@@ -1,0 +1,5 @@
+* All under this directory are modules for Monkey.
+
+* All directory modules begin with "mod_name_of_module".
+
+* Script cleanmods.sh remove all objects and Makefiles from Modules.

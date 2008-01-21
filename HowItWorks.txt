@@ -1,0 +1,93 @@
+HOWITWORKS - Monkey >= 0.5.x
+============================
+Date        : 20 Sept 2002
+Last Update : Initial version
+
+Note: I don't write or speak english very well :P .
+
+Here i hope to explain how monkey works. This isn't a set design, this
+design has been changing with time and will continue to change :) .
+
+Sections
+--------
+	1) Starting and setting
+	2) Accepting and processing new connections
+	3) comming soon...
+
+
+1) Starting and setting
+-----------------------
+In this section i will explain what monkey does at the beginning.
+
+	Starting monkey ->|
+			  |
+		+----------------------+ <- file: monkey.c
+		+    Reading options   +    func: main();
+		+   from command line  +	
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c, config.c
+		+ Reading config files +    func: main(); 	    
+		+----------------------+	  |->Monkey_Read_Config();
+			  |
+			  |
+		+----------------------+ <- file: monkey.c, signals.c
+		+   Starting signals   +    func: main();
+		+----------------------+	  |->Init_Signals();
+			  |
+			  |
+		+----------------------+ <- file: monkey.c
+		+    Setting socket    +    func: main();	
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c
+		+    Setting threads   +    func: main();
+		+      properties      +	
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c, utils.c
+		+   Changing mode to   +    func: main();
+		+    daemon if it was  +	  |->set_daemon();
+		+     specicated       +
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c, logfile.c
+		+     Register PID     +    func: main();
+		+      of process      +	  |->add_log_pid();
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c
+		+  Starting main loop  +    func: main();
+		+   and waiting for    +
+		+   new connections    +
+		+----------------------+
+
+2) Accepting and processing new connections
+------------------------------------------
+When a new connection comes, monkey follows the next steps.
+
+
+		+----------------------+ <- file: monkey.c, deny.c
+		+   Checking IP from   +    func: main();
+		+   remote machine to  +	  |->Deny_Check();
+		+   know if this is    +
+		+   not blocked in our +
+		+   monkey.deny file   +
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkeu.c
+		+   Checking how many  +    func: main();
+		+   request are being  +
+		+  processed by monkey +
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c
+		+  Passing connection  +    func: main();
+		+   to a new thread    +	  |->thread_init();
+		+----------------------+
+			  |
+		+----------------------+ <- file: monkey.c, request.c
+		+   Reciving request   +    func: thread_init();
+		+    and processing    +	  |->Request_Main();
+		+----------------------+
+

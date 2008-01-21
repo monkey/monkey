@@ -1,0 +1,232 @@
+
+# Creando conf/monkey.conf
+cat > conf/monkey.conf <<EOF
+# Monkey HTTP Daemon - Configuracion
+# ==================================
+# Aqui se definen las variables principales del programa en lo que
+# respecta a la configuracion de los distintos tipos de directivas.
+#
+
+# Server_root :
+# -------------
+# Esta variable corresponde a la ubicacion del directorio
+# raiz servidor de paginas web, en donde se ubican los archivos
+# de tu sitio.
+#
+# Ejemplo:
+#      Server_root /home/krypton/htdocs
+#
+
+Server_root $datadir
+
+# Port : 
+# ------
+# Port es el numero de puerto en el cual Monkey estara escuchando
+# por conexiones y peticiones. Este numero puede tomar cualquier
+# valor numerico entre 1 y 65535. Cualquier numero especificado
+# menor o igual a 1024, solo podra establecerse como puerto de conexion si
+# el usuario posee privilegios de root.
+#
+
+Port 2001
+
+# ServerName :
+# ------------
+# Te permite configurar el nombre de host y de dominio 
+# (monkey.linuxchile.cl). Si estas trabajando en una red local solo coloca 
+# tu IP o si trabajas localmente coloca tu direccion loopback (127.0.0.1).
+
+ServerName 127.0.0.1
+
+# Timeout :
+# ---------
+# Lapso maximo de tiempo expresado en segundos durante el cual se debe
+# esperar para recibir el envio de datos en un request o tiempo de espera 
+# para que el host remoto acepte una respuesta. (Timeout > 0).
+
+Timeout 15
+
+# MaxClients :
+# ------------
+# Cantidad maxima de clientes sirviendo simultaneamente.
+
+MaxClients 20  
+
+# PidFile:
+# --------
+# Archivo donde el servidor guarda su numero de proceso al iniciarse.
+
+PidFile $logdir/monkey.pid
+
+# AccessLog:
+# ----------
+# Archivo de registro de peticiones correctas.
+
+AccessLog $logdir/access.log
+
+# ErrorLog:
+# ---------
+# Archivo de registro de peticiones erroneas.
+
+ErrorLog $logdir/error.log
+
+# UserDir:
+# --------
+# Nombre del directorio bajo el cual se serviran las paginas 
+# del home del usuario (/~user).
+
+UserDir public_html
+
+# Indexfile :
+# -----------
+# Esta variable corresponde al nombre del archivo inicial de apertura
+# al llamar a un directorio.
+ 
+Indexfile index.html index.htm
+
+# Server_ScriptAlias :
+# --------------------   
+#  Si deseas tener soporte CGI (Common Gateway Interface), debes definir
+#  el directorio donde se encontraran los scripts a ejecutar, para esto ,
+#  debes definir un directorio alias hacia el original, de la siguiente
+#  forma:
+# 
+#       Server_ScriptAlias /nombre_del_alias/ ruta_original
+# 
+
+Server_ScriptAlias /cgi-bin/ $cgibin
+
+# GetDir :
+# --------
+# En caso de que no sea encontrado un archivo de inicio para la ruta
+# requerida por el browser, es posible enviar la informacion del directorio
+# con su contenido respectivos. Valores a tomar on/off.
+#
+
+GetDir on
+
+# HideVersion :
+# ------------- 
+# Por razones de seguridad, a veces las personas desean ocultar la version
+# de su Servidor Web (Valores a tomar on/off).
+
+HideVersion off
+
+# Resume:
+# -------
+# Permite recibir archivos por partes (Valores a tomar on/off).
+
+Resume on
+
+# User :
+# ------
+# Si deseas que el servidor web corra como proceso de un usuario definido,
+# puedes definirlo en esta variable, para que el cambio de usuario pueda
+# llevarse a cabo , es necesario ejecutar monkey con privilegios de root.
+# En caso de que sea iniciado por un usuario que no tiene privilegios de
+# root esta variable sera omitida.
+
+User nobody
+
+# AddScript
+# ------------
+# Si deseas procesar algun archivo mediante un interprete como PHP,
+# puedes especificarlo con el siguiente formato:
+#
+#    AddScript mime_type ruta_del_binario extension_a_procesar
+#
+#  Ejemplo para PHP4.x:
+#  --------------------
+#   AddScript application/x-httpd-php /home/my_home/php/bin/php php
+#
+#   El ejemplo anterior define que cualquier archivo cuya extension sea
+#   "php", debera ser procesado por "/home/my_home/php/bin/php"
+#
+
+#AddScript application/x-httpd-php /home/my_home/php/bin/php php
+#AddScript application/x-httpd-php /home/my_home/php/bin/php php3
+
+# VIRTUAL HOST :
+# --------------
+# Virtualhost permite servir distintos archivos en distintos directorios
+# todo esto direccionado por la direccion de host la cual es enviada
+# por el browser.
+#
+# Ejemplo:
+#        
+#  Si deseas definir por ejemplo www.example.org, al llegar el request
+#  a la maquina (supuestamente ya aceptado por el servidor de DNS),
+#  deberias agregar la siguientes entradas :
+# 
+#   <Virtualhost>
+#       VirtualServerName www.example.org
+#       VirtualDocumentRoot /home/web/example/htdocs
+#       VirtualScriptAlias /cgi-bin/ /home/web/example/cgi-bin
+#       VirtualForceGetDir off
+#   </Virtualhost>
+# 
+# Si no tienes un servidor DNS instalado, puedes agregar tus
+# direcciones virtuales  en /etc/hosts y jugar con la interfaz
+# loopback. =)
+#
+
+# -------------------------
+#  CONFIGURACION AVANZADA
+# -------------------------
+# Solo cambia las siguientes variables si es que sabes lo que haces.
+
+# KeepAlive :
+# -----------
+# Permitir conexiones persistentes. (on/off)
+
+KeepAlive on
+
+# MaxKeepAliveRequest
+# -------------------
+# Numero maximo de peticiones por conexion. (valor > 0)
+
+MaxKeepAliveRequest 20
+
+# KeepAliveTimeout
+# ----------------
+# Cantidad de segundos para esperar la siguiente conexion en una conexion
+# persistente (valor > 0).
+
+KeepAliveTimeout 15  
+
+# Include
+# -------
+# Te permite tener tu archivo de configuracion en archivos separados.
+#
+# Example:
+#       Include virtualhost.conf
+
+# Header_file y Footer_file
+# -------------------------
+#
+# Estas variablespermiten mostrar informacion de los archivos 
+# configurados cuando los directorios son mostrados
+#
+Header_file .header
+Footer_file .footer
+#
+#  Estos archivos pueden existir en los directorios a mostrar.
+
+# Max_IP
+# ------
+#
+# Permite definir el maximo de conexiones clientes provenientes
+# desde una misma direccion IP hacia el servidor (valor = 0 desabilita 
+# esta caracteristica).
+
+Max_IP 5
+
+# SymLink
+# -------
+# Permitir peticiones a links simbolicos.
+#
+
+SymLink Off
+
+EOF
+

@@ -1,0 +1,631 @@
+
+#!/bin/sh
+#
+#  Monkey HTTP Daemon
+#  ------------------
+#  Copyright (C) 2001-2002, Eduardo Silva P.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Library General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+VERSION="0.9.2"
+SYSNAME=`uname -s`
+SYSINFO=`uname -sr`
+
+INFOMODS="extras/inf/"
+INCDIR="src/include/"
+
+messages_en()
+{
+	case "$*" in
+		"1")
+			echo "+ Creating conf/monkey.conf"
+		;;
+		"2")
+			echo "+ Creating Makefile"
+		;;
+		"3")
+			echo "+ Creating src/Makefile"
+		;;
+		"4")
+			echo "+ Creating src/include/info.h"
+		;;
+		"5")
+			echo "+ Creating banana script"
+		;;
+		"6")
+			echo -n "Configuration done, just type 'make"
+		;;
+		"7")
+			echo -n "+ Checking for Pthreads lib.........."
+		;;
+	esac
+}
+
+messages_es()
+{
+	case "$*" in
+		"1")
+			echo "+ Creando conf/monkey.conf"
+		;;
+		"2")
+			echo "+ Creando Makefile"
+		;;
+		"3")
+			echo "+ Creando src/Makefile"
+		;;
+		"4")
+			echo "+ Creando src/include/info.h"
+		;;
+		"5")
+			echo "+ Creando banana script"
+		;;
+		"6")
+			echo -n "Configuracion completa, tipee 'make"
+		;;
+		"7")
+			echo -n "+ Checkeando Pthreads lib.........."
+		;;
+	esac
+}
+
+messages_fr()
+{
+	case "$*" in
+		"1")
+			echo "+ Creating conf/monkey.conf"
+		;;
+		"2")
+			echo "+ Creating Makefile"
+		;;
+		"3")
+			echo "+ Creating src/Makefile"
+		;;
+		"4")
+			echo "+ Creating src/include/info.h"
+		;;
+		"5")
+			echo "+ Creating banana script"
+		;;
+		"6")
+			echo -n "Configuration done, just type 'make"
+		;;
+		"7")
+			echo -n "+ Checking for Pthreads lib.........."
+		;;
+	esac
+}
+
+make_conf()
+{
+cat $INCDIR/config.path lang/"$*"/mconf > makeconf.sh
+chmod 755 makeconf.sh
+./makeconf.sh
+rm makeconf.sh
+rm $INCDIR/config.path
+cp lang/"$*"/monkey.deny conf/
+cp lang/"$*"/INSTALL ./
+cp lang/"$*"/README ./
+}
+
+main()
+{
+	dir=0
+	actual_path=`pwd`
+	rm -rf src/extras/inf/*
+	
+# Checking loaded modules 
+	if [ "$modules" = "on" ]; then
+		add_obj_mod="modules.o"
+		echo "Modules loaded :"
+		
+cat > $INCDIR/modules.h <<EOF
+char **MOD_Read_Config(char *mod_name);
+char *MOD_get_ptr_value(char **ptr, char *var);
+
+EOF
+		
+		##### MOD_MYSQL #####
+		if [ "$mod_mysql" = "on" ]; then
+			echo "* MySQL Module -> Running mod_mysql configure"
+			cd src/extras/mod_mysql && ./configure
+			cd ../../../
+		fi
+		
+		echo
+	fi
+
+	if test -f src/extras/inf/libmod.info ; then
+		mod_libs=`cat src/extras/inf/libmod.info`
+	fi
+	if test -f src/extras/inf/obj.info ; then
+		mod_obj=`cat src/extras/inf/obj.info`
+	fi
+	if test -f src/extras/inf/defs.info ; then
+		mod_defs=`cat src/extras/inf/defs.info`
+	fi
+
+	if test -f src/extras/inf/make_script.info ; then
+		make_script=`cat src/extras/inf/make_script.info`
+	fi
+	
+# end check
+
+	echo "Language : $lang"
+	echo
+
+	if [ "$prefix" != "$actual_path" ]; then
+		dir=1
+	fi
+
+	if [ "$bindir" != "$actual_path/bin" ]; then
+		dir=1
+	fi
+	
+	if [ "$cgibin" != "$actual_path/cgi-bin" ]; then
+		dir=1
+	fi
+	
+	if [ "$sysconfdir" != "$actual_path/conf" ]; then
+		dir=1
+	fi
+
+	if [ "$datadir" != "$actual_path/htdocs" ]; then
+		dir=1
+	fi
+	
+	if [ "$logdir" != "$actual_path/logs" ]; then
+		dir=1
+	fi
+	
+	messages_$lang "7"
+	check_lib lang
+	
+	messages_$lang "1"
+	create_conf prefix bindir cgibin sysconfdir datadir logdir
+
+	make_conf  $lang
+	messages_$lang "2"
+
+	if [ "$dir" = 0 ]; then
+		create_makefile1 bindir
+	else
+		create_makefile1_install prefix bindir cgibin sysconfdir datadir logdir
+	fi
+
+	messages_$lang "3"
+	create_makefile2 mod_libs mod_defs mod_obj make_script add_obj_mod
+
+	messages_$lang "4"
+	create_info sysconfdir SYSNAME VERSION
+	
+	messages_$lang "5"
+	create_banana_script bindir logdir
+	
+	echo 
+	messages_$lang "6"
+
+	if [ "$dir" = 1 ]; then
+		echo -n " && make install' "
+	else
+		echo -e "' "
+	fi
+	echo
+}
+
+# Checkea biblioteca PTHREADS
+check_lib()
+{
+cat > check.c <<EOF
+#include <pthread.h>
+int main(){ return 0;}
+EOF
+
+libtest=`gcc check.c -lpthread &>configure.log`
+libstatus=`cat configure.log`
+if  test -n "$libstatus"  ; then
+	echo "no"
+	rm -fr check* configure.log
+	exit 1
+fi
+echo "yes"
+rm -fr check* configure.log a.out
+}
+
+
+# Creando Makefile
+create_makefile1()
+{
+cat > Makefile << EOF
+# Monkey HTTP Daemon: Makefile
+# ============================
+default:
+	@(cd src; make all)
+	@echo  
+	@echo  " Running Monkey :"
+	@echo  " ----------------"
+	@echo 
+	@echo  "  # $bindir/monkey"
+	@echo 
+	@echo  "  For more help use '-h' option."		
+	@echo 
+clean:
+	@(cd src; make clean)
+distclean:
+	@(cd src; make distclean)
+EOF
+}
+
+create_makefile1_install()
+{
+cat > Makefile <<EOF
+# Monkey HTTP Daemon: Makefile
+# ============================
+PREFIX=${prefix}
+BINDIR=${bindir}
+CGIBIN=${cgibin}
+SYSCONFDIR=${sysconfdir}
+DATADIR=${datadir}
+LOGDIR=${logdir}
+
+default:
+	@(cd src; make all)
+clean:
+	@(cd src; make clean)
+distclean:
+	@(cd src; make distclean)
+
+install:
+	make -C src all
+	install -d \$(BINDIR)
+	install -d \$(CGIBIN)
+	install -d \$(SYSCONFDIR) 
+	install -d \$(DATADIR)
+	install -d \${DATADIR}/imgs
+	install -d \${DATADIR}/php
+	install -d \${DATADIR}/docs
+	install -d \${LOGDIR}
+	install -s -m 755 bin/monkey \$(BINDIR)
+	install -m 755 bin/banana \$(BINDIR)
+	install -m 755 ./cgi-bin/* \$(CGIBIN)
+	install -m 600 ./conf/*.* \$(SYSCONFDIR)
+	install -m 644 ./htdocs/*.* \$(DATADIR)
+	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
+	install -m 644 ./htdocs/php/*.* \${DATADIR}/php
+	install -m 644 ./htdocs/docs/*.* \${DATADIR}/docs
+	@echo 
+	@echo  " Running Monkey :"
+	@echo  " ----------------"
+	@echo 
+	@echo  "  # $bindir/monkey"
+	@echo 
+	@echo  "  For more help use '-h' option"	
+	@echo 
+
+EOF
+}
+
+# Creando src/Makefile
+create_makefile2()
+{
+
+if [ $SYSNAME = "SunOS" ]; then
+	MORE_LIBS="-lsocket"
+fi
+
+if test -z $CC ; then
+	CC="gcc"
+fi
+if test -z $STRIP ; then
+    STRIP="strip"
+fi
+
+cat > src/Makefile<<EOF
+CC	= $CC
+DEFS	= $mod_defs
+CFLAGS	= \$(DEFS) -g -O2 -Wall
+INCDIR  = ./include
+LDFLAGS	= 
+DESTDIR	= ../bin/monkey
+LIBS	= -lpthread $mod_libs $MORE_LIBS
+OBJ	= monkey.o method.o mimetype.o request.o \\
+	vhost.o config.o logfile.o signals.o \\
+	dir_html.o deny.o cgi.o user.o utils.o \\
+	process.o chars.o $add_obj_mod
+
+all: modules ../bin/monkey
+
+modules:
+	$make_script
+	
+../bin/monkey: \$(OBJ)
+	\$(CC) \$(CFLAGS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
+	$STRIP ../bin/monkey
+	
+clean:
+	rm -rf *.o
+	rm -rf ../bin/monkey
+
+distclean:
+	rm -rf *.o ../bin/* Makefile \\
+	../Makefile ../conf/monkey.conf \\
+	../conf/monkey.deny include/info.h ../logs/*\\
+	extras/inf/*
+	@(cd extras && ./cleanmods.sh && cd ..)
+	
+.c.o:
+	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
+EOF
+}
+
+# Creando include/info.h
+create_info()
+{
+cat > $INCDIR/info.h <<EOF
+#define OS "$SYSNAME"
+#define VERSION "$VERSION" /* Version de Monkey */
+#define MONKEY_PATH_CONF "$sysconfdir"
+EOF
+}
+
+create_conf()
+{
+cat > $INCDIR/config.path <<EOF
+#!/bin/sh
+prefix=$prefix
+bindir=$bindir
+cgibin=$cgibin
+sysconfdir=$sysconfdir
+datadir=$datadir
+logdir=$logdir
+EOF
+}
+
+create_banana_script()
+{
+cat > bin/banana << EOF
+#!/bin/sh
+#
+# Monkey HTTP Daemon - Banana Script
+# -----------------------------------
+# This script allow you to control monkey. Written by Eduardo Silva 
+# ----------------------------
+# Date		: 2002/09/01.
+# ----------------------------
+#
+# Use: ./banana OPTION
+#
+# Options available to banana:
+#
+#	start	->	start monkey
+#	restart	->	restart monkey
+#	stop	->	stop monkey if this is running	
+#	help	->	what do u think ?
+
+PIDFILE="$logdir/monkey.pid"
+BINMONKEY="$bindir/monkey"
+
+for arg in \$*; do
+	case "\$arg" in
+		-*=*) optarg=\`echo "\$arg" | sed 's/[-_a-zA-Z0-9]*=//'\` ;;
+		   *) optarg= ;;
+	esac
+
+	if  ! test -f \$PIDFILE ; then
+		STATUS="no"
+	else
+		PIDMONKEY=\`cat \$PIDFILE\`
+		if ! kill -0 \$PIDMONKEY 2>/dev/null; then
+			STATUS="no"
+		else
+			STATUS="yes"
+		fi
+	fi
+
+	case "\$arg" in
+		start)
+			if [ "\$STATUS" == "yes"  ] ; then
+				echo "Monkey is running... (PID=\$PIDMONKEY)"
+				exit 1
+			fi
+			if ! test -x \$BINMONKEY ; then
+				echo "Error: I can't run binary file"
+				exit 1
+			else
+				if \$BINMONKEY -D  2>/dev/null ; then
+					echo "Running Monkey -> OK"
+					exit 0
+				fi
+			fi
+		;;
+		stop)
+			if  [ "\$STATUS" == "no" ]; then
+				echo "Monkey is not running."
+				exit 1
+			fi
+			kill \$PIDMONKEY
+			rm -rf \$PIDFILE > /dev/null
+			echo "Monkey stopped (\$PIDMONKEY)"
+			exit 0
+			;;
+		restart)
+			if  [ "\$STATUS" == "yes" ]; then
+				if ! kill \$PIDMONKEY  > /dev/null ; then
+					killall -9 monkey
+				else
+					echo -n "Stopping Monkey... "
+				fi
+			else
+				echo -n "Monkey is not running... "
+			fi		
+			if ! test -x \$BINMONKEY ; then
+				echo "Error: I can't run binary file"
+				exit 1
+			else
+				\$BINMONKEY -D > /dev/null
+				echo "Restarting -> OK"
+				exit 0
+			fi
+			;;
+		*)
+			echo "Use : banana [start|stop|restart|help]"
+			exit 1
+		;;
+	esac
+done
+echo "Use : banana [start|stop|restart|help]"
+
+exit 0
+EOF
+chmod 755 bin/banana
+}
+
+#---------------------------#
+# End Functions		    
+#---------------------------#
+
+
+#---------------------------#
+# Starting configure 	   
+#---------------------------#
+
+aux=`pwd`
+
+prefix="$aux"
+bindir="$aux/bin"
+cgibin="$aux/cgi-bin"
+sysconfdir="$aux/conf"
+datadir="$aux/htdocs"
+logdir="$aux/logs"
+
+rm -rf src/extras/*.info
+touch $INCDIR/modules.h
+
+for arg in $*; do
+	case "$arg" in
+		-*=*) 
+			optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+		   *) optarg= ;;
+	esac
+
+	case "$arg" in
+		--prefix*)
+			prefix=$optarg
+			bindir="$optarg/bin"
+			cgibin="$optarg/cgi-bin"
+			sysconfdir="$optarg/conf"
+			datadir="$optarg/htdocs"
+			logdir="$optarg/logs"
+			;;
+		--bindir*)
+			bindir=$optarg
+			;;
+		--cgibin*)
+			cgibin=$optarg
+			;;
+		--sysconfdir*)
+			sysconfdir=$optarg
+			;;
+		--datadir*)
+			datadir=$optarg
+			;;
+		--logdir*)
+			logdir=$optarg
+			;;
+		--lang*)
+			lang=$optarg
+			;;
+		--load-mod_mysql*)
+			modules="on"
+			mod_mysql="on"
+			;;
+		--version*)
+			echo "Monkey HTTP Daemon v$VERSION"
+			echo "-------------------------"
+			echo "Copyright 2001-2002"
+			echo "Developed by Eduardo Silva"
+			echo "Monkey Home   : http://monkeyd.sf.net"
+			echo "Contact Email : edsiper@users.sf.net"
+			echo
+			exit 1
+			;;
+		*)
+			echo "Usage: configure [--prefix=PREFIXDIR] [--lang=LANGUAGE] [ --bindir=BINDIR]"
+			echo "                 [--cgibin=CGIBINDIR] [--sysconfdir=SYSCONFDIR]"
+			echo "                 [--datadir=DATADIR] [--logdir=LOGDIR]"
+			echo 
+			echo "Options : "
+			echo "  --help		Display this help and exit"
+			echo "  --version		Display version information and exit"
+			echo 
+			echo "  --prefix=PREFIX	Install Monkey under PREFIX directory"
+			echo "  --bindir=BINDIR	Install Monkey binaries	under BINDIR directory"
+			echo "  --cgibin=CGIBINDIR	Install Monkey cgi-bin	under CGIBIN directory"
+			echo "  --sysconfdir=SYSCONFDIR	Install Monkey conf files under SYSCONFDIR dir"
+			echo "  --datadir=DATADIR	Install Monkey data dir files under DATADIR directory"
+			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
+			echo "  --lang=[en|es]	Language to configuration files (default English)"
+			echo 
+			echo "Modules :"
+			echo "  All modules are optional features, neither of them are loaded by default,"
+			echo "  the available modules are:"
+			echo
+			echo "  --load-mod_mysql	Load MySQL Support (read MODULES file for details)." 
+			echo
+			exit 1
+			;;
+	esac
+done
+
+echo "********************************************"
+echo "        Monkey HTTP Daemon v$VERSION        "
+echo "*         (http://monkeyd.sf.net)          *"
+echo "* ---------------------------------------- *"
+echo "*  We need beta testers, developers and    *"
+echo "*  translators!, if u want help to this    *"
+echo "*  project, email me :                     *"
+echo "*                                          *"
+echo "*      edsiper@users.sourceforge.net       *"
+echo "*                                          *"
+echo "*         Thanks for use Monkey!!!         *"
+echo "*                                          *"
+echo "********************************************"
+echo "System   : $SYSINFO"
+
+if [ -z "$lang" ]; then
+	echo 
+	echo "+ Choose configure language: "
+	echo " -> [en] English"
+	echo " -> [es] Spanish"
+	echo " -> [fr] French"
+	echo 
+	echo -n " -> Option (default English) : "
+	lang="en"
+	read lang
+	echo
+
+	if [ -z "$lang" ]; then
+		lang="en"
+	fi
+
+	if [ $lang != "es" ] && [ $lang != "en" ] && [ $lang != "fr" ]; then
+		echo " -> Error: Language not available"
+		exit 1
+	fi
+
+fi
+
+# starting main function 
+main prefix lang bindir cgibin sysconfdir datadir logdir modules mod_mysql SYSNAME VERSION
+exit 0

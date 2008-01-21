@@ -1,0 +1,14 @@
+<H2>Information found in Images dir</H2>
+
+<TABLE cellpadding="2" cellspacing="0" border="0" width="500">
+<TR>
+ <TD>
+   <IMG src="logonooficial.jpg">
+ </TD>
+ <TD>
+   This file information is located in <b>htdocs/imgs/.header</b>
+   <BR>
+   You can put here all information that you want...	
+ </TD>
+</TR>
+</TABLE>

@@ -1,0 +1,47 @@
+ Monkey HTTP Daemon - Readme
+ ===========================
+ Monkey HTTP Daemon es un pequeño WebServer escrito 100% en C desarrollado
+ para plataforma Linux.
+
+ Actualmente Monkey esta basado en el documento RFC2616
+ correspondiente a la especificacion del protocolo HTTP/1.1
+ 
+ Caracteristicas
+ ===============
+ 
+ - Get, Post & Head Method
+ - CGI & PHP
+ - Multithreading
+ - Soporte archivo de configuracion
+ - Configuracion de Mime types 
+ - VirtualHost
+ - Navegacion por directorios y Home de usuarios
+ - Denegacion a URLs e IPs.
+ - Resumen
+
+ Listas de correo
+ ================
+
+	Noticias acerca de nuevas versiones:
+	    Monkeyd-news@lists.sourceforge.net
+	    https://lists.sourceforge.net/lists/listinfo/monkeyd-news
+
+	Bugs encontrados:
+	    Monkeyd-bugs@lists.sourceforge.net
+	    https://lists.sourceforge.net/lists/listinfo/monkeyd-bugs 
+
+ Autor
+ =====
+ Desarrollado por : Eduardo Silva
+ Pais             : Chile
+ E-mail		  : edsiper@users.sf.net
+ IRC 		  : irc.linuxchile.cl #linux (EdsipeR)
+ ICQ		  : 33799244
+ Monkey Project   : http://monkeyd.sourceforge.net
+ 
+ Estoy abierto a sugerencias, criticas y por demases, si tienes 
+ alguna idea, encontraste algun BUG, no dudes en reportarlo para 
+ buscarle una solucion, y si tu la tienes, mandala y agregare tu 
+ codigo. =)
+
+ ;-)

@@ -1,0 +1,224 @@
+
+cat > conf/monkey.conf <<EOF
+# Monkey HTTP Daemon - Configuration
+# ==================================
+# Here the variable principals of the program are defined in respect
+# to the configuration of the different types of directives.
+
+# Server_root :
+# -------------
+# This variable corresponds to the location of the main server directory
+# of the web pages, where the files of your site are located.
+#
+# Example:
+#      Server_root /home/krypton/htdocs
+#
+
+Server_root $datadir
+
+# Port : 
+# ------
+# Port is the number of the door in which Monkey will be listened through
+# connections and petitions. This number can have any value between 1 and
+# 65535. Whatever specified number less than or equal to 1024, only will
+# be able to be established as a connection door if the user posesses 
+# privledges of Root.
+
+Port 2001
+
+# ServerName :
+# ------------
+# Allow you to set a host and domain name (e.g monkey.linuxchile.cl). If      
+# you are working in a local network just set your IP address or if you
+# are working like localhost set your loopback address (127.0.0.1).
+
+ServerName 127.0.0.1
+
+# Timeout :
+# ---------
+# The lasgest span of time expressed in seconds during which you should
+# wait to recive the information or waiting time for the remote host to
+# accept an answer. (Timeout > 0)
+
+Timeout 15
+
+# MaxClients :
+# ------------
+# Limit on the number of clients who can simultaneously connect. 
+
+MaxClients 20 
+
+# PidFile:
+# --------
+# File where the server guards the process number when starting.
+
+PidFile $logdir/monkey.pid
+
+# AccessLog:
+# ----------
+# Registration file of correct request.
+
+AccessLog $logdir/access.log
+
+# ErrorLog:
+# ---------
+# Registration file of incorrect request.
+
+ErrorLog $logdir/error.log
+
+# UserDir:
+# --------
+# Directory name for users home (/~user).
+
+UserDir public_html
+
+# Indexfile :
+# -----------
+# Number of the inicial file of aperture when calling a directory.
+ 
+Indexfile index.html index.htm
+
+# Server_ScriptAlias :
+# --------------------   
+# If you which to have CGI support (Common Gateway Interface), you should
+# define the directory where the executive scripts will be found,for that,
+# you should define an alias directory towards the original of the
+# following form:
+# 
+#       Server_ScriptAlias /name_of_alias/ original_path
+#
+
+Server_ScriptAlias /cgi-bin/ $cgibin
+
+# GetDir :
+# --------
+# In case a starting file cannot be found for the required route through
+# the browser, it's possible to send the information from the directory 
+# with it's respective contents (values on/off).
+
+GetDir on
+
+# HideVersion :
+# ------------- 
+# For security reasons, sometimes people want to hide the version of his 
+# own webserver to clients (values on/off).
+
+HideVersion off
+
+
+# Resume:
+# -------
+# Allow to retrieve chunks of file (values on/off).
+
+Resume on
+
+# User :
+# ------
+# If you want the webserver to run as a process of a defined user, you can
+# define it in this variable, so that the change of the user can done,
+# it's necessary to execute Monkey with root priviledges. In case it's
+# started by a user that doesn't have root priviledges, this variable will
+# be omitted.
+
+User nobody
+
+# AddScript
+# ------------
+# If you which to process some file through an interpreter like PHP, you
+# can specify it with the following format:
+#
+#    AddScript mime_type source_path_binary extension
+#
+#  Example for PHP4.x:
+#  --------------------
+#   AddScript application/x-httpd-php /home/my_home/php/bin/php php
+#
+#   The above example defines that whatever file, it's extension being
+#   "php", should be processed through by "/home/my_home/php/bin/php"
+#
+
+#AddScript application/x-httpd-php /home/my_home/php/bin/php php
+#AddScript application/x-httpd-php /home/my_home/php/bin/php php3
+
+# VIRTUAL HOST :
+# --------------
+# Virtualhost allow you to serve different files in different directories
+# all this directioned through the host address, which is sent through the
+# browser.
+#
+# Example:
+#        
+# If you want to define for example www.example.org, when the request
+# arrives to the machine (supposedly already accepted through DNS server), 
+# you should add the following entries:
+# 
+#   <Virtualhost>
+#       VirtualServerName www.example.org
+#       VirtualDocumentRoot /home/web/example/htdocs
+#       VirtualScriptAlias /cgi-bin/ /home/web/example/cgi-bin
+#       VirtualForceGetDir off
+#   </Virtualhost>
+# 
+# If you don't have a DNS Server installed, you can add your
+# virtual addresses in /etc/host and play with the loopback interface. =)
+#
+
+# -----------------
+#  ADVANCED CONFIG
+# -----------------
+# Just change the next variables if you know what are you doing.
+
+# KeepAlive :
+# -----------
+# Allow persistent connections. (on/off)
+
+KeepAlive on
+
+# MaxKeepAliveRequest
+# -------------------
+# Maximun number of request per connection. (value > 0)
+
+MaxKeepAliveRequest 20
+
+# KeepAliveTimeout
+# ----------------
+# Number of seconds to wait for the next request in a persistent
+# connection (value > 0).
+
+KeepAliveTimeout 15 
+
+# Include
+# -------
+# Allow you have your configure file in separate files.
+#
+# Example:
+#	Include virtualhost.conf
+
+# Header_file and Footer_file
+# ---------------------------
+#
+# This variables allow you show information of configured files when 
+# full directories are shown
+#
+Header_file .header
+Footer_file .footer
+#
+#
+#  This files could exist in directories to show.
+
+# Max_IP
+# ------
+#
+# Allow define the maximum of client connections 
+# from same IP address to server (value = 0 disable this feature).
+
+Max_IP 5
+
+# SymLink
+# -------
+# Allow request to symbolic link files.
+#
+
+SymLink Off
+
+EOF

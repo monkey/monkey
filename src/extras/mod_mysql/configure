@@ -1,0 +1,110 @@
+#!/bin/sh
+
+libmod="../inf/libmod.info"
+obj="../inf/obj.info"
+defs="../inf/defs.info"
+make_script="../inf/make_script.info"
+
+
+check_lib()
+{
+echo -n "	+ Checking for MySQL libraries -> "
+cat > check.c <<EOF
+#include <stdio.h>
+#include <mysql/mysql.h>
+int main()
+{ 
+	mysql_init(NULL);
+	return 0;
+}
+EOF
+
+libtest=`gcc check.c -lmysqlclient &>configure.log`
+libstatus=`cat configure.log`
+if  test -n "$libstatus"  ; then
+	echo "no"
+	rm -fr check* configure.log
+	exit 1
+fi
+rm -rf check* configure.log a.out
+echo "yes"
+
+# Creating Makefile
+echo "	+ Creating Makefile"
+cat > Makefile <<EOF
+CC      = gcc
+CFLAGS  = -c -g -O2 -Wall
+INCDIR	= ../../include
+LDFLAGS =
+SOURCES = mod_mysql.c
+
+all:
+	\$(CC) \$(CFLAGS) -I\$(INCDIR) \$(LIBS) \$(LDFLAGS) \$(SOURCES)
+clean:
+	rm -rf *.o
+
+distclean:
+	rm -fr *.o Makefile
+	
+.c.o:
+	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
+EOF
+
+# Libraries
+if ! test -f $libmod ;  then
+cat > $libmod <<EOF
+-lmysqlclient
+EOF
+else
+aux_libmod=`cat $libmod`
+cat > $libmod <<EOF
+$aux_libmod -lmysqlclient
+EOF
+fi
+# End Libraries
+
+
+# Object files
+if ! test -f $obj ;  then
+cat > $obj <<EOF
+extras/mod_mysql/mod_mysql.o
+EOF
+else
+aux_obj=`cat $obj`
+cat > $obj <<EOF
+$aux_obj extras/mod_mysql/mod_mysql.o
+EOF
+fi
+# End Object Files
+
+# DEFS
+if ! test -f $defs ;  then
+cat > $defs <<EOF
+-DMOD_MYSQL
+EOF
+else
+aux_defs=`cat $defs`
+cat > $defs <<EOF
+$aux_defs -DMOD_MYSQL
+EOF
+fi
+# End DEFS
+
+if ! test -f $make_script ; then
+cat > $make_script <<EOF
+@(cd extras/mod_mysql && make && cd ../../)
+EOF
+else
+aux_make=`cat $make_script`
+cat > $make_script <<EOF
+$aux_make @(cd extras/mod_mysql && make)
+
+EOF
+fi
+}
+
+cp ../../include/modules.h ./modules.temp
+cat modules.temp functions.dec > ../../include/modules.h
+rm modules.temp
+
+check_lib

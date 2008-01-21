@@ -1,0 +1,45 @@
+ Monkey HTTP Daemon - Install
+ ============================
+ Pour un fonctionnement optimum, je recommande que Monkey soit compilé
+ avec GCC >= 2.95.3
+ 
+ Comme toute source nous devons lancer le script 'configure' puis
+ make :
+ 
+ #./configure
+ # make 
+ 
+ En option, vous pouvez faire 'make install' qui vous copiera les fichiers
+ selon les options spécifiées au lancement de configure.
+ 
+ Lancer Monkey
+ ==============
+
+	bin/monkey
+
+	ou
+
+	bin/monkey -D (Pour lancer Monkey en démon)
+
+ Vous pouvez spécifier à la ligne de commande le répertoire ou Monkey
+ doit cherchez ses fichiers de conffiguration :	
+
+	bin/monkey -D -c conf/
+	
+ Cet argument est utilisé par les personnes qui veulent bien laisser
+ plusieurs de leurs utilisateurs lancer Monkey sur des ports différents
+ avec leur configuration propre.
+ Pour plus d'informations voir 'conf/monkey.conf'
+
+ Essayez l'option -h .
+
+ Tester Monkey
+ ==============
+ 
+ Pour voir si Monkey fonctionne essayer avec lynx ou Netscape :
+ 
+ 	# lynx 127.0.0.1:2001
+ 	
+ Note: Ceci est un exemple, le 2001 correspond au port assigné par
+ défaut dans 'conf/monkey.conf'.
+ 

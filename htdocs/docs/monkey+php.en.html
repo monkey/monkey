@@ -1,0 +1,85 @@
+<HTML>
+<TITLE>Monkey + PHP : English Version</TITLE>
+<BODY bgcolor=#ffffff>
+<CENTER>
+<TABLE cellpadding=0 cellspacing=0 border=0 width=600>
+<TR>
+<TD>
+ <H2>Monkey + PHP</H2>
+ 
+Before we begin with the intructions of configuring and installing PHP, 
+we assume you already have Monkey installed on your system.<BR><BR>
+It doesnt matter if you already have PHP installed running with Apache or another httpd, 
+because you can install PHP in another directory it will be perfectly compatible.
+ <br>
+ <br>
+ <li><b>Download the Lastest version of PHP: </b><br>
+	<ol>
+	In the official site <a href="http://www.php.net">http://www-php.net</a>  you can find the latest version of this great 
+	hypertext preprocesor.
+    </ol>
+
+ <li><b>Installing PHP for Monkey :</b><br>
+	<ol>
+	 From the command line :<br><br>
+	 <ol>
+		 # tar zxfv php-4.x.x.tar.gz<br>
+		 # cd php-4.x.x<br>
+		 # ./configure --prefix=/home/my_home/php/<br>
+		 # make<br>
+		 # make install<br>
+	 </ol>
+	 <br>
+	That will install PHP in your home directory. If you wish to add <a href="www.mysql.com">MySQL</a> support,<br> 
+	you have to add the option --with-mysql to the configure command, or any other option that you may might want 
+	to enable.
+	<BR>
+	</ol>
+ <li><b> Adding the PHP libraries to the system :</b><br>	
+	<ol>
+		Now we must copy the PHP configuration file (php.ini-dist) located in the same directory
+		where the source code for Monkey is located to the direcotiry where we have just installed PHP and with the
+destination file name of "php.ini":<br>
+	<br>
+			<ol># cp php.ini-dist  /home/my_home/php/lib/php.ini</ol>
+	</ol>
+	
+	<ol>
+		The following steps must be executed has <b>root</b>.
+		Add this line at the end of  "/etc/ld.so.conf" :<BR>
+		<br>
+			<ol>/home/my_home/php/lib</ol>
+		<br>
+		Afterwards run the following command:<BR><BR>
+			<ol># ldconfig</ol>
+	</ol>
+	
+ <li><b>Reconfiguring monkey.conf :</b><br>
+	<ol>
+	Having installed PHP correctly, we must edit and reconfigure the monkey.conf file (conf/monkey.conf)<BR>
+	<br>
+	In the file, we must define the mime type and the interpreter to process the PHP files, so you must add the following line:
+	<br>
+	<br>
+ 	   <ol>AddScript application/x-httpd-php /home/my_home/php/bin/php php</ol>
+	<br>
+	With this defined, you can now process files with .php extentions. If
+	you wish to add more extentions so they can be looked at the PHP, you must add 
+	the same line we wrote above with more extentions.
+	</ol>
+	<CENTER>
+		Any problems or questions : 
+		<a href="mailto:edsiper@users.sf.net">
+			edsiper@users.sf.net
+		</a>. ;-)
+		<BR><BR>
+		Translated by <a href="mailto:unixoz@tux.cl"> Davidlohr Bueso</a>
+		and <a href="mailto:phumphreys@rm.com"> Pablo Humphreys</a>
+	</CENTER>
+</TD>
+</TR>
+</TABLE>
+</CENTER>
+<BR><BR>
+</BODY>
+</HTML>

@@ -1,0 +1,97 @@
+<HTML>
+<TITLE>Monkey HTTP Daemon</TITLE>
+<BODY bgcolor="#ffffff" text="#000000" link="#172354" vlink="#172354" alink="#172354">
+<br><br>
+<center>
+<img src="imgs/titulo.jpg">
+<BR><BR>
+<TABLE cellpadding="3" cellspacing="3" border="0" width="500">
+ <TR>
+  <TD width="120" valign="top">
+	<img src="imgs/logonooficial.jpg">
+  </TD>
+  <TD valign="top">
+	<BR><BR>
+	Monkey it's running in your system, smile and be happy :)
+	<BR><BR>
+	Contact me :
+	<a href=mailto:edsiper@users.sf.net>edsiper@users.sourceforge.net</a><br><br>  
+  </TD>
+ </TR>
+</TABLE>
+<BR>
+
+<TABLE cellpadding="0" cellspacing="0" border="0" width="450">
+<TR>
+ <TD width="50%" valign=top>
+	<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" BGCOLOR="#335470" VALIGN="top" WIDTH=200>
+		<TR>
+		    <TD>
+		      <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="1" BGCOLOR="#335470" VALIGN="top" HEIGHT="100%" WIDTH="100%">
+		        <TR>
+				  <TD ALIGN="center" BGCOLOR="#335470">
+					<b><font color=#ffffff>Documentation</font></b>
+				   </TD>
+				</TR>
+		      </TABLE>
+		    </TD>
+		  </TR>
+	</TABLE>
+	<TABLE cellpadding="2" cellspacing="2" border="0" width="200">
+	  <TR>
+	    <TD valign="top">
+		<li>&nbsp;<font color="#172354">Monkey + PHP</font> 
+			<BR>
+			<DIV align="left">
+			
+			<TABLE cellpadding="3" cellspacing="0" border="0" width="100%">
+			<TR><TD>
+			<font size="2">
+			[<a href="docs/monkey+php.en.html">English</a>]&nbsp;
+			[<a href="docs/monkey+php.es.html">Español</a>]&nbsp;
+			[<a href="docs/monkey+php.fr.html">French</a>]&nbsp;
+			[<a href="docs/monkey+php.pt-br.html">Português</a>]&nbsp;
+            [<a href="docs/monkey+php.pl.html">Polish (ISO-8859-2)</a>]&nbsp;
+            [<a href="docs/monkey+php.1337.html">--Funny 1337 :D</a>]&nbsp;
+			[<a href="docs/monkey+php.ru.html">Russian</a>]&nbsp;
+			[<a href="docs/monkey+php.sv.html">Swedish</a>]
+			<BR><BR>
+			<CENTER>
+				We need more translators!
+			</CENTER>
+			</font>
+			</TD></TR>
+			</TABLE>
+			</DIV>
+		</TD>
+ 	</TR>
+    </TABLE>
+ </TD>
+ 
+ <TD width="50%" valign="top">
+	<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" BGCOLOR="#335470" VALIGN="top" WIDTH=200>
+		<TR>
+		    <TD>
+		      <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="1" BGCOLOR="#335470" VALIGN="top" HEIGHT="100%" WIDTH="100%">
+		        <TR>
+				  <TD ALIGN="center" BGCOLOR="#335470">
+					<b><font color=#ffffff>Test of supports</font></b>
+				   </TD>
+				</TR>
+		      </TABLE>
+		    </TD>
+		  </TR>
+	</TABLE>
+    	<li>&nbsp; <a href="cgi-bin/test.pl"> CGI & Post Method</a>
+	<li>&nbsp; <a href="php/index.php">PHP: phpinfo();</a>
+	<li>&nbsp; <a href="imgs/">Browse Dir</a>
+  </TD>
+ </TR>
+</TABLE>
+
+<BR><BR>
+<b>Monkey Home</b>: <a href="http://monkeyd.sourceforge.net">http://monkeyd.sourceforge.net</a>
+<BR><BR>
+</CENTER>
+</BODY>
+</HTML>
