@@ -49,7 +49,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     const char *old_string_end = "\n\n";
     char *string_end=0, *check_normal_string=0, *check_old_string=0;
     char *block=0;
-    struct client_request *cr=0, *cr_buf=0, *cr_search=0;
+    struct request *cr_buf=0, *cr_search=0;
 
     check_normal_string = strstr(buf, normal_string_end);
     check_old_string = strstr(buf, old_string_end);
@@ -77,6 +77,8 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     }
     */
 
+    cr->body = buf;
+
     length_buf = strlen(buf);
     length_string_end = strlen(string_end);
 
@@ -95,16 +97,16 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             /* Allocating request block */
             block = m_copy_string(buf, init_block+offset, i);
 
-            cr_buf = M_malloc(sizeof(struct client_request));
-            cr_buf->request = block;
+            cr_buf = M_malloc(sizeof(struct request));
+            cr_buf->body = block;
             cr_buf->next = NULL;
 
-            if(!cr)
+            if(!cr->request)
             {
-                cr = cr_buf;
+                cr->request = cr_buf;
             }
             else{
-                cr_search = cr;
+                cr_search = cr->request;
                 while(cr_search)
                 {
                     if(cr_search->next==NULL)
@@ -133,7 +135,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         pipelining = TRUE;
 
         while(cr_search){
-            if(Get_method_from_request(cr_search->request)!=GET_METHOD)
+            if(Get_method_from_request(cr_search->body)!=GET_METHOD)
                 pipelining = FALSE;
 
             //printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
@@ -145,9 +147,9 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     printf("\n\n*** BLOCKS FOUND: %i", n_blocks);
     if(pipelining){
         printf("\nPIPELINING: TRUE\n");
-        cr_search = cr;
+        cr_search = cr->request;
         while(cr_search){
-            printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
+            printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->body);
             fflush(stdout);
             cr_search = cr_search->next;
         }
@@ -168,12 +170,11 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
 
     fflush(stdout);
     */
-    return cr;
+    return cr->request;
 }
 
-int Request_Main(struct request *s_request)
+int Request_Main(int socket)
 {
-
 	int num_bytes=0, recv_timeout, times=0, status=0, limit_time;
     int process_request = TRUE, length_remote_request;
     char *request_end = NULL;

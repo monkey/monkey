@@ -32,7 +32,7 @@ int local_fd;
 #define MAX_REQUEST_BODY 10240 /* Maximo buffer del request */
 #define BUFFER_SOCKET 4096 /* Maximo buffer de envio */
 
-#define MAX_PATH 1024 /* Largo máximo para rutas (archivos) */
+#define MAX_PATH 1024 /* Largo mï¿½ximo para rutas (archivos) */
 
 /* METODOS */
 #define GET_METHOD 	 (0)
@@ -103,7 +103,7 @@ gid_t EUID;
 
 #include "modules.h"
 
-void free_request(struct request *sr);
+void free_request(struct client_request *cr);
 
 #endif
 

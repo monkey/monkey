@@ -65,6 +65,7 @@ struct request {
 
 	int status;	/* Request Status, ON, OFF */
     int pipelined; /* Pipelined request */
+    char *body;
 
 	/*----First header of client request--*/
 	int method;
@@ -136,7 +137,7 @@ struct header_values {
 	char *location;
 };
 
-int	Request_Main(struct request *sr);
+int	Request_Main();
 int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
 char	*FindIndex(char *pathfile);

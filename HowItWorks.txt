@@ -5,7 +5,7 @@ Last Update : Initial version
 
 Note: I don't write or speak english very well :P .
 
-Here i hope to explain how monkey works. This isn't a set design, this
+Here I hope to explain how monkey works. This isn't a set design, this
 design has been changing with time and will continue to change :) .
 
 Sections

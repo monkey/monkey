@@ -70,69 +70,71 @@ void Help()
 	exit(0);
 }
 
-void free_request(struct request *sr){
-	
-	/* I hate it, but i don't know another light way :( */
-	if(sr){
-		if(sr->headers){
-			M_free(sr->headers->location);
-			M_free(sr->headers->last_modified);
-			/*
-				M_free(sr->headers->content_type);
-			
-				headers->content_type never it's allocated with malloc or something, so
-				we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
-				
-				this BUG was reported by gentoo team.. thanks guys XD
-			*/
-			M_free(sr->headers);
-		}
-		 
-		if(sr->log){
- 			M_free(sr->log->error_msg); 
-		 	M_free(sr->log);
-		}
+void free_request(struct client_request *cr){
+    struct request *sr;
 
-		M_free(sr->uri);
-		M_free(sr->uri_processed);
-
-		M_free(sr->accept);
-		M_free(sr->accept_language);
-		M_free(sr->accept_encoding);
-		M_free(sr->accept_charset);
-		M_free(sr->content_type);
-		M_free(sr->connection);
-		M_free(sr->cookies);
-		M_free(sr->host);
-		M_free(sr->if_modified_since);
-		M_free(sr->last_modified_since);
-		M_free(sr->range);
-		M_free(sr->referer);
-		M_free(sr->resume);
-		M_free(sr->user_agent);
-		M_free(sr->post_variables);
-		M_free(sr->temp_path);
-		
-		M_free(sr->server_signature);
-		
-		M_free(sr->user_uri);
-		M_free(sr->query_string);
-	
-		M_free(sr->virtual_user);
-		M_free(sr->script_filename);
-		M_free(sr->real_path);
-
-		M_free(sr);
-	}	
-	sr=NULL;
-	
+    sr = cr->request;
+    while(sr)
+    {
+	    /* I hate it, but I don't know another light way :( */
+	    if(sr){
+		    if(sr->headers){
+			    M_free(sr->headers->location);
+			    M_free(sr->headers->last_modified);
+			    /*
+				    M_free(sr->headers->content_type);
+			    
+				    headers->content_type never it's allocated with malloc or something, so
+				    we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
+				    
+				    this BUG was reported by gentoo team.. thanks guys XD
+			    */
+			    M_free(sr->headers);
+		    }
+		    
+		    if(sr->log){
+                M_free(sr->log->error_msg); 
+		        M_free(sr->log);
+		    }
+    
+		    M_free(sr->uri);
+		    M_free(sr->uri_processed);
+    
+		    M_free(sr->accept);
+		    M_free(sr->accept_language);
+		    M_free(sr->accept_encoding);
+		    M_free(sr->accept_charset);
+		    M_free(sr->content_type);
+		    M_free(sr->connection);
+		    M_free(sr->cookies);
+		    M_free(sr->host);
+		    M_free(sr->if_modified_since);
+		    M_free(sr->last_modified_since);
+		    M_free(sr->range);
+		    M_free(sr->referer);
+		    M_free(sr->resume);
+		    M_free(sr->user_agent);
+		    M_free(sr->post_variables);
+		    M_free(sr->temp_path);
+		    
+		    M_free(sr->server_signature);
+		    
+		    M_free(sr->user_uri);
+		    M_free(sr->query_string);
+	    
+		    M_free(sr->virtual_user);
+		    M_free(sr->script_filename);
+		    M_free(sr->real_path);
+    
+		    M_free(sr);
+	    }	
+	    sr=sr->next;
+	}
 }
 
 void *thread_init(void *args)
 {
-	int request_response=0, 
-		  counter_connections=0, 
-		  temp_socket;
+	int request_response=0, counter_connections=0, temp_socket;
 
 	struct process *th=0;
     struct request *r;
@@ -143,33 +145,25 @@ void *thread_init(void *args)
 
 	while(request_response==0){
 
-		free_request(th->sr);
+		free_request(th->cr);
 
 		/* Alloc memory */
-        th->cr = (struct request *) M_malloc(sizeof(struct client_request));
-
-		request_response = (int) Request_Main(th->sr); /* Working in request... */
-
-		counter_connections = th->sr->counter_connections;  /* Total of connections */
+		request_response = (int) Request_Main(temp_socket); /* Working in request... */
+		//counter_connections = th->sr->counter_connections;  /* Total of connections */
 		
-		/* Register request (logs) */
-		if(counter_connections<=1 && th->sr->method!=METHOD_NOT_FOUND && th->sr->make_log==VAR_ON){
-#ifdef MOD_MYSQL
-			mod_mysql_log_main(th->sr);
-#endif
-			SetEGID_BACK(); /* We need change user if i'm root */
-			log_main(th->sr); /* Log */ 
-			SetUIDGID();  /* Back to old user */
-		}
+        /* LOGS ARE BEEN DISABLED */
 		
+        /*
 		if(config->keep_alive==VAR_OFF || th->sr->keep_alive==VAR_OFF){
 			break;
 		}
+        */
 
-		/* Persistent connection: Exit */
+		/* Persistent connection: Exit 
 		if(counter_connections>=config->max_keep_alive_request || request_response==2 || request_response==-1){
 			break;
 		}
+        */
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
