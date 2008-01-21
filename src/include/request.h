@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 /* request.c */
 
-/* Estructura para manejo de nombres para index.* */
+/* Handle index file names: index.* */
 #define MAX_INDEX_NOMBRE 50
 struct indexfile {
 	char indexname[MAX_INDEX_NOMBRE];		
@@ -54,9 +54,17 @@ parametros de una peticion */
 #define EXIT_NORMAL -1
 #define EXIT_PCONNECTION 24
 
+struct client_request
+{
+    int pipelined; /* Pipelined request */
+    char *body; /* Original request sent */
+    struct request *request; /* Parsed request */
+};
+
 struct request {
 
 	int status;	/* Request Status, ON, OFF */
+    int pipelined; /* Pipelined request */
 
 	/*----First header of client request--*/
 	int method;
@@ -84,7 +92,7 @@ struct request {
 	char *post_variables;
 	/*-----------------*/
 
-	char *real_path; /* Path real al que se realiza la peticiòn */
+	char *real_path; /* Path real al que se realiza la peticiï¿½n */
 	char *temp_path; /* Variable temporal para trabajar con 
 						Virtualhost en request. */
 
@@ -101,7 +109,7 @@ struct request {
 	
 	int  keep_alive;	
 	int  counter_connections; /* Contador de conexiones persistentes */
-	int  user_home; /* ¿ Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
+	int  user_home; /* ï¿½ Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
 
 	/*-Connection-*/
 	int  port;
@@ -113,6 +121,7 @@ struct request {
 		
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */
+    struct request *next;
 };
 
 struct header_values {

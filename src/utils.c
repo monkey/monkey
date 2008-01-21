@@ -623,3 +623,23 @@ int Check_symlink(const char *path)
 
 	return SYML_NOT;	
 }
+
+char *get_end_position(char *buf)
+{
+    char *sl=0, *dsl=0;
+
+    sl = strstr(buf, "\r\n\r\n");
+    dsl = strstr(buf, "\n\n");
+
+    if(sl)
+    {
+        return sl;
+    }
+    else if(dsl)
+    {
+        return dsl;
+    }
+
+    return NULL;
+}
+

@@ -135,6 +135,7 @@ void *thread_init(void *args)
 		  temp_socket;
 
 	struct process *th=0;
+    struct request *r;
 
 	temp_socket = (int) args;
 
@@ -145,19 +146,7 @@ void *thread_init(void *args)
 		free_request(th->sr);
 
 		/* Alloc memory */
-		th->sr = (struct request *) M_malloc(sizeof(struct request));
-		th->sr->log= (struct log_info *) M_malloc(sizeof(struct log_info));
-		th->sr->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
-
-		th->sr->headers->content_type = NULL;
-		th->sr->headers->last_modified = NULL;
-		th->sr->headers->location = NULL;
-		
-		th->sr->socket=temp_socket; /* Descriptor */
-		th->sr->status=VAR_OFF; /* Request not processed yet */
-		th->sr->make_log=VAR_ON; /* build log file of this request ? */
-		th->sr->counter_connections=counter_connections; /* Counter of connections (total) */
-		th->sr->query_string=NULL;
+        th->cr = (struct request *) M_malloc(sizeof(struct client_request));
 
 		request_response = (int) Request_Main(th->sr); /* Working in request... */
 

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,15 +22,14 @@
 #define P_NORMAL_EXIT	0
 #define P_BROKEN_PIPE	1
 
-/* Struct to register info about thread childs (clients) */
+/* Struct to register info about the thread childs (clients) */
 struct process {
 	pthread_t	thread_pid;
 	int 	socket;
 	char *ip_client;
-	struct request *sr;
+	struct client_request *cr;
 	struct process *next;
 } *first_process;
 
 struct process *RegProc(pthread_t thread, int socket);
 int	FreeThread(pthread_t thread);
-

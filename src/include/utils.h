@@ -17,6 +17,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* Defining TRUE and FALSE */
+#define TRUE 1
+#define FALSE 0
+
 /* Tipo de envio de datos en fdprintf(...) */
 #define CHUNKED 0
 #define NO_CHUNKED 1
@@ -60,4 +64,5 @@ void M_free(void *ptr);
 #define SYML_ERR_FORBIDDEN 3
 
 int Check_symlink(const char *path);
+char *get_end_position(char *buf);
 

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,24 +40,148 @@
 #define MAX_TIMES 10000
 #define POST_TIMEOUT 10
 
+struct request *parse_client_request(struct client_request *cr, char *buf)
+{
+    int i, init_block=0, n_blocks=0, offset=0;
+    int length_buf, length_string_end;
+    int pipelining=FALSE;
+    const char *normal_string_end = "\r\n\r\n";
+    const char *old_string_end = "\n\n";
+    char *string_end=0, *check_normal_string=0, *check_old_string=0;
+    char *block=0;
+    struct client_request *cr=0, *cr_buf=0, *cr_search=0;
+
+    check_normal_string = strstr(buf, normal_string_end);
+    check_old_string = strstr(buf, old_string_end);
+    if(check_normal_string)
+    {
+        if(check_old_string)
+        {
+            return FALSE;
+        }
+        else
+        {
+            string_end = (char *)normal_string_end;
+        }
+    }
+    else if(check_old_string)
+    {
+            string_end = (char *)old_string_end;
+    }
+
+    /* DEBUG 
+    if(strcmp(string_end, "\r\n\r\n")==0)
+    {
+        printf("\n*** STRING_END: RNRN");
+        fflush(stdout);
+    }
+    */
+
+    length_buf = strlen(buf);
+    length_string_end = strlen(string_end);
+
+    for(i=0; i< length_buf ; i++)
+    {
+        if(strncmp(buf+i, string_end, length_string_end)==0)
+        {
+            if(n_blocks==0){
+                offset = 0;
+            }
+            else
+            {
+                offset = length_string_end;
+            }
+
+            /* Allocating request block */
+            block = m_copy_string(buf, init_block+offset, i);
+
+            cr_buf = M_malloc(sizeof(struct client_request));
+            cr_buf->request = block;
+            cr_buf->next = NULL;
+
+            if(!cr)
+            {
+                cr = cr_buf;
+            }
+            else{
+                cr_search = cr;
+                while(cr_search)
+                {
+                    if(cr_search->next==NULL)
+                    {
+                        cr_search->next = cr_buf;
+                        break;
+                    }
+                    else
+                    {
+                        cr_search = cr_search->next;
+                    }
+                }
+            }
+
+            init_block = i;
+            n_blocks++;
+            //printf("\n**** BLOCK ****:\n%s\n*** END BLOCK ***\n", block);
+            //fflush(stdout);
+        }
+    }
+
+
+    /* Checking pipelining connection */
+    if(n_blocks>1)
+    {
+        pipelining = TRUE;
+
+        while(cr_search){
+            if(Get_method_from_request(cr_search->request)!=GET_METHOD)
+                pipelining = FALSE;
+
+            //printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
+            //fflush(stdout);
+            cr_search = cr_search->next;
+        }
+    }
+
+    printf("\n\n*** BLOCKS FOUND: %i", n_blocks);
+    if(pipelining){
+        printf("\nPIPELINING: TRUE\n");
+        cr_search = cr;
+        while(cr_search){
+            printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
+            fflush(stdout);
+            cr_search = cr_search->next;
+        }
+    }
+    else{
+        printf("\n\nPIPELINING: FALSE");
+    }
+    fflush(stdout);
+
+    /* DEBUG 
+    printf("\n\n*** BLOCKS FOUND: %i\n\n", n_blocks);
+    cr_search = cr;
+    while(cr_search){
+        printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
+        fflush(stdout);
+        cr_search = cr_search->next;
+    }
+
+    fflush(stdout);
+    */
+    return cr;
+}
+
 int Request_Main(struct request *s_request)
 {
 
 	int num_bytes=0, recv_timeout, times=0, status=0, limit_time;
+    int process_request = TRUE, length_remote_request;
+    char *request_end = NULL;
 	static char remote_request[MAX_REQUEST_BODY];
 	struct vhost *vhost;
-		
+
 	/* Init values */
 	s_request->log->ip=PutIP(remote);
-	s_request->log->datetime=PutTime();
-	s_request->log->final_response=M_HTTP_OK;
-	s_request->log->status=S_LOG_ON;
-	s_request->status=VAR_ON;
-	s_request->method=METHOD_NOT_FOUND;
-	s_request->getdir = config->getdir;
-	
-	s_request->headers->range_values[0]=-1;
-	s_request->headers->range_values[1]=-1;
 	
 	if(s_request->counter_connections>0)
 		recv_timeout=config->keep_alive_timeout; 
@@ -66,7 +190,10 @@ int Request_Main(struct request *s_request)
 
 	memset(remote_request, '\0', sizeof(remote_request));
 	limit_time = (int) time(NULL) + recv_timeout;
-	
+
+    //printf("\n******************** NEW REQUEST *******************\n");
+    //fflush(stdout);
+
 	/* Getting Request */
 	do {		
 		times++;
@@ -79,13 +206,18 @@ int Request_Main(struct request *s_request)
 				return 2; /* Exit: timeout of persistent connection */
 			}
 			else{
-				Request_Error(M_CLIENT_REQUEST_TIMEOUT, s_request, 1, s_request->log);
+                printf("\nCONNECTION: GOT TIMEOUT");
+                fflush(stdout);
+				
+                Request_Error(M_CLIENT_REQUEST_TIMEOUT, s_request, 1, s_request->log);
 				return -1;
 			}
 		}
-		
+
 		/* Timeout ? */
 		if(num_bytes==-2){
+            printf("\nCONNECTION: GOT TIMEOUT");
+            fflush(stdout);
 			if(s_request->counter_connections > 0){ /* persistent connection ? */
 				return EXIT_PCONNECTION;    /* Exit : timeout of persistent connection */
 			}
@@ -116,14 +248,49 @@ int Request_Main(struct request *s_request)
 			if(Get_method_from_request(remote_request)==POST_METHOD)
 				recv_timeout=POST_TIMEOUT;
 		}
-	} while(!strstr(remote_request,"\r\n\r\n") && !strstr(remote_request,"\n\n") && times<RECV_MAX_TIMES);
+        printf("\nRECV/times: %i", times);
+        fflush(stdout);
+
+        request_end = get_end_position(remote_request);
+        if(s_request->counter_connections<=0){
+            if(request_end && times<RECV_MAX_TIMES)
+            {
+                process_request = FALSE;
+            }
+        }
+        else{
+            /* We need to detect if we have a Pipelined connection:
+            A pipelined connection means that more than 1 request are sent by 
+            the  client in the same TCP connection without wait for a response 
+            to every request sent until the server listen all requests and
+            when the last one arrives, it must send responses in the same order.
+            A keepalive connection is necessary to support this feature and a 
+            pipelining connection always comes in the second keepalive request
+            and all them use the GET method.
+            */
+            length_remote_request = strlen(remote_request);
+
+            if(strcmp(remote_request+(length_remote_request-4), "\r\n\r\n")==0)
+            {
+                check_pipelining_request(remote_request);
+                //printf("\n--- PIPELINING CONNECTION ---:\n%s--- END --- ", remote_request);
+                fflush(stdout);
+                break;
+            }
+            else if(remote_request+(length_remote_request-2) == "\n\n")
+            {
+                printf("\nNO: %s", remote_request+(length_remote_request-4));
+                fflush(stdout);
+            }
+        }
+	} while(process_request);
 
 	s_request = (struct request *) Request_Strip_Header(s_request, remote_request);
 
 	s_request->user_home=VAR_OFF;
 	s_request->temp_path = m_build_buffer(config->server_root);
 	s_request->counter_connections++;
-	
+
 	/* Empty Host (HTTP/1.0) */
 	if(!s_request->host){
 		s_request->host=m_build_buffer("%s", config->servername);
@@ -218,9 +385,9 @@ int Request_Main(struct request *s_request)
 		}
 	}
 
-	/* ¿ Peticion a un directorio de usuario ? */
-	if(strncmp(s_request->uri_processed, USER_HOME_STRING, strlen(USER_HOME_STRING))==0 &&
-		config->user_dir){
+	/* is requesting an user home directory ? */
+	if(strncmp(s_request->uri_processed, USER_HOME_STRING, 
+        strlen(USER_HOME_STRING))==0 && config->user_dir){
 		if(User_main(s_request)!=0)
 			return EXIT_NORMAL;
 	}
@@ -313,11 +480,11 @@ struct request *Request_Strip_Header(struct request *sr, char *request_body)
 	/* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
 		
-	/* Validando el Host */
+	/* Host */
 	if((strstr2(request_body, RH_HOST))!=NULL){
 		char *tmp = Request_Find_Variable(request_body, RH_HOST);
 		
-		/* El host es de la forma xxxxx:yy ???? */
+		/* is host formated something like xxxxx:yy ???? */
 		if(tmp!=NULL && strstr(tmp, ":") != NULL ){
 			int pos_sep=0;
 			char *port=0;
@@ -366,7 +533,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 	int pos_init_var=0, pos_end_var=0;
 	char *var_value=0;
 	
-	/* Existe *string en request_body ??? */	
+	/* looking for string on request_body ??? */	
 	if (strstr2(request_body, string) == NULL)
 		return NULL;
 
@@ -480,7 +647,7 @@ void Request_Error(int num_error, struct request *s_request, int debug, struct l
 		s_request->headers->content_type = m_build_buffer("text/html");
 
 	M_METHOD_send_headers(s_request->socket, s_request->headers, s_log);
-	
+
 	if(debug==1){
 		fdprintf(s_request->socket, NO_CHUNKED, "%s", page_default);
 		M_free(page_default);
@@ -544,4 +711,31 @@ int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
 	}
 	
 	return status;
+}
+
+/* Create a memory allocation in order to handle the request data */
+int alloc_request(struct request *request)
+{
+    request = (struct request *) M_malloc(sizeof(struct request));
+    request->log= (struct log_info *) M_malloc(sizeof(struct log_info));
+    request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
+    request->headers->content_type = NULL;
+    request->headers->last_modified = NULL;
+    request->headers->location = NULL;
+        
+    request->socket=temp_socket; /* Descriptor */
+    request->status=VAR_OFF; /* Request not processed yet */
+    request->make_log=VAR_ON; /* build log file of this request ? */
+    request->counter_connections=counter_connections; /* Counter of connections (total) */
+    request->query_string=NULL;
+
+    request->log->datetime=PutTime();
+    request->log->final_response=M_HTTP_OK;
+    request->log->status=S_LOG_ON;
+    request->status=VAR_ON;
+    request->method=METHOD_NOT_FOUND;
+    request->getdir = config->getdir;
+
+    request->headers->range_values[0]=-1;
+    request->headers->range_values[1]=-1;
 }
