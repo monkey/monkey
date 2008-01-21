@@ -18,7 +18,8 @@
  */
 
 /* dir_html.c */
-int  GetDir(struct request *sr, char *header_file, char *footer_file);
+int  GetDir(struct client_request *cr, struct request *sr, char *header_file, 
+                                                            char *footer_file);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 

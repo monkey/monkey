@@ -116,7 +116,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			if(sr->getdir==VAR_ON) {
 				int getdir_res = 0;
 
-				getdir_res = GetDir(sr, config->header_file, config->footer_file);
+				getdir_res = GetDir(cr, sr, config->header_file, config->footer_file);
 					
 				if(getdir_res == -1){
 					Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 
 /***********************************************/ 
-/* Modulo dir_html.c escrito por Daniel R. Ome */
+/* Modulo dir_html.c written by Daniel R. Ome */
 /***********************************************/
 
 #include <dirent.h>
@@ -40,7 +40,7 @@
 /* Longitud de la fecha y hora */
 #define  MAX_TIME			 17
 
-/* Longitud del tamaño */
+/* Longitud del tamaï¿½o */
 #define  MAX_SIZE			  6
 
 /* Incremento */
@@ -52,12 +52,12 @@
 /* Estructura de lista de archivos y directorios */
 struct f_list {
 	char	  path[MAX_PATH+1];			/* Ruta de acceso               */
-	char	  size[MAX_SIZE+1];			/* Tamaño del archivo           */
+	char	  size[MAX_SIZE+1];			/* Tamaï¿½o del archivo           */
 	char	  ft_modif[MAX_TIME+1];	  /* Fecha y hora de modificacion */
 };
 
 /* Ordenar cadenas de caracteres por el metodo SHELL */
-/* Código tomado del libro de Kernighan y Ritchie    */
+/* Cï¿½digo tomado del libro de Kernighan y Ritchie    */
 struct f_list *shell (struct f_list *b, int n)
 {
 	int				gap, i, j;
@@ -152,7 +152,7 @@ struct f_list *add_element(struct f_list *object, char *string,
 	/* Si object->count = 0 es */
 	/* el primer elemento      */
 
-	if ((*count) != 0){              /* Aumentar el tamaño del array */
+	if ((*count) != 0){              /* Aumentar el tamaï¿½o del array */
 		if ((*count) >= (*max)) {
 			bak = (struct f_list *) M_realloc(object, (GROW+(*max)) * sizeof(struct f_list));
 	
@@ -223,10 +223,14 @@ char *read_header_footer_file(char *file_path)
 }
  
 /* Send information of current directory on HTML format
+   Modified : 2007/01/21
+   -> Add struct client_request support
+
    Modified : 2002/10/22 
    -> Chunked Transfer Encoding support added to HTTP/1.1
 */
-int GetDir(struct request *sr, char *header_file, char *footer_file)
+int GetDir(struct client_request *cr, struct request *sr, char *header_file, 
+                                                          char *footer_file)
 {
 	DIR *dir;
 	struct dirent *ent;
@@ -292,17 +296,17 @@ int GetDir(struct request *sr, char *header_file, char *footer_file)
 	hd.content_type = m_build_buffer("text/html");
 	hd.location = NULL;
 	hd.cgi = SH_CGI;
-	hd.pconnections_left = config->max_keep_alive_request - sr->counter_connections;
+	hd.pconnections_left = config->max_keep_alive_request - cr->counter_connections;
 
 	if(sr->protocol==HTTP_11){
 		transfer_type=CHUNKED;
-		M_METHOD_send_headers(sr->socket, &hd, sr->log);
-		fdprintf(sr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
+		M_METHOD_send_headers(cr->socket, &hd, sr->log);
+		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
 	}
 	else{
 		transfer_type=NO_CHUNKED;
-		M_METHOD_send_headers(sr->socket, &hd, sr->log);
-		fdprintf(sr->socket, transfer_type, "\r\n");
+		M_METHOD_send_headers(cr->socket, &hd, sr->log);
+		fdprintf(cr->socket, transfer_type, "\r\n");
 	}
 	M_free(hd.content_type);
 
@@ -358,10 +362,10 @@ int GetDir(struct request *sr, char *header_file, char *footer_file)
 	
 	content_buffer = m_build_buffer_from_buffer(content_buffer,"<ADDRESS>%s</ADDRESS></BODY></HTML>\r\n\r\n", sr->server_signature);
 
-	fdprintf(sr->socket, transfer_type, "%s", content_buffer);
+	fdprintf(cr->socket, transfer_type, "%s", content_buffer);
 
 	if(transfer_type==CHUNKED)
-		fdprintf(sr->socket, CHUNKED, "");
+		fdprintf(cr->socket, CHUNKED, "");
 		
 	M_free(file_list);
 	M_free(buffer);
