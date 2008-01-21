@@ -57,7 +57,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		method_value=1;
 
 	if(stat(sr->real_path, &checkpath)==-1){
-		Request_Error(M_CLIENT_NOT_FOUND, sr, method_value, sr->log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, method_value, sr->log);
 		return -1;
 	}
 
@@ -65,7 +65,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	if(Check_symlink(sr->real_path)==0){
 		if(config->symlink==VAR_OFF){
 			sr->log->final_response=M_CLIENT_FORBIDDEN;
-			Request_Error(M_CLIENT_FORBIDDEN, sr, method_value, sr->log);
+			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, method_value, sr->log);
 			return -1;
 		}		
 		else{
@@ -73,7 +73,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			readlink(sr->real_path, linked_file, MAX_PATH);
 			if(Deny_Check(linked_file)==-1) {
 				sr->log->final_response=M_CLIENT_FORBIDDEN;
-				Request_Error(M_CLIENT_FORBIDDEN, sr, method_value, sr->log);
+				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, method_value, sr->log);
 				return -1;
 			}
 		}			
@@ -119,13 +119,13 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 				getdir_res = GetDir(sr, config->header_file, config->footer_file);
 					
 				if(getdir_res == -1){
-					Request_Error(M_CLIENT_FORBIDDEN, sr, 1, sr->log);
+					Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 					return -1;
 				}
 				return 0;
 			}
 			else {
-				Request_Error(M_CLIENT_FORBIDDEN, sr, 1, sr->log);
+				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 				return -1;
 			}
 		}
@@ -136,13 +136,13 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 
 	/* ¿Existe archivo? */
 	if(access(sr->real_path,F_OK)!=0){
-		Request_Error(M_CLIENT_NOT_FOUND, sr, 1, sr->log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		return -1;	
 	}
 
 	/* Permisos de lectura */
 	if(AccessFile(sr->real_path)!=0){
-		Request_Error(M_CLIENT_FORBIDDEN, sr, 1, sr->log);
+		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 		return -1;	
 	}
 		
@@ -157,7 +157,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			
 				/* ¿ Es un archivo regular ? */
 				if(CheckFile(mime_info[1])!=0){
-					Request_Error(M_SERVER_INTERNAL_ERROR, sr, 1, sr->log);
+					Request_Error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
 					Mimetype_free(mime_info);
 					return -1;
 				}
@@ -189,7 +189,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 				};	
 
 				if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-					Request_Error(sr->log->final_response, sr, 1, sr->log);	
+					Request_Error(sr->log->final_response, cr, sr, 1, sr->log);	
 				}
 
 				Mimetype_free(mime_info);
@@ -198,7 +198,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	}
 	/* Rescatando largo del archivo */
 	if(stat(sr->real_path,&statfile) < 0) {
-		Request_Error(M_CLIENT_NOT_FOUND, sr, 1, sr->log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		Mimetype_free(mime_info);
 		return -1;
 	}
@@ -261,7 +261,8 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 }
 
 /* POST METHOD */
-int M_METHOD_Post(struct request *s_request, char *request_body)
+int M_METHOD_Post(struct client_request *cr, 
+                                struct request *s_request, char *request_body)
 {
 	char *tmp;
 	char *post_buffer;
@@ -269,7 +270,7 @@ int M_METHOD_Post(struct request *s_request, char *request_body)
 	int i=0, content_length_post=0;
 	
 	if(!(tmp=Request_Find_Variable(request_body, RH_CONTENT_LENGTH))){
-		Request_Error(M_CLIENT_LENGHT_REQUIRED, s_request,0,s_request->log);
+		Request_Error(M_CLIENT_LENGHT_REQUIRED, cr, s_request,0,s_request->log);
 		return -1;
 	}
 	
@@ -277,12 +278,12 @@ int M_METHOD_Post(struct request *s_request, char *request_body)
 	M_free(tmp);
 
 	if(content_length_post<=0 || content_length_post >=MAX_REQUEST_BODY){
-		Request_Error(M_CLIENT_BAD_REQUEST ,s_request, 0, s_request->log);	
+		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);	
 		return -1;
 	}
 	
 	if(!(tmp = Request_Find_Variable(request_body, RH_CONTENT_TYPE))){
-		Request_Error(M_CLIENT_BAD_REQUEST, s_request, 0, s_request->log);
+		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);
 		return -1;
 	}
 	

@@ -210,7 +210,8 @@ int Request_Main(struct client_request *cr)
                 printf("\nCONNECTION: GOT TIMEOUT");
                 fflush(stdout);
 				
-                Request_Error(M_CLIENT_REQUEST_TIMEOUT, s_request, 1, s_request->log);
+                Request_Error(M_CLIENT_REQUEST_TIMEOUT, cr, 
+                                                s_request, 1, s_request->log);
 				return -1;
 			}
 		}
@@ -224,7 +225,8 @@ int Request_Main(struct client_request *cr)
 			}
 			else{
 				if(recv_timeout==config->timeout){
-					Request_Error(M_CLIENT_REQUEST_TIMEOUT, s_request, 1,s_request->log);
+					Request_Error(M_CLIENT_REQUEST_TIMEOUT, cr, 
+                                                s_request, 1,s_request->log);
 					return EXIT_NORMAL; /* Exit: Normal timeout */
 				}
 				else
@@ -243,7 +245,8 @@ int Request_Main(struct client_request *cr)
 				if(remote_request[i]==' ') count++;
 			}
 			if(count<2){
-				Request_Error(M_CLIENT_BAD_REQUEST, s_request,1,s_request->log);
+				Request_Error(M_CLIENT_BAD_REQUEST, cr, 
+                                                    s_request,1,s_request->log);
 				return EXIT_NORMAL;
 			}
 			if(Get_method_from_request(remote_request)==POST_METHOD)
@@ -309,21 +312,21 @@ int Request_Main(struct client_request *cr)
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
-		Request_Error(M_CLIENT_BAD_REQUEST, s_request,1,s_request->log);
+		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, s_request->log);
 		return EXIT_NORMAL;
 	}	
 	
 	/*  URL it's Allowed ? */
 	if(Deny_Check(s_request->uri_processed)==-1 || Deny_Check(s_request->query_string)) {
 		s_request->log->final_response=M_CLIENT_FORBIDDEN;
-		Request_Error(M_CLIENT_FORBIDDEN, s_request,1,s_request->log);
+		Request_Error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 	
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host && s_request->protocol==HTTP_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
-		Request_Error(M_CLIENT_BAD_REQUEST, s_request,1,s_request->log);
+		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -337,14 +340,14 @@ int Request_Main(struct client_request *cr)
 	/* Method not allowed ? */
 	if(s_request->method==METHOD_NOT_ALLOWED){
 		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-		Request_Error(M_CLIENT_METHOD_NOT_ALLOWED, s_request,1,s_request->log);
+		Request_Error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 
 	/* Validating protocol version */
 	if(!strstr(PROTOCOLS, get_name_protocol(s_request->protocol))) {
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
-		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, s_request,1,s_request->log);
+		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -380,7 +383,7 @@ int Request_Main(struct client_request *cr)
 				-3 : Internal Server Error
 			*/
 			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-				Request_Error(s_request->log->final_response, s_request, 1, s_request->log);	
+				Request_Error(s_request->log->final_response, cr, s_request, 1, s_request->log);	
 			}
 			return cgi_status;
 		}
@@ -399,7 +402,7 @@ int Request_Main(struct client_request *cr)
 	}
 	else {
 		if(s_request->method==POST_METHOD){
-			if((status=M_METHOD_Post(s_request, remote_request))==-1){
+			if((status=M_METHOD_Post(cr, s_request, remote_request))==-1){
 				M_free(s_request->post_variables);
 				return status;
 			}
@@ -579,7 +582,8 @@ char *FindIndex(char *pathfile)
 }
 
 /* Send error responses */
-void Request_Error(int num_error, struct request *s_request, int debug, struct log_info *s_log)
+void Request_Error(int num_error, struct client_request *cr, 
+                   struct request *s_request, int debug, struct log_info *s_log)
 {
 	char *page_default=0, *aux_message=0;
 			
@@ -647,13 +651,12 @@ void Request_Error(int num_error, struct request *s_request, int debug, struct l
 	else
 		s_request->headers->content_type = m_build_buffer("text/html");
 
-	M_METHOD_send_headers(s_request->socket, s_request->headers, s_log);
+	M_METHOD_send_headers(cr->socket, s_request->headers, s_log);
 
 	if(debug==1){
-		fdprintf(s_request->socket, NO_CHUNKED, "%s", page_default);
+		fdprintf(cr->socket, NO_CHUNKED, "%s", page_default);
 		M_free(page_default);
 	}
-
 }
 
 /* Build error page */
@@ -730,7 +733,6 @@ struct request *alloc_request()
         
     request->status=VAR_OFF; /* Request not processed yet */
     request->make_log=VAR_ON; /* build log file of this request ? */
-    request->counter_connections=counter_connections; /* Counter of connections (total) */
     request->query_string=NULL;
 
     request->log->datetime=PutTime();
