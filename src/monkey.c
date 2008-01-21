@@ -134,21 +134,26 @@ void free_request(struct client_request *cr){
 
 void *thread_init(void *args)
 {
-	int request_response=0, counter_connections=0, temp_socket;
+	int request_response=0, counter_connections=0, socket;
 
 	struct process *th=0;
     struct request *r;
 
-	temp_socket = (int) args;
+    socket = (int) args;
 
-	th = (struct  process *) RegProc(pthread_self(), temp_socket);
+	th = (struct  process *) RegProc(pthread_self(), socket);
+    th->cr = M_malloc(sizeof(struct client_request));
+    th->cr->pipelined = FALSE;
+    th->cr->counter_connections = 0;
+    th->cr->socket = socket;
+    th->cr->request = alloc_request();
 
 	while(request_response==0){
 
 		free_request(th->cr);
 
 		/* Alloc memory */
-		request_response = (int) Request_Main(temp_socket); /* Working in request... */
+		request_response = (int) Request_Main(th->cr); /* Working in request... */
 		//counter_connections = th->sr->counter_connections;  /* Total of connections */
 		
         /* LOGS ARE BEEN DISABLED */
@@ -271,7 +276,7 @@ int main(int argc, char **argv)
 			close(remote_fd);
 			continue;
 		}
-		
+
 		/*
 			Limit of maximum of connections from same IP address :
  		   This routine check every node of struct with a counter checking

@@ -173,18 +173,18 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     return cr->request;
 }
 
-int Request_Main(int socket)
+int Request_Main(struct client_request *cr)
 {
 	int num_bytes=0, recv_timeout, times=0, status=0, limit_time;
     int process_request = TRUE, length_remote_request;
     char *request_end = NULL;
 	static char remote_request[MAX_REQUEST_BODY];
 	struct vhost *vhost;
+    struct request *s_request;
 
-	/* Init values */
-	s_request->log->ip=PutIP(remote);
-	
-	if(s_request->counter_connections>0)
+	s_request = cr->request;
+
+	if(cr->counter_connections>0)
 		recv_timeout=config->keep_alive_timeout; 
 	else
 		recv_timeout=config->timeout;
@@ -199,11 +199,11 @@ int Request_Main(int socket)
 	do {		
 		times++;
 
-		num_bytes=Socket_Timeout(s_request->socket, remote_request+strlen(remote_request), \
+		num_bytes=Socket_Timeout(cr->socket, remote_request+strlen(remote_request), \
 								MAX_REQUEST_BODY - strlen(remote_request) - 1, recv_timeout, ST_RECV);
 
 		if((int) time(NULL) >= limit_time) {
-			if(s_request->counter_connections>0){
+			if(cr->counter_connections>0){
 				return 2; /* Exit: timeout of persistent connection */
 			}
 			else{
@@ -219,7 +219,7 @@ int Request_Main(int socket)
 		if(num_bytes==-2){
             printf("\nCONNECTION: GOT TIMEOUT");
             fflush(stdout);
-			if(s_request->counter_connections > 0){ /* persistent connection ? */
+			if(cr->counter_connections > 0){ /* persistent connection ? */
 				return EXIT_PCONNECTION;    /* Exit : timeout of persistent connection */
 			}
 			else{
@@ -253,7 +253,7 @@ int Request_Main(int socket)
         fflush(stdout);
 
         request_end = get_end_position(remote_request);
-        if(s_request->counter_connections<=0){
+        if(cr->counter_connections<=0){
             if(request_end && times<RECV_MAX_TIMES)
             {
                 process_request = FALSE;
@@ -290,7 +290,7 @@ int Request_Main(int socket)
 
 	s_request->user_home=VAR_OFF;
 	s_request->temp_path = m_build_buffer(config->server_root);
-	s_request->counter_connections++;
+	cr->counter_connections++;
 
 	/* Empty Host (HTTP/1.0) */
 	if(!s_request->host){
@@ -395,7 +395,7 @@ int Request_Main(int socket)
 
 	/* Verificacion del Metodo */
 	if(s_request->method==GET_METHOD || s_request->method==HEAD_METHOD){
-			status=M_METHOD_Get_and_Head(s_request);
+			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 	}
 	else {
 		if(s_request->method==POST_METHOD){
@@ -403,7 +403,7 @@ int Request_Main(int socket)
 				M_free(s_request->post_variables);
 				return status;
 			}
-			status=M_METHOD_Get_and_Head(s_request);
+			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 		}
 	}
 
@@ -715,16 +715,19 @@ int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
 }
 
 /* Create a memory allocation in order to handle the request data */
-int alloc_request(struct request *request)
+struct request *alloc_request()
 {
+    struct request *request=0;
+
     request = (struct request *) M_malloc(sizeof(struct request));
     request->log= (struct log_info *) M_malloc(sizeof(struct log_info));
+    //request->log->ip=PutIP(remote);
+
     request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
     request->headers->location = NULL;
         
-    request->socket=temp_socket; /* Descriptor */
     request->status=VAR_OFF; /* Request not processed yet */
     request->make_log=VAR_ON; /* build log file of this request ? */
     request->counter_connections=counter_connections; /* Counter of connections (total) */
@@ -739,4 +742,6 @@ int alloc_request(struct request *request)
 
     request->headers->range_values[0]=-1;
     request->headers->range_values[1]=-1;
+
+    return (struct request *) request;
 }

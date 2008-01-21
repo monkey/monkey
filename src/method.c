@@ -31,9 +31,14 @@
 #include "monkey.h"
 
 /* Get & Head Method */
-int M_METHOD_Get_and_Head(struct request *sr)
+int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr, 
+                                                             int socket)
 {
-	/* *sr = struct request */
+	/* 
+        cr = client request
+        sr = struct request 
+    */
+
 	int method_value=0;
 	char *location=0, *real_location=0; /* ruta para redireccion */
 	char **mime_info;
@@ -94,9 +99,9 @@ int M_METHOD_Get_and_Head(struct request *sr)
 			sr->headers->content_type = NULL;
 			sr->headers->location = real_location;
 			sr->headers->cgi = SH_NOCGI;
-			sr->headers->pconnections_left = config->max_keep_alive_request - sr->counter_connections;
+			sr->headers->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
 
-			M_METHOD_send_headers(sr->socket, sr->headers, sr->log);
+			M_METHOD_send_headers(socket, sr->headers, sr->log);
 
 			M_free(location);
 			M_free(real_location);
@@ -199,7 +204,7 @@ int M_METHOD_Get_and_Head(struct request *sr)
 	}
 	
 	/* Fue enviado if_modified_since por el cliente ? */
-	sr->headers->pconnections_left = config->max_keep_alive_request - sr->counter_connections;
+	sr->headers->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
 	if(sr->if_modified_since && sr->method==GET_METHOD){
 
 		time_t date_client; // Date send by client
@@ -213,7 +218,7 @@ int M_METHOD_Get_and_Head(struct request *sr)
 		
 		if( (date_file_server <= date_client) && (date_client > 0) ){
 			sr->headers->status = M_NOT_MODIFIED;
-			M_METHOD_send_headers(sr->socket, sr->headers, sr->log);	
+			M_METHOD_send_headers(socket, sr->headers, sr->log);	
 			Mimetype_free(mime_info);
 			return 0;
 		}
@@ -238,7 +243,7 @@ int M_METHOD_Get_and_Head(struct request *sr)
 	else{ /* Sin content-type */
 		sr->headers->content_type = NULL;
 	}
-	M_METHOD_send_headers(sr->socket, sr->headers, sr->log);
+	M_METHOD_send_headers(socket, sr->headers, sr->log);
 
 	if(sr->headers->content_length==0){
 		Mimetype_free(mime_info);
@@ -246,7 +251,7 @@ int M_METHOD_Get_and_Head(struct request *sr)
 	}
 	/* Enviando archivo */
 	if((sr->method==GET_METHOD || sr->method==POST_METHOD) && statfile.st_size>0)
-		SendFile(sr->socket, sr->real_path, sr->headers->range_values);
+		SendFile(socket, sr->real_path, sr->headers->range_values);
 
 	Mimetype_free(mime_info);
 

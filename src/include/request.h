@@ -57,6 +57,8 @@ parametros de una peticion */
 struct client_request
 {
     int pipelined; /* Pipelined request */
+    int socket;
+    int  counter_connections; /* Count persistent connections */
     char *body; /* Original request sent */
     struct request *request; /* Parsed request */
 };
@@ -109,12 +111,10 @@ struct request {
 	int  getdir; 
 	
 	int  keep_alive;	
-	int  counter_connections; /* Contador de conexiones persistentes */
 	int  user_home; /* � Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
 
 	/*-Connection-*/
 	int  port;
-	int  socket;
 	/*------------*/
 	
 	int make_log;
@@ -137,7 +137,7 @@ struct header_values {
 	char *location;
 };
 
-int	Request_Main();
+int Request_Main(struct client_request *s_request);
 int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
 char	*FindIndex(char *pathfile);
@@ -145,3 +145,5 @@ char	*Set_Page_Default(char *title,  char *message, char *signature);
 char	*Request_Find_Variable(char *request_body, char *string);
 void	Request_Error(int num_error, struct request *s_request, int debug, struct log_info *s_log);
 struct request	*Request_Strip_Header(struct request *sr, char *request_body);
+struct request *alloc_request();
+
