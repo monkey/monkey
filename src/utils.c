@@ -643,3 +643,8 @@ char *get_end_position(char *buf)
     return NULL;
 }
 
+void DEBUG(char *buf)
+{
+    printf("\n*** [DEBUG] %s\n", (char *) buf);
+    fflush(stdout);
+}

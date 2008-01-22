@@ -306,6 +306,9 @@ int main(int argc, char **argv)
 			continue;
 
   		/* A New thread will be working in the new connection */
+        printf("\nCREATING NEW THREAD, SOCKET: %i", remote_fd);
+        fflush(stdout);
+
 		if(pthread_create(&tid, &thread_attr, thread_init, (void *) remote_fd)!=0){
 			perror("pthread_create");
 			close(remote_fd);

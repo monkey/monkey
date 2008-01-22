@@ -192,8 +192,8 @@ int Request_Main(struct client_request *cr)
 	memset(remote_request, '\0', sizeof(remote_request));
 	limit_time = (int) time(NULL) + recv_timeout;
 
-    //printf("\n******************** NEW REQUEST *******************\n");
-    //fflush(stdout);
+    printf("\n******************** NEW REQUEST *******************\n");
+    fflush(stdout);
 
 	/* Getting Request */
 	do {		
@@ -201,6 +201,9 @@ int Request_Main(struct client_request *cr)
 
 		num_bytes=Socket_Timeout(cr->socket, remote_request+strlen(remote_request), \
 								MAX_REQUEST_BODY - strlen(remote_request) - 1, recv_timeout, ST_RECV);
+
+        printf("\nNBYTES: %i\n%s", num_bytes, remote_request);
+        fflush(stdout);
 
 		if((int) time(NULL) >= limit_time) {
 			if(cr->counter_connections>0){
@@ -256,13 +259,14 @@ int Request_Main(struct client_request *cr)
         fflush(stdout);
 
         request_end = get_end_position(remote_request);
-        if(cr->counter_connections<=0){
-            if(request_end && times<RECV_MAX_TIMES)
-            {
-                process_request = FALSE;
-            }
+        if(!request_end){
+            printf("\nREQUEST END IS NULL");
+            fflush(stdout);
         }
-        else{
+
+        if(request_end && times<RECV_MAX_TIMES)
+        {
+            process_request = FALSE;
             /* We need to detect if we have a Pipelined connection:
             A pipelined connection means that more than 1 request are sent by 
             the  client in the same TCP connection without wait for a response 
@@ -276,6 +280,7 @@ int Request_Main(struct client_request *cr)
 
             if(strcmp(remote_request+(length_remote_request-4), "\r\n\r\n")==0)
             {
+                DEBUG("GOING TO PARSE CLIENT REQUEST");
                 parse_client_request(cr, remote_request);
                 //printf("\n--- PIPELINING CONNECTION ---:\n%s--- END --- ", remote_request);
                 fflush(stdout);
