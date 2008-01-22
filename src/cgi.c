@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 #include "monkey.h"
 
 /* Main function to normal CGI scripts */
-int M_CGI_main(struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
+int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
 {
 	int cgi_status=0, checkdir;
 
@@ -42,24 +42,24 @@ int M_CGI_main(struct request *sr, struct log_info *s_log, char remote_request[M
 	checkdir=CheckDir(sr->script_filename);
 
 	if(access(sr->script_filename,F_OK)!=0){
-		Request_Error(M_CLIENT_NOT_FOUND, sr, 1, s_log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, s_log);
 		return -1;
 	}
 	else if(AccessFile(sr->script_filename)!=0 ||  checkdir==0){
-		Request_Error(M_CLIENT_FORBIDDEN, sr, 1, s_log);
+		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
 		return -1;
 	}
 
 	if(ExecFile(sr->script_filename)!=0){
-		Request_Error(M_CLIENT_FORBIDDEN, sr, 1, s_log);
+		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
 		return -1;
 	}
 
 	if(sr->method==POST_METHOD){
-		M_METHOD_Post(sr, remote_request);
+		M_METHOD_Post(cr, sr, remote_request);
 	}
 	
-	cgi_status=M_CGI_run(sr,sr->script_filename, NULL);
+	cgi_status=M_CGI_run(cr, sr,sr->script_filename, NULL);
 	
 	switch(cgi_status){
 			case M_CGI_TIMEOUT:
@@ -101,7 +101,7 @@ char *M_CGI_alias(char *path, char *query, char *newstring )
 }
 
 /* Running CGI script */
-int M_CGI_run(struct request *sr, char *script_filename, char **args)
+int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filename, char **args)
 {
 	int return_status=0;
 	int pipe_fd[2];
@@ -151,8 +151,8 @@ int M_CGI_run(struct request *sr, char *script_filename, char **args)
 		close(pipe_write[1]);
 		
 		close(pipe_fd[1]);
-		return_status=M_CGI_send(sr->socket, pipe_fd[0], sr->log, 
-			config->max_keep_alive_request - sr->counter_connections, sr->protocol);
+		return_status=M_CGI_send(cr->socket, pipe_fd[0], sr->log, 
+			config->max_keep_alive_request - cr->counter_connections, sr->protocol);
 			
 		close(pipe_fd[0]);
 		while(waitpid(pid,NULL,0)>0);

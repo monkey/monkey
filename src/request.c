@@ -376,7 +376,7 @@ int Request_Main(struct client_request *cr)
 		len = strlen(config->server_scriptalias[0]);
 		if((strncmp(config->server_scriptalias[0], s_request->uri_processed, len))==0){
 			int cgi_status;
-			cgi_status=M_CGI_main(s_request, s_request->log, remote_request);
+			cgi_status=M_CGI_main(cr, s_request, s_request->log, remote_request);
 			/* Codes:
 				-1 : Fallo de permisos
 				-2 : Timeout

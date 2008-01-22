@@ -170,7 +170,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 				arg_script[2] = NULL;
 
 				if(sr->method==GET_METHOD || sr->method==POST_METHOD)
-						cgi_status=M_CGI_run(sr, mime_info[1], arg_script);
+						cgi_status=M_CGI_run(cr, sr, mime_info[1], arg_script);
 			
 				switch(cgi_status){
 					case -2:	/* Timeout */
