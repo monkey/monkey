@@ -18,7 +18,7 @@
  */
 
 /* user.c */
-int	User_main(struct request *sr); /* struct request */
+int	User_main(struct client_request *cr, struct request *sr);/* struct request */
 int	SetUIDGID();
 int	SetEGID_BACK();
 

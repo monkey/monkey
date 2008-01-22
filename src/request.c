@@ -392,7 +392,7 @@ int Request_Main(struct client_request *cr)
 	/* is requesting an user home directory ? */
 	if(strncmp(s_request->uri_processed, USER_HOME_STRING, 
         strlen(USER_HOME_STRING))==0 && config->user_dir){
-		if(User_main(s_request)!=0)
+		if(User_main(cr, s_request)!=0)
 			return EXIT_NORMAL;
 	}
 

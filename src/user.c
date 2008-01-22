@@ -27,7 +27,7 @@
 
 #include "monkey.h"
 
-int User_main(struct request *sr)
+int User_main(struct client_request *cr, struct request *sr)
 {
 	int limit, offset;
 	char *user=0, *user_server_root=0;
@@ -52,7 +52,7 @@ int User_main(struct request *sr)
 
 	if((s_user=getpwnam(user))==NULL){
 		M_free(user);
-		Request_Error(404,sr,1,sr->log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr,1,sr->log);
 		return -1;
 	}
 	M_free(user);
