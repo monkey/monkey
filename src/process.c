@@ -37,7 +37,7 @@ struct process *RegProc(pthread_t thread, int socket)
 	proc->thread_pid=(pthread_t) thread;
 	proc->ip_client = PutIP(socket);
 	proc->socket = socket;
-	proc->sr = NULL;
+	proc->cr = NULL;
 	proc->next=NULL;
 	
 	fflush(stdout);
@@ -68,7 +68,7 @@ int FreeThread(pthread_t thread)
 	while(aux!=NULL){
 		if(pthread_equal(aux->thread_pid, thread)!=0){
 			close(aux->socket);
-			free_request(aux->sr);
+			free_request(aux->cr);
 			if(first_process==aux){
 				first_process=first_process->next;
 				M_free(aux);

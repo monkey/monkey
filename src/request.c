@@ -276,7 +276,7 @@ int Request_Main(struct client_request *cr)
 
             if(strcmp(remote_request+(length_remote_request-4), "\r\n\r\n")==0)
             {
-                check_pipelining_request(remote_request);
+                parse_client_request(cr, remote_request);
                 //printf("\n--- PIPELINING CONNECTION ---:\n%s--- END --- ", remote_request);
                 fflush(stdout);
                 break;
