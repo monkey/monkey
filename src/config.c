@@ -155,7 +155,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 					auxarg=strtok_r(NULL,"\"\t ", &last);
 			}
 		}
-		
+
 		/* Script_Alias del server */
 		if(strcasecmp(variable,"Server_ScriptAlias")==0) {
 			if(!value) M_Config_print_error_msg("Script_Alias", path);
@@ -268,9 +268,9 @@ void M_Config_print_error_msg(char *variable, char *path)
 /* Agrega distintos index.xxx */
 void M_Config_add_index(char *indexname)
 {
-	struct indexfile *new_index, *aux_index;
+	struct indexfile *new_index=0, *aux_index;
 
-	new_index=malloc(sizeof(struct indexfile));
+	new_index = (struct indexfile *) malloc(sizeof(struct indexfile));
 	strncpy(new_index->indexname,indexname,MAX_INDEX_NOMBRE - 1);
 	new_index->indexname[MAX_INDEX_NOMBRE - 1]='\0';
 	new_index->next=NULL; 
@@ -305,7 +305,7 @@ void M_Config_set_init_values(void)
 	config->symlink=VAR_OFF;
 }
 
-/* Lee la configuración principal desde monkey.conf */
+/* Lee la configuraciï¿½n principal desde monkey.conf */
 void M_Config_start_configure(void)
 {
 
@@ -314,7 +314,7 @@ void M_Config_start_configure(void)
     M_Config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
 
     /* Si no fueron definidas variables 
-    INDEX, se asume index.html por omisión */
+    INDEX, se asume index.html por omisiï¿½n */
     if(first_index==NULL) 
     	M_Config_add_index("index.html");			
 
@@ -324,7 +324,7 @@ void M_Config_start_configure(void)
 	/* Carga directorios e IP's a denegar */
     Deny_Read_Config(); 
 
-    /* Información básica del server */
+    /* Informaciï¿½n bï¿½sica del server */
     if(config->hideversion==VAR_OFF)
 		config->server_software = m_build_buffer("Monkey/%s (%s)",VERSION,OS);
     else

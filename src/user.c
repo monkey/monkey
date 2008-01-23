@@ -46,9 +46,7 @@ int User_main(struct client_request *cr, struct request *sr)
 	user[limit]='\0';
 	
 	if(sr->uri[offset+limit]=='/')
-		sr->user_uri=m_build_buffer("%s", sr->uri_processed+offset+limit);
-	else
-		sr->user_uri=NULL;
+		sr->user_uri = m_build_buffer("%s", sr->uri_processed+offset+limit);
 
 	if((s_user=getpwnam(user))==NULL){
 		M_free(user);
@@ -60,7 +58,7 @@ int User_main(struct client_request *cr, struct request *sr)
 	user_server_root=m_build_buffer("%s/%s",s_user->pw_dir, config->user_dir);
 
 	if(sr->user_uri!=NULL)
-		sr->real_path=m_build_buffer("%s%s",user_server_root,sr->user_uri);
+		sr->real_path=m_build_buffer("%s%s",user_server_root, sr->user_uri);
 	else
 		sr->real_path=m_build_buffer("%s",user_server_root);
 	

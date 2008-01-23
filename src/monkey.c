@@ -83,18 +83,19 @@ void free_request(struct client_request *cr){
 			    M_free(sr->headers->last_modified);
 			    /*
 				    M_free(sr->headers->content_type);
-			    
+
 				    headers->content_type never it's allocated with malloc or something, so
 				    we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
-				    
+
 				    this BUG was reported by gentoo team.. thanks guys XD
 			    */
+
 			    M_free(sr->headers);
 		    }
-		    
+
 		    if(sr->log){
                 M_free(sr->log->error_msg); 
-		        M_free(sr->log);
+		        //M_free(sr->log);
 		    }
     
 		    M_free(sr->uri);
@@ -118,15 +119,15 @@ void free_request(struct client_request *cr){
 		    M_free(sr->temp_path);
 		    
 		    M_free(sr->server_signature);
-		    
+
 		    M_free(sr->user_uri);
 		    M_free(sr->query_string);
 	    
 		    M_free(sr->virtual_user);
 		    M_free(sr->script_filename);
 		    M_free(sr->real_path);
-    
-		    M_free(sr);
+
+            //M_free(sr);
 	    }	
 	    sr=sr->next;
 	}
@@ -134,10 +135,9 @@ void free_request(struct client_request *cr){
 
 void *thread_init(void *args)
 {
-	int request_response=0, counter_connections=0, socket;
+	int request_response=0, socket;
 
 	struct process *th=0;
-    struct request *r;
 
     socket = (int) args;
 
@@ -149,26 +149,20 @@ void *thread_init(void *args)
     th->cr->request = alloc_request();
 
 	while(request_response==0){
-
-		free_request(th->cr);
-
 		/* Alloc memory */
-		request_response = (int) Request_Main(th->cr); /* Working in request... */
-		//counter_connections = th->sr->counter_connections;  /* Total of connections */
-		
-        /* LOGS ARE BEEN DISABLED */
-		
-        /*
+		request_response = Request_Main(th->cr); /* Working in request... */
+    		
+        /* LOGS HAS BEEN DISABLED 
 		if(config->keep_alive==VAR_OFF || th->sr->keep_alive==VAR_OFF){
 			break;
 		}
         */
 
-		/* Persistent connection: Exit 
-		if(counter_connections>=config->max_keep_alive_request || request_response==2 || request_response==-1){
+		/* Persistent connection: Exit */
+		if(th->cr->counter_connections>=config->max_keep_alive_request || 
+                           request_response==2 || request_response==-1){
 			break;
 		}
-        */
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */

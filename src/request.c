@@ -411,7 +411,7 @@ int Request_Main(struct client_request *cr)
 				M_free(s_request->post_variables);
 				return status;
 			}
-			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
+            status = M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 		}
 	}
 
@@ -728,14 +728,9 @@ struct request *alloc_request()
     struct request *request=0;
 
     request = (struct request *) M_malloc(sizeof(struct request));
-    request->log= (struct log_info *) M_malloc(sizeof(struct log_info));
+    request->log = (struct log_info *) M_malloc(sizeof(struct log_info));
     //request->log->ip=PutIP(remote);
 
-    request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
-    request->headers->content_type = NULL;
-    request->headers->last_modified = NULL;
-    request->headers->location = NULL;
-        
     request->status=VAR_OFF; /* Request not processed yet */
     request->make_log=VAR_ON; /* build log file of this request ? */
     request->query_string=NULL;
@@ -747,6 +742,38 @@ struct request *alloc_request()
     request->method=METHOD_NOT_FOUND;
     request->getdir = config->getdir;
 
+    request->uri = NULL;
+    request->uri_processed = NULL;
+    
+    request->accept = NULL;
+    request->accept_language = NULL;
+    request->accept_encoding = NULL;
+    request->accept_charset = NULL;
+    request->content_type = NULL;
+    request->connection = NULL;
+    request->cookies = NULL;
+    request->host = NULL;
+    request->if_modified_since = NULL;
+    request->last_modified_since = NULL;
+    request->range = NULL;
+    request->referer = NULL;
+    request->resume = NULL;
+    request->user_agent = NULL;
+    request->post_variables = NULL;
+    request->temp_path = NULL;
+            
+    request->server_signature = NULL;
+    request->user_uri = NULL;
+    request->query_string = NULL;
+        
+    request->virtual_user = NULL;
+    request->script_filename = NULL;
+    request->real_path = NULL;
+
+    request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
+    request->headers->content_type = NULL;
+    request->headers->last_modified = NULL;
+    request->headers->location = NULL;
     request->headers->range_values[0]=-1;
     request->headers->range_values[1]=-1;
 

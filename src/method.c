@@ -109,10 +109,10 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			return 0;
 		}
 	
-		/* Buscar un indexfile según configuración */
+		/* looking for a index file */
 		index_file = (char *) FindIndex(sr->real_path);
 		if(!index_file) {
-			/* No existe un indexfile, mostrar el directorio */
+			/* No index file found, show the content directory */
 			if(sr->getdir==VAR_ON) {
 				int getdir_res = 0;
 
@@ -134,28 +134,28 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		}
 	}
 
-	/* ¿Existe archivo? */
+	/* do exists the file ? */
 	if(access(sr->real_path,F_OK)!=0){
 		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		return -1;	
 	}
 
-	/* Permisos de lectura */
+	/* read permission */
 	if(AccessFile(sr->real_path)!=0){
 		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 		return -1;	
 	}
 		
-	/* Buscanco MimeType que coincida */
+	/* Matching MimeType  */
 	mime_info=Mimetype_Find(sr->real_path);
 	
 	if(mime_info[1]){
-		/* ¿ Script ejecutable (e.g PHP) ? */
+		/* executable script (e.g PHP) ? */
 		if(access(mime_info[1],X_OK)==0){
 				int cgi_status=0;
 				char *arg_script[3];
 			
-				/* ¿ Es un archivo regular ? */
+				/* is it  normal file ? */
 				if(CheckFile(mime_info[1])!=0){
 					Request_Error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
 					Mimetype_free(mime_info);
@@ -196,15 +196,15 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 				return cgi_status;
 			}
 	}
-	/* Rescatando largo del archivo */
+	/* get file size */
 	if(stat(sr->real_path,&statfile) < 0) {
 		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		Mimetype_free(mime_info);
 		return -1;
 	}
 	
-	/* Fue enviado if_modified_since por el cliente ? */
-	sr->headers->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
+	/* was if_modified_since sent by the  client ? */
+	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
 	if(sr->if_modified_since && sr->method==GET_METHOD){
 
 		time_t date_client; // Date send by client
@@ -240,7 +240,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 				sr->headers->status = M_HTTP_PARTIAL;
 		}
 	}
-	else{ /* Sin content-type */
+	else{ /* without content-type */
 		sr->headers->content_type = NULL;
 	}
 	M_METHOD_send_headers(socket, sr->headers, sr->log);
@@ -249,7 +249,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		Mimetype_free(mime_info);
 		return -1;
 	}
-	/* Enviando archivo */
+	/* Sending file */
 	if((sr->method==GET_METHOD || sr->method==POST_METHOD) && statfile.st_size>0)
 		SendFile(socket, sr->real_path, sr->headers->range_values);
 

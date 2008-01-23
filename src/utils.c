@@ -602,7 +602,7 @@ void *M_realloc(void* ptr, size_t size)
 void M_free(void *ptr)
 {
 	if(ptr!=NULL){
-		memset(ptr, '\0', sizeof(*ptr));
+		//memset(ptr, '\0', sizeof(*ptr));
 		free(ptr);
 		ptr=NULL;
 	}
