@@ -96,10 +96,13 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
 
             /* Allocating request block */
             block = m_copy_string(buf, init_block+offset, i);
+            //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block+offset, i, block);
+            //fflush(stdout);
 
-            cr_buf = M_malloc(sizeof(struct request));
-            cr_buf->body = block;
+            cr_buf = alloc_request();
+            cr_buf->body = m_build_buffer("%s\n", block);
             cr_buf->next = NULL;
+            M_free(block);
 
             if(!cr->request)
             {
@@ -144,20 +147,25 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         }
     }
 
+    /*
     printf("\n\n*** BLOCKS FOUND: %i", n_blocks);
+
     if(pipelining){
         printf("\nPIPELINING: TRUE\n");
-        cr_search = cr->request;
-        while(cr_search){
-            printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->body);
-            fflush(stdout);
-            cr_search = cr_search->next;
-        }
     }
     else{
         printf("\n\nPIPELINING: FALSE");
     }
-    fflush(stdout);
+    */
+
+    cr_search = cr->request;
+    while(cr_search){
+        printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
+        fflush(stdout);
+        cr_search = cr_search->next;
+    }
+
+    //fflush(stdout);
 
     /* DEBUG 
     printf("\n\n*** BLOCKS FOUND: %i\n\n", n_blocks);
@@ -173,14 +181,13 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     return cr->request;
 }
 
-int Request_Main(struct client_request *cr)
+int Get_Request(struct client_request *cr)
 {
-	int num_bytes=0, recv_timeout, times=0, status=0, limit_time;
+	int num_bytes=0, recv_timeout, times=0, limit_time;
     int process_request = TRUE, length_remote_request;
     char *request_end = NULL;
 	static char remote_request[MAX_REQUEST_BODY];
-	struct vhost *vhost;
-    struct request *s_request;
+    struct request *s_request, *p_request=0;
 
 	s_request = cr->request;
 
@@ -202,8 +209,8 @@ int Request_Main(struct client_request *cr)
 		num_bytes=Socket_Timeout(cr->socket, remote_request+strlen(remote_request), \
 								MAX_REQUEST_BODY - strlen(remote_request) - 1, recv_timeout, ST_RECV);
 
-        printf("\nNBYTES: %i\n%s", num_bytes, remote_request);
-        fflush(stdout);
+        //printf("\nNBYTES: %i\n%s", num_bytes, remote_request);
+        //fflush(stdout);
 
 		if((int) time(NULL) >= limit_time) {
 			if(cr->counter_connections>0){
@@ -280,7 +287,6 @@ int Request_Main(struct client_request *cr)
 
             if(strcmp(remote_request+(length_remote_request-4), "\r\n\r\n")==0)
             {
-                DEBUG("GOING TO PARSE CLIENT REQUEST");
                 parse_client_request(cr, remote_request);
                 //printf("\n--- PIPELINING CONNECTION ---:\n%s--- END --- ", remote_request);
                 fflush(stdout);
@@ -294,11 +300,26 @@ int Request_Main(struct client_request *cr)
         }
 	} while(process_request);
 
-	s_request = (struct request *) Request_Strip_Header(s_request, remote_request);
+    cr->counter_connections++;
+    p_request = cr->request;
+    while(p_request)
+    {
+        //printf("\n *** TRYING BODY:\n%s", p_request->body);
+        //fflush(stdout);
 
-	s_request->user_home=VAR_OFF;
-	s_request->temp_path = m_build_buffer(config->server_root);
-	cr->counter_connections++;
+        Process_Request(cr, p_request);
+        p_request = p_request->next;
+    }
+}
+
+int Process_Request(struct client_request *cr, struct request *s_request)
+{
+    int status=0;
+    struct vhost *vhost;
+
+    Process_Request_Header(s_request);
+    s_request->user_home=VAR_OFF;
+    s_request->temp_path = m_build_buffer(config->server_root);
 
 	/* Empty Host (HTTP/1.0) */
 	if(!s_request->host){
@@ -381,7 +402,7 @@ int Request_Main(struct client_request *cr)
 		len = strlen(config->server_scriptalias[0]);
 		if((strncmp(config->server_scriptalias[0], s_request->uri_processed, len))==0){
 			int cgi_status;
-			cgi_status=M_CGI_main(cr, s_request, s_request->log, remote_request);
+			cgi_status=M_CGI_main(cr, s_request, s_request->log, s_request->body);
 			/* Codes:
 				-1 : Fallo de permisos
 				-2 : Timeout
@@ -407,7 +428,7 @@ int Request_Main(struct client_request *cr)
 	}
 	else {
 		if(s_request->method==POST_METHOD){
-			if((status=M_METHOD_Post(cr, s_request, remote_request))==-1){
+			if((status=M_METHOD_Post(cr, s_request, s_request->body))==-1){
 				M_free(s_request->post_variables);
 				return status;
 			}
@@ -443,45 +464,45 @@ int Get_method_from_request(char *request)
 
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
-struct request *Request_Strip_Header(struct request *sr, char *request_body)
+void Process_Request_Header(struct request *sr)
 {
 	int uri_init=0, uri_end=0, 
 		query_init=0, query_end=0,
 		prot_init=0, prot_end=0;
 	
 	/* Method */
-	sr->method = Get_method_from_request(request_body);
+	sr->method = Get_method_from_request(sr->body);
 
 	/* Request URI */
-	uri_init = str_search(request_body, " ",1) + 1;
-	uri_end = str_search(request_body+uri_init, " ",1) + uri_init;
+	uri_init = str_search(sr->body, " ",1) + 1;
+	uri_end = str_search(sr->body+uri_init, " ",1) + uri_init;
 	
 	/* Query String */
-    query_init = str_search(request_body+uri_init, "?", 1);
+    query_init = str_search(sr->body+uri_init, "?", 1);
 	if(query_init > 0 && query_init <= uri_end){
         query_init+=uri_init+1;
         query_end = uri_end;
         uri_end = query_init - 1;
-        sr->query_string = m_copy_string(request_body, query_init, query_end);
+        sr->query_string = m_copy_string(sr->body, query_init, query_end);
 	}
 	
 	/* Request URI Part 2 */
-	sr->uri = (char *) m_copy_string(request_body, uri_init, uri_end);
+	sr->uri = (char *) m_copy_string(sr->body, uri_init, uri_end);
 
 	/* HTTP Version */
-	prot_init=str_search(request_body+uri_init+1," ",1)+uri_init+2;
+	prot_init=str_search(sr->body+uri_init+1," ",1)+uri_init+2;
 
-	if(str_search(request_body, "\r\n",2)>0){
-		prot_end = str_search(request_body, "\r\n",2);
+	if(str_search(sr->body, "\r\n",2)>0){
+		prot_end = str_search(sr->body, "\r\n",2);
 	}
 	else{
-		prot_end = str_search(request_body, "\n",1);
+		prot_end = str_search(sr->body, "\n",1);
 	}
 	
 	if(prot_end!=prot_init && prot_end>0){
 		char *str_prot=0;
 	
-		str_prot = m_copy_string(request_body, prot_init, prot_end);
+		str_prot = m_copy_string(sr->body, prot_init, prot_end);
 		sr->protocol=get_version_protocol(str_prot);
 		M_free(str_prot);
 	}
@@ -490,8 +511,8 @@ struct request *Request_Strip_Header(struct request *sr, char *request_body)
 	sr->uri_processed = get_real_string( sr->uri );
 		
 	/* Host */
-	if((strstr2(request_body, RH_HOST))!=NULL){
-		char *tmp = Request_Find_Variable(request_body, RH_HOST);
+	if((strstr2(sr->body, RH_HOST))!=NULL){
+		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
 		
 		/* is host formated something like xxxxx:yy ???? */
 		if(tmp!=NULL && strstr(tmp, ":") != NULL ){
@@ -513,27 +534,25 @@ struct request *Request_Strip_Header(struct request *sr, char *request_body)
 	else{
 		sr->host=NULL;
 	}
-		
+
 	/* Variables generales del header remoto */
 	sr->keep_alive=VAR_OFF;
-	if((strstr2(request_body, RH_CONNECTION))!=NULL && sr->protocol==HTTP_11){
-		sr->connection = Request_Find_Variable(request_body, RH_CONNECTION);
+	if((strstr2(sr->body, RH_CONNECTION))!=NULL && sr->protocol==HTTP_11){
+		sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
 		if((strstr2(sr->connection,"Keep-Alive"))!=NULL){
 			sr->keep_alive=VAR_ON;
 		}
 	}
 	
-	sr->accept			= Request_Find_Variable(request_body, RH_ACCEPT);
-	sr->accept_charset	= Request_Find_Variable(request_body, RH_ACCEPT_CHARSET);
-	sr->accept_encoding   = Request_Find_Variable(request_body, RH_ACCEPT_ENCODING);
-	sr->accept_language   = Request_Find_Variable(request_body, RH_ACCEPT_LANGUAGE);
-	sr->cookies		   = Request_Find_Variable(request_body, RH_COOKIE);
-	sr->referer		   = Request_Find_Variable(request_body, RH_REFERER);
-	sr->user_agent		= Request_Find_Variable(request_body, RH_USER_AGENT);
-	sr->range			 = Request_Find_Variable(request_body, RH_RANGE);
-	sr->if_modified_since = Request_Find_Variable(request_body, RH_IF_MODIFIED_SINCE);
-	
-	return (struct request *) sr;
+	sr->accept			= Request_Find_Variable(sr->body, RH_ACCEPT);
+	sr->accept_charset	= Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
+	sr->accept_encoding   = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);
+	sr->accept_language   = Request_Find_Variable(sr->body, RH_ACCEPT_LANGUAGE);
+	sr->cookies		   = Request_Find_Variable(sr->body, RH_COOKIE);
+	sr->referer		   = Request_Find_Variable(sr->body, RH_REFERER);
+	sr->user_agent		= Request_Find_Variable(sr->body, RH_USER_AGENT);
+	sr->range			 = Request_Find_Variable(sr->body, RH_RANGE);
+	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
 }
 
 /* Return value of some variable sent in request */

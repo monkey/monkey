@@ -206,6 +206,8 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	/* was if_modified_since sent by the  client ? */
 	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
 	if(sr->if_modified_since && sr->method==GET_METHOD){
+        printf("\nWAS DEFINED\n!");
+        fflush(stdout);
 
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file

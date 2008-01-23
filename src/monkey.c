@@ -146,11 +146,11 @@ void *thread_init(void *args)
     th->cr->pipelined = FALSE;
     th->cr->counter_connections = 0;
     th->cr->socket = socket;
-    th->cr->request = alloc_request();
+    th->cr->request = NULL;
 
 	while(request_response==0){
 		/* Alloc memory */
-		request_response = Request_Main(th->cr); /* Working in request... */
+		request_response = Get_Request(th->cr); /* Working in request... */
     		
         /* LOGS HAS BEEN DISABLED 
 		if(config->keep_alive==VAR_OFF || th->sr->keep_alive==VAR_OFF){

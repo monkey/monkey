@@ -137,7 +137,10 @@ struct header_values {
 	char *location;
 };
 
-int Request_Main(struct client_request *s_request);
+int Get_Request(struct client_request *s_request);
+int Process_Request(struct client_request *cr, struct request *s_request);
+void Process_Request_Header(struct request *sr);
+
 int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
 char	*FindIndex(char *pathfile);
@@ -145,6 +148,5 @@ char	*Set_Page_Default(char *title,  char *message, char *signature);
 char	*Request_Find_Variable(char *request_body, char *string);
 void Request_Error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log);
-struct request	*Request_Strip_Header(struct request *sr, char *request_body);
-struct request *alloc_request();
 
+struct request *alloc_request();
