@@ -88,7 +88,6 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             //printf("\n--->BLOCK<---\n%s", block);
             //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
             //fflush(stdout);
-
             cr_buf = alloc_request();
             cr_buf->body = m_build_buffer("%s\n", block);
             cr_buf->next = NULL;
@@ -489,13 +488,14 @@ int Process_Request_Header(struct request *sr)
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = m_copy_string(sr->body, prot_init, prot_end);
 		sr->protocol=get_version_protocol(str_prot);
-		M_free(str_prot);
+        if(!remove_space(str_prot)){
+            return -1;
+        }
+        M_free(str_prot);
 	}
-	/* URI processed */
-    if(!remove_space(str_prot)){
-        return -1;
-    }
 
+
+    /* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
 		
 	/* Host */
