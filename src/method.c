@@ -214,7 +214,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 
 		gmt_file_unix_time = PutDate_string((time_t) statfile.st_mtime);
 		date_file_server = PutDate_unix(gmt_file_unix_time);
-		
+
 		if( (date_file_server <= date_client) && (date_client > 0) ){
 			sr->headers->status = M_NOT_MODIFIED;
 			M_METHOD_send_headers(socket, sr->headers, sr->log);	

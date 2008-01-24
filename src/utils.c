@@ -651,3 +651,36 @@ void DEBUG(char *buf)
     printf("\n*** [DEBUG] %s\n", (char *) buf);
     fflush(stdout);
 }
+
+char *remove_space(char *buf)
+{
+    size_t bufsize;
+    int new_i=0, i, len, spaces=0;
+    char *new_buf=0;
+
+    len = strlen(buf);
+    for(i=0; i<len; i++)
+    {
+        if(buf[i] == ' '){
+            spaces++;
+        }
+    }
+
+    bufsize = len+1-spaces;
+    new_buf = M_malloc(bufsize);
+    memset(new_buf, '\0', bufsize);
+
+    for(i=0; i<len; i++)
+    {
+        if(buf[i] != ' '){
+            new_buf[new_i] = buf[i];
+            new_i++;
+        }
+    }
+
+    if(strlen(new_buf)==0){
+        return NULL;
+    }
+
+    return new_buf;
+}

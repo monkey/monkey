@@ -139,7 +139,7 @@ struct header_values {
 
 int Get_Request(struct client_request *s_request);
 int Process_Request(struct client_request *cr, struct request *s_request);
-void Process_Request_Header(struct request *sr);
+int Process_Request_Header(struct request *sr);
 
 int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
@@ -148,6 +148,7 @@ char	*Set_Page_Default(char *title,  char *message, char *signature);
 char	*Request_Find_Variable(char *request_body, char *string);
 void Request_Error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log);
+int Validate_Request_Header(char *buf);
 
 struct request *alloc_request();
 void free_list_requests(struct client_request *cr);
