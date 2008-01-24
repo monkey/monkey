@@ -44,7 +44,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
 {
     int i, init_block=0, n_blocks=0, offset=0;
     int length_buf, length_string_end;
-    int pipelining=FALSE;
+    int pipelined=FALSE;
     const char *normal_string_end = "\r\n\r\n";
     const char *old_string_end = "\n\n";
     char *string_end=0, *check_normal_string=0, *check_old_string=0;
@@ -85,17 +85,10 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             block = m_copy_string(buf, init_block, i);
             i = init_block = (i+offset) + length_string_end;
 
-            if(!block){
-                printf("\nBLOCK NULL");
-            }
-            //printf("\nLEN: %i, I: %i", length_buf, i);
-            //fflush(stdout);
-
             //printf("\n--->BLOCK<---\n%s", block);
             //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
             //fflush(stdout);
 
-            Validate_Request_Header(block);
             cr_buf = alloc_request();
             cr_buf->body = m_build_buffer("%s\n", block);
             cr_buf->next = NULL;
@@ -129,16 +122,25 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     cr_search = cr->request;
     if(n_blocks>1)
     {
-        pipelining = TRUE;
+        pipelined = TRUE;
 
         while(cr_search){
             if(Get_method_from_request(cr_search->body)!=GET_METHOD)
-                pipelining = FALSE;
+            {
+                pipelined = FALSE;
                 break;
+            }
             cr_search = cr_search->next;
         }
+
+        if(pipelined == FALSE){
+            /* All pipelined requests must been GET method */
+            return NULL;
+        }
+        else{
+            cr->pipelined = TRUE;
+        }
     }
-    cr->pipelined = pipelining;
 
     /* DEBUG BLOCKS 
     cr_search = cr->request;
@@ -240,14 +242,15 @@ int Get_Request(struct client_request *cr)
             the  client in the same TCP connection without wait for a response 
             to every request sent until the server listen all requests and
             when the last one arrives, it must send responses in the same order.
-            A keepalive connection is necessary to support this feature and a 
-            pipelining connection always comes in the second keepalive request
-            and all them use the GET method.
+            All pipelined request must use the GET method.
             */
             length_remote_request = strlen(remote_request);
             if(strcmp(remote_request+(length_remote_request-strlen(request_end)), request_end)==0)
             {
-                parse_client_request(cr, remote_request);
+                if(!parse_client_request(cr, remote_request))
+                {
+                    return -1;
+                }
                 break;
             }
         }
