@@ -71,14 +71,6 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             offset = 1;
     }
 
-    /* DEBUG 
-    if(strcmp(string_end, "\r\n\r\n")==0)
-    {
-        printf("\n*** STRING_END: RNRN");
-        fflush(stdout);
-    }
-    */
-
     cr->body = buf;
 
     length_buf = strlen(buf);
@@ -123,9 +115,6 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             }
 
             n_blocks++;
-            
-            //printf("\n**** BLOCK ****:\n%s\n*** END BLOCK ***\n", block);
-            //fflush(stdout);
         }
     }
 
@@ -138,43 +127,17 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         while(cr_search){
             if(Get_method_from_request(cr_search->body)!=GET_METHOD)
                 pipelining = FALSE;
-
-            //printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
-            //fflush(stdout);
             cr_search = cr_search->next;
         }
     }
 
-    /*
-    printf("\n\n*** BLOCKS FOUND: %i", n_blocks);
-
-    if(pipelining){
-        printf("\nPIPELINING: TRUE\n");
-    }
-    else{
-        printf("\n\nPIPELINING: FALSE");
-    }
-    */
-
+    /* DEBUG BLOCKS 
     cr_search = cr->request;
     while(cr_search){
-        //printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_searc->body);
-        //fflush(stdout);
-        cr_search = cr_search->next;
-    }
-
-    //fflush(stdout);
-
-    /* DEBUG 
-    printf("\n\n*** BLOCKS FOUND: %i\n\n", n_blocks);
-    cr_search = cr;
-    while(cr_search){
-        printf("---BLOCK---:\n%s\n---END BLOCK---\n\n", cr_search->request);
+        printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_searc->body);
         fflush(stdout);
         cr_search = cr_search->next;
     }
-
-    fflush(stdout);
     */
     return cr->request;
 }
@@ -197,18 +160,12 @@ int Get_Request(struct client_request *cr)
 	memset(remote_request, '\0', sizeof(remote_request));
 	limit_time = (int) time(NULL) + recv_timeout;
 
-    printf("\n******************** NEW REQUEST *******************\n");
-    fflush(stdout);
-
 	/* Getting Request */
 	do {		
 		times++;
 
 		num_bytes=Socket_Timeout(cr->socket, remote_request+strlen(remote_request), \
 								MAX_REQUEST_BODY - strlen(remote_request) - 1, recv_timeout, ST_RECV);
-
-        //printf("\nNBYTES: %i\n%s", num_bytes, remote_request);
-        //fflush(stdout);
 
 		if((int) time(NULL) >= limit_time) {
 			if(cr->counter_connections>0){
@@ -260,8 +217,6 @@ int Get_Request(struct client_request *cr)
 			if(Get_method_from_request(remote_request)==POST_METHOD)
 				recv_timeout=POST_TIMEOUT;
 		}
-        printf("\nRECV/times: %i", times);
-        fflush(stdout);
 
         request_end = get_end_position(remote_request);
         if(!request_end){
@@ -295,9 +250,6 @@ int Get_Request(struct client_request *cr)
     while(p_request)
     {
         status = Process_Request(cr, p_request);
-        printf("\nRequest BODY:\n%sSTATUS: %i", p_request->body, status);
-        fflush(stdout);
-
         p_request = p_request->next;
     }
 
@@ -789,4 +741,88 @@ struct request *alloc_request()
     request->headers->range_values[1]=-1;
 
     return (struct request *) request;
+}
+
+void free_list_requests(struct client_request *cr)
+{
+    struct request *sr=0, *before=0;
+
+    /* sr = last node */
+
+    while(cr->request)
+    {
+        sr = before = cr->request;
+        while(sr->next)
+        {
+            sr = sr->next;
+        }
+
+        if(sr!=cr->request){
+            while(before->next!=sr){
+                before = before->next;
+            }
+            before->next = NULL;
+        }
+        else{
+            cr->request = NULL;
+        }
+
+        free_request(sr);
+    }
+    cr->request = NULL;
+}
+
+void free_request(struct request *sr)
+{
+
+        /* I hate it, but I don't know another light way :( */
+        if(sr->headers){
+            M_free(sr->headers->location);
+            M_free(sr->headers->last_modified);
+            /*
+                M_free(sr->headers->content_type);
+                 headers->content_type never it's allocated with malloc or something, so
+                we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
+                this BUG was reported by gentoo team.. thanks guys XD
+            */
+
+            M_free(sr->headers);
+        }
+
+        if(sr->log){
+            M_free(sr->log->error_msg); 
+            //M_free(sr->log);
+        }
+
+        M_free(sr->body);
+        M_free(sr->uri);
+        M_free(sr->uri_processed);
+
+        M_free(sr->accept);
+        M_free(sr->accept_language);
+        M_free(sr->accept_encoding);
+        M_free(sr->accept_charset);
+        M_free(sr->content_type);
+        M_free(sr->connection);
+        M_free(sr->cookies);
+        M_free(sr->host);
+        M_free(sr->if_modified_since);
+        M_free(sr->last_modified_since);
+        M_free(sr->range);
+        M_free(sr->referer);
+        M_free(sr->resume);
+        M_free(sr->user_agent);
+        M_free(sr->post_variables);
+        M_free(sr->temp_path);
+ 
+        M_free(sr->server_signature);
+
+        M_free(sr->user_uri);
+        M_free(sr->query_string);
+ 
+        M_free(sr->virtual_user);
+        M_free(sr->script_filename);
+        M_free(sr->real_path);
+        M_free(sr);
+    
 }

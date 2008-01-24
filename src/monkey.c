@@ -70,69 +70,6 @@ void Help()
 	exit(0);
 }
 
-void free_request(struct client_request *cr){
-    struct request *sr;
-
-    sr = cr->request;
-    while(sr)
-    {
-	    /* I hate it, but I don't know another light way :( */
-	    if(sr){
-		    if(sr->headers){
-			    M_free(sr->headers->location);
-			    M_free(sr->headers->last_modified);
-			    /*
-				    M_free(sr->headers->content_type);
-
-				    headers->content_type never it's allocated with malloc or something, so
-				    we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
-
-				    this BUG was reported by gentoo team.. thanks guys XD
-			    */
-
-			    M_free(sr->headers);
-		    }
-
-		    if(sr->log){
-                M_free(sr->log->error_msg); 
-		        //M_free(sr->log);
-		    }
-    
-		    M_free(sr->uri);
-		    M_free(sr->uri_processed);
-    
-		    M_free(sr->accept);
-		    M_free(sr->accept_language);
-		    M_free(sr->accept_encoding);
-		    M_free(sr->accept_charset);
-		    M_free(sr->content_type);
-		    M_free(sr->connection);
-		    M_free(sr->cookies);
-		    M_free(sr->host);
-		    M_free(sr->if_modified_since);
-		    M_free(sr->last_modified_since);
-		    M_free(sr->range);
-		    M_free(sr->referer);
-		    M_free(sr->resume);
-		    M_free(sr->user_agent);
-		    M_free(sr->post_variables);
-		    M_free(sr->temp_path);
-		    
-		    M_free(sr->server_signature);
-
-		    M_free(sr->user_uri);
-		    M_free(sr->query_string);
-	    
-		    M_free(sr->virtual_user);
-		    M_free(sr->script_filename);
-		    M_free(sr->real_path);
-
-            //M_free(sr);
-	    }	
-	    sr=sr->next;
-	}
-    cr->request = NULL;
-}
 
 void *thread_init(void *args)
 {
@@ -164,7 +101,7 @@ void *thread_init(void *args)
                            request_response==2 || request_response==-1){
 			break;
 		}
-        free_request(th->cr);
+        free_list_requests(th->cr);
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
@@ -302,9 +239,6 @@ int main(int argc, char **argv)
 			continue;
 
   		/* A New thread will be working in the new connection */
-        printf("\nCREATING NEW THREAD, SOCKET: %i", remote_fd);
-        fflush(stdout);
-
 		if(pthread_create(&tid, &thread_attr, thread_init, (void *) remote_fd)!=0){
 			perror("pthread_create");
 			close(remote_fd);

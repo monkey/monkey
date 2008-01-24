@@ -68,7 +68,7 @@ int FreeThread(pthread_t thread)
 	while(aux!=NULL){
 		if(pthread_equal(aux->thread_pid, thread)!=0){
 			close(aux->socket);
-			free_request(aux->cr);
+			free_list_requests(aux->cr);
 			if(first_process==aux){
 				first_process=first_process->next;
 				M_free(aux);

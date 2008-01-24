@@ -103,7 +103,5 @@ gid_t EUID;
 
 #include "modules.h"
 
-void free_request(struct client_request *cr);
-
 #endif
 

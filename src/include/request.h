@@ -150,3 +150,5 @@ void Request_Error(int num_error, struct client_request *cr,
                    struct request *s_request, int debug, struct log_info *s_log);
 
 struct request *alloc_request();
+void free_list_requests(struct client_request *cr);
+void free_request(struct request *sr);
