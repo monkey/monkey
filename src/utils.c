@@ -70,7 +70,10 @@ int SendFile(int socket, char *pathfile, int ranges[2])
 		}
 	}
 	
+    //printf("*** SENDING FILE DATA ***\n");
 	while((num_bytes=fread(buffer,1, BUFFER_SOCKET, file_request)) > 0 ){
+        //printf("%s", buffer);
+        //fflush(stdout);
 		if( num_bytes<offset_range || offset_range==0) {
 			st_status=Socket_Timeout(socket, buffer, num_bytes, config->timeout, ST_SEND);
 			if(config->resume==VAR_ON && offset_range>0)

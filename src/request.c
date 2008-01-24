@@ -62,11 +62,13 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         else
         {
             string_end = (char *)normal_string_end;
+            offset = 0;
         }
     }
     else if(check_old_string)
     {
             string_end = (char *)old_string_end;
+            offset = 1;
     }
 
     /* DEBUG 
@@ -82,22 +84,18 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     length_buf = strlen(buf);
     length_string_end = strlen(string_end);
 
-    for(i=0; i< length_buf ; i++)
+    init_block = 0;
+    for(i=0; i<= length_buf-length_string_end; i++)
     {
         if(strncmp(buf+i, string_end, length_string_end)==0)
         {
-            if(n_blocks==0){
-                offset = 0;
-            }
-            else
-            {
-                offset = length_string_end;
-            }
-
             /* Allocating request block */
-            block = m_copy_string(buf, init_block+offset, i);
+            block = m_copy_string(buf, init_block, i);
+            i = init_block = (i+offset) + length_string_end;
+
+            //printf("\n--->BLOCK<---\n%s", block);
             //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block+offset, i, block);
-            //fflush(stdout);
+            fflush(stdout);
 
             cr_buf = alloc_request();
             cr_buf->body = m_build_buffer("%s\n", block);
@@ -124,8 +122,8 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
                 }
             }
 
-            init_block = i;
             n_blocks++;
+            
             //printf("\n**** BLOCK ****:\n%s\n*** END BLOCK ***\n", block);
             //fflush(stdout);
         }
@@ -160,8 +158,8 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
 
     cr_search = cr->request;
     while(cr_search){
-        printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
-        fflush(stdout);
+        //printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_searc->body);
+        //fflush(stdout);
         cr_search = cr_search->next;
     }
 
@@ -183,7 +181,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
 
 int Get_Request(struct client_request *cr)
 {
-	int num_bytes=0, recv_timeout, times=0, limit_time;
+	int num_bytes=0, recv_timeout, times=0, limit_time, status=0;
     int process_request = TRUE, length_remote_request;
     char *request_end = NULL;
 	static char remote_request[MAX_REQUEST_BODY];
@@ -284,18 +282,10 @@ int Get_Request(struct client_request *cr)
             and all them use the GET method.
             */
             length_remote_request = strlen(remote_request);
-
-            if(strcmp(remote_request+(length_remote_request-4), "\r\n\r\n")==0)
+            if(strcmp(remote_request+(length_remote_request-strlen(request_end)), request_end)==0)
             {
                 parse_client_request(cr, remote_request);
-                //printf("\n--- PIPELINING CONNECTION ---:\n%s--- END --- ", remote_request);
-                fflush(stdout);
                 break;
-            }
-            else if(remote_request+(length_remote_request-2) == "\n\n")
-            {
-                printf("\nNO: %s", remote_request+(length_remote_request-4));
-                fflush(stdout);
             }
         }
 	} while(process_request);
@@ -304,10 +294,10 @@ int Get_Request(struct client_request *cr)
     p_request = cr->request;
     while(p_request)
     {
-        //printf("\n *** TRYING BODY:\n%s", p_request->body);
-        //fflush(stdout);
+        status = Process_Request(cr, p_request);
+        printf("\nRequest BODY:\n%sSTATUS: %i", p_request->body, status);
+        fflush(stdout);
 
-        Process_Request(cr, p_request);
         p_request = p_request->next;
     }
 }
@@ -422,7 +412,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 			return EXIT_NORMAL;
 	}
 
-	/* Verificacion del Metodo */
+	/* Handling method requested */
 	if(s_request->method==GET_METHOD || s_request->method==HEAD_METHOD){
 			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 	}

@@ -206,9 +206,6 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	/* was if_modified_since sent by the  client ? */
 	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
 	if(sr->if_modified_since && sr->method==GET_METHOD){
-        printf("\nWAS DEFINED\n!");
-        fflush(stdout);
-
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file
 		char *gmt_file_unix_time; // gmt time of server file (unix time)
@@ -419,12 +416,12 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 	
 	/* Ranges */ 
 	buffer = m_build_buffer_from_buffer(buffer, "Accept-Ranges: bytes\r\n", sh->content_type);
-		
+
 	/* Tamaño total de la informacion a enviar */
 	if((sh->content_length!=0 && (sh->range_values[0]>=0 || sh->range_values[1]>=0)) && config->resume==VAR_ON){
 		long int length;
 
-		/* yyy- */
+        /* yyy- */
 		if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
 			length = (unsigned long int) ( sh->content_length - sh->range_values[0] );
 			buffer = m_build_buffer_from_buffer(buffer, "%s %i\r\n", RH_CONTENT_LENGTH, length);
@@ -454,6 +451,9 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 		
 	if(sh->cgi==SH_NOCGI)
 		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
+
+    //printf("\n*** SENDING HEADERS ***\n%s", buffer);
+    fflush(stdout);
 
 	fdprintf(fd, NO_CHUNKED, "%s", buffer);
 	M_free(buffer);
