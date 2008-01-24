@@ -300,6 +300,8 @@ int Get_Request(struct client_request *cr)
 
         p_request = p_request->next;
     }
+
+    return 0;
 }
 
 int Process_Request(struct client_request *cr, struct request *s_request)
