@@ -667,6 +667,10 @@ char *remove_space(char *buf)
     }
 
     bufsize = len+1-spaces;
+    if(bufsize <= 1){
+        return NULL;
+    }
+
     new_buf = M_malloc(bufsize);
     memset(new_buf, '\0', bufsize);
 
@@ -676,10 +680,6 @@ char *remove_space(char *buf)
             new_buf[new_i] = buf[i];
             new_i++;
         }
-    }
-
-    if(strlen(new_buf)==0){
-        return NULL;
     }
 
     return new_buf;
