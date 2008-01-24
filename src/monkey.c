@@ -95,7 +95,6 @@ void *thread_init(void *args)
 			break;
 		}
         */
-
 		/* Persistent connection: Exit */
 		if(th->cr->counter_connections>=config->max_keep_alive_request || 
                            request_response==2 || request_response==-1){

@@ -118,8 +118,8 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         }
     }
 
-
     /* Checking pipelining connection */
+    cr_search = cr->request;
     if(n_blocks>1)
     {
         pipelining = TRUE;
@@ -127,9 +127,11 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         while(cr_search){
             if(Get_method_from_request(cr_search->body)!=GET_METHOD)
                 pipelining = FALSE;
+                break;
             cr_search = cr_search->next;
         }
     }
+    cr->pipelined = pipelining;
 
     /* DEBUG BLOCKS 
     cr_search = cr->request;
@@ -250,10 +252,12 @@ int Get_Request(struct client_request *cr)
     while(p_request)
     {
         status = Process_Request(cr, p_request);
+        if(status<0){
+            return status;
+        }
         p_request = p_request->next;
     }
-
-    return 0;
+    return status;
 }
 
 int Process_Request(struct client_request *cr, struct request *s_request)
