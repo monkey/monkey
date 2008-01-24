@@ -131,6 +131,7 @@ void free_request(struct client_request *cr){
 	    }	
 	    sr=sr->next;
 	}
+    cr->request = NULL;
 }
 
 void *thread_init(void *args)
@@ -163,6 +164,7 @@ void *thread_init(void *args)
                            request_response==2 || request_response==-1){
 			break;
 		}
+        free_request(th->cr);
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
