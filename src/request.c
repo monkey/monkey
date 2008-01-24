@@ -121,10 +121,12 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     cr_search = cr->request;
     if(n_blocks>1)
     {
+        int method;
         pipelined = TRUE;
 
         while(cr_search){
-            if(Get_method_from_request(cr_search->body)!=GET_METHOD)
+            method = Get_method_from_request(cr_search->body);
+            if(method!=GET_METHOD && method!=HEAD_METHOD)
             {
                 pipelined = FALSE;
                 break;
