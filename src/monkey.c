@@ -63,6 +63,7 @@ void Help()
 {
 	printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
 	printf("Available options:\n");
+    printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
 	printf("  -c directory\tspecify directory from configuration files\n");
 	printf("  -D\t\trun Monkey as daemon\n");
 	printf("  -v\t\tshow version number\n");
@@ -74,11 +75,13 @@ void Help()
 void *thread_init(void *args)
 {
 	int request_response=0, socket;
+    int request_keepalive;
 
 	struct process *th=0;
 
     socket = (int) args;
 
+    /* Alloc main thread info */
 	th = (struct  process *) RegProc(pthread_self(), socket);
     th->cr = M_malloc(sizeof(struct client_request));
     th->cr->pipelined = FALSE;
@@ -87,30 +90,48 @@ void *thread_init(void *args)
     th->cr->request = NULL;
 
 	while(request_response==0){
-		/* Alloc memory */
 		request_response = Get_Request(th->cr); /* Working in request... */
+
+        /*
+        if(!th->cr->request)
+        {
+            break;
+        }
+        */
+
+        request_keepalive = th->cr->request->keep_alive;
+        free_list_requests(th->cr);
 
         /* Persistent connection: Exit */
         if(th->cr->counter_connections>=config->max_keep_alive_request || 
-                           request_response==2 || request_response==-1){
+                           request_response==2 || request_response==-1)
+        {
             break;
         }
 
-		if(config->keep_alive==VAR_OFF || th->cr->request->keep_alive==VAR_OFF){
+		if(config->keep_alive==VAR_OFF || request_keepalive==VAR_OFF)
+        {
 			break;
 		}
-
-        free_list_requests(th->cr);
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
 	pthread_exit(0); /* See you! */
 }
 
+void set_benchmark_conf()
+{
+    const int max_int = 65000;
+
+    config->max_keep_alive_request = max_int;
+    config->maxclients = max_int;
+    config->max_ip = 0;
+}
+
 /* MAIN */
 int main(int argc, char **argv)
 {
-	int opt, remote_fd;
+	int opt, remote_fd, benchmark_mode=FALSE;
 	char daemon = 0;
 	pthread_t tid;
 	pthread_attr_t thread_attr;	
@@ -120,7 +141,7 @@ int main(int argc, char **argv)
 	config->file_config=0;
 			
 	opterr = 0;
-	while ((opt = getopt(argc, argv, "Dvhc:")) != -1)
+	while ((opt = getopt(argc, argv, "bDvhc:")) != -1)
 	{
 		switch (opt) {
 			case 'v': 
@@ -138,6 +159,9 @@ int main(int argc, char **argv)
 						config->file_config=optarg;
 						break;
 					}
+            case 'b':
+                    benchmark_mode = TRUE;
+                    break;
 			case '?':
 					printf("Monkey: Invalid option or option needs an argument.\n");
 					Help();
@@ -150,6 +174,18 @@ int main(int argc, char **argv)
 	Version();
 	Init_Signals();
 	M_Config_start_configure();
+
+    /* 
+        Benchmark mode overwrite some configuration directives in order 
+        to disable some limit numbers as number of clients, request per 
+        client, same ip connected, etc
+    */
+    if(benchmark_mode)
+    {
+        printf("*** Running Monkey in Benchmark mode ***\n");
+        fflush(stdout);
+        set_benchmark_conf();
+    }
 
 
 	local_fd=socket(PF_INET,SOCK_STREAM,0);
@@ -193,7 +229,6 @@ int main(int argc, char **argv)
 	thread_counter=0;
 
 	while(1) { /* Waiting for new connections */
-		
 		struct process *check_ip;
 		int ip_times=0, status_max_ip=CONX_OPEN;
 		int sin_size;
@@ -203,6 +238,7 @@ int main(int argc, char **argv)
 		if((remote_fd=accept(local_fd,(struct sockaddr *)&remote, &sin_size))==-1){
 			continue;
 		}
+
 		/* IP allowed ? ; Limit of connections */
 		if(thread_counter > config->maxclients){
 			close(remote_fd);
@@ -210,8 +246,8 @@ int main(int argc, char **argv)
 		}
 
 		/*
-			Limit of maximum of connections from same IP address :
- 		   This routine check every node of struct with a counter checking
+    		Limit of maximum of connections from same IP address :
+            This routine check every node of struct with a counter checking
 			if the new connection exist more times than has been allowed in
 			config->max_ip.
 		*/
@@ -221,7 +257,7 @@ int main(int argc, char **argv)
 			M_free(IP_client);
 			continue;			
 		}
-		
+
 		check_ip=first_process;
 		while(check_ip!=NULL && config->max_ip!=0) {
 			if(strcasecmp(check_ip->ip_client, IP_client)==0){
@@ -233,7 +269,7 @@ int main(int argc, char **argv)
 			}
 			check_ip=check_ip->next;
 		}
-		
+
 		if(status_max_ip==CONX_CLOSED)
 			continue;
 

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,12 +38,12 @@ int	fdprintf(int fd, int type, const char *format, ...);
 int	fdchunked(int fd, char *data, int length);
 int	str_search(char *string, char *search, int length_cmp);
 int	hex2int(char *pChars);
-char   *strstr2(char *s, char *t);
+char *strstr2(char *s, char *t);
 
 char *PutDate_string(time_t date);
 time_t PutDate_unix(char *date);
 
-char   *get_real_string(char *req_uri);
+char *get_real_string(char *req_uri);
 
 int	get_version_protocol(char *remote_protocol);
 char  *get_name_protocol(int remote_protocol);
@@ -66,5 +66,3 @@ void M_free(void *ptr);
 int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 char *remove_space(char *buf);
-
-void DEBUG(char *buf);
