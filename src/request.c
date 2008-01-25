@@ -262,11 +262,23 @@ int Get_Request(struct client_request *cr)
     while(p_request)
     {
         status = Process_Request(cr, p_request);
+        /* Register request (logs) */
+        if(p_request->method!=METHOD_NOT_FOUND && p_request->make_log==VAR_ON){
+#ifdef MOD_MYSQL
+    mod_mysql_log_main(p_request);
+#endif
+            SetEGID_BACK(); /* We need change user if i'm root */
+            log_main(p_request); /* Log */
+            SetUIDGID();  /* Back to old user */
+        }
+
         if(status<0){
             return status;
         }
         p_request = p_request->next;
     }
+
+
     return status;
 }
 
@@ -740,7 +752,7 @@ struct request *alloc_request()
 
     request = (struct request *) M_malloc(sizeof(struct request));
     request->log = (struct log_info *) M_malloc(sizeof(struct log_info));
-    //request->log->ip=PutIP(remote);
+    request->log->ip=PutIP(remote);
 
     request->status=VAR_OFF; /* Request not processed yet */
     request->make_log=VAR_ON; /* build log file of this request ? */
@@ -776,7 +788,7 @@ struct request *alloc_request()
     request->server_signature = NULL;
     request->user_uri = NULL;
     request->query_string = NULL;
-        
+
     request->virtual_user = NULL;
     request->script_filename = NULL;
     request->real_path = NULL;

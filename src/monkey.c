@@ -89,12 +89,11 @@ void *thread_init(void *args)
 	while(request_response==0){
 		/* Alloc memory */
 		request_response = Get_Request(th->cr); /* Working in request... */
-    		
-        /* LOGS HAS BEEN DISABLED 
-		if(config->keep_alive==VAR_OFF || th->sr->keep_alive==VAR_OFF){
+
+		if(config->keep_alive==VAR_OFF || th->cr->request->keep_alive==VAR_OFF){
 			break;
 		}
-        */
+
 		/* Persistent connection: Exit */
 		if(th->cr->counter_connections>=config->max_keep_alive_request || 
                            request_response==2 || request_response==-1){
