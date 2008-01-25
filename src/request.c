@@ -164,10 +164,16 @@ int Get_Request(struct client_request *cr)
 
 	s_request = cr->request;
 
-	if(cr->counter_connections>0)
+	if(cr->counter_connections>1)
+    {
 		recv_timeout=config->keep_alive_timeout; 
-	else
+	}
+    else
+    {
 		recv_timeout=config->timeout;
+    }
+
+    cr->counter_connections++;
 
 	memset(remote_request, '\0', sizeof(remote_request));
 	limit_time = (int) time(NULL) + recv_timeout;
@@ -257,7 +263,6 @@ int Get_Request(struct client_request *cr)
         }
 	} while(process_request);
 
-    cr->counter_connections++;
     p_request = cr->request;
     while(p_request)
     {
@@ -508,7 +513,6 @@ int Process_Request_Header(struct request *sr)
         M_free(str_prot);
 	}
 
-
     /* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
 		
@@ -539,13 +543,14 @@ int Process_Request_Header(struct request *sr)
 
 	/* Variables generales del header remoto */
 	sr->keep_alive=VAR_OFF;
-	if((strstr2(sr->body, RH_CONNECTION))!=NULL && sr->protocol==HTTP_11){
+	if((strstr2(sr->body, RH_CONNECTION))!=NULL && 
+                            (sr->protocol==HTTP_11 || sr->protocol==HTTP_10) ){
 		sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
 		if((strstr2(sr->connection,"Keep-Alive"))!=NULL){
 			sr->keep_alive=VAR_ON;
 		}
 	}
-	
+
 	sr->accept			= Request_Find_Variable(sr->body, RH_ACCEPT);
 	sr->accept_charset	= Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
 	sr->accept_encoding   = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);

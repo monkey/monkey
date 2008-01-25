@@ -90,14 +90,14 @@ void *thread_init(void *args)
     th->cr->request = NULL;
 
 	while(request_response==0){
+        th->cr->counter_connections++;
 		request_response = Get_Request(th->cr); /* Working in request... */
 
-        /*
         if(!th->cr->request)
         {
             break;
         }
-        */
+
 
         request_keepalive = th->cr->request->keep_alive;
         free_list_requests(th->cr);
