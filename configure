@@ -118,8 +118,24 @@ cp lang/"$*"/INSTALL ./
 cp lang/"$*"/README ./
 }
 
+local_dirs()
+{
+bin="bin"
+logs="logs"
+
+if [ ! -d $bin ]; then
+    mkdir $bin
+fi
+
+if [ ! -d $logs ]; then
+    mkdir $logs
+fi
+
+}
+
 main()
 {
+    local_dirs
 	dir=0
 	actual_path=`pwd`
 	rm -rf src/extras/inf/*
@@ -503,7 +519,6 @@ chmod 755 bin/banana
 #---------------------------#
 # Starting configure 	   
 #---------------------------#
-
 aux=`pwd`
 
 prefix="$aux"
