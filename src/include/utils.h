@@ -30,9 +30,6 @@
 /* utils.c */
 int SendFile(struct client_request *cr, 
         char *header_range, char *pathfile, size_t size, int ranges[2]);
-
-int SendFileOLD(struct client_request *cr, 
-        char *header_range, char *pathfile, size_t size, int ranges[2]);
 int	CheckDir(char *pathfile);
 int	CheckFile(char *pathfile);
 int	AccessFile(char *pathfile);
