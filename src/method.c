@@ -242,15 +242,19 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	else{ /* without content-type */
 		sr->headers->content_type = NULL;
 	}
+
 	M_METHOD_send_headers(socket, sr->headers, sr->log);
 
 	if(sr->headers->content_length==0){
+        printf("\nClosing connection ...length!");
+        fflush(stdout);
 		Mimetype_free(mime_info);
 		return -1;
 	}
 	/* Sending file */
 	if((sr->method==GET_METHOD || sr->method==POST_METHOD) && statfile.st_size>0)
-		SendFile(socket, sr->real_path, sr->headers->range_values);
+		SendFile(cr, sr->range, sr->real_path, 
+                                statfile.st_size, sr->headers->range_values);
 
 	Mimetype_free(mime_info);
 
@@ -400,7 +404,7 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 		buffer = m_build_buffer_from_buffer(buffer,"%s %s\r\n", RH_LAST_MODIFIED, sh->last_modified);
 	}
 	
-	/* Conexion */
+	/* Connection */
 	if(sh->pconnections_left!=0 && config->keep_alive==VAR_ON){
 		buffer = m_build_buffer_from_buffer(buffer, "Keep-Alive: timeout=%i, max=%i\r\n", config->keep_alive_timeout, sh->pconnections_left);
 		buffer = m_build_buffer_from_buffer(buffer, "Connection: Keep-Alive\r\n");
@@ -423,7 +427,7 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 
         /* yyy- */
 		if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
-			length = (unsigned long int) ( sh->content_length - sh->range_values[0] );
+			length = (unsigned int) ( sh->content_length - sh->range_values[0] );
 			buffer = m_build_buffer_from_buffer(buffer, "%s %i\r\n", RH_CONTENT_LENGTH, length);
 			buffer = m_build_buffer_from_buffer(buffer, "%s bytes %d-%d/%d\r\n", RH_CONTENT_RANGE, sh->range_values[0], 
 				(sh->content_length - 1), sh->content_length);
@@ -431,7 +435,11 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 		
 		/* yyy-xxx */
 		if(sh->range_values[0]>=0 && sh->range_values[1]>=0){
-			length = (unsigned long int) (sh->range_values[1] - sh->range_values[0] + 1);
+			length = (unsigned int) abs(sh->range_values[1] - sh->range_values[0]) + 1;
+            if(length<0){
+                printf("\nERROR!");
+                fflush(stdout);
+            }
 			buffer = m_build_buffer_from_buffer(buffer, "%s %d\r\n", RH_CONTENT_LENGTH, length);	
 			buffer = m_build_buffer_from_buffer(buffer, "%s bytes %d-%d/%d\r\n", RH_CONTENT_RANGE, sh->range_values[0], 
 				sh->range_values[1], sh->content_length);

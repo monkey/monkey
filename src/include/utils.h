@@ -28,7 +28,11 @@
 #define DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
 
 /* utils.c */
-int	SendFile(int socket, char *pathfile, int ranges[2]);
+int SendFile(struct client_request *cr, 
+        char *header_range, char *pathfile, size_t size, int ranges[2]);
+
+int SendFileOLD(struct client_request *cr, 
+        char *header_range, char *pathfile, size_t size, int ranges[2]);
 int	CheckDir(char *pathfile);
 int	CheckFile(char *pathfile);
 int	AccessFile(char *pathfile);

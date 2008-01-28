@@ -89,7 +89,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
             //fflush(stdout);
             cr_buf = alloc_request();
-            cr_buf->body = m_build_buffer("%s\n", block);
+            cr_buf->body = m_build_buffer("%s\r\n", block);
             cr_buf->next = NULL;
             M_free(block);
 
@@ -143,7 +143,7 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         }
     }
 
-    /* DEBUG BLOCKS 
+    /* DEBUG BLOCKS     
     cr_search = cr->request;
     while(cr_search){
         printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
@@ -164,7 +164,7 @@ int Get_Request(struct client_request *cr)
 
 	s_request = cr->request;
 
-	if(cr->counter_connections>1)
+	if(cr->counter_connections>0)
     {
 		recv_timeout=config->keep_alive_timeout; 
 	}
@@ -172,8 +172,6 @@ int Get_Request(struct client_request *cr)
     {
 		recv_timeout=config->timeout;
     }
-
-    cr->counter_connections++;
 
 	memset(remote_request, '\0', sizeof(remote_request));
 	limit_time = (int) time(NULL) + recv_timeout;
@@ -228,6 +226,9 @@ int Get_Request(struct client_request *cr)
             if(status<0)
             {
                 //Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1, s_request->log);
+                printf("\nCLOSING 2");
+                fflush(stdout);
+
                 return EXIT_NORMAL;
             }
 
@@ -263,7 +264,9 @@ int Get_Request(struct client_request *cr)
         }
 	} while(process_request);
 
+    cr->counter_connections++;
     p_request = cr->request;
+    
     while(p_request)
     {
         status = Process_Request(cr, p_request);
@@ -278,6 +281,9 @@ int Get_Request(struct client_request *cr)
         }
 
         if(status<0){
+            printf("\nSTATUS: %i", status);
+            fflush(stdout);
+
             return status;
         }
         p_request = p_request->next;

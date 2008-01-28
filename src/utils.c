@@ -21,26 +21,70 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/sendfile.h>
 
 #define __USE_XOPEN
 #include <time.h>
 
 #include "monkey.h"
 
+int SendFile(struct client_request *cr, 
+                char *header_range, char *pathfile, size_t size, int ranges[2])
+{
+    long int fd;
+    int st_status=0;
+    off_t offset=0;
+    long int off_size=0;
+    fd = open(pathfile, O_RDONLY);
+    off_size = size;
+
+    if(config->resume==VAR_ON && header_range){
+        /* yyy- */
+        if(ranges[0]>=0 && ranges[1]==-1){
+            offset = ranges[0];
+            off_size = size - offset;
+            fflush(stdout);
+        }
+
+        /* yyy-xxx */
+        if(ranges[0]>=0 && ranges[1]>=0){
+            offset = ranges[0];
+            off_size = labs(ranges[1]-ranges[0]) + 1;
+        }
+
+        /* -xxx */
+        if(ranges[0]==-1 && ranges[1]>=0){
+            offset = size - ranges[1];
+            off_size = ranges[1];
+        }
+    }
+
+    st_status = sendfile(cr->socket, fd, &offset, off_size);
+    if (st_status == -1) {
+        fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
+    }
+
+    close(fd);
+    return 0;
+}
+
 /* Sending file... */
-int SendFile(int socket, char *pathfile, int ranges[2])
+int SendFileOLD(struct client_request *cr, 
+                char *header_range, char *pathfile, size_t size, int ranges[2])
 {
 	long int num_bytes , offset_range=0;
 	int st_status=0;
 	char buffer[BUFFER_SOCKET];
 	FILE *file_request;
-	
+
 	if((file_request=fopen(pathfile,"r"))==NULL)
 		return -1;
 
@@ -70,18 +114,15 @@ int SendFile(int socket, char *pathfile, int ranges[2])
 		}
 	}
 	
-    //printf("*** SENDING FILE DATA ***\n");
 	while((num_bytes=fread(buffer,1, BUFFER_SOCKET, file_request)) > 0 ){
-        //printf("%s", buffer);
-        //fflush(stdout);
 		if( num_bytes<offset_range || offset_range==0) {
-			st_status=Socket_Timeout(socket, buffer, num_bytes, config->timeout, ST_SEND);
+			st_status=Socket_Timeout(cr->socket, buffer, num_bytes, config->timeout, ST_SEND);
 			if(config->resume==VAR_ON && offset_range>0)
 				offset_range = (unsigned int ) offset_range - num_bytes;
 		}
 		else {
 			num_bytes = offset_range;				
-			st_status=Socket_Timeout(socket, buffer, num_bytes, config->timeout, ST_SEND);
+			st_status=Socket_Timeout(cr->socket, buffer, num_bytes, config->timeout, ST_SEND);
 			break;
 		}
 		if(st_status==-2){
