@@ -1,9 +1,8 @@
-
 #!/bin/sh
 #
 #  Monkey HTTP Daemon
 #  ------------------
-#  Copyright (C) 2001-2002, Eduardo Silva P.
+#  Copyright (C) 2001-2007, Eduardo Silva P.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -135,7 +134,7 @@ char **MOD_Read_Config(char *mod_name);
 char *MOD_get_ptr_value(char **ptr, char *var);
 
 EOF
-		
+
 		##### MOD_MYSQL #####
 		if [ "$mod_mysql" = "on" ]; then
 			echo "* MySQL Module -> Running mod_mysql configure"
@@ -219,7 +218,7 @@ EOF
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
 	else
-		echo -e "' "
+		echo "' "
 	fi
 	echo
 }
@@ -331,9 +330,14 @@ if test -z $STRIP ; then
     STRIP="strip"
 fi
 
+##### Internal options ####
+if [ "$disable_sendfile" = "on" ]; then
+    internal_options="-DDISABLE_SENDFILE_SYSCALL"
+fi
+
 cat > src/Makefile<<EOF
 CC	= $CC
-DEFS	= $mod_defs
+DEFS	= $mod_defs $internal_options
 CFLAGS	= \$(DEFS) -g -O2 -Wall
 INCDIR  = ./include
 LDFLAGS	= 
@@ -546,6 +550,9 @@ for arg in $*; do
 		--lang*)
 			lang=$optarg
 			;;
+        --disable-sendfile*)
+            disable_sendfile="on"
+            ;;
 		--load-mod_mysql*)
 			modules="on"
 			mod_mysql="on"
@@ -577,6 +584,10 @@ for arg in $*; do
 			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
 			echo "  --lang=[en|es]	Language to configuration files (default English)"
 			echo 
+            echo "Internal options :"
+            echo 
+            echo "  --disable-sendfile  Do not use the sendfile() system call"
+            echo
 			echo "Modules :"
 			echo "  All modules are optional features, neither of them are loaded by default,"
 			echo "  the available modules are:"

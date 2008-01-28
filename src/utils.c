@@ -36,6 +36,7 @@
 
 #include "monkey.h"
 
+#ifndef DISABLE_SENDFILE_SYSCALL
 int SendFile(struct client_request *cr, 
                 char *header_range, char *pathfile, size_t size, int ranges[2])
 {
@@ -75,9 +76,9 @@ int SendFile(struct client_request *cr,
     close(fd);
     return 0;
 }
-
+#else
 /* Sending file... */
-int SendFileOLD(struct client_request *cr, 
+int SendFile(struct client_request *cr, 
                 char *header_range, char *pathfile, size_t size, int ranges[2])
 {
 	long int num_bytes , offset_range=0;
@@ -133,6 +134,7 @@ int SendFileOLD(struct client_request *cr,
 	fclose(file_request);	
 	return 0;	
 }
+#endif
 
 /* It's an valid directory ? */
 int CheckDir(char *pathfile)
