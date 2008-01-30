@@ -122,7 +122,7 @@ KeepAliveTimeout 15
 # Te permite tener tu archivo de configuracion en archivos separados.
 #
 # Example:
-#       Include virtualhost.conf
+#       Include something.conf
 
 # Max_IP
 # ------

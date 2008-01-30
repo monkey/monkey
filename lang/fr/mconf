@@ -5,16 +5,6 @@ cat > conf/monkey.conf <<EOF
 #
 # Ici les principales variables du programme sont définies.
 #
-# Server_root :
-# -------------
-# Le répertoire de travail principal du serveur, là où se trouvent
-# vos pages Web.
-#
-# Exemple:
-#      Server_root /home/krypton/htdocs
-#
-
-Server_root $datadir
 
 # Port : 
 # ------
@@ -25,14 +15,6 @@ Server_root $datadir
 #
 
 Port 2001
-
-# ServerName :
-# ------------
-# Vous pouvez mettre ici un hostname (ex :monkey.linuxchile.cl).
-# Mettez votre adresse IP si vous êtes sur un réseau ou 127.0.0.1 pour
-# travailler en local.
-
-ServerName 127.0.0.1
 
 # Timeout :
 # ---------
@@ -53,18 +35,6 @@ MaxClients 20
 
 PidFile $logdir/monkey.pid
 
-# AccessLog:
-# ----------
-# Fichier d'enregistrement des connections normales.
-
-AccessLog $logdir/access.log
-
-# ErrorLog:
-# ---------
-# Fichier d'enregistrement des connections erronées.
-
-ErrorLog $logdir/error.log
-
 # UserDir:
 # --------
 # Nom du répertoire des utilisateurs (/~user).
@@ -76,23 +46,6 @@ UserDir public_html
 # Nom du fichier à ouvir quand l'url se fini par un répertoire.
  
 Indexfile index.html index.htm
-
-# Server_ScriptAlias :
-# --------------------
-# Si vous utilisez CGI vous deveez définir le répertoire ou vous allez mettre
-# vos executables en définissant un alias de la forme :
-# 
-#       Server_ScriptAlias /name_of_alias/ original_path
-#
-
-Server_ScriptAlias /cgi-bin/ $cgibin
-
-# GetDir :
-# --------
-# S'il n'y a pas de fichier défini dans la rubrique 'Indexfile' envoyer
-# ou pas le contenu du répertoire (on/off).
-
-GetDir on
 
 # HideVersion :
 # ------------- 
@@ -137,29 +90,6 @@ User nobody
 #AddScript application/x-httpd-php /home/my_home/php/bin/php php
 #AddScript application/x-httpd-php /home/my_home/php/bin/php php3
 
-# VIRTUAL HOST :
-# --------------
-# Virtual host vous permet de servir différent fichiers dans différents 
-# répertoires, tout cela étant redirigé vers le client avec l'adresse 
-# du serveur spécifié.
-#
-# Exemple:
-#        
-# Si vous voulez définir par exemple www.exemple.org, quand la requête
-# arrive à la machine (bien entendu www.exemple.org doit être connu des
-# serveurs DNS) vous devez ajouter cette entrée :
-# 
-#   <Virtualhost>
-#       VirtualServerName www.example.org
-#       VirtualDocumentRoot /home/web/example/htdocs
-#       VirtualScriptAlias /cgi-bin/ /home/web/example/cgi-bin
-#       VirtualForceGetDir off
-#   </Virtualhost>
-#
-# Si vous n'avez pas de serveur DNS installé vous pouvez jouer avec le
-# loopback 127.0.0.1 en ajoutant votre adresse virtuelle dans /etc/hosts
-#
-
 # ---------------------
 # CONFIGURATION AVANCEE
 # --------------------
@@ -190,20 +120,7 @@ KeepAliveTimeout 15
 # fichiers.
 #
 # Exemple:
-#	Include virtualhost.conf
-
-# Header_file et Footer_file
-# ---------------------------
-#
-# 
-# Cette variable vous autorise à voir les fichier suivant quand vous avez
-# autorisé à voir les répertoires complets
-#
-Header_file .header
-Footer_file .footer
-#
-#
-#  Ces fichiers pourraient exister dans les répertoires à voir.
+#	Include something.conf
 
 # Max_IP
 # ------

@@ -385,10 +385,10 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/monkey.deny include/info.h ../logs/*\\
+	../conf/monkey.deny ../conf/sites/* include/info.h ../logs/*\\
 	extras/inf/*
 	@(cd extras && ./cleanmods.sh && cd ..)
-	
+
 .c.o:
 	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
 EOF

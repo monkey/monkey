@@ -1,6 +1,5 @@
 
-# Creando conf/monkey.conf
-cat > conf/monkey.conf <<EOF
+cat > conf/sites/default <<EOF
 # Host Inicial - Configuracion
 # ============================
 # Aqui se definen las variables principales del programa en lo que
