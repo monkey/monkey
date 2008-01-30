@@ -271,22 +271,7 @@ int fdprintf(int fd, int type, const char *format, ...)
 
 	va_start(ap, format);
 	length = vsnprintf(buffer, alloc, format, ap);
-	if(length == alloc - 1) {
-		/* glibc 2.0 */
-		do {
-			char	*ptr;
-			
-			ptr = M_realloc(buffer, alloc + 256);
-			if(!ptr) {
-				length = -1;
-				break;
-			}
-			buffer = ptr;
-			alloc += 256;
-			length = vsnprintf(buffer, alloc, format, ap);
-		} while(length == alloc - 1);
-
-	} else if(length >= alloc) {
+	if(length >= alloc) {
 		char *ptr;
 		
 		/* glibc 2.x, x > 0 */
@@ -360,22 +345,7 @@ char *m_build_buffer(const char *format, ...)
 	va_start(ap, format);
 	length = vsnprintf(buffer, alloc, format, ap);
 
-	if(length == alloc - 1) {
-		/* glibc 2.0 */
-		do {
-			char	*ptr;
-			
-			ptr = M_realloc(buffer, alloc + 256);
-			if(!ptr) {
-				length = -1;
-				break;
-			}
-			buffer = ptr;
-			alloc += 256;
-			length = vsnprintf(buffer, alloc, format, ap);
-		} while(length == alloc - 1);
-
-	} else if(length >= alloc) {
+    if(length >= alloc) {
 		char *ptr;
 		
 		/* glibc 2.x, x > 0 */
@@ -419,23 +389,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	va_start(ap, format);
 	length = vsnprintf(new_buffer, alloc, format, ap);
 
-	if(length == alloc - 1) {
-		/* glibc 2.0 */
-		do {
-			char	*ptr;
-			
-			ptr = M_realloc(new_buffer, alloc + 256);
-			if(!ptr) {
-				length = -1;
-				break;
-			}
-			new_buffer = ptr;
-			alloc += 256;
-			length = vsnprintf(new_buffer, alloc, format, ap);
-		
-		} while(length == alloc - 1);
-
-	} else if(length >= alloc) {
+    if(length >= alloc) {
 		char *ptr;
 		
 		/* glibc 2.x, x > 0 */
