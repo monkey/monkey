@@ -28,15 +28,15 @@
 
 #include "monkey.h"
 
-/* Lee la configuracion desde un archivo */
+/* Read configuration files */
 void M_Config_read_files(char *path_conf, char *file_conf)
 {
+    int bool;
 	char *path=0, buffer[255];
 	char *variable=0, *value=0, *last=0, *auxarg=0;
 	FILE *configfile;
 	struct stat checkdir;
 
-	
 	config->serverconf = M_strdup(path_conf);
 	
 	if(stat(config->serverconf, &checkdir)==-1){
@@ -50,7 +50,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		fprintf(stderr, "Error: I can't open %s file.\n", path);
 		exit(1);
 	}
-	
+
 	while(fgets(buffer,255,configfile)) {
 		int len;
 		len = strlen(buffer);
@@ -68,19 +68,6 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 
 		if (!variable || !value) continue;
 
-		/* Ubicacion directorio servidor */
-		if(strcasecmp(variable,"Server_root")==0) {
-			config->server_root=M_strdup(value);
-			if(stat(config->server_root, &checkdir)==-1) {
-				fprintf(stderr, "ERROR: Invalid path to Server_root in %s.", path);	
-				exit(1);
-			}
-			else if(!(checkdir.st_mode & S_IFDIR)) {
-				fprintf(stderr, "ERROR: Server_root variable in %s has an invalid directory path.", path);
-				exit(1);
-			}
-		}	
-
 		/* Puerto de conexion */
 		if(strcasecmp(variable, "Port")==0) {
 			config->serverport=atoi(value);
@@ -88,10 +75,6 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 				M_Config_print_error_msg("Port", path);
 		}
 
-		/* Server Name */
-		if(strcasecmp(variable,"Servername")==0)
-			config->servername = m_build_buffer("%s", value);
-		
 		/* Timeout */
 		if(strcasecmp(variable,"Timeout")==0) {
 			config->timeout=atoi(value);
@@ -101,13 +84,17 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 				
 		/* KeepAlive */
 		if(strcasecmp(variable,"KeepAlive")==0) {
-			if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-			    M_Config_print_error_msg("KeepAlive", path);
-			else if(strcasecmp(value,VALUE_OFF)==0)
-					config->keep_alive=VAR_OFF;
-		}
-		
-			/* MaxKeepAliveRequest */
+            bool = M_Config_Get_Bool(value);
+            if(bool == VAR_ERR)
+            {
+                M_Config_print_error_msg("KeepAlive", path);
+            }
+            else{
+                config->keep_alive=bool;
+            }
+        }
+
+    	/* MaxKeepAliveRequest */
 		if(strcasecmp(variable,"MaxKeepAliveRequest")==0){
 			config->max_keep_alive_request=atoi(value);
 			if(config->max_keep_alive_request!=0)
@@ -134,14 +121,6 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable,"PidFile")==0)
 			config->pid_file_path=m_build_buffer("%s", value);
 
-		/* Access log */
-		if(strcasecmp(variable,"AccessLog")==0) 
-			config->access_log_path=m_build_buffer("%s", value);
-		
-		/* Error log */
-		if(strcasecmp(variable,"ErrorLog")==0)
-			config->error_log_path = m_build_buffer("%s", value);
-		
 		/* Directorio para /~ */
 		if(strcasecmp(variable,"UserDir")==0){
 			config->user_dir = m_build_buffer("%s", value);
@@ -156,34 +135,16 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 			}
 		}
 
-		/* Script_Alias del server */
-		if(strcasecmp(variable,"Server_ScriptAlias")==0) {
-			if(!value) M_Config_print_error_msg("Script_Alias", path);
-			config->server_scriptalias = (char **) M_malloc(sizeof(char *) * 3);
-			config->server_scriptalias[0]=M_strdup(value);
-			auxarg=strtok_r(NULL,"\"\t ", &last);
-
-			if(!auxarg) M_Config_print_error_msg("Script_Alias", path);
-			config->server_scriptalias[1]=M_strdup(auxarg);
-			config->server_scriptalias[2]='\0';
-		}
-	
-		/* GetDir Variable */
-		if(strcasecmp(variable,"GetDir")==0) {
-			if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-			    M_Config_print_error_msg("GetDir", path);
-			else if(strcasecmp(value,VALUE_OFF)==0)
-					 config->getdir=VAR_OFF;
-		}
-				
-
 		/* HideVersion Variable */
 		if(strcasecmp(variable,"HideVersion")==0) {
-			if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-			    M_Config_print_error_msg("HideVersion", path);
-			else
-				if(strcasecmp(value,VALUE_ON)==0)
-					config->hideversion=VAR_ON;
+            bool = M_Config_Get_Bool(value);
+            if(bool == VAR_ERR)
+            {
+                M_Config_print_error_msg("HideVersion", path);
+            }
+            else{
+                config->hideversion=bool;
+            }
 		}
 		
 		/* Scripts */
@@ -217,21 +178,28 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		}
 
 		/* Resume */
-		if(strcasecmp(variable, "Resume")==0) {
-			if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-			    M_Config_print_error_msg("Resume", path);
-			else
-				if(strcasecmp(value,VALUE_OFF)==0)
-					config->resume=VAR_OFF;
+		if(strcasecmp(variable, "Resume")==0)
+        {
+            bool = M_Config_Get_Bool(value);
+            if(bool == VAR_ERR)
+            {
+                M_Config_print_error_msg("Resume", path);
+            }
+            else{
+                config->resume=bool;
+            }
 		}
 		
 		/* Symbolic Links */
 		if(strcasecmp(variable, "SymLink")==0) {
-			if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-			    M_Config_print_error_msg("SymLink", path);
-			else
-				if(strcasecmp(value,VALUE_OFF)==0)
-					config->symlink=VAR_OFF;
+            bool = M_Config_Get_Bool(value);
+            if(bool == VAR_ERR)
+            {
+                M_Config_print_error_msg("SymLink", path);
+            }
+            else{
+                config->symlink=bool;
+            }
 		}
 		/* Max connection per IP */
 		if(strcasecmp(variable, "Max_IP")==0) {
@@ -244,17 +212,153 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable,"Include")==0) {
 			M_Config_read_files(path_conf, value);
 		}
-		
-		if(strcasecmp(variable, "Header_file")==0) {
-			config->header_file = m_build_buffer("%s", value);		
-		}
-		if(strcasecmp(variable, "Footer_file")==0) {
-			config->footer_file = m_build_buffer("%s", value);
-		}
 	}
 	fclose(configfile);
-	M_free(path);	
-	VHOST_Read_Config(path_conf, file_conf); /* Verificar VH definidos en monkey.conf */
+	M_free(path);
+    M_Config_Read_Hosts(path_conf);
+}
+
+void M_Config_Read_Hosts(char *path)
+{
+    char *buf;
+    struct host *h; /* debug */
+
+    buf = m_build_buffer("%s/sites/default", path);
+    config->hosts = M_Config_Get_Host(buf);
+
+    h = config->hosts;
+    while(h)
+    {
+        printf("*** HOST ***\n");
+        printf(" [servername]\t\t%s\n", h->servername);
+        printf(" [documentroot]\t\t%s\n", h->documentroot);
+        printf(" [conf file]\t\t%s\n", h->file);
+        printf(" [access log]\t\t%s\n", h->access_log_path);
+        printf(" [error log]\t\t%s\n", h->error_log_path);
+        printf(" [script alias]\t\t%s %s\n", h->scriptalias[0], h->scriptalias[1]);
+        printf(" [get dir]\t\t%i\n", h->getdir);
+        printf(" [header file]\t\t%s\n", h->header_file);
+        printf(" [footer file]\t\t%s\n\n", h->footer_file);
+
+        h = h->next;
+    }
+    fflush(stdout);
+}
+
+int M_Config_Get_Bool(char *value)
+{
+    int on, off;
+
+    on = strcasecmp(value, VALUE_ON);
+    off = strcasecmp(value,VALUE_OFF);
+
+    if(on!=0 && off!=0)
+    {
+        return -1;
+    }
+    else if(on>=0)
+    {
+        return VAR_ON;
+    }
+    else{
+        return VAR_OFF;
+    }
+}
+
+struct host *M_Config_Get_Host(char *path)
+{
+    char buffer[255];
+    char *variable=0, *value=0, *last=0, *auxarg=0;
+    FILE *configfile;
+    struct stat checkdir;
+    struct host *host;
+
+    printf("[PARSING HOST FILE]: %s\n", path);
+    fflush(stdout);
+
+    if( (configfile=fopen(path,"r"))==NULL ) {
+        fprintf(stderr, "Error: I can't open %s file.\n", path);
+        exit(1);
+    }
+
+    host = M_malloc(sizeof(struct host));
+    host->file = M_strdup(path);
+
+    while(fgets(buffer,255,configfile)) {
+        int len;
+        len = strlen(buffer);
+        if(buffer[len-1] == '\n') {
+            buffer[--len] = 0;
+            if(len && buffer[len-1] == '\r')
+                buffer[--len] = 0;
+        }
+        
+        if(!buffer[0] || buffer[0] == '#')
+            continue;
+            
+        variable   = strtok_r(buffer, "\"\t ", &last);
+        value     = strtok_r(NULL, "\"\t ", &last);
+
+        if (!variable || !value) continue;
+
+
+        /* Server Name */
+        if(strcasecmp(variable,"Servername")==0)
+            host->servername = m_build_buffer("%s", value);
+
+        /* Ubicacion directorio servidor */
+        if(strcasecmp(variable,"DocumentRoot")==0) {
+            host->documentroot=M_strdup(value);
+            if(stat(host->documentroot, &checkdir)==-1) {
+                fprintf(stderr, "ERROR: Invalid path to Server_root in %s.", path); 
+                exit(1);
+            }
+            else if(!(checkdir.st_mode & S_IFDIR)) {
+                fprintf(stderr, "ERROR: DocumentRoot variable in %s has an invalid directory path.", path);
+                exit(1);
+            }
+        }
+
+        /* Access log */
+        if(strcasecmp(variable,"AccessLog")==0) 
+            host->access_log_path=m_build_buffer("%s", value);
+        
+        /* Error log */
+        if(strcasecmp(variable,"ErrorLog")==0)
+            host->error_log_path = m_build_buffer("%s", value);
+        
+        /* GetDir Variable */
+        if(strcasecmp(variable,"GetDir")==0)
+        {
+            if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
+                M_Config_print_error_msg("GetDir", path);
+            else if(strcasecmp(value,VALUE_OFF)==0)
+                     host->getdir=VAR_OFF;
+        }
+
+        /* Script_Alias del server */
+        if(strcasecmp(variable,"ScriptAlias")==0)
+        {
+            if(!value) M_Config_print_error_msg("ScriptAlias", path);
+            host->scriptalias = (char **) M_malloc(sizeof(char *) * 3);
+            host->scriptalias[0]=M_strdup(value);
+            auxarg=strtok_r(NULL,"\"\t ", &last);
+
+            if(!auxarg) M_Config_print_error_msg("ScriptAlias", path);
+            host->scriptalias[1]=M_strdup(auxarg);
+            host->scriptalias[2]='\0';
+        }
+
+        if(strcasecmp(variable, "Header_file")==0)
+            host->header_file = m_build_buffer("%s", value);
+
+        if(strcasecmp(variable, "Footer_file")==0)
+            host->footer_file = m_build_buffer("%s", value);
+
+    }
+    fclose(configfile);
+    host->next = NULL;
+    return host;
 }
 
 /* Imprime error de configuracion y cierra */
@@ -290,7 +394,6 @@ void M_Config_set_init_values(void)
 {
 	/* Valores iniciales */
 	config->timeout=15;
-	config->getdir=0;
 	config->hideversion=VAR_OFF;
 	config->keep_alive=VAR_ON;
 	config->keep_alive_timeout=15;
@@ -300,7 +403,6 @@ void M_Config_set_init_values(void)
 	config->resume=VAR_ON;
 	config->standard_port=80;
 	config->serverport=2001;
-	config->server_scriptalias=NULL;
 	config->server_addr=NULL;
 	config->symlink=VAR_OFF;
 }

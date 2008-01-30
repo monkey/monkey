@@ -229,8 +229,7 @@ char *read_header_footer_file(char *file_path)
    Modified : 2002/10/22 
    -> Chunked Transfer Encoding support added to HTTP/1.1
 */
-int GetDir(struct client_request *cr, struct request *sr, char *header_file, 
-                                                          char *footer_file)
+int GetDir(struct client_request *cr, struct request *sr)
 {
 	DIR *dir;
 	struct dirent *ent;
@@ -265,7 +264,7 @@ int GetDir(struct client_request *cr, struct request *sr, char *header_file,
 		if (strcmp((char *) ent->d_name, "." )  == 0) continue;
 		if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
 
-		if(strcmp(ent->d_name, header_file)==0 || strcmp(ent->d_name, footer_file)==0){
+		if(strcmp(ent->d_name, sr->host_conf->header_file)==0 || strcmp(ent->d_name, sr->host_conf->footer_file)==0){
 			continue;	
 		}
 		
@@ -315,7 +314,7 @@ int GetDir(struct client_request *cr, struct request *sr, char *header_file,
 				 <H1>Index of %s</H1>", sr->uri_processed, sr->uri_processed);
 				 
 				 
-	real_header_file = m_build_buffer("%s%s", sr->real_path, header_file);
+	real_header_file = m_build_buffer("%s%s", sr->real_path, sr->host_conf->header_file);
 
 	if(real_header_file){
 		char *header_file_buffer=0;
@@ -348,7 +347,7 @@ int GetDir(struct client_request *cr, struct request *sr, char *header_file,
 
 
 	content_buffer = m_build_buffer_from_buffer(content_buffer,"</PRE><HR>");
-	real_footer_file = m_build_buffer("%s%s", sr->real_path, footer_file);
+	real_footer_file = m_build_buffer("%s%s", sr->real_path, sr->host_conf->footer_file);
 
 	if(real_footer_file){
 		char *footer_file_buffer=0;

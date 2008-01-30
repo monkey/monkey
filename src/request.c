@@ -311,7 +311,7 @@ int Validate_Request_Header(char *buf)
 int Process_Request(struct client_request *cr, struct request *s_request)
 {
     int status=0;
-    struct vhost *vhost;
+    struct host *host;
 
     status = Process_Request_Header(s_request);
     if(status<0)
@@ -320,22 +320,6 @@ int Process_Request(struct client_request *cr, struct request *s_request)
     }
 
     s_request->user_home=VAR_OFF;
-    s_request->temp_path = m_build_buffer(config->server_root);
-
-	/* Empty Host (HTTP/1.0) */
-	if(!s_request->host){
-		s_request->host=m_build_buffer("%s", config->servername);
-	}
-
-	/* Server Signature */
-	if(config->hideversion==VAR_OFF){
-		s_request->server_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)", 
-			VERSION, s_request->host, config->serverport);
-	}
-	else{
-		s_request->server_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)", 
-			s_request->host, config->serverport);
-	}
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
@@ -349,7 +333,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		Request_Error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
-	
+
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host && s_request->protocol==HTTP_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
@@ -357,13 +341,6 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}
 	
-	/* Setting info: SERVER_SCRIPTALIAS */
-	if(config->server_scriptalias!=NULL){
-		s_request->scriptalias[0] = config->server_scriptalias[0];
-		s_request->scriptalias[1] = config->server_scriptalias[1];
-		s_request->scriptalias[2]='\0';
-	}
-
 	/* Method not allowed ? */
 	if(s_request->method==METHOD_NOT_ALLOWED){
 		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
@@ -377,31 +354,37 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
-	
-	/* It's a request for a special VirtualHost ? */
-	if((vhost=VHOST_Find(s_request->host))!=NULL) {
-		if(s_request->temp_path)
-			M_free(s_request->temp_path);
-			
-		s_request->temp_path = m_build_buffer(vhost->documentroot);
 
-		s_request->scriptalias[0]=vhost->cgi_alias;
-		s_request->scriptalias[1]=vhost->cgi_path;
-		s_request->scriptalias[2]='\0';
+    if(s_request->host)
+    {
+        host=VHOST_Find(s_request->host);
+        if(host){
+            s_request->host_conf = host;
+        }
+        else{
+            s_request->host_conf = config->hosts;
+        }
+    }
+    else{
+        s_request->host_conf = config->hosts;
+    }
 
-		/* If wasn't defined a forcegetdir var on Vhost configuration
-		 we assume default server config to getdir var */
-		if(vhost->forcegetdir != VAR_NOTSET){
-			s_request->getdir = vhost->forcegetdir;
-		}
-	}
+    /* Server Signature */
+    if(config->hideversion==VAR_OFF){
+        s_request->server_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)", 
+            VERSION, s_request->host_conf->servername, config->serverport);
+    }
+    else{
+        s_request->server_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)", 
+            s_request->host_conf->servername, config->serverport);
+    }
 
 	/* CGI Request ? */
-	if(config->server_scriptalias!=NULL){
+	if(s_request->host_conf->scriptalias!=NULL){
 		int len=0;
-		
-		len = strlen(config->server_scriptalias[0]);
-		if((strncmp(config->server_scriptalias[0], s_request->uri_processed, len))==0){
+
+		len = strlen(s_request->host_conf->scriptalias[0]);
+		if((strncmp(s_request->host_conf->scriptalias[0], s_request->uri_processed, len))==0){
 			int cgi_status;
 			cgi_status=M_CGI_main(cr, s_request, s_request->log, s_request->body);
 			/* Codes:
@@ -774,7 +757,6 @@ struct request *alloc_request()
     request->log->status=S_LOG_ON;
     request->status=VAR_ON;
     request->method=METHOD_NOT_FOUND;
-    request->getdir = config->getdir;
 
     request->uri = NULL;
     request->uri_processed = NULL;
@@ -794,7 +776,7 @@ struct request *alloc_request()
     request->resume = NULL;
     request->user_agent = NULL;
     request->post_variables = NULL;
-    request->temp_path = NULL;
+
             
     request->server_signature = NULL;
     request->user_uri = NULL;
@@ -884,7 +866,6 @@ void free_request(struct request *sr)
         M_free(sr->resume);
         M_free(sr->user_agent);
         M_free(sr->post_variables);
-        M_free(sr->temp_path);
  
         M_free(sr->server_signature);
 

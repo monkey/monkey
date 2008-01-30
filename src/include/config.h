@@ -26,25 +26,17 @@
 struct server_config {
 	char *serverconf;	/* path to configuration files */
 	char *server_addr;
-	char *server_root;
 	char *server_software;
-	char *servername;
 	char *user;
 	char *user_dir;
 	char *pid_file_path; /* pid of server */
-	char *access_log_path; /* access log file */
-	char *error_log_path;  /* error log file */
 	char *file_config;
-	char *header_file;	/* Path file with information about directory shown */
-	char *footer_file;   /* Path file with information about directory shown */
-	char **server_scriptalias;
 	char **request_headers_allowed;
 
 	int  symlink; /* symbolic links */
 	int  serverport; /* port */
 	int  timeout;  /* max time to wait for a new connection */
 	int  maxclients; /* max clients (max threads) */
-	int  getdir; /* allow show directory info ? */
 	int  hideversion; /* hide version of server to clients ? */
 	int  standard_port; /* common port used in web servers (80) */
 	int  pid_status;
@@ -64,9 +56,27 @@ struct server_config {
 
 	/* max ip */
 	int max_ip;
-
+    struct host *hosts;
 };
 struct server_config *config;
+
+struct host {
+    char *file; /* configuration file */
+    char *servername; /* host name */
+    char *documentroot;
+
+    char *access_log_path; /* access log file */
+    char *error_log_path;  /* error log file */
+    char *header_file;  /* Path file with information about directory shown */
+    char *footer_file;   /* Path file with information about directory shown */
+
+    int  getdir; /* allow show directory info ? */
+
+    char *cgi_alias;
+    char *cgi_path;
+    char **scriptalias;
+    struct host *next;
+};
 
 /* Functions */
 void	M_Config_start_configure(void);
@@ -74,3 +84,8 @@ void	M_Config_read_files(char *path_conf, char *file_conf);
 void	M_Config_add_index(char *indexname);
 void	M_Config_print_error_msg(char *variable, char *path);
 void	M_Config_set_init_values(void);
+
+int M_Config_Get_Bool(char *value);
+void M_Config_Read_Hosts(char *path);
+struct host *M_Config_Get_Host(char *path);
+

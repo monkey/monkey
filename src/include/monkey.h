@@ -59,6 +59,7 @@ un home de un usuario */
 #define S_LOG_OFF 1
 
 /* Valores para distintas variables */
+#define VAR_ERR -2
 #define VAR_NOTSET -1
 #define VAR_ON 0
 #define VAR_OFF 1

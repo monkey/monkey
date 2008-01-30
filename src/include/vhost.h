@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2007, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,20 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* vhost.c */
-struct vhost {
-	char *servername;
-	char *documentroot;
-	char *cgi_alias;
-	char *cgi_path;
-	int	forcegetdir;
-	struct vhost *next;
-} *first_vhost;
-
-void	VHOST_Read_Config(char *path_conf, char *file_conf);
-void	VHOST_Config_Error(char *path);
-
-struct vhost	*VHOST_Find(char *host);
-int	 VHOST_Config_Add(char *vhost_servername, char *vhost_documentroot, \
-	char *vhost_cgi_alias, char *vhost_cgi_path, int forcegetdir);
+struct host	*VHOST_Find(char *host);
+void VHOST_Config_Error(char *path);
+int	 VHOST_Config_Add(char *vhost_servername, char *vhost_documentroot,
+                    char *vhost_cgi_alias, char *vhost_cgi_path, int getdir);
 

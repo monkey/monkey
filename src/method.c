@@ -47,10 +47,10 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 
 	/* Peticion normal, no es a un Virtualhost */
 	if((strcmp(sr->uri_processed,"/"))==0)
-		sr->real_path = m_build_buffer("%s", sr->temp_path);
+		sr->real_path = m_build_buffer("%s", sr->host_conf->documentroot);
 
 	if(sr->user_home==VAR_OFF){
-		sr->real_path = m_build_buffer("%s%s", sr->temp_path, sr->uri_processed);
+		sr->real_path = m_build_buffer("%s%s", sr->host_conf->documentroot, sr->uri_processed);
 	}
 	
 	if(sr->method!=HEAD_METHOD)
@@ -113,10 +113,10 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		index_file = (char *) FindIndex(sr->real_path);
 		if(!index_file) {
 			/* No index file found, show the content directory */
-			if(sr->getdir==VAR_ON) {
+			if(sr->host_conf->getdir==VAR_ON) {
 				int getdir_res = 0;
 
-				getdir_res = GetDir(cr, sr, config->header_file, config->footer_file);
+				getdir_res = GetDir(cr, sr);
 					
 				if(getdir_res == -1){
 					Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);

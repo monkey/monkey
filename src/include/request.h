@@ -96,19 +96,13 @@ struct request {
 	/*-----------------*/
 
 	char *real_path; /* Path real al que se realiza la petici�n */
-	char *temp_path; /* Variable temporal para trabajar con 
-						Virtualhost en request. */
-
 	char *user_uri; /* Lo que queda despues del /~user/.... */
 	char *query_string; /* ?... */
 
 	char *virtual_user; /* Usuario del proceso para un Virtualhost */
-	char *scriptalias[MAX_SCRIPTALIAS]; /* Arreglo que mantiene info de peticion a un Virtualhost */
 	char *script_filename;
 
 	char *server_signature;
-	
-	int  getdir; 
 	
 	int  keep_alive;	
 	int  user_home; /* � Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
@@ -119,7 +113,8 @@ struct request {
 	
 	int make_log;
 	int cgi_pipe[2];
-		
+
+    struct host *host_conf;
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */
     struct request *next;

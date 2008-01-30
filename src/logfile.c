@@ -42,7 +42,7 @@ int log_main(struct request *sr)
 	
 	/* Registramos una peticion exitosa */
 	if(sr->log->final_response==M_HTTP_OK || sr->log->final_response==M_REDIR_MOVED_T){
-		if((log_file=fopen(config->access_log_path,"a"))==NULL){
+		if((log_file=fopen(sr->host_conf->access_log_path,"a"))==NULL){
 			pthread_mutex_unlock(&mutex_logfile);
 			return -1;
 		}
@@ -56,7 +56,7 @@ int log_main(struct request *sr)
 
 	}
 	else{ /* Registramos algun error */
-		if((log_file=fopen(config->error_log_path,"a"))==NULL){
+		if((log_file=fopen(sr->host_conf->error_log_path,"a"))==NULL){
 			pthread_mutex_unlock(&mutex_logfile);
 			return -1;
 		}
@@ -93,7 +93,7 @@ int remove_log_pid()
 }
 
 /* Calcula y formatea la salida de la fecha y 
-	hora de conexión (Por Daniel R. Ome) */
+	hora de conexiï¿½n (Por Daniel R. Ome) */
 char *PutTime() {
 
    time_t      fec_hora;

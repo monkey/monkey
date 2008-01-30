@@ -38,7 +38,7 @@ int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s
 {
 	int cgi_status=0, checkdir;
 
-	sr->script_filename = (char *) M_CGI_alias(sr->uri_processed, sr->scriptalias[0], sr->scriptalias[1]);
+	sr->script_filename = (char *) M_CGI_alias(sr->uri_processed, sr->host_conf->scriptalias[0], sr->host_conf->scriptalias[1]);
 	checkdir=CheckDir(sr->script_filename);
 
 	if(access(sr->script_filename,F_OK)!=0){
@@ -292,7 +292,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 	
 	ptr = arg = (char **) M_malloc(sizeof(char *) * 30);
 
-	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", config->server_root);
+	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", sr->host_conf->documentroot);
 	
 	if(sr->method==POST_METHOD && sr->content_length>0){
 		snprintf(auxint,10,"%i",sr->content_length);
