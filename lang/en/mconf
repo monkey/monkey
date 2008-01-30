@@ -5,17 +5,6 @@ cat > conf/monkey.conf <<EOF
 # Here the variable principals of the program are defined in respect
 # to the configuration of the different types of directives.
 
-# Server_root :
-# -------------
-# This variable corresponds to the location of the main server directory
-# of the web pages, where the files of your site are located.
-#
-# Example:
-#      Server_root /home/krypton/htdocs
-#
-
-Server_root $datadir
-
 # Port : 
 # ------
 # Port is the number of the door in which Monkey will be listened through
@@ -25,14 +14,6 @@ Server_root $datadir
 # privledges of Root.
 
 Port 2001
-
-# ServerName :
-# ------------
-# Allow you to set a host and domain name (e.g monkey.linuxchile.cl). If      
-# you are working in a local network just set your IP address or if you
-# are working like localhost set your loopback address (127.0.0.1).
-
-ServerName 127.0.0.1
 
 # Timeout :
 # ---------
@@ -54,18 +35,6 @@ MaxClients 20
 
 PidFile $logdir/monkey.pid
 
-# AccessLog:
-# ----------
-# Registration file of correct request.
-
-AccessLog $logdir/access.log
-
-# ErrorLog:
-# ---------
-# Registration file of incorrect request.
-
-ErrorLog $logdir/error.log
-
 # UserDir:
 # --------
 # Directory name for users home (/~user).
@@ -78,25 +47,6 @@ UserDir public_html
  
 Indexfile index.html index.htm
 
-# Server_ScriptAlias :
-# --------------------   
-# If you which to have CGI support (Common Gateway Interface), you should
-# define the directory where the executive scripts will be found,for that,
-# you should define an alias directory towards the original of the
-# following form:
-# 
-#       Server_ScriptAlias /name_of_alias/ original_path
-#
-
-Server_ScriptAlias /cgi-bin/ $cgibin
-
-# GetDir :
-# --------
-# In case a starting file cannot be found for the required route through
-# the browser, it's possible to send the information from the directory 
-# with it's respective contents (values on/off).
-
-GetDir on
 
 # HideVersion :
 # ------------- 
@@ -140,29 +90,6 @@ User nobody
 #AddScript application/x-httpd-php /home/my_home/php/bin/php php
 #AddScript application/x-httpd-php /home/my_home/php/bin/php php3
 
-# VIRTUAL HOST :
-# --------------
-# Virtualhost allow you to serve different files in different directories
-# all this directioned through the host address, which is sent through the
-# browser.
-#
-# Example:
-#        
-# If you want to define for example www.example.org, when the request
-# arrives to the machine (supposedly already accepted through DNS server), 
-# you should add the following entries:
-# 
-#   <Virtualhost>
-#       VirtualServerName www.example.org
-#       VirtualDocumentRoot /home/web/example/htdocs
-#       VirtualScriptAlias /cgi-bin/ /home/web/example/cgi-bin
-#       VirtualForceGetDir off
-#   </Virtualhost>
-# 
-# If you don't have a DNS Server installed, you can add your
-# virtual addresses in /etc/host and play with the loopback interface. =)
-#
-
 # -----------------
 #  ADVANCED CONFIG
 # -----------------
@@ -193,18 +120,6 @@ KeepAliveTimeout 15
 #
 # Example:
 #	Include virtualhost.conf
-
-# Header_file and Footer_file
-# ---------------------------
-#
-# This variables allow you show information of configured files when 
-# full directories are shown
-#
-Header_file .header
-Footer_file .footer
-#
-#
-#  This files could exist in directories to show.
 
 # Max_IP
 # ------

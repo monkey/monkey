@@ -108,7 +108,7 @@ messages_fr()
 
 make_conf()
 {
-cat $INCDIR/config.path lang/"$*"/mconf > makeconf.sh
+cat $INCDIR/config.path lang/"$*"/mconf lang/"$*"/sites/default > makeconf.sh
 chmod 755 makeconf.sh
 ./makeconf.sh
 rm makeconf.sh
@@ -122,6 +122,7 @@ local_dirs()
 {
 bin="bin"
 logs="logs"
+sites="conf/sites"
 
 if [ ! -d $bin ]; then
     mkdir $bin
@@ -129,6 +130,10 @@ fi
 
 if [ ! -d $logs ]; then
     mkdir $logs
+fi
+
+if [ ! -d $sites ]; then
+    mkdir $sites
 fi
 
 }
