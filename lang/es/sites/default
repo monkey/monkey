@@ -1,0 +1,76 @@
+
+# Creando conf/monkey.conf
+cat > conf/monkey.conf <<EOF
+# Host Inicial - Configuracion
+# ============================
+# Aqui se definen las variables principales del programa en lo que
+# respecta a la configuracion de los distintos tipos de directivas.
+#
+
+# DocumentRoot :
+# -------------
+# Esta variable corresponde a la ubicacion del directorio
+# raiz servidor de paginas web, en donde se ubican los archivos
+# de tu sitio.
+#
+# Ejemplo:
+#      DocumentRoot /home/krypton/htdocs
+#
+
+DocumentRoot $datadir
+
+# ServerName :
+# ------------
+# Te permite configurar el nombre de host y de dominio 
+# (monkey.linuxchile.cl). Si estas trabajando en una red local solo coloca 
+# tu IP o si trabajas localmente coloca tu direccion loopback (127.0.0.1).
+
+ServerName 127.0.0.1
+
+# AccessLog:
+# ----------
+# Archivo de registro de peticiones correctas.
+
+AccessLog $logdir/access.log
+
+# ErrorLog:
+# ---------
+# Archivo de registro de peticiones erroneas.
+
+ErrorLog $logdir/error.log
+
+# ScriptAlias :
+# -------------
+#  Si deseas tener soporte CGI (Common Gateway Interface), debes definir
+#  el directorio donde se encontraran los scripts a ejecutar, para esto ,
+#  debes definir un directorio alias hacia el original, de la siguiente
+#  forma:
+# 
+#       ScriptAlias /nombre_del_alias/ ruta_original
+# 
+
+ScriptAlias /cgi-bin/ $cgibin
+
+# GetDir :
+# --------
+# En caso de que no sea encontrado un archivo de inicio para la ruta
+# requerida por el browser, es posible enviar la informacion del directorio
+# con su contenido respectivos. Valores a tomar on/off.
+#
+
+GetDir on
+
+# Header_file y Footer_file
+# -------------------------
+#
+# Estas variablespermiten mostrar informacion de los archivos 
+# configurados cuando los directorios son mostrados
+#
+Header_file .header
+Footer_file .footer
+#
+#  Estos archivos pueden existir en los directorios a mostrar.
+
+
+EOF
+
