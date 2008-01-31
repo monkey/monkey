@@ -1,45 +1,47 @@
  Monkey HTTP Daemon - Install
  ============================
- Pour un fonctionnement optimum, je recommande que Monkey soit compilé
- avec GCC >= 2.95.3
- 
- Comme toute source nous devons lancer le script 'configure' puis
- make :
- 
+
+ For optimum functioning, i recommend that Monkey be compiled with GCC >= 
+ 2.95.3 .
+
+ Like every source program we must run 'configure' script and later
+ 'make':
+
  #./configure
  # make 
  
- En option, vous pouvez faire 'make install' qui vous copiera les fichiers
- selon les options spécifiées au lancement de configure.
- 
- Lancer Monkey
+ Optionally, you have the option of 'make install',which will copy the main
+ directory of monkey where it has been specificated in the script
+ configure.
+
+ Running Monkey
  ==============
 
 	bin/monkey
 
-	ou
+	or
 
-	bin/monkey -D (Pour lancer Monkey en démon)
-
- Vous pouvez spécifier à la ligne de commande le répertoire ou Monkey
- doit cherchez ses fichiers de conffiguration :	
+	bin/monkey -D (to run monkey in background mode)
+	
+ Optionally, you can specificate the directory whe the configuration files
+ are found, this can be done the following way: 
 
 	bin/monkey -D -c conf/
 	
- Cet argument est utilisé par les personnes qui veulent bien laisser
- plusieurs de leurs utilisateurs lancer Monkey sur des ports différents
- avec leur configuration propre.
- Pour plus d'informations voir 'conf/monkey.conf'
+ This argument (conf/) was thought of for those wishing to have Monkey
+ running for various users, in distinctive Ports and it's own 
+ configuration files. For more information see 'conf/monkey.conf'.
 
- Essayez l'option -h .
+ For more info try -h option.
 
- Tester Monkey
+ Testing Monkey
  ==============
  
- Pour voir si Monkey fonctionne essayer avec lynx ou Netscape :
+ To see that Monkey is running, make a requisite from your lynx or
+ netscape:
  
  	# lynx 127.0.0.1:2001
  	
- Note: Ceci est un exemple, le 2001 correspond au port assigné par
- défaut dans 'conf/monkey.conf'.
+ Note: In this example the '2001' corresponds to the connection port
+ assigned on 'conf/monkey.conf'.
  

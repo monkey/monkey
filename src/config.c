@@ -17,6 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <dirent.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -220,11 +221,50 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 
 void M_Config_Read_Hosts(char *path)
 {
+    DIR *dir;
     char *buf;
-    struct host *h; /* debug */
+    char *file;
+    struct host *h, *p_host, *new_host; /* debug */
+    struct dirent *ent;
+    struct f_list *file_list;
 
     buf = m_build_buffer("%s/sites/default", path);
     config->hosts = M_Config_Get_Host(buf);
+    M_free(buf);
+
+    if(!config->hosts)
+    {
+        printf("\nERR");
+        fflush(stdout);
+    }
+
+    buf = m_build_buffer("%s/sites/", path);
+    if (!(dir = opendir(buf)))
+        return -1;
+
+
+    p_host = config->hosts;
+
+    /* Leer los archivos y directorios */
+    while ((ent = readdir(dir)) != NULL)
+    {
+        if (strcmp((char *) ent->d_name, "." )  == 0) continue;
+        if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
+        if (strcasecmp((char *) ent->d_name, "default" ) == 0) continue;
+
+        file = m_build_buffer("%s/sites/%s", path, ent->d_name);
+
+        new_host = (struct host *) M_Config_Get_Host(file);
+        M_free(file);
+        if(!new_host)
+        {
+            continue;
+        }
+        else{
+            p_host->next = new_host;
+            p_host = new_host;
+        }
+    }
 
     h = config->hosts;
     while(h)
@@ -357,6 +397,10 @@ struct host *M_Config_Get_Host(char *path)
 
     }
     fclose(configfile);
+    if(!host->servername)
+    {
+        return NULL;
+    }
     host->next = NULL;
     return host;
 }

@@ -827,7 +827,6 @@ void free_list_requests(struct client_request *cr)
 
 void free_request(struct request *sr)
 {
-
         /* I hate it, but I don't know another light way :( */
         if(sr->headers){
             M_free(sr->headers->location);
@@ -876,5 +875,4 @@ void free_request(struct request *sr)
         M_free(sr->script_filename);
         M_free(sr->real_path);
         M_free(sr);
-    
 }
