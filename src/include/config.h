@@ -75,6 +75,7 @@ struct host {
     char *cgi_alias;
     char *cgi_path;
     char **scriptalias;
+    char *host_signature;
     struct host *next;
 };
 

@@ -226,7 +226,6 @@ void M_Config_Read_Hosts(char *path)
     char *file;
     struct host *h, *p_host, *new_host; /* debug */
     struct dirent *ent;
-    struct f_list *file_list;
 
     buf = m_build_buffer("%s/sites/default", path);
     config->hosts = M_Config_Get_Host(buf);
@@ -234,18 +233,18 @@ void M_Config_Read_Hosts(char *path)
 
     if(!config->hosts)
     {
-        printf("\nERR");
-        fflush(stdout);
+        printf("\nError parsing main configuration file 'default'\n");
+        exit(1);
     }
 
     buf = m_build_buffer("%s/sites/", path);
     if (!(dir = opendir(buf)))
-        return -1;
+        exit(1);
 
 
     p_host = config->hosts;
 
-    /* Leer los archivos y directorios */
+    /* Reading content */
     while ((ent = readdir(dir)) != NULL)
     {
         if (strcmp((char *) ent->d_name, "." )  == 0) continue;
@@ -318,7 +317,7 @@ struct host *M_Config_Get_Host(char *path)
 
     if( (configfile=fopen(path,"r"))==NULL ) {
         fprintf(stderr, "Error: I can't open %s file.\n", path);
-        exit(1);
+        return NULL;
     }
 
     host = M_malloc(sizeof(struct host));
@@ -366,7 +365,7 @@ struct host *M_Config_Get_Host(char *path)
         /* Error log */
         if(strcasecmp(variable,"ErrorLog")==0)
             host->error_log_path = m_build_buffer("%s", value);
-        
+
         /* GetDir Variable */
         if(strcasecmp(variable,"GetDir")==0)
         {
@@ -401,6 +400,17 @@ struct host *M_Config_Get_Host(char *path)
     {
         return NULL;
     }
+
+    /* Server Signature */
+    if(config->hideversion==VAR_OFF){
+        host->host_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)", 
+            VERSION, host->servername, config->serverport);
+    }
+    else{
+        host->host_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)", 
+            host->servername, config->serverport);
+    }
+
     host->next = NULL;
     return host;
 }

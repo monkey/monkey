@@ -101,7 +101,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			sr->headers->cgi = SH_NOCGI;
 			sr->headers->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
 
-			M_METHOD_send_headers(socket, sr->headers, sr->log);
+			M_METHOD_send_headers(socket, sr, sr->log);
 
 			M_free(location);
 			M_free(real_location);
@@ -217,7 +217,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 
 		if( (date_file_server <= date_client) && (date_client > 0) ){
 			sr->headers->status = M_NOT_MODIFIED;
-			M_METHOD_send_headers(socket, sr->headers, sr->log);	
+			M_METHOD_send_headers(socket, sr, sr->log);	
 			Mimetype_free(mime_info);
 			return 0;
 		}
@@ -243,7 +243,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		sr->headers->content_type = NULL;
 	}
 
-	M_METHOD_send_headers(socket, sr->headers, sr->log);
+	M_METHOD_send_headers(socket, sr, sr->log);
 
 	if(sr->headers->content_length==0){
         printf("\nClosing connection ...length!");
@@ -317,11 +317,14 @@ int M_METHOD_Post(struct client_request *cr,
 }
 
 /* Send_Header , envia las cabeceras principales */
-int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_log)
+int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 {
 	int fd_status=0;
 	char *buffer=0;
-	
+    struct header_values *sh;
+
+    sh = sr->headers;
+
 	/* Status Code */
 	switch(sh->status){
 		case M_HTTP_OK:	
@@ -390,7 +393,7 @@ int M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_l
 	}
 	
 	/* Informacion del server */
-	buffer = m_build_buffer_from_buffer(buffer,"Server: %s\r\n", config->server_software);
+	buffer = m_build_buffer_from_buffer(buffer,"Server: %s\r\n", sr->host_conf->host_signature);
 
 	/* Fecha */
 	buffer = m_build_buffer_from_buffer(buffer,"Date: %s\r\n", PutDate_string(0));

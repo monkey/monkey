@@ -305,7 +305,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 	*ptr++ = M_CGI_env_add_var("SERVER_NAME",sr->host);
 	*ptr++ = M_CGI_env_add_var("SERVER_PROTOCOL", get_name_protocol(MONKEY_HTTP_PROTOCOL));
 	*ptr++ = M_CGI_env_add_var("SERVER_SOFTWARE", config->server_software);
-	*ptr++ = M_CGI_env_add_var("SERVER_SIGNATURE", sr->server_signature);
+	*ptr++ = M_CGI_env_add_var("SERVER_SIGNATURE", sr->host_conf->host_signature);
 	
 	if(sr->user_agent)
 		*ptr++ = M_CGI_env_add_var("HTTP_USER_AGENT",sr->user_agent);

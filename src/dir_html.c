@@ -236,7 +236,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 	char *path=0, *real_header_file, *real_footer_file, *content_buffer=0;
 	struct stat *buffer;
 	struct f_list *file_list;
-	struct header_values hd;
+	struct header_values *hd;
 	
 	int i,
  		count_file=-1,	  /* Cantidad de elementos        */
@@ -290,24 +290,27 @@ int GetDir(struct client_request *cr, struct request *sr)
 	/* Ordenar el arreglo de archivos y directorios */
 	shell(file_list, count_file);
 
-	hd.status = M_HTTP_OK;
-	hd.content_length = 0;
-	hd.content_type = m_build_buffer("text/html");
-	hd.location = NULL;
-	hd.cgi = SH_CGI;
-	hd.pconnections_left = config->max_keep_alive_request - cr->counter_connections;
+    hd = M_malloc(sizeof(struct header_values));
+	hd->status = M_HTTP_OK;
+	hd->content_length = 0;
+	hd->content_type = m_build_buffer("text/html");
+	hd->location = NULL;
+	hd->cgi = SH_CGI;
+	hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
+
+    sr->headers = hd;
 
 	if(sr->protocol==HTTP_11){
 		transfer_type=CHUNKED;
-		M_METHOD_send_headers(cr->socket, &hd, sr->log);
+		M_METHOD_send_headers(cr->socket, sr, sr->log);
 		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
 	}
 	else{
 		transfer_type=NO_CHUNKED;
-		M_METHOD_send_headers(cr->socket, &hd, sr->log);
+		M_METHOD_send_headers(cr->socket, sr, sr->log);
 		fdprintf(cr->socket, transfer_type, "\r\n");
 	}
-	M_free(hd.content_type);
+
 
 	content_buffer = m_build_buffer_from_buffer(content_buffer, 
 		"<HTML>\n<HEAD><TITLE>Index of %s</TITLE></HEAD>\n <BODY> \
@@ -359,7 +362,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 		M_free(footer_file_buffer);
 	}
 	
-	content_buffer = m_build_buffer_from_buffer(content_buffer,"<ADDRESS>%s</ADDRESS></BODY></HTML>\r\n\r\n", sr->server_signature);
+	content_buffer = m_build_buffer_from_buffer(content_buffer,"<ADDRESS>%s</ADDRESS></BODY></HTML>\r\n\r\n", sr->host_conf->host_signature);
 
 	fdprintf(cr->socket, transfer_type, "%s", content_buffer);
 

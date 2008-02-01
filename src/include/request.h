@@ -101,9 +101,6 @@ struct request {
 
 	char *virtual_user; /* Usuario del proceso para un Virtualhost */
 	char *script_filename;
-
-	char *server_signature;
-	
 	int  keep_alive;	
 	int  user_home; /* � Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
 

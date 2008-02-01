@@ -26,7 +26,7 @@
 int 	M_METHOD_Get_and_Head(struct client_request *cr, struct request *s_request, int socket); /* Process get and head methods*/
 int M_METHOD_Post(struct client_request *cr, 
                                 struct request *s_request, char *request_body);
-int	 M_METHOD_send_headers(int fd, struct header_values *sh, struct log_info *s_log); /* Send basic headers */
+int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log);
 int	 M_METHOD_get_range(char *header, int range_from_to[2]); /* Process and get range request */
 int	 M_METHOD_get_number(char *method); /* Return value assigned to Method called */
 char *M_METHOD_get_name(int method); /* Return name of Method */

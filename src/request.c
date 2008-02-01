@@ -281,9 +281,6 @@ int Get_Request(struct client_request *cr)
         }
 
         if(status<0){
-            printf("\nSTATUS: %i", status);
-            fflush(stdout);
-
             return status;
         }
         p_request = p_request->next;
@@ -367,16 +364,6 @@ int Process_Request(struct client_request *cr, struct request *s_request)
     }
     else{
         s_request->host_conf = config->hosts;
-    }
-
-    /* Server Signature */
-    if(config->hideversion==VAR_OFF){
-        s_request->server_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)", 
-            VERSION, s_request->host_conf->servername, config->serverport);
-    }
-    else{
-        s_request->server_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)", 
-            s_request->host_conf->servername, config->serverport);
     }
 
 	/* CGI Request ? */
@@ -615,23 +602,23 @@ void Request_Error(int num_error, struct client_request *cr,
 		
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
-			page_default=Set_Page_Default("Bad Request", "", s_request->server_signature);
+			page_default=Set_Page_Default("Bad Request", "", s_request->host_conf->host_signature);
 			s_log->error_msg=m_build_buffer("[error 400] Bad request");
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			page_default=Set_Page_Default("Forbidden", s_request->uri, s_request->server_signature);
+			page_default=Set_Page_Default("Forbidden", s_request->uri, s_request->host_conf->host_signature);
 			s_log->error_msg=m_build_buffer("[error 403] Forbidden %s",s_request->uri);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
 			aux_message = m_build_buffer("The requested URL %.100s  was not found on this server.", (char *) s_request->uri);
-			page_default=Set_Page_Default("Not Found", aux_message, s_request->server_signature);
+			page_default=Set_Page_Default("Not Found", aux_message, s_request->host_conf->host_signature);
 			s_log->error_msg=m_build_buffer("[error 404] Not Found %s",s_request->uri);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			page_default=Set_Page_Default("Method Not Allowed",s_request->uri, s_request->server_signature);
+			page_default=Set_Page_Default("Method Not Allowed",s_request->uri, s_request->host_conf->host_signature);
 			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
 			s_log->error_msg=m_build_buffer("[error 405] Method Not Allowed %s", M_METHOD_get_name(s_request->method));
 			break;
@@ -647,12 +634,12 @@ void Request_Error(int num_error, struct client_request *cr,
 			
 		case M_SERVER_INTERNAL_ERROR:
 			aux_message = m_build_buffer("Problems found running %s ",s_request->uri);
-			page_default=Set_Page_Default("Internal Server Error",aux_message, s_request->server_signature);
+			page_default=Set_Page_Default("Internal Server Error",aux_message, s_request->host_conf->host_signature);
 			s_log->error_msg=m_build_buffer("[error 411] Internal Server Error %s",s_request->uri);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			page_default=Set_Page_Default("HTTP Version Not Supported"," ", s_request->server_signature);
+			page_default=Set_Page_Default("HTTP Version Not Supported"," ", s_request->host_conf->host_signature);
 			s_log->error_msg=m_build_buffer("[error 505] HTTP Version Not Supported");
 			break;
 	}
@@ -673,7 +660,7 @@ void Request_Error(int num_error, struct client_request *cr,
 	else
 		s_request->headers->content_type = m_build_buffer("text/html");
 
-	M_METHOD_send_headers(cr->socket, s_request->headers, s_log);
+	M_METHOD_send_headers(cr->socket, s_request, s_log);
 
 	if(debug==1){
 		fdprintf(cr->socket, NO_CHUNKED, "%s", page_default);
@@ -777,8 +764,6 @@ struct request *alloc_request()
     request->user_agent = NULL;
     request->post_variables = NULL;
 
-            
-    request->server_signature = NULL;
     request->user_uri = NULL;
     request->query_string = NULL;
 
@@ -866,8 +851,6 @@ void free_request(struct request *sr)
         M_free(sr->user_agent);
         M_free(sr->post_variables);
  
-        M_free(sr->server_signature);
-
         M_free(sr->user_uri);
         M_free(sr->query_string);
  
