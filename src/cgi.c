@@ -151,7 +151,7 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 		close(pipe_write[1]);
 		
 		close(pipe_fd[1]);
-		return_status=M_CGI_send(cr->socket, pipe_fd[0], sr->log, 
+		return_status=M_CGI_send(cr->socket, pipe_fd[0], sr, 
 			config->max_keep_alive_request - cr->counter_connections, sr->protocol);
 			
 		close(pipe_fd[0]);
@@ -164,13 +164,16 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 }
 
 /* Read 'cgi_pipe' pipe data and send it to socket */
-int M_CGI_send(int socket, int cgi_pipe, struct log_info *s_log, int persistent_connections_left, int remote_protocol)
+int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_connections_left, int remote_protocol)
 {
 	int bytes, total_bytes=0, spaces, buffer_empty=VAR_ON;
 	long offset;
 	char buffer[BUFFER_SOCKET +1], data[BUFFER_SOCKET +1];
-	struct header_values hd;
-			
+	struct header_values *hd;
+    struct log_info *s_log;
+
+    s_log = sr->log;
+
 	memset(data, '\0', sizeof(data));
 	do{
 		memset(buffer,'\0',sizeof(buffer));
@@ -211,15 +214,18 @@ int M_CGI_send(int socket, int cgi_pipe, struct log_info *s_log, int persistent_
 	else
 		s_log->final_response=M_HTTP_OK;
 
-	hd.status = s_log->final_response;
-	hd.content_length = 0;
-	hd.content_type = NULL;
-	hd.location = NULL;
-	hd.cgi = SH_CGI;
-	hd.pconnections_left = persistent_connections_left;	
-	hd.last_modified = NULL;
+    hd = M_malloc(sizeof(struct header_values));
+	hd->status = s_log->final_response;
+	hd->content_length = 0;
+	hd->content_type = NULL;
+	hd->location = NULL;
+	hd->cgi = SH_CGI;
+	hd->pconnections_left = persistent_connections_left;	
+	hd->last_modified = NULL;
 	
-	if(M_METHOD_send_headers(socket, &hd, s_log)<0){
+    sr->headers = hd;
+
+	if(M_METHOD_send_headers(socket, sr, s_log)<0){
 		return -1;	
 	}
 	

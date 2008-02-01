@@ -37,8 +37,9 @@ int M_CGI_main(struct client_request *cr, struct request *sr,
                         struct log_info *s_log, char *remote_request);
 int M_CGI_run(struct client_request *cr, struct request *sr, 
                         char *script_filename, char **args);
-int M_CGI_send(int socket, int cgi_pipe, struct log_info *s_log, 
+int M_CGI_send(int socket, int cgi_pipe, struct request *sr, 
                         int persistent_connections_left, int remote_protocol);
+
 int M_CGI_change_dir(char *script);
 char *M_CGI_env_add_var(char *name, const char *value);
 char *M_CGI_alias(char *path, char *query, char *newstring );
