@@ -56,7 +56,7 @@ int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s
 	}
 
 	if(sr->method==POST_METHOD){
-		M_METHOD_Post(cr, sr, remote_request);
+		M_METHOD_Post(cr, sr);
 	}
 	
 	cgi_status=M_CGI_run(cr, sr,sr->script_filename, NULL);

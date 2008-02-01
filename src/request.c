@@ -83,8 +83,6 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
         {
             /* Allocating request block */
             block = m_copy_string(buf, init_block, i);
-            i = init_block = (i+offset) + length_string_end;
-
             //printf("\n--->BLOCK<---\n%s", block);
             //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
             //fflush(stdout);
@@ -92,6 +90,18 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             cr_buf->body = m_build_buffer("%s\r\n", block);
             cr_buf->next = NULL;
             M_free(block);
+
+            /* Looking for POST data */
+            cr_buf->method = Get_method_from_request(cr_buf->body);
+            i = init_block = (i+offset) + length_string_end;
+            if(cr_buf->method == POST_METHOD)
+            {
+                cr_buf->post_variables = M_Get_POST_Vars(buf, i, string_end);
+                if(cr_buf->post_variables)
+                {
+                    i += strlen(cr_buf->post_variables) + length_string_end;
+                }
+            }
 
             if(!cr->request)
             {
@@ -121,12 +131,10 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
     cr_search = cr->request;
     if(n_blocks>1)
     {
-        int method;
         pipelined = TRUE;
 
         while(cr_search){
-            method = Get_method_from_request(cr_search->body);
-            if(method!=GET_METHOD && method!=HEAD_METHOD)
+            if(cr_search->method!=GET_METHOD && cr_search->method!=HEAD_METHOD)
             {
                 pipelined = FALSE;
                 break;
@@ -399,7 +407,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	}
 	else {
 		if(s_request->method==POST_METHOD){
-			if((status=M_METHOD_Post(cr, s_request, s_request->body))==-1){
+			if((status=M_METHOD_Post(cr, s_request))==-1){
 				M_free(s_request->post_variables);
 				return status;
 			}

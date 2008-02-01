@@ -438,7 +438,6 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 		return NULL;
 	}
 	
-
 	bytes =  pos_end - pos_init;
 	strncpy(buffer, string+pos_init, bytes);
 	buffer[bytes]='\0';

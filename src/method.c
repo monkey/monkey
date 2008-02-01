@@ -264,19 +264,17 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 }
 
 /* POST METHOD */
-int M_METHOD_Post(struct client_request *cr, 
-                                struct request *s_request, char *request_body)
+int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 {
 	char *tmp;
-	char *post_buffer;
 	char buffer[MAX_REQUEST_BODY];
-	int i=0, content_length_post=0;
+	int content_length_post=0;
 	
-	if(!(tmp=Request_Find_Variable(request_body, RH_CONTENT_LENGTH))){
+	if(!(tmp=Request_Find_Variable(s_request->body, RH_CONTENT_LENGTH))){
 		Request_Error(M_CLIENT_LENGHT_REQUIRED, cr, s_request,0,s_request->log);
 		return -1;
 	}
-	
+
 	content_length_post = (int) atoi(tmp);
 	M_free(tmp);
 
@@ -285,36 +283,45 @@ int M_METHOD_Post(struct client_request *cr,
 		return -1;
 	}
 	
-	if(!(tmp = Request_Find_Variable(request_body, RH_CONTENT_TYPE))){
+	if(!(tmp = Request_Find_Variable(s_request->body, RH_CONTENT_TYPE))){
 		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);
 		return -1;
 	}
 	
 	s_request->content_type = tmp;
 
-	post_buffer = (char *) strstr(request_body,"\r\n\r\n");
-
-	if(post_buffer==NULL || strlen(post_buffer)<=4) {
+	if(s_request->post_variables==NULL || strlen(s_request->post_variables)<=4) {
 		s_request->post_variables=NULL;
 		return -1;
 	}
 
-	memset(buffer,'\0',sizeof(buffer));
-	for(i=4;i<strlen(post_buffer);i++){
-		buffer[i-4]=post_buffer[i];
-	}
-
-	if(strlen(buffer) < content_length_post){
+	if(strlen(s_request->post_variables) < content_length_post){
 		content_length_post=strlen(buffer);
 	}
-			
-	s_request->post_variables = M_malloc(sizeof(buffer) + 1);
-	memset(s_request->post_variables, '\0', sizeof(buffer) + 1);
-	strncpy(s_request->post_variables, buffer, content_length_post);
-	s_request->post_variables[content_length_post ]='\0';
+
 	s_request->content_length=content_length_post;
 	return 0;
 }
+
+/* Reuturn the POST variables sent in the request */
+char *M_Get_POST_Vars(char *request, int index, char *strend)
+{
+    int i=index;
+    int length, length_string_end;
+    
+    length = strlen(request);
+    length_string_end = strlen(strend);
+
+    for(i=index; i<=length; i++)
+    {
+        if(strncmp(request+i, strend, length_string_end)==0)
+        {
+            break;
+        }
+    }
+    return m_copy_string(request, index, i-1);
+}
+
 
 /* Send_Header , envia las cabeceras principales */
 int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
