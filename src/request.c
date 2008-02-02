@@ -70,7 +70,6 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             string_end = (char *)old_string_end;
             offset = 1;
     }
-
     cr->body = buf;
 
     length_buf = strlen(buf);
@@ -88,12 +87,13 @@ struct request *parse_client_request(struct client_request *cr, char *buf)
             //fflush(stdout);
             cr_buf = alloc_request();
             cr_buf->body = m_build_buffer("%s\r\n", block);
+            cr_buf->method = Get_method_from_request(cr_buf->body);
             cr_buf->next = NULL;
             M_free(block);
 
-            /* Looking for POST data */
-            cr_buf->method = Get_method_from_request(cr_buf->body);
             i = init_block = (i+offset) + length_string_end;
+
+            /* Looking for POST data */
             if(cr_buf->method == POST_METHOD)
             {
                 cr_buf->post_variables = M_Get_POST_Vars(buf, i, string_end);
@@ -240,8 +240,9 @@ int Get_Request(struct client_request *cr)
                 return EXIT_NORMAL;
             }
 
-			if(Get_method_from_request(remote_request)==POST_METHOD)
-				recv_timeout=POST_TIMEOUT;
+			if(strncmp(remote_request, POST_METHOD_STR, 4)==0){
+                recv_timeout=POST_TIMEOUT;
+            }
 		}
 
         request_end = get_end_position(remote_request);
@@ -271,7 +272,6 @@ int Get_Request(struct client_request *cr)
             }
         }
 	} while(process_request);
-
     cr->counter_connections++;
     p_request = cr->request;
     
@@ -408,7 +408,6 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	else {
 		if(s_request->method==POST_METHOD){
 			if((status=M_METHOD_Post(cr, s_request))==-1){
-				M_free(s_request->post_variables);
 				return status;
 			}
             status = M_METHOD_Get_and_Head(cr, s_request, cr->socket);

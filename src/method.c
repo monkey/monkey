@@ -308,9 +308,14 @@ char *M_Get_POST_Vars(char *request, int index, char *strend)
 {
     int i=index;
     int length, length_string_end;
-    
+    int last_byte = 1;
+
     length = strlen(request);
     length_string_end = strlen(strend);
+    if(length_string_end == 2)
+    {
+        last_byte = 0;
+    }
 
     for(i=index; i<=length; i++)
     {
@@ -319,7 +324,7 @@ char *M_Get_POST_Vars(char *request, int index, char *strend)
             break;
         }
     }
-    return m_copy_string(request, index, i-1);
+    return m_copy_string(request, index, i-last_byte);
 }
 
 

@@ -264,7 +264,7 @@ void M_Config_Read_Hosts(char *path)
             p_host = new_host;
         }
     }
-
+    /*
     h = config->hosts;
     while(h)
     {
@@ -282,6 +282,7 @@ void M_Config_Read_Hosts(char *path)
         h = h->next;
     }
     fflush(stdout);
+    */
 }
 
 int M_Config_Get_Bool(char *value)
