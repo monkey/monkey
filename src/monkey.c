@@ -31,6 +31,7 @@
 #include <resolv.h>
 
 #include "monkey.h"
+#include <sys/time.h>
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -72,7 +73,7 @@ void Help()
 }
 
 
-void *thread_init(void *args)
+void thread_init(void *args)
 {
 	int request_response=0, socket;
     int request_keepalive;
@@ -113,7 +114,7 @@ void *thread_init(void *args)
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
-	pthread_exit(0); /* See you! */
+	//pthread_exit(0); /* See you! */
 }
 
 void set_benchmark_conf()
@@ -132,6 +133,13 @@ int main(int argc, char **argv)
 	char daemon = 0;
 	pthread_t tid;
 	pthread_attr_t thread_attr;	
+    mk_thread_pool *pool;
+
+        struct process *check_ip;
+        int ip_times=0, status_max_ip=CONX_OPEN;
+        int sin_size;
+        char *IP_client;
+
 	struct sockaddr_in local_sockaddr_in;
 			
 	config = M_malloc(sizeof(struct server_config));
@@ -224,24 +232,21 @@ int main(int argc, char **argv)
 	SetUIDGID(); 	/* Changing user */
 
 	thread_counter=0;
+    pool = mk_thread_pool_create(30);
 
 	while(1) { /* Waiting for new connections */
-		struct process *check_ip;
-		int ip_times=0, status_max_ip=CONX_OPEN;
-		int sin_size;
-		char *IP_client;
 				
 		sin_size=sizeof(struct sockaddr_in);
 		if((remote_fd=accept(local_fd,(struct sockaddr *)&remote, &sin_size))==-1){
 			continue;
 		}
 
-		/* IP allowed ? ; Limit of connections */
+		/* IP allowed ? ; Limit of connections 
 		if(thread_counter > config->maxclients){
 			close(remote_fd);
 			continue;
 		}
-
+        */
 		/*
     		Limit of maximum of connections from same IP address :
             This routine check every node of struct with a counter checking
@@ -270,7 +275,11 @@ int main(int argc, char **argv)
 		if(status_max_ip==CONX_CLOSED)
 			continue;
 
-  		/* A New thread will be working in the new connection */
+        mk_thread_pool_set(pool, thread_init,  (void *) remote_fd);
+        continue;
+
+        /*
+
 		if(pthread_create(&tid, &thread_attr, thread_init, (void *) remote_fd)!=0){
 			perror("pthread_create");
 			close(remote_fd);
@@ -280,6 +289,7 @@ int main(int argc, char **argv)
 			thread_counter++;
 			pthread_mutex_unlock(&mutex_thread_counter);
 		}
+        */
 	}
 	return 0;
 }

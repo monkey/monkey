@@ -85,6 +85,9 @@ gid_t EUID;
 /* Functions and data types */
 #include "http_status.h"
 
+#include "mk_common.h"
+#include "mk_thread.h"
+
 #include "request.h"
 #include "method.h"
 #include "cgi.h"

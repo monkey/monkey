@@ -294,7 +294,6 @@ int Get_Request(struct client_request *cr)
         p_request = p_request->next;
     }
 
-
     return status;
 }
 
