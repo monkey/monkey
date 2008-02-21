@@ -23,11 +23,25 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
 #ifndef MK_COMMON_H
 #define MK_COMMON_H
 
-#define MK_OK		0
-#define MK_ERROR 	-1
+#define MK_OK       0
+#define MK_ERROR    -1
+
+typedef struct __mk_queue_node {
+    void *data;
+    struct __mk_queue_node *next;
+} mk_queue_node;
+
+typedef struct {
+    mk_queue_node *head;
+    mk_queue_node *tail;
+} mk_queue;
+
+mk_queue *mk_common_queue();
+int mk_common_enqueue(mk_queue *q, void *d);
+void *mk_common_dequeue(mk_queue *q);
 
 #endif
+

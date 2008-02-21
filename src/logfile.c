@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,24 @@
 #include <unistd.h>
 
 #include "monkey.h"
+
+void *logger_worker(void *args)
+{
+    struct log_queue *lq, *temp;
+
+    lq = (struct log_queue *) _log_queue;
+    while(1)
+    {
+        /*
+        temp = lq;
+        while(temp->next!=NULL)
+            temp = temp->next;
+        */
+        /* Escribir log !!!*/
+        /* Borrar actual log !!!*/
+    }
+}
+
 
 /* Registra en archivos de logs: accesos
  y errores */

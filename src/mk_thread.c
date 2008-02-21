@@ -33,128 +33,149 @@
 
 static inline void mk_thread_wakeup(int *wakeup)
 {
-	/* wake up _one_ thread waiting "wakeup" */
-	futex(wakeup, FUTEX_WAKE, 1, NULL, NULL, 0);
+    /* wake up _one_ thread waiting "wakeup" */
+    futex(wakeup, FUTEX_WAKE, 1, NULL, NULL, 0);
 }
 
-static inline void mk_thread_sleep(int *wakeup)
+static inline void mk_thread_wait_for(int *wakeup)
 {
-	/* Always waits a WAKE UP */
-	futex(wakeup, FUTEX_WAIT, 0xb33f, NULL, NULL, 0);
+    futex(wakeup, FUTEX_WAIT, 0xfe119e, NULL, NULL, 0);
 }
 
 static void *mk_thread_start(void *_pool)
 {
-	mk_thread_pool *pool = (mk_thread_pool *)_pool;
-	int kill;
+    mk_thread_pool *pool = (mk_thread_pool *)_pool;
+    mk_thread_data *thread_data;
+    int keep = 1;
 
-	do {
-		mk_thread_sleep(&pool->pl_wakeup);
+    do {
+        mk_thread_mutex_lock(&pool->pl_rqq_lock);
+        thread_data = mk_common_dequeue(pool->pl_rqq);
+        mk_thread_mutex_unlock(&pool->pl_rqq_lock);
 
-		/* Activated */
-		pool->pl_func(pool->pl_data);
+        if(!thread_data) {
+            mk_thread_wait_for(&pool->pl_wakeup);
+            continue;
+        }
 
-		/* Starts critical section */
-		mk_thread_mutex_lock(&pool->pl_lock);
-		kill = (pool->pl_free < pool->pl_quantity);
-		pool->pl_free += kill;
-		mk_thread_mutex_unlock(&pool->pl_lock);
-		/* Ends critical section */
-	} while(kill);
+        /* Activated */
+        thread_data->func(thread_data->arg);
+        /* Ended */
+        free(thread_data);
 
-	return NULL;
+        mk_thread_mutex_lock(&pool->pl_lock);
+        keep = (pool->pl_free < pool->pl_quantity);
+        pool->pl_free += keep; /* If keep is zero, this thread MUST DIE :_( */
+        mk_thread_mutex_unlock(&pool->pl_lock);
+    } while(keep);
+
+    return NULL;
 }
 
 static int mk_thread_create_one(mk_thread_pool *pool)
 {
-	pthread_t thread;
+    pthread_t thread;
 
-	if(pthread_create(&thread, NULL, mk_thread_start, (void *)pool) != 0)
-		return MK_ERROR;
+    if(pthread_create(&thread, NULL, mk_thread_start, (void *)pool) != 0)
+        return MK_ERROR;
 
-	return MK_OK;
+    return MK_OK;
 }
 
 static void mk_thread_get_quantity(mk_thread_pool *pool)
 {
-	/* If possible creates pool->pl_quantity threads. */
-	while(pool->pl_free < pool->pl_quantity) {
-		if(mk_thread_create_one(pool) == MK_ERROR)
-			break;
+    /* If possible creates pool->pl_quantity threads. */
+    while(pool->pl_free < pool->pl_quantity) {
+        if(mk_thread_create_one(pool) == MK_ERROR)
+            break;
 
-		pool->pl_free++;
-	}
+        pool->pl_free++;
+    }
 }
 
 mk_thread_pool *mk_thread_pool_create(unsigned int n)
 {
-	mk_thread_pool *pool;
+    mk_thread_pool *pool;
 
-	pool = malloc(sizeof(mk_thread_pool));
-	if(!pool)
-		return NULL;
+    pool = malloc(sizeof(mk_thread_pool));
+    if(!pool)
+        return NULL;
 
-	pool->pl_quantity = n;
-	pool->pl_free = 0;
+    pool->pl_quantity = n;
+    pool->pl_free = 0;
 
-	pool->pl_func = NULL;
-	pool->pl_data = NULL;
+    pool->pl_rqq = mk_common_queue();
+    pool->pl_rqq_lock = MK_THREAD_UNLOCKED_VAL;
+    pool->pl_lock = MK_THREAD_UNLOCKED_VAL;
+    pool->pl_wakeup = 0xfe119e;
 
-	pool->pl_lock = MK_THREAD_UNLOCKED_VAL;
-	pool->pl_wakeup = 0xb33f;
+    mk_thread_get_quantity(pool);
 
-	mk_thread_get_quantity(pool);
-
-	return pool;
+    return pool;
 }
 
-int mk_thread_mutex_lock(int *lock)
+void mk_thread_mutex_lock(int *lock)
 {
-    int r;
-
-	/* If *lock is equal to MK_THREAD_LOCKED_VAL, waits a WAKE UP */
-	r = futex(lock, FUTEX_WAIT, MK_THREAD_LOCKED_VAL, NULL, NULL, 0);
-    if(r<0){
-        return -1;
-    }
-
-	*lock = MK_THREAD_LOCKED_VAL;
-    return 0;
+    if(__sync_lock_test_and_set(lock, MK_THREAD_LOCKED_VAL) == MK_THREAD_LOCKED_VAL)
+        futex(lock, FUTEX_WAIT, MK_THREAD_LOCKED_VAL, NULL, NULL, 0);
+    *lock = MK_THREAD_LOCKED_VAL;
 }
 
 void mk_thread_mutex_unlock(int *lock)
 {
-	/* Sends a WAKE UP and sets *lock to MK_THREAD_UNLOCKED_VAL */
-	futex(lock, FUTEX_WAKE, 1, NULL, NULL, 0);
-	*lock = MK_THREAD_UNLOCKED_VAL;
+    if(*lock == MK_THREAD_LOCKED_VAL) {
+        *lock = MK_THREAD_UNLOCKED_VAL;
+        futex(lock, FUTEX_WAKE, 1, NULL, NULL, 0);
+    }
 }
 
-int mk_thread_pool_set(mk_thread_pool *pool, void (*func)(void *data), void *data)
+static inline mk_thread_data *__new_thread_data(void (*func)(void *), void *data)
 {
-	/* Starts critical section */
+    mk_thread_data *thread_data;
+
+    thread_data = malloc(sizeof(mk_thread_data));
+    if(!thread_data)
+        /* Oops.. It's really bad! */
+        return NULL;
+
+    thread_data->func = func;
+    thread_data->arg = data;
+    return thread_data;
+}
+
+int mk_thread_pool_set(mk_thread_pool *pool, void (*func)(void *), void *data)
+{
+    mk_thread_data *thread_data;
+    int retval;
+
+    thread_data = __new_thread_data(func, data);
+    if(!thread_data)
+        return MK_ERROR;
+
+    mk_thread_mutex_lock(&pool->pl_rqq_lock);
+    retval = mk_common_enqueue(pool->pl_rqq, thread_data);
+    mk_thread_mutex_unlock(&pool->pl_rqq_lock);
+
+    if(retval == MK_ERROR) {
+        free(thread_data);
+        return MK_ERROR;
+    }
+
     mk_thread_mutex_lock(&pool->pl_lock);
+    if(pool->pl_free) {
+        pool->pl_free--;
 
-	pool->pl_func = func;
-	pool->pl_data = data;
+        /* Assigns pre-loaded thread */
+        mk_thread_wakeup(&pool->pl_wakeup);
+    } else {
+        /* Fatal error: is not able to create a thread for "func(data)" call. */
+        if(mk_thread_create_one(pool) == MK_ERROR)
+            return MK_ERROR;
 
-	if(pool->pl_free) {
-		/* Gets pre-loaded thread */
-        printf("\nWAKE UP THREAD FOR: %i", (int) data);
-        fflush(stdout);
+        /* Asks pool->pl_quantity threads for pool */
+        mk_thread_get_quantity(pool);
+    }
+    mk_thread_mutex_unlock(&pool->pl_lock);
 
-		mk_thread_wakeup(&pool->pl_wakeup);
-		pool->pl_free--;
-	} else {
-		/* Fatal error: is not able to create a thread for "func(data)" call. */
-		if(mk_thread_create_one(pool) == MK_ERROR)
-			return MK_ERROR;
-
-		mk_thread_wakeup(&pool->pl_wakeup);
-		mk_thread_get_quantity(pool);
-	}
-
-	mk_thread_mutex_unlock(&pool->pl_lock);
-	/* Ends critical section */
-
-	return MK_OK;
+    return MK_OK;
 }

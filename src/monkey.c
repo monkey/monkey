@@ -211,14 +211,20 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+    /* Main log queue index list */
+    //(struct log_queue *) _log_queue = NULL;
+
 	/* threads attr / mutex */
 	pthread_attr_init(&thread_attr);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-	pthread_mutex_init(&mutex_thread_list,  (pthread_mutexattr_t *) NULL);	
+	pthread_mutex_init(&mutex_thread_list,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_cgi_child,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
-	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);	
-	
+	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
+    pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
+
+    pthread_create(&tid, &thread_attr, logger_worker, NULL);
+
 	/* Running Monkey as daemon */
 	if(daemon)
 		set_daemon();
@@ -232,7 +238,7 @@ int main(int argc, char **argv)
 	SetUIDGID(); 	/* Changing user */
 
 	thread_counter=0;
-    pool = mk_thread_pool_create(30);
+    pool = mk_thread_pool_create(20);
 
 	while(1) { /* Waiting for new connections */
 				

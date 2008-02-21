@@ -224,7 +224,7 @@ void M_Config_Read_Hosts(char *path)
     DIR *dir;
     char *buf;
     char *file;
-    struct host *h, *p_host, *new_host; /* debug */
+    struct host *p_host, *new_host; /* debug */
     struct dirent *ent;
 
     buf = m_build_buffer("%s/sites/default", path);

@@ -18,6 +18,14 @@
  */
 
 /* logfile.c */
+pthread_mutex_t mutex_log_queue;
+
+struct log_queue {
+    struct log_info *buf;
+    struct log_queue *next;
+};
+struct log_queue *_log_queue;
+
 
 struct log_info {
 	char *ip;
@@ -35,3 +43,4 @@ int	 log_main(struct request *sr);
 int	 add_log_pid();
 int	 remove_log_pid();
 
+void *logger_worker(void *args);

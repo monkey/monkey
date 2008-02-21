@@ -283,7 +283,7 @@ int Get_Request(struct client_request *cr)
 #ifdef MOD_MYSQL
     mod_mysql_log_main(p_request);
 #endif
-            SetEGID_BACK(); /* We need change user if i'm root */
+           SetEGID_BACK(); /* We need change user if i'm root */
             log_main(p_request); /* Log */
             SetUIDGID();  /* Back to old user */
         }
