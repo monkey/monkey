@@ -385,7 +385,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 		buffer_content = M_strdup(buffer);		
 		M_free(buffer);
 	}
-	
+
 	va_start(ap, format);
 	length = vsnprintf(new_buffer, alloc, format, ap);
 
@@ -411,8 +411,9 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 
 	if(buffer_content){
 		buffer = m_build_buffer("%s%s", buffer_content, new_buffer);
-		M_free(buffer_content);
-		M_free(new_buffer);
+        buffer = strdup(strcat(buffer_content, new_buffer));
+		//M_free(buffer_content);
+		//M_free(new_buffer);
 	}else{
 		buffer = new_buffer;
 	}

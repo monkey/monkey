@@ -114,7 +114,7 @@ void thread_init(void *args)
 	}
 
 	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
-	//pthread_exit(0); /* See you! */
+	pthread_exit(0); /* See you! */
 }
 
 void set_benchmark_conf()
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 					Help();
 					break;
 		}
-	}
+	}   
 	if(!config->file_config)
 		config->file_config=MONKEY_PATH_CONF;
 		
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
     pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
 
-    pthread_create(&tid, &thread_attr, logger_worker, NULL);
+    //pthread_create(&tid, &thread_attr, logger_worker, NULL);
 
 	/* Running Monkey as daemon */
 	if(daemon)
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
 	SetUIDGID(); 	/* Changing user */
 
 	thread_counter=0;
-    pool = mk_thread_pool_create(20);
+    //pool = mk_thread_pool_create(20);
 
 	while(1) { /* Waiting for new connections */
 				
@@ -281,10 +281,10 @@ int main(int argc, char **argv)
 		if(status_max_ip==CONX_CLOSED)
 			continue;
 
-        mk_thread_pool_set(pool, thread_init,  (void *) remote_fd);
-        continue;
+        //mk_thread_pool_set(pool, thread_init,  (void *) remote_fd);
+        //continue;
 
-        /*
+        
 
 		if(pthread_create(&tid, &thread_attr, thread_init, (void *) remote_fd)!=0){
 			perror("pthread_create");
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 			thread_counter++;
 			pthread_mutex_unlock(&mutex_thread_counter);
 		}
-        */
+        
 	}
 	return 0;
 }
