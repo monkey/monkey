@@ -283,9 +283,11 @@ int Get_Request(struct client_request *cr)
 #ifdef MOD_MYSQL
     mod_mysql_log_main(p_request);
 #endif
-           SetEGID_BACK(); /* We need change user if i'm root */
+
+        logger_add_request(p_request->log);
+           //SetEGID_BACK(); /* We need change user if i'm root */
            // log_main(p_request); /* Log */
-            SetUIDGID();  /* Back to old user */
+            //SetUIDGID();  /* Back to old user */
         }
 
         if(status<0){
@@ -372,6 +374,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
     else{
         s_request->host_conf = config->hosts;
     }
+    s_request->log->host_conf = s_request->host_conf;
 
 	/* CGI Request ? */
 	if(s_request->host_conf->scriptalias!=NULL){
@@ -449,7 +452,7 @@ int Process_Request_Header(struct request *sr)
     char *str_prot=0;
 
 	/* Method */
-	sr->method = Get_method_from_request(sr->body);
+	sr->method = sr->log->method = Get_method_from_request(sr->body);
 
 	/* Request URI */
 	uri_init = str_search(sr->body, " ",1) + 1;
@@ -470,7 +473,8 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Request URI Part 2 */
-	sr->uri = (char *) m_copy_string(sr->body, uri_init, uri_end);
+	sr->uri = sr->log->uri = (char *)m_copy_string(sr->body, uri_init, uri_end);
+
     if(strlen(sr->uri)<1)
     {
         return -1;
@@ -488,7 +492,7 @@ int Process_Request_Header(struct request *sr)
 	
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = m_copy_string(sr->body, prot_init, prot_end);
-		sr->protocol=get_version_protocol(str_prot);
+		sr->protocol = sr->log->protocol = get_version_protocol(str_prot);
         if(!remove_space(str_prot)){
             return -1;
         }
@@ -497,7 +501,7 @@ int Process_Request_Header(struct request *sr)
 
     /* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
-		
+
 	/* Host */
 	if((strstr2(sr->body, RH_HOST))!=NULL){
 		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
@@ -832,13 +836,15 @@ void free_request(struct request *sr)
             M_free(sr->headers);
         }
 
+        /*
         if(sr->log){
             M_free(sr->log->error_msg); 
-            //M_free(sr->log);
+            M_free(sr->log);
         }
+        */
 
         M_free(sr->body);
-        M_free(sr->uri);
+//        M_free(sr->uri);
         M_free(sr->uri_processed);
 
         M_free(sr->accept);

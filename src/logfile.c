@@ -28,64 +28,113 @@
 
 #include "monkey.h"
 
-void *logger_worker(void *args)
+void *start_worker_logger(void *args)
 {
     struct log_queue *lq, *temp;
+    printf("\nStarting logger worker--->>>\n\n");
+    fflush(stdout);
 
     lq = (struct log_queue *) _log_queue;
+
     while(1)
     {
-        /*
-        temp = lq;
-        while(temp->next!=NULL)
-            temp = temp->next;
-        */
+        if(_log_queue){
+            write_log(_log_queue->info);
+            pthread_mutex_lock(&mutex_log_queue);
+            lq = _log_queue;
+            lq->info = NULL;
+            lq->next = NULL;
+
+            _log_queue = _log_queue->next;
+            pthread_mutex_unlock(&mutex_log_queue);
+        }
+
         /* Escribir log !!!*/
         /* Borrar actual log !!!*/
     }
 }
 
+int logger_add_request(struct log_info *log)
+{
+    struct log_queue *new, *last, *t;
+
+    pthread_mutex_lock(&mutex_log_queue);
+
+    new = M_malloc(sizeof(struct log_queue));
+    new->info = log;
+    new->next = NULL;
+    
+    if(!_log_queue)
+    {
+        _log_queue = new;
+    }
+    else
+    {
+        last = _log_queue;
+        while(last->next)
+            last = last->next;
+
+        last->next = new;
+    }
+
+    pthread_mutex_unlock(&mutex_log_queue);
+    
+    t = _log_queue;
+    printf("\n****ROUND****");
+    while(t){
+        printf("\nLOG: %s", t->info->uri);
+        t = t->next;
+    }
+    fflush(stdout);
+    
+
+    return 0;
+}
 
 /* Registra en archivos de logs: accesos
  y errores */
-int log_main(struct request *sr)
+int write_log(struct log_info *log)
 {
 	FILE *log_file=0;
 	
-	if(sr->log->status!=S_LOG_ON){
+    printf("\n-->LOGO: %s", log->uri);
+    fflush(stdout);
+
+	if(log->status!=S_LOG_ON){
+        printf("\nFUCK!");
+        fflush(stdout);
 		return 0;
 	}
-
 	pthread_mutex_lock(&mutex_logfile);
 	
-	/* Registramos una peticion exitosa */
-	if(sr->log->final_response==M_HTTP_OK || sr->log->final_response==M_REDIR_MOVED_T){
-		if((log_file=fopen(sr->host_conf->access_log_path,"a"))==NULL){
+	/* Register a successfull request */
+	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T){
+		if((log_file=fopen(log->host_conf->access_log_path,"a"))==NULL){
 			pthread_mutex_unlock(&mutex_logfile);
 			return -1;
 		}
-			fprintf(log_file,"%s - %s ",sr->log->ip,sr->log->datetime);
-			fprintf(log_file,"\"%s %s %s\" %i", M_METHOD_get_name(sr->method), 
-				sr->uri, get_name_protocol(sr->protocol) , sr->log->final_response);
-			if(sr->log->size > 0) 
-				fprintf(log_file," %i\n",sr->log->size);
+			fprintf(log_file,"%s - %s ", log->ip, log->datetime);
+			fprintf(log_file,"\"%s %s %s\" %i", M_METHOD_get_name(log->method), 
+				log->uri, get_name_protocol(log->protocol), log->final_response);
+			if(log->size > 0) 
+				fprintf(log_file," %i\n", log->size);
 			else
 				fprintf(log_file,"\n");
 
 	}
-	else{ /* Registramos algun error */
-		if((log_file=fopen(sr->host_conf->error_log_path,"a"))==NULL){
+	else{ /* Regiter some error */
+		if((log_file=fopen(log->host_conf->error_log_path,"a"))==NULL){
 			pthread_mutex_unlock(&mutex_logfile);
 			return -1;
 		}
-		fprintf(log_file, "%s - %s  %s\n",sr->log->ip,sr->log->datetime, sr->log->error_msg);
+		fprintf(log_file, "%s - %s  %s\n", log->ip, log->datetime, log->error_msg);
 	}
 	fclose(log_file);
 	pthread_mutex_unlock(&mutex_logfile);
 	return 0;	
 }
 
-/* Registra PID de monkey */
+/* Write Monkey's PID */
 int add_log_pid()
 {
 	FILE *pid_file;

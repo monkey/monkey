@@ -21,26 +21,31 @@
 pthread_mutex_t mutex_log_queue;
 
 struct log_queue {
-    struct log_info *buf;
+    struct log_info *info;
     struct log_queue *next;
 };
 struct log_queue *_log_queue;
 
-
 struct log_info {
+    int method;
+    int protocol;
+    char *uri;
+
 	char *ip;
 	char *datetime;
 	int   final_response; /* Ok: 200, Not Found 400, etc... */
 	int   size;
 	int   status; /* on/off : 301. */
 	char  *error_msg;
+    struct host *host_conf;
 };
 
 char    *PutTime();
 char    *PutIP();
 char    *BaseName(char *name);
-int	 log_main(struct request *sr);
+int	 write_log(struct log_info *log);
 int	 add_log_pid();
 int	 remove_log_pid();
 
-void *logger_worker(void *args);
+void *start_worker_logger(void *args);
+int logger_add_request(struct log_info *log);

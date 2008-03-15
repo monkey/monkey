@@ -221,9 +221,11 @@ int main(int argc, char **argv)
 	pthread_mutex_init(&mutex_cgi_child,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
-    pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
 
-    //pthread_create(&tid, &thread_attr, logger_worker, NULL);
+    /* logger-worker: mutex */
+    pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
+    pthread_create(&tid, &thread_attr, start_worker_logger, NULL);
+
 
 	/* Running Monkey as daemon */
 	if(daemon)
