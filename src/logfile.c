@@ -101,8 +101,6 @@ int write_log(struct log_info *log)
     fflush(stdout);
 
 	if(log->status!=S_LOG_ON){
-        printf("\nFUCK!");
-        fflush(stdout);
 		return 0;
 	}
 	pthread_mutex_lock(&mutex_logfile);
