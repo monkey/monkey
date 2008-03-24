@@ -1,4 +1,4 @@
-/*  Monkey HTTP Daemon
+/*  MonkeyD
  *  ------------------
  *  Copyright (C) 2008 Felipe Astroza
  *
@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <mk_common.h>
 
@@ -27,7 +28,7 @@ mk_queue *mk_common_queue()
 
 	new = malloc(sizeof(mk_queue));
 	if(!new)
-		/* Here a message log */
+		/* Here a log message */
 		return NULL;
 
 	new->head = NULL;
@@ -78,4 +79,99 @@ void *mk_common_dequeue(mk_queue *q)
 	q->head = next;
 
 	return data;
+}
+
+inline void mk_common_list_init(mk_list *l)
+{
+	memset(l, 0, sizeof(mk_list));
+}
+
+/* For dynamically assigned list */
+mk_list *mk_common_list()
+{
+	mk_list *new;
+
+	new = malloc(sizeof(mk_list));
+	if(!new)
+		/* Here a log message */
+		return NULL;
+
+	mk_common_list_init(new);
+	return new;
+}
+
+int mk_common_list_add(mk_list *l, void *data)
+{
+	mk_list_node *node;
+
+	if(!l)
+		return MK_ERROR;
+
+	node = malloc(sizeof(mk_list_node));
+	if(!node || !data)
+		/* Here a log message */
+		return MK_ERROR;
+
+	node->data = data;
+	node->next = NULL;
+	node->prev = l->tail;
+
+	if(l->tail)
+		l->tail->next = node;
+	else
+		l->head = node;
+	l->tail = node;
+
+	return MK_OK;
+}
+
+void *mk_common_list_remove(mk_list *l, mk_list_node *node)
+{
+	void *data;
+
+	if(!l || !node)
+		return NULL;
+
+	if(node->next)
+		node->next->prev = node->prev;
+	if(node->prev)
+		node->prev->next = node->next;
+
+	if(l->head == node)
+		l->head = node->next;
+	if(l->tail == node)
+		l->tail = node->prev;
+
+	data = node->data;
+	free(node);
+
+	return data;
+}
+
+void *mk_common_list_find(mk_list *l, int (*cmp)(void *a, void *b), void *a)
+{
+	mk_list_node *node;
+
+	if(!l || !cmp || !a)
+		return NULL;
+
+	for(node = l->head; node != NULL; node = node->next)
+		if(cmp(a, node->data))
+			return node;
+
+	return NULL;
+}
+
+mk_list_node *mk_common_list_rfind(mk_list *l, int (*cmp)(void *a, void *b), void *a)
+{
+	mk_list_node *node;
+
+	if(!l || !cmp || !a)
+		return NULL;
+
+	for(node = l->tail; node != NULL; node = node->prev)
+		if(cmp(a, node->data))
+			return node;
+
+	return NULL;
 }
