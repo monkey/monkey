@@ -88,7 +88,6 @@ int main(int argc, char **argv)
 	char daemon = 0;
 	pthread_t tid;
 	pthread_attr_t thread_attr;	
-	mk_thread_pool *pool;
 
 	struct process *check_ip;
 	int ip_times=0, status_max_ip=CONX_OPEN;
