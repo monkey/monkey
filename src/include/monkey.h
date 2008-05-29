@@ -88,6 +88,7 @@ gid_t EUID;
 #include "mk_common.h"
 #include "mk_thread.h"
 
+#include "mk_epoll.h"
 #include "request.h"
 #include "method.h"
 #include "cgi.h"
@@ -108,4 +109,7 @@ gid_t EUID;
 #include "modules.h"
 
 #endif
+
+#define true 0
+#define false 1
 

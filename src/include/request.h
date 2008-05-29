@@ -54,20 +54,37 @@ parametros de una peticion */
 #define EXIT_NORMAL -1
 #define EXIT_PCONNECTION 24
 
+/* 
+ * Every client request has the status of the process, 
+ * we handle it with different values.
+ */
+#define MK_REQ_STAT_WAITING 0 // Not attended
+#define MK_REQ_STAT_READING 1 // Reading client request 
+#define MK_REQ_STAT_READING_DONE 2 // Reading request has done
+#define MK_REQ_STAT_PROCESSING 3 // Processing readed data
+#define MK_REQ_STAT_PROCESSING_DONE 4 // Processing data has done
+#define MK_REQ_STAT_WRITING 5 // Writing response to client
+#define MK_REQ_STAT_WRITING_DONE 6 // Writing process has done
+
 struct client_request
 {
     int pipelined; /* Pipelined request */
     int socket;
     int  counter_connections; /* Count persistent connections */
-    char *body; /* Original request sent */
+    int status; /* Request status */
+    
+    char body[MAX_REQUEST_BODY]; /* Original request sent */
     struct request *request; /* Parsed request */
+    struct client_request *next;
 };
+
+struct client_request *request_handler;
 
 struct request {
 
 	int status;	/* Request Status, ON, OFF */
-    int pipelined; /* Pipelined request */
-    char *body;
+	int pipelined; /* Pipelined request */
+	char *body;
 
 	/*----First header of client request--*/
 	int method;
@@ -111,10 +128,10 @@ struct request {
 	int make_log;
 	int cgi_pipe[2];
 
-    struct host *host_conf;
+	struct host *host_conf;
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */
-    struct request *next;
+	struct request *next;
 };
 
 struct header_values {
@@ -145,3 +162,10 @@ int Validate_Request_Header(char *buf);
 struct request *alloc_request();
 void free_list_requests(struct client_request *cr);
 void free_request(struct request *sr);
+
+struct client_request *create_client_request(int socket);
+struct client_request *get_client_request_from_fd(int socket);
+struct client_request *remove_client_request(int socket);
+
+int Read_Request(void *data);
+int Write_Request(void *data);

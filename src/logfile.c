@@ -30,7 +30,7 @@
 
 void *start_worker_logger(void *args)
 {
-    struct log_queue *lq, *temp;
+    struct log_queue *lq;
     printf("\nStarting logger worker--->>>\n\n");
     fflush(stdout);
 
@@ -97,8 +97,8 @@ int write_log(struct log_info *log)
 {
 	FILE *log_file=0;
 	
-    printf("\n-->LOGO: %s", log->uri);
-    fflush(stdout);
+    //printf("\n-->LOGO: %s", log->uri);
+    //fflush(stdout);
 
 	if(log->status!=S_LOG_ON){
 		return 0;

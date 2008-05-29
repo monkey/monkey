@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2007, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <pthread.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -30,6 +28,7 @@
 #include <netdb.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <arpa/inet.h> 
 #include <netinet/in.h>
@@ -40,264 +39,222 @@
 #define MAX_TIMES 10000
 #define POST_TIMEOUT 10
 
-struct request *parse_client_request(struct client_request *cr, char *buf)
+
+struct request *parse_client_request(struct client_request *cr)
 {
-    int i, init_block=0, n_blocks=0, offset=0;
-    int length_buf, length_string_end;
-    int pipelined=FALSE;
-    const char *normal_string_end = "\r\n\r\n";
-    const char *old_string_end = "\n\n";
-    char *string_end=0, *check_normal_string=0, *check_old_string=0;
-    char *block=0;
-    struct request *cr_buf=0, *cr_search=0;
+	int i, init_block=0, n_blocks=0, offset=0;
+	int length_buf, length_string_end;
+	int pipelined=FALSE;
+	const char *normal_string_end = "\r\n\r\n";
+	const char *old_string_end = "\n\n";
+	char *string_end=0, *check_normal_string=0, *check_old_string=0;
+	char *block=0;
+	struct request *cr_buf=0, *cr_search=0;
 
-    check_normal_string = strstr(buf, normal_string_end);
-    check_old_string = strstr(buf, old_string_end);
-    if(check_normal_string)
-    {
-        if(check_old_string)
-        {
-            return FALSE;
-        }
-        else
-        {
-            string_end = (char *)normal_string_end;
-            offset = 0;
-        }
-    }
-    else if(check_old_string)
-    {
-            string_end = (char *)old_string_end;
-            offset = 1;
-    }
-    cr->body = buf;
-
-    length_buf = strlen(buf);
-    length_string_end = strlen(string_end);
-
-    init_block = 0;
-    for(i=0; i<= length_buf-length_string_end; i++)
-    {
-        if(strncmp(buf+i, string_end, length_string_end)==0)
-        {
-            /* Allocating request block */
-            block = m_copy_string(buf, init_block, i);
-            //printf("\n--->BLOCK<---\n%s", block);
-            //printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
-            //fflush(stdout);
-            cr_buf = alloc_request();
-            cr_buf->body = m_build_buffer("%s\r\n", block);
-            cr_buf->method = Get_method_from_request(cr_buf->body);
-            cr_buf->next = NULL;
-            M_free(block);
-
-            i = init_block = (i+offset) + length_string_end;
-
-            /* Looking for POST data */
-            if(cr_buf->method == POST_METHOD)
-            {
-                cr_buf->post_variables = M_Get_POST_Vars(buf, i, string_end);
-                if(cr_buf->post_variables)
-                {
-                    i += strlen(cr_buf->post_variables) + length_string_end;
-                }
-            }
-
-            if(!cr->request)
-            {
-                cr->request = cr_buf;
-            }
-            else{
-                cr_search = cr->request;
-                while(cr_search)
-                {
-                    if(cr_search->next==NULL)
-                    {
-                        cr_search->next = cr_buf;
-                        break;
-                    }
-                    else
-                    {
-                        cr_search = cr_search->next;
-                    }
-                }
-            }
-
-            n_blocks++;
-        }
-    }
-
-    /* Checking pipelining connection */
-    cr_search = cr->request;
-    if(n_blocks>1)
-    {
-        pipelined = TRUE;
-
-        while(cr_search){
-            if(cr_search->method!=GET_METHOD && cr_search->method!=HEAD_METHOD)
-            {
-                pipelined = FALSE;
-                break;
-            }
-            cr_search = cr_search->next;
-        }
-
-        if(pipelined == FALSE){
-            /* All pipelined requests must been GET method */
-            return NULL;
-        }
-        else{
-            cr->pipelined = TRUE;
-        }
-    }
-
-    /* DEBUG BLOCKS     
-    cr_search = cr->request;
-    while(cr_search){
-        printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
-        fflush(stdout);
-        cr_search = cr_search->next;
-    }
-    */
-    return cr->request;
-}
-
-int Get_Request(struct client_request *cr)
-{
-	int num_bytes=0, recv_timeout, times=0, limit_time, status=0;
-    int process_request = TRUE, length_remote_request;
-    char *request_end = NULL;
-	static char remote_request[MAX_REQUEST_BODY];
-    struct request *s_request, *p_request=0;
-
-	s_request = cr->request;
-
-	if(cr->counter_connections>0)
-    {
-		recv_timeout=config->keep_alive_timeout; 
+	check_normal_string = strstr(cr->body, normal_string_end);
+	check_old_string = strstr(cr->body, old_string_end);
+	if(check_normal_string)
+	{
+		if(check_old_string)
+		{
+			return FALSE;
+		}
+		else
+		{
+			string_end = (char *)normal_string_end;
+			offset = 0;
+		}
 	}
-    else
-    {
-		recv_timeout=config->timeout;
-    }
+	else if(check_old_string)
+	{
+		string_end = (char *)old_string_end;
+		offset = 1;
+	}
 
-	memset(remote_request, '\0', sizeof(remote_request));
-	limit_time = (int) time(NULL) + recv_timeout;
+	length_buf = strlen(cr->body);
+	length_string_end = strlen(string_end);
 
-	/* Getting Request */
-	do {		
-		times++;
+	init_block = 0;
+	for(i=0; i<= length_buf-length_string_end; i++)
+	{
+		if(strncmp(cr->body+i, string_end, length_string_end)==0)
+		{
+			/* Allocating request block */
+			block = m_copy_string(cr->body, init_block, i);
+		
+			/* printf("\n--->BLOCK<---\n%s", block);
+			 * printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
+			 * fflush(stdout);
+			 */
+		
+			cr_buf = alloc_request();
+			cr_buf->body = m_build_buffer("%s\r\n", block);
+			cr_buf->method = Get_method_from_request(cr_buf->body);
+			cr_buf->next = NULL;
+			M_free(block);
 
-		num_bytes=Socket_Timeout(cr->socket, remote_request+strlen(remote_request), \
-								MAX_REQUEST_BODY - strlen(remote_request) - 1, recv_timeout, ST_RECV);
-
-		if((int) time(NULL) >= limit_time) {
-			if(cr->counter_connections>0){
-				return 2; /* Exit: timeout of persistent connection */
-			}
-			else{
-                printf("\nCONNECTION: GOT TIMEOUT");
-                fflush(stdout);
-				
-                Request_Error(M_CLIENT_REQUEST_TIMEOUT, cr, 
-                                                s_request, 1, s_request->log);
-				return -1;
-			}
-		}
-
-		/* Timeout ? */
-		if(num_bytes==-2){
-            printf("\nCONNECTION: GOT TIMEOUT");
-            fflush(stdout);
-			if(cr->counter_connections > 0){ /* persistent connection ? */
-				return EXIT_PCONNECTION;    /* Exit : timeout of persistent connection */
-			}
-			else{
-				if(recv_timeout==config->timeout){
-					Request_Error(M_CLIENT_REQUEST_TIMEOUT, cr, 
-                                                s_request, 1,s_request->log);
-					return EXIT_NORMAL; /* Exit: Normal timeout */
+			i = init_block = (i+offset) + length_string_end;
+	
+			/* Looking for POST data */
+			if(cr_buf->method == POST_METHOD)
+			{
+				cr_buf->post_variables = M_Get_POST_Vars(cr->body, i, string_end);
+				if(cr_buf->post_variables)
+				{
+					i += strlen(cr_buf->post_variables) + length_string_end;
 				}
-				else
-					continue;
 			}
+
+			if(!cr->request)
+			{	
+				cr->request = cr_buf;
+			}
+			else{
+				cr_search = cr->request;
+				while(cr_search)
+				{
+					if(cr_search->next==NULL)
+					{
+						cr_search->next = cr_buf;
+                        			break;
+					}
+					else
+					{
+						cr_search = cr_search->next;
+					}
+				}
+			}
+			n_blocks++;
 		}
-		/* Exit: Persistent connection */
-		if(num_bytes<=0){
-			return EXIT_NORMAL;
+	}
+
+	/* Checking pipelining connection */
+	cr_search = cr->request;
+	if(n_blocks>1)
+	{
+		pipelined = TRUE;
+
+		while(cr_search){
+			if(cr_search->method!=GET_METHOD && cr_search->method!=HEAD_METHOD)
+			{
+				pipelined = FALSE;
+				break;
+			}
+			cr_search = cr_search->next;
 		}
 
-		if(times==1) {
-			 /* Validating format of first header */
-            int status;
-            status = Validate_Request_Header(remote_request);
-            if(status<0)
-            {
-                //Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1, s_request->log);
-                printf("\nCLOSING 2");
-                fflush(stdout);
-
-                return EXIT_NORMAL;
-            }
-
-			if(strncmp(remote_request, POST_METHOD_STR, 4)==0){
-                recv_timeout=POST_TIMEOUT;
-            }
+		if(pipelined == FALSE){
+			/* All pipelined requests must been GET method */
+			return NULL;
 		}
+		else{
+			cr->pipelined = TRUE;
+		}
+	}
 
-        request_end = get_end_position(remote_request);
-        if(!request_end){
-            printf("\nREQUEST END IS NULL");
-            fflush(stdout);
-        }
-
-        if(request_end && times<RECV_MAX_TIMES)
-        {
-            process_request = FALSE;
-            /* We need to detect if we have a Pipelined connection:
-            A pipelined connection means that more than 1 request are sent by 
-            the  client in the same TCP connection without wait for a response 
-            to every request sent until the server listen all requests and
-            when the last one arrives, it must send responses in the same order.
-            All pipelined request must use the GET method.
-            */
-            length_remote_request = strlen(remote_request);
-            if(strcmp(remote_request+(length_remote_request-strlen(request_end)), request_end)==0)
-            {
-                if(!parse_client_request(cr, remote_request))
-                {
-                    return -1;
-                }
-                break;
-            }
-        }
-	} while(process_request);
-    cr->counter_connections++;
-    p_request = cr->request;
-    
-    while(p_request)
-    {
-        status = Process_Request(cr, p_request);
-        /* Register request (logs) */
-        if(p_request->method!=METHOD_NOT_FOUND && p_request->make_log==VAR_ON){
-#ifdef MOD_MYSQL
-    mod_mysql_log_main(p_request);
-#endif
-
-        logger_add_request(p_request->log);
-           //SetEGID_BACK(); /* We need change user if i'm root */
-           // log_main(p_request); /* Log */
-            //SetUIDGID();  /* Back to old user */
-        }
-
-        if(status<0){
-            return status;
-        }
-        p_request = p_request->next;
-    }
-
-    return status;
+	/* DEBUG BLOCKS  
+	cr_search = cr->request;
+	while(cr_search){
+		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
+		fflush(stdout);
+		cr_search = cr_search->next;
+	}
+	*/
+	return cr->request;
 }
+
+int Read_Request(void *data)
+{
+	int socket, bytes, len;
+	struct client_request *cr;
+	socket = (int) data;
+
+	cr = get_client_request_from_fd(socket);
+	if(!cr)
+	{
+		cr = create_client_request(socket);
+	}
+
+	len = strlen(cr->body);
+	/*
+	printf("\n*** READ LOOP (%i) ***", socket);
+	printf("\n  BUFFER LEN: %i", len);*/
+	bytes = read(socket, cr->body+len, MAX_REQUEST_BODY-len-1);
+/*	printf("\n  SOCKET: %i | BYTES: %i", socket, bytes);
+	printf("\n  NEW BUFFER LEN: %i\n", strlen(cr->body));
+	fflush(stdout);
+*/
+	if (bytes == -1) {
+		if (errno == EAGAIN) {
+			return 0;
+		} 
+		else{
+			perror("read");
+			return -1;
+		}
+	}
+	if (bytes == 0){
+		return -1;
+	}
+	
+	//printf("\n*** GOT REQUEST:\n%s\n----\n", buffer);
+	//fflush(stdout);
+
+	//printf("\nrequest:\n%s", cr->body->request->body);
+	//fflush(stdout);
+	return 0;
+}
+
+int Write_Request(void *data)
+{
+	int status, socket, len=0;
+	struct request *p_request;
+	struct client_request *cr;
+
+	//printf("\n*** WRITE LOOP (%i) ***", (int) data);
+	
+	socket = (int) data;
+	if(!request_handler)
+	{
+	//	printf("\n ERR: HANDLER DATA EQUAL ZERO");
+	//	fflush(stdout);
+		return -1;
+	}	
+
+	cr = get_client_request_from_fd(socket);
+	//printf("\n GOT CLIENT FROM LIST");
+	//fflush(stdout);
+	if(!cr->request)
+	{
+	//	printf("\n PARSING CLIENT REQUESTS");
+		parse_client_request(cr);
+		/* Let's return after this routine in order 
+		 * to let others requests do some work
+		 */
+		/*
+		printf("\n PARSING CLIENT REQUEST DONE");
+		printf("\n ENDING LOOP");
+		fflush(stdout);*/
+		//return 0;
+	}
+
+	p_request = cr->request;
+	while(p_request)
+	{
+		len++;
+		status = Process_Request(cr, p_request);
+		write_log(p_request->log);
+		// printf("\nstatus: %i", status);
+		// fflush(stdout);
+		/* Register request (logs) */
+		p_request = p_request->next;
+	}
+	remove_client_request(socket);
+	free_list_requests(cr);
+	close(socket);
+	return 0;
+}
+
 
 int Validate_Request_Header(char *buf)
 {
@@ -871,3 +828,81 @@ void free_request(struct request *sr)
         M_free(sr->real_path);
         M_free(sr);
 }
+
+/* Create a client request struct and put it on the
+ * main list
+ */
+struct client_request *create_client_request(int socket)
+{
+	struct client_request *cr, *aux;
+
+	cr = M_malloc(sizeof(struct client_request));
+	cr->pipelined = FALSE;
+	cr->counter_connections = 0;
+	cr->socket = socket;
+	cr->request = NULL;
+	memset(cr->body, '\0', MAX_REQUEST_BODY);
+
+	if(!request_handler)
+	{
+		request_handler = cr;
+	}
+	else{
+		aux = request_handler;
+		while(aux->next!=NULL)
+		{
+			aux = aux->next;
+		}
+
+		aux->next = cr;
+	}
+
+	return (struct client_request *) cr;
+}
+
+struct client_request *get_client_request_from_fd(int socket)
+{
+	struct client_request *cr;
+
+	cr = request_handler;
+	while(cr!=NULL)
+	{
+		if(cr->socket == socket)
+		{
+			break;
+		}
+		cr = cr->next;
+	}
+
+	return (struct client_request *) cr;
+}
+
+struct client_request *remove_client_request(int socket)
+{
+	struct client_request *cr, *aux;
+	
+	cr = request_handler;
+	while(cr)
+	{
+		if(cr->socket == socket)
+		{
+			if(cr==request_handler)
+			{
+				request_handler = cr->next;
+				break;
+			}
+			else
+			{
+				aux = request_handler;
+				while(aux->next!=cr)
+				{
+					aux = aux->next;
+				}
+				aux->next = cr->next;
+			}
+		}
+		cr = cr->next;
+	}
+	return (struct client_request *) cr;
+}
+

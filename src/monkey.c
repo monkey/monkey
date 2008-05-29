@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#include <pthread.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -40,7 +38,7 @@
 #endif
 
 #define CONX_CLOSED 0
-#define CONX_OPEN	1
+#define CONX_OPEN 1
 		
 void ResetSocket(int fd)
 {
@@ -64,7 +62,7 @@ void Help()
 {
 	printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
 	printf("Available options:\n");
-    printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
+	printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
 	printf("  -c directory\tspecify directory from configuration files\n");
 	printf("  -D\t\trun Monkey as daemon\n");
 	printf("  -v\t\tshow version number\n");
@@ -73,57 +71,14 @@ void Help()
 }
 
 
-void thread_init(void *args)
-{
-	int request_response=0, socket;
-    int request_keepalive;
-
-	struct process *th=0;
-
-    socket = (int) args;
-
-    /* Alloc main thread info */
-	th = (struct  process *) RegProc(pthread_self(), socket);
-    th->cr = M_malloc(sizeof(struct client_request));
-    th->cr->pipelined = FALSE;
-    th->cr->counter_connections = 0;
-    th->cr->socket = socket;
-    th->cr->request = NULL;
-
-	while(request_response==0){
-		request_response = Get_Request(th->cr); /* Working in request... */
-        if(!th->cr->request)
-        {
-            break;
-        }
-
-        request_keepalive = th->cr->request->keep_alive;
-        free_list_requests(th->cr);
-
-        /* Persistent connection: Exit */
-        if(th->cr->counter_connections>=config->max_keep_alive_request || 
-                           request_response==2 || request_response==-1)
-        {
-            break;
-        }
-
-		if(config->keep_alive==VAR_OFF || request_keepalive==VAR_OFF)
-        {
-			break;
-		}
-	}
-
-	FreeThread(pthread_self()); /* Close socket & delete thread info from register */
-	pthread_exit(0); /* See you! */
-}
-
+	
 void set_benchmark_conf()
 {
-    const int max_int = 65000;
+	const int max_int = 65000;
 
-    config->max_keep_alive_request = max_int;
-    config->maxclients = max_int;
-    config->max_ip = 0;
+	config->max_keep_alive_request = max_int;
+	config->maxclients = max_int;
+	config->max_ip = 0;
 }
 
 /* MAIN */
@@ -133,13 +88,14 @@ int main(int argc, char **argv)
 	char daemon = 0;
 	pthread_t tid;
 	pthread_attr_t thread_attr;	
-    mk_thread_pool *pool;
+	mk_thread_pool *pool;
 
-        struct process *check_ip;
-        int ip_times=0, status_max_ip=CONX_OPEN;
-        int sin_size;
-        char *IP_client;
+	struct process *check_ip;
+	int ip_times=0, status_max_ip=CONX_OPEN;
+	int sin_size;
+	char *IP_client;
 
+	mk_epoll_calls *callers;
 	struct sockaddr_in local_sockaddr_in;
 			
 	config = M_malloc(sizeof(struct server_config));
@@ -150,29 +106,30 @@ int main(int argc, char **argv)
 	{
 		switch (opt) {
 			case 'v': 
-					Version() ; 
-					exit(0); 
-					break;
+				Version() ; 
+				exit(0); 
+				break;
 			case 'h':
-					Help();
-					break;
+				Help();
+				break;
 			case 'D':
-					daemon = 1;
-					break;
+				daemon = 1;
+				break;
 			case 'c':
-					if (strlen(optarg) != 0) {
-						config->file_config=optarg;
-						break;
-					}
-            case 'b':
-                    benchmark_mode = TRUE;
-                    break;
-			case '?':
-					printf("Monkey: Invalid option or option needs an argument.\n");
-					Help();
+				if (strlen(optarg) != 0) {
+					config->file_config=optarg;
 					break;
+				}
+			case 'b':
+				benchmark_mode = TRUE;
+				break;
+			case '?':
+				printf("Monkey: Invalid option or option needs an argument.\n");
+				Help();
+				break;
 		}
 	}   
+
 	if(!config->file_config)
 		config->file_config=MONKEY_PATH_CONF;
 		
@@ -180,18 +137,17 @@ int main(int argc, char **argv)
 	Init_Signals();
 	M_Config_start_configure();
 
-    /* 
+	/* 
         Benchmark mode overwrite some configuration directives in order 
         to disable some limit numbers as number of clients, request per 
         client, same ip connected, etc
-    */
-    if(benchmark_mode)
-    {
-        printf("*** Running Monkey in Benchmark mode ***\n");
-        fflush(stdout);
-        set_benchmark_conf();
-    }
-
+	*/
+	if(benchmark_mode)
+	{
+		printf("*** Running Monkey in Benchmark mode ***\n");
+		fflush(stdout);
+		set_benchmark_conf();
+	}
 
 	local_fd=socket(PF_INET,SOCK_STREAM,0);
 	local_sockaddr_in.sin_family=AF_INET;
@@ -211,22 +167,21 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-    /* Main log queue index list */
-    //(struct log_queue *) _log_queue = NULL;
+	/* Main log queue index list */
+	//(struct log_queue *) _log_queue = NULL;
 
-	/* threads attr / mutex */
+	/* threads attr / mutex 
 	pthread_attr_init(&thread_attr);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 	pthread_mutex_init(&mutex_thread_list,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_cgi_child,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
-
-    /* logger-worker: mutex */
-    pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
-    pthread_create(&tid, &thread_attr, start_worker_logger, NULL);
-
-
+	*/
+	/* logger-worker: mutex 
+	pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
+	//pthread_create(&tid, &thread_attr, start_worker_logger, NULL);
+	*/
 	/* Running Monkey as daemon */
 	if(daemon)
 		set_daemon();
@@ -239,65 +194,10 @@ int main(int argc, char **argv)
 
 	SetUIDGID(); 	/* Changing user */
 
-	thread_counter=0;
-    //pool = mk_thread_pool_create(20);
-
-	while(1) { /* Waiting for new connections */
-				
-		sin_size=sizeof(struct sockaddr_in);
-		if((remote_fd=accept(local_fd,(struct sockaddr *)&remote, &sin_size))==-1){
-			continue;
-		}
-
-		/* IP allowed ? ; Limit of connections 
-		if(thread_counter > config->maxclients){
-			close(remote_fd);
-			continue;
-		}
-        */
-		/*
-    		Limit of maximum of connections from same IP address :
-            This routine check every node of struct with a counter checking
-			if the new connection exist more times than has been allowed in
-			config->max_ip.
-		*/
-		IP_client = (char *) PutIP(remote_fd);
-		if(!IP_client){
-			close(remote_fd);
-			M_free(IP_client);
-			continue;			
-		}
-
-		check_ip=first_process;
-		while(check_ip!=NULL && config->max_ip!=0) {
-			if(strcasecmp(check_ip->ip_client, IP_client)==0){
-				ip_times++;
-			}
-			if(ip_times>=config->max_ip){
-				close(remote_fd);
-				status_max_ip=CONX_CLOSED;
-			}
-			check_ip=check_ip->next;
-		}
-
-		if(status_max_ip==CONX_CLOSED)
-			continue;
-
-        //mk_thread_pool_set(pool, thread_init,  (void *) remote_fd);
-        //continue;
-
-        
-
-		if(pthread_create(&tid, &thread_attr, thread_init, (void *) remote_fd)!=0){
-			perror("pthread_create");
-			close(remote_fd);
-		}
-		else{
-			pthread_mutex_lock(&mutex_thread_counter);
-			thread_counter++;
-			pthread_mutex_unlock(&mutex_thread_counter);
-		}
-        
-	}
+	//epoll_conf = struct mk_epoll_calls;
+	//epoll_conf = malloc(sizeof(struct mk_epoll_calls));
+	request_handler = NULL;
+	callers = mk_epoll_set_callers(Read_Request, Write_Request);
+	epoll_init(local_fd, callers);
 	return 0;
 }

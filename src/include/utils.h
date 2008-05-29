@@ -67,3 +67,6 @@ void M_free(void *ptr);
 int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 char *remove_space(char *buf);
+
+int setnonblocking(int sockfd);
+
