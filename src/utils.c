@@ -345,7 +345,7 @@ char *m_build_buffer(const char *format, ...)
 	va_start(ap, format);
 	length = vsnprintf(buffer, alloc, format, ap);
 
-    if(length >= alloc) {
+	if(length >= alloc) {
 		char *ptr;
 		
 		/* glibc 2.x, x > 0 */
@@ -383,7 +383,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 
 	if(buffer){
 		buffer_content = M_strdup(buffer);		
-		M_free(buffer);
+		//M_free(buffer);
 	}
 
 	va_start(ap, format);
@@ -412,7 +412,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	if(buffer_content){
 		buffer = m_build_buffer("%s%s", buffer_content, new_buffer);
 		M_free(buffer_content);
-		M_free(new_buffer);
+		//M_free(new_buffer);
 	}else{
 		buffer = new_buffer;
 	}
@@ -560,7 +560,7 @@ void *M_malloc(size_t size)
 	size++;
 	if((aux=malloc(size))==NULL){
 		perror("malloc");
-		pthread_kill(pthread_self(), SIGPIPE);
+		//pthread_kill(pthread_self(), SIGPIPE);
 		return NULL;						
 	}
 	memset(aux, '\0', size);
@@ -591,6 +591,7 @@ void *M_realloc(void* ptr, size_t size)
 	char *aux=0;
 
 	if((aux=realloc(ptr, size))==NULL){
+		printf("\n** Monkey ERROR");
 		perror("realloc");
 		pthread_kill(pthread_self(), SIGPIPE);
 		return NULL;						
@@ -601,7 +602,7 @@ void *M_realloc(void* ptr, size_t size)
 void M_free(void *ptr)
 {
 	if(ptr!=NULL){
-		//memset(ptr, '\0', sizeof(*ptr));
+		memset(ptr, '\0', sizeof(*ptr));
 		free(ptr);
 		ptr=NULL;
 	}

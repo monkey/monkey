@@ -71,3 +71,6 @@
 #define M_SERVER_SERVICE_UNAV			503
 #define M_SERVER_GATEWAY_TIMEOUT		504
 #define M_SERVER_HTTP_VERSION_UNSUP		505
+
+/* Text header messages */
+#define M_HTTP_OK_TXT				"HTTP/1.1 200 OK\r\n"

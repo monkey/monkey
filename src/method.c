@@ -363,6 +363,8 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
+			printf("\nGOT BAD REQUEST!, IMPOSSIBLE!");
+			fflush(stdout);
 			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 400 Bad Request\r\n");
 			break;
 
@@ -476,7 +478,6 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
 
     //printf("\n*** SENDING HEADERS ***\n%s", buffer);
-    fflush(stdout);
 
 	fdprintf(fd, NO_CHUNKED, "%s", buffer);
 	M_free(buffer);

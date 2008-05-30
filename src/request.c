@@ -169,10 +169,10 @@ int Read_Request(void *data)
 	struct client_request *cr;
 	socket = (int) data;
 
-	cr = get_client_request_from_fd(socket);
+	cr = mk_get_client_request_from_fd(socket);
 	if(!cr)
 	{
-		cr = create_client_request(socket);
+		cr = mk_create_client_request(socket);
 	}
 
 	len = strlen(cr->body);
@@ -210,18 +210,29 @@ int Write_Request(void *data)
 	int status, socket, len=0;
 	struct request *p_request;
 	struct client_request *cr;
+	struct sched_list_node *sched_node;
 
 	//printf("\n*** WRITE LOOP (%i) ***", (int) data);
 	
 	socket = (int) data;
-	if(!request_handler)
+
+	/* 
+	 * Get node from schedule list node which contains
+	 * the information regarding to the current thread
+	 */
+	sched_node = mk_sched_get_handler_owner();
+
+	if(!sched_node->request_handler)
 	{
 	//	printf("\n ERR: HANDLER DATA EQUAL ZERO");
 	//	fflush(stdout);
 		return -1;
 	}	
 
-	cr = get_client_request_from_fd(socket);
+	cr = mk_get_client_request_from_fd(socket);
+	printf("\nGOT REQUEST:\n%s", cr->body);
+	printf("\nsomething else...");
+	fflush(stdout);
 	//printf("\n GOT CLIENT FROM LIST");
 	//fflush(stdout);
 	if(!cr->request)
@@ -243,15 +254,17 @@ int Write_Request(void *data)
 	{
 		len++;
 		status = Process_Request(cr, p_request);
-		write_log(p_request->log);
+		//write_log(p_request->log);
 		// printf("\nstatus: %i", status);
 		// fflush(stdout);
 		/* Register request (logs) */
 		p_request = p_request->next;
 	}
-	remove_client_request(socket);
-	free_list_requests(cr);
-	close(socket);
+	mk_remove_client_request(socket);
+	//free_list_requests(cr);
+	//printf("\n  -> Closing socket: %i", socket);
+	//fflush(stdout);
+	//close(socket);
 	return 0;
 }
 
@@ -673,7 +686,7 @@ int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
 				return -2;
 				break;
 		case -1:
-				pthread_kill(pthread_self(), SIGPIPE);
+				//pthread_kill(pthread_self(), SIGPIPE);
 				return -1;
 	}
 	
@@ -686,7 +699,7 @@ int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
 
 	if( status < 0 ){
 		if(time(NULL) >= max_time){
-			pthread_kill(pthread_self(), SIGPIPE);
+			//pthread_kill(pthread_self(), SIGPIPE);
 		}
 	}
 	
@@ -772,7 +785,7 @@ void free_list_requests(struct client_request *cr)
             cr->request = NULL;
         }
 
-        free_request(sr);
+        // FIXXX free_request(sr);
     }
     cr->request = NULL;
 }
@@ -832,23 +845,27 @@ void free_request(struct request *sr)
 /* Create a client request struct and put it on the
  * main list
  */
-struct client_request *create_client_request(int socket)
+struct client_request *mk_create_client_request(int socket)
 {
 	struct client_request *cr, *aux;
+	struct sched_list_node *sched_node;
 
 	cr = M_malloc(sizeof(struct client_request));
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
 	cr->socket = socket;
 	cr->request = NULL;
+
+	cr->body = M_malloc(MAX_REQUEST_BODY);
 	memset(cr->body, '\0', MAX_REQUEST_BODY);
 
-	if(!request_handler)
+	sched_node = mk_sched_get_handler_owner();
+	if(!sched_node->request_handler)
 	{
-		request_handler = cr;
+		sched_node->request_handler = cr;
 	}
 	else{
-		aux = request_handler;
+		aux = sched_node->request_handler;
 		while(aux->next!=NULL)
 		{
 			aux = aux->next;
@@ -860,11 +877,13 @@ struct client_request *create_client_request(int socket)
 	return (struct client_request *) cr;
 }
 
-struct client_request *get_client_request_from_fd(int socket)
+struct client_request *mk_get_client_request_from_fd(int socket)
 {
 	struct client_request *cr;
+	struct sched_list_node *sched_node;
 
-	cr = request_handler;
+	sched_node = mk_sched_get_handler_owner();
+	cr = sched_node->request_handler;
 	while(cr!=NULL)
 	{
 		if(cr->socket == socket)
@@ -877,32 +896,46 @@ struct client_request *get_client_request_from_fd(int socket)
 	return (struct client_request *) cr;
 }
 
-struct client_request *remove_client_request(int socket)
+/*
+ * From thread sched_list_node "list", remove the client_request
+ * struct information 
+ */
+struct client_request *mk_remove_client_request(int socket)
 {
 	struct client_request *cr, *aux;
-	
-	cr = request_handler;
+	struct sched_list_node *sched_node;
+
+	sched_node = mk_sched_get_handler_owner();
+	cr = sched_node->request_handler;
 	while(cr)
 	{
 		if(cr->socket == socket)
 		{
-			if(cr==request_handler)
+			if(cr==sched_node->request_handler)
 			{
-				request_handler = cr->next;
+				sched_node->request_handler = cr->next;
+				free_list_requests(cr);
 				break;
 			}
 			else
 			{
-				aux = request_handler;
+				aux = sched_node->request_handler;
 				while(aux->next!=cr)
 				{
 					aux = aux->next;
 				}
+				if(!aux)
+				{
+					printf("\nINVALID SEARCH, SADLY BUG :/");
+					fflush(stdout);
+				}
 				aux->next = cr->next;
+				free_list_requests(cr);
 			}
 		}
 		cr = cr->next;
 	}
-	return (struct client_request *) cr;
+	M_free(cr);
+	return NULL;
 }
 

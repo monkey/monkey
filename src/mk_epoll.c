@@ -30,45 +30,52 @@
 
 #include "monkey.h"
 
-#define MAX_EVENTS 32000
+#define MAX_EVENTS 10000
 
 mk_epoll_calls *mk_epoll_set_callers(void (*read)(void *), void (*write)(void *))
 {
 	mk_epoll_calls *calls;
 
 	calls = malloc(sizeof(mk_epoll_calls));
-	calls->func_read = read;
-	calls->func_write = write;
+	calls->func_read = (void *) read;
+	calls->func_write = (void *) write;
 
 	return calls;
 }
-		
-void epoll_init(int server, mk_epoll_calls *calls)
+
+int mk_epoll_create(int max_events)
 {
-	int i, ret, epoll_fd;
-	struct sockaddr remote_addr;
-	struct epoll_event event;
+	int epoll_fd;
 
-	socklen_t addr_size = sizeof(remote_addr);
-	epoll_fd = epoll_create(MAX_EVENTS);
-
+	epoll_fd = epoll_create(max_events);
 	if (epoll_fd == -1) {
 		perror("epoll_create");
 	}
 
-	event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
-	event.data.fd = server;
+	return epoll_fd;
+}
 
-	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server, &event) == -1) {
-		perror("epoll_ctl");
+void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
+{
+	int i, ret;
+	struct sched_list_node *sched_node;
+
+	pthread_mutex_lock(&mutex_wait_register);
+	
+	sched_node = mk_sched_get_handler_owner();
+	if(!sched_node)
+	{
+		printf("\nNODE NULL!");
+		fflush(stdout);
 	}
 
-//void epoll_start_loop(int server, int epoll_fd)
+	pthread_mutex_unlock(&mutex_wait_register);
+	
+	sched_node->request_handler = NULL;
 	while(1){
-		struct epoll_event events[MAX_EVENTS];
-		int num_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+		struct epoll_event events[max_events];
+		int num_fds = epoll_wait(epoll_fd, events, max_events, -1);
 
-		event.events |= EPOLLOUT | EPOLLET;
 		for(i=0; i< num_fds; i++) {
 			// Case 1: Error condition
 			if (events[i].events & (EPOLLHUP | EPOLLERR)) {
@@ -77,31 +84,6 @@ void epoll_init(int server, mk_epoll_calls *calls)
 				continue;
 			}
 			assert(events[i].events & (EPOLLIN | EPOLLOUT));
-
-			// Case 2: Our server is receiving a connection
-			if (events[i].data.fd == server) {
-				int connection = accept(server, &remote_addr, &addr_size);
-				
-				//printf("**: NEW CLIENT SOCKET: %i", connection);
-				//fflush(stdout);
-
-				if (connection == -1) {
-					if (errno != EAGAIN && errno != EWOULDBLOCK) {
-						perror("accept");
-					}
-					continue;
-				}
-				
-				setnonblocking(connection);
-
-				// Add the connection to our epoll loop
-				event.data.fd = connection;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, connection, 
-							&event) == -1) {
-				    perror("epoll_ctl");
-				}
-				continue;
-			}
 
 			/*
 			printf("\n*** EPOLL EVENT DEBUG: %i ***", events[i].data.fd);
@@ -124,7 +106,7 @@ void epoll_init(int server, mk_epoll_calls *calls)
 			{
 				//printf("\nCALL::READ DATA");
 				//fflush(stdout);
-				ret = (* calls->func_read)(events[i].data.fd);
+				ret = (* calls->func_read)((void *)events[i].data.fd);
 				if(ret<0){
 					close(events[i].data.fd);
 				}
@@ -133,12 +115,28 @@ void epoll_init(int server, mk_epoll_calls *calls)
 			{
 				//printf("\nCALL::WRITE DATA");
 				//fflush(stdout);
-				ret = (* calls->func_write)(events[i].data.fd);
-				//if(ret<0){
-				//	close(events[i].data.fd);
-				//}
+				ret = (* calls->func_write)((void *)events[i].data.fd);
+				if(ret == 0){
+					close(events[i].data.fd);
+				}
 			}
 		}
 	}
+}
+
+int mk_epoll_add_client(int epoll_fd, int socket)
+{
+	int ret;
+	struct epoll_event event;
+
+	event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+	event.data.fd = socket;
+
+	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event);
+	if(ret < 0)
+	{
+		perror("epoll_ctl");
+	}
+	return ret;
 }
 

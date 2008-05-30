@@ -76,6 +76,8 @@ pthread_mutex_t  mutex_thread_list;
 pthread_mutex_t  mutex_thread_counter;
 pthread_mutex_t  mutex_cgi_child;
 pthread_mutex_t  mutex_logfile;
+pthread_mutex_t  mutex_wait_register;
+//pthread_mutex_t  mutex_write_sched_list;
 
 /* Usuario real que que ejecuto
  el servidor */
@@ -86,6 +88,7 @@ gid_t EUID;
 #include "http_status.h"
 
 #include "mk_epoll.h"
+#include "scheduler.h"
 #include "request.h"
 #include "method.h"
 #include "cgi.h"

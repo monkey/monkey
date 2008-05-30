@@ -86,17 +86,16 @@ int main(int argc, char **argv)
 {
 	int opt, remote_fd, benchmark_mode=FALSE;
 	char daemon = 0;
-	pthread_t tid;
-	pthread_attr_t thread_attr;	
 
 	struct process *check_ip;
 	int ip_times=0, status_max_ip=CONX_OPEN;
-	int sin_size;
+	int i, num_threads;
+	int epoll_server;
 	char *IP_client;
 
-	mk_epoll_calls *callers;
 	struct sockaddr_in local_sockaddr_in;
-			
+	struct sched_list_node *sched;
+		
 	config = M_malloc(sizeof(struct server_config));
 	config->file_config=0;
 			
@@ -170,9 +169,13 @@ int main(int argc, char **argv)
 	//(struct log_queue *) _log_queue = NULL;
 
 	/* threads attr / mutex 
-	pthread_attr_init(&thread_attr);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-	pthread_mutex_init(&mutex_thread_list,  (pthread_mutexattr_t *) NULL);
+	*/
+	
+
+	//pthread_mutex_init(&mutex_write_sched_list, (pthread_mutexattr_t *) NULL);
+	
+	/*
 	pthread_mutex_init(&mutex_cgi_child,  (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
 	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
@@ -191,12 +194,43 @@ int main(int argc, char **argv)
 	mod_mysql_init();
 #endif
 
-	SetUIDGID(); 	/* Changing user */
+	//SetUIDGID(); 	/* Changing user */
 
-	//epoll_conf = struct mk_epoll_calls;
-	//epoll_conf = malloc(sizeof(struct mk_epoll_calls));
-	request_handler = NULL;
-	callers = mk_epoll_set_callers(Read_Request, Write_Request);
-	epoll_init(local_fd, callers);
+	num_threads = 5;
+	//request_handler = NULL;
+	sched_list = NULL;
+	for(i=0; i<num_threads; i++)
+	{
+		mk_sched_launch_thread(5000);
+	}
+
+	sched = sched_list;
+	socklen_t socket_size = sizeof(remote);
+	while(1)
+	{
+		if((remote_fd=accept(local_fd, (struct sockaddr *)&remote, &socket_size))==-1)
+		{
+			perror("accept");
+			continue;
+		}
+
+		setnonblocking(remote_fd);
+		
+		//printf("\nATTENDING ON THREAD: %i", sched->idx);
+		//fflush(stdout);
+
+		//printf("\nTHREAD: %i, epoll_fd: %i, attending: %i", sched->idx, sched->epoll_fd, remote_fd);
+		//fflush(stdout);
+
+		mk_epoll_add_client(sched->epoll_fd, remote_fd);
+		
+		if(sched->next)
+		{
+			sched = sched->next;
+		}
+		else{
+			sched = sched_list;
+		}
+	}
 	return 0;
 }

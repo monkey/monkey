@@ -17,13 +17,23 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-typedef struct {
-	int (*func_read)(void *);
-	int (*func_write)(void *);
-} mk_epoll_calls;
+struct sched_list_node{
+	short int idx;
+	pthread_t tid;
+	int epoll_fd;
+	struct client_request *request_handler;
+	struct sched_list_node *next;
+};
 
-int mk_epoll_create(int max_events);
-void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events);
-mk_epoll_calls *mk_epoll_set_callers(void (*read)(void *), void (*write)(void *));
-int mk_epoll_add_client(int epoll_fd, int socket);
+struct sched_list_node *sched_list;
+
+typedef struct {
+	int epoll_fd;
+	int max_events;
+} sched_thread_conf;
+
+int mk_sched_register_thread(pthread_t tid, int epoll_fd);
+int mk_sched_launch_thread(int max_events);
+void *mk_sched_launch_epoll_loop(void *thread_conf);
+struct sched_list_node *mk_sched_get_handler_owner();
 
