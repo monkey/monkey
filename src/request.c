@@ -230,9 +230,9 @@ int Write_Request(void *data)
 	}	
 
 	cr = mk_get_client_request_from_fd(socket);
-	printf("\nGOT REQUEST:\n%s", cr->body);
-	printf("\nsomething else...");
-	fflush(stdout);
+	//printf("\nGOT REQUEST:\n%s", cr->body);
+	//printf("\nsomething else...");
+	//fflush(stdout);
 	//printf("\n GOT CLIENT FROM LIST");
 	//fflush(stdout);
 	if(!cr->request)
