@@ -26,6 +26,12 @@ struct indexfile {
 	struct indexfile *next;	
 } *first_index;
 
+#define NORMAL_STRING_END "\r\n\r\n"
+#define LEN_NORMAL_STRING_END 4
+
+#define OLD_STRING_END "\n\n"
+#define LEN_OLD_STRING_END 2
+
 /* Headers */
 #define RH_ACCEPT "Accept:"
 #define RH_ACCEPT_CHARSET	"Accept-Charset:"
@@ -78,7 +84,7 @@ struct client_request
     struct client_request *next;
 };
 
-//struct client_request *request_handler;
+pthread_key_t request_handler;
 
 struct request {
 

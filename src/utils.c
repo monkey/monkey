@@ -383,7 +383,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 
 	if(buffer){
 		buffer_content = M_strdup(buffer);		
-		//M_free(buffer);
+		M_free(buffer);
 	}
 
 	va_start(ap, format);
@@ -412,7 +412,7 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	if(buffer_content){
 		buffer = m_build_buffer("%s%s", buffer_content, new_buffer);
 		M_free(buffer_content);
-		//M_free(new_buffer);
+		M_free(new_buffer);
 	}else{
 		buffer = new_buffer;
 	}

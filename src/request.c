@@ -43,16 +43,14 @@
 struct request *parse_client_request(struct client_request *cr)
 {
 	int i, init_block=0, n_blocks=0, offset=0;
-	int length_buf, length_string_end;
+	int length_buf=0, length_end=0;
 	int pipelined=FALSE;
-	const char *normal_string_end = "\r\n\r\n";
-	const char *old_string_end = "\n\n";
 	char *string_end=0, *check_normal_string=0, *check_old_string=0;
 	char *block=0;
 	struct request *cr_buf=0, *cr_search=0;
 
-	check_normal_string = strstr(cr->body, normal_string_end);
-	check_old_string = strstr(cr->body, old_string_end);
+	check_normal_string = strstr(cr->body, NORMAL_STRING_END);
+	check_old_string = strstr(cr->body, OLD_STRING_END);
 	if(check_normal_string)
 	{
 		if(check_old_string)
@@ -61,23 +59,24 @@ struct request *parse_client_request(struct client_request *cr)
 		}
 		else
 		{
-			string_end = (char *)normal_string_end;
+			string_end = NORMAL_STRING_END;
+			length_end = LEN_NORMAL_STRING_END;
 			offset = 0;
 		}
 	}
 	else if(check_old_string)
 	{
-		string_end = (char *)old_string_end;
+		string_end = OLD_STRING_END;
+		length_end = LEN_OLD_STRING_END;
 		offset = 1;
 	}
 
 	length_buf = strlen(cr->body);
-	length_string_end = strlen(string_end);
 
 	init_block = 0;
-	for(i=0; i<= length_buf-length_string_end; i++)
+	for(i=0; i<= length_buf-length_end; i++)
 	{
-		if(strncmp(cr->body+i, string_end, length_string_end)==0)
+		if(strncmp(cr->body+i, string_end, length_end)==0)
 		{
 			/* Allocating request block */
 			block = m_copy_string(cr->body, init_block, i);
@@ -93,7 +92,7 @@ struct request *parse_client_request(struct client_request *cr)
 			cr_buf->next = NULL;
 			M_free(block);
 
-			i = init_block = (i+offset) + length_string_end;
+			i = init_block = (i+offset) + length_end;
 	
 			/* Looking for POST data */
 			if(cr_buf->method == POST_METHOD)
@@ -101,7 +100,7 @@ struct request *parse_client_request(struct client_request *cr)
 				cr_buf->post_variables = M_Get_POST_Vars(cr->body, i, string_end);
 				if(cr_buf->post_variables)
 				{
-					i += strlen(cr_buf->post_variables) + length_string_end;
+					i += strlen(cr_buf->post_variables) + length_end;
 				}
 			}
 
@@ -175,7 +174,15 @@ int Read_Request(void *data)
 		cr = mk_create_client_request(socket);
 	}
 
+	if(!cr->body)
+	{
+		len = 0;
+	}
+	else{
+
+	
 	len = strlen(cr->body);
+	}
 	/*
 	printf("\n*** READ LOOP (%i) ***", socket);
 	printf("\n  BUFFER LEN: %i", len);*/
@@ -210,7 +217,6 @@ int Write_Request(void *data)
 	int status, socket, len=0;
 	struct request *p_request;
 	struct client_request *cr;
-	struct sched_list_node *sched_node;
 
 	//printf("\n*** WRITE LOOP (%i) ***", (int) data);
 	
@@ -220,16 +226,11 @@ int Write_Request(void *data)
 	 * Get node from schedule list node which contains
 	 * the information regarding to the current thread
 	 */
-	sched_node = mk_sched_get_handler_owner();
-
-	if(!sched_node->request_handler)
-	{
-	//	printf("\n ERR: HANDLER DATA EQUAL ZERO");
-	//	fflush(stdout);
-		return -1;
-	}	
-
 	cr = mk_get_client_request_from_fd(socket);
+	if(!cr)
+	{
+		return -1;
+	}
 	//printf("\nGOT REQUEST:\n%s", cr->body);
 	//printf("\nsomething else...");
 	//fflush(stdout);
@@ -785,7 +786,7 @@ void free_list_requests(struct client_request *cr)
             cr->request = NULL;
         }
 
-        // FIXXX free_request(sr);
+        free_request(sr);
     }
     cr->request = NULL;
 }
@@ -806,15 +807,14 @@ void free_request(struct request *sr)
             M_free(sr->headers);
         }
 
-        /*
+        
         if(sr->log){
             M_free(sr->log->error_msg); 
             M_free(sr->log);
         }
-        */
 
         M_free(sr->body);
-//        M_free(sr->uri);
+        M_free(sr->uri);
         M_free(sr->uri_processed);
 
         M_free(sr->accept);
@@ -847,8 +847,7 @@ void free_request(struct request *sr)
  */
 struct client_request *mk_create_client_request(int socket)
 {
-	struct client_request *cr, *aux;
-	struct sched_list_node *sched_node;
+	struct client_request *request_handler, *cr, *aux;
 
 	cr = M_malloc(sizeof(struct client_request));
 	cr->pipelined = FALSE;
@@ -859,13 +858,14 @@ struct client_request *mk_create_client_request(int socket)
 	cr->body = M_malloc(MAX_REQUEST_BODY);
 	memset(cr->body, '\0', MAX_REQUEST_BODY);
 
-	sched_node = mk_sched_get_handler_owner();
-	if(!sched_node->request_handler)
+	request_handler = mk_sched_get_request_handler();
+
+	if(!request_handler)
 	{
-		sched_node->request_handler = cr;
+		request_handler = cr;
 	}
 	else{
-		aux = sched_node->request_handler;
+		aux = request_handler;
 		while(aux->next!=NULL)
 		{
 			aux = aux->next;
@@ -874,16 +874,16 @@ struct client_request *mk_create_client_request(int socket)
 		aux->next = cr;
 	}
 
+	mk_sched_set_request_handler(request_handler);
 	return (struct client_request *) cr;
 }
 
 struct client_request *mk_get_client_request_from_fd(int socket)
 {
-	struct client_request *cr;
-	struct sched_list_node *sched_node;
+	struct client_request *request_handler, *cr;
 
-	sched_node = mk_sched_get_handler_owner();
-	cr = sched_node->request_handler;
+	request_handler = mk_sched_get_request_handler();
+	cr = request_handler;
 	while(cr!=NULL)
 	{
 		if(cr->socket == socket)
@@ -902,24 +902,24 @@ struct client_request *mk_get_client_request_from_fd(int socket)
  */
 struct client_request *mk_remove_client_request(int socket)
 {
-	struct client_request *cr, *aux;
-	struct sched_list_node *sched_node;
+	struct client_request *request_handler, *cr, *aux;
 
-	sched_node = mk_sched_get_handler_owner();
-	cr = sched_node->request_handler;
+	request_handler = mk_sched_get_request_handler();
+	cr = request_handler;
+
 	while(cr)
 	{
 		if(cr->socket == socket)
 		{
-			if(cr==sched_node->request_handler)
+			if(cr==request_handler)
 			{
-				sched_node->request_handler = cr->next;
+				request_handler = cr->next;
 				free_list_requests(cr);
 				break;
 			}
 			else
 			{
-				aux = sched_node->request_handler;
+				aux = request_handler;
 				while(aux->next!=cr)
 				{
 					aux = aux->next;
@@ -936,6 +936,7 @@ struct client_request *mk_remove_client_request(int socket)
 		cr = cr->next;
 	}
 	M_free(cr);
+	mk_sched_set_request_handler(request_handler);
 	return NULL;
 }
 

@@ -58,20 +58,11 @@ int mk_epoll_create(int max_events)
 void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 {
 	int i, ret;
-	struct sched_list_node *sched_node;
+	//struct sched_list_node *sched_node;
 
 	pthread_mutex_lock(&mutex_wait_register);
-	
-	sched_node = mk_sched_get_handler_owner();
-	if(!sched_node)
-	{
-		printf("\nNODE NULL!");
-		fflush(stdout);
-	}
-
 	pthread_mutex_unlock(&mutex_wait_register);
 	
-	sched_node->request_handler = NULL;
 	while(1){
 		struct epoll_event events[max_events];
 		int num_fds = epoll_wait(epoll_fd, events, max_events, -1);
@@ -116,7 +107,7 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 				//printf("\nCALL::WRITE DATA");
 				//fflush(stdout);
 				ret = (* calls->func_write)((void *)events[i].data.fd);
-				if(ret == 0){
+				if(ret <= 0){
 					close(events[i].data.fd);
 				}
 			}

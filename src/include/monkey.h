@@ -79,6 +79,7 @@ pthread_mutex_t  mutex_logfile;
 pthread_mutex_t  mutex_wait_register;
 //pthread_mutex_t  mutex_write_sched_list;
 
+
 /* Usuario real que que ejecuto
  el servidor */
 gid_t EGID;

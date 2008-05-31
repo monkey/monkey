@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
 	struct sockaddr_in local_sockaddr_in;
 	struct sched_list_node *sched;
-		
+	
 	config = M_malloc(sizeof(struct server_config));
 	config->file_config=0;
 			
@@ -196,12 +196,14 @@ int main(int argc, char **argv)
 
 	//SetUIDGID(); 	/* Changing user */
 
-	num_threads = 5;
-	//request_handler = NULL;
+	num_threads = 2;
 	sched_list = NULL;
+
+	pthread_key_create(&request_handler, NULL);
+
 	for(i=0; i<num_threads; i++)
 	{
-		mk_sched_launch_thread(5000);
+		mk_sched_launch_thread(50);
 	}
 
 	sched = sched_list;
