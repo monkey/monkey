@@ -58,7 +58,6 @@ int mk_epoll_create(int max_events)
 void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 {
 	int i, ret;
-	//struct sched_list_node *sched_node;
 
 	pthread_mutex_lock(&mutex_wait_register);
 	pthread_mutex_unlock(&mutex_wait_register);
@@ -95,17 +94,19 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 
 			if(events[i].events & EPOLLIN)
 			{
-				//printf("\nCALL::READ DATA");
-				//fflush(stdout);
+//				printf("\nCALL::READ DATA");
+//				fflush(stdout);
 				ret = (* calls->func_read)((void *)events[i].data.fd);
 				if(ret<0){
+//					printf("\nclosing?");
+//					fflush(stdout);
 					close(events[i].data.fd);
 				}
 			}
 			if(events[i].events & EPOLLOUT)
 			{
-				//printf("\nCALL::WRITE DATA");
-				//fflush(stdout);
+//				printf("\nCALL::WRITE DATA");
+//				fflush(stdout);
 				ret = (* calls->func_write)((void *)events[i].data.fd);
 				if(ret <= 0){
 					close(events[i].data.fd);
@@ -120,7 +121,7 @@ int mk_epoll_add_client(int epoll_fd, int socket)
 	int ret;
 	struct epoll_event event;
 
-	event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+	event.events = EPOLLIN | EPOLLET | EPOLLERR | EPOLLHUP;
 	event.data.fd = socket;
 
 	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event);
@@ -129,5 +130,22 @@ int mk_epoll_add_client(int epoll_fd, int socket)
 		perror("epoll_ctl");
 	}
 	return ret;
+}
+
+int mk_epoll_set_ready_for_write(int epoll_fd, int socket)
+{
+	int ret;
+	struct epoll_event event;
+
+	event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+	event.data.fd = socket;
+
+	ret = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, socket, &event);
+	if(ret < 0)
+	{
+		perror("epoll_ctl");
+	}
+	return ret;
+
 }
 

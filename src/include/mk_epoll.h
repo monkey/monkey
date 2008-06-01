@@ -26,4 +26,5 @@ int mk_epoll_create(int max_events);
 void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events);
 mk_epoll_calls *mk_epoll_set_callers(void (*read)(void *), void (*write)(void *));
 int mk_epoll_add_client(int epoll_fd, int socket);
+int mk_epoll_set_ready_for_write(int epoll_fd, int socket);
 

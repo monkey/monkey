@@ -32,10 +32,15 @@ typedef struct {
 	int max_events;
 } sched_thread_conf;
 
+pthread_key_t epoll_fd;
+
 int mk_sched_register_thread(pthread_t tid, int epoll_fd);
 int mk_sched_launch_thread(int max_events);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner();
 struct client_request *mk_sched_get_request_handler();
 void mk_sched_set_request_handler(struct client_request *hr);
+
+int mk_sched_get_thread_poll();
+void mk_sched_set_thread_poll(int epoll);
 

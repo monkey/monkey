@@ -196,14 +196,15 @@ int main(int argc, char **argv)
 
 	//SetUIDGID(); 	/* Changing user */
 
-	num_threads = 2;
+	num_threads = 3;
 	sched_list = NULL;
 
 	pthread_key_create(&request_handler, NULL);
+	pthread_key_create(&epoll_fd, NULL);
 
 	for(i=0; i<num_threads; i++)
 	{
-		mk_sched_launch_thread(50);
+		mk_sched_launch_thread(15000);
 	}
 
 	sched = sched_list;
@@ -217,13 +218,6 @@ int main(int argc, char **argv)
 		}
 
 		setnonblocking(remote_fd);
-		
-		//printf("\nATTENDING ON THREAD: %i", sched->idx);
-		//fflush(stdout);
-
-		//printf("\nTHREAD: %i, epoll_fd: %i, attending: %i", sched->idx, sched->epoll_fd, remote_fd);
-		//fflush(stdout);
-
 		mk_epoll_add_client(sched->epoll_fd, remote_fd);
 		
 		if(sched->next)
@@ -236,3 +230,4 @@ int main(int argc, char **argv)
 	}
 	return 0;
 }
+

@@ -108,11 +108,13 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	mk_epoll_calls *callers;
 	callers = mk_epoll_set_callers((void *)Read_Request, (void *)Write_Request);
 
+	mk_sched_set_thread_poll(thconf->epoll_fd);
 	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);
 	return 0;
 }
 
 
+/*
 struct sched_list_node *mk_sched_get_handler_owner()
 {
 	pthread_t tid;
@@ -137,11 +139,9 @@ struct sched_list_node *mk_sched_get_handler_owner()
 		}
 	}
 
-	printf("\nNOT SCHED NODE FOUND, BUG! :/");
-	fflush(stdout);
 	return NULL;
 }
-
+*/
 struct client_request *mk_sched_get_request_handler()
 {
 	return (struct client_request *) pthread_getspecific(request_handler);
@@ -150,5 +150,15 @@ struct client_request *mk_sched_get_request_handler()
 void mk_sched_set_request_handler(struct client_request *hr)
 {
 	pthread_setspecific(request_handler, (void *)hr);
+}
+
+void mk_sched_set_thread_poll(int epoll)
+{
+	pthread_setspecific(epoll_fd, (void *) epoll);
+}
+
+int mk_sched_get_thread_poll()
+{
+	return (int) pthread_getspecific(epoll_fd);
 }
 

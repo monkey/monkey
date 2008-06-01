@@ -164,7 +164,7 @@ struct request *parse_client_request(struct client_request *cr)
 
 int Read_Request(void *data)
 {
-	int socket, bytes, len;
+	int socket, bytes, epoll_fd;
 	struct client_request *cr;
 	socket = (int) data;
 
@@ -174,26 +174,12 @@ int Read_Request(void *data)
 		cr = mk_create_client_request(socket);
 	}
 
-	if(!cr->body)
-	{
-		len = 0;
-	}
-	else{
+	bytes = read(socket, cr->body+cr->body_length,
+			MAX_REQUEST_BODY-cr->body_length-1);
 
-	
-	len = strlen(cr->body);
-	}
-	/*
-	printf("\n*** READ LOOP (%i) ***", socket);
-	printf("\n  BUFFER LEN: %i", len);*/
-	bytes = read(socket, cr->body+len, MAX_REQUEST_BODY-len-1);
-/*	printf("\n  SOCKET: %i | BYTES: %i", socket, bytes);
-	printf("\n  NEW BUFFER LEN: %i\n", strlen(cr->body));
-	fflush(stdout);
-*/
 	if (bytes == -1) {
 		if (errno == EAGAIN) {
-			return 0;
+			return 1;
 		} 
 		else{
 			perror("read");
@@ -203,23 +189,34 @@ int Read_Request(void *data)
 	if (bytes == 0){
 		return -1;
 	}
-	
-	//printf("\n*** GOT REQUEST:\n%s\n----\n", buffer);
-	//fflush(stdout);
 
-	//printf("\nrequest:\n%s", cr->body->request->body);
-	//fflush(stdout);
+	if(bytes > 0)
+	{
+		cr->body_length+=bytes;
+		epoll_fd = mk_sched_get_thread_poll();
+
+		if(strncmp(cr->body+(cr->body_length-LEN_NORMAL_STRING_END),
+					NORMAL_STRING_END, 
+					LEN_NORMAL_STRING_END) == 0)
+		{
+			mk_epoll_set_ready_for_write(epoll_fd, socket);
+		}
+		else if(strncmp(cr->body+(cr->body_length-LEN_OLD_STRING_END),
+					OLD_STRING_END,
+					LEN_OLD_STRING_END) == 0)
+		{
+			mk_epoll_set_ready_for_write(epoll_fd, socket);
+		}
+	}	
 	return 0;
 }
 
 int Write_Request(void *data)
 {
-	int status, socket, len=0;
+	int status, socket;
 	struct request *p_request;
 	struct client_request *cr;
 
-	//printf("\n*** WRITE LOOP (%i) ***", (int) data);
-	
 	socket = (int) data;
 
 	/* 
@@ -227,45 +224,25 @@ int Write_Request(void *data)
 	 * the information regarding to the current thread
 	 */
 	cr = mk_get_client_request_from_fd(socket);
+	
 	if(!cr)
 	{
 		return -1;
 	}
-	//printf("\nGOT REQUEST:\n%s", cr->body);
-	//printf("\nsomething else...");
-	//fflush(stdout);
-	//printf("\n GOT CLIENT FROM LIST");
-	//fflush(stdout);
+	
 	if(!cr->request)
 	{
-	//	printf("\n PARSING CLIENT REQUESTS");
 		parse_client_request(cr);
-		/* Let's return after this routine in order 
-		 * to let others requests do some work
-		 */
-		/*
-		printf("\n PARSING CLIENT REQUEST DONE");
-		printf("\n ENDING LOOP");
-		fflush(stdout);*/
-		//return 0;
 	}
 
 	p_request = cr->request;
 	while(p_request)
 	{
-		len++;
 		status = Process_Request(cr, p_request);
 		//write_log(p_request->log);
-		// printf("\nstatus: %i", status);
-		// fflush(stdout);
-		/* Register request (logs) */
 		p_request = p_request->next;
 	}
 	mk_remove_client_request(socket);
-	//free_list_requests(cr);
-	//printf("\n  -> Closing socket: %i", socket);
-	//fflush(stdout);
-	//close(socket);
 	return 0;
 }
 
@@ -857,8 +834,8 @@ struct client_request *mk_create_client_request(int socket)
 
 	cr->body = M_malloc(MAX_REQUEST_BODY);
 	memset(cr->body, '\0', MAX_REQUEST_BODY);
-
 	request_handler = mk_sched_get_request_handler();
+	cr->body_length = 0;
 
 	if(!request_handler)
 	{
@@ -875,6 +852,7 @@ struct client_request *mk_create_client_request(int socket)
 	}
 
 	mk_sched_set_request_handler(request_handler);
+	request_handler = mk_sched_get_request_handler();
 	return (struct client_request *) cr;
 }
 

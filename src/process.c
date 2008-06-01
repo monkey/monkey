@@ -26,36 +26,6 @@
 
 #include "monkey.h"
 
-/* Registra el thread en proceso */
-struct process *RegProc(pthread_t thread, int socket)
-{
-	struct process *proc, *find;
-	
-	pthread_mutex_lock(&mutex_thread_list);
-	
-	proc=M_malloc(sizeof(struct process));
-	proc->thread_pid=(pthread_t) thread;
-	proc->ip_client = PutIP(socket);
-	proc->socket = socket;
-	proc->cr = NULL;
-	proc->next=NULL;
-	
-	fflush(stdout);
-	if(first_process==NULL){	
-		first_process=proc;
-		pthread_mutex_unlock(&mutex_thread_list);
-		return (struct process *) proc;
-	}
-	
-	find=first_process;
-	while(find->next!=NULL) 
-		find=find->next;
-
-	find->next=proc;
-	
-	pthread_mutex_unlock(&mutex_thread_list);
-	return (struct process *) proc;
-}
 
 /* Close socket and delete thread info from register */
 int FreeThread(pthread_t thread)

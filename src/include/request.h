@@ -80,6 +80,7 @@ struct client_request
     int status; /* Request status */
     
     char *body; /* Original request sent */
+    int body_length;
     struct request *request; /* Parsed request */
     struct client_request *next;
 };
@@ -175,3 +176,4 @@ struct client_request *mk_remove_client_request(int socket);
 
 int Read_Request(void *data);
 int Write_Request(void *data);
+

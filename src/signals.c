@@ -26,45 +26,43 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-//#include <execinfo.h>
 #include "monkey.h"
 
-/* (Por Daniel R. Ome) */
+/* (by Daniel R. Ome) */
 void signal_handler(int signo)
 {
 
 switch( signo ) {
-			  
-      case SIGUSR2   :
-						printf("%s => Monkey reconfiguration \n", PutTime()); /* Not ready */
-                        break;
+	case SIGUSR2:
+		printf("%s => Monkey reconfiguration \n", PutTime()); /* Not ready */
+                break;
 
-      case SIGINT    : 
-						remove_log_pid();
-						printf("%s => Interrupt from keyboard / Killing thread: %i\n", PutTime(), (int) pthread_self());
-                        break;
+	case SIGINT: 
+		remove_log_pid();
+		printf("%s => Interrupt from keyboard / Killing thread: %i\n", PutTime(), (int) pthread_self());
+                break;
+	
+	case SIGHUP:
+		printf("%s => Hangup\n", PutTime());
+		Term_Signals();
+                break;
 
-      case SIGHUP    :
-						printf("%s => Hangup\n", PutTime());
-						Term_Signals();
-                        break;
-  
-	  case SIGBUS    : 
-						printf("%s => Invalid memory reference\n", PutTime());
-						abort();
-						break;
+	case SIGBUS: 
+		printf("%s => Invalid memory reference\n", PutTime());
+		abort();
+		break;
  
-      case SIGPIPE   : 
-                        break;
+	case SIGPIPE:
+		break;
    
-      case SIGSEGV   : 
-						printf("%s => Invalid memory reference\n", PutTime());
-                        break;
+	case SIGSEGV: 
+		printf("%s => Invalid memory reference\n", PutTime());
+		break;
  
-      case SIGTERM   : 
-      				  printf("%s => Termination signal\n", PutTime());
-						Term_Signals();						
-                        break;
+	case SIGTERM:
+		printf("%s => Termination signal\n", PutTime());
+		Term_Signals();						
+                break;
 	}
 
 	FreeThread(pthread_self());
@@ -84,12 +82,12 @@ void Init_Signals()
 
 void Term_Signals()
 {
-   signal(SIGHUP , (void *) SIG_DFL);
-   signal(SIGINT , (void *) SIG_DFL);
-   signal(SIGPIPE, (void *) SIG_DFL);
-   signal(SIGBUS,  (void *) SIG_DFL);
-   signal(SIGSEGV, (void *) SIG_DFL);
-   signal(SIGTERM, (void *) SIG_DFL);
-   signal(SIGUSR2, (void *) SIG_DFL);
+	signal(SIGHUP , (void *) SIG_DFL);
+	signal(SIGINT , (void *) SIG_DFL);
+	signal(SIGPIPE, (void *) SIG_DFL);
+	signal(SIGBUS,  (void *) SIG_DFL);
+	signal(SIGSEGV, (void *) SIG_DFL);
+	signal(SIGTERM, (void *) SIG_DFL);
+	signal(SIGUSR2, (void *) SIG_DFL);
 }
 
