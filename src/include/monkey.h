@@ -89,6 +89,7 @@ gid_t EUID;
 #include "http_status.h"
 
 #include "mk_epoll.h"
+#include "socket.h"
 #include "scheduler.h"
 #include "request.h"
 #include "method.h"
@@ -110,7 +111,4 @@ gid_t EUID;
 #include "modules.h"
 
 #endif
-
-#define true 0
-#define false 1
 

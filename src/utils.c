@@ -68,6 +68,7 @@ int SendFile(struct client_request *cr,
         }
     }
 
+    mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
     st_status = sendfile(cr->socket, fd, &offset, off_size);
     if (st_status == -1) {
         fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
