@@ -333,9 +333,9 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 {
 	int fd_status=0;
 	char *buffer=0;
-    struct header_values *sh;
+	struct header_values *sh;
 
-    sh = sr->headers;
+	sh = sr->headers;
 
 	/* Status Code */
 	switch(sh->status){
@@ -363,8 +363,6 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
-			printf("\nGOT BAD REQUEST!, IMPOSSIBLE!");
-			fflush(stdout);
 			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 400 Bad Request\r\n");
 			break;
 
@@ -396,7 +394,7 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 505 HTTP Version Not Supported\r\n");
 			break;
-		};
+	};
 
 	if(sh->status!=0){
 		s_log->final_response = sh->status;
@@ -407,73 +405,124 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	}
 	
 	/* Informacion del server */
-	buffer = m_build_buffer_from_buffer(buffer,"Server: %s\r\n", sr->host_conf->host_signature);
+	buffer = m_build_buffer_from_buffer(buffer,
+			"Server: %s\r\n", 
+			sr->host_conf->host_signature);
 
 	/* Fecha */
-	buffer = m_build_buffer_from_buffer(buffer,"Date: %s\r\n", PutDate_string(0));
+	buffer = m_build_buffer_from_buffer(buffer,
+			"Date: %s\r\n",
+			PutDate_string(0));
 
 	/* Location */
 	if(sh->location!=NULL)
-		buffer = m_build_buffer_from_buffer(buffer, "Location: %s\r\n", sh->location);
+		buffer = m_build_buffer_from_buffer(buffer, 
+			"Location: %s\r\n",
+			sh->location);
 
 	/* Last-Modified */
 	if(sh->last_modified!=NULL){
-		buffer = m_build_buffer_from_buffer(buffer,"%s %s\r\n", RH_LAST_MODIFIED, sh->last_modified);
+		buffer = m_build_buffer_from_buffer(buffer,
+			"%s %s\r\n",
+			RH_LAST_MODIFIED,
+			sh->last_modified);
 	}
 	
 	/* Connection */
 	if(sh->pconnections_left!=0 && config->keep_alive==VAR_ON){
-		buffer = m_build_buffer_from_buffer(buffer, "Keep-Alive: timeout=%i, max=%i\r\n", config->keep_alive_timeout, sh->pconnections_left);
-		buffer = m_build_buffer_from_buffer(buffer, "Connection: Keep-Alive\r\n");
+		buffer = m_build_buffer_from_buffer(buffer,
+			"Keep-Alive: timeout=%i, max=%i\r\n",
+			config->keep_alive_timeout, 
+			sh->pconnections_left);
+
+		buffer = m_build_buffer_from_buffer(buffer, 
+			"Connection: Keep-Alive\r\n");
 	}
 	else{
-		buffer = m_build_buffer_from_buffer(buffer, "Connection: close\r\n");
+		buffer = m_build_buffer_from_buffer(buffer, 
+			"Connection: close\r\n");
 	}
 
 	/* Tipo de contenido de la informacion */
 	if(sh->content_type!=NULL){
-		buffer = m_build_buffer_from_buffer(buffer, "Content-Type: %s\r\n", sh->content_type);
+		buffer = m_build_buffer_from_buffer(buffer, 
+			"Content-Type: %s\r\n",
+			sh->content_type);
 	}
 	
 	/* Ranges */ 
-	buffer = m_build_buffer_from_buffer(buffer, "Accept-Ranges: bytes\r\n", sh->content_type);
+	buffer = m_build_buffer_from_buffer(buffer, 
+			"Accept-Ranges: bytes\r\n", 
+			sh->content_type);
 
 	/* Tamaño total de la informacion a enviar */
-	if((sh->content_length!=0 && (sh->range_values[0]>=0 || sh->range_values[1]>=0)) && config->resume==VAR_ON){
+	if((sh->content_length!=0 && 
+			(sh->range_values[0]>=0 || sh->range_values[1]>=0)) && 
+			config->resume==VAR_ON){
 		long int length;
 
         /* yyy- */
-		if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
-			length = (unsigned int) ( sh->content_length - sh->range_values[0] );
-			buffer = m_build_buffer_from_buffer(buffer, "%s %i\r\n", RH_CONTENT_LENGTH, length);
-			buffer = m_build_buffer_from_buffer(buffer, "%s bytes %d-%d/%d\r\n", RH_CONTENT_RANGE, sh->range_values[0], 
-				(sh->content_length - 1), sh->content_length);
-		}
+	if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
+		length = (unsigned int) ( sh->content_length - sh->range_values[0] );
+		buffer = m_build_buffer_from_buffer(buffer, 
+				"%s %i\r\n", 
+				RH_CONTENT_LENGTH, 
+				length);
+
+		buffer = m_build_buffer_from_buffer(buffer,
+				"%s bytes %d-%d/%d\r\n",
+				RH_CONTENT_RANGE, 
+				sh->range_values[0],
+				(sh->content_length - 1), 
+				sh->content_length);
+	}
 		
-		/* yyy-xxx */
-		if(sh->range_values[0]>=0 && sh->range_values[1]>=0){
-			length = (unsigned int) abs(sh->range_values[1] - sh->range_values[0]) + 1;
-            if(length<0){
-                printf("\nERROR!");
-                fflush(stdout);
-            }
-			buffer = m_build_buffer_from_buffer(buffer, "%s %d\r\n", RH_CONTENT_LENGTH, length);	
-			buffer = m_build_buffer_from_buffer(buffer, "%s bytes %d-%d/%d\r\n", RH_CONTENT_RANGE, sh->range_values[0], 
-				sh->range_values[1], sh->content_length);
+	/* yyy-xxx */
+	if(sh->range_values[0]>=0 && sh->range_values[1]>=0){
+		length = (unsigned int) abs(sh->range_values[1] - sh->range_values[0]) + 1;
+		buffer = m_build_buffer_from_buffer(buffer, 
+				"%s %d\r\n", 
+				RH_CONTENT_LENGTH, 
+				length);
+		
+		buffer = m_build_buffer_from_buffer(buffer, 
+				"%s bytes %d-%d/%d\r\n",
+				RH_CONTENT_RANGE, 
+				sh->range_values[0], 
+				sh->range_values[1],
+				sh->content_length);
 		}
 
 		/* -xxx */
 		if(sh->range_values[0]==-1 && sh->range_values[1]>=0){
-			buffer = m_build_buffer_from_buffer(buffer, "%s %d\r\n", RH_CONTENT_LENGTH, sh->range_values[1]);
-			buffer = m_build_buffer_from_buffer(buffer, "%s bytes %d-%d/%d\r\n", RH_CONTENT_RANGE, (sh->content_length - sh->range_values[1]),
-				 (sh->content_length - 1) , sh->content_length);
+			buffer = m_build_buffer_from_buffer(buffer,
+					"%s %d\r\n", 
+					RH_CONTENT_LENGTH,
+					sh->range_values[1]);
+
+			buffer = m_build_buffer_from_buffer(buffer, 
+					"%s bytes %d-%d/%d\r\n", 
+					RH_CONTENT_RANGE, 
+					(sh->content_length - sh->range_values[1]),
+					(sh->content_length - 1),
+					sh->content_length);
 		}
 	}
 	else if(sh->content_length!=0)
-			buffer = m_build_buffer_from_buffer(buffer, "%s %d\r\n", RH_CONTENT_LENGTH, sh->content_length);
-		else if(sh->status==M_REDIR_MOVED)
-			buffer = m_build_buffer_from_buffer(buffer, "%s %d\r\n", RH_CONTENT_LENGTH, sh->content_length);
-		
+	{
+		buffer = m_build_buffer_from_buffer(buffer, 
+				"%s %d\r\n",
+				RH_CONTENT_LENGTH,
+				sh->content_length);
+	}
+	else if(sh->status==M_REDIR_MOVED)
+	{
+		buffer = m_build_buffer_from_buffer(buffer, 
+				"%s %d\r\n", 
+				RH_CONTENT_LENGTH, 
+				sh->content_length);
+	}	
+	
 	if(sh->cgi==SH_NOCGI)
 		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
 
