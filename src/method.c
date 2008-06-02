@@ -477,9 +477,8 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	if(sh->cgi==SH_NOCGI)
 		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
 
-
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
-	fdprintf(fd, NO_CHUNKED, "%s", buffer);
+	Socket_Timeout(fd, buffer, strlen(buffer), config->timeout, ST_SEND);
 	M_free(buffer);
 	return 0;
 }
