@@ -23,52 +23,6 @@
 #define POST_METHOD_STR "POST"
 #define HEAD_METHOD_STR "HEAD"
 
-/* 
- * Response headers: We handle this as static global data in order
- * to save some process time when building the response header.
- */
-#define RESP_BREAK_LINE "\r\n"
-#define LEN_RESP_BREAK_LINE 2
-
-#define RESP_HTTP_OK "HTTP/1.1 200 OK"
-#define LEN_RESP_HTTP_OK 15
-
-#define RESP_HTTP_PARTIAL "HTTP/1.1 206 Partial Content"
-#define LEN_RESP_HTTP_PARTIAL 28
-
-#define RESP_REDIR_MOVED "HTTP/1.1 301 Moved Permanently"
-#define LEN_RESP_REDIR_MOVED 30
-
-#define RESP_REDIR_MOVED_T "HTTP/1.1 302 Found"
-#define LEN_RESP_REDIR_MOVED_T 18
-
-#define RESP_NOT_MODIFIED "HTTP/1.1 304 Not Modified"
-#define LEN_RESP_NOT_MODIFIED 25
-
-#define RESP_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request"
-#define LEN_RESP_CLIENT_BAD_REQUEST 24
-
-#define RESP_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden"
-#define LEN_RESP_CLIENT_FORBIDDEN 22
-
-#define RESP_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found"
-#define LEN_RESP_CLIENT_NOT_FOUND 22
-
-#define RESP_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed"
-#define LEN_RESP_CLIENT_METHOD_NOT_ALLOWED 31
-
-#define RESP_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout"
-#define LEN_RESP_CLIENT_REQUEST_TIMEOUT 28
-
-#define RESP_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required"
-#define LEN_RESP_CLIENT_LENGTH_REQUIRED 28
-
-#define RESP_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error"
-#define LEN_RESP_SERVER_INTERNAL_ERROR 34
-
-#define RESP_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported"
-#define LEN_RESP_SERVER_HTTP_VERSION_UNSUP 39
-
 
 int M_METHOD_Get_and_Head(struct client_request *cr, 
 		struct request *s_request, int socket); 
