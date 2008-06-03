@@ -88,11 +88,12 @@ gid_t EUID;
 /* Functions and data types */
 #include "http_status.h"
 
+#include "request.h"
+#include "header.h"
+#include "method.h"
 #include "mk_epoll.h"
 #include "socket.h"
 #include "scheduler.h"
-#include "request.h"
-#include "method.h"
 #include "cgi.h"
 #include "process.h"
 #include "user.h"

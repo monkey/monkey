@@ -902,11 +902,6 @@ struct client_request *mk_remove_client_request(int socket)
 				{
 					aux = aux->next;
 				}
-				if(!aux)
-				{
-					printf("\nINVALID SEARCH, SADLY BUG :/");
-					fflush(stdout);
-				}
 				aux->next = cr->next;
 				free_list_requests(cr);
 			}

@@ -17,6 +17,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -26,12 +35,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+
 #include <unistd.h>
 #include <signal.h>
 #include <sys/sendfile.h>
 
-#define __USE_XOPEN
 #include <time.h>
 
 #include "monkey.h"
@@ -68,14 +76,15 @@ int SendFile(struct client_request *cr,
         }
     }
 
-    mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
-    st_status = sendfile(cr->socket, fd, &offset, off_size);
-    if (st_status == -1) {
-        fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
-    }
-
-    close(fd);
-    return 0;
+	mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+    
+	st_status = sendfile(cr->socket, fd, &offset, off_size);
+	if (st_status == -1) {
+		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
+	}
+	
+	close(fd);
+	return 0;
 }
 #else
 /* Sending file... */

@@ -402,18 +402,20 @@ struct host *M_Config_Get_Host(char *path)
         return NULL;
     }
 
-    /* Server Signature */
-    if(config->hideversion==VAR_OFF){
-        host->host_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)", 
-            VERSION, host->servername, config->serverport);
-    }
-    else{
-        host->host_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)", 
-            host->servername, config->serverport);
-    }
+	/* Server Signature */
+	if(config->hideversion==VAR_OFF){
+		host->host_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)",
+				VERSION, host->servername, config->serverport);
+	}
+	else{
+		host->host_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)",
+				host->servername, config->serverport);
+	}
+	host->header_host_signature = m_build_buffer("Server: %s", host->host_signature);
+	host->header_len_host_signature = strlen(host->header_host_signature);
 
-    host->next = NULL;
-    return host;
+	host->next = NULL;
+	return host;
 }
 
 /* Imprime error de configuracion y cierra */

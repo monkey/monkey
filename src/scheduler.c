@@ -113,35 +113,6 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	return 0;
 }
 
-
-/*
-struct sched_list_node *mk_sched_get_handler_owner()
-{
-	pthread_t tid;
-	struct sched_list_node *sr;
-
-	if(!sched_list)
-	{
-		printf("\nGLOBAL SCHED_LIST IS NULL");
-		fflush(stdout);
-	}
-	sr = sched_list;
-	tid = pthread_self();
-
-	while(sr!=NULL)
-	{
-		if(pthread_equal(sr->tid, tid)!=0)
-		{
-			return sr;
-		}
-		else{
-			sr = sr->next;
-		}
-	}
-
-	return NULL;
-}
-*/
 struct client_request *mk_sched_get_request_handler()
 {
 	return (struct client_request *) pthread_getspecific(request_handler);

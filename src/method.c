@@ -246,8 +246,6 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	M_METHOD_send_headers(socket, sr, sr->log);
 
 	if(sr->headers->content_length==0){
-        printf("\nClosing connection ...length!");
-        fflush(stdout);
 		Mimetype_free(mime_info);
 		return -1;
 	}
@@ -334,65 +332,80 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	int fd_status=0;
 	char *buffer=0;
 	struct header_values *sh;
+	struct mk_iov *iov;
 
 	sh = sr->headers;
+
+	iov = mk_header_iov_create(20);
 
 	/* Status Code */
 	switch(sh->status){
 		case M_HTTP_OK:	
-			buffer = m_build_buffer_from_buffer(buffer,"HTTP/1.1 200 OK\r\n");
+			mk_header_iov_add_line(iov, RESP_HTTP_OK, LEN_RESP_HTTP_OK);
 			break;
 			
 		case M_HTTP_PARTIAL:	
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 206 Partial Content\r\n");
+			mk_header_iov_add_line(iov, RESP_HTTP_PARTIAL, 
+					LEN_RESP_HTTP_PARTIAL);
 			break;
 			
 		case M_REDIR_MOVED:
 			s_log->status=S_LOG_OFF;
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 301 Moved Permanently\r\n");
+			mk_header_iov_add_line(iov, RESP_REDIR_MOVED, 
+					LEN_RESP_REDIR_MOVED);
 			break;
 
 		case M_REDIR_MOVED_T:
 			s_log->status=S_LOG_ON;
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 302 Found\r\n");
+			mk_header_iov_add_line(iov, RESP_REDIR_MOVED_T, 
+					LEN_RESP_REDIR_MOVED_T);
 			break;
 		
 		case M_NOT_MODIFIED:
 			s_log->status=S_LOG_OFF;
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 304 Not Modified\r\n");
+			mk_header_iov_add_line(iov, RESP_NOT_MODIFIED, 
+					LEN_RESP_NOT_MODIFIED);
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 400 Bad Request\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_BAD_REQUEST, 
+					LEN_RESP_CLIENT_BAD_REQUEST);
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 403 Forbidden\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_FORBIDDEN, 
+					LEN_RESP_CLIENT_FORBIDDEN);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 404 Not Found\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_NOT_FOUND, 
+					LEN_RESP_CLIENT_NOT_FOUND);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 405 Method Not Allowed\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_METHOD_NOT_ALLOWED, 
+					LEN_RESP_CLIENT_METHOD_NOT_ALLOWED);
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 408 Request Timeout\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_REQUEST_TIMEOUT, 
+					LEN_RESP_CLIENT_REQUEST_TIMEOUT);
 			s_log->status=S_LOG_OFF;
 			break;
 
 		case M_CLIENT_LENGHT_REQUIRED:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 411 Length Required\r\n");
+			mk_header_iov_add_line(iov, RESP_CLIENT_LENGTH_REQUIRED,
+					LEN_RESP_CLIENT_LENGTH_REQUIRED);
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 500 Internal Server Error\r\n");
+			mk_header_iov_add_line(iov, RESP_SERVER_INTERNAL_ERROR,
+					LEN_RESP_SERVER_INTERNAL_ERROR);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			buffer = m_build_buffer_from_buffer(buffer, "HTTP/1.1 505 HTTP Version Not Supported\r\n");
+			mk_header_iov_add_line(iov, RESP_SERVER_HTTP_VERSION_UNSUP,
+					LEN_RESP_SERVER_HTTP_VERSION_UNSUP);
 			break;
 	};
 
@@ -401,18 +414,20 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	}
 	
 	if(fd_status<0){
+		mk_header_iov_free(iov);
 		return -1;		
 	}
-	
+
+	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
+
 	/* Informacion del server */
-	buffer = m_build_buffer_from_buffer(buffer,
-			"Server: %s\r\n", 
-			sr->host_conf->host_signature);
+	mk_header_iov_add_line(iov, sr->host_conf->header_host_signature,
+			strlen(sr->host_conf->header_host_signature));
+
+	mk_header_iov_send(fd, iov);
 
 	/* Fecha */
-	buffer = m_build_buffer_from_buffer(buffer,
-			"Date: %s\r\n",
-			PutDate_string(0));
+	buffer = m_build_buffer("Date: %s\r\n", PutDate_string(0));
 
 	/* Location */
 	if(sh->location!=NULL)
@@ -526,7 +541,6 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	if(sh->cgi==SH_NOCGI)
 		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
 
-	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 	Socket_Timeout(fd, buffer, strlen(buffer), config->timeout, ST_SEND);
 	M_free(buffer);
 	return 0;
