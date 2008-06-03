@@ -341,71 +341,84 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	/* Status Code */
 	switch(sh->status){
 		case M_HTTP_OK:	
-			mk_header_iov_add_line(iov, RESP_HTTP_OK, LEN_RESP_HTTP_OK);
+			mk_header_iov_add_line(iov, RESP_HTTP_OK, LEN_RESP_HTTP_OK, 
+					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_HTTP_PARTIAL:	
 			mk_header_iov_add_line(iov, RESP_HTTP_PARTIAL, 
-					LEN_RESP_HTTP_PARTIAL);
+					LEN_RESP_HTTP_PARTIAL, 
+					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_REDIR_MOVED:
 			s_log->status=S_LOG_OFF;
 			mk_header_iov_add_line(iov, RESP_REDIR_MOVED, 
-					LEN_RESP_REDIR_MOVED);
+					LEN_RESP_REDIR_MOVED, 
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_REDIR_MOVED_T:
 			s_log->status=S_LOG_ON;
 			mk_header_iov_add_line(iov, RESP_REDIR_MOVED_T, 
-					LEN_RESP_REDIR_MOVED_T);
+					LEN_RESP_REDIR_MOVED_T,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 		
 		case M_NOT_MODIFIED:
 			s_log->status=S_LOG_OFF;
 			mk_header_iov_add_line(iov, RESP_NOT_MODIFIED, 
-					LEN_RESP_NOT_MODIFIED);
+					LEN_RESP_NOT_MODIFIED,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
 			mk_header_iov_add_line(iov, RESP_CLIENT_BAD_REQUEST, 
-					LEN_RESP_CLIENT_BAD_REQUEST);
+					LEN_RESP_CLIENT_BAD_REQUEST,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_FORBIDDEN:
 			mk_header_iov_add_line(iov, RESP_CLIENT_FORBIDDEN, 
-					LEN_RESP_CLIENT_FORBIDDEN);
+					LEN_RESP_CLIENT_FORBIDDEN,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
 			mk_header_iov_add_line(iov, RESP_CLIENT_NOT_FOUND, 
-					LEN_RESP_CLIENT_NOT_FOUND);
+					LEN_RESP_CLIENT_NOT_FOUND,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
 			mk_header_iov_add_line(iov, RESP_CLIENT_METHOD_NOT_ALLOWED, 
-					LEN_RESP_CLIENT_METHOD_NOT_ALLOWED);
+					LEN_RESP_CLIENT_METHOD_NOT_ALLOWED,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
 			mk_header_iov_add_line(iov, RESP_CLIENT_REQUEST_TIMEOUT, 
-					LEN_RESP_CLIENT_REQUEST_TIMEOUT);
+					LEN_RESP_CLIENT_REQUEST_TIMEOUT,
+					MK_IOV_NOT_FREE_BUF);
 			s_log->status=S_LOG_OFF;
 			break;
 
 		case M_CLIENT_LENGHT_REQUIRED:
 			mk_header_iov_add_line(iov, RESP_CLIENT_LENGTH_REQUIRED,
-					LEN_RESP_CLIENT_LENGTH_REQUIRED);
+					LEN_RESP_CLIENT_LENGTH_REQUIRED,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
 			mk_header_iov_add_line(iov, RESP_SERVER_INTERNAL_ERROR,
-					LEN_RESP_SERVER_INTERNAL_ERROR);
+					LEN_RESP_SERVER_INTERNAL_ERROR,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			mk_header_iov_add_line(iov, RESP_SERVER_HTTP_VERSION_UNSUP,
-					LEN_RESP_SERVER_HTTP_VERSION_UNSUP);
+					LEN_RESP_SERVER_HTTP_VERSION_UNSUP,
+					MK_IOV_NOT_FREE_BUF);
 			break;
 	};
 
@@ -422,7 +435,8 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 
 	/* Informacion del server */
 	mk_header_iov_add_line(iov, sr->host_conf->header_host_signature,
-			strlen(sr->host_conf->header_host_signature));
+			strlen(sr->host_conf->header_host_signature),
+			MK_IOV_NOT_FREE_BUF);
 
 	mk_header_iov_send(fd, iov);
 
