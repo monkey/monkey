@@ -915,8 +915,6 @@ struct client_request *mk_remove_client_request(int socket)
 			if(cr==request_handler)
 			{
 				request_handler = cr->next;
-				free_list_requests(cr);
-				break;
 			}
 			else
 			{
@@ -926,8 +924,9 @@ struct client_request *mk_remove_client_request(int socket)
 					aux = aux->next;
 				}
 				aux->next = cr->next;
-				free_list_requests(cr);
 			}
+			free_list_requests(cr);
+			break;
 		}
 		cr = cr->next;
 	}
