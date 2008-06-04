@@ -83,16 +83,16 @@ struct request *parse_client_request(struct client_request *cr)
 			/* Allocating request block */
 			block = m_copy_string(cr->body, init_block, i);
 		
-			/* printf("\n--->BLOCK<---\n%s", block);
-			 * printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
-			 * fflush(stdout);
-			 */
-		
+			//printf("\n--->BLOCK<---\n%s", block);
+			//printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
+			//fflush(stdout);
+			
 			cr_buf = alloc_request();
-			cr_buf->body = m_build_buffer("%s\r\n", block);
+			//cr_buf->body = m_build_buffer("%s\r\n", block);
+			cr_buf->body = block;
 			cr_buf->method = Get_method_from_request(cr_buf->body);
 			cr_buf->next = NULL;
-			M_free(block);
+			//M_free(block);
 
 			i = init_block = (i+offset) + length_end;
 	
@@ -153,7 +153,7 @@ struct request *parse_client_request(struct client_request *cr)
 		}
 	}
 
-	/* DEBUG BLOCKS  
+	/* DEBUG BLOCKS
 	cr_search = cr->request;
 	while(cr_search){
 		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
@@ -234,7 +234,10 @@ int Write_Request(void *data)
 	
 	if(!cr->request)
 	{
-		parse_client_request(cr);
+		if(!parse_client_request(cr))
+		{
+			return -1;	
+		}
 	}
 
 	p_request = cr->request;
@@ -242,8 +245,6 @@ int Write_Request(void *data)
 	{
 		if(p_request->bytes_to_send>0)
 		{
-			//printf("\ncontinue pending file data...");
-			//fflush(stdout);
 			status = SendFile(socket, p_request, 
 					p_request->range,
 					p_request->real_path,
@@ -256,8 +257,6 @@ int Write_Request(void *data)
 		if(status>0)
 		{
 			final_status = status;
-			//printf("\nfinal status setted to: %i", final_status);
-			//fflush(stdout);
 		}
 
 		//write_log(p_request->log);
@@ -267,7 +266,6 @@ int Write_Request(void *data)
 	{
 		mk_remove_client_request(socket);
 	}
-	//printf("\nfinal_status: %i", final_status);
 	return final_status;
 }
 
@@ -328,6 +326,9 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	}
 
 	/* Validating protocol version */
+	printf("\n->%s", PROTOCOLS);
+	fflush(stdout);
+
 	if(!strstr(PROTOCOLS, get_name_protocol(s_request->protocol))) {
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
 		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
@@ -475,11 +476,12 @@ int Process_Request_Header(struct request *sr)
     /* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
 
-	/* Host 
-	if((strstr2(sr->body, RH_HOST))!=NULL){
+	/* Host */ 
+	if(mk_strcasestr(sr->body, RH_HOST))
+	{
 		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
 		
-		 is host formated something like xxxxx:yy ???? 
+		/* is host formated something like xxxxx:yy ????  */
 		if(tmp!=NULL && strstr(tmp, ":") != NULL ){
 			int pos_sep=0;
 			char *port=0;
@@ -492,20 +494,20 @@ int Process_Request_Header(struct request *sr)
 			M_free(tmp);
 		}
 		else{
-			sr->host=tmp;  maybe null 
+			sr->host=tmp;  /* maybe null */ 
 			sr->port=config->standard_port;
 		}
 	}
 	else{
 		sr->host=NULL;
 	}
-	*/
+	
 	/* Variables generales del header remoto */
 	sr->keep_alive=VAR_OFF;
-	if((strcasestr(sr->body, RH_CONNECTION))!=NULL && 
+	if(mk_strcasestr(sr->body, RH_CONNECTION) && 
                             (sr->protocol==HTTP_11 || sr->protocol==HTTP_10) ){
 		sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
-		if((strcasestr(sr->connection,"Keep-Alive"))!=NULL){
+		if(mk_strcasestr(sr->connection,"Keep-Alive")){
 			sr->keep_alive=VAR_ON;
 		}
 	}
@@ -520,7 +522,7 @@ int Process_Request_Header(struct request *sr)
 	sr->range = Request_Find_Variable(sr->body, RH_RANGE);
 	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
 
-    return 0;
+	return 0;
 }
 
 /* Return value of some variable sent in request */
@@ -528,23 +530,27 @@ char *Request_Find_Variable(char *request_body,  char *string)
 {
 	int pos_init_var=0, pos_end_var=0;
 	char *var_value=0;
-	
-	/* looking for string on request_body ??? */	
-	if (strcasestr(request_body, string) == NULL)
-		return NULL;
+	char *t;
 
-	pos_init_var = str_search(request_body, string, strlen(string));
-	pos_end_var = str_search(request_body+pos_init_var, "\n", 1) - 1;
-	
+	/* looking for string on request_body ??? */	
+	if(!(t=(char *)mk_strcasestr(request_body, string)))
+	{
+		return NULL;
+	}
+
+	pos_init_var = strlen(string);
+	if((t+pos_init_var)[0]==' ')
+	{
+		pos_init_var++;
+	}
+
+	pos_end_var = str_search((char *)t, "\n", 1) - 1;
+
 	if(pos_init_var<=0 || pos_end_var<=0){
 		return  NULL;	
 	}
+	var_value = m_copy_string(t, pos_init_var, pos_end_var);
 
-	pos_init_var += strlen(string) + 1;
-	pos_end_var = (unsigned int) (pos_init_var  + pos_end_var) - (strlen(string) +1);
-
-	var_value = m_copy_string(request_body, pos_init_var, pos_end_var);
-	
 	return (char *) var_value;
 }
 
@@ -858,7 +864,6 @@ struct client_request *mk_create_client_request(int socket)
 	cr->request = NULL;
 
 	cr->body = M_malloc(MAX_REQUEST_BODY);
-	memset(cr->body, '\0', MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();
 	cr->body_length = 0;
 

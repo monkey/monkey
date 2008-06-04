@@ -69,4 +69,5 @@ char *get_end_position(char *buf);
 char *remove_space(char *buf);
 
 int setnonblocking(int sockfd);
+char *mk_strcasestr(char *heystack, char *needle);
 

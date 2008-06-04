@@ -446,11 +446,7 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		buffer = m_build_buffer( 
 			"Location: %s",
 			sh->location);
-		if(!buffer)
-		{
-			printf("\nbuff is null!");
-			fflush(stdout);
-		}
+		
 		mk_header_iov_add_line(iov, buffer, strlen(buffer), 
 				MK_IOV_FREE_BUF);
 	}
@@ -584,7 +580,6 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	{
 		mk_header_iov_add_break_line(iov);
 	}
-
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 	mk_header_iov_send(fd, iov);
 	mk_header_iov_free(iov);

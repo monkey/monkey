@@ -222,7 +222,9 @@ int ExecFile(char *pathfile)
 	if(stat(pathfile,&file)==-1)
 		return -1;
 
-	if( (file.st_mode & S_IXUSR && file.st_uid == geteuid()) || (file.st_mode & S_IXGRP && file.st_gid == getegid()) || (file.st_mode & S_IXOTH))
+	if( (file.st_mode & S_IXUSR && file.st_uid == geteuid()) ||
+			(file.st_mode & S_IXGRP && file.st_gid == getegid()) ||
+			(file.st_mode & S_IXOTH))
 		return 0;
 
 	return -1; /* No se puede leer */
@@ -244,7 +246,6 @@ char *PutDate_string(time_t date) {
 
 	gmt_tm	= (struct tm *) gmtime(&date);
 	date_gmt = M_malloc(250);
-	memset(date_gmt, '\0', sizeof(date_gmt));
 
 	strftime(date_gmt,250,  DATEFORMAT, gmt_tm);
 	return (char *) date_gmt;
@@ -255,8 +256,6 @@ time_t PutDate_unix(char *date)
 	time_t new_unix_time;
 	struct tm t_data;
 	
-//	t_data = M_malloc(sizeof(struct tm));
-
 	if(!strptime(date, DATEFORMAT, (struct tm *) &t_data)){
 		return -1;
 	}
@@ -326,7 +325,6 @@ int fdchunked(int fd, char *data, int length)
 	lenhexlen=strlen(hexlength);
 
 	buffer = M_malloc(lenhexlen + length + 3);
-	memset(buffer,'\0', sizeof(buffer));	
 
 	memcpy(buffer, hexlength, lenhexlen);
 	memcpy(buffer+lenhexlen, data, length);
@@ -490,6 +488,7 @@ int str_search(char *string, char *search, int length_cmp)
 		return -1;
 		
 	length = strlen(string);
+
 	for(i=0; string[i]!='\0'  &&  i<length; i++){
 		if(string[i]==search[0]){
 			if(strncasecmp(string+i, search, length_cmp)==0)
@@ -619,7 +618,6 @@ void *M_realloc(void* ptr, size_t size)
 void M_free(void *ptr)
 {
 	if(ptr!=NULL){
-		memset(ptr, '\0', sizeof(*ptr));
 		free(ptr);
 		ptr=NULL;
 	}
@@ -641,27 +639,9 @@ int Check_symlink(const char *path)
 	return SYML_NOT;	
 }
 
-char *get_end_position(char *buf)
-{
-    char *sl=0, *dsl=0;
-
-    sl = strstr(buf, "\r\n\r\n");
-    dsl = strstr(buf, "\n\n");
-
-    if(sl)
-    {
-        return sl;
-    }
-    else if(dsl)
-    {
-        return dsl;
-    }
-
-    return NULL;
-}
-
 char *remove_space(char *buf)
 {
+
     size_t bufsize;
     int new_i=0, i, len, spaces=0;
     char *new_buf=0;
@@ -680,7 +660,6 @@ char *remove_space(char *buf)
     }
 
     new_buf = M_malloc(bufsize);
-    memset(new_buf, '\0', bufsize);
 
     for(i=0; i<len; i++)
     {
@@ -701,4 +680,15 @@ int setnonblocking(int sockfd)
     }
     return 0;
 }
+
+char *mk_strcasestr(char *heystack, char *needle)
+{
+	if(!heystack || !needle)
+	{
+		return NULL;
+	}
+
+	return strcasestr(heystack, needle);
+}
+
 

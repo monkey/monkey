@@ -34,14 +34,6 @@ int local_fd;
 
 #define MAX_PATH 1024 /* Largo m�ximo para rutas (archivos) */
 
-/* METODOS */
-#define GET_METHOD 	 (0)
-#define POST_METHOD	(1)
-#define HEAD_METHOD   (2)
-#define METHOD_NOT_ALLOWED  (-1)
-#define METHOD_NOT_FOUND	(-2)
-#define METHOD_EMPTY	(-3)
-
 /* String que define la llamada a 
 un home de un usuario */
 #define USER_HOME_STRING "/~"

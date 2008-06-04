@@ -17,11 +17,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+
 /* iso_8859_15 (man iso_8859_15) */
 int get_char(int code)
 {
 	switch(code){
-		/* Perl it's great :) */
+		/* Perl is great :) */
 		case 160: return ' ';
 		case 161: return '¡';
 		case 162: return '¢';

@@ -32,6 +32,9 @@ struct indexfile {
 #define OLD_STRING_END "\n\n"
 #define LEN_OLD_STRING_END 2
 
+#define CRLF "\r\n"
+#define CRLF_LEN 2
+
 /* Headers */
 #define RH_ACCEPT "Accept:"
 #define RH_ACCEPT_CHARSET	"Accept-Charset:"
@@ -89,14 +92,14 @@ pthread_key_t request_handler;
 
 struct request {
 
-	int status;	/* Request Status, ON, OFF */
+	int status;
 	int pipelined; /* Pipelined request */
 	char *body;
 
 	/*----First header of client request--*/
 	int method;
-	char *uri;  /* Request original */
-	char *uri_processed; /* Request procesado */
+	char *uri;  /* original request */
+	char *uri_processed; /* processed request */
 	int protocol;
 	/*------------------*/
 
@@ -119,14 +122,15 @@ struct request {
 	char *post_variables;
 	/*-----------------*/
 
-	char *real_path; /* Path real al que se realiza la petici�n */
-	char *user_uri; /* Lo que queda despues del /~user/.... */
+	/*-Internal-*/
+	char *real_path; /* Absolute real path */
+	char *user_uri; /* ~user/...path */
 	char *query_string; /* ?... */
 
-	char *virtual_user; /* Usuario del proceso para un Virtualhost */
+	char *virtual_user; /* Virtualhost user */
 	char *script_filename;
 	int  keep_alive;	
-	int  user_home; /* � Peticion a un home de usuario ? (VAR_ON/VAR_OFF) */
+	int  user_home; /* user_home request(VAR_ON/VAR_OFF) */
 
 	/*-Connection-*/
 	int  port;
