@@ -37,7 +37,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	int method_value=0, status=0;
 	char *location=0, *real_location=0; /* ruta para redireccion */
 	char **mime_info;
-
+	char *gmt_file_unix_time; // gmt time of server file (unix time)
 	struct stat checkpath, statfile;
 
 	/* Peticion normal, no es a un Virtualhost */
@@ -205,12 +205,12 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	if(sr->if_modified_since && sr->method==GET_METHOD){
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file
-		char *gmt_file_unix_time; // gmt time of server file (unix time)
 		
 		date_client = PutDate_unix(sr->if_modified_since);
 
 		gmt_file_unix_time = PutDate_string((time_t) statfile.st_mtime);
 		date_file_server = PutDate_unix(gmt_file_unix_time);
+		M_free(gmt_file_unix_time);
 
 		if( (date_file_server <= date_client) && (date_client > 0) ){
 			sr->headers->status = M_NOT_MODIFIED;
@@ -218,12 +218,11 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			Mimetype_free(mime_info);
 			return 0;
 		}
-		M_free(gmt_file_unix_time);
 	}
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->content_length = statfile.st_size;
 	sr->headers->cgi = SH_NOCGI;
-	sr->headers->last_modified = m_build_buffer("%s", PutDate_string( statfile.st_mtime ));
+	sr->headers->last_modified = PutDate_string( statfile.st_mtime );
 	sr->headers->location = NULL;
 
 	sr->log->size=(statfile.st_size);
@@ -331,6 +330,7 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	char *buffer=0;
 	struct header_values *sh;
 	struct mk_iov *iov;
+	char *date=0;
 
 	sh = sr->headers;
 
@@ -435,8 +435,10 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 			MK_IOV_NOT_FREE_BUF);
 
 	/* Fecha */
-	buffer = m_build_buffer("Date: %s", PutDate_string(0));
+	date = PutDate_string(0);
+	buffer = m_build_buffer("Date: %s", date);
 	mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
+	M_free(date);
 
 	/* Location */
 	if(sh->location!=NULL)

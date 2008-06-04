@@ -508,14 +508,14 @@ int Process_Request_Header(struct request *sr)
 		}
 	}
 
-	sr->accept			= Request_Find_Variable(sr->body, RH_ACCEPT);
-	sr->accept_charset	= Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
-	sr->accept_encoding   = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);
-	sr->accept_language   = Request_Find_Variable(sr->body, RH_ACCEPT_LANGUAGE);
-	sr->cookies		   = Request_Find_Variable(sr->body, RH_COOKIE);
-	sr->referer		   = Request_Find_Variable(sr->body, RH_REFERER);
-	sr->user_agent		= Request_Find_Variable(sr->body, RH_USER_AGENT);
-	sr->range			 = Request_Find_Variable(sr->body, RH_RANGE);
+	sr->accept = Request_Find_Variable(sr->body, RH_ACCEPT);
+	sr->accept_charset = Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
+	sr->accept_encoding = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);
+	sr->accept_language = Request_Find_Variable(sr->body, RH_ACCEPT_LANGUAGE);
+	sr->cookies = Request_Find_Variable(sr->body, RH_COOKIE);
+	sr->referer = Request_Find_Variable(sr->body, RH_REFERER);
+	sr->user_agent = Request_Find_Variable(sr->body, RH_USER_AGENT);
+	sr->range = Request_Find_Variable(sr->body, RH_RANGE);
 	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
 
     return 0;
@@ -931,6 +931,7 @@ struct client_request *mk_remove_client_request(int socket)
 		}
 		cr = cr->next;
 	}
+	M_free(cr->body);
 	M_free(cr);
 	mk_sched_set_request_handler(request_handler);
 	return NULL;
