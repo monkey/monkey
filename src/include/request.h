@@ -139,6 +139,9 @@ struct request {
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */
 	struct request *next;
+
+	size_t bytes_to_send;
+	size_t bytes_offset;
 };
 
 struct header_values {

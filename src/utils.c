@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,46 +45,70 @@
 #include "monkey.h"
 
 #ifndef DISABLE_SENDFILE_SYSCALL
-int SendFile(struct client_request *cr, 
-                char *header_range, char *pathfile, size_t size, int ranges[2])
+int SendFile(int socket, struct request *request, 
+                char *header_range, char *pathfile, int ranges[2])
 {
-    long int fd;
-    int st_status=0;
-    off_t offset=0;
-    long int off_size=0;
-    fd = open(pathfile, O_RDONLY);
-    off_size = size;
+	int fd, size;
+	long int nbytes=0;
+	off_t offset=0;
+	long int off_size=0;
 
-    if(config->resume==VAR_ON && header_range){
-        /* yyy- */
-        if(ranges[0]>=0 && ranges[1]==-1){
-            offset = ranges[0];
-            off_size = size - offset;
-            fflush(stdout);
-        }
+	fd = open(pathfile, O_RDONLY);
+	off_size = size;
 
-        /* yyy-xxx */
-        if(ranges[0]>=0 && ranges[1]>=0){
-            offset = ranges[0];
-            off_size = labs(ranges[1]-ranges[0]) + 1;
-        }
+	if(config->resume==VAR_ON && header_range){
+		/* yyy- */
+		if(ranges[0]>=0 && ranges[1]==-1){
+			offset = ranges[0];
+			off_size = size - offset;
+		}
 
-        /* -xxx */
-        if(ranges[0]==-1 && ranges[1]>=0){
-            offset = size - ranges[1];
-            off_size = ranges[1];
-        }
-    }
+		/* yyy-xxx */
+		if(ranges[0]>=0 && ranges[1]>=0){
+			offset = ranges[0];
+			off_size = labs(ranges[1]-ranges[0]) + 1;
+		}
 
-	mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
-    
-	st_status = sendfile(cr->socket, fd, &offset, off_size);
-	if (st_status == -1) {
+		/* -xxx */
+		if(ranges[0]==-1 && ranges[1]>=0){
+			offset = size - ranges[1];
+			off_size = ranges[1];
+		}
+	}
+
+	mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
+   
+	//printf("\nA) file offset: %i, to_send: %i", request->size_offset, request->size_to_send);
+	//fflush(stdout);
+
+	nbytes = sendfile(socket, fd, &request->bytes_offset,
+			request->bytes_to_send);
+
+	//printf("\nB)file offset: %i, to_send: %i", request->size_offset, request->size_to_send);
+	//fflush(stdout);
+
+	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
 	}
-	
+	else
+	{
+		request->bytes_to_send-=nbytes;
+		//printf("\nnew size_offset: %i", request->size_offset);
+		//fflush(stdout);
+		/*
+		if(nbytes == size)
+		{
+			printf("\nsendfile was blocking!");
+			fflush(stdout);
+		}
+		else
+		{
+			printf("\nsendfile: file size: %i, sent: %i", size, nbytes);
+			fflush(stdout);
+		}*/
+	}
 	close(fd);
-	return 0;
+	return request->bytes_to_send;
 }
 #else
 /* Sending file... */
@@ -229,7 +253,7 @@ char *strstr2(char *s, char *t)
  en el header */
 char *PutDate_string(time_t date) {
 
-	static char date_gmt[255];
+	char *date_gmt;
 	struct tm *gmt_tm;
 	
 	if(date==0){
@@ -239,9 +263,10 @@ char *PutDate_string(time_t date) {
 	}
 
 	gmt_tm	= (struct tm *) gmtime(&date);
-	
-	strftime(date_gmt,255,  DATEFORMAT, gmt_tm);
-		
+	date_gmt = M_malloc(250);
+	memset(date_gmt, '\0', sizeof(date_gmt));
+
+	strftime(date_gmt,250,  DATEFORMAT, gmt_tm);
 	return (char *) date_gmt;
 }
 
@@ -344,7 +369,8 @@ char *m_build_buffer(const char *format, ...)
 	int length;
 	char *buffer = NULL;
 	static size_t alloc = 0;
-	
+
+		
 	if(!buffer) {
 		buffer = (char *)M_malloc(256);
 		if(!buffer)
@@ -358,7 +384,6 @@ char *m_build_buffer(const char *format, ...)
 	if(length >= alloc) {
 		char *ptr;
 		
-		/* glibc 2.x, x > 0 */
 		ptr = M_realloc(buffer, length + 1);
 		if(!ptr) {
 			va_end(ap);
@@ -384,9 +409,11 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	char *new_buffer=0;
 	char *buffer_content=0;
 	static size_t alloc = 0;
-	
+
 	new_buffer = (char *)M_malloc(256);
 	if(!new_buffer){
+		printf("\nret NULL: 1");
+		fflush(stdout);
 		return NULL;
 	}
 	alloc = 256;

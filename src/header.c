@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
+#include <stdio.h>
 #include "monkey.h"
 
 struct mk_iov *mk_header_iov_create(int n)
@@ -37,22 +37,29 @@ int mk_header_iov_add_line(struct mk_iov *mk_io, char *buf, int len, int free)
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
 
-	mk_io->io[mk_io->iov_idx].iov_base = RESP_BREAK_LINE;
-	mk_io->io[mk_io->iov_idx].iov_len = LEN_RESP_BREAK_LINE;
+	mk_header_iov_add_break_line(mk_io);
 
 	if(free==MK_IOV_FREE_BUF)
 	{
 		mk_io->buf_to_free[mk_io->buf_idx] = (char *)buf;
 		mk_io->buf_idx++;
 	}
-	return mk_io->iov_idx++;
+	return mk_io->iov_idx;
+}
+
+int mk_header_iov_add_break_line(struct mk_iov *mk_io)
+{
+	mk_io->io[mk_io->iov_idx].iov_base = RESP_BREAK_LINE;
+	mk_io->io[mk_io->iov_idx].iov_len = LEN_RESP_BREAK_LINE;
+	mk_io->iov_idx++;
+
+	return mk_io->iov_idx;
 }
 
 ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io)
 {
 	ssize_t n;
 
-	//mk_header_iov_add_line(mk_io, RESP_BREAK_LINE, LEN_RESP_BREAK_LINE);
 	n = writev(fd, mk_io->io, mk_io->iov_idx);
 	return n;
 }
@@ -60,8 +67,10 @@ ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io)
 void mk_header_iov_free(struct mk_iov *mk_io)
 {
 	int i;
-	for(i=0; i<=mk_io->buf_idx;i++)
+	for(i=0; i<mk_io->buf_idx;i++)
 	{
+		//printf("\ngoing free (idx: %i/%i): %s",i, mk_io->buf_idx, mk_io->buf_to_free[i]);
+		//fflush(stdout);
 		M_free(mk_io->buf_to_free[i]);
 	}
 	M_free(mk_io->io);

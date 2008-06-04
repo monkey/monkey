@@ -213,7 +213,7 @@ int Read_Request(void *data)
 
 int Write_Request(void *data)
 {
-	int status, socket;
+	int status, final_status=0, socket;
 	struct request *p_request;
 	struct client_request *cr;
 
@@ -238,12 +238,35 @@ int Write_Request(void *data)
 	p_request = cr->request;
 	while(p_request)
 	{
-		status = Process_Request(cr, p_request);
+		if(p_request->bytes_to_send>0)
+		{
+			//printf("\ncontinue pending file data...");
+			//fflush(stdout);
+			status = SendFile(socket, p_request, 
+					p_request->range,
+					p_request->real_path,
+					p_request->headers->range_values);
+		}	
+		else
+		{
+			status = Process_Request(cr, p_request);
+		}
+		if(status>0)
+		{
+			final_status = status;
+			//printf("\nfinal status setted to: %i", final_status);
+			//fflush(stdout);
+		}
+
 		//write_log(p_request->log);
 		p_request = p_request->next;
 	}
-	mk_remove_client_request(socket);
-	return 0;
+	if(final_status<=0)
+	{
+		mk_remove_client_request(socket);
+	}
+	//printf("\nfinal_status: %i", final_status);
+	return final_status;
 }
 
 
@@ -360,7 +383,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 			if((status=M_METHOD_Post(cr, s_request))==-1){
 				return status;
 			}
-            status = M_METHOD_Get_and_Head(cr, s_request, cr->socket);
+	            status = M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 		}
 	}
 

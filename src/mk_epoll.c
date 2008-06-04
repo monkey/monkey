@@ -75,8 +75,9 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 			}
 			assert(events[i].events & (EPOLLIN | EPOLLOUT));
 
+			
+			//printf("\n*** EPOLL EVENT DEBUG: %i ***", events[i].data.fd);
 			/*
-			printf("\n*** EPOLL EVENT DEBUG: %i ***", events[i].data.fd);
 			if(events[i].events & EPOLLIN)
 			{
 				printf("\nPOLLIN");
@@ -94,6 +95,8 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 
 			if(events[i].events & EPOLLIN)
 			{
+				//printf("\ngoing read");
+				//fflush(stdout);
 				ret = (* calls->func_read)((void *)events[i].data.fd);
 				if(ret<0){
 					close(events[i].data.fd);
@@ -101,8 +104,12 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 			}
 			if(events[i].events & EPOLLOUT)
 			{
+				//printf("\ngoing write");
+				//fflush(stdout);
 				ret = (* calls->func_write)((void *)events[i].data.fd);
 				if(ret <= 0){
+				//	printf("\nclosing...");
+				//	fflush(stdout);
 					close(events[i].data.fd);
 				}
 			}

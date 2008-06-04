@@ -34,12 +34,7 @@
 int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr, 
                                                              int socket)
 {
-	/* 
-        cr = client request
-        sr = struct request 
-    */
-
-	int method_value=0;
+	int method_value=0, status=0;
 	char *location=0, *real_location=0; /* ruta para redireccion */
 	char **mime_info;
 
@@ -202,7 +197,9 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		Mimetype_free(mime_info);
 		return -1;
 	}
-	
+	sr->bytes_to_send = statfile.st_size;
+	sr->bytes_offset = (off_t) 0;
+
 	/* was if_modified_since sent by the  client ? */
 	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
 	if(sr->if_modified_since && sr->method==GET_METHOD){
@@ -221,7 +218,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			Mimetype_free(mime_info);
 			return 0;
 		}
-//		M_free(gmt_file_unix_time);
+		M_free(gmt_file_unix_time);
 	}
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->content_length = statfile.st_size;
@@ -249,16 +246,17 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		Mimetype_free(mime_info);
 		return -1;
 	}
+
 	/* Sending file */
 	if((sr->method==GET_METHOD || sr->method==POST_METHOD) && statfile.st_size>0)
-		SendFile(cr, sr->range, sr->real_path, 
-                                statfile.st_size, sr->headers->range_values);
+		status = SendFile(socket, sr, sr->range, sr->real_path, 
+                                sr->headers->range_values);
 
 	Mimetype_free(mime_info);
 
 	sr->headers->content_type=NULL;
 
-	return 0;
+	return status;
 }
 
 /* POST METHOD */
@@ -336,7 +334,7 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 
 	sh = sr->headers;
 
-	iov = mk_header_iov_create(20);
+	iov = mk_header_iov_create(50);
 
 	/* Status Code */
 	switch(sh->status){
@@ -431,58 +429,74 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		return -1;		
 	}
 
-	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
-
 	/* Informacion del server */
 	mk_header_iov_add_line(iov, sr->host_conf->header_host_signature,
 			strlen(sr->host_conf->header_host_signature),
 			MK_IOV_NOT_FREE_BUF);
 
-	mk_header_iov_send(fd, iov);
-
 	/* Fecha */
-	buffer = m_build_buffer("Date: %s\r\n", PutDate_string(0));
+	buffer = m_build_buffer("Date: %s", PutDate_string(0));
+	mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 
 	/* Location */
 	if(sh->location!=NULL)
-		buffer = m_build_buffer_from_buffer(buffer, 
-			"Location: %s\r\n",
+	{
+		buffer = m_build_buffer( 
+			"Location: %s",
 			sh->location);
+		if(!buffer)
+		{
+			printf("\nbuff is null!");
+			fflush(stdout);
+		}
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), 
+				MK_IOV_FREE_BUF);
+	}
 
 	/* Last-Modified */
 	if(sh->last_modified!=NULL){
-		buffer = m_build_buffer_from_buffer(buffer,
-			"%s %s\r\n",
+		buffer = m_build_buffer(
+			"%s %s",
 			RH_LAST_MODIFIED,
 			sh->last_modified);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 	}
 	
 	/* Connection */
 	if(sh->pconnections_left!=0 && config->keep_alive==VAR_ON){
-		buffer = m_build_buffer_from_buffer(buffer,
-			"Keep-Alive: timeout=%i, max=%i\r\n",
+		buffer = m_build_buffer(
+			"Keep-Alive: timeout=%i, max=%i",
 			config->keep_alive_timeout, 
 			sh->pconnections_left);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 
-		buffer = m_build_buffer_from_buffer(buffer, 
-			"Connection: Keep-Alive\r\n");
+		buffer = m_build_buffer("Connection: Keep-Alive");
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 	}
 	else{
-		buffer = m_build_buffer_from_buffer(buffer, 
-			"Connection: close\r\n");
+		buffer = m_build_buffer("Connection: close");
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 	}
 
 	/* Tipo de contenido de la informacion */
 	if(sh->content_type!=NULL){
-		buffer = m_build_buffer_from_buffer(buffer, 
-			"Content-Type: %s\r\n",
+		buffer = m_build_buffer( 
+			"Content-Type: %s",
 			sh->content_type);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 	}
 	
 	/* Ranges */ 
-	buffer = m_build_buffer_from_buffer(buffer, 
-			"Accept-Ranges: bytes\r\n", 
+	buffer = m_build_buffer( 
+			"Accept-Ranges: bytes", 
 			sh->content_type);
+	mk_header_iov_add_line(iov, buffer, strlen(buffer),
+			MK_IOV_FREE_BUF);
 
 	/* Tamaño total de la informacion a enviar */
 	if((sh->content_length!=0 && 
@@ -493,70 +507,85 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
         /* yyy- */
 	if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
 		length = (unsigned int) ( sh->content_length - sh->range_values[0] );
-		buffer = m_build_buffer_from_buffer(buffer, 
-				"%s %i\r\n", 
+		buffer = m_build_buffer( 
+				"%s %i", 
 				RH_CONTENT_LENGTH, 
 				length);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 
-		buffer = m_build_buffer_from_buffer(buffer,
-				"%s bytes %d-%d/%d\r\n",
+		buffer = m_build_buffer(
+				"%s bytes %d-%d/%d",
 				RH_CONTENT_RANGE, 
 				sh->range_values[0],
 				(sh->content_length - 1), 
 				sh->content_length);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 	}
 		
 	/* yyy-xxx */
 	if(sh->range_values[0]>=0 && sh->range_values[1]>=0){
 		length = (unsigned int) abs(sh->range_values[1] - sh->range_values[0]) + 1;
-		buffer = m_build_buffer_from_buffer(buffer, 
-				"%s %d\r\n", 
+		buffer = m_build_buffer( 
+				"%s %d", 
 				RH_CONTENT_LENGTH, 
 				length);
-		
-		buffer = m_build_buffer_from_buffer(buffer, 
-				"%s bytes %d-%d/%d\r\n",
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
+
+		buffer = m_build_buffer( 
+				"%s bytes %d-%d/%d",
 				RH_CONTENT_RANGE, 
 				sh->range_values[0], 
 				sh->range_values[1],
 				sh->content_length);
 		}
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 
 		/* -xxx */
 		if(sh->range_values[0]==-1 && sh->range_values[1]>=0){
-			buffer = m_build_buffer_from_buffer(buffer,
-					"%s %d\r\n", 
+			buffer = m_build_buffer(
+					"%s %d", 
 					RH_CONTENT_LENGTH,
 					sh->range_values[1]);
+			mk_header_iov_add_line(iov, buffer, strlen(buffer),
+					MK_IOV_FREE_BUF);
 
-			buffer = m_build_buffer_from_buffer(buffer, 
-					"%s bytes %d-%d/%d\r\n", 
+			buffer = m_build_buffer(
+					"%s bytes %d-%d/%d",
 					RH_CONTENT_RANGE, 
 					(sh->content_length - sh->range_values[1]),
 					(sh->content_length - 1),
 					sh->content_length);
+			mk_header_iov_add_line(iov, buffer, strlen(buffer),
+					MK_IOV_FREE_BUF);
 		}
 	}
 	else if(sh->content_length!=0)
 	{
-		buffer = m_build_buffer_from_buffer(buffer, 
-				"%s %d\r\n",
+		buffer = m_build_buffer( 
+				"%s %d",
 				RH_CONTENT_LENGTH,
 				sh->content_length);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer), 
+				MK_IOV_FREE_BUF);
 	}
 	else if(sh->status==M_REDIR_MOVED)
 	{
-		buffer = m_build_buffer_from_buffer(buffer, 
-				"%s %d\r\n", 
+		buffer = m_build_buffer( 
+				"%s %d", 
 				RH_CONTENT_LENGTH, 
 				sh->content_length);
+		mk_header_iov_add_line(iov, buffer, strlen(buffer),
+				MK_IOV_FREE_BUF);
 	}	
 	
 	if(sh->cgi==SH_NOCGI)
-		buffer = m_build_buffer_from_buffer(buffer, "\r\n");
+	{
+		mk_header_iov_add_break_line(iov);
+	}
 
-	Socket_Timeout(fd, buffer, strlen(buffer), config->timeout, ST_SEND);
-	M_free(buffer);
+	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
+	mk_header_iov_send(fd, iov);
+	mk_header_iov_free(iov);
 	return 0;
 }
 

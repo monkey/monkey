@@ -72,13 +72,14 @@
 struct mk_iov 
 {
 	struct iovec *io;
-	char *buf_to_free;
+	char **buf_to_free;
 	int iov_idx;
 	int buf_idx;
 };
 
 struct mk_iov *mk_header_iov_create(int n);
 int mk_header_iov_add_line(struct mk_iov *mk_io, char *buf, int len, int free);
+int mk_header_iov_add_break_line(struct mk_iov *mk_io);
 ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io);
 void mk_header_iov_free(struct mk_iov *mk_io);
 
