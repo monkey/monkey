@@ -108,7 +108,6 @@ gid_t EUID;
 #include "vhost.h"
 #include "config.h"
 #include "chars.h"
-
 #include "modules.h"
 
 #endif

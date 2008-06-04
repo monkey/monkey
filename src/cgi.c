@@ -209,7 +209,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_conn
 	verify if 'Location' header has been sent from 
 	script, i was sent we send an '302 Found' header',
 	if not we send '200 OK' header */
-	if(strstr2(data, "Location:")!=NULL)
+	if(strcasestr(data, "Location:")!=NULL)
 		s_log->final_response=M_REDIR_MOVED_T;
 	else
 		s_log->final_response=M_HTTP_OK;

@@ -228,26 +228,6 @@ int ExecFile(char *pathfile)
 	return -1; /* No se puede leer */
 }
 
-/* Compara 2 strings sin importar 
- Mayusculas ni minusculas */
-char *strstr2(char *s, char *t)
-{
-	static char res[MAX_REQUEST_BODY];
-	int i, j, k;
-				
-	for (i=0; s[i] ; i++) {
-		for (j=i, k=0; t[k] && toupper(s[j]) == toupper(t[k]); j++, k++) ;
-			if (k > 0 && t[k] == '\0') {
-			  for (j=i, k=0; s[j]; j++, k++)
-				res[k] = s[j];
-			
-			  res[k] = s[j];
-			  return (char *) res;
-			}
-		}
-	
-	return NULL;
-}
 
 /* Devuelve la fecha para enviarla 
  en el header */

@@ -30,6 +30,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <string.h>
+
 #include <arpa/inet.h> 
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -473,11 +475,11 @@ int Process_Request_Header(struct request *sr)
     /* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
 
-	/* Host */
+	/* Host 
 	if((strstr2(sr->body, RH_HOST))!=NULL){
 		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
 		
-		/* is host formated something like xxxxx:yy ???? */
+		 is host formated something like xxxxx:yy ???? 
 		if(tmp!=NULL && strstr(tmp, ":") != NULL ){
 			int pos_sep=0;
 			char *port=0;
@@ -490,20 +492,20 @@ int Process_Request_Header(struct request *sr)
 			M_free(tmp);
 		}
 		else{
-			sr->host=tmp; /* maybe null */
+			sr->host=tmp;  maybe null 
 			sr->port=config->standard_port;
 		}
 	}
 	else{
 		sr->host=NULL;
 	}
-
+	*/
 	/* Variables generales del header remoto */
 	sr->keep_alive=VAR_OFF;
-	if((strstr2(sr->body, RH_CONNECTION))!=NULL && 
+	if((strcasestr(sr->body, RH_CONNECTION))!=NULL && 
                             (sr->protocol==HTTP_11 || sr->protocol==HTTP_10) ){
 		sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
-		if((strstr2(sr->connection,"Keep-Alive"))!=NULL){
+		if((strcasestr(sr->connection,"Keep-Alive"))!=NULL){
 			sr->keep_alive=VAR_ON;
 		}
 	}
@@ -528,7 +530,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 	char *var_value=0;
 	
 	/* looking for string on request_body ??? */	
-	if (strstr2(request_body, string) == NULL)
+	if (strcasestr(request_body, string) == NULL)
 		return NULL;
 
 	pos_init_var = str_search(request_body, string, strlen(string));
