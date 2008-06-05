@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "monkey.h"
+#include "http_status.h"
 
 #define  DIRECTORIO		  "     -"
 

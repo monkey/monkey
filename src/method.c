@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 #include <time.h>
 
 #include "monkey.h"
+#include "http.h"
+#include "http_status.h"
 
 /* Get & Head Method */
 int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr, 

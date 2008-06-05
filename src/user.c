@@ -26,6 +26,8 @@
 #include <sys/resource.h>
 
 #include "monkey.h"
+#include "http.h"
+#include "http_status.h"
 
 int User_main(struct client_request *cr, struct request *sr)
 {

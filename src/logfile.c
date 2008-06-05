@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "monkey.h"
+#include "http_status.h"
 
 void *start_worker_logger(void *args)
 {

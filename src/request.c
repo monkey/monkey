@@ -37,10 +37,8 @@
 #include <sys/types.h>
 
 #include "monkey.h"
-
-#define MAX_TIMES 10000
-#define POST_TIMEOUT 10
-
+#include "http.h"
+#include "http_status.h"
 
 struct request *parse_client_request(struct client_request *cr)
 {

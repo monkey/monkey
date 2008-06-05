@@ -30,7 +30,10 @@
 #include <sys/wait.h>
 
 #include <string.h>
+
 #include "monkey.h"
+#include "http.h"
+#include "http_status.h"
 
 /* Main function to normal CGI scripts */
 int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
