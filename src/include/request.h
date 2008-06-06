@@ -81,8 +81,9 @@ struct client_request
     int socket;
     int  counter_connections; /* Count persistent connections */
     int status; /* Request status */
-    
+   
     char *body; /* Original request sent */
+    char *client_ip;
     int body_length;
     struct request *request; /* Parsed request */
     struct client_request *next;
@@ -98,6 +99,7 @@ struct request {
 
 	/*----First header of client request--*/
 	int method;
+	char *method_str;
 	char *uri;  /* original request */
 	char *uri_processed; /* processed request */
 	int protocol;

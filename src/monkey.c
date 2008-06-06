@@ -29,6 +29,7 @@
 #include <resolv.h>
 
 #include "monkey.h"
+#include "socket.h"
 #include <sys/time.h>
 
 #if defined(__DATE__) && defined(__TIME__)
@@ -217,7 +218,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		setnonblocking(remote_fd);
+		mk_socket_set_nonblocking(remote_fd);
 		mk_epoll_add_client(sched->epoll_fd, remote_fd);
 		
 		if(sched->next)

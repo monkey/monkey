@@ -79,6 +79,7 @@ struct host *VHOST_Find(char *host)
 
 	while(aux_host){
 		if(strcasecmp(aux_host->servername, host)==0)
+		//if(*aux_host->servername==*host)
 			break;
 		else
 			aux_host=aux_host->next;

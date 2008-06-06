@@ -18,6 +18,10 @@
  */
 
 /* Defining TRUE and FALSE */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #define TRUE 1
 #define FALSE 0
 
@@ -32,7 +36,7 @@ int SendFile(int socket, struct request *request,
         char *header_range, char *pathfile, int ranges[2]);
 int	CheckDir(char *pathfile);
 int	CheckFile(char *pathfile);
-int	AccessFile(char *pathfile);
+int AccessFile(struct stat file);
 int	ExecFile(char *pathfile);
 int	set_daemon();
 int	fdprintf(int fd, int type, const char *format, ...);
@@ -46,7 +50,6 @@ time_t PutDate_unix(char *date);
 
 char *get_real_string(char *req_uri);
 
-int	get_version_protocol(char *remote_protocol);
 char  *get_name_protocol(int remote_protocol);
 
 char *m_build_buffer(const char *format, ...);
@@ -68,6 +71,6 @@ int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 char *remove_space(char *buf);
 
-int setnonblocking(int sockfd);
+
 char *mk_strcasestr(char *heystack, char *needle);
 

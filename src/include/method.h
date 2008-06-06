@@ -19,11 +19,6 @@
 
 /* method.c */
 
-#define GET_METHOD_STR "GET"
-#define POST_METHOD_STR "POST"
-#define HEAD_METHOD_STR "HEAD"
-
-
 int M_METHOD_Get_and_Head(struct client_request *cr, 
 		struct request *s_request, int socket); 
 

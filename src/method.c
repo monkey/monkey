@@ -29,6 +29,8 @@
 #include <time.h>
 
 #include "monkey.h"
+
+#include "file.h"
 #include "http.h"
 #include "http_status.h"
 
@@ -36,11 +38,11 @@
 int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr, 
                                                              int socket)
 {
-	int method_value=0, status=0;
+	int debug_error=0, status=0;
 	char *location=0, *real_location=0; /* ruta para redireccion */
 	char **mime_info;
 	char *gmt_file_unix_time; // gmt time of server file (unix time)
-	struct stat checkpath, statfile;
+	struct file_info *path_info;
 
 	/* Peticion normal, no es a un Virtualhost */
 	if((strcmp(sr->uri_processed,"/"))==0)
@@ -50,33 +52,36 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 		sr->real_path = m_build_buffer("%s%s", sr->host_conf->documentroot, sr->uri_processed);
 	}
 	
-	if(sr->method!=HEAD_METHOD)
-		method_value=1;
+	if(sr->method!=HTTP_METHOD_HEAD){
+		debug_error=1;
+	}
 
-	if(stat(sr->real_path, &checkpath)==-1){
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, method_value, sr->log);
+	path_info = mk_file_get_info(sr->real_path);
+	if(!path_info){
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, debug_error, sr->log);
 		return -1;
 	}
 
-	// it's an symbolic link
-	if(Check_symlink(sr->real_path)==0){
+	if(path_info->is_link == MK_FILE_TRUE){
 		if(config->symlink==VAR_OFF){
 			sr->log->final_response=M_CLIENT_FORBIDDEN;
-			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, method_value, sr->log);
+			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
 			return -1;
 		}		
 		else{
 			char linked_file[MAX_PATH];
 			readlink(sr->real_path, linked_file, MAX_PATH);
+			/*
 			if(Deny_Check(linked_file)==-1) {
 				sr->log->final_response=M_CLIENT_FORBIDDEN;
-				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, method_value, sr->log);
+				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
 				return -1;
 			}
+			*/
 		}			
 	}
 	/* Checkeando si la ruta es un Directorio */
-	if(checkpath.st_mode & S_IFDIR) {
+	if(path_info->is_directory == MK_FILE_TRUE) {
 		/* This pointer never must be freed */
 		char *index_file = 0; 
 
@@ -108,6 +113,7 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	
 		/* looking for a index file */
 		index_file = (char *) FindIndex(sr->real_path);
+
 		if(!index_file) {
 			/* No index file found, show the content directory */
 			if(sr->host_conf->getdir==VAR_ON) {
@@ -127,18 +133,14 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			}
 		}
 		else{
+			M_free(path_info);
 			sr->real_path = m_build_buffer_from_buffer(sr->real_path, "%s", index_file);
+			path_info = mk_file_get_info(sr->real_path);
 		}
 	}
 
-	/* do exists the file ? */
-	if(access(sr->real_path,F_OK)!=0){
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
-		return -1;	
-	}
-
-	/* read permission */
-	if(AccessFile(sr->real_path)!=0){
+	/* read permission */ 
+	if(path_info->read_access == MK_FILE_FALSE){
 		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 		return -1;	
 	}
@@ -147,70 +149,84 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	mime_info=Mimetype_Find(sr->real_path);
 	
 	if(mime_info[1]){
+		struct file_info *fcgi, *ftarget;
+		fcgi = mk_file_get_info(mime_info[1]);
+		
 		/* executable script (e.g PHP) ? */
-		if(access(mime_info[1],X_OK)==0){
-				int cgi_status=0;
-				char *arg_script[3];
+		if(fcgi){
+			int cgi_status=0;
+			char *arg_script[3];
 			
-				/* is it  normal file ? */
-				if(CheckFile(mime_info[1])!=0){
-					Request_Error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
-					Mimetype_free(mime_info);
-					return -1;
-				}
-
-				sr->log->final_response=M_HTTP_OK;
-				sr->script_filename=M_strdup(sr->real_path);
-
-				arg_script[0] = mime_info[1];
-				arg_script[1] = sr->script_filename;
-				arg_script[2] = NULL;
-
-				if(sr->method==GET_METHOD || sr->method==POST_METHOD)
-						cgi_status=M_CGI_run(cr, sr, mime_info[1], arg_script);
-			
-				switch(cgi_status){
-					case -2:	/* Timeout */
-							sr->log->final_response=M_CLIENT_REQUEST_TIMEOUT;
-							break;
-					case -3:  /* Internal server Error */
-							sr->log->final_response=M_SERVER_INTERNAL_ERROR;
-							break;
-						
-					case -1:
-							sr->make_log=VAR_OFF;
-							break;
-					case 0:  /* Ok */
-							sr->log->final_response=M_HTTP_OK;
-							break;
-				};	
-
-				if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-					Request_Error(sr->log->final_response, cr, sr, 1, sr->log);	
-				}
-
+			/* is it  normal file ? */
+			if(fcgi->is_directory==MK_FILE_TRUE || fcgi->exec_access==MK_FILE_FALSE){
+				Request_Error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
 				Mimetype_free(mime_info);
-				return cgi_status;
+				return -1;
 			}
+			/*
+			 * FIXME: CHECK FOR TARGET PERMISSION AS GCI DOES
+			 *			
+			 ftarget = mk_file_get_info(sr->script_filename);
+			if(!ftarget)
+			{
+			
+			}
+			*/
+			sr->log->final_response=M_HTTP_OK;
+			sr->script_filename=M_strdup(sr->real_path);
+
+			arg_script[0] = mime_info[1];
+			arg_script[1] = sr->script_filename;
+			arg_script[2] = NULL;
+
+			if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
+			{
+				cgi_status=M_CGI_run(cr, sr, mime_info[1], arg_script);
+			}
+			
+			switch(cgi_status){
+				case -2:	/* Timeout */
+						sr->log->final_response=M_CLIENT_REQUEST_TIMEOUT;
+						break;
+				case -3:  /* Internal server Error */
+						sr->log->final_response=M_SERVER_INTERNAL_ERROR;
+						break;
+					
+				case -1:
+						sr->make_log=VAR_OFF;
+						break;
+				case 0:  /* Ok */
+						sr->log->final_response=M_HTTP_OK;
+						break;
+			};	
+
+			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
+				Request_Error(sr->log->final_response, cr, sr, 1, sr->log);	
+			}
+
+			Mimetype_free(mime_info);
+			M_free(fcgi);
+			return cgi_status;
+		}
 	}
 	/* get file size */
-	if(stat(sr->real_path,&statfile) < 0) {
+	if(path_info->size < 0) {
 		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		Mimetype_free(mime_info);
 		return -1;
 	}
-	sr->bytes_to_send = statfile.st_size;
+	sr->bytes_to_send = path_info->size;
 	sr->bytes_offset = (off_t) 0;
 
 	/* was if_modified_since sent by the  client ? */
 	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
-	if(sr->if_modified_since && sr->method==GET_METHOD){
+	if(sr->if_modified_since && sr->method==HTTP_METHOD_GET){
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file
 		
 		date_client = PutDate_unix(sr->if_modified_since);
 
-		gmt_file_unix_time = PutDate_string((time_t) statfile.st_mtime);
+		gmt_file_unix_time = PutDate_string((time_t) path_info->last_modification);
 		date_file_server = PutDate_unix(gmt_file_unix_time);
 		M_free(gmt_file_unix_time);
 
@@ -218,17 +234,18 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 			sr->headers->status = M_NOT_MODIFIED;
 			M_METHOD_send_headers(socket, sr, sr->log);	
 			Mimetype_free(mime_info);
+			M_free(path_info);
 			return 0;
 		}
 	}
 	sr->headers->status = M_HTTP_OK;
-	sr->headers->content_length = statfile.st_size;
+	sr->headers->content_length = path_info->size;
 	sr->headers->cgi = SH_NOCGI;
-	sr->headers->last_modified = PutDate_string( statfile.st_mtime );
+	sr->headers->last_modified = PutDate_string( path_info->last_modification);
 	sr->headers->location = NULL;
 
-	sr->log->size=(statfile.st_size);
-	if(sr->method==GET_METHOD || sr->method==POST_METHOD){
+	sr->log->size = path_info->size;
+	if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST){
 		sr->headers->content_type = mime_info[0];
 		/* Range */
 		if(sr->range!=NULL && config->resume==VAR_ON){
@@ -249,12 +266,15 @@ int M_METHOD_Get_and_Head(struct client_request *cr, struct request *sr,
 	}
 
 	/* Sending file */
-	if((sr->method==GET_METHOD || sr->method==POST_METHOD) && statfile.st_size>0)
+	if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
+			&& path_info->size>0)
+	{
 		status = SendFile(socket, sr, sr->range, sr->real_path, 
                                 sr->headers->range_values);
+	}
 
 	Mimetype_free(mime_info);
-
+	M_free(path_info);
 	sr->headers->content_type=NULL;
 
 	return status;
@@ -586,35 +606,6 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	mk_header_iov_send(fd, iov);
 	mk_header_iov_free(iov);
 	return 0;
-}
-
-int M_METHOD_get_number(char *method)
-{
-	if(strcmp(method, GET_METHOD_STR)==0)
-		return GET_METHOD;
-
-	if(strcmp(method, POST_METHOD_STR)==0)
-		return POST_METHOD;
-
-	if(strcmp(method, HEAD_METHOD_STR)==0)
-		return HEAD_METHOD;
-
-	return METHOD_NOT_ALLOWED;
-}
-
-char *M_METHOD_get_name(int method)
-{
-	switch(method){
-		case GET_METHOD:
-				return (char *) GET_METHOD_STR;
-				
-		case POST_METHOD:
-				return (char *) POST_METHOD_STR;
-				
-		case HEAD_METHOD:
-				return (char *) HEAD_METHOD_STR;
-	}
-	return (char *) "";
 }
 
 int M_METHOD_get_range(char *header, int range_from_to[2])

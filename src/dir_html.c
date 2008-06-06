@@ -28,6 +28,9 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <time.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "monkey.h"
@@ -204,22 +207,22 @@ char *read_header_footer_file(char *file_path)
 	int bytes;
 	char *file_content=0;
 	static char buffer[BUFFER_SOCKET];
+	struct stat f;
+
+	stat(file_path, &f);	
+	file = fopen(file_path, "r");
+	if(!file)
+	{	
+		return NULL;
+	}	
 	
-	if(AccessFile(file_path)==0){
-		file = fopen(file_path, "r");
-		if(!file) return NULL;
-		
+	memset(buffer, '\0', sizeof(buffer));
+	while((bytes=fread(buffer,1, BUFFER_SOCKET, file)>0)){
+		file_content = m_build_buffer_from_buffer(file_content,"%s", buffer);
 		memset(buffer, '\0', sizeof(buffer));
-		while((bytes=fread(buffer,1, BUFFER_SOCKET, file)>0)){
-			file_content = m_build_buffer_from_buffer(file_content,"%s", buffer);
-			memset(buffer, '\0', sizeof(buffer));
-		}
-		fclose(file);
 	}
-	else{
-		return NULL;	
-	}
-	
+	fclose(file);
+		
 	return (char *) file_content;
 }
  

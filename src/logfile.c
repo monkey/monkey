@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "monkey.h"
+#include "http.h"
 #include "http_status.h"
 
 void *start_worker_logger(void *args)
@@ -113,8 +114,8 @@ int write_log(struct log_info *log)
 			return -1;
 		}
 			fprintf(log_file,"%s - %s ", log->ip, log->datetime);
-			fprintf(log_file,"\"%s %s %s\" %i", M_METHOD_get_name(log->method), 
-				log->uri, get_name_protocol(log->protocol), log->final_response);
+			fprintf(log_file,"\"%s %s %s\" %i", mk_http_method_check_str(log->method), 
+				log->uri, mk_http_protocol_check_str(log->protocol), log->final_response);
 			if(log->size > 0) 
 				fprintf(log_file," %i\n", log->size);
 			else
@@ -172,21 +173,6 @@ char *PutTime() {
                (struct tm *)localtime((time_t *) &fec_hora));
 
    return (char *) data;
-}
-
-/* Imprime IP de conexion remota */
-char *PutIP() {
-	int ip_length, max_ip_length=15;
-	char *ip_address=0;
-	
-	ip_address = inet_ntoa(remote.sin_addr);
-	ip_length = strlen(ip_address);
-
-	if(ip_length > max_ip_length || ip_length<=0) {
-		return NULL;	
-	}
-
-	return inet_ntoa(remote.sin_addr);
 }
 
 char *BaseName(char *name)

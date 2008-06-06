@@ -20,6 +20,9 @@
 /* mimetype.c */
 
 /* MIME Structs variables*/
+
+#define MIMETYPE_DEFAULT "text/plain"
+
 #define MAX_MIMETYPES_NOMBRE 15
 #define MAX_MIMETYPES_TIPO 55
 #define MAX_SCRIPT_BIN_PATH 255

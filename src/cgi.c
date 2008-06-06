@@ -39,15 +39,17 @@
 int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
 {
 	int cgi_status=0, checkdir;
+	struct stat f;
 
-	sr->script_filename = (char *) M_CGI_alias(sr->uri_processed, sr->host_conf->scriptalias[0], sr->host_conf->scriptalias[1]);
+	sr->script_filename = (char *) M_CGI_alias(sr->uri_processed, 
+			sr->host_conf->scriptalias[0], 
+			sr->host_conf->scriptalias[1]);
+
 	checkdir=CheckDir(sr->script_filename);
+	stat(sr->script_filename, &f);
 
-	if(access(sr->script_filename,F_OK)!=0){
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, s_log);
-		return -1;
-	}
-	else if(AccessFile(sr->script_filename)!=0 ||  checkdir==0){
+	/*
+	if(AccessFile(f)!=0 ||  checkdir==0){
 		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
 		return -1;
 	}
@@ -56,8 +58,9 @@ int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s
 		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
 		return -1;
 	}
+	*/
 
-	if(sr->method==POST_METHOD){
+	if(sr->method==HTTP_METHOD_POST){
 		M_METHOD_Post(cr, sr);
 	}
 	
@@ -147,7 +150,7 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 	}
 	else{
 		close(pipe_write[0]);
-		if(sr->method==POST_METHOD){	
+		if(sr->method==HTTP_METHOD_POST){	
 			write(pipe_write[1], sr->post_variables, sr->content_length);
 		}
 		close(pipe_write[1]);
@@ -302,7 +305,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 
 	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", sr->host_conf->documentroot);
 	
-	if(sr->method==POST_METHOD && sr->content_length>0){
+	if(sr->method==HTTP_METHOD_POST && sr->content_length>0){
 		snprintf(auxint,10,"%i",sr->content_length);
 		*ptr++ = M_CGI_env_add_var("CONTENT_LENGTH",auxint);
 		*ptr++ = M_CGI_env_add_var("CONTENT_TYPE",sr->content_type);
@@ -344,9 +347,9 @@ char **M_CGI_env_set_basic(struct request *sr)
 	
 	snprintf(auxint,10,"CGI/%s",CGI_VERSION);
 	*ptr++ = M_CGI_env_add_var("GATEWAY_INTERFACE",auxint);
-	*ptr++ = M_CGI_env_add_var("REMOTE_ADDR",PutIP());
+	*ptr++ = M_CGI_env_add_var("REMOTE_ADDR","NO IP");
 	*ptr++ = M_CGI_env_add_var("REQUEST_URI", sr->uri);
-	*ptr++ = M_CGI_env_add_var("REQUEST_METHOD", M_METHOD_get_name(sr->method));
+	*ptr++ = M_CGI_env_add_var("REQUEST_METHOD", mk_http_method_check_str(sr->method));
 	*ptr++ = M_CGI_env_add_var("SCRIPT_NAME",sr->uri);
 	*ptr++ = M_CGI_env_add_var("SCRIPT_FILENAME",sr->script_filename);
 

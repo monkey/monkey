@@ -48,7 +48,7 @@
 int SendFile(int socket, struct request *request, 
                 char *header_range, char *pathfile, int ranges[2])
 {
-	int fd, size;
+	int fd, size=0;
 	long int nbytes=0;
 	off_t offset=0;
 	long int off_size=0;
@@ -170,7 +170,7 @@ int SendFile(struct client_request *cr,
 }
 #endif
 
-/* It's an valid directory ? */
+/* It's a valid directory ? */
 int CheckDir(char *pathfile)
 {
 	struct stat path;
@@ -197,39 +197,6 @@ int CheckFile(char *pathfile)
 		
 	return 0;
 }
-
-/* Checking read access 
-   Written by Carlos Oliva 
-   (carlos.oliva@igloo.cl) */
-int AccessFile(char *pathfile)
-{
-	struct stat file;
-
-	if(stat(pathfile,&file)==-1)
-		return -1;
-
-	if( (file.st_mode & S_IRUSR && file.st_uid == geteuid()) || (file.st_mode & S_IRGRP && file.st_gid == getegid()) || (file.st_mode & S_IROTH))
-		return 0;
-
-	return -1; /* I can't read it */
-}
-
-/* Permisos de ejecucion */
-int ExecFile(char *pathfile)
-{
-	struct stat file;
-
-	if(stat(pathfile,&file)==-1)
-		return -1;
-
-	if( (file.st_mode & S_IXUSR && file.st_uid == geteuid()) ||
-			(file.st_mode & S_IXGRP && file.st_gid == getegid()) ||
-			(file.st_mode & S_IXOTH))
-		return 0;
-
-	return -1; /* No se puede leer */
-}
-
 
 /* Devuelve la fecha para enviarla 
  en el header */
@@ -350,7 +317,7 @@ char *m_build_buffer(const char *format, ...)
 
 		
 	if(!buffer) {
-		buffer = (char *)M_malloc(256);
+		buffer = (char *)malloc(256);
 		if(!buffer)
 			return NULL;
 		alloc = 256;
@@ -362,7 +329,7 @@ char *m_build_buffer(const char *format, ...)
 	if(length >= alloc) {
 		char *ptr;
 		
-		ptr = M_realloc(buffer, length + 1);
+		ptr = realloc(buffer, length + 1);
 		if(!ptr) {
 			va_end(ap);
 			return NULL;
@@ -443,7 +410,7 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 	size = (unsigned int) (pos_end - pos_init ) + 1;
 	if(size<=2) size=4;
 
-	buffer = M_malloc(size);
+	buffer = malloc(size);
 	
 	if(!buffer){
 		return NULL;
@@ -495,17 +462,6 @@ int str_search(char *string, char *search, int length_cmp)
 				return i;
 		}
 	}
-
-	return -1;
-}
-
-int get_version_protocol(char *remote_protocol)
-{
-	if(strcmp(remote_protocol,"HTTP/1.1")==0)
-		return HTTP_11;
-
-	if(strcmp(remote_protocol,"HTTP/1.0")==0)
-		return HTTP_10;
 
 	return -1;
 }
@@ -573,7 +529,7 @@ void *M_malloc(size_t size)
 {
 	char *aux=0;
 
-	size++;
+	//size++;
 	if((aux=malloc(size))==NULL){
 		perror("malloc");
 		//pthread_kill(pthread_self(), SIGPIPE);
@@ -590,7 +546,7 @@ char *M_strdup(const char *s)
  	
 	if(!s)
 		return NULL;
-	
+
 	size = strlen(s)+1;	
 	if((aux=malloc(size))==NULL){
 		perror("strdup");
@@ -619,24 +575,7 @@ void M_free(void *ptr)
 {
 	if(ptr!=NULL){
 		free(ptr);
-		ptr=NULL;
 	}
-}
-
-// Return 0 if path it's an symbolic link
-int Check_symlink(const char *path)
-{
-	struct stat st;	
-
-	if(lstat(path, &st)==-1){
-			return SYML_ERR_NOTFOUND;
-	}
-
-	if((S_ISLNK(st.st_mode))){
-		return SYML_OK;	
-	}
-
-	return SYML_NOT;	
 }
 
 char *remove_space(char *buf)
@@ -670,15 +609,6 @@ char *remove_space(char *buf)
     }
 
     return new_buf;
-}
-
-int setnonblocking(int sockfd)
-{
-    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0)|O_NONBLOCK) == -1) {
-        perror("fcntl");
-	return -1;
-    }
-    return 0;
 }
 
 char *mk_strcasestr(char *heystack, char *needle)

@@ -36,4 +36,7 @@ struct deny{
 
 void	Deny_Read_Config();
 void	Deny_Add(const short int type, char *value);
-int     Deny_Check(char *uri);
+int     Deny_Check(struct request *req, char *client_ip);
+int Check_IP(char *client_ip, char *aux_deny_value);
+
+

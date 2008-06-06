@@ -94,57 +94,53 @@ void Deny_Add(const short int type, char *value)
 
 /* Compara la IP a denegar con la IP solicitante del servicio */
 /* Devuelve 0 cuando hay coincidencia, 1 cuando no la hay	  */
-int Check_IP(char *aux_deny_value)
+int Check_IP(char *client_ip, char *aux_deny_value)
 {
-	char IP[16];
 	int	 i;
 
-	/* Copiar el IP solicitante */	
-	strncpy(IP, PutIP(), 16);
-	IP[15] = '\0';
-	
 	/* Comparar el valor a denegar con el IP 		*/
 	/* El * indica coincidencia completa	 		*/
 	/* El ? indica coincidencia con un solo numero 	*/
 	for ( i=0; aux_deny_value[i]; i ++) {	
 	
 		if (aux_deny_value[i]=='?') {
-			if (IP[i]=='.' || IP[i]=='\0')	
+			if (client_ip[i]=='.' || client_ip[i]=='\0')	
 				return 1;
 			else
 				continue;
 		}
 																			
-		if (aux_deny_value[i]=='*')		/* Coincidencia, salir */
+		if (aux_deny_value[i]=='*') /* Coincidencia, salir */
 			return 0;
 		
-		if (aux_deny_value[i]!=IP[i])		/* Las IPs no coinciden, salir */
+		if (aux_deny_value[i]!=client_ip[i]) /* Las IPs no coinciden, salir */
 			return 1;	
 	}
 	
-	if (IP[i]=='\0')
+	if (client_ip[i]=='\0')
 		return 0;
 	else
 		return 1;
 }
 
-int Deny_Check(char *uri)
+int Deny_Check(struct request *req, char *client_ip)
 {
-
 	struct deny *aux_deny;
-	
-	if(!uri)
-		return 0;
-		
+
 	aux_deny=first_deny;
 	while(aux_deny!=NULL){
 		/* Validando que la IP sea distinta */
-		if(aux_deny->type==DENY_IP && Check_IP(aux_deny->value)==0) {
-			return -1;
+		if(aux_deny->type==DENY_IP)
+		{
+			if(Check_IP(client_ip, aux_deny->value)==0) 
+			{
+				return -1;
+			}
 		}
+
 		/* Validando strings a denegar en el request */
-		if(uri){
-			if(aux_deny->type && DENY_URL && strstr(uri,aux_deny->value)){
+		if(req->uri){
+			if(aux_deny->type && DENY_URL && strstr(req->uri,aux_deny->value)){
 				return -1;
 			}			
 		}

@@ -66,10 +66,12 @@ ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io)
 
 void mk_header_iov_free(struct mk_iov *mk_io)
 {
-	int i;
-	for(i=0; i<mk_io->buf_idx;i++)
+	int i, limit;
+	
+	limit = mk_io->buf_idx-1;
+	for(i=0; i<limit; i++)
 	{
-		//printf("\ngoing free (idx: %i/%i): %s",i, mk_io->buf_idx, mk_io->buf_to_free[i]);
+		//printf("\ngoing free (idx: %i/%i): %s",i, limit, mk_io->buf_to_free[i]);
 		//fflush(stdout);
 		M_free(mk_io->buf_to_free[i]);
 	}

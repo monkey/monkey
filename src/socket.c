@@ -17,17 +17,41 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* 
- * Example from:
- * http://www.baus.net/on-tcp_cork
- */
-
+#include <stdio.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+/* 
+ * Example from:
+ * http://www.baus.net/on-tcp_cork
+ */
 int mk_socket_set_cork_flag(int fd, int state)
 {
 	return setsockopt(fd, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 }
+
+int mk_socket_set_nonblocking(int sockfd)
+{
+    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0)|O_NONBLOCK) == -1) {
+        perror("fcntl");
+	return -1;
+    }
+    return 0;
+}
+
+char *mk_socket_get_ip(int socket)
+{
+	struct sockaddr_in m_addr;
+	socklen_t len;
+
+	len = sizeof(m_addr);
+	getpeername(socket, (struct sockaddr*)&m_addr, &len);
+
+	return inet_ntoa(m_addr.sin_addr);
+}
+

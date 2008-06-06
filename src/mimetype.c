@@ -113,7 +113,7 @@ char **Mimetype_CMP(char *name)
 {
 	char **info;
 	struct mimetypes *aux_mime;
-		
+	
 	aux_mime=first_mime;
 	while(aux_mime!=NULL) {
 		if(strcasecmp(aux_mime->name,name)==0) {
@@ -125,12 +125,12 @@ char **Mimetype_CMP(char *name)
 
 	info=(char **) M_malloc(sizeof(char *) * 3);
 	if(aux_mime==NULL){
-		info[0]=M_strdup("text/plain");
+		info[0]=MIMETYPE_DEFAULT;
 		info[1]=NULL;
 	}
 	else{
-		info[0]=M_strdup(aux_mime->type);
-		info[1]=M_strdup(aux_mime->script_bin_path);
+		info[0]=aux_mime->type;
+		info[1]=aux_mime->script_bin_path;
 	}
 	info[2]='\0';
 	return info;
@@ -138,9 +138,7 @@ char **Mimetype_CMP(char *name)
 
 int Mimetype_free(char **arr)
 {
-	M_free(arr[0]);
-	M_free(arr[1]);
-	M_free(arr);
+	free(arr);
 	return 0;
 }
 

@@ -18,17 +18,32 @@
  */
 
 /* Methods */
-#define GET_METHOD (0)
-#define POST_METHOD (1)
-#define HEAD_METHOD (2)
+#define HTTP_METHOD_GET (0)
+#define HTTP_METHOD_POST (1)
+#define HTTP_METHOD_HEAD (2)
 
-#define GET_METHOD_STR "GET"
-#define POST_METHOD_STR "POST"
-#define HEAD_METHOD_STR "HEAD"
+#define HTTP_METHOD_GET_STR "GET"
+#define HTTP_METHOD_POST_STR "POST"
+#define HTTP_METHOD_HEAD_STR "HEAD"
 
 /* Method status */
 #define METHOD_NOT_ALLOWED (-1)
 #define METHOD_NOT_FOUND (-2)
 #define METHOD_EMPTY (-3)
 
+#define HTTP_PROTOCOL_UNKNOWN (-1)
+#define HTTP_PROTOCOL_09 (9)
+#define HTTP_PROTOCOL_10 (10)
+#define HTTP_PROTOCOL_11 (11)
+
+#define HTTP_PROTOCOL_09_STR "HTTP/0.9"
+#define HTTP_PROTOCOL_10_STR "HTTP/1.0"
+#define HTTP_PROTOCOL_11_STR "HTTP/1.1"
+
+int mk_http_method_check(char *method);
+char *mk_http_method_check_str(int method);
+int mk_http_method_get(char *body);
+
+int mk_http_protocol_check(char *protocol);
+char *mk_http_protocol_check_str(int protocol);
 

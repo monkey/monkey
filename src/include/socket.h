@@ -21,4 +21,6 @@
 #define TCP_CORK_OFF 0
 
 int mk_socket_set_cork_flag(int fd, int state);
+int mk_socket_set_nonblocking(int sockfd);
+char *mk_socket_get_ip(int socket);
 

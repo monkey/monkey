@@ -71,7 +71,7 @@ struct request *parse_client_request(struct client_request *cr)
 		offset = 1;
 	}
 
-	length_buf = strlen(cr->body);
+	length_buf = cr->body_length;
 
 	init_block = 0;
 	for(i=0; i<= length_buf-length_end; i++)
@@ -88,14 +88,15 @@ struct request *parse_client_request(struct client_request *cr)
 			cr_buf = alloc_request();
 			//cr_buf->body = m_build_buffer("%s\r\n", block);
 			cr_buf->body = block;
-			cr_buf->method = Get_method_from_request(cr_buf->body);
+			cr_buf->method = mk_http_method_get(cr_buf->body);
+
 			cr_buf->next = NULL;
 			//M_free(block);
 
 			i = init_block = (i+offset) + length_end;
 	
 			/* Looking for POST data */
-			if(cr_buf->method == POST_METHOD)
+			if(cr_buf->method == HTTP_METHOD_POST)
 			{
 				cr_buf->post_variables = M_Get_POST_Vars(cr->body, i, string_end);
 				if(cr_buf->post_variables)
@@ -134,7 +135,8 @@ struct request *parse_client_request(struct client_request *cr)
 		pipelined = TRUE;
 
 		while(cr_search){
-			if(cr_search->method!=GET_METHOD && cr_search->method!=HEAD_METHOD)
+			if(cr_search->method!=HTTP_METHOD_GET && 
+					cr_search->method!=HTTP_METHOD_HEAD)
 			{
 				pipelined = FALSE;
 				break;
@@ -151,14 +153,14 @@ struct request *parse_client_request(struct client_request *cr)
 		}
 	}
 
-	/* DEBUG BLOCKS
+	/* DEBUG BLOCKS 
 	cr_search = cr->request;
 	while(cr_search){
 		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
 		fflush(stdout);
 		cr_search = cr_search->next;
-	}
-	*/
+	}*/
+	
 	return cr->request;
 }
 
@@ -264,23 +266,8 @@ int Write_Request(void *data)
 	{
 		mk_remove_client_request(socket);
 	}
+	
 	return final_status;
-}
-
-
-int Validate_Request_Header(char *buf)
-{
-    int i, count=0, method;
-
-    for(i=0; i<strlen(buf) && count<2; i++){
-        if(buf[i]==' ') count++;
-    }
-    if(count<2){
-        return M_CLIENT_BAD_REQUEST;
-    }
-
-    method = Get_method_from_request(buf);
-    return method; 
 }
 
 int Process_Request(struct client_request *cr, struct request *s_request)
@@ -302,12 +289,13 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}	
 	
-	/*  URL it's Allowed ? */
-	if(Deny_Check(s_request->uri_processed)==-1 || Deny_Check(s_request->query_string)) {
+	/*  URL it's Allowed ? */ 
+	if(Deny_Check(s_request, cr->client_ip)==-1) {
 		s_request->log->final_response=M_CLIENT_FORBIDDEN;
 		Request_Error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
+	
 
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host && s_request->protocol==HTTP_11){
@@ -323,10 +311,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}
 
-	/* Validating protocol version */
-	printf("\n->%s", PROTOCOLS);
-	fflush(stdout);
-
+	/* Validating protocol version */ 
 	if(!strstr(PROTOCOLS, get_name_protocol(s_request->protocol))) {
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
 		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
@@ -376,11 +361,11 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	}
 
 	/* Handling method requested */
-	if(s_request->method==GET_METHOD || s_request->method==HEAD_METHOD){
+	if(s_request->method==HTTP_METHOD_GET || s_request->method==HTTP_METHOD_HEAD){
 			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
 	}
 	else {
-		if(s_request->method==POST_METHOD){
+		if(s_request->method==HTTP_METHOD_POST){
 			if((status=M_METHOD_Post(cr, s_request))==-1){
 				return status;
 			}
@@ -391,40 +376,18 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	return status;
 }
 
-/* Returns method of request:
-we use this function to know type of method before
-request done */
-int Get_method_from_request(char *request)
-{
-	int int_method, pos = 0, max_length_method = 5;
-	char *str_method;
-	
-	pos = str_search(request, " ",1);
-	if(pos<=2 || pos>=max_length_method){
-		return -1;	
-	}
-	
-	str_method = M_malloc(max_length_method);
-	strncpy(str_method, request, pos);
-	str_method[pos]='\0';
-
-	int_method = M_METHOD_get_number(str_method);
-	M_free(str_method);
-	
-	return int_method;
-}
-
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
 int Process_Request_Header(struct request *sr)
 {
-	int uri_init=0, uri_end=0, 
-		query_init=0, query_end=0,
-		prot_init=0, prot_end=0;
-    char *str_prot=0;
+	int uri_init=0, uri_end=0;
+	int query_init=0, query_end=0;
+	int prot_init=0, prot_end=0;
+	char *str_prot=0;
 
 	/* Method */
-	sr->method = sr->log->method = Get_method_from_request(sr->body);
+	//sr->method = sr->log->method = mk_http_method_get(sr->body);
+	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
 	uri_init = str_search(sr->body, " ",1) + 1;
@@ -464,10 +427,11 @@ int Process_Request_Header(struct request *sr)
 	
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = m_copy_string(sr->body, prot_init, prot_end);
-		sr->protocol = sr->log->protocol = get_version_protocol(str_prot);
-        if(!remove_space(str_prot)){
+		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
+
+	/*if(!remove_space(str_prot)){
             return -1;
-        }
+        }*/
         M_free(str_prot);
 	}
 
@@ -519,7 +483,6 @@ int Process_Request_Header(struct request *sr)
 	sr->user_agent = Request_Find_Variable(sr->body, RH_USER_AGENT);
 	sr->range = Request_Find_Variable(sr->body, RH_RANGE);
 	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
-
 	return 0;
 }
 
@@ -543,7 +506,10 @@ char *Request_Find_Variable(char *request_body,  char *string)
 	}
 
 	pos_end_var = str_search((char *)t, "\n", 1) - 1;
-
+	if(pos_end_var<0)
+	{
+		pos_end_var = strlen(t);
+	}
 	if(pos_init_var<=0 || pos_end_var<=0){
 		return  NULL;	
 	}
@@ -607,7 +573,7 @@ void Request_Error(int num_error, struct client_request *cr,
 		case M_CLIENT_METHOD_NOT_ALLOWED:
 			page_default=Set_Page_Default("Method Not Allowed",s_request->uri, s_request->host_conf->host_signature);
 			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-			s_log->error_msg=m_build_buffer("[error 405] Method Not Allowed %s", M_METHOD_get_name(s_request->method));
+			s_log->error_msg=m_build_buffer("[error 405] Method Not Allowed");
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
@@ -720,13 +686,13 @@ struct request *alloc_request()
 
     request = (struct request *) M_malloc(sizeof(struct request));
     request->log = (struct log_info *) M_malloc(sizeof(struct log_info));
-    request->log->ip=PutIP(remote);
+    //request->log->ip=PutIP(remote);
 
     request->status=VAR_OFF; /* Request not processed yet */
     request->make_log=VAR_ON; /* build log file of this request ? */
     request->query_string=NULL;
 
-    request->log->datetime=PutTime();
+    //request->log->datetime=PutTime();
     request->log->final_response=M_HTTP_OK;
     request->log->status=S_LOG_ON;
     request->status=VAR_ON;
@@ -860,6 +826,7 @@ struct client_request *mk_create_client_request(int socket)
 	cr->counter_connections = 0;
 	cr->socket = socket;
 	cr->request = NULL;
+	cr->client_ip = mk_socket_get_ip(socket);
 
 	cr->body = M_malloc(MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();
