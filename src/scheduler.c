@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "monkey.h"
+#include "conn_switch.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int epoll_fd)
@@ -103,7 +104,9 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	thconf = thread_conf;
 
 	mk_epoll_calls *callers;
-	callers = mk_epoll_set_callers((void *)Read_Request, (void *)Write_Request);
+	callers = mk_epoll_set_callers((void *)mk_conn_switch,
+			MK_CONN_SWITCH_READ, 
+			MK_CONN_SWITCH_WRITE);
 
 	mk_sched_set_thread_poll(thconf->epoll_fd);
 	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);

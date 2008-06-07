@@ -32,14 +32,15 @@
 
 #define MAX_EVENTS 10000
 
-mk_epoll_calls *mk_epoll_set_callers(void (*read)(void *), void (*write)(void *))
+mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *),
+		int read, int write)
 {
 	mk_epoll_calls *calls;
 
 	calls = malloc(sizeof(mk_epoll_calls));
-	calls->func_read = (void *) read;
-	calls->func_write = (void *) write;
-
+	calls->func_switch = (void *) func_switch;
+	calls->read = (int) read;
+	calls->write = (int) write;
 	return calls;
 }
 
@@ -69,35 +70,20 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 		for(i=0; i< num_fds; i++) {
 			// Case 1: Error condition
 			if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				fputs("epoll: EPOLLERR", stderr);
+				fputs("\nepoll: EPOLLERR", stderr);
 				close(events[i].data.fd);
 				continue;
 			}
 			assert(events[i].events & (EPOLLIN | EPOLLOUT));
 
-			
-			//printf("\n*** EPOLL EVENT DEBUG: %i ***", events[i].data.fd);
-			/*
-			if(events[i].events & EPOLLIN)
-			{
-				printf("\nPOLLIN");
-			}
-			if(events[i].events & EPOLLOUT)
-			{
-				printf("\nPOLLOUT");
-			}
-			if(events[i].events & EPOLLET)
-			{
-				printf("\nPOLLET");
-			}
-			fflush(stdout);
-			*/
-
 			if(events[i].events & EPOLLIN)
 			{
 				//printf("\ngoing read");
 				//fflush(stdout);
-				ret = (* calls->func_read)((void *)events[i].data.fd);
+				
+				ret = (* calls->func_switch)((void *)calls->read, 
+						(void *)events[i].data.fd);
+				
 				if(ret<0){
 					close(events[i].data.fd);
 				}
@@ -106,7 +92,8 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 			{
 				//printf("\ngoing write");
 				//fflush(stdout);
-				ret = (* calls->func_write)((void *)events[i].data.fd);
+				ret = (* calls->func_switch)((void *)calls->write,
+						(void *)events[i].data.fd);
 				if(ret <= 0){
 				//	printf("\nclosing...");
 				//	fflush(stdout);

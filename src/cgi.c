@@ -235,7 +235,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_conn
 	}
 	
 	/* HTTP/1.1*/
-	if(remote_protocol==HTTP_11){
+	if(remote_protocol==HTTP_PROTOCOL_11){
 		
 		if(fdprintf(socket, NO_CHUNKED, "Transfer-Encoding: chunked\r\n")<0)
 			return -1;			
@@ -269,7 +269,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_conn
 	do{
 		memset(buffer, '\0', sizeof(buffer));
 		bytes=recv(cgi_pipe, buffer, BUFFER_SOCKET, 0);		
-		if(remote_protocol==HTTP_11 && bytes > 0){
+		if(remote_protocol==HTTP_PROTOCOL_11 && bytes > 0){
 			if(fdchunked(socket, buffer, bytes)<0){
 				return -1;							
 			}
@@ -282,7 +282,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_conn
 		}
 	}while(bytes>0);
 
-	if(remote_protocol==HTTP_11){
+	if(remote_protocol==HTTP_PROTOCOL_11){
 		if(fdprintf(socket, NO_CHUNKED, "0\r\n\r\n")<0){
 			return -1;																
 		}
@@ -314,7 +314,9 @@ char **M_CGI_env_set_basic(struct request *sr)
 	*ptr++ = M_CGI_env_add_var("SERVER_ADDR", config->server_addr);
 	
 	*ptr++ = M_CGI_env_add_var("SERVER_NAME",sr->host);
-	*ptr++ = M_CGI_env_add_var("SERVER_PROTOCOL", get_name_protocol(MONKEY_HTTP_PROTOCOL));
+	*ptr++ = M_CGI_env_add_var("SERVER_PROTOCOL", 
+			mk_http_protocol_check_str(MONKEY_HTTP_PROTOCOL));
+
 	*ptr++ = M_CGI_env_add_var("SERVER_SOFTWARE", config->server_software);
 	*ptr++ = M_CGI_env_add_var("SERVER_SIGNATURE", sr->host_conf->host_signature);
 	

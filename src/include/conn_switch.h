@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define MONKEY_HTTP_PROTOCOL HTTP_PROTOCOL_11 /* Protocolo oficial */
-#define CGI_VERSION "1.1" /* Version del soporte CGI */
+#define MK_CONN_SWITCH_READ 0
+#define MK_CONN_SWITCH_WRITE 1
+
+int mk_conn_switch(int action, int socket);
 

@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include "monkey.h"
+#include "http.h"
 #include "http_status.h"
 
 #define  DIRECTORIO		  "     -"
@@ -304,7 +305,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 
     sr->headers = hd;
 
-	if(sr->protocol==HTTP_11){
+	if(sr->protocol==HTTP_PROTOCOL_11){
 		transfer_type=CHUNKED;
 		M_METHOD_send_headers(cr->socket, sr, sr->log);
 		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");

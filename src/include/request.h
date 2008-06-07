@@ -183,6 +183,6 @@ struct client_request *mk_create_client_request(int socket);
 struct client_request *mk_get_client_request_from_fd(int socket);
 struct client_request *mk_remove_client_request(int socket);
 
-int Read_Request(void *data);
-int Write_Request(void *data);
+int mk_handler_read(int socket);
+int mk_handler_write(int socket);
 

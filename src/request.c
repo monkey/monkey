@@ -154,21 +154,22 @@ struct request *parse_client_request(struct client_request *cr)
 	}
 
 	/* DEBUG BLOCKS 
+        printf("*****************************************");
+	fflush(stdout);	
 	cr_search = cr->request;
 	while(cr_search){
 		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
 		fflush(stdout);
 		cr_search = cr_search->next;
-	}*/
-	
+	}
+	*/
 	return cr->request;
 }
 
-int Read_Request(void *data)
+int mk_handler_read(int socket)
 {
-	int socket, bytes, epoll_fd;
+	int bytes, epoll_fd;
 	struct client_request *cr;
-	socket = (int) data;
 
 	cr = mk_get_client_request_from_fd(socket);
 	if(!cr)
@@ -213,13 +214,11 @@ int Read_Request(void *data)
 	return 0;
 }
 
-int Write_Request(void *data)
+int mk_handler_write(int socket)
 {
-	int status, final_status=0, socket;
+	int status, final_status=0;
 	struct request *p_request;
 	struct client_request *cr;
-
-	socket = (int) data;
 
 	/* 
 	 * Get node from schedule list node which contains
@@ -298,7 +297,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	
 
 	/* HTTP/1.1 needs Host header */
-	if(!s_request->host && s_request->protocol==HTTP_11){
+	if(!s_request->host && s_request->protocol==HTTP_PROTOCOL_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
 		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
@@ -311,27 +310,29 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}
 
-	/* Validating protocol version */ 
-	if(!strstr(PROTOCOLS, get_name_protocol(s_request->protocol))) {
+	/* Validating protocol version */
+	if(s_request->protocol == HTTP_PROTOCOL_UNKNOWN)
+	{
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
 		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
-
-    if(s_request->host)
-    {
-        host=VHOST_Find(s_request->host);
-        if(host){
-            s_request->host_conf = host;
-        }
-        else{
-            s_request->host_conf = config->hosts;
-        }
-    }
-    else{
-        s_request->host_conf = config->hosts;
-    }
-    s_request->log->host_conf = s_request->host_conf;
+	
+	if(s_request->host)
+	{
+		host=VHOST_Find(s_request->host);
+		if(host)
+		{
+			s_request->host_conf = host;
+		}
+		else{
+			s_request->host_conf = config->hosts;
+		}
+    	}
+	else{
+		s_request->host_conf = config->hosts;
+	}
+	s_request->log->host_conf = s_request->host_conf;
 
 	/* CGI Request ? */
 	if(s_request->host_conf->scriptalias!=NULL){
@@ -347,7 +348,8 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 				-3 : Internal Server Error
 			*/
 			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-				Request_Error(s_request->log->final_response, cr, s_request, 1, s_request->log);	
+				Request_Error(s_request->log->final_response, 
+						cr, s_request, 1, s_request->log);	
 			}
 			return cgi_status;
 		}
@@ -361,15 +363,16 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	}
 
 	/* Handling method requested */
-	if(s_request->method==HTTP_METHOD_GET || s_request->method==HTTP_METHOD_HEAD){
-			status=M_METHOD_Get_and_Head(cr, s_request, cr->socket);
+	if(s_request->method==HTTP_METHOD_GET || s_request->method==HTTP_METHOD_HEAD)
+	{
+		status=mk_http_init(cr, s_request);
 	}
 	else {
 		if(s_request->method==HTTP_METHOD_POST){
 			if((status=M_METHOD_Post(cr, s_request))==-1){
 				return status;
 			}
-	            status = M_METHOD_Get_and_Head(cr, s_request, cr->socket);
+	            status = mk_http_init(cr, s_request);
 		}
 	}
 
@@ -428,11 +431,7 @@ int Process_Request_Header(struct request *sr)
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = m_copy_string(sr->body, prot_init, prot_end);
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
-
-	/*if(!remove_space(str_prot)){
-            return -1;
-        }*/
-        M_free(str_prot);
+        	M_free(str_prot);
 	}
 
     /* URI processed */
@@ -464,25 +463,31 @@ int Process_Request_Header(struct request *sr)
 		sr->host=NULL;
 	}
 	
-	/* Variables generales del header remoto */
-	sr->keep_alive=VAR_OFF;
-	if(mk_strcasestr(sr->body, RH_CONNECTION) && 
-                            (sr->protocol==HTTP_11 || sr->protocol==HTTP_10) ){
-		sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
-		if(mk_strcasestr(sr->connection,"Keep-Alive")){
-			sr->keep_alive=VAR_ON;
-		}
-	}
-
+	/* Looking for headers */
 	sr->accept = Request_Find_Variable(sr->body, RH_ACCEPT);
 	sr->accept_charset = Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
 	sr->accept_encoding = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);
 	sr->accept_language = Request_Find_Variable(sr->body, RH_ACCEPT_LANGUAGE);
 	sr->cookies = Request_Find_Variable(sr->body, RH_COOKIE);
+	sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
 	sr->referer = Request_Find_Variable(sr->body, RH_REFERER);
 	sr->user_agent = Request_Find_Variable(sr->body, RH_USER_AGENT);
 	sr->range = Request_Find_Variable(sr->body, RH_RANGE);
 	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
+
+	/* Checking keepalive */
+	sr->keep_alive=VAR_OFF;
+	if(sr->connection)
+	{
+		if(sr->protocol==HTTP_PROTOCOL_11 || 
+				sr->protocol==HTTP_PROTOCOL_10)
+		{
+			if(mk_strcasestr(sr->connection,"Keep-Alive"))
+			{
+				sr->keep_alive=VAR_ON;
+			}
+		}
+	}
 	return 0;
 }
 

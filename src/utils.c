@@ -466,18 +466,6 @@ int str_search(char *string, char *search, int length_cmp)
 	return -1;
 }
 
-char *get_name_protocol(int remote_protocol)
-{
-	switch(remote_protocol){
-		case HTTP_11:
-				return (char *) "HTTP/1.1";
-				
-		case HTTP_10:
-				return (char *) "HTTP/1.0";
-	}
-	return (char *) "";
-}
-
 char *get_real_string(char *req_uri){
 	
 	int length=0, hex_result;

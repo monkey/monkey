@@ -47,3 +47,4 @@ int mk_http_method_get(char *body);
 int mk_http_protocol_check(char *protocol);
 char *mk_http_protocol_check_str(int protocol);
 
+int mk_http_init(struct client_request *cr, struct request *sr);
