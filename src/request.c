@@ -576,7 +576,10 @@ void Request_Error(int num_error, struct client_request *cr,
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			page_default=Set_Page_Default("Method Not Allowed",s_request->uri, s_request->host_conf->host_signature);
+			page_default=Set_Page_Default("Method Not Allowed",
+					s_request->uri, 
+					s_request->host_conf->host_signature);
+
 			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
 			s_log->error_msg=m_build_buffer("[error 405] Method Not Allowed");
 			break;
@@ -728,7 +731,7 @@ struct request *alloc_request()
     request->virtual_user = NULL;
     request->script_filename = NULL;
     request->real_path = NULL;
-
+    request->host_conf = config->hosts; 
     request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
