@@ -44,7 +44,6 @@
 
 #include "monkey.h"
 
-#ifndef DISABLE_SENDFILE_SYSCALL
 int SendFile(int socket, struct request *request, 
                 char *header_range, char *pathfile, int ranges[2])
 {
@@ -79,7 +78,7 @@ int SendFile(int socket, struct request *request,
 	mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
 	nbytes = sendfile(socket, fd, &request->bytes_offset,
 			request->bytes_to_send);
-
+	
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
 	}
@@ -90,65 +89,6 @@ int SendFile(int socket, struct request *request,
 	close(fd);
 	return request->bytes_to_send;
 }
-#else
-/* Sending file... */
-int SendFile(struct client_request *cr, 
-                char *header_range, char *pathfile, size_t size, int ranges[2])
-{
-	long int num_bytes , offset_range=0;
-	int st_status=0;
-	char buffer[BUFFER_SOCKET];
-	FILE *file_request;
-
-	if((file_request=fopen(pathfile,"r"))==NULL)
-		return -1;
-
-	if(config->resume==VAR_ON){
-		/* yyy- */
-		if(ranges[0]>=0 && ranges[1]==-1){
-			if(fseek(file_request, ranges[0], SEEK_SET)<0)
-				return -1;	
-		}
-	
-		/* yyy-xxx */
-		if(ranges[0]>=0 && ranges[1]>=0){
-			if(fseek(file_request, ranges[0], SEEK_SET)<0)
-				return -1;
-		
-			offset_range = (unsigned int) (ranges[1] - ranges[0]) + 1;
-		}	
-
-		/* -xxx */
-		if(ranges[0]==-1 && ranges[1]>=0){
-			struct stat buf;
-	
-			if(stat(pathfile, &buf)==0){
-				if(fseek( file_request, (buf.st_size - ranges[1] ), SEEK_SET)<0)
-					return -1;	
-			}
-		}
-	}
-	
-	while((num_bytes=fread(buffer,1, BUFFER_SOCKET, file_request)) > 0 ){
-		if( num_bytes<offset_range || offset_range==0) {
-			st_status=Socket_Timeout(cr->socket, buffer, num_bytes, config->timeout, ST_SEND);
-			if(config->resume==VAR_ON && offset_range>0)
-				offset_range = (unsigned int ) offset_range - num_bytes;
-		}
-		else {
-			num_bytes = offset_range;				
-			st_status=Socket_Timeout(cr->socket, buffer, num_bytes, config->timeout, ST_SEND);
-			break;
-		}
-		if(st_status==-2){
-			fclose(file_request);
-			return -2;
-		}
-	}
-	fclose(file_request);	
-	return 0;	
-}
-#endif
 
 /* It's a valid directory ? */
 int CheckDir(char *pathfile)

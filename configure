@@ -352,9 +352,11 @@ if test -z $STRIP ; then
 fi
 
 ##### Internal options ####
-if [ "$disable_sendfile" = "on" ]; then
-    internal_options="-DDISABLE_SENDFILE_SYSCALL"
-fi
+# just for remember that one time we support this :_(
+# ---------------------------------------------------
+#if [ "$disable_sendfile" = "on" ]; then
+#    internal_options="-DDISABLE_SENDFILE_SYSCALL"
+#fi
 
 cat > src/Makefile<<EOF
 CC	= $CC
