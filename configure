@@ -573,9 +573,6 @@ for arg in $*; do
 		--lang*)
 			lang=$optarg
 			;;
-        --disable-sendfile*)
-            disable_sendfile="on"
-            ;;
 		--load-mod_mysql*)
 			modules="on"
 			mod_mysql="on"
@@ -607,10 +604,6 @@ for arg in $*; do
 			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
 			echo "  --lang=[en|es]	Language to configuration files (default English)"
 			echo 
-            echo "Internal options :"
-            echo 
-            echo "  --disable-sendfile  Do not use the sendfile() system call"
-            echo
 			echo "Modules :"
 			echo "  All modules are optional features, neither of them are loaded by default,"
 			echo "  the available modules are:"
