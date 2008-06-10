@@ -90,22 +90,21 @@ int Mimetype_Add(char *name, char *type, char *bin_path)
 
 char **Mimetype_Find(char *filename)
 {
-	int i,j;
-	char name[MAX_PATH];
+	int j, len;
+	char *name;
+	char **mime;
+
+	j = len = strlen(filename);
 	
-	j=strlen(filename)-1;
-	
-	/* Tipo de archivo */
+	/* looking for extension */
 	while(filename[j]!='.' && j>=0) 
 		j--;
 
-	for(i=0; i<=strlen(filename) ;i++) {
-		name[i]=filename[j+1];
-		j++;
-	}
-	name[strlen(name)]='\0';
-
-	return (char **) Mimetype_CMP(name);
+	name = m_copy_string(filename, j+1, len);
+	mime = Mimetype_CMP(name);
+	M_free(name);
+	
+	return (char **) mime;
 }
 
 /* Busca mime type segun Request */

@@ -77,15 +77,8 @@ int SendFile(int socket, struct request *request,
 	}
 
 	mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
-   
-	//printf("\nA) file offset: %i, to_send: %i", request->size_offset, request->size_to_send);
-	//fflush(stdout);
-
 	nbytes = sendfile(socket, fd, &request->bytes_offset,
 			request->bytes_to_send);
-
-	//printf("\nB)file offset: %i, to_send: %i", request->size_offset, request->size_to_send);
-	//fflush(stdout);
 
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
@@ -93,19 +86,6 @@ int SendFile(int socket, struct request *request,
 	else
 	{
 		request->bytes_to_send-=nbytes;
-		//printf("\nnew size_offset: %i", request->size_offset);
-		//fflush(stdout);
-		/*
-		if(nbytes == size)
-		{
-			printf("\nsendfile was blocking!");
-			fflush(stdout);
-		}
-		else
-		{
-			printf("\nsendfile: file size: %i, sent: %i", size, nbytes);
-			fflush(stdout);
-		}*/
 	}
 	close(fd);
 	return request->bytes_to_send;

@@ -28,13 +28,13 @@
 #include "conn_switch.h"
 
 /* Register thread information */
-int mk_sched_register_thread(pthread_t tid, int epoll_fd)
+int mk_sched_register_thread(pthread_t tid, int efd)
 {
 	struct sched_list_node *sr, *aux;
 
 	sr = M_malloc(sizeof(struct sched_list_node)); 
 	sr->tid = tid;
-	sr->epoll_fd = epoll_fd;
+	sr->epoll_fd = efd;
 	sr->request_handler = NULL;
 	sr->next = NULL;
 
@@ -61,15 +61,15 @@ int mk_sched_register_thread(pthread_t tid, int epoll_fd)
  */
 int mk_sched_launch_thread(int max_events)
 {
-	int epoll_fd;
+	int efd;
 	pthread_t tid;
 	pthread_attr_t attr;
 	sched_thread_conf *thconf;
 	pthread_mutex_t mutex_wait_register;
 
 	/* Creating epoll file descriptor */
-	epoll_fd = mk_epoll_create(max_events);
-	if(epoll_fd < 1)
+	efd = mk_epoll_create(max_events);
+	if(efd < 1)
 	{
 		return -1;
 	}
@@ -79,7 +79,7 @@ int mk_sched_launch_thread(int max_events)
 	pthread_mutex_lock(&mutex_wait_register);
 
 	thconf = M_malloc(sizeof(sched_thread_conf));
-	thconf->epoll_fd = epoll_fd;
+	thconf->epoll_fd = efd;
 	thconf->max_events = max_events;
 
 	pthread_attr_init(&attr);
@@ -92,7 +92,7 @@ int mk_sched_launch_thread(int max_events)
 	}
 
 	/* Register working thread */
-	mk_sched_register_thread(tid, epoll_fd);
+	mk_sched_register_thread(tid, efd);
 	pthread_mutex_unlock(&mutex_wait_register);
 	return 0;
 }

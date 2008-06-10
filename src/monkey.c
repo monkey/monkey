@@ -219,6 +219,8 @@ int main(int argc, char **argv)
 		}
 
 		mk_socket_set_nonblocking(remote_fd);
+		//printf("\nMONKEY::add socket: %i into epoll_fd list: %i", remote_fd, sched->epoll_fd);
+		//fflush(stdout);
 		mk_epoll_add_client(sched->epoll_fd, remote_fd);
 		
 		if(sched->next)

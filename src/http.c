@@ -29,17 +29,26 @@ int mk_http_method_check(char *method)
 {
 	if(*method==*HTTP_METHOD_GET_STR)
 	{
-		return HTTP_METHOD_GET;
+		if(strcmp(method, HTTP_METHOD_GET_STR)==0)
+		{
+			return HTTP_METHOD_GET;
+		}
 	}
 
 	if(*method==*HTTP_METHOD_POST_STR)
 	{
-		return HTTP_METHOD_POST;
+		if(strcmp(method, HTTP_METHOD_POST_STR)==0)
+		{
+			return HTTP_METHOD_POST;
+		}
 	}
 
 	if(*method==*HTTP_METHOD_HEAD_STR)
 	{
-		return HTTP_METHOD_HEAD;
+		if(strcmp(method, HTTP_METHOD_HEAD_STR)==0)
+		{
+			return HTTP_METHOD_HEAD;
+		}
 	}
 
 	return METHOD_NOT_FOUND;
@@ -83,15 +92,15 @@ int mk_http_method_get(char *body)
 
 int mk_http_protocol_check(char *protocol)
 {
-	if(*protocol==*HTTP_PROTOCOL_11_STR)
+	if(strcmp(protocol, HTTP_PROTOCOL_11_STR)==0)
 	{
 		return HTTP_PROTOCOL_11;
 	}
-	if(*protocol==*HTTP_PROTOCOL_10_STR)
+	if(strcmp(protocol, HTTP_PROTOCOL_10_STR)==0)
 	{
 		return HTTP_PROTOCOL_10;
 	}
-	if(*protocol==*HTTP_PROTOCOL_09_STR)
+	if(strcmp(protocol, HTTP_PROTOCOL_09_STR)==0)
 	{
 		return HTTP_PROTOCOL_09;
 	}
@@ -119,7 +128,7 @@ char *mk_http_protocol_check_str(int protocol)
 
 int mk_http_init(struct client_request *cr, struct request *sr)
 {
-	int debug_error=0, status=0;
+	int debug_error=0, bytes=0;
 	char *location=0, *real_location=0; /* ruta para redireccion */
 	char **mime_info;
 	char *gmt_file_unix_time; // gmt time of server file (unix time)
@@ -127,10 +136,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	/* Peticion normal, no es a un Virtualhost */
 	if((strcmp(sr->uri_processed,"/"))==0)
-		sr->real_path = m_build_buffer("%s", sr->host_conf->documentroot);
+		sr->real_path = m_build_buffer("%s", 
+				sr->host_conf->documentroot);
 
 	if(sr->user_home==VAR_OFF){
-		sr->real_path = m_build_buffer("%s%s", sr->host_conf->documentroot, sr->uri_processed);
+		sr->real_path = m_build_buffer("%s%s", 
+				sr->host_conf->documentroot, 
+				sr->uri_processed);
 	}
 	
 	if(sr->method!=HTTP_METHOD_HEAD){
@@ -139,14 +151,16 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	path_info = mk_file_get_info(sr->real_path);
 	if(!path_info){
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, debug_error, sr->log);
+		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 
+				debug_error, sr->log);
 		return -1;
 	}
 
 	if(path_info->is_link == MK_FILE_TRUE){
 		if(config->symlink==VAR_OFF){
 			sr->log->final_response=M_CLIENT_FORBIDDEN;
-			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 
+					debug_error, sr->log);
 			return -1;
 		}		
 		else{
@@ -161,7 +175,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			*/
 		}			
 	}
-	/* Checkeando si la ruta es un Directorio */
+	/* is it a valid directory ? */
 	if(path_info->is_directory == MK_FILE_TRUE) {
 		/* This pointer never must be freed */
 		char *index_file = 0; 
@@ -305,7 +319,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	sr->bytes_offset = (off_t) 0;
 
 	/* was if_modified_since sent by the  client ? */
-	sr->headers->pconnections_left = (int) config->max_keep_alive_request - cr->counter_connections;
+	sr->headers->pconnections_left = (int) 
+		(config->max_keep_alive_request - cr->counter_connections);
+
 	if(sr->if_modified_since && sr->method==HTTP_METHOD_GET){
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file
@@ -355,7 +371,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
 			&& path_info->size>0)
 	{
-		status = SendFile(cr->socket, sr, sr->range, sr->real_path, 
+		bytes = SendFile(cr->socket, sr, sr->range, sr->real_path, 
                                 sr->headers->range_values);
 	}
 
@@ -363,6 +379,25 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	M_free(path_info);
 	sr->headers->content_type=NULL;
 
-	return status;
+	return bytes;
+}
+
+/* 
+ * Check if a connection can continue open using as criteria
+ * the keepalive headers vars and Monkey configuration
+ */
+int mk_http_keepalive_check(int socket, struct client_request *cr)
+{
+	if(config->keep_alive==VAR_OFF || cr->request->keep_alive==VAR_OFF)
+	{
+        	return -1;
+        }
+
+	if(cr->counter_connections>=config->max_keep_alive_request)
+	{
+		return -1;
+	}
+
+	return 0;
 }
 

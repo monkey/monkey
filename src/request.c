@@ -154,8 +154,8 @@ struct request *parse_client_request(struct client_request *cr)
 	}
 
 	/* DEBUG BLOCKS 
-        printf("*****************************************");
-	fflush(stdout);	
+        // printf("*****************************************");
+	//fflush(stdout);	
 	cr_search = cr->request;
 	while(cr_search){
 		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
@@ -168,7 +168,7 @@ struct request *parse_client_request(struct client_request *cr)
 
 int mk_handler_read(int socket)
 {
-	int bytes, epoll_fd;
+	int bytes, efd;
 	struct client_request *cr;
 
 	cr = mk_get_client_request_from_fd(socket);
@@ -182,6 +182,8 @@ int mk_handler_read(int socket)
 
 	if (bytes == -1) {
 		if (errno == EAGAIN) {
+			printf("\ngot EAGAIN");
+			fflush(stdout);
 			return 1;
 		} 
 		else{
@@ -196,29 +198,32 @@ int mk_handler_read(int socket)
 	if(bytes > 0)
 	{
 		cr->body_length+=bytes;
-		epoll_fd = mk_sched_get_thread_poll();
+		efd = mk_sched_get_thread_poll();
 
 		if(strncmp(cr->body+(cr->body_length-LEN_NORMAL_STRING_END),
 					NORMAL_STRING_END, 
 					LEN_NORMAL_STRING_END) == 0)
 		{
-			mk_epoll_set_ready_for_write(epoll_fd, socket);
+			mk_epoll_socket_change_mode(efd, socket, 
+					MK_EPOLL_WRITE);
 		}
 		else if(strncmp(cr->body+(cr->body_length-LEN_OLD_STRING_END),
 					OLD_STRING_END,
 					LEN_OLD_STRING_END) == 0)
 		{
-			mk_epoll_set_ready_for_write(epoll_fd, socket);
+			mk_epoll_socket_change_mode(efd, socket, 
+					MK_EPOLL_WRITE);
 		}
-	}	
+		//mk_sched_set_thread_poll(epoll_fd);
+	}
+
 	return 0;
 }
 
-int mk_handler_write(int socket)
+int mk_handler_write(int socket, struct client_request *cr)
 {
-	int status, final_status=0;
+	int bytes, final_status=0;
 	struct request *p_request;
-	struct client_request *cr;
 
 	/* 
 	 * Get node from schedule list node which contains
@@ -240,33 +245,49 @@ int mk_handler_write(int socket)
 	}
 
 	p_request = cr->request;
+
 	while(p_request)
 	{
-		if(p_request->bytes_to_send>0)
+		/* Request not processed */
+		if(p_request->bytes_to_send < 0)
 		{
-			status = SendFile(socket, p_request, 
+			//printf("\nREQUEST::going process");
+			//fflush(stdout);
+
+			final_status = Process_Request(cr, p_request);
+		}
+		/* Request with data to send */
+		else if(p_request->bytes_to_send>0)
+		{
+			//printf("\nREQUEST::trying to send data :/");
+			//fflush(stdout);
+			bytes = SendFile(socket, p_request, 
 					p_request->range,
 					p_request->real_path,
 					p_request->headers->range_values);
+			final_status = bytes;
+		}
+		else if(p_request->bytes_to_send == 0)
+		{
+			//printf("\n*** to send = 0");
+			//fflush(stdout);
 		}	
-		else
+		/*
+		 * If we got an error, we don't want to parse
+		 * and send information for another pipelined request
+		 */
+		if(final_status<0 || final_status > 0)
 		{
-			status = Process_Request(cr, p_request);
+			return final_status;
 		}
-		if(status>0)
-		{
-			final_status = status;
-		}
-
 		//write_log(p_request->log);
 		p_request = p_request->next;
 	}
-	if(final_status<=0)
-	{
-		mk_remove_client_request(socket);
-	}
-	
-	return final_status;
+
+	/* If we are here, is because all pipelined request were
+	 * processed successfully, let's return 0;
+	 */
+	return 0;
 }
 
 int Process_Request(struct client_request *cr, struct request *s_request)
@@ -362,7 +383,9 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 			return EXIT_NORMAL;
 	}
 
-	/* Handling method requested */
+	/* 
+	 * FIXME
+	 * Handling method requested */
 	if(s_request->method==HTTP_METHOD_GET || s_request->method==HTTP_METHOD_HEAD)
 	{
 		status=mk_http_init(cr, s_request);
@@ -732,6 +755,10 @@ struct request *alloc_request()
     request->script_filename = NULL;
     request->real_path = NULL;
     request->host_conf = config->hosts; 
+
+    request->bytes_to_send = -1;
+    request->bytes_offset = 0;
+
     request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
@@ -887,7 +914,8 @@ struct client_request *mk_remove_client_request(int socket)
 
 	request_handler = mk_sched_get_request_handler();
 	cr = request_handler;
-
+	//printf("\n ***** going to remove CR: %p, socket: %i", cr, socket);
+	//fflush(stdout);
 	while(cr)
 	{
 		if(cr->socket == socket)
@@ -905,7 +933,7 @@ struct client_request *mk_remove_client_request(int socket)
 				}
 				aux->next = cr->next;
 			}
-			free_list_requests(cr);
+			//free_list_requests(cr);
 			break;
 		}
 		cr = cr->next;

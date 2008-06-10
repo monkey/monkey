@@ -55,3 +55,8 @@ char *mk_socket_get_ip(int socket)
 	return inet_ntoa(m_addr.sin_addr);
 }
 
+int mk_socket_close(int socket)
+{
+	return close(socket);
+}
+

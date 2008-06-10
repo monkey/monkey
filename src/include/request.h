@@ -79,7 +79,7 @@ struct client_request
 {
     int pipelined; /* Pipelined request */
     int socket;
-    int  counter_connections; /* Count persistent connections */
+    int counter_connections; /* Count persistent connections */
     int status; /* Request status */
    
     char *body; /* Original request sent */
@@ -146,7 +146,7 @@ struct request {
 	struct header_values *headers; /* headers response */
 	struct request *next;
 
-	size_t bytes_to_send;
+	long bytes_to_send;
 	size_t bytes_offset;
 };
 
@@ -184,5 +184,5 @@ struct client_request *mk_get_client_request_from_fd(int socket);
 struct client_request *mk_remove_client_request(int socket);
 
 int mk_handler_read(int socket);
-int mk_handler_write(int socket);
+int mk_handler_write(int socket, struct client_request *cr);
 

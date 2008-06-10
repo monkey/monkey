@@ -30,7 +30,7 @@
 
 #include "monkey.h"
 
-#define MAX_EVENTS 10000
+#define MAX_EVENTS 5000
 
 mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *),
 		int read, int write)
@@ -46,17 +46,17 @@ mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *),
 
 int mk_epoll_create(int max_events)
 {
-	int epoll_fd;
+	int efd;
 
-	epoll_fd = epoll_create(max_events);
-	if (epoll_fd == -1) {
+	efd = epoll_create(max_events);
+	if (efd == -1) {
 		perror("epoll_create");
 	}
 
-	return epoll_fd;
+	return efd;
 }
 
-void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
+void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 {
 	int i, ret;
 
@@ -65,12 +65,12 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 	
 	while(1){
 		struct epoll_event events[max_events];
-		int num_fds = epoll_wait(epoll_fd, events, max_events, -1);
+		int num_fds = epoll_wait(efd, events, max_events, -1);
 
 		for(i=0; i< num_fds; i++) {
 			// Case 1: Error condition
 			if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				fputs("\nepoll: EPOLLERR", stderr);
+				//fputs("\nepoll: EPOLLERR", stderr);
 				close(events[i].data.fd);
 				continue;
 			}
@@ -78,25 +78,24 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 
 			if(events[i].events & EPOLLIN)
 			{
-				//printf("\ngoing read");
+				//printf("\nEPOLL::going read");
 				//fflush(stdout);
 				
 				ret = (* calls->func_switch)((void *)calls->read, 
 						(void *)events[i].data.fd);
-				
 				if(ret<0){
 					close(events[i].data.fd);
 				}
 			}
 			if(events[i].events & EPOLLOUT)
 			{
-				//printf("\ngoing write");
+				//printf("\nEPOLL::going write");
 				//fflush(stdout);
 				ret = (* calls->func_switch)((void *)calls->write,
 						(void *)events[i].data.fd);
-				if(ret <= 0){
-				//	printf("\nclosing...");
-				//	fflush(stdout);
+				if(ret<0){
+					//printf("\nclosing...");
+					//fflush(stdout);
 					close(events[i].data.fd);
 				}
 			}
@@ -104,7 +103,7 @@ void *mk_epoll_init(int epoll_fd, mk_epoll_calls *calls, int max_events)
 	}
 }
 
-int mk_epoll_add_client(int epoll_fd, int socket)
+int mk_epoll_add_client(int efd, int socket)
 {
 	int ret;
 	struct epoll_event event;
@@ -112,7 +111,7 @@ int mk_epoll_add_client(int epoll_fd, int socket)
 	event.events = EPOLLIN | EPOLLET | EPOLLERR | EPOLLHUP;
 	event.data.fd = socket;
 
-	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event);
+	ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
 	if(ret < 0)
 	{
 		perror("epoll_ctl");
@@ -120,20 +119,29 @@ int mk_epoll_add_client(int epoll_fd, int socket)
 	return ret;
 }
 
-int mk_epoll_set_ready_for_write(int epoll_fd, int socket)
+int mk_epoll_socket_change_mode(int efd, int socket, int mode)
 {
 	int ret;
 	struct epoll_event event;
-
-	event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+	
+	event.events = EPOLLET | EPOLLERR | EPOLLHUP;
 	event.data.fd = socket;
 
-	ret = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, socket, &event);
+	switch(mode)
+	{
+		case MK_EPOLL_READ:
+			event.events |= EPOLLIN;
+			break;
+		case MK_EPOLL_WRITE:
+			event.events |= EPOLLOUT;
+			break;
+	}
+	
+	ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
 	if(ret < 0)
 	{
-		perror("epoll_ctl");
+		perror("\nepoll_ctl");
 	}
 	return ret;
-
 }
 

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,3 +48,5 @@ int mk_http_protocol_check(char *protocol);
 char *mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct client_request *cr, struct request *sr);
+int mk_http_keepalive_check(int socket, struct client_request *cr);
+
