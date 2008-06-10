@@ -27,30 +27,21 @@
 
 int mk_http_method_check(char *method)
 {
-	if(*method==*HTTP_METHOD_GET_STR)
+	if(strcmp(method, HTTP_METHOD_GET_STR)==0)
 	{
-		if(strcmp(method, HTTP_METHOD_GET_STR)==0)
-		{
-			return HTTP_METHOD_GET;
-		}
+		return HTTP_METHOD_GET;
 	}
-
-	if(*method==*HTTP_METHOD_POST_STR)
+	
+	if(strcmp(method, HTTP_METHOD_POST_STR)==0)
 	{
-		if(strcmp(method, HTTP_METHOD_POST_STR)==0)
-		{
-			return HTTP_METHOD_POST;
-		}
+		return HTTP_METHOD_POST;
 	}
-
-	if(*method==*HTTP_METHOD_HEAD_STR)
+	
+	if(strcmp(method, HTTP_METHOD_HEAD_STR)==0)
 	{
-		if(strcmp(method, HTTP_METHOD_HEAD_STR)==0)
-		{
-			return HTTP_METHOD_HEAD;
-		}
+		return HTTP_METHOD_HEAD;
 	}
-
+	
 	return METHOD_NOT_FOUND;
 }
 
