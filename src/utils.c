@@ -80,12 +80,12 @@ int SendFile(int socket, struct request *request,
 
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
+		return -1;
 	}
 	else
 	{
 		request->bytes_to_send-=nbytes;
 	}
-	//close(fd);
 	return request->bytes_to_send;
 }
 
