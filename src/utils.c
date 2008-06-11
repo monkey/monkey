@@ -47,12 +47,11 @@
 int SendFile(int socket, struct request *request, 
                 char *header_range, char *pathfile, int ranges[2])
 {
-	int fd, size=0;
+	int size=0;
 	long int nbytes=0;
 	off_t offset=0;
 	long int off_size=0;
 
-	fd = open(pathfile, O_RDONLY);
 	off_size = size;
 
 	if(config->resume==VAR_ON && header_range){
@@ -76,9 +75,9 @@ int SendFile(int socket, struct request *request,
 	}
 
 	mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
-	nbytes = sendfile(socket, fd, &request->bytes_offset,
+	nbytes = sendfile(socket, request->fd_file, &request->bytes_offset,
 			request->bytes_to_send);
-	
+
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
 	}
@@ -86,7 +85,7 @@ int SendFile(int socket, struct request *request,
 	{
 		request->bytes_to_send-=nbytes;
 	}
-	close(fd);
+	//close(fd);
 	return request->bytes_to_send;
 }
 

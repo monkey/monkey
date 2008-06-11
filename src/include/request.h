@@ -141,6 +141,9 @@ struct request {
 	int make_log;
 	int cgi_pipe[2];
 
+	/* file descriptors */
+	int fd_file;
+
 	struct host *host_conf;
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */

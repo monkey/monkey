@@ -758,6 +758,7 @@ struct request *alloc_request()
 
     request->bytes_to_send = -1;
     request->bytes_offset = 0;
+    request->fd_file = -1;
 
     request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
     request->headers->content_type = NULL;
@@ -801,7 +802,11 @@ void free_list_requests(struct client_request *cr)
 void free_request(struct request *sr)
 {
         /* I hate it, but I don't know another light way :( */
-        if(sr->headers){
+	if(sr->fd_file>0)
+	{
+		close(sr->fd_file);
+	}
+	if(sr->headers){
             M_free(sr->headers->location);
             M_free(sr->headers->last_modified);
             /*

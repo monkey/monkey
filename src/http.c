@@ -20,6 +20,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
@@ -362,6 +366,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
 			&& path_info->size>0)
 	{
+		sr->fd_file = open(sr->real_path, O_RDONLY);
 		bytes = SendFile(cr->socket, sr, sr->range, sr->real_path, 
                                 sr->headers->range_values);
 	}
