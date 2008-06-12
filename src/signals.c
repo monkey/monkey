@@ -65,7 +65,6 @@ switch( signo ) {
                 break;
 	}
 
-	FreeThread(pthread_self());
 	pthread_exit(NULL);
 }
 

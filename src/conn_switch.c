@@ -71,10 +71,9 @@ int mk_conn_switch_write(int socket)
 		else{
 			memset(cr->body, '\0', sizeof(cr->body));
 			cr->body_length = 0;
-			cr->counter_connections--;
+			cr->counter_connections++;
 			efd = mk_sched_get_thread_poll();
 			mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_READ);
-			//mk_sched_set_thread_poll(efd);	
 			return 0;
 		}
 	}

@@ -98,8 +98,6 @@ void M_Config_read_files(char *path_conf, char *file_conf)
     	/* MaxKeepAliveRequest */
 		if(strcasecmp(variable,"MaxKeepAliveRequest")==0){
 			config->max_keep_alive_request=atoi(value);
-			if(config->max_keep_alive_request!=0)
-				config->max_keep_alive_request++;
 			if(config->max_keep_alive_request==0)
 			    M_Config_print_error_msg("MaxKeepAliveRequest", path);
 		}

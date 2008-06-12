@@ -156,8 +156,8 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 		close(pipe_write[1]);
 		
 		close(pipe_fd[1]);
-		return_status=M_CGI_send(cr->socket, pipe_fd[0], sr, 
-			config->max_keep_alive_request - cr->counter_connections, sr->protocol);
+		return_status=M_CGI_send(cr->socket, pipe_fd[0], cr, 
+				sr, sr->protocol);
 			
 		close(pipe_fd[0]);
 		while(waitpid(pid,NULL,0)>0);
@@ -169,7 +169,8 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 }
 
 /* Read 'cgi_pipe' pipe data and send it to socket */
-int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_connections_left, int remote_protocol)
+int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
+		struct request *sr, int remote_protocol)
 {
 	int bytes, total_bytes=0, spaces, buffer_empty=VAR_ON;
 	long offset;
@@ -225,12 +226,11 @@ int M_CGI_send(int socket, int cgi_pipe, struct request *sr, int persistent_conn
 	hd->content_type = NULL;
 	hd->location = NULL;
 	hd->cgi = SH_CGI;
-	hd->pconnections_left = persistent_connections_left;	
 	hd->last_modified = NULL;
 	
     sr->headers = hd;
 
-	if(M_METHOD_send_headers(socket, sr, s_log)<0){
+	if(M_METHOD_send_headers(socket, cr, sr, s_log)<0){
 		return -1;	
 	}
 	

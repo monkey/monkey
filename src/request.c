@@ -80,18 +80,11 @@ struct request *parse_client_request(struct client_request *cr)
 		{
 			/* Allocating request block */
 			block = m_copy_string(cr->body, init_block, i);
-		
-			//printf("\n--->BLOCK<---\n%s", block);
-			//printf("\n(len: %i) COPYING: %i to %i:\n%s\n---\n", length_buf, init_block, i, block);
-			//fflush(stdout);
 			
 			cr_buf = alloc_request();
-			//cr_buf->body = m_build_buffer("%s\r\n", block);
 			cr_buf->body = block;
 			cr_buf->method = mk_http_method_get(cr_buf->body);
-
 			cr_buf->next = NULL;
-			//M_free(block);
 
 			i = init_block = (i+offset) + length_end;
 	
@@ -214,7 +207,6 @@ int mk_handler_read(int socket)
 			mk_epoll_socket_change_mode(efd, socket, 
 					MK_EPOLL_WRITE);
 		}
-		//mk_sched_set_thread_poll(epoll_fd);
 	}
 
 	return 0;
@@ -261,10 +253,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		{
 			//printf("\nREQUEST::trying to send data :/");
 			//fflush(stdout);
-			bytes = SendFile(socket, p_request, 
-					p_request->range,
-					p_request->real_path,
-					p_request->headers->range_values);
+			bytes = SendFile(socket, p_request);
 			final_status = bytes;
 		}
 		else if(p_request->bytes_to_send == 0)
@@ -644,7 +633,7 @@ void Request_Error(int num_error, struct client_request *cr,
 	else
 		s_request->headers->content_type = m_build_buffer("text/html");
 
-	M_METHOD_send_headers(cr->socket, s_request, s_log);
+	M_METHOD_send_headers(cr->socket, cr, s_request, s_log);
 
 	if(debug==1){
 		fdprintf(cr->socket, NO_CHUNKED, "%s", page_default);
@@ -764,8 +753,8 @@ struct request *alloc_request()
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
     request->headers->location = NULL;
-    request->headers->range_values[0]=-1;
-    request->headers->range_values[1]=-1;
+    request->headers->ranges[0]=-1;
+    request->headers->ranges[1]=-1;
 
     return (struct request *) request;
 }
@@ -793,7 +782,6 @@ void free_list_requests(struct client_request *cr)
         else{
             cr->request = NULL;
         }
-
         free_request(sr);
     }
     cr->request = NULL;
@@ -811,9 +799,12 @@ void free_request(struct request *sr)
             M_free(sr->headers->last_modified);
             /*
                 M_free(sr->headers->content_type);
-                 headers->content_type never it's allocated with malloc or something, so
-                we don't need to free it, the value has been freed before in M_METHOD_Get_and_Head(struct request *sr)
-                this BUG was reported by gentoo team.. thanks guys XD
+                 headers->content_type never it's allocated 
+		 with malloc or something, so we don't need 
+		 to free it, the value has been freed before 
+		 in M_METHOD_Get_and_Head(struct request *sr)
+                
+		 this BUG was reported by gentoo team.. thanks guys XD
             */
 
             M_free(sr->headers);
@@ -919,8 +910,7 @@ struct client_request *mk_remove_client_request(int socket)
 
 	request_handler = mk_sched_get_request_handler();
 	cr = request_handler;
-	//printf("\n ***** going to remove CR: %p, socket: %i", cr, socket);
-	//fflush(stdout);
+	
 	while(cr)
 	{
 		if(cr->socket == socket)

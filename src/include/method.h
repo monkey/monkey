@@ -23,7 +23,8 @@ int M_METHOD_Get_and_Head(struct client_request *cr,
 		struct request *s_request, int socket); 
 
 int M_METHOD_Post(struct client_request *cr, struct request *s_request);
-int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log);
+int M_METHOD_send_headers(int fd, struct client_request *cr,
+		struct request *sr, struct log_info *s_log);
 
 /* Get request range */
 int M_METHOD_get_range(char *header, int range_from_to[2]);

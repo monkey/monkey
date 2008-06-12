@@ -100,7 +100,8 @@ char *M_Get_POST_Vars(char *request, int index, char *strend)
 
 
 /* Send_Header , envia las cabeceras principales */
-int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
+int M_METHOD_send_headers(int fd, struct client_request *cr,
+		struct request *sr, struct log_info *s_log)
 {
 	int fd_status=0;
 	char *buffer=0;
@@ -238,11 +239,12 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	}
 	
 	/* Connection */
-	if(sh->pconnections_left!=0 && config->keep_alive==VAR_ON){
+
+	if(cr->counter_connections<config->max_keep_alive_request && config->keep_alive==VAR_ON){
 		buffer = m_build_buffer(
 			"Keep-Alive: timeout=%i, max=%i",
 			config->keep_alive_timeout, 
-			sh->pconnections_left);
+			config->max_keep_alive_request-cr->counter_connections);
 		mk_header_iov_add_line(iov, buffer, strlen(buffer),
 				MK_IOV_FREE_BUF);
 
@@ -274,13 +276,13 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 
 	/* Tamaño total de la informacion a enviar */
 	if((sh->content_length!=0 && 
-			(sh->range_values[0]>=0 || sh->range_values[1]>=0)) && 
+			(sh->ranges[0]>=0 || sh->ranges[1]>=0)) && 
 			config->resume==VAR_ON){
 		long int length;
 
         /* yyy- */
-	if(sh->range_values[0]>=0 && sh->range_values[1]==-1){
-		length = (unsigned int) ( sh->content_length - sh->range_values[0] );
+	if(sh->ranges[0]>=0 && sh->ranges[1]==-1){
+		length = (unsigned int) ( sh->content_length - sh->ranges[0] );
 		buffer = m_build_buffer( 
 				"%s %i", 
 				RH_CONTENT_LENGTH, 
@@ -290,15 +292,15 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		buffer = m_build_buffer(
 				"%s bytes %d-%d/%d",
 				RH_CONTENT_RANGE, 
-				sh->range_values[0],
+				sh->ranges[0],
 				(sh->content_length - 1), 
 				sh->content_length);
 		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 	}
 		
 	/* yyy-xxx */
-	if(sh->range_values[0]>=0 && sh->range_values[1]>=0){
-		length = (unsigned int) abs(sh->range_values[1] - sh->range_values[0]) + 1;
+	if(sh->ranges[0]>=0 && sh->ranges[1]>=0){
+		length = (unsigned int) abs(sh->ranges[1] - sh->ranges[0]) + 1;
 		buffer = m_build_buffer( 
 				"%s %d", 
 				RH_CONTENT_LENGTH, 
@@ -308,25 +310,25 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 		buffer = m_build_buffer( 
 				"%s bytes %d-%d/%d",
 				RH_CONTENT_RANGE, 
-				sh->range_values[0], 
-				sh->range_values[1],
+				sh->ranges[0], 
+				sh->ranges[1],
 				sh->content_length);
 		}
 		mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
 
 		/* -xxx */
-		if(sh->range_values[0]==-1 && sh->range_values[1]>=0){
+		if(sh->ranges[0]==-1 && sh->ranges[1]>=0){
 			buffer = m_build_buffer(
 					"%s %d", 
 					RH_CONTENT_LENGTH,
-					sh->range_values[1]);
+					sh->ranges[1]);
 			mk_header_iov_add_line(iov, buffer, strlen(buffer),
 					MK_IOV_FREE_BUF);
 
 			buffer = m_build_buffer(
 					"%s bytes %d-%d/%d",
 					RH_CONTENT_RANGE, 
-					(sh->content_length - sh->range_values[1]),
+					(sh->content_length - sh->ranges[1]),
 					(sh->content_length - 1),
 					sh->content_length);
 			mk_header_iov_add_line(iov, buffer, strlen(buffer),
@@ -362,56 +364,3 @@ int M_METHOD_send_headers(int fd, struct request *sr, struct log_info *s_log)
 	return 0;
 }
 
-int M_METHOD_get_range(char *header, int range_from_to[2])
-{
-	int eq_pos, sep_pos;
-	
-	range_from_to[0] = -1;
-	range_from_to[1] = -1;
-	
-	if(!header)
-		return -1;	
-	
-	if((eq_pos = str_search(header, "=", 1))<0)
-		return -1;	
-	
-	if(strncasecmp(header, "Bytes", eq_pos)!=0)
-		return -1;	
-	
-	if((sep_pos = str_search(header, "-", 1))<0)
-		return -1;
-	
-	/* =-xxx */
-	if(eq_pos+1 == sep_pos){
-		range_from_to[0] = -1;
-		range_from_to[1] = (unsigned long) atol(header + sep_pos + 1);
-		return 0;
-	}
-
-	/* =yyy-xxx */
-	if( (eq_pos+1 != sep_pos) && (strlen(header) > sep_pos + 1) ){
-		char *buffer_start=0, *buffer=0, *last=0;
-
-		buffer_start = buffer = M_strdup(header+eq_pos+1);
-		buffer = strtok_r(buffer, "-", &last);
-		range_from_to[0] = (unsigned long) atol(m_build_buffer("%d", atol(buffer)));
-		buffer = strtok_r(NULL, "\n", &last);
-		range_from_to[1] = (unsigned long) atol(m_build_buffer("%d", atol(buffer)));	
-		M_free(buffer_start);
-		return 0;
-	}
-	/* =yyy- */
-	if( (eq_pos+1 != sep_pos) && (strlen(header) == sep_pos + 1 ) ){
-		char *buffer_start=0, *buffer=0, *last=0;
-
-		buffer = M_strdup(header+eq_pos+1);
-		buffer = strtok_r(buffer, "-", &last);
-
-		range_from_to[0] = (unsigned long) atol(m_build_buffer("%d", atol(buffer)));
-		range_from_to[1] = -1;
-		M_free(buffer_start);
-		return 0;
-	}
-	
-	return -1;	
-}

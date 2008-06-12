@@ -44,39 +44,12 @@
 
 #include "monkey.h"
 
-int SendFile(int socket, struct request *request, 
-                char *header_range, char *pathfile, int ranges[2])
+int SendFile(int socket, struct request *sr)
 {
-	int size=0;
 	long int nbytes=0;
-	off_t offset=0;
-	long int off_size=0;
 
-	off_size = size;
-
-	if(config->resume==VAR_ON && header_range){
-		/* yyy- */
-		if(ranges[0]>=0 && ranges[1]==-1){
-			offset = ranges[0];
-			off_size = size - offset;
-		}
-
-		/* yyy-xxx */
-		if(ranges[0]>=0 && ranges[1]>=0){
-			offset = ranges[0];
-			off_size = labs(ranges[1]-ranges[0]) + 1;
-		}
-
-		/* -xxx */
-		if(ranges[0]==-1 && ranges[1]>=0){
-			offset = size - ranges[1];
-			off_size = ranges[1];
-		}
-	}
-
-	mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
-	nbytes = sendfile(socket, request->fd_file, &request->bytes_offset,
-			request->bytes_to_send);
+	nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
+			sr->bytes_to_send);
 
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
@@ -84,9 +57,9 @@ int SendFile(int socket, struct request *request,
 	}
 	else
 	{
-		request->bytes_to_send-=nbytes;
+		sr->bytes_to_send-=nbytes;
 	}
-	return request->bytes_to_send;
+	return sr->bytes_to_send;
 }
 
 /* It's a valid directory ? */

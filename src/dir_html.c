@@ -307,12 +307,12 @@ int GetDir(struct client_request *cr, struct request *sr)
 
 	if(sr->protocol==HTTP_PROTOCOL_11){
 		transfer_type=CHUNKED;
-		M_METHOD_send_headers(cr->socket, sr, sr->log);
+		M_METHOD_send_headers(cr->socket, cr, sr, sr->log);
 		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
 	}
 	else{
 		transfer_type=NO_CHUNKED;
-		M_METHOD_send_headers(cr->socket, sr, sr->log);
+		M_METHOD_send_headers(cr->socket, cr, sr, sr->log);
 		fdprintf(cr->socket, transfer_type, "\r\n");
 	}
 

@@ -369,7 +369,7 @@ LIBS	= -lpthread $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
 	header.o vhost.o config.o logfile.o signals.o \\
 	dir_html.o deny.o cgi.o user.o utils.o \\
-	process.o chars.o epoll.o scheduler.o \\
+	chars.o epoll.o scheduler.o \\
 	conn_switch.o http.o file.o socket.o $add_obj_mod
 
 all: modules ../bin/monkey

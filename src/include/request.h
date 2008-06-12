@@ -158,7 +158,7 @@ struct header_values {
 	int content_length;	
 	int cgi;
 	int pconnections_left;
-	int range_values[2];
+	int ranges[2];
 		
 	char *content_type;
 	char *last_modified;
