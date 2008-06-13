@@ -501,4 +501,3 @@ char *mk_strcasestr(char *heystack, char *needle)
 	return strcasestr(heystack, needle);
 }
 
-
