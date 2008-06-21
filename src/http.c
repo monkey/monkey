@@ -232,7 +232,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		}
 		else{
 			M_free(path_info);
-			sr->real_path = m_build_buffer_from_buffer(sr->real_path, "%s", index_file);
+			sr->real_path = 
+				m_build_buffer_from_buffer(sr->real_path, "%s", index_file);
+
 			path_info = mk_file_get_info(sr->real_path);
 		}
 	}

@@ -65,7 +65,7 @@ int mk_conn_switch_write(int socket)
 		 * close it.
 		 */
 
-		if(ka<0)
+		if(ka<0 || ret<0)
 		{
 			mk_remove_client_request(socket);
 			return -1;
