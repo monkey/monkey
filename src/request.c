@@ -175,8 +175,6 @@ int mk_handler_read(int socket)
 
 	if (bytes == -1) {
 		if (errno == EAGAIN) {
-			printf("\ngot EAGAIN");
-			fflush(stdout);
 			return 1;
 		} 
 		else{
@@ -408,27 +406,28 @@ int Process_Request_Header(struct request *sr)
 	uri_init = str_search(sr->body, " ",1) + 1;
 	uri_end = str_search(sr->body+uri_init, " ",1) + uri_init;
 
-    if(uri_end < uri_init)
-    {
-        return -1;
-    }
+	if(uri_end < uri_init)
+	{
+		return -1;
+	}
 	
 	/* Query String */
-    query_init = str_search(sr->body+uri_init, "?", 1);
-	if(query_init > 0 && query_init <= uri_end){
-        query_init+=uri_init+1;
-        query_end = uri_end;
-        uri_end = query_init - 1;
-        sr->query_string = m_copy_string(sr->body, query_init, query_end);
+	query_init = str_search(sr->body+uri_init, "?", 1);
+	if(query_init > 0 && query_init <= uri_end)
+	{
+		query_init+=uri_init+1;
+		query_end = uri_end;
+		uri_end = query_init - 1;
+		sr->query_string = m_copy_string(sr->body, query_init, query_end);
 	}
 	
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = (char *)m_copy_string(sr->body, uri_init, uri_end);
 
-    if(strlen(sr->uri)<1)
-    {
-        return -1;
-    }
+	if(strlen(sr->uri)<1)
+	{
+		return -1;
+	}
 
 	/* HTTP Version */
 	prot_init=str_search(sr->body+uri_init+1," ",1)+uri_init+2;
@@ -446,8 +445,13 @@ int Process_Request_Header(struct request *sr)
         	M_free(str_prot);
 	}
 
-    /* URI processed */
+	/* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
+	if(!sr->uri_processed)
+	{
+		sr->uri_processed = sr->uri;
+		sr->uri_twin = VAR_ON;
+	}
 
 	/* Host */ 
 	if(mk_strcasestr(sr->body, RH_HOST))
@@ -720,7 +724,8 @@ struct request *alloc_request()
 
     request->uri = NULL;
     request->uri_processed = NULL;
-    
+	request->uri_twin = VAR_OFF;
+
     request->accept = NULL;
     request->accept_language = NULL;
     request->accept_encoding = NULL;
@@ -768,7 +773,8 @@ void free_list_requests(struct client_request *cr)
     while(cr->request)
     {
         sr = before = cr->request;
-        while(sr->next)
+
+	while(sr->next)
         {
             sr = sr->next;
         }
@@ -818,7 +824,11 @@ void free_request(struct request *sr)
 
         M_free(sr->body);
         M_free(sr->uri);
-        M_free(sr->uri_processed);
+        
+	if(sr->uri_twin==VAR_OFF)
+	{
+		M_free(sr->uri_processed);
+	}
 
         M_free(sr->accept);
         M_free(sr->accept_language);

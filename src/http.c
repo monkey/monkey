@@ -130,7 +130,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	char *gmt_file_unix_time; // gmt time of server file (unix time)
 	struct file_info *path_info;
 
-	/* Peticion normal, no es a un Virtualhost */
+	/* Normal request default site */
 	if((strcmp(sr->uri_processed,"/"))==0)
 		sr->real_path = m_build_buffer("%s", 
 				sr->host_conf->documentroot);
@@ -152,6 +152,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		return -1;
 	}
 
+	/* Check symbolic link file */
 	if(path_info->is_link == MK_FILE_TRUE){
 		if(config->symlink==VAR_OFF){
 			sr->log->final_response=M_CLIENT_FORBIDDEN;
@@ -162,13 +163,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		else{
 			char linked_file[MAX_PATH];
 			readlink(sr->real_path, linked_file, MAX_PATH);
-			/*
+			/*		
 			if(Deny_Check(linked_file)==-1) {
 				sr->log->final_response=M_CLIENT_FORBIDDEN;
 				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
 				return -1;
 			}
 			*/
+			
 		}			
 	}
 	/* is it a valid directory ? */
@@ -312,9 +314,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		return -1;
 	}
 	
-
-
-	/* was if_modified_since sent by the  client ? */
+	/* counter connections */
 	sr->headers->pconnections_left = (int) 
 		(config->max_keep_alive_request - cr->counter_connections);
 
@@ -510,3 +510,4 @@ int mk_http_range_parse(struct request *sr)
 	
 	return -1;	
 }
+

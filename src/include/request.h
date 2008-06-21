@@ -102,6 +102,8 @@ struct request {
 	char *method_str;
 	char *uri;  /* original request */
 	char *uri_processed; /* processed request */
+	int uri_twin;
+
 	int protocol;
 	/*------------------*/
 

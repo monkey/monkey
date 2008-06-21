@@ -348,7 +348,7 @@ if test -z $CC ; then
 	CC="gcc"
 fi
 if test -z $STRIP ; then
-    STRIP="strip -x --remove-section=.comment"
+    STRIP="strip "
 fi
 
 ##### Internal options ####

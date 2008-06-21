@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	mod_mysql_init();
 #endif
 
-	//SetUIDGID(); 	/* Changing user */
+	SetUIDGID(); 	/* Changing user */
 
 	num_threads = 3;
 	sched_list = NULL;

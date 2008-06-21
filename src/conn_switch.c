@@ -58,11 +58,13 @@ int mk_conn_switch_write(int socket)
 
 	if(ret <= 0)
 	{
+		free_list_requests(cr);
+	
 		/* We need to ask to http_keepalive if this 
 		 * connection can continue working or we must 
 		 * close it.
 		 */
-		free_list_requests(cr);
+
 		if(ka<0)
 		{
 			mk_remove_client_request(socket);

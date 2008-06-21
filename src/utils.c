@@ -76,11 +76,13 @@ int CheckDir(char *pathfile)
 	return 0;
 }
 
-/* It's a normal file ? */
 int CheckFile(char *pathfile)
 {
 	struct stat path;
-	
+
+	printf("\ncheck file?");
+	fflush(stdout);
+
 	if(stat(pathfile,&path)==-1)
 		return -1;
 		
@@ -249,8 +251,6 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 
 	new_buffer = (char *)M_malloc(256);
 	if(!new_buffer){
-		printf("\nret NULL: 1");
-		fflush(stdout);
 		return NULL;
 	}
 	alloc = 256;
@@ -298,7 +298,7 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 {
 	unsigned int size, bytes;
 	char *buffer=0;
-	
+
 	size = (unsigned int) (pos_end - pos_init ) + 1;
 	if(size<=2) size=4;
 
@@ -308,14 +308,18 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 		return NULL;
 	}
 	
-	if(pos_end>strlen(string) || (pos_init > pos_end)){
+	if(pos_init > pos_end)
+	{
 		return NULL;
 	}
+	/*
+	if(pos_end>strlen(string) || (pos_init > pos_end)){
+		return NULL;
+	}*/
 	
 	bytes =  pos_end - pos_init;
 	strncpy(buffer, string+pos_init, bytes);
 	buffer[bytes]='\0';
-
 	return (char *) buffer;	
 }
 
@@ -337,35 +341,54 @@ int set_daemon()
 	return 0;
 }
 
-/* Retorna la posicion de search en string */
+/* Get position of a substring.
+ * Original version taken from google, modified in order
+ * to send the position instead the substring.
+ */
 int str_search(char *string, char *search, int length_cmp)
 {
-	long int length;
-	long i;
-	
-	if(!string || !search)
-		return -1;
-		
-	length = strlen(string);
+	char *p, *startn = 0, *np = 0;
+	int idx=-1, loop=0;
 
-	for(i=0; string[i]!='\0'  &&  i<length; i++){
-		if(string[i]==search[0]){
-			if(strncasecmp(string+i, search, length_cmp)==0)
-				return i;
+	for (p = string; *p; p++) {
+		if (np) {
+			if (toupper(*p) == toupper(*np)) {
+				if (!*++np)
+				{	
+					return idx;
+				}
+			} else
+			{
+				np = 0;
+				idx = -1;
+			}
+		} else if (toupper(*p) == toupper(*search)) {
+			np = search + 1;
+			startn = p;
+			idx = loop;
+			if(!*np)
+			{
+				return idx;
+			}
 		}
-	}
 
-	return -1;
+		loop++;
+	}
+	return idx;
 }
 
 char *get_real_string(char *req_uri){
 	
-	int length=0, hex_result;
+	int length=0, hex_result, auxchar;
 	int new_i=0, i=0;
 	char *buffer=0, hex[3];
 
-	length=strlen(req_uri);
+	if((i = str_search(req_uri, "%", 1))<0)
+	{
+		return NULL;
+	}
 
+	length=strlen(req_uri);
 	buffer=M_malloc(length + 3);
 
 	do {
@@ -380,7 +403,6 @@ char *get_real_string(char *req_uri){
 				new_i++;
 			}
 			else {
-				int auxchar;
 				if((auxchar=get_char(hex_result))!=-1){
 					buffer[new_i]=get_char(hex_result);
 					i=i+3;
@@ -409,10 +431,8 @@ void *M_malloc(size_t size)
 {
 	char *aux=0;
 
-	//size++;
 	if((aux=malloc(size))==NULL){
 		perror("malloc");
-		//pthread_kill(pthread_self(), SIGPIPE);
 		return NULL;						
 	}
 	memset(aux, '\0', size);
@@ -443,9 +463,7 @@ void *M_realloc(void* ptr, size_t size)
 	char *aux=0;
 
 	if((aux=realloc(ptr, size))==NULL){
-		printf("\n** Monkey ERROR");
 		perror("realloc");
-		pthread_kill(pthread_self(), SIGPIPE);
 		return NULL;						
 	}
 	return (void *) aux;
