@@ -403,8 +403,8 @@ int Process_Request_Header(struct request *sr)
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
-	uri_init = str_search(sr->body, " ",1) + 1;
-	uri_end = str_search(sr->body+uri_init, " ",1) + uri_init;
+	uri_init = mk_strsearch(sr->body, " ") + 1;
+	uri_end = mk_strsearch(sr->body+uri_init, " ") + uri_init;
 
 	if(uri_end < uri_init)
 	{
@@ -412,7 +412,7 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Query String */
-	query_init = str_search(sr->body+uri_init, "?", 1);
+	query_init = mk_strsearch(sr->body+uri_init, "?");
 	if(query_init > 0 && query_init <= uri_end)
 	{
 		query_init+=uri_init+1;
@@ -430,13 +430,13 @@ int Process_Request_Header(struct request *sr)
 	}
 
 	/* HTTP Version */
-	prot_init=str_search(sr->body+uri_init+1," ",1)+uri_init+2;
+	prot_init=mk_strsearch(sr->body+uri_init+1," ")+uri_init+2;
 
-	if(str_search(sr->body, "\r\n",2)>0){
-		prot_end = str_search(sr->body, "\r\n",2);
+	if(mk_strsearch(sr->body, "\r\n")>0){
+		prot_end = mk_strsearch(sr->body, "\r\n");
 	}
 	else{
-		prot_end = str_search(sr->body, "\n",1);
+		prot_end = mk_strsearch(sr->body, "\n");
 	}
 	
 	if(prot_end!=prot_init && prot_end>0){
@@ -463,7 +463,7 @@ int Process_Request_Header(struct request *sr)
 			int pos_sep=0;
 			char *port=0;
 
-			pos_sep = str_search(tmp, ":",1);
+			pos_sep = mk_strsearch(tmp, ":");
 			sr->host = m_copy_string(tmp, 0, pos_sep);
 			port = m_copy_string(tmp, pos_sep, strlen(tmp));
 			sr->port=atoi(port);
@@ -526,7 +526,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 		pos_init_var++;
 	}
 
-	pos_end_var = str_search((char *)t, "\n", 1) - 1;
+	pos_end_var = mk_strsearch((char *)t, "\n") - 1;
 	if(pos_end_var<0)
 	{
 		pos_end_var = strlen(t);

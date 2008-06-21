@@ -40,7 +40,6 @@ int	ExecFile(char *pathfile);
 int	set_daemon();
 int	fdprintf(int fd, int type, const char *format, ...);
 int	fdchunked(int fd, char *data, int length);
-int	str_search(char *string, char *search, int length_cmp);
 int	hex2int(char *pChars);
 char *strstr2(char *s, char *t);
 
@@ -70,6 +69,6 @@ int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 char *remove_space(char *buf);
 
-
+int mk_strsearch(char *string, char *search);
 char *mk_strcasestr(char *heystack, char *needle);
 

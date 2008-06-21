@@ -71,7 +71,7 @@ int mk_http_method_get(char *body)
 	int int_method, pos = 0, max_length_method = 5;
 	char *str_method;
 	
-	pos = str_search(body, " ",1);
+	pos = mk_strsearch(body, " ");
 	if(pos<=2 || pos>=max_length_method){
 		return -1;	
 	}
@@ -457,13 +457,13 @@ int mk_http_range_parse(struct request *sr)
 	if(!sr->range)
 		return -1;	
 
-	if((eq_pos = str_search(sr->range, "=", 1))<0)
+	if((eq_pos = mk_strsearch(sr->range, "="))<0)
 		return -1;	
 
 	if(strncasecmp(sr->range, "Bytes", eq_pos)!=0)
 		return -1;	
 	
-	if((sep_pos = str_search(sr->range, "-", 1))<0)
+	if((sep_pos = mk_strsearch(sr->range, "-"))<0)
 		return -1;
 	
 	len = strlen(sr->range);

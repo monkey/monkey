@@ -202,10 +202,10 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 		}
 	}while(bytes>0);
 	
-	offset=str_search(data,"\r\n\r\n",4);
+	offset=mk_strsearch(data,"\r\n\r\n");
 	spaces=4;
 	if(offset==-1){
-		if((offset=str_search(data,"\n\n",2))!=-1)
+		if((offset=mk_strsearch(data,"\n\n"))!=-1)
 			spaces=2;
 		else
 			return -1;		

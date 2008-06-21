@@ -312,10 +312,6 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 	{
 		return NULL;
 	}
-	/*
-	if(pos_end>strlen(string) || (pos_init > pos_end)){
-		return NULL;
-	}*/
 	
 	bytes =  pos_end - pos_init;
 	strncpy(buffer, string+pos_init, bytes);
@@ -323,18 +319,18 @@ char *m_copy_string(const char *string, int pos_init, int pos_end)
 	return (char *) buffer;	
 }
 
-/* Rutina para pasar Monkey a daemon */
+/* run monkey as daemon, evil monkey! >:) */
 int set_daemon()
 {
 	 switch (fork())
   	  {
 		case 0 : break;
-		case -1: exit(1); break;	/* Error */
-		default: exit(0);			/* Exito */
+		case -1: exit(1); break; /* Error */
+		default: exit(0); /* Success */
 	  };
 
-	  setsid();			/* Crear una nueva sesion */
-	  fclose(stdin);		/* Cerrar las salidas en pantallas */
+	  setsid(); /* Create new session */
+	  fclose(stdin); /* close screen outputs */
 	  fclose(stderr);
 	  fclose(stdout);
 
@@ -345,7 +341,7 @@ int set_daemon()
  * Original version taken from google, modified in order
  * to send the position instead the substring.
  */
-int str_search(char *string, char *search, int length_cmp)
+int mk_strsearch(char *string, char *search)
 {
 	char *p, *startn = 0, *np = 0;
 	int idx=-1, loop=0;
@@ -383,7 +379,7 @@ char *get_real_string(char *req_uri){
 	int new_i=0, i=0;
 	char *buffer=0, hex[3];
 
-	if((i = str_search(req_uri, "%", 1))<0)
+	if((i = mk_strsearch(req_uri, "%"))<0)
 	{
 		return NULL;
 	}
@@ -450,7 +446,6 @@ char *M_strdup(const char *s)
 	size = strlen(s)+1;	
 	if((aux=malloc(size))==NULL){
 		perror("strdup");
-		pthread_kill(pthread_self(), SIGPIPE);
 		return NULL;						
 	}
 
@@ -478,7 +473,6 @@ void M_free(void *ptr)
 
 char *remove_space(char *buf)
 {
-
     size_t bufsize;
     int new_i=0, i, len, spaces=0;
     char *new_buf=0;

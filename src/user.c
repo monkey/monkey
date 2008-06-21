@@ -39,7 +39,7 @@ int User_main(struct client_request *cr, struct request *sr)
 	
 	user=M_malloc(strlen(sr->uri_processed) + 1);
 	offset=strlen(USER_HOME_STRING);	
-	limit=str_search(sr->uri_processed+offset, "/",1);
+	limit=mk_strsearch(sr->uri_processed+offset, "/");
 
 	if(limit==-1)
 		limit=strlen(sr->uri_processed) - offset ;

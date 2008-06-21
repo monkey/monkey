@@ -50,7 +50,7 @@ struct file_info *mk_file_get_info(char *path)
 	f_info->last_modification = f.st_mtime;
 
 	/* is it a symbolic link? */
-	if((S_ISLNK(f.st_mode))){
+	if(f.st_mode & S_IFLNK){
 		f_info->is_link = MK_FILE_TRUE;	
 	}
 
