@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "monkey.h"
 #include "file.h"
@@ -30,48 +31,58 @@ struct file_info *mk_file_get_info(char *path)
 	uid_t euid;
 
 	struct file_info *f_info;
-	struct stat f;
+	struct stat f, target;
 
-	if(stat(path, &f)==-1)
+	/* Stat right resource */
+	if(lstat(path, &f)==-1)
 	{
 		return NULL;
+	}
+
+	f_info = M_malloc(sizeof(struct file_info));
+	f_info->is_link = MK_FILE_FALSE;
+	f_info->is_directory = MK_FILE_FALSE;
+	f_info->exec_access = MK_FILE_FALSE;
+	f_info->read_access = MK_FILE_FALSE;
+
+	if(S_ISLNK(f.st_mode))
+	{
+		f_info->is_link = MK_FILE_TRUE;
+		if(stat(path, &target)==-1)
+		{
+			return NULL;
+		}
+	}
+	else{
+		target = f;
+	}
+
+	f_info->size = target.st_size;
+	f_info->last_modification = target.st_mtime;
+	
+
+
+	if(S_ISDIR(target.st_mode))
+	{
+		f_info->is_directory = MK_FILE_TRUE;
 	}
 
 	/* Getting current user euid/egid */
 	euid = geteuid();
 	egid = getegid();
 
-	f_info = M_malloc(sizeof(struct file_info));
-	f_info->size = f.st_size;
-	f_info->is_link = MK_FILE_FALSE;
-	f_info->is_directory = MK_FILE_FALSE;
-	f_info->exec_access = MK_FILE_FALSE;
-	f_info->read_access = MK_FILE_FALSE;
-	f_info->last_modification = f.st_mtime;
-
-	/* is it a symbolic link? */
-	if(f.st_mode & S_IFLNK){
-		f_info->is_link = MK_FILE_TRUE;	
-	}
-
-	/* is directory ? */
-	if(f.st_mode & S_IFDIR)
-	{
-		f_info->is_directory = MK_FILE_TRUE;
-	}
-
 	/* Checking read access */
-	if( (f.st_mode & S_IRUSR && f.st_uid == euid) || 
-			(f.st_mode & S_IRGRP && f.st_gid == egid) || 
-			(f.st_mode & S_IROTH))
+	if( (target.st_mode & S_IRUSR && target.st_uid == euid) || 
+			(target.st_mode & S_IRGRP && target.st_gid == egid) ||
+			(target.st_mode & S_IROTH))
 	{
 		f_info->read_access = MK_FILE_TRUE;
 	}
 
 	/* Checking execution access */
-	if( (f.st_mode & S_IXUSR && f.st_uid == euid) ||
-			(f.st_mode & S_IXGRP && f.st_gid == egid) ||
-			(f.st_mode & S_IXOTH))
+	if( (target.st_mode & S_IXUSR && target.st_uid == euid) ||
+			(target.st_mode & S_IXGRP && target.st_gid == egid) ||
+			(target.st_mode & S_IXOTH))
 	{
 		f_info->exec_access = MK_FILE_TRUE;
 

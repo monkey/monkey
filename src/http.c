@@ -401,6 +401,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
  */
 int mk_http_keepalive_check(int socket, struct client_request *cr)
 {
+	if(!cr->request)
+	{
+		return -1;
+	}
+
 	if(config->keep_alive==VAR_OFF || cr->request->keep_alive==VAR_OFF)
 	{
         	return -1;

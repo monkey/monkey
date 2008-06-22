@@ -241,16 +241,11 @@ int mk_handler_write(int socket, struct client_request *cr)
 		/* Request not processed */
 		if(p_request->bytes_to_send < 0)
 		{
-			//printf("\nREQUEST::going process");
-			//fflush(stdout);
-
 			final_status = Process_Request(cr, p_request);
 		}
 		/* Request with data to send */
 		else if(p_request->bytes_to_send>0)
 		{
-			//printf("\nREQUEST::trying to send data :/");
-			//fflush(stdout);
 			bytes = SendFile(socket, p_request);
 			final_status = bytes;
 		}
@@ -279,16 +274,16 @@ int mk_handler_write(int socket, struct client_request *cr)
 
 int Process_Request(struct client_request *cr, struct request *s_request)
 {
-    int status=0;
-    struct host *host;
+	int status=0;
+	struct host *host;
 
-    status = Process_Request_Header(s_request);
-    if(status<0)
-    {
-        return EXIT_NORMAL;
-    }
+	status = Process_Request_Header(s_request);
+	if(status<0)
+	{
+		return EXIT_NORMAL;
+	}
 
-    s_request->user_home=VAR_OFF;
+	s_request->user_home=VAR_OFF;
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
@@ -371,20 +366,14 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	}
 
 	/* 
-	 * FIXME
 	 * Handling method requested */
-	if(s_request->method==HTTP_METHOD_GET || s_request->method==HTTP_METHOD_HEAD)
+	if(s_request->method==HTTP_METHOD_POST)
 	{
-		status=mk_http_init(cr, s_request);
-	}
-	else {
-		if(s_request->method==HTTP_METHOD_POST){
-			if((status=M_METHOD_Post(cr, s_request))==-1){
-				return status;
-			}
-	            status = mk_http_init(cr, s_request);
+		if((status=M_METHOD_Post(cr, s_request))==-1){
+			return status;
 		}
 	}
+	status = mk_http_init(cr, s_request);
 
 	return status;
 }
@@ -438,7 +427,7 @@ int Process_Request_Header(struct request *sr)
 	else{
 		prot_end = mk_strsearch(sr->body, "\n");
 	}
-	
+
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = m_copy_string(sr->body, prot_init, prot_end);
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
