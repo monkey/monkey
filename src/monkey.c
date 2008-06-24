@@ -23,7 +23,6 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <resolv.h>
@@ -31,6 +30,19 @@
 #include "monkey.h"
 #include "socket.h"
 #include <sys/time.h>
+
+#include <string.h>
+
+#include "epoll.h"
+#include "scheduler.h"
+#include "user.h"
+#include "info.h"
+#include "utils.h"
+#include "logfile.h"
+#include "signals.h"
+#include "config.h"
+#include "modules.h"
+#include "memory.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -97,7 +109,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in local_sockaddr_in;
 	struct sched_list_node *sched;
 	
-	config = M_malloc(sizeof(struct server_config));
+	config = mk_mem_malloc(sizeof(struct server_config));
 	config->file_config=0;
 			
 	opterr = 0;

@@ -36,6 +36,11 @@
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
+#include "str.h"
+#include "memory.h"
+#include "utils.h"
+#include "config.h"
+#include "method.h"
 
 #define  DIRECTORIO		  "     -"
 
@@ -97,9 +102,9 @@ char *check_string(char *str)
 		if(*s==' ') cnt++;
 
 	if(cnt==0)
-		return M_strdup(str);
+		return mk_string_dup(str);
 
-	final_buffer=M_malloc(strlen(str)+1+(cnt*3));
+	final_buffer=mk_mem_malloc(strlen(str)+1+(cnt*3));
 
 	for(f=final_buffer,s=str;*s!='\0';++s) {
 		if (*s==' ') {
@@ -120,7 +125,7 @@ char *cut_string(char *str)
 	char *s;
 
 	if ((len = strlen(str)) > MAX_LEN_STR) {
-		s=M_malloc(MAX_LEN_STR);
+		s=mk_mem_malloc(MAX_LEN_STR);
 		k = MAX_LEN_STR/2 - 2;
 		for (i=0; i<k; i++)
 			s[i] = str[i];
@@ -138,7 +143,7 @@ char *cut_string(char *str)
 		return (char *) s;
 	}
 
-	return M_strdup(str);
+	return mk_string_dup(str);
 }
 
 /* Agregar un elemento del directorio */
@@ -159,7 +164,7 @@ struct f_list *add_element(struct f_list *object, char *string,
 
 	if ((*count) != 0){              /* Aumentar el tama�o del array */
 		if ((*count) >= (*max)) {
-			bak = (struct f_list *) M_realloc(object, (GROW+(*max)) * sizeof(struct f_list));
+			bak = (struct f_list *) mk_mem_realloc(object, (GROW+(*max)) * sizeof(struct f_list));
 	
 			(*max)+= GROW;
 			object = bak;
@@ -251,15 +256,15 @@ int GetDir(struct client_request *cr, struct request *sr)
 	if ((dir = opendir(sr->real_path)) == NULL)
 		return -1;
 
-	if ((file_list = (struct f_list *) M_malloc(sizeof(struct f_list))) == NULL)
+	if ((file_list = (struct f_list *) mk_mem_malloc(sizeof(struct f_list))) == NULL)
 	{
 		closedir(dir);
 		return -1;
 	}
 
-	if ((buffer = (struct stat *) M_malloc(sizeof(struct stat))) == NULL)
+	if ((buffer = (struct stat *) mk_mem_malloc(sizeof(struct stat))) == NULL)
 	{
-		M_free(file_list);
+		mk_mem_free(file_list);
 		closedir(dir);
 		return -1;
 	}
@@ -284,18 +289,18 @@ int GetDir(struct client_request *cr, struct request *sr)
 		file_list = (struct f_list *) add_element(file_list, ent->d_name, &count_file, &max_file,
                                                       buffer);
 		if (!file_list) {
-			M_free(path);
-			M_free(buffer);
+			mk_mem_free(path);
+			mk_mem_free(buffer);
 			closedir(dir);
 			return -1;
 		}
-		M_free(path);
+		mk_mem_free(path);
  	}
 
 	/* Ordenar el arreglo de archivos y directorios */
 	shell(file_list, count_file);
 
-    hd = M_malloc(sizeof(struct header_values));
+    hd = mk_mem_malloc(sizeof(struct header_values));
 	hd->status = M_HTTP_OK;
 	hd->content_length = 0;
 	hd->content_type = m_build_buffer("text/html");
@@ -331,7 +336,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 		if(header_file_buffer){
 			content_buffer = m_build_buffer_from_buffer(content_buffer, "%s", header_file_buffer);
 		}
-		M_free(header_file_buffer);
+		mk_mem_free(header_file_buffer);
 	}
 	
 	content_buffer = m_build_buffer_from_buffer(content_buffer,
@@ -349,8 +354,8 @@ int GetDir(struct client_request *cr, struct request *sr)
             file_list[i].ft_modif, file_list[i].size,
             c_str, x_str);
 
-		M_free(c_str);
-		M_free(x_str);
+		mk_mem_free(c_str);
+		mk_mem_free(x_str);
 	}
 
 
@@ -364,7 +369,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 		if(footer_file_buffer){
 			content_buffer = m_build_buffer_from_buffer(content_buffer, "%s<HR>", footer_file_buffer);
 		}
-		M_free(footer_file_buffer);
+		mk_mem_free(footer_file_buffer);
 	}
 	
 	content_buffer = m_build_buffer_from_buffer(content_buffer,"<ADDRESS>%s</ADDRESS></BODY></HTML>\r\n\r\n", sr->host_conf->host_signature);
@@ -374,11 +379,11 @@ int GetDir(struct client_request *cr, struct request *sr)
 	if(transfer_type==CHUNKED)
 		fdprintf(cr->socket, CHUNKED, "");
 		
-	M_free(file_list);
-	M_free(buffer);
-	M_free(real_header_file);
-	M_free(real_footer_file);
-	M_free(content_buffer);
+	mk_mem_free(file_list);
+	mk_mem_free(buffer);
+	mk_mem_free(real_header_file);
+	mk_mem_free(real_footer_file);
+	mk_mem_free(content_buffer);
 	closedir(dir);
 
 	return 0;

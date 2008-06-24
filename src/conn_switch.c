@@ -20,6 +20,9 @@
 #include "monkey.h"
 #include "http.h"
 #include "conn_switch.h"
+#include "scheduler.h"
+#include "epoll.h"
+
 #include <string.h>
 #include <stdio.h>
 

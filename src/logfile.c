@@ -29,6 +29,10 @@
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
+#include "logfile.h"
+#include "memory.h"
+#include "config.h"
+#include "user.h"
 
 void *start_worker_logger(void *args)
 {
@@ -62,7 +66,7 @@ int logger_add_request(struct log_info *log)
 
     pthread_mutex_lock(&mutex_log_queue);
 
-    new = M_malloc(sizeof(struct log_queue));
+    new = mk_mem_malloc(sizeof(struct log_queue));
     new->info = log;
     new->next = NULL;
     

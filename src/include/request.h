@@ -19,6 +19,9 @@
 
 /* request.c */
 
+#ifndef MK_REQUEST_H
+#define MK_REQUEST_H
+
 /* Handle index file names: index.* */
 #define MAX_INDEX_NOMBRE 50
 struct indexfile {
@@ -191,3 +194,4 @@ struct client_request *mk_remove_client_request(int socket);
 int mk_handler_read(int socket);
 int mk_handler_write(int socket, struct client_request *cr);
 
+#endif

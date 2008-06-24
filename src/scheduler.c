@@ -26,13 +26,17 @@
 
 #include "monkey.h"
 #include "conn_switch.h"
+#include "scheduler.h"
+#include "memory.h"
+#include "epoll.h"
+#include "request.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
 {
 	struct sched_list_node *sr, *aux;
 
-	sr = M_malloc(sizeof(struct sched_list_node)); 
+	sr = mk_mem_malloc(sizeof(struct sched_list_node)); 
 	sr->tid = tid;
 	sr->epoll_fd = efd;
 	sr->request_handler = NULL;
@@ -78,7 +82,7 @@ int mk_sched_launch_thread(int max_events)
 	pthread_mutex_init(&mutex_wait_register,(pthread_mutexattr_t *) NULL);
 	pthread_mutex_lock(&mutex_wait_register);
 
-	thconf = M_malloc(sizeof(sched_thread_conf));
+	thconf = mk_mem_malloc(sizeof(sched_thread_conf));
 	thconf->epoll_fd = efd;
 	thconf->max_events = max_events;
 

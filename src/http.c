@@ -26,9 +26,19 @@
 #include <fcntl.h>
 
 #include "monkey.h"
+#include "memory.h"
 #include "http.h"
 #include "http_status.h"
 #include "file.h"
+#include "utils.h"
+#include "config.h"
+#include "cgi.h"
+#include "str.h"
+#include "method.h"
+#include "socket.h"
+#include "mimetype.h"
+#include "dir_html.h"
+#include "logfile.h"
 
 int mk_http_method_check(char *method)
 {
@@ -71,17 +81,17 @@ int mk_http_method_get(char *body)
 	int int_method, pos = 0, max_length_method = 5;
 	char *str_method;
 	
-	pos = mk_strsearch(body, " ");
+	pos = mk_string_search(body, " ");
 	if(pos<=2 || pos>=max_length_method){
 		return -1;	
 	}
 	
-	str_method = M_malloc(max_length_method);
+	str_method = mk_mem_malloc(max_length_method);
 	strncpy(str_method, body, pos);
 	str_method[pos]='\0';
 
 	int_method = mk_http_method_check(str_method);
-	M_free(str_method);
+	mk_mem_free(str_method);
 	
 	return int_method;
 }
@@ -203,8 +213,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 			M_METHOD_send_headers(cr->socket, cr, sr, sr->log);
 
-			M_free(location);
-			M_free(real_location);
+			mk_mem_free(location);
+			mk_mem_free(real_location);
 			sr->headers->location=NULL;
 			return 0;
 		}
@@ -231,7 +241,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			}
 		}
 		else{
-			M_free(path_info);
+			mk_mem_free(path_info);
 			sr->real_path = 
 				m_build_buffer_from_buffer(sr->real_path, "%s", index_file);
 
@@ -273,7 +283,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			}
 			*/
 			sr->log->final_response=M_HTTP_OK;
-			sr->script_filename=M_strdup(sr->real_path);
+			sr->script_filename=mk_string_dup(sr->real_path);
 
 			arg_script[0] = mime_info[1];
 			arg_script[1] = sr->script_filename;
@@ -305,7 +315,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			}
 
 			Mimetype_free(mime_info);
-			M_free(fcgi);
+			mk_mem_free(fcgi);
 			return cgi_status;
 		}
 	}
@@ -328,13 +338,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 		gmt_file_unix_time = PutDate_string((time_t) path_info->last_modification);
 		date_file_server = PutDate_unix(gmt_file_unix_time);
-		M_free(gmt_file_unix_time);
+		mk_mem_free(gmt_file_unix_time);
 
 		if( (date_file_server <= date_client) && (date_client > 0) ){
 			sr->headers->status = M_NOT_MODIFIED;
 			M_METHOD_send_headers(cr->socket, cr, sr, sr->log);	
 			Mimetype_free(mime_info);
-			M_free(path_info);
+			mk_mem_free(path_info);
 			return 0;
 		}
 	}
@@ -389,7 +399,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	}
 
 	Mimetype_free(mime_info);
-	M_free(path_info);
+	mk_mem_free(path_info);
 	sr->headers->content_type=NULL;
 
 	return bytes;
@@ -464,13 +474,13 @@ int mk_http_range_parse(struct request *sr)
 	if(!sr->range)
 		return -1;	
 
-	if((eq_pos = mk_strsearch(sr->range, "="))<0)
+	if((eq_pos = mk_string_search(sr->range, "="))<0)
 		return -1;	
 
 	if(strncasecmp(sr->range, "Bytes", eq_pos)!=0)
 		return -1;	
 	
-	if((sep_pos = mk_strsearch(sr->range, "-"))<0)
+	if((sep_pos = mk_string_search(sr->range, "-"))<0)
 		return -1;
 	
 	len = strlen(sr->range);
@@ -490,13 +500,13 @@ int mk_http_range_parse(struct request *sr)
 	/* =yyy-xxx */
 	if( (eq_pos+1 != sep_pos) && (len > sep_pos + 1))
 	{
-		buffer = m_copy_string(sr->range, eq_pos+1, sep_pos);
+		buffer = mk_string_copy_substr(sr->range, eq_pos+1, sep_pos);
 		sr->headers->ranges[0] = (unsigned long) atol(buffer);
-		M_free(buffer);
+		mk_mem_free(buffer);
 
-		buffer = m_copy_string(sr->range, sep_pos+1, len);
+		buffer = mk_string_copy_substr(sr->range, sep_pos+1, len);
 		sr->headers->ranges[1] = (unsigned long) atol(buffer);
-		M_free(buffer);
+		mk_mem_free(buffer);
 		
 		if(sr->headers->ranges[1]<=0 || 
 				sr->headers->ranges[0]>sr->headers->ranges[1])
@@ -509,9 +519,9 @@ int mk_http_range_parse(struct request *sr)
 	/* =yyy- */
 	if( (eq_pos+1 != sep_pos) && (len == sep_pos + 1))
 	{
-		buffer = m_copy_string(sr->range, eq_pos+1, len);
+		buffer = mk_string_copy_substr(sr->range, eq_pos+1, len);
 		sr->headers->ranges[0] = (unsigned long) atol(buffer);
-		M_free(buffer);
+		mk_mem_free(buffer);
 		return 0;
 	}
 	

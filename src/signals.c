@@ -26,7 +26,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
 #include "monkey.h"
+#include "signals.h"
+#include "utils.h"
+#include "logfile.h"
+#include "chars.h"
 
 /* (by Daniel R. Ome) */
 void signal_handler(int signo)

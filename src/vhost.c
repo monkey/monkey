@@ -26,21 +26,24 @@
 #include <string.h>
 
 #include "monkey.h"
- 
+#include "memory.h"
+#include "str.h"
+#include "config.h"
+
 int VHOST_Config_Add(char *vhost_servername, char  *vhost_documentroot,
 									char *vhost_cgi_alias, char  *vhost_cgi_path, int getdir)
 {
 
 	struct host *new_vhost, *aux_vhost;
 	
-	new_vhost=M_malloc(sizeof(struct host));
+	new_vhost = mk_mem_malloc(sizeof(struct host));
 
-	new_vhost->servername = M_strdup(vhost_servername);
-	new_vhost->documentroot = M_strdup(vhost_documentroot);
+	new_vhost->servername = mk_string_dup(vhost_servername);
+	new_vhost->documentroot = mk_string_dup(vhost_documentroot);
 
 	if(vhost_cgi_alias && vhost_cgi_path){
-		new_vhost->cgi_alias = M_strdup(vhost_cgi_alias);
-		new_vhost->cgi_path = M_strdup(vhost_cgi_path);
+		new_vhost->cgi_alias = mk_string_dup(vhost_cgi_alias);
+		new_vhost->cgi_path = mk_string_dup(vhost_cgi_path);
 	}
 	else{
 		new_vhost->cgi_alias=NULL;

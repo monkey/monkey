@@ -28,6 +28,14 @@
 #include <string.h>
 
 #include "monkey.h"
+#include "config.h"
+#include "str.h"
+#include "utils.h"
+#include "mimetype.h"
+#include "info.h"
+#include "logfile.h"
+#include "deny.h"
+#include "memory.h"
 
 /* Read configuration files */
 void M_Config_read_files(char *path_conf, char *file_conf)
@@ -38,7 +46,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 	FILE *configfile;
 	struct stat checkdir;
 
-	config->serverconf = M_strdup(path_conf);
+	config->serverconf = mk_string_dup(path_conf);
 	
 	if(stat(config->serverconf, &checkdir)==-1){
 		fprintf(stderr, "ERROR: Invalid path to configuration files.");
@@ -213,7 +221,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		}
 	}
 	fclose(configfile);
-	M_free(path);
+	mk_mem_free(path);
     M_Config_Read_Hosts(path_conf);
 }
 
@@ -227,7 +235,7 @@ void M_Config_Read_Hosts(char *path)
 
     buf = m_build_buffer("%s/sites/default", path);
     config->hosts = M_Config_Get_Host(buf);
-    M_free(buf);
+    mk_mem_free(buf);
 
     if(!config->hosts)
     {
@@ -252,7 +260,7 @@ void M_Config_Read_Hosts(char *path)
         file = m_build_buffer("%s/sites/%s", path, ent->d_name);
 
         new_host = (struct host *) M_Config_Get_Host(file);
-        M_free(file);
+        mk_mem_free(file);
         if(!new_host)
         {
             continue;
@@ -319,8 +327,8 @@ struct host *M_Config_Get_Host(char *path)
         return NULL;
     }
 
-    host = M_malloc(sizeof(struct host));
-    host->file = M_strdup(path);
+    host = mk_mem_malloc(sizeof(struct host));
+    host->file = mk_string_dup(path);
 
     while(fgets(buffer,255,configfile)) {
         int len;
@@ -346,7 +354,7 @@ struct host *M_Config_Get_Host(char *path)
 
         /* Ubicacion directorio servidor */
         if(strcasecmp(variable,"DocumentRoot")==0) {
-            host->documentroot=M_strdup(value);
+            host->documentroot=mk_string_dup(value);
             if(stat(host->documentroot, &checkdir)==-1) {
                 fprintf(stderr, "ERROR: Invalid path to Server_root in %s.", path); 
                 exit(1);
@@ -378,12 +386,12 @@ struct host *M_Config_Get_Host(char *path)
         if(strcasecmp(variable,"ScriptAlias")==0)
         {
             if(!value) M_Config_print_error_msg("ScriptAlias", path);
-            host->scriptalias = (char **) M_malloc(sizeof(char *) * 3);
-            host->scriptalias[0]=M_strdup(value);
+            host->scriptalias = (char **) mk_mem_malloc(sizeof(char *) * 3);
+            host->scriptalias[0]=mk_string_dup(value);
             auxarg=strtok_r(NULL,"\"\t ", &last);
 
             if(!auxarg) M_Config_print_error_msg("ScriptAlias", path);
-            host->scriptalias[1]=M_strdup(auxarg);
+            host->scriptalias[1]=mk_string_dup(auxarg);
             host->scriptalias[2]='\0';
         }
 

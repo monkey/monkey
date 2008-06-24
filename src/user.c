@@ -28,6 +28,10 @@
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
+#include "memory.h"
+#include "str.h"
+#include "utils.h"
+#include "config.h"
 
 int User_main(struct client_request *cr, struct request *sr)
 {
@@ -37,9 +41,9 @@ int User_main(struct client_request *cr, struct request *sr)
 		
 	sr->user_home=VAR_ON;
 	
-	user=M_malloc(strlen(sr->uri_processed) + 1);
+	user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
 	offset=strlen(USER_HOME_STRING);	
-	limit=mk_strsearch(sr->uri_processed+offset, "/");
+	limit=mk_string_search(sr->uri_processed+offset, "/");
 
 	if(limit==-1)
 		limit=strlen(sr->uri_processed) - offset ;
@@ -51,11 +55,11 @@ int User_main(struct client_request *cr, struct request *sr)
 		sr->user_uri = m_build_buffer("%s", sr->uri_processed+offset+limit);
 
 	if((s_user=getpwnam(user))==NULL){
-		M_free(user);
+		mk_mem_free(user);
 		Request_Error(M_CLIENT_NOT_FOUND, cr, sr,1,sr->log);
 		return -1;
 	}
-	M_free(user);
+	mk_mem_free(user);
 	
 	user_server_root=m_build_buffer("%s/%s",s_user->pw_dir, config->user_dir);
 
@@ -64,7 +68,7 @@ int User_main(struct client_request *cr, struct request *sr)
 	else
 		sr->real_path=m_build_buffer("%s",user_server_root);
 	
-	M_free(user_server_root);
+	mk_mem_free(user_server_root);
 	return 0;
 }
 

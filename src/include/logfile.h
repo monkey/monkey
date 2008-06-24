@@ -17,6 +17,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_LOGFILE_H
+#define MK_LOGFILE_H
+
+/* s_log status */
+#define S_LOG_ON 0
+#define S_LOG_OFF 1
+
 /* logfile.c */
 pthread_mutex_t mutex_log_queue;
 
@@ -49,3 +56,6 @@ int	 remove_log_pid();
 
 void *start_worker_logger(void *args);
 int logger_add_request(struct log_info *log);
+
+#endif
+

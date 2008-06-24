@@ -29,6 +29,7 @@
 #include <sys/epoll.h>
 
 #include "monkey.h"
+#include "epoll.h"
 
 #define MAX_EVENTS 5000
 

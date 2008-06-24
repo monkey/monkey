@@ -31,8 +31,15 @@
 #include "monkey.h"
 
 #include "file.h"
+#include "str.h"
+#include "memory.h"
 #include "http.h"
 #include "http_status.h"
+#include "header.h"
+#include "socket.h"
+#include "logfile.h"
+#include "config.h"
+#include "utils.h"
 
 /* POST METHOD */
 int M_METHOD_Post(struct client_request *cr, struct request *s_request)
@@ -47,7 +54,7 @@ int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 	}
 
 	content_length_post = (int) atoi(tmp);
-	M_free(tmp);
+	mk_mem_free(tmp);
 
 	if(content_length_post<=0 || content_length_post >=MAX_REQUEST_BODY){
 		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);	
@@ -95,7 +102,7 @@ char *M_Get_POST_Vars(char *request, int index, char *strend)
             break;
         }
     }
-    return m_copy_string(request, index, i-last_byte);
+    return mk_string_copy_substr(request, index, i-last_byte);
 }
 
 
@@ -215,7 +222,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 	date = PutDate_string(0);
 	buffer = m_build_buffer("Date: %s", date);
 	mk_header_iov_add_line(iov, buffer, strlen(buffer), MK_IOV_FREE_BUF);
-	M_free(date);
+	mk_mem_free(date);
 
 	/* Location */
 	if(sh->location!=NULL)

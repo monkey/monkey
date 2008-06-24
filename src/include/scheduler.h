@@ -17,6 +17,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_SCHEDULER_H
+#define MK_SCHEDULER_H
+
 struct sched_list_node{
 	short int idx;
 	pthread_t tid;
@@ -43,4 +46,6 @@ void mk_sched_set_request_handler(struct client_request *hr);
 
 int mk_sched_get_thread_poll();
 void mk_sched_set_thread_poll(int epoll);
+
+#endif
 

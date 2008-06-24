@@ -27,6 +27,10 @@
 #include <arpa/inet.h>
 
 #include "monkey.h"
+#include "utils.h"
+#include "deny.h"
+#include "config.h"
+#include "memory.h"
 
 void Deny_Read_Config()
 {
@@ -66,7 +70,7 @@ void Deny_Read_Config()
 		}
 	}
 	fclose(deny_file);
-	M_free(path);
+	mk_mem_free(path);
 }
 
 /* Agrega una denegacion de IP o URL */
@@ -74,7 +78,7 @@ void Deny_Add(const short int type, char *value)
 {
 	struct deny *new_deny, *aux_deny;
 		
-	new_deny=M_malloc(sizeof(struct deny));
+	new_deny=mk_mem_malloc(sizeof(struct deny));
 	
 	new_deny->type = type;
 	strncpy(new_deny->value,value,MAX_DENY_VALUE - 1);

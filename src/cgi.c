@@ -34,6 +34,14 @@
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
+#include "cgi.h"
+#include "method.h"
+#include "str.h"
+#include "memory.h"
+#include "utils.h"
+#include "config.h"
+#include "support.h"
+#include "logfile.h"
 
 /* Main function to normal CGI scripts */
 int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
@@ -101,7 +109,7 @@ char *M_CGI_alias(char *path, char *query, char *newstring )
 	else
 		buffer=m_build_buffer("%s%s", newstring, aux);
 
-	M_free(aux);
+	mk_mem_free(aux);
 	return (char *) buffer;
 }
 
@@ -202,10 +210,10 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 		}
 	}while(bytes>0);
 	
-	offset=mk_strsearch(data,"\r\n\r\n");
+	offset=mk_string_search(data,"\r\n\r\n");
 	spaces=4;
 	if(offset==-1){
-		if((offset=mk_strsearch(data,"\n\n"))!=-1)
+		if((offset=mk_string_search(data,"\n\n"))!=-1)
 			spaces=2;
 		else
 			return -1;		
@@ -215,12 +223,12 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 	verify if 'Location' header has been sent from 
 	script, i was sent we send an '302 Found' header',
 	if not we send '200 OK' header */
-	if(mk_strcasestr(data, "Location:")!=NULL)
+	if(mk_string_casestr(data, "Location:")!=NULL)
 		s_log->final_response=M_REDIR_MOVED_T;
 	else
 		s_log->final_response=M_HTTP_OK;
 
-    hd = M_malloc(sizeof(struct header_values));
+	hd = mk_mem_malloc(sizeof(struct header_values));
 	hd->status = s_log->final_response;
 	hd->content_length = 0;
 	hd->content_type = NULL;
@@ -301,7 +309,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 {
 	char **arg=0, **ptr=0, auxint[10];
 	
-	ptr = arg = (char **) M_malloc(sizeof(char *) * 30);
+	ptr = arg = (char **) mk_mem_malloc(sizeof(char *) * 30);
 
 	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", sr->host_conf->documentroot);
 	
@@ -388,17 +396,17 @@ int M_CGI_change_dir(char *script)
 			break;	
 	}
 
-	aux = M_malloc(i+2);
+	aux = mk_mem_malloc(i+2);
 	strncpy(aux,script,i+1);
 	aux[i+1]='\0';
 
 	if(CheckDir(aux)!=0){
-		M_free(aux);
+		mk_mem_free(aux);
 		return -1;
 	}
 
 	status = chdir(aux);
-	M_free(aux);
+	mk_mem_free(aux);
 	
 	return status;
 }
@@ -414,7 +422,7 @@ int M_CGI_register_child(pthread_t thread, pid_t pid)
 	
 	pthread_mutex_lock(&mutex_cgi_child);
 	
-	proc = M_malloc(sizeof(struct cgi_child));
+	proc = mk_mem_malloc(sizeof(struct cgi_child));
 	proc->thread_pid = (pthread_t) thread;
 	proc->pid = (pid_t) pid;
 	proc->next = NULL;
@@ -453,7 +461,7 @@ int M_CGI_free_childs(pthread_t thread, int exit_type)
 			}
 			if(c_aux==cgi_child_index){
 				cgi_child_index=cgi_child_index->next;
-				M_free(c_aux);
+				mk_mem_free(c_aux);
 				c_aux = cgi_child_index;
 				continue;
 			}
@@ -462,7 +470,7 @@ int M_CGI_free_childs(pthread_t thread, int exit_type)
 				while(c_aux2->next!=c_aux)
 					c_aux2=c_aux2->next;
 				c_aux2->next=c_aux->next;
-				M_free(c_aux);
+				mk_mem_free(c_aux);
 			}
 		}	
 		c_aux=c_aux->next;	

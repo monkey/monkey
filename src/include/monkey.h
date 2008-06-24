@@ -17,8 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _MONKEY_H
-#define _MONKEY_H
+#ifndef MK_MONKEY_H
+#define MK_MONKEY_H
 
 #include <pthread.h>
 #include <netinet/in.h>
@@ -46,19 +46,11 @@ un home de un usuario */
 #define SH_NOCGI 0
 #define SH_CGI 1
 
-/* Status para struct s_log */
-#define S_LOG_ON 0
-#define S_LOG_OFF 1
-
 /* Valores para distintas variables */
 #define VAR_ERR -2
 #define VAR_NOTSET -1
 #define VAR_ON 0
 #define VAR_OFF 1
-
-/* Cantidad maxima de ciclos del 
-loop recibiendo una peticion en request.c */
-#define RECV_MAX_TIMES 10000
 
 /* Contador de requests en proceso */
 int thread_counter;
@@ -76,30 +68,6 @@ pthread_mutex_t  mutex_wait_register;
  el servidor */
 gid_t EGID;
 gid_t EUID;
-
-/* Functions and data types */
-
-#include "request.h"
-#include "header.h"
-#include "method.h"
-#include "epoll.h"
-#include "socket.h"
-#include "scheduler.h"
-#include "cgi.h"
-#include "process.h"
-#include "user.h"
-#include "info.h"
-#include "support.h"
-#include "utils.h"
-#include "mimetype.h"
-#include "logfile.h"
-#include "dir_html.h"
-#include "deny.h"
-#include "signals.h"
-#include "vhost.h"
-#include "config.h"
-#include "chars.h"
-#include "modules.h"
 
 #endif
 

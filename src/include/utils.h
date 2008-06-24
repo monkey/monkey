@@ -17,6 +17,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_UTILS_H
+#define MK_UTILS_H
+
 /* Defining TRUE and FALSE */
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,6 +33,8 @@
 #define NO_CHUNKED 1
 
 #define DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
+
+#include "request.h"
 
 /* utils.c */
 int SendFile(int socket, struct request *request);
@@ -52,7 +57,6 @@ char  *get_name_protocol(int remote_protocol);
 
 char *m_build_buffer(const char *format, ...);
 char *m_build_buffer_from_buffer(char *buffer, const char *format, ...);
-char *m_copy_string(const char *string, int pos_init, int pos_end);
 
 void *M_malloc(size_t size);
 char *M_strdup(const char *s);
@@ -67,8 +71,6 @@ void M_free(void *ptr);
 
 int Check_symlink(const char *path);
 char *get_end_position(char *buf);
-char *remove_space(char *buf);
 
-int mk_strsearch(char *string, char *search);
-char *mk_strcasestr(char *heystack, char *needle);
+#endif
 

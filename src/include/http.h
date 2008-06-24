@@ -17,6 +17,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_HTTP_H
+#define MK_HTTP_H
+
 /* Methods */
 #define HTTP_METHOD_GET (0)
 #define HTTP_METHOD_POST (1)
@@ -40,6 +43,8 @@
 #define HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
+#include "request.h"
+
 int mk_http_method_check(char *method);
 char *mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
@@ -52,3 +57,4 @@ int mk_http_keepalive_check(int socket, struct client_request *cr);
 int mk_http_range_set(struct request *sr, long file_size);
 int mk_http_range_parse(struct request *sr);
 
+#endif

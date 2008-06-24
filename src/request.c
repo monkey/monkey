@@ -39,6 +39,21 @@
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
+#include "string.h"
+#include "cgi.h"
+#include "str.h"
+#include "config.h"
+#include "scheduler.h"
+#include "epoll.h"
+#include "vhost.h"
+#include "socket.h"
+#include "logfile.h"
+#include "utils.h"
+#include "header.h"
+#include "deny.h"
+#include "user.h"
+#include "method.h"
+#include "memory.h"
 
 struct request *parse_client_request(struct client_request *cr)
 {
@@ -79,7 +94,7 @@ struct request *parse_client_request(struct client_request *cr)
 		if(strncmp(cr->body+i, string_end, length_end)==0)
 		{
 			/* Allocating request block */
-			block = m_copy_string(cr->body, init_block, i);
+			block = mk_string_copy_substr(cr->body, init_block, i);
 			
 			cr_buf = alloc_request();
 			cr_buf->body = block;
@@ -392,8 +407,8 @@ int Process_Request_Header(struct request *sr)
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
-	uri_init = mk_strsearch(sr->body, " ") + 1;
-	uri_end = mk_strsearch(sr->body+uri_init, " ") + uri_init;
+	uri_init = mk_string_search(sr->body, " ") + 1;
+	uri_end = mk_string_search(sr->body+uri_init, " ") + uri_init;
 
 	if(uri_end < uri_init)
 	{
@@ -401,17 +416,17 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Query String */
-	query_init = mk_strsearch(sr->body+uri_init, "?");
+	query_init = mk_string_search(sr->body+uri_init, "?");
 	if(query_init > 0 && query_init <= uri_end)
 	{
 		query_init+=uri_init+1;
 		query_end = uri_end;
 		uri_end = query_init - 1;
-		sr->query_string = m_copy_string(sr->body, query_init, query_end);
+		sr->query_string = mk_string_copy_substr(sr->body, query_init, query_end);
 	}
 	
 	/* Request URI Part 2 */
-	sr->uri = sr->log->uri = (char *)m_copy_string(sr->body, uri_init, uri_end);
+	sr->uri = sr->log->uri = (char *)mk_string_copy_substr(sr->body, uri_init, uri_end);
 
 	if(strlen(sr->uri)<1)
 	{
@@ -419,19 +434,19 @@ int Process_Request_Header(struct request *sr)
 	}
 
 	/* HTTP Version */
-	prot_init=mk_strsearch(sr->body+uri_init+1," ")+uri_init+2;
+	prot_init=mk_string_search(sr->body+uri_init+1," ")+uri_init+2;
 
-	if(mk_strsearch(sr->body, "\r\n")>0){
-		prot_end = mk_strsearch(sr->body, "\r\n");
+	if(mk_string_search(sr->body, "\r\n")>0){
+		prot_end = mk_string_search(sr->body, "\r\n");
 	}
 	else{
-		prot_end = mk_strsearch(sr->body, "\n");
+		prot_end = mk_string_search(sr->body, "\n");
 	}
 
 	if(prot_end!=prot_init && prot_end>0){
-		str_prot = m_copy_string(sr->body, prot_init, prot_end);
+		str_prot = mk_string_copy_substr(sr->body, prot_init, prot_end);
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
-        	M_free(str_prot);
+        	mk_mem_free(str_prot);
 	}
 
 	/* URI processed */
@@ -443,7 +458,7 @@ int Process_Request_Header(struct request *sr)
 	}
 
 	/* Host */ 
-	if(mk_strcasestr(sr->body, RH_HOST))
+	if(mk_string_casestr(sr->body, RH_HOST))
 	{
 		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
 		
@@ -452,12 +467,12 @@ int Process_Request_Header(struct request *sr)
 			int pos_sep=0;
 			char *port=0;
 
-			pos_sep = mk_strsearch(tmp, ":");
-			sr->host = m_copy_string(tmp, 0, pos_sep);
-			port = m_copy_string(tmp, pos_sep, strlen(tmp));
+			pos_sep = mk_string_search(tmp, ":");
+			sr->host = mk_string_copy_substr(tmp, 0, pos_sep);
+			port = mk_string_copy_substr(tmp, pos_sep, strlen(tmp));
 			sr->port=atoi(port);
-			M_free(port);
-			M_free(tmp);
+			mk_mem_free(port);
+			mk_mem_free(tmp);
 		}
 		else{
 			sr->host=tmp;  /* maybe null */ 
@@ -487,7 +502,7 @@ int Process_Request_Header(struct request *sr)
 		if(sr->protocol==HTTP_PROTOCOL_11 || 
 				sr->protocol==HTTP_PROTOCOL_10)
 		{
-			if(mk_strcasestr(sr->connection,"Keep-Alive"))
+			if(mk_string_casestr(sr->connection,"Keep-Alive"))
 			{
 				sr->keep_alive=VAR_ON;
 			}
@@ -504,7 +519,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 	char *t;
 
 	/* looking for string on request_body ??? */	
-	if(!(t=(char *)mk_strcasestr(request_body, string)))
+	if(!(t=(char *)mk_string_casestr(request_body, string)))
 	{
 		return NULL;
 	}
@@ -515,7 +530,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 		pos_init_var++;
 	}
 
-	pos_end_var = mk_strsearch((char *)t, "\n") - 1;
+	pos_end_var = mk_string_search((char *)t, "\n") - 1;
 	if(pos_end_var<0)
 	{
 		pos_end_var = strlen(t);
@@ -523,7 +538,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 	if(pos_init_var<=0 || pos_end_var<=0){
 		return  NULL;	
 	}
-	var_value = m_copy_string(t, pos_init_var, pos_end_var);
+	var_value = mk_string_copy_substr(t, pos_init_var, pos_end_var);
 
 	return (char *) var_value;
 }
@@ -543,10 +558,10 @@ char *FindIndex(char *pathfile)
 			file_aux=m_build_buffer("%s%s",pathfile,aux_index->indexname);
 			
 		if(access(file_aux,F_OK)==0) {
-			M_free(file_aux);
+			mk_mem_free(file_aux);
 			return (char *) aux_index->indexname;
 		}
-		M_free(file_aux);
+		mk_mem_free(file_aux);
 		aux_index=aux_index->next;
 	}
 
@@ -560,7 +575,7 @@ void Request_Error(int num_error, struct client_request *cr,
 	char *page_default=0, *aux_message=0;
 			
 	if(!s_log) {
-		s_log=M_malloc(sizeof(struct log_info));
+		s_log=mk_mem_malloc(sizeof(struct log_info));
 	}
 		
 	switch(num_error) {
@@ -619,7 +634,7 @@ void Request_Error(int num_error, struct client_request *cr,
 	s_request->headers->pconnections_left = 0;
 	s_request->headers->last_modified = NULL;
 	
-	if(aux_message) M_free(aux_message);
+	if(aux_message) mk_mem_free(aux_message);
 	
 	if(!page_default)
 		s_request->headers->content_type = NULL;
@@ -630,7 +645,7 @@ void Request_Error(int num_error, struct client_request *cr,
 
 	if(debug==1){
 		fdprintf(cr->socket, NO_CHUNKED, "%s", page_default);
-		M_free(page_default);
+		mk_mem_free(page_default);
 	}
 }
 
@@ -697,8 +712,8 @@ struct request *alloc_request()
 {
     struct request *request=0;
 
-    request = (struct request *) M_malloc(sizeof(struct request));
-    request->log = (struct log_info *) M_malloc(sizeof(struct log_info));
+    request = (struct request *) mk_mem_malloc(sizeof(struct request));
+    request->log = (struct log_info *) mk_mem_malloc(sizeof(struct log_info));
     //request->log->ip=PutIP(remote);
 
     request->status=VAR_OFF; /* Request not processed yet */
@@ -743,7 +758,7 @@ struct request *alloc_request()
     request->bytes_offset = 0;
     request->fd_file = -1;
 
-    request->headers = (struct header_values *) M_malloc(sizeof(struct header_values));
+    request->headers = (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
     request->headers->location = NULL;
@@ -790,10 +805,10 @@ void free_request(struct request *sr)
 		close(sr->fd_file);
 	}
 	if(sr->headers){
-            M_free(sr->headers->location);
-            M_free(sr->headers->last_modified);
+            mk_mem_free(sr->headers->location);
+            mk_mem_free(sr->headers->last_modified);
             /*
-                M_free(sr->headers->content_type);
+                mk_mem_free(sr->headers->content_type);
                  headers->content_type never it's allocated 
 		 with malloc or something, so we don't need 
 		 to free it, the value has been freed before 
@@ -802,46 +817,46 @@ void free_request(struct request *sr)
 		 this BUG was reported by gentoo team.. thanks guys XD
             */
 
-            M_free(sr->headers);
+            mk_mem_free(sr->headers);
         }
 
         
         if(sr->log){
-            M_free(sr->log->error_msg); 
-            M_free(sr->log);
+            mk_mem_free(sr->log->error_msg); 
+            mk_mem_free(sr->log);
         }
 
-        M_free(sr->body);
-        M_free(sr->uri);
+        mk_mem_free(sr->body);
+        mk_mem_free(sr->uri);
         
 	if(sr->uri_twin==VAR_OFF)
 	{
-		M_free(sr->uri_processed);
+		mk_mem_free(sr->uri_processed);
 	}
 
-        M_free(sr->accept);
-        M_free(sr->accept_language);
-        M_free(sr->accept_encoding);
-        M_free(sr->accept_charset);
-        M_free(sr->content_type);
-        M_free(sr->connection);
-        M_free(sr->cookies);
-        M_free(sr->host);
-        M_free(sr->if_modified_since);
-        M_free(sr->last_modified_since);
-        M_free(sr->range);
-        M_free(sr->referer);
-        M_free(sr->resume);
-        M_free(sr->user_agent);
-        M_free(sr->post_variables);
+        mk_mem_free(sr->accept);
+        mk_mem_free(sr->accept_language);
+        mk_mem_free(sr->accept_encoding);
+        mk_mem_free(sr->accept_charset);
+        mk_mem_free(sr->content_type);
+        mk_mem_free(sr->connection);
+        mk_mem_free(sr->cookies);
+        mk_mem_free(sr->host);
+        mk_mem_free(sr->if_modified_since);
+        mk_mem_free(sr->last_modified_since);
+        mk_mem_free(sr->range);
+        mk_mem_free(sr->referer);
+        mk_mem_free(sr->resume);
+        mk_mem_free(sr->user_agent);
+        mk_mem_free(sr->post_variables);
  
-        M_free(sr->user_uri);
-        M_free(sr->query_string);
+        mk_mem_free(sr->user_uri);
+        mk_mem_free(sr->query_string);
  
-        M_free(sr->virtual_user);
-        M_free(sr->script_filename);
-        M_free(sr->real_path);
-        M_free(sr);
+        mk_mem_free(sr->virtual_user);
+        mk_mem_free(sr->script_filename);
+        mk_mem_free(sr->real_path);
+        mk_mem_free(sr);
 }
 
 /* Create a client request struct and put it on the
@@ -851,14 +866,14 @@ struct client_request *mk_create_client_request(int socket)
 {
 	struct client_request *request_handler, *cr, *aux;
 
-	cr = M_malloc(sizeof(struct client_request));
+	cr = mk_mem_malloc(sizeof(struct client_request));
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
 	cr->socket = socket;
 	cr->request = NULL;
 	cr->client_ip = mk_socket_get_ip(socket);
 
-	cr->body = M_malloc(MAX_REQUEST_BODY);
+	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();
 	cr->body_length = 0;
 
@@ -932,8 +947,8 @@ struct client_request *mk_remove_client_request(int socket)
 		}
 		cr = cr->next;
 	}
-	M_free(cr->body);
-	M_free(cr);
+	mk_mem_free(cr->body);
+	mk_mem_free(cr);
 	mk_sched_set_request_handler(request_handler);
 	return NULL;
 }

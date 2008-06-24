@@ -26,6 +26,10 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "mimetype.h"
+#include "memory.h"
+#include "str.h"
+#include "config.h"
 #include "monkey.h"
 
 /* Carga en estructura los mimetypes */
@@ -69,11 +73,11 @@ int Mimetype_Add(char *name, char *type, char *bin_path)
 	
 	struct mimetypes *new_mime, *aux_mime;
 	
-	new_mime = M_malloc(sizeof(struct mimetypes));
+	new_mime = mk_mem_malloc(sizeof(struct mimetypes));
 	
-	new_mime->name = M_strdup(name);
-	new_mime->type = M_strdup(type);
-	new_mime->script_bin_path = M_strdup(bin_path);
+	new_mime->name = mk_string_dup(name);
+	new_mime->type = mk_string_dup(type);
+	new_mime->script_bin_path = mk_string_dup(bin_path);
 
 	new_mime->next=NULL;
 	
@@ -100,9 +104,9 @@ char **Mimetype_Find(char *filename)
 	while(filename[j]!='.' && j>=0) 
 		j--;
 
-	name = m_copy_string(filename, j+1, len);
+	name = mk_string_copy_substr(filename, j+1, len);
 	mime = Mimetype_CMP(name);
-	M_free(name);
+	mk_mem_free(name);
 	
 	return (char **) mime;
 }
@@ -122,7 +126,7 @@ char **Mimetype_CMP(char *name)
 			aux_mime=aux_mime->next;
 	}
 
-	info=(char **) M_malloc(sizeof(char *) * 3);
+	info=(char **) mk_mem_malloc(sizeof(char *) * 3);
 	if(aux_mime==NULL){
 		info[0]=MIMETYPE_DEFAULT;
 		info[1]=NULL;

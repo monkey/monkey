@@ -19,14 +19,17 @@
 #include <stdio.h>
 #include "monkey.h"
 
+#include "header.h"
+#include "memory.h"
+
 struct mk_iov *mk_header_iov_create(int n)
 {
 	struct mk_iov *iov;
 
-	iov = M_malloc(sizeof(struct mk_iov));
+	iov = mk_mem_malloc(sizeof(struct mk_iov));
 	iov->iov_idx = 0;
-	iov->io = M_malloc(n*sizeof(struct iovec));
-	iov->buf_to_free = M_malloc(n*sizeof(char));
+	iov->io = mk_mem_malloc(n*sizeof(struct iovec));
+	iov->buf_to_free = mk_mem_malloc(n*sizeof(char));
 	iov->buf_idx = 0;
 	return iov;
 }
@@ -73,10 +76,10 @@ void mk_header_iov_free(struct mk_iov *mk_io)
 	{
 		//printf("\ngoing free (idx: %i/%i): %s",i, limit, mk_io->buf_to_free[i]);
 		//fflush(stdout);
-		M_free(mk_io->buf_to_free[i]);
+		mk_mem_free(mk_io->buf_to_free[i]);
 	}
-	M_free(mk_io->io);
-	M_free(mk_io);
+	mk_mem_free(mk_io->io);
+	mk_mem_free(mk_io);
 }
 
 

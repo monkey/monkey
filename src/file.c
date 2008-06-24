@@ -24,6 +24,7 @@
 
 #include "monkey.h"
 #include "file.h"
+#include "memory.h"
 
 struct file_info *mk_file_get_info(char *path)
 {
@@ -39,7 +40,7 @@ struct file_info *mk_file_get_info(char *path)
 		return NULL;
 	}
 
-	f_info = M_malloc(sizeof(struct file_info));
+	f_info = mk_mem_malloc(sizeof(struct file_info));
 	f_info->is_link = MK_FILE_FALSE;
 	f_info->is_directory = MK_FILE_FALSE;
 	f_info->exec_access = MK_FILE_FALSE;
@@ -60,8 +61,6 @@ struct file_info *mk_file_get_info(char *path)
 	f_info->size = target.st_size;
 	f_info->last_modification = target.st_mtime;
 	
-
-
 	if(S_ISDIR(target.st_mode))
 	{
 		f_info->is_directory = MK_FILE_TRUE;

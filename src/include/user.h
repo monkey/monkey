@@ -17,8 +17,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_USER_H
+#define MK_USER_H
+
+#include "request.h"
+
 /* user.c */
 int	User_main(struct client_request *cr, struct request *sr);/* struct request */
 int	SetUIDGID();
 int	SetEGID_BACK();
 
+#endif
