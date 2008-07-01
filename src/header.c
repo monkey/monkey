@@ -22,7 +22,7 @@
 #include "header.h"
 #include "memory.h"
 
-struct mk_iov *mk_header_iov_create(int n)
+struct mk_iov *mk_iov_create(int n)
 {
 	struct mk_iov *iov;
 
@@ -34,13 +34,14 @@ struct mk_iov *mk_header_iov_create(int n)
 	return iov;
 }
 
-int mk_header_iov_add_line(struct mk_iov *mk_io, char *buf, int len, int free)
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, 
+		int sep, int free)
 {
 	mk_io->io[mk_io->iov_idx].iov_base = buf;
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
 
-	mk_header_iov_add_break_line(mk_io);
+	mk_iov_add_separator(mk_io, sep);
 
 	if(free==MK_IOV_FREE_BUF)
 	{
@@ -50,16 +51,31 @@ int mk_header_iov_add_line(struct mk_iov *mk_io, char *buf, int len, int free)
 	return mk_io->iov_idx;
 }
 
-int mk_header_iov_add_break_line(struct mk_iov *mk_io)
+int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 {
-	mk_io->io[mk_io->iov_idx].iov_base = RESP_BREAK_LINE;
-	mk_io->io[mk_io->iov_idx].iov_len = LEN_RESP_BREAK_LINE;
+	int len=0;
+	char *_sep=0;
+
+	switch(sep)
+	{
+		case BREAK_LINE:
+			_sep = _BREAK_LINE;
+			len = LEN_BREAK_LINE;
+			break;
+		case SPACE:
+			_sep = _SPACE;
+			len = LEN_SPACE;
+			break;
+	}
+
+	mk_io->io[mk_io->iov_idx].iov_base = _sep;
+	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
 
 	return mk_io->iov_idx;
 }
 
-ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io)
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 {
 	ssize_t n;
 
@@ -67,7 +83,7 @@ ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io)
 	return n;
 }
 
-void mk_header_iov_free(struct mk_iov *mk_io)
+void mk_iov_free(struct mk_iov *mk_io)
 {
 	int i, limit;
 	
@@ -81,5 +97,4 @@ void mk_header_iov_free(struct mk_iov *mk_io)
 	mk_mem_free(mk_io->io);
 	mk_mem_free(mk_io);
 }
-
 

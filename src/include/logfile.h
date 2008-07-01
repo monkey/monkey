@@ -50,7 +50,7 @@ struct log_info {
 char    *PutTime();
 char    *PutIP();
 char    *BaseName(char *name);
-int	 write_log(struct log_info *log);
+int	 write_log(struct log_info *log, int host_pipe);
 int	 add_log_pid();
 int	 remove_log_pid();
 

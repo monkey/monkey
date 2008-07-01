@@ -104,13 +104,19 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 	}
 }
 
-int mk_epoll_add_client(int efd, int socket)
+int mk_epoll_add_client(int efd, int socket, int mode)
 {
 	int ret;
 	struct epoll_event event;
 
-	event.events = EPOLLIN | EPOLLET | EPOLLERR | EPOLLHUP;
+	event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
 	event.data.fd = socket;
+
+	if(mode == MK_EPOLL_BEHAVIOR_TRIGGERED)
+	{
+		event.events |= EPOLLET;
+	}
+
 
 	ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
 	if(ret < 0)

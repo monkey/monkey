@@ -17,6 +17,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define _GNU_SOURCE
+#include <string.h>
+
 #include <ctype.h>
 #include <stdlib.h>
 
@@ -24,8 +27,7 @@
 #include "utils.h"
 #include "memory.h"
 
-#define _GNU_SOURCE
-#include <string.h>
+
 #include <stdio.h>
 
 /* Return a buffer with a new string from string */

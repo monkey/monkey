@@ -235,6 +235,7 @@ void M_Config_Read_Hosts(char *path)
 
     buf = m_build_buffer("%s/sites/default", path);
     config->hosts = M_Config_Get_Host(buf);
+    config->nhosts++;
     mk_mem_free(buf);
 
     if(!config->hosts)
@@ -268,6 +269,7 @@ void M_Config_Read_Hosts(char *path)
         else{
             p_host->next = new_host;
             p_host = new_host;
+	    config->nhosts++;
         }
     }
     /*
@@ -420,6 +422,11 @@ struct host *M_Config_Get_Host(char *path)
 	host->header_host_signature = m_build_buffer("Server: %s", host->host_signature);
 	host->header_len_host_signature = strlen(host->header_host_signature);
 
+	if(pipe(host->logpipe)<0)
+	{
+		perror("pipe");
+	}
+
 	host->next = NULL;
 	return host;
 }
@@ -468,6 +475,7 @@ void M_Config_set_init_values(void)
 	config->serverport=2001;
 	config->server_addr=NULL;
 	config->symlink=VAR_OFF;
+	config->nhosts = 0;
 }
 
 /* Lee la configuraci�n principal desde monkey.conf */
@@ -495,3 +503,4 @@ void M_Config_start_configure(void)
     else
 		config->server_software = m_build_buffer("Monkey Server");
 }
+

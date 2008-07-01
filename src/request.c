@@ -65,7 +65,6 @@ struct request *parse_client_request(struct client_request *cr)
 	struct request *cr_buf=0, *cr_search=0;
 
 	check_normal_string = strstr(cr->body, NORMAL_STRING_END);
-	check_old_string = strstr(cr->body, OLD_STRING_END);
 	if(check_normal_string)
 	{
 		if(check_old_string)
@@ -81,9 +80,16 @@ struct request *parse_client_request(struct client_request *cr)
 	}
 	else if(check_old_string)
 	{
-		string_end = OLD_STRING_END;
-		length_end = LEN_OLD_STRING_END;
-		offset = 1;
+		check_old_string = strstr(cr->body, OLD_STRING_END);
+		if(check_old_string)
+		{
+			string_end = OLD_STRING_END;
+			length_end = LEN_OLD_STRING_END;
+			offset = 1;
+		}
+		else{
+			return FALSE;
+		}
 	}
 
 	length_buf = cr->body_length;
@@ -264,11 +270,6 @@ int mk_handler_write(int socket, struct client_request *cr)
 			bytes = SendFile(socket, p_request);
 			final_status = bytes;
 		}
-		else if(p_request->bytes_to_send == 0)
-		{
-			//printf("\n*** to send = 0");
-			//fflush(stdout);
-		}	
 		/*
 		 * If we got an error, we don't want to parse
 		 * and send information for another pipelined request
@@ -277,7 +278,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		{
 			return final_status;
 		}
-		//write_log(p_request->log);
+		write_log(p_request->log, p_request->host_conf->logpipe[1]);
 		p_request = p_request->next;
 	}
 
@@ -403,7 +404,6 @@ int Process_Request_Header(struct request *sr)
 	char *str_prot=0;
 
 	/* Method */
-	//sr->method = sr->log->method = mk_http_method_get(sr->body);
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */

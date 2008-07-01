@@ -56,8 +56,12 @@ struct server_config {
 
 	/* max ip */
 	int max_ip;
-    struct host *hosts;
+
+	 /* configured host quantity */
+	int nhosts;	
+	struct host *hosts;
 };
+
 struct server_config *config;
 
 struct host {
@@ -78,6 +82,7 @@ struct host {
     char *host_signature;
     char *header_host_signature;
     int header_len_host_signature;
+    int logpipe[2];
     struct host *next;
 };
 

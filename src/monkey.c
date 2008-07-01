@@ -105,6 +105,8 @@ int main(int argc, char **argv)
 	int i, num_threads;
 	int epoll_server;
 	char *IP_client;
+	pthread_t tid;
+	pthread_attr_t thread_attr;
 
 	struct sockaddr_in local_sockaddr_in;
 	struct sched_list_node *sched;
@@ -178,28 +180,22 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* Main log queue index list */
-	//(struct log_queue *) _log_queue = NULL;
 
-	/* threads attr / mutex 
-	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-	*/
-	
-
-	//pthread_mutex_init(&mutex_write_sched_list, (pthread_mutexattr_t *) NULL);
-	
-	/*
-	pthread_mutex_init(&mutex_cgi_child,  (pthread_mutexattr_t *) NULL);
+	/* logger-worker */ 
+	pthread_attr_init(&thread_attr);
 	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
-	pthread_mutex_init(&mutex_thread_counter, (pthread_mutexattr_t *) NULL);
-	*/
-	/* logger-worker: mutex 
-	pthread_mutex_init(&mutex_log_queue,  (pthread_mutexattr_t *) NULL);
-	//pthread_create(&tid, &thread_attr, start_worker_logger, NULL);
-	*/
+	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+	if(pthread_create(&tid, &thread_attr, start_worker_logger, NULL)<0)
+	{
+		perror("pthread_create");
+		exit(1);
+	}
+	
 	/* Running Monkey as daemon */
 	if(daemon)
+	{
 		set_daemon();
+	}
 		
 	add_log_pid(); /* Register Pid of monkey */
 
@@ -217,7 +213,7 @@ int main(int argc, char **argv)
 
 	for(i=0; i<num_threads; i++)
 	{
-		mk_sched_launch_thread(15000);
+		mk_sched_launch_thread(200);
 	}
 
 	sched = sched_list;
@@ -231,9 +227,7 @@ int main(int argc, char **argv)
 		}
 
 		mk_socket_set_nonblocking(remote_fd);
-		//printf("\nMONKEY::add socket: %i into epoll_fd list: %i", remote_fd, sched->epoll_fd);
-		//fflush(stdout);
-		mk_epoll_add_client(sched->epoll_fd, remote_fd);
+		mk_epoll_add_client(sched->epoll_fd, remote_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
 		
 		if(sched->next)
 		{

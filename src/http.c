@@ -296,22 +296,24 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			
 			switch(cgi_status){
 				case -2:	/* Timeout */
-						sr->log->final_response=M_CLIENT_REQUEST_TIMEOUT;
-						break;
+					sr->log->final_response=M_CLIENT_REQUEST_TIMEOUT;
+					break;
 				case -3:  /* Internal server Error */
-						sr->log->final_response=M_SERVER_INTERNAL_ERROR;
-						break;
-					
+					sr->log->final_response=M_SERVER_INTERNAL_ERROR;
+					break;
 				case -1:
-						sr->make_log=VAR_OFF;
-						break;
+					sr->make_log=VAR_OFF;
+					break;
 				case 0:  /* Ok */
-						sr->log->final_response=M_HTTP_OK;
-						break;
+					sr->log->final_response=M_HTTP_OK;
+					break;
 			};	
 
-			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-				Request_Error(sr->log->final_response, cr, sr, 1, sr->log);	
+			if(cgi_status==M_CGI_TIMEOUT || 
+					cgi_status==M_CGI_INTERNAL_SERVER_ERR)
+			{
+				Request_Error(sr->log->final_response, cr, 
+						sr, 1, sr->log);	
 			}
 
 			Mimetype_free(mime_info);
@@ -336,11 +338,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		
 		date_client = PutDate_unix(sr->if_modified_since);
 
-		gmt_file_unix_time = PutDate_string((time_t) path_info->last_modification);
+		gmt_file_unix_time = 
+			PutDate_string((time_t) path_info->last_modification);
+
 		date_file_server = PutDate_unix(gmt_file_unix_time);
 		mk_mem_free(gmt_file_unix_time);
 
-		if( (date_file_server <= date_client) && (date_client > 0) ){
+		if( (date_file_server <= date_client) && (date_client > 0) )
+		{
 			sr->headers->status = M_NOT_MODIFIED;
 			M_METHOD_send_headers(cr->socket, cr, sr, sr->log);	
 			Mimetype_free(mime_info);
@@ -355,7 +360,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	sr->headers->location = NULL;
 
 	sr->log->size = path_info->size;
-	if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST){
+	if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
+	{
 		sr->headers->content_type = mime_info[0];
 		/* Range */
 		if(sr->range!=NULL && config->resume==VAR_ON){

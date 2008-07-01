@@ -17,14 +17,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define _GNU_SOURCE
+#include <fcntl.h>
+
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/uio.h>
+#include <sys/ioctl.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/times.h>
 
 #include "monkey.h"
 #include "http.h"
@@ -33,98 +41,179 @@
 #include "memory.h"
 #include "config.h"
 #include "user.h"
+#include "utils.h"
+#include "epoll.h"
+#include "header.h"
+
+#include <sys/sysinfo.h>
 
 void *start_worker_logger(void *args)
 {
-    struct log_queue *lq;
-    printf("\nStarting logger worker--->>>\n\n");
-    fflush(stdout);
+	int efd, max_events=config->nhosts;
+	int i, bytes, err;
+	struct host *h=0;
+	int flog;
+	long slen;
+	int fdop = 0;
+	int timeout;
+	int clock_ticks;
+	int clk;
 
-    lq = (struct log_queue *) _log_queue;
+	/* pipe_size:
+	 * ---------- 
+	 * Linux set a pipe size usingto the PAGE_SIZE, 
+	 * check linux/include/pipe_fs_i.h for details:
+	 *
+	 *       #define PIPE_SIZE               PAGE_SIZE
+	 *
+	 * In the same header file we can found that every 
+	 * pipe has 16 pages, so our real memory allocation
+	 * is: (PAGE_SIZE*PIPE_BUFFERS)
+	 */
+	long pipe_size;
+	
+	/* buffer_limit:
+	 * -------------
+	 * it means the maximum data that a monkey log pipe can contain.
+	 */
+	long buffer_limit;
 
-    while(1)
-    {
-        if(_log_queue){
-            write_log(_log_queue->info);
-            pthread_mutex_lock(&mutex_log_queue);
-            lq = _log_queue;
-            lq->info = NULL;
-            lq->next = NULL;
+	/* Monkey allow just 50% of a pipe capacity */
+	pipe_size = sysconf(_SC_PAGESIZE)*16;
+	buffer_limit = (pipe_size*0.5);
 
-            _log_queue = _log_queue->next;
-            pthread_mutex_unlock(&mutex_log_queue);
-        }
+	/* Creating poll */
+	efd = mk_epoll_create(max_events);
+	h = config->hosts;
+	while(h)
+	{
+		//mk_socket_set_nonblocking(h->logpipe[0]);
+		mk_epoll_add_client(efd, h->logpipe[0], MK_EPOLL_BEHAVIOR_DEFAULT);
+		h = h->next;
+	}
 
-        /* Escribir log !!!*/
-        /* Borrar actual log !!!*/
-    }
-}
+	/* set initial timeout */
+	clock_ticks = sysconf(_SC_CLK_TCK);
+	timeout = times(NULL) + clock_ticks;
+	
+	/* Reading pipe buffer */
+	while(1)
+	{
+		usleep(1000);
 
-int logger_add_request(struct log_info *log)
-{
-    struct log_queue *new, *last, *t;
+		struct epoll_event events[max_events];
+		int num_fds = epoll_wait(efd, events, max_events, -1);
 
-    pthread_mutex_lock(&mutex_log_queue);
+		clk = times(NULL);
 
-    new = mk_mem_malloc(sizeof(struct log_queue));
-    new->info = log;
-    new->next = NULL;
-    
-    if(!_log_queue)
-    {
-        _log_queue = new;
-    }
-    else
-    {
-        last = _log_queue;
-        while(last->next)
-            last = last->next;
+		if(!h)
+		{
+			h = config->hosts;
+		}
 
-        last->next = new;
-    }
+		for(i=0; i< num_fds; i++)
+		{
+			while(h)
+			{
+				if(events[i].data.fd==h->logpipe[0]){
+					break;
+				}
+				h = h->next;
+			}
 
-    pthread_mutex_unlock(&mutex_log_queue);
-    
-    t = _log_queue;
-    printf("\n****ROUND****");
-    while(t){
-        printf("\nLOG: %s", t->info->uri);
-        t = t->next;
-    }
-    fflush(stdout);
-    
+			if(!h)
+			{
+				printf("\nERROR matching host/epoll_fd");
+				fflush(stdout);
+				continue;
+			}
+				
+			err = ioctl(h->logpipe[0], FIONREAD, &bytes);
+			if(err == -1)
+			{
+				perror("err");
+			}
+		
+			if(bytes < buffer_limit && clk<timeout)
+			{
+				continue;
+			}
+			else
+			{
+				timeout = clk+clock_ticks;
+				fdop++;
+				flog = open(h->access_log_path, 
+						O_WRONLY | O_CREAT , 0644);
+			
+				if(flog==-1)
+				{
+					perror("open");
+					continue;
+				}
 
-    return 0;
+				lseek(flog, 0, SEEK_END);
+				slen = splice(events[i].data.fd, NULL, flog,
+						NULL, bytes, SPLICE_F_MOVE);
+				if(slen==-1)
+				{
+					perror("splice");
+				}
+				close(flog);
+				printf("\nfdop: %i", fdop);
+				fflush(stdout);
+			}
+		}
+	}
 }
 
 /* Registra en archivos de logs: accesos
  y errores */
-int write_log(struct log_info *log)
+int write_log(struct log_info *log, int host_pipe)
 {
 	FILE *log_file=0;
-	
-    //printf("\n-->LOGO: %s", log->uri);
-    //fflush(stdout);
+	char *buf;
+	struct mk_iov *iov;
 
 	if(log->status!=S_LOG_ON){
 		return 0;
 	}
-	pthread_mutex_lock(&mutex_logfile);
 	
-	/* Register a successfull request */
-	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T){
-		if((log_file=fopen(log->host_conf->access_log_path,"a"))==NULL){
-			pthread_mutex_unlock(&mutex_logfile);
-			return -1;
-		}
-			fprintf(log_file,"%s - %s ", log->ip, log->datetime);
-			fprintf(log_file,"\"%s %s %s\" %i", mk_http_method_check_str(log->method), 
-				log->uri, mk_http_protocol_check_str(log->protocol), log->final_response);
-			if(log->size > 0) 
-				fprintf(log_file," %i\n", log->size);
-			else
-				fprintf(log_file,"\n");
+	iov = mk_iov_create(20);
 
+	/* Register a successfull request */
+	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
+	{
+			mk_iov_add_entry(iov, log->ip, 0, SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, "-", 1, SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, log->datetime, 0, SPACE, MK_IOV_NOT_FREE_BUF);
+			
+			buf = mk_http_method_check_str(log->method);
+			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, log->uri, strlen(log->uri), SPACE, MK_IOV_NOT_FREE_BUF);
+                        
+			buf = mk_http_protocol_check_str(log->protocol);
+			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
+
+			buf = m_build_buffer("%i", log->final_response);
+                        mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_FREE_BUF);
+
+			buf = m_build_buffer("%i\n", log->size);
+			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_FREE_BUF);
+
+			mk_iov_send(host_pipe, iov);
+			mk_iov_free(iov);
+
+		/*
+		buf = m_build_buffer("%s - %s %s %s %s %i %i\n",
+				log->ip, log->datetime,
+				mk_http_method_check_str(log->method),
+				log->uri, 
+				mk_http_protocol_check_str(log->protocol),
+				log->final_response, log->size);
+			
+		bytes = write(host_pipe, buf, strlen(buf));
+		mk_mem_free(buf);
+		*/
 	}
 	else{ /* Regiter some error */
 		if((log_file=fopen(log->host_conf->error_log_path,"a"))==NULL){
@@ -133,8 +222,6 @@ int write_log(struct log_info *log)
 		}
 		fprintf(log_file, "%s - %s  %s\n", log->ip, log->datetime, log->error_msg);
 	}
-	fclose(log_file);
-	pthread_mutex_unlock(&mutex_logfile);
 	return 0;	
 }
 

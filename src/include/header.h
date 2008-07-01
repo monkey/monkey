@@ -26,8 +26,13 @@
  * Response headers: We handle this as static global data in order
  * to save some process time when building the response header.
  */
-#define RESP_BREAK_LINE "\r\n"
-#define LEN_RESP_BREAK_LINE 2
+#define BREAK_LINE 0
+#define _BREAK_LINE "\r\n"
+#define LEN_BREAK_LINE 2
+
+#define SPACE 1
+#define _SPACE " "
+#define LEN_SPACE 1
 
 #define RESP_HTTP_OK "HTTP/1.1 200 OK"
 #define LEN_RESP_HTTP_OK 15
@@ -80,11 +85,11 @@ struct mk_iov
 	int buf_idx;
 };
 
-struct mk_iov *mk_header_iov_create(int n);
-int mk_header_iov_add_line(struct mk_iov *mk_io, char *buf, int len, int free);
-int mk_header_iov_add_break_line(struct mk_iov *mk_io);
-ssize_t mk_header_iov_send(int fd, struct mk_iov *mk_io);
-void mk_header_iov_free(struct mk_iov *mk_io);
+struct mk_iov *mk_iov_create(int n);
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, int sep, int free);
+int mk_iov_add_separator(struct mk_iov *mk_io, int sep);
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
+void mk_iov_free(struct mk_iov *mk_io);
 
 #endif
 
