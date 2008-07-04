@@ -80,14 +80,13 @@ void *start_worker_logger(void *args)
 
 	/* Monkey allow just 50% of a pipe capacity */
 	pipe_size = sysconf(_SC_PAGESIZE)*16;
-	buffer_limit = (pipe_size*0.5);
+	buffer_limit = (pipe_size*0.75);
 
 	/* Creating poll */
 	efd = mk_epoll_create(max_events);
 	h = config->hosts;
 	while(h)
 	{
-		//mk_socket_set_nonblocking(h->logpipe[0]);
 		mk_epoll_add_client(efd, h->logpipe[0], MK_EPOLL_BEHAVIOR_DEFAULT);
 		h = h->next;
 	}
@@ -141,7 +140,7 @@ void *start_worker_logger(void *args)
 			else
 			{
 				timeout = clk+clock_ticks;
-				fdop++;
+				//fdop++;
 				flog = open(h->access_log_path, 
 						O_WRONLY | O_CREAT , 0644);
 			
@@ -159,8 +158,8 @@ void *start_worker_logger(void *args)
 					perror("splice");
 				}
 				close(flog);
-				printf("\nfdop: %i", fdop);
-				fflush(stdout);
+				//printf("\nfdop: %i", fdop);
+				//fflush(stdout);
 			}
 		}
 	}
@@ -170,6 +169,7 @@ void *start_worker_logger(void *args)
  y errores */
 int write_log(struct log_info *log, int host_pipe)
 {
+	unsigned long len;
 	FILE *log_file=0;
 	char *buf;
 	struct mk_iov *iov;
@@ -194,26 +194,14 @@ int write_log(struct log_info *log, int host_pipe)
 			buf = mk_http_protocol_check_str(log->protocol);
 			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
 
-			buf = m_build_buffer("%i", log->final_response);
-                        mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_FREE_BUF);
+			m_build_buffer(&buf, &len, "%i", log->final_response);
+                        mk_iov_add_entry(iov, buf, len, SPACE, MK_IOV_FREE_BUF);
 
-			buf = m_build_buffer("%i\n", log->size);
-			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_FREE_BUF);
+			buf = m_build_buffer(&buf, &len, "%i\n", log->size);
+			mk_iov_add_entry(iov, buf, len, SPACE, MK_IOV_FREE_BUF);
 
 			mk_iov_send(host_pipe, iov);
 			mk_iov_free(iov);
-
-		/*
-		buf = m_build_buffer("%s - %s %s %s %s %i %i\n",
-				log->ip, log->datetime,
-				mk_http_method_check_str(log->method),
-				log->uri, 
-				mk_http_protocol_check_str(log->protocol),
-				log->final_response, log->size);
-			
-		bytes = write(host_pipe, buf, strlen(buf));
-		mk_mem_free(buf);
-		*/
 	}
 	else{ /* Regiter some error */
 		if((log_file=fopen(log->host_conf->error_log_path,"a"))==NULL){

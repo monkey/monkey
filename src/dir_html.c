@@ -241,6 +241,7 @@ char *read_header_footer_file(char *file_path)
 */
 int GetDir(struct client_request *cr, struct request *sr)
 {
+	unsigned long len;
 	DIR *dir;
 	struct dirent *ent;
 	char *path=0, *real_header_file, *real_footer_file, *content_buffer=0;
@@ -278,7 +279,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 			continue;	
 		}
 		
-		path = m_build_buffer("%s%s", sr->real_path, ent->d_name);
+		m_build_buffer(&path, &len, "%s%s", sr->real_path, ent->d_name);
 		
 		if (stat(path, buffer) == -1) continue;
 
@@ -300,10 +301,10 @@ int GetDir(struct client_request *cr, struct request *sr)
 	/* Ordenar el arreglo de archivos y directorios */
 	shell(file_list, count_file);
 
-    hd = mk_mem_malloc(sizeof(struct header_values));
+	hd = mk_mem_malloc(sizeof(struct header_values));
 	hd->status = M_HTTP_OK;
 	hd->content_length = 0;
-	hd->content_type = m_build_buffer("text/html");
+	m_build_buffer(&hd->content_type, &len, "text/html");
 	hd->location = NULL;
 	hd->cgi = SH_CGI;
 	hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
@@ -327,7 +328,8 @@ int GetDir(struct client_request *cr, struct request *sr)
 				 <H1>Index of %s</H1>", sr->uri_processed, sr->uri_processed);
 				 
 				 
-	real_header_file = m_build_buffer("%s%s", sr->real_path, sr->host_conf->header_file);
+	m_build_buffer(&real_header_file, &len, 
+			"%s%s", sr->real_path, sr->host_conf->header_file);
 
 	if(real_header_file){
 		char *header_file_buffer=0;
@@ -360,7 +362,8 @@ int GetDir(struct client_request *cr, struct request *sr)
 
 
 	content_buffer = m_build_buffer_from_buffer(content_buffer,"</PRE><HR>");
-	real_footer_file = m_build_buffer("%s%s", sr->real_path, sr->host_conf->footer_file);
+	m_build_buffer(&real_footer_file, &len, "%s%s", 
+			sr->real_path, sr->host_conf->footer_file);
 
 	if(real_footer_file){
 		char *footer_file_buffer=0;

@@ -206,44 +206,48 @@ int fdchunked(int fd, char *data, int length)
 	mk_mem_free(buffer);
 	return 0;
 }
-
-char *m_build_buffer(const char *format, ...)
+char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 {
 	va_list	ap;
 	int length;
-	char *buffer = NULL;
+	char *ptr;
+	static size_t _mem_alloc = 128;
 	static size_t alloc = 0;
-
-		
-	if(!buffer) {
-		buffer = (char *)malloc(256);
-		if(!buffer)
-			return NULL;
-		alloc = 256;
+	
+	/* *buffer *must* be an empty/NULL buffer */
+	*buffer = (char *) malloc(_mem_alloc);
+	if(!*buffer)
+	{
+		return NULL;
 	}
-
+	alloc = _mem_alloc;
+	
 	va_start(ap, format);
-	length = vsnprintf(buffer, alloc, format, ap);
+	length = vsnprintf(*buffer, alloc, format, ap);
 
 	if(length >= alloc) {
-		char *ptr;
-		
-		ptr = realloc(buffer, length + 1);
+		printf("realloc!");
+		fflush(stdout);
+		ptr = realloc(*buffer, length + 1);
 		if(!ptr) {
 			va_end(ap);
 			return NULL;
 		}
-		buffer = ptr;
+		*buffer = ptr;
 		alloc = length + 1;
-		length = vsnprintf(buffer, alloc, format, ap);
+		length = vsnprintf(*buffer, alloc, format, ap);
 	}
 	va_end(ap);
 
 	if(length<0){
 		return NULL;
 	}
-	buffer[length]='\0';
-	return (char * ) buffer;
+
+	ptr = *buffer;
+	ptr[length] = '\0';
+	*len = length;
+
+	return *buffer;
 }
 
 char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
@@ -253,6 +257,10 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	char *new_buffer=0;
 	char *buffer_content=0;
 	static size_t alloc = 0;
+	unsigned long len;
+	
+	printf("\nbuffer from buffer");
+	fflush(stdout);
 
 	new_buffer = (char *)mk_mem_malloc(256);
 	if(!new_buffer){
@@ -289,7 +297,8 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	new_buffer[length]='\0';
 
 	if(buffer_content){
-		buffer = m_build_buffer("%s%s", buffer_content, new_buffer);
+		m_build_buffer(&buffer, &len,
+				"%s%s", buffer_content, new_buffer);
 		mk_mem_free(buffer_content);
 		mk_mem_free(new_buffer);
 	}else{

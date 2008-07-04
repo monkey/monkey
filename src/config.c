@@ -40,7 +40,8 @@
 /* Read configuration files */
 void M_Config_read_files(char *path_conf, char *file_conf)
 {
-    int bool;
+	int bool;
+	unsigned long len;
 	char *path=0, buffer[255];
 	char *variable=0, *value=0, *last=0, *auxarg=0;
 	FILE *configfile;
@@ -53,7 +54,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		exit(1);
 	}
 	
-	path = m_build_buffer("%s/%s", path_conf, file_conf);
+	m_build_buffer(&path, &len, "%s/%s", path_conf, file_conf);
 
 	if( (configfile=fopen(path,"r"))==NULL ) {
 		fprintf(stderr, "Error: I can't open %s file.\n", path);
@@ -61,7 +62,6 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 	}
 
 	while(fgets(buffer,255,configfile)) {
-		int len;
 		len = strlen(buffer);
 		if(buffer[len-1] == '\n') {
 			buffer[--len] = 0;
@@ -126,11 +126,11 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		
 		/* Pid File */
 		if(strcasecmp(variable,"PidFile")==0)
-			config->pid_file_path=m_build_buffer("%s", value);
+			m_build_buffer(&config->pid_file_path, &len, "%s", value);
 
 		/* Directorio para /~ */
 		if(strcasecmp(variable,"UserDir")==0){
-			config->user_dir = m_build_buffer("%s", value);
+			m_build_buffer(&config->user_dir, &len, "%s", value);
 		}
 		
 		/* Variable INDEX */
@@ -143,15 +143,16 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		}
 
 		/* HideVersion Variable */
-		if(strcasecmp(variable,"HideVersion")==0) {
-            bool = M_Config_Get_Bool(value);
-            if(bool == VAR_ERR)
-            {
-                M_Config_print_error_msg("HideVersion", path);
-            }
-            else{
-                config->hideversion=bool;
-            }
+		if(strcasecmp(variable,"HideVersion")==0)
+		{
+			bool = M_Config_Get_Bool(value);
+			if(bool == VAR_ERR)
+			{
+				M_Config_print_error_msg("HideVersion", path);
+			}
+			else{
+				config->hideversion=bool;
+			}
 		}
 		
 		/* Scripts */
@@ -181,32 +182,34 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 
 		/* User Variable */
 		if(strcasecmp(variable,"User")==0) {
-			config->user = m_build_buffer("%s", value);
+			m_build_buffer(&config->user, &len,
+					"%s", value);
 		}
-
+		
 		/* Resume */
 		if(strcasecmp(variable, "Resume")==0)
-        {
-            bool = M_Config_Get_Bool(value);
-            if(bool == VAR_ERR)
-            {
-                M_Config_print_error_msg("Resume", path);
-            }
-            else{
-                config->resume=bool;
-            }
+		{
+			bool = M_Config_Get_Bool(value);
+			if(bool == VAR_ERR)
+			{
+				M_Config_print_error_msg("Resume", path);
+			}
+			else{
+				config->resume=bool;
+			}
 		}
 		
 		/* Symbolic Links */
-		if(strcasecmp(variable, "SymLink")==0) {
-            bool = M_Config_Get_Bool(value);
-            if(bool == VAR_ERR)
-            {
-                M_Config_print_error_msg("SymLink", path);
-            }
-            else{
-                config->symlink=bool;
-            }
+		if(strcasecmp(variable, "SymLink")==0)
+		{
+			bool = M_Config_Get_Bool(value);
+			if(bool == VAR_ERR)
+ 			{
+				M_Config_print_error_msg("SymLink", path);
+			}
+			else{
+				config->symlink=bool;
+			}
 		}
 		/* Max connection per IP */
 		if(strcasecmp(variable, "Max_IP")==0) {
@@ -222,18 +225,19 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 	}
 	fclose(configfile);
 	mk_mem_free(path);
-    M_Config_Read_Hosts(path_conf);
+	M_Config_Read_Hosts(path_conf);
 }
 
 void M_Config_Read_Hosts(char *path)
 {
     DIR *dir;
-    char *buf;
+    unsigned long len;
+    char *buf=0;
     char *file;
     struct host *p_host, *new_host; /* debug */
     struct dirent *ent;
 
-    buf = m_build_buffer("%s/sites/default", path);
+    m_build_buffer(&buf, &len, "%s/sites/default", path);
     config->hosts = M_Config_Get_Host(buf);
     config->nhosts++;
     mk_mem_free(buf);
@@ -244,7 +248,7 @@ void M_Config_Read_Hosts(char *path)
         exit(1);
     }
 
-    buf = m_build_buffer("%s/sites/", path);
+	m_build_buffer(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf)))
         exit(1);
 
@@ -258,7 +262,7 @@ void M_Config_Read_Hosts(char *path)
         if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
         if (strcasecmp((char *) ent->d_name, "default" ) == 0) continue;
 
-        file = m_build_buffer("%s/sites/%s", path, ent->d_name);
+        m_build_buffer(&file, &len, "%s/sites/%s", path, ent->d_name);
 
         new_host = (struct host *) M_Config_Get_Host(file);
         mk_mem_free(file);
@@ -315,6 +319,7 @@ int M_Config_Get_Bool(char *value)
 
 struct host *M_Config_Get_Host(char *path)
 {
+	unsigned long len;
     char buffer[255];
     char *variable=0, *value=0, *last=0, *auxarg=0;
     FILE *configfile;
@@ -333,7 +338,6 @@ struct host *M_Config_Get_Host(char *path)
     host->file = mk_string_dup(path);
 
     while(fgets(buffer,255,configfile)) {
-        int len;
         len = strlen(buffer);
         if(buffer[len-1] == '\n') {
             buffer[--len] = 0;
@@ -352,7 +356,8 @@ struct host *M_Config_Get_Host(char *path)
 
         /* Server Name */
         if(strcasecmp(variable,"Servername")==0)
-            host->servername = m_build_buffer("%s", value);
+            m_build_buffer(&host->servername, &len,
+			    "%s", value);
 
         /* Ubicacion directorio servidor */
         if(strcasecmp(variable,"DocumentRoot")==0) {
@@ -369,11 +374,13 @@ struct host *M_Config_Get_Host(char *path)
 
         /* Access log */
         if(strcasecmp(variable,"AccessLog")==0) 
-            host->access_log_path=m_build_buffer("%s", value);
+            m_build_buffer(&host->access_log_path, 
+			    &len,"%s", value);
         
         /* Error log */
         if(strcasecmp(variable,"ErrorLog")==0)
-            host->error_log_path = m_build_buffer("%s", value);
+            m_build_buffer(&host->error_log_path, &len,
+			    "%s", value);
 
         /* GetDir Variable */
         if(strcasecmp(variable,"GetDir")==0)
@@ -398,10 +405,12 @@ struct host *M_Config_Get_Host(char *path)
         }
 
         if(strcasecmp(variable, "Header_file")==0)
-            host->header_file = m_build_buffer("%s", value);
+            m_build_buffer(&host->header_file, &len,
+			    "%s", value);
 
         if(strcasecmp(variable, "Footer_file")==0)
-            host->footer_file = m_build_buffer("%s", value);
+            m_build_buffer(&host->footer_file, &len,
+			    "%s", value);
 
     }
     fclose(configfile);
@@ -412,15 +421,18 @@ struct host *M_Config_Get_Host(char *path)
 
 	/* Server Signature */
 	if(config->hideversion==VAR_OFF){
-		host->host_signature = m_build_buffer("Monkey/%s Server (Host: %s, Port: %i)",
+		m_build_buffer(&host->host_signature, &len,
+				"Monkey/%s Server (Host: %s, Port: %i)",
 				VERSION, host->servername, config->serverport);
 	}
 	else{
-		host->host_signature = m_build_buffer("Monkey Server (Host: %s, Port: %i)",
+		m_build_buffer(&host->host_signature, &len, 
+				"Monkey Server (Host: %s, Port: %i)",
 				host->servername, config->serverport);
 	}
-	host->header_host_signature = m_build_buffer("Server: %s", host->host_signature);
-	host->header_len_host_signature = strlen(host->header_host_signature);
+	m_build_buffer(&host->header_host_signature, &len, 
+			"Server: %s", host->host_signature);
+	host->header_len_host_signature = len;
 
 	if(pipe(host->logpipe)<0)
 	{
@@ -476,31 +488,36 @@ void M_Config_set_init_values(void)
 	config->server_addr=NULL;
 	config->symlink=VAR_OFF;
 	config->nhosts = 0;
+	config->user = NULL;
 }
 
 /* Lee la configuraci�n principal desde monkey.conf */
 void M_Config_start_configure(void)
 {
+	unsigned long len;
 
-    M_Config_set_init_values();
+	M_Config_set_init_values();
+	M_Config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
 
-    M_Config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
+	/* if not index names defined, set default */
+	if(first_index==NULL) 
+		M_Config_add_index("index.html");			
 
-    /* Si no fueron definidas variables 
-    INDEX, se asume index.html por omisi�n */
-    if(first_index==NULL) 
-    	M_Config_add_index("index.html");			
-
-	/* Almacenar en estructura los mimetypes definidos */
-    Mimetype_Read_Config();
+	/* Load mimes */
+	Mimetype_Read_Config();
      
-	/* Carga directorios e IP's a denegar */
-    Deny_Read_Config(); 
+	/* Load security rules */
+	Deny_Read_Config(); 
 
-    /* Informaci�n b�sica del server */
-    if(config->hideversion==VAR_OFF)
-		config->server_software = m_build_buffer("Monkey/%s (%s)",VERSION,OS);
-    else
-		config->server_software = m_build_buffer("Monkey Server");
+	/* Basic server information */
+	if(config->hideversion==VAR_OFF)
+	{
+		m_build_buffer(&config->server_software, &len, "Monkey/%s (%s)",VERSION,OS);
+	}
+	else
+	{
+		m_build_buffer(&config->server_software, &len,
+				"Monkey Server");
+	}
 }
 

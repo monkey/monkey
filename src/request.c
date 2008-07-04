@@ -546,6 +546,7 @@ char *Request_Find_Variable(char *request_body,  char *string)
 /* Look for some  index.xxx in pathfile */
 char *FindIndex(char *pathfile)
 {
+	unsigned long len;
 	char *file_aux=0;
 	struct indexfile *aux_index;
 	
@@ -553,10 +554,16 @@ char *FindIndex(char *pathfile)
 
 	while(aux_index!=NULL) {
 		if(pathfile[strlen(pathfile)-1]=='/')
-			file_aux=m_build_buffer("%s/%s",pathfile,aux_index->indexname);
+		{
+			m_build_buffer(&file_aux, &len,
+					"%s/%s",pathfile,aux_index->indexname);
+		}
 		else
-			file_aux=m_build_buffer("%s%s",pathfile,aux_index->indexname);
-			
+		{
+			m_build_buffer(&file_aux, &len,
+					"%s%s",pathfile,aux_index->indexname);
+		}
+	
 		if(access(file_aux,F_OK)==0) {
 			mk_mem_free(file_aux);
 			return (char *) aux_index->indexname;
@@ -572,6 +579,7 @@ char *FindIndex(char *pathfile)
 void Request_Error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log)
 {
+	unsigned long len;
 	char *page_default=0, *aux_message=0;
 			
 	if(!s_log) {
@@ -581,18 +589,22 @@ void Request_Error(int num_error, struct client_request *cr,
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
 			page_default=Set_Page_Default("Bad Request", "", s_request->host_conf->host_signature);
-			s_log->error_msg=m_build_buffer("[error 400] Bad request");
+			m_build_buffer(&s_log->error_msg, &len,
+					"[error 400] Bad request");
 			break;
 
 		case M_CLIENT_FORBIDDEN:
 			page_default=Set_Page_Default("Forbidden", s_request->uri, s_request->host_conf->host_signature);
-			s_log->error_msg=m_build_buffer("[error 403] Forbidden %s",s_request->uri);
+			m_build_buffer(&s_log->error_msg, &len,
+					"[error 403] Forbidden %s",s_request->uri);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
-			aux_message = m_build_buffer("The requested URL %.100s  was not found on this server.", (char *) s_request->uri);
+			m_build_buffer(&aux_message, &len,
+					"The requested URL %.100s  was not found on this server.", 
+					(char *) s_request->uri);
 			page_default=Set_Page_Default("Not Found", aux_message, s_request->host_conf->host_signature);
-			s_log->error_msg=m_build_buffer("[error 404] Not Found %s",s_request->uri);
+			m_build_buffer(&s_log->error_msg, &len, "[error 404] Not Found %s",s_request->uri);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
@@ -601,27 +613,36 @@ void Request_Error(int num_error, struct client_request *cr,
 					s_request->host_conf->host_signature);
 
 			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-			s_log->error_msg=m_build_buffer("[error 405] Method Not Allowed");
+			m_build_buffer(&s_log->error_msg, &len, 
+					"[error 405] Method Not Allowed");
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
 			s_log->status=S_LOG_OFF;
-			s_log->error_msg=m_build_buffer("[error 408] Request Timeout");
+			m_build_buffer(&s_log->error_msg, &len,
+					"[error 408] Request Timeout");
 			break;
 
 		case M_CLIENT_LENGHT_REQUIRED:
-			s_log->error_msg=m_build_buffer("[error 411] Length Required");
+			m_build_buffer(&s_log->error_msg, &len,
+					"[error 411] Length Required");
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
-			aux_message = m_build_buffer("Problems found running %s ",s_request->uri);
-			page_default=Set_Page_Default("Internal Server Error",aux_message, s_request->host_conf->host_signature);
-			s_log->error_msg=m_build_buffer("[error 411] Internal Server Error %s",s_request->uri);
+			m_build_buffer(&aux_message, &len, 
+					"Problems found running %s ",
+					s_request->uri);
+			page_default=Set_Page_Default("Internal Server Error",
+					aux_message, s_request->host_conf->host_signature);
+			m_build_buffer(&s_log->error_msg, &len,
+					"[error 411] Internal Server Error %s",s_request->uri);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			page_default=Set_Page_Default("HTTP Version Not Supported"," ", s_request->host_conf->host_signature);
-			s_log->error_msg=m_build_buffer("[error 505] HTTP Version Not Supported");
+			page_default=Set_Page_Default("HTTP Version Not Supported"," ",
+				       s_request->host_conf->host_signature);
+			m_build_buffer(&s_log->error_msg, &len, 
+					"[error 505] HTTP Version Not Supported");
 			break;
 	}
 
@@ -637,9 +658,15 @@ void Request_Error(int num_error, struct client_request *cr,
 	if(aux_message) mk_mem_free(aux_message);
 	
 	if(!page_default)
+	{
 		s_request->headers->content_type = NULL;
+	}
 	else
-		s_request->headers->content_type = m_build_buffer("text/html");
+	{
+		m_build_buffer(&s_request->headers->content_type,
+				&len,
+				"text/html");
+	}
 
 	M_METHOD_send_headers(cr->socket, cr, s_request, s_log);
 
@@ -652,9 +679,10 @@ void Request_Error(int num_error, struct client_request *cr,
 /* Build error page */
 char *Set_Page_Default(char *title, char *message, char *signature)
 {
+	unsigned long len;
 	char *page=0;
 
-	page = m_build_buffer("<HTML><BODY><H1>%s</H1>%s<BR><HR> \
+	m_build_buffer(&page, &len, "<HTML><BODY><H1>%s</H1>%s<BR><HR> \
 		<ADDRESS>%s</ADDRESS></BODY></HTML>", title, message, signature);
 	return (char *) page;
 }

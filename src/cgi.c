@@ -94,7 +94,8 @@ char *M_CGI_alias(char *path, char *query, char *newstring )
 {
 	int slash_offset=0;
 	char *aux=0, *buffer=0;
-	
+	unsigned long len;
+
 	if(!path || !query)
 		return NULL;
 
@@ -102,12 +103,13 @@ char *M_CGI_alias(char *path, char *query, char *newstring )
 	if(path[strlen(query) - 1]!='/')
 		slash_offset++;
 	
-	aux=m_build_buffer("%s", path+strlen(query)+slash_offset);
+	m_build_buffer(&aux, &len, "%s",
+		       path+strlen(query)+slash_offset);
 	
 	if(newstring[strlen(newstring) - 1]!='/')
-		buffer=m_build_buffer("%s/%s", newstring, aux);
+		m_build_buffer(&buffer, &len, "%s/%s", newstring, aux);
 	else
-		buffer=m_build_buffer("%s%s", newstring, aux);
+		m_build_buffer(&buffer, &len, "%s%s", newstring, aux);
 
 	mk_mem_free(aux);
 	return (char *) buffer;
@@ -375,9 +377,11 @@ char **M_CGI_env_set_basic(struct request *sr)
 /* Add new var to **arg */
 char *M_CGI_env_add_var(char *name, const char *value)
 {
+	unsigned long len;
 	char *variable=0;
 
-	variable = m_build_buffer("%s=%s", name, value ? value : "");
+	m_build_buffer(&variable, &len, 
+			"%s=%s", name, value ? value : "");
 	return variable;
 }
 

@@ -139,14 +139,15 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	char **mime_info;
 	char *gmt_file_unix_time; // gmt time of server file (unix time)
 	struct file_info *path_info;
+	unsigned long len;
 
 	/* Normal request default site */
 	if((strcmp(sr->uri_processed,"/"))==0)
-		sr->real_path = m_build_buffer("%s", 
+		m_build_buffer(&sr->real_path, &len, "%s", 
 				sr->host_conf->documentroot);
 
 	if(sr->user_home==VAR_OFF){
-		sr->real_path = m_build_buffer("%s%s", 
+		m_build_buffer(&sr->real_path, &len, "%s%s", 
 				sr->host_conf->documentroot, 
 				sr->uri_processed);
 	}
@@ -193,12 +194,12 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		  this string, if doesn't exist we send a redirection header
 		*/
 		if(sr->uri_processed[strlen(sr->uri_processed) - 1] != '/') {
-			location=m_build_buffer("%s/", sr->uri_processed);
+			m_build_buffer(&location, &len, "%s/", sr->uri_processed);
 			if(config->serverport == config->standard_port)
-				real_location=m_build_buffer("http://%s%s", 
+				m_build_buffer(&real_location, &len, "http://%s%s", 
 						sr->host, location);
 			else
-				real_location=m_build_buffer("http://%s:%i%s",
+				m_build_buffer(&real_location, &len, "http://%s:%i%s",
 						sr->host, config->serverport,
 						location);
 

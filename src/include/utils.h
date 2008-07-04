@@ -55,7 +55,7 @@ char *get_real_string(char *req_uri);
 
 char  *get_name_protocol(int remote_protocol);
 
-char *m_build_buffer(const char *format, ...);
+char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...);
 char *m_build_buffer_from_buffer(char *buffer, const char *format, ...);
 
 void *M_malloc(size_t size);

@@ -38,8 +38,9 @@ void Deny_Read_Config()
 	char *path=0;
 	char *type=0,*value=0, *last=0;
 	FILE *deny_file;
-		
-	path = m_build_buffer("%s/%s", config->serverconf, DENY_CONF_FILENAME);
+	unsigned long len;
+
+	m_build_buffer(&path, &len, "%s/%s", config->serverconf, DENY_CONF_FILENAME);
 
 	if((deny_file=fopen(path,"r"))==NULL ) {
 		puts("Error: I can't open monkey deny file");
