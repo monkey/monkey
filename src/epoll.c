@@ -71,7 +71,6 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 		for(i=0; i< num_fds; i++) {
 			// Case 1: Error condition
 			if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				//fputs("\nepoll: EPOLLERR", stderr);
 				close(events[i].data.fd);
 				continue;
 			}
@@ -79,9 +78,6 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 
 			if(events[i].events & EPOLLIN)
 			{
-				//printf("\nEPOLL::going read");
-				//fflush(stdout);
-				
 				ret = (* calls->func_switch)((void *)calls->read, 
 						(void *)events[i].data.fd);
 				if(ret<0){
@@ -90,13 +86,9 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 			}
 			if(events[i].events & EPOLLOUT)
 			{
-				//printf("\nEPOLL::going write");
-				//fflush(stdout);
 				ret = (* calls->func_switch)((void *)calls->write,
 						(void *)events[i].data.fd);
 				if(ret<0){
-					//printf("\nclosing...");
-					//fflush(stdout);
 					close(events[i].data.fd);
 				}
 			}

@@ -212,7 +212,7 @@ char *read_header_footer_file(char *file_path)
 	FILE *file;
 	int bytes;
 	char *file_content=0;
-	static char buffer[BUFFER_SOCKET];
+	char *buffer;
 	struct stat f;
 
 	stat(file_path, &f);	
@@ -222,13 +222,15 @@ char *read_header_footer_file(char *file_path)
 		return NULL;
 	}	
 	
-	memset(buffer, '\0', sizeof(buffer));
+	buffer = mk_mem_malloc_z(BUFFER_SOCKET);
+
 	while((bytes=fread(buffer,1, BUFFER_SOCKET, file)>0)){
 		file_content = m_build_buffer_from_buffer(file_content,"%s", buffer);
 		memset(buffer, '\0', sizeof(buffer));
 	}
 	fclose(file);
-		
+	
+	mk_mem_free(buffer);	
 	return (char *) file_content;
 }
  

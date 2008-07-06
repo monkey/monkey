@@ -218,6 +218,7 @@ int main(int argc, char **argv)
 
 	sched = sched_list;
 	socklen_t socket_size = sizeof(remote);
+	
 	while(1)
 	{
 		if((remote_fd=accept(local_fd, (struct sockaddr *)&remote, &socket_size))==-1)

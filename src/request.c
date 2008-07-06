@@ -400,8 +400,11 @@ int Process_Request_Header(struct request *sr)
 {
 	int uri_init=0, uri_end=0;
 	int query_init=0, query_end=0;
-	int prot_init=0, prot_end=0;
-	char *str_prot=0;
+	int prot_init=0, prot_end=0, pos_sep=0;
+	int break_line;
+	char *str_prot=0, *port=0;
+	char *headers;
+	char *host;
 
 	/* Method */
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
@@ -428,19 +431,23 @@ int Process_Request_Header(struct request *sr)
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = (char *)mk_string_copy_substr(sr->body, uri_init, uri_end);
 
+	
 	if(strlen(sr->uri)<1)
 	{
 		return -1;
 	}
+	
 
 	/* HTTP Version */
 	prot_init=mk_string_search(sr->body+uri_init+1," ")+uri_init+2;
 
 	if(mk_string_search(sr->body, "\r\n")>0){
 		prot_end = mk_string_search(sr->body, "\r\n");
+		break_line = 2;
 	}
 	else{
 		prot_end = mk_string_search(sr->body, "\n");
+		break_line = 1;
 	}
 
 	if(prot_end!=prot_init && prot_end>0){
@@ -448,6 +455,8 @@ int Process_Request_Header(struct request *sr)
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
         	mk_mem_free(str_prot);
 	}
+
+	headers = sr->body+prot_end+break_line;
 
 	/* URI processed */
 	sr->uri_processed = get_real_string( sr->uri );
@@ -458,24 +467,18 @@ int Process_Request_Header(struct request *sr)
 	}
 
 	/* Host */ 
-	if(mk_string_casestr(sr->body, RH_HOST))
+	if((host = Request_Find_Variable(headers, RH_HOST)))
 	{
-		char *tmp = Request_Find_Variable(sr->body, RH_HOST);
-		
-		/* is host formated something like xxxxx:yy ????  */
-		if(tmp!=NULL && strstr(tmp, ":") != NULL ){
-			int pos_sep=0;
-			char *port=0;
-
-			pos_sep = mk_string_search(tmp, ":");
-			sr->host = mk_string_copy_substr(tmp, 0, pos_sep);
-			port = mk_string_copy_substr(tmp, pos_sep, strlen(tmp));
-			sr->port=atoi(port);
+		if((pos_sep = mk_string_search(host, ":"))>=0)
+		{
+			sr->host = mk_string_copy_substr(host, 0, pos_sep);
+			port = mk_string_copy_substr(host, pos_sep+1, strlen(host));
+			sr->port = atoi(port);
 			mk_mem_free(port);
-			mk_mem_free(tmp);
+			mk_mem_free(host);
 		}
 		else{
-			sr->host=tmp;  /* maybe null */ 
+			sr->host=host;  /* maybe null */ 
 			sr->port=config->standard_port;
 		}
 	}
@@ -484,16 +487,16 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Looking for headers */
-	sr->accept = Request_Find_Variable(sr->body, RH_ACCEPT);
-	sr->accept_charset = Request_Find_Variable(sr->body, RH_ACCEPT_CHARSET);
-	sr->accept_encoding = Request_Find_Variable(sr->body, RH_ACCEPT_ENCODING);
-	sr->accept_language = Request_Find_Variable(sr->body, RH_ACCEPT_LANGUAGE);
-	sr->cookies = Request_Find_Variable(sr->body, RH_COOKIE);
-	sr->connection = Request_Find_Variable(sr->body, RH_CONNECTION);
-	sr->referer = Request_Find_Variable(sr->body, RH_REFERER);
-	sr->user_agent = Request_Find_Variable(sr->body, RH_USER_AGENT);
-	sr->range = Request_Find_Variable(sr->body, RH_RANGE);
-	sr->if_modified_since = Request_Find_Variable(sr->body, RH_IF_MODIFIED_SINCE);
+	sr->accept = Request_Find_Variable(headers, RH_ACCEPT);
+	sr->accept_charset = Request_Find_Variable(headers, RH_ACCEPT_CHARSET);
+	sr->accept_encoding = Request_Find_Variable(headers, RH_ACCEPT_ENCODING);
+	sr->accept_language = Request_Find_Variable(headers, RH_ACCEPT_LANGUAGE);
+	sr->cookies = Request_Find_Variable(headers, RH_COOKIE);
+	sr->connection = Request_Find_Variable(headers, RH_CONNECTION);
+	sr->referer = Request_Find_Variable(headers, RH_REFERER);
+	sr->user_agent = Request_Find_Variable(headers, RH_USER_AGENT);
+	sr->range = Request_Find_Variable(headers, RH_RANGE);
+	sr->if_modified_since = Request_Find_Variable(headers, RH_IF_MODIFIED_SINCE);
 
 	/* Checking keepalive */
 	sr->keep_alive=VAR_OFF;
@@ -551,7 +554,7 @@ char *FindIndex(char *pathfile)
 	struct indexfile *aux_index;
 	
 	aux_index=first_index;
-
+	
 	while(aux_index!=NULL) {
 		if(pathfile[strlen(pathfile)-1]=='/')
 		{
@@ -740,8 +743,8 @@ struct request *alloc_request()
 {
     struct request *request=0;
 
-    request = (struct request *) mk_mem_malloc(sizeof(struct request));
-    request->log = (struct log_info *) mk_mem_malloc(sizeof(struct log_info));
+    request = (struct request *) mk_mem_malloc_z(sizeof(struct request));
+    request->log = (struct log_info *) mk_mem_malloc_z(sizeof(struct log_info));
     //request->log->ip=PutIP(remote);
 
     request->status=VAR_OFF; /* Request not processed yet */
@@ -751,6 +754,7 @@ struct request *alloc_request()
     //request->log->datetime=PutTime();
     request->log->final_response=M_HTTP_OK;
     request->log->status=S_LOG_ON;
+    request->log->error_msg = NULL;
     request->status=VAR_ON;
     request->method=METHOD_NOT_FOUND;
 
@@ -787,6 +791,7 @@ struct request *alloc_request()
     request->fd_file = -1;
 
     request->headers = (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
+
     request->headers->content_type = NULL;
     request->headers->last_modified = NULL;
     request->headers->location = NULL;
@@ -894,14 +899,15 @@ struct client_request *mk_create_client_request(int socket)
 {
 	struct client_request *request_handler, *cr, *aux;
 
-	cr = mk_mem_malloc(sizeof(struct client_request));
+	cr = mk_mem_malloc_z(sizeof(struct client_request));
+
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
 	cr->socket = socket;
 	cr->request = NULL;
 	cr->client_ip = mk_socket_get_ip(socket);
-
-	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
+	cr->next = NULL;
+	cr->body = mk_mem_malloc_z(MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();
 	cr->body_length = 0;
 

@@ -36,7 +36,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 {
 	struct sched_list_node *sr, *aux;
 
-	sr = mk_mem_malloc(sizeof(struct sched_list_node)); 
+	sr = mk_mem_malloc_z(sizeof(struct sched_list_node)); 
 	sr->tid = tid;
 	sr->epoll_fd = efd;
 	sr->request_handler = NULL;

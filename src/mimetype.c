@@ -73,8 +73,8 @@ int Mimetype_Add(char *name, char *type, char *bin_path)
 	
 	struct mimetypes *new_mime, *aux_mime;
 	
-	new_mime = mk_mem_malloc(sizeof(struct mimetypes));
-	
+	new_mime = mk_mem_malloc_z(sizeof(struct mimetypes));
+
 	new_mime->name = mk_string_dup(name);
 	new_mime->type = mk_string_dup(type);
 	new_mime->script_bin_path = mk_string_dup(bin_path);
@@ -141,7 +141,7 @@ char **Mimetype_CMP(char *name)
 
 int Mimetype_free(char **arr)
 {
-	free(arr);
+	mk_mem_free(arr);
 	return 0;
 }
 

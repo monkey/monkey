@@ -19,19 +19,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "memory.h"
 
 void *mk_mem_malloc(size_t size)
 {
 	char *aux=0;
-
+	
 	if((aux=malloc(size))==NULL){
 		perror("malloc");
 		return NULL;						
 	}
-	memset(aux, '\0', size);
 	return (void *) aux;
+}
+
+void *mk_mem_malloc_z(size_t size)
+{
+	char *buf=0;
+
+	buf = mk_mem_malloc(size);
+	if(!buf)
+	{
+		return NULL;
+	}
+
+	memset(buf, '\0', sizeof(size));
+	return buf;
 }
 
 void *mk_mem_realloc(void* ptr, size_t size)

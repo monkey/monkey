@@ -85,9 +85,6 @@ int CheckFile(char *pathfile)
 {
 	struct stat path;
 
-	printf("\ncheck file?");
-	fflush(stdout);
-
 	if(stat(pathfile,&path)==-1)
 		return -1;
 		
@@ -211,11 +208,12 @@ char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 	va_list	ap;
 	int length;
 	char *ptr;
-	static size_t _mem_alloc = 128;
-	static size_t alloc = 0;
+	static size_t _mem_alloc = 64;
+	size_t alloc = 0;
 	
 	/* *buffer *must* be an empty/NULL buffer */
-	*buffer = (char *) malloc(_mem_alloc);
+
+	*buffer = (char *) mk_mem_malloc(_mem_alloc);
 	if(!*buffer)
 	{
 		return NULL;
@@ -224,10 +222,8 @@ char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 	
 	va_start(ap, format);
 	length = vsnprintf(*buffer, alloc, format, ap);
-
+	
 	if(length >= alloc) {
-		printf("realloc!");
-		fflush(stdout);
 		ptr = realloc(*buffer, length + 1);
 		if(!ptr) {
 			va_end(ap);
@@ -246,7 +242,7 @@ char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 	ptr = *buffer;
 	ptr[length] = '\0';
 	*len = length;
-
+	
 	return *buffer;
 }
 
@@ -258,9 +254,6 @@ char *m_build_buffer_from_buffer(char *buffer, const char *format, ...)
 	char *buffer_content=0;
 	static size_t alloc = 0;
 	unsigned long len;
-	
-	printf("\nbuffer from buffer");
-	fflush(stdout);
 
 	new_buffer = (char *)mk_mem_malloc(256);
 	if(!new_buffer){

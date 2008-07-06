@@ -21,6 +21,8 @@
 #define MK_MEM_H
 
 void *mk_mem_malloc(size_t size);
+void *mk_mem_malloc_z(size_t size);
+
 void *mk_mem_realloc(void* ptr, size_t size);
 void mk_mem_free(void *ptr);
 

@@ -319,7 +319,7 @@ int M_Config_Get_Bool(char *value)
 
 struct host *M_Config_Get_Host(char *path)
 {
-	unsigned long len;
+	unsigned long len=0;
     char buffer[255];
     char *variable=0, *value=0, *last=0, *auxarg=0;
     FILE *configfile;
@@ -334,7 +334,8 @@ struct host *M_Config_Get_Host(char *path)
         return NULL;
     }
 
-    host = mk_mem_malloc(sizeof(struct host));
+    host = mk_mem_malloc_z(sizeof(struct host));
+    host->servername = 0;
     host->file = mk_string_dup(path);
 
     while(fgets(buffer,255,configfile)) {
@@ -356,8 +357,10 @@ struct host *M_Config_Get_Host(char *path)
 
         /* Server Name */
         if(strcasecmp(variable,"Servername")==0)
-            m_build_buffer(&host->servername, &len,
+	{
+		m_build_buffer(&host->servername, &len,
 			    "%s", value);
+	}
 
         /* Ubicacion directorio servidor */
         if(strcasecmp(variable,"DocumentRoot")==0) {

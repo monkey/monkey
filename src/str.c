@@ -141,13 +141,6 @@ char *mk_string_dup(const char *s)
 	if(!s)
 		return NULL;
 
-	size = strlen(s)+1;	
-	if((aux=malloc(size))==NULL){
-		perror("strdup");
-		return NULL;						
-	}
-
-	memcpy(aux, s, size);
-	return (char *) aux;
+	return strdup(s);
 }
 
