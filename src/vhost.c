@@ -74,14 +74,14 @@ void VHOST_Config_Error(char *path)
 	exit(1);	
 }
 
-struct host *VHOST_Find(char *host)
+struct host *VHOST_Find(mk_pointer host)
 {
 	struct host *aux_host;
 	
-    aux_host = config->hosts;
+	aux_host = config->hosts;
 
 	while(aux_host){
-		if(strcasecmp(aux_host->servername, host)==0)
+		if(strncasecmp(aux_host->servername, host.data, host.len)==0)
 		//if(*aux_host->servername==*host)
 			break;
 		else

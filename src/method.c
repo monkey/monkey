@@ -44,6 +44,7 @@
 /* POST METHOD */
 int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 {
+	/*
 	char *tmp;
 	char buffer[MAX_REQUEST_BODY];
 	int content_length_post=0;
@@ -79,6 +80,7 @@ int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 
 	s_request->content_length=content_length_post;
 	return 0;
+	*/
 }
 
 /* Reuturn the POST variables sent in the request */

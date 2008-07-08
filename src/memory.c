@@ -26,7 +26,7 @@
 void *mk_mem_malloc(size_t size)
 {
 	char *aux=0;
-	
+
 	if((aux=malloc(size))==NULL){
 		perror("malloc");
 		return NULL;						

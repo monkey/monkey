@@ -19,6 +19,8 @@
 
 /* request.c */
 
+#include "memory.h"
+
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
 
@@ -112,20 +114,23 @@ struct request {
 
 	/*---Request headers--*/
 	int  content_length;
-	char *accept;
-	char *accept_language;
-	char *accept_encoding;
-	char *accept_charset;
-	char *content_type;
-	char *connection;	
-	char *cookies; 
-	char *host;
-	char *if_modified_since;
-	char *last_modified_since;
-	char *range;
-	char *referer;
-	char *resume;
-	char *user_agent;	
+	mk_pointer accept;
+	mk_pointer accept_language;
+	mk_pointer accept_encoding;
+	mk_pointer accept_charset;
+	mk_pointer content_type;
+	mk_pointer connection;	
+	mk_pointer cookies; 
+	mk_pointer host;
+	mk_pointer if_modified_since;
+	mk_pointer last_modified_since;
+	mk_pointer range;
+	mk_pointer referer;
+	mk_pointer resume;
+	mk_pointer user_agent;	
+	/*---------------------*/
+	
+	/* POST */
 	char *post_variables;
 	/*-----------------*/
 
@@ -178,7 +183,7 @@ int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
 char	*FindIndex(char *pathfile);
 char	*Set_Page_Default(char *title,  char *message, char *signature);
-char	*Request_Find_Variable(char *request_body, char *string);
+mk_pointer Request_Find_Variable(char *request_body, char *string);
 void Request_Error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log);
 int Validate_Request_Header(char *buf);

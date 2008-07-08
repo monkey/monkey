@@ -314,7 +314,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 	ptr = arg = (char **) mk_mem_malloc(sizeof(char *) * 30);
 
 	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", sr->host_conf->documentroot);
-	
+	/*	
 	if(sr->method==HTTP_METHOD_POST && sr->content_length>0){
 		snprintf(auxint,10,"%i",sr->content_length);
 		*ptr++ = M_CGI_env_add_var("CONTENT_LENGTH",auxint);
@@ -370,7 +370,7 @@ char **M_CGI_env_set_basic(struct request *sr)
 	*ptr++ = M_CGI_env_add_var("QUERY_STRING",  sr->query_string);
 	*ptr++ = M_CGI_env_add_var("POST_VARS", sr->post_variables);
 	*ptr++ = '\0';
-	
+	*/
 	return arg;
 }
 

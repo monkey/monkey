@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-struct host	*VHOST_Find(char *host);
+struct host	*VHOST_Find(mk_pointer host);
 void VHOST_Config_Error(char *path);
 int	 VHOST_Config_Add(char *vhost_servername, char *vhost_documentroot,
                     char *vhost_cgi_alias, char *vhost_cgi_path, int getdir);

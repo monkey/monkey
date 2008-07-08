@@ -316,7 +316,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	
 
 	/* HTTP/1.1 needs Host header */
-	if(!s_request->host && s_request->protocol==HTTP_PROTOCOL_11){
+	if(!s_request->host.data && s_request->protocol==HTTP_PROTOCOL_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
 		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
@@ -337,7 +337,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}
 	
-	if(s_request->host)
+	if(s_request->host.data)
 	{
 		host=VHOST_Find(s_request->host);
 		if(host)
@@ -404,7 +404,7 @@ int Process_Request_Header(struct request *sr)
 	int break_line;
 	char *str_prot=0, *port=0;
 	char *headers;
-	char *host;
+	mk_pointer host;
 
 	/* Method */
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
@@ -430,14 +430,12 @@ int Process_Request_Header(struct request *sr)
 	
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = (char *)mk_string_copy_substr(sr->body, uri_init, uri_end);
-
 	
 	if(strlen(sr->uri)<1)
 	{
 		return -1;
 	}
 	
-
 	/* HTTP Version */
 	prot_init=mk_string_search(sr->body+uri_init+1," ")+uri_init+2;
 
@@ -455,7 +453,6 @@ int Process_Request_Header(struct request *sr)
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
         	mk_mem_free(str_prot);
 	}
-
 	headers = sr->body+prot_end+break_line;
 
 	/* URI processed */
@@ -466,16 +463,20 @@ int Process_Request_Header(struct request *sr)
 		sr->uri_twin = VAR_ON;
 	}
 
-	/* Host */ 
-	if((host = Request_Find_Variable(headers, RH_HOST)))
+	/* Host */
+	host = Request_Find_Variable(headers, RH_HOST);
+	if(host.data)
 	{
-		if((pos_sep = mk_string_search(host, ":"))>=0)
+		if((pos_sep = mk_string_search(host.data, ":"))>=0)
 		{
-			sr->host = mk_string_copy_substr(host, 0, pos_sep);
-			port = mk_string_copy_substr(host, pos_sep+1, strlen(host));
+			//sr->host = mk_string_copy_substr(host, 0, pos_sep);
+			sr->host.data = host.data;
+			sr->host.len = pos_sep;
+
+			port = mk_string_copy_substr(host.data, pos_sep+1, host.len);
 			sr->port = atoi(port);
 			mk_mem_free(port);
-			mk_mem_free(host);
+			//mk_mem_free(host);
 		}
 		else{
 			sr->host=host;  /* maybe null */ 
@@ -483,7 +484,7 @@ int Process_Request_Header(struct request *sr)
 		}
 	}
 	else{
-		sr->host=NULL;
+		sr->host.data=NULL;
 	}
 	
 	/* Looking for headers */
@@ -500,12 +501,12 @@ int Process_Request_Header(struct request *sr)
 
 	/* Checking keepalive */
 	sr->keep_alive=VAR_OFF;
-	if(sr->connection)
+	if(sr->connection.data)
 	{
 		if(sr->protocol==HTTP_PROTOCOL_11 || 
 				sr->protocol==HTTP_PROTOCOL_10)
 		{
-			if(mk_string_casestr(sr->connection,"Keep-Alive"))
+			if(mk_string_casestr(sr->connection.data,"Keep-Alive"))
 			{
 				sr->keep_alive=VAR_ON;
 			}
@@ -515,16 +516,19 @@ int Process_Request_Header(struct request *sr)
 }
 
 /* Return value of some variable sent in request */
-char *Request_Find_Variable(char *request_body,  char *string)
+mk_pointer Request_Find_Variable(char *request_body,  char *string)
 {
+	mk_pointer var;
 	int pos_init_var=0, pos_end_var=0;
-	char *var_value=0;
 	char *t;
+
+	var.data = NULL;
+	var.len = 0;
 
 	/* looking for string on request_body ??? */	
 	if(!(t=(char *)mk_string_casestr(request_body, string)))
 	{
-		return NULL;
+		return var;
 	}
 
 	pos_init_var = strlen(string);
@@ -539,11 +543,12 @@ char *Request_Find_Variable(char *request_body,  char *string)
 		pos_end_var = strlen(t);
 	}
 	if(pos_init_var<=0 || pos_end_var<=0){
-		return  NULL;	
+		return  var;	
 	}
-	var_value = mk_string_copy_substr(t, pos_init_var, pos_end_var);
 
-	return (char *) var_value;
+	var.data = t+pos_init_var;
+	var.len = pos_end_var - pos_init_var;
+	return (mk_pointer) var;
 }
 
 /* Look for some  index.xxx in pathfile */
@@ -762,20 +767,36 @@ struct request *alloc_request()
     request->uri_processed = NULL;
 	request->uri_twin = VAR_OFF;
 
-    request->accept = NULL;
-    request->accept_language = NULL;
-    request->accept_encoding = NULL;
-    request->accept_charset = NULL;
-    request->content_type = NULL;
-    request->connection = NULL;
-    request->cookies = NULL;
-    request->host = NULL;
-    request->if_modified_since = NULL;
-    request->last_modified_since = NULL;
-    request->range = NULL;
-    request->referer = NULL;
-    request->resume = NULL;
-    request->user_agent = NULL;
+ 	request->accept.data = NULL;
+	request->accept_language.data = NULL;
+	request->accept_encoding.data = NULL;
+	request->accept_charset.data = NULL;
+	request->content_type.data = NULL;
+	request->connection.data = NULL;	
+	request->cookies.data = NULL; 
+	request->host.data = NULL;
+	request->if_modified_since.data = NULL;
+	request->last_modified_since.data = NULL;
+	request->range.data = NULL;
+	request->referer.data = NULL;
+	request->resume.data = NULL;
+	request->user_agent.data = NULL;
+
+    //request->accept = NULL;
+    //request->accept_language = NULL;
+    //request->accept_encoding = NULL;
+    //request->accept_charset = NULL;
+    //request->content_type = NULL;
+    //request->connection = NULL;
+    //request->cookies = NULL;
+    //request->host = NULL;
+    //request->if_modified_since = NULL;
+    //request->last_modified_since = NULL;
+    //request->range = NULL;
+    //request->referer = NULL;
+    //request->resume = NULL;
+    //request->user_agent = NULL;
+    
     request->post_variables = NULL;
 
     request->user_uri = NULL;
@@ -867,7 +888,8 @@ void free_request(struct request *sr)
 		mk_mem_free(sr->uri_processed);
 	}
 
-        mk_mem_free(sr->accept);
+        /*
+      	mk_mem_free(sr->accept);
         mk_mem_free(sr->accept_language);
         mk_mem_free(sr->accept_encoding);
         mk_mem_free(sr->accept_charset);
@@ -881,7 +903,8 @@ void free_request(struct request *sr)
         mk_mem_free(sr->referer);
         mk_mem_free(sr->resume);
         mk_mem_free(sr->user_agent);
-        mk_mem_free(sr->post_variables);
+	*/
+	mk_mem_free(sr->post_variables);
  
         mk_mem_free(sr->user_uri);
         mk_mem_free(sr->query_string);

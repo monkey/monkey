@@ -40,6 +40,8 @@
 #include "dir_html.h"
 #include "logfile.h"
 
+#define O_NOATIME       01000000
+
 int mk_http_method_check(char *method)
 {
 	if(strcmp(method, HTTP_METHOD_GET_STR)==0)
@@ -333,11 +335,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	sr->headers->pconnections_left = (int) 
 		(config->max_keep_alive_request - cr->counter_connections);
 
-	if(sr->if_modified_since && sr->method==HTTP_METHOD_GET){
+	if(sr->if_modified_since.data && sr->method==HTTP_METHOD_GET){
 		time_t date_client; // Date send by client
 		time_t date_file_server; // Date server file
 		
-		date_client = PutDate_unix(sr->if_modified_since);
+		date_client = PutDate_unix(sr->if_modified_since.data);
 
 		gmt_file_unix_time = 
 			PutDate_string((time_t) path_info->last_modification);
@@ -365,7 +367,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	{
 		sr->headers->content_type = mime_info[0];
 		/* Range */
-		if(sr->range!=NULL && config->resume==VAR_ON){
+		if(sr->range.data!=NULL && config->resume==VAR_ON){
 			if(mk_http_range_parse(sr)<0)
 			{
 				Request_Error(M_CLIENT_BAD_REQUEST, cr, 
@@ -392,7 +394,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
 			&& path_info->size>0)
 	{
-		sr->fd_file = open(sr->real_path, O_RDONLY);
+		sr->fd_file = open(sr->real_path, O_RDONLY|O_NOATIME|O_NONBLOCK);
+
 		/* Calc bytes to send & offset */
 		if(mk_http_range_set(sr, path_info->size)!=0)
 		{
@@ -443,7 +446,7 @@ int mk_http_range_set(struct request *sr, long file_size)
 	sr->bytes_to_send = file_size;
 	sr->bytes_offset = 0;
 	
-	if(config->resume==VAR_ON && sr->range){
+	if(config->resume==VAR_ON && sr->range.data){
 		/* yyy- */
 		if(sh->ranges[0]>=0 && sh->ranges[1]==-1){
 			sr->bytes_offset = sh->ranges[0];
@@ -478,24 +481,24 @@ int mk_http_range_parse(struct request *sr)
 	int eq_pos, sep_pos, len;
 	char *buffer=0;
 
-	if(!sr->range)
+	if(!sr->range.data)
 		return -1;	
 
-	if((eq_pos = mk_string_search(sr->range, "="))<0)
+	if((eq_pos = mk_string_search(sr->range.data, "="))<0)
 		return -1;	
 
-	if(strncasecmp(sr->range, "Bytes", eq_pos)!=0)
+	if(strncasecmp(sr->range.data, "Bytes", eq_pos)!=0)
 		return -1;	
 	
-	if((sep_pos = mk_string_search(sr->range, "-"))<0)
+	if((sep_pos = mk_string_search(sr->range.data, "-"))<0)
 		return -1;
 	
-	len = strlen(sr->range);
+	len = sr->range.len;
 
 	/* =-xxx */
 	if(eq_pos+1 == sep_pos){
 		sr->headers->ranges[0] = -1;
-		sr->headers->ranges[1] = (unsigned long) atol(sr->range + sep_pos + 1);
+		sr->headers->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
 
 		if(sr->headers->ranges[1]<=0)
 		{
@@ -507,11 +510,11 @@ int mk_http_range_parse(struct request *sr)
 	/* =yyy-xxx */
 	if( (eq_pos+1 != sep_pos) && (len > sep_pos + 1))
 	{
-		buffer = mk_string_copy_substr(sr->range, eq_pos+1, sep_pos);
+		buffer = mk_string_copy_substr(sr->range.data, eq_pos+1, sep_pos);
 		sr->headers->ranges[0] = (unsigned long) atol(buffer);
 		mk_mem_free(buffer);
 
-		buffer = mk_string_copy_substr(sr->range, sep_pos+1, len);
+		buffer = mk_string_copy_substr(sr->range.data, sep_pos+1, len);
 		sr->headers->ranges[1] = (unsigned long) atol(buffer);
 		mk_mem_free(buffer);
 		
@@ -526,7 +529,7 @@ int mk_http_range_parse(struct request *sr)
 	/* =yyy- */
 	if( (eq_pos+1 != sep_pos) && (len == sep_pos + 1))
 	{
-		buffer = mk_string_copy_substr(sr->range, eq_pos+1, len);
+		buffer = mk_string_copy_substr(sr->range.data, eq_pos+1, len);
 		sr->headers->ranges[0] = (unsigned long) atol(buffer);
 		mk_mem_free(buffer);
 		return 0;

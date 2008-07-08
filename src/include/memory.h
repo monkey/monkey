@@ -20,6 +20,12 @@
 #ifndef MK_MEM_H
 #define MK_MEM_H
 
+typedef struct
+{
+	char *data;
+	unsigned long len;
+} mk_pointer;
+
 void *mk_mem_malloc(size_t size);
 void *mk_mem_malloc_z(size_t size);
 
