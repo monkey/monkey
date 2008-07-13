@@ -397,7 +397,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
 			&& path_info->size>0)
 	{
-		sr->fd_file = open(sr->real_path, O_RDONLY|O_NOATIME|O_NONBLOCK);
+		/* O_NOATIME will just work if process owner has 
+		 * root privileges */
+		sr->fd_file = open(sr->real_path, 
+				O_RDONLY|O_NOATIME|O_NONBLOCK);
 
 		/* Calc bytes to send & offset */
 		if(mk_http_range_set(sr, path_info->size)!=0)

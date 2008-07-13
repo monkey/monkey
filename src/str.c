@@ -89,6 +89,10 @@ int _mk_string_search(char *string, char *search, int n)
 		}
 
 		loop++;
+		if(loop>=n && n>=0)
+		{
+			return -1;
+		}
 	}
 	return idx;
 }

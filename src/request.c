@@ -469,18 +469,17 @@ int Process_Request_Header(struct request *sr)
 
 	/* Host */
 	host = Request_Find_Variable(headers, RH_HOST);
+
 	if(host.data)
 	{
-		if((pos_sep = mk_string_search(host.data, ":"))>=0)
+		if((pos_sep = mk_string_search_n(host.data, ":", host.len))>=0)
 		{
-			//sr->host = mk_string_copy_substr(host, 0, pos_sep);
 			sr->host.data = host.data;
 			sr->host.len = pos_sep;
 
 			port = mk_string_copy_substr(host.data, pos_sep+1, host.len);
 			sr->port = atoi(port);
 			mk_mem_free(port);
-			//mk_mem_free(host);
 		}
 		else{
 			sr->host=host;  /* maybe null */ 
