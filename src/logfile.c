@@ -189,7 +189,7 @@ int write_log(struct log_info *log, int host_pipe)
 			
 			buf = mk_http_method_check_str(log->method);
 			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->uri, strlen(log->uri), SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, log->uri.data, log->uri.len, SPACE, MK_IOV_NOT_FREE_BUF);
                         
 			buf = mk_http_protocol_check_str(log->protocol);
 			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);

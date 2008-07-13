@@ -17,6 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "memory.h"
+
 #define M_CGI_OK 0
 #define M_CGI_TIMEOUT -2
 #define M_CGI_INTERNAL_SERVER_ERR -3
@@ -34,7 +36,9 @@ struct cgi_child {
 
 /* cgi.c */
 int M_CGI_main(struct client_request *cr, struct request *sr, 
-                        struct log_info *s_log, char *remote_request);
+                        struct log_info *s_log, 
+			mk_pointer remote_request);
+
 int M_CGI_run(struct client_request *cr, struct request *sr, 
                         char *script_filename, char **args);
 int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,

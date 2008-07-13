@@ -100,12 +100,13 @@ struct request {
 
 	int status;
 	int pipelined; /* Pipelined request */
-	char *body;
+	//char *body;
+	mk_pointer body;
 
 	/*----First header of client request--*/
 	int method;
 	char *method_str;
-	char *uri;  /* original request */
+	mk_pointer uri;  /* original request */
 	char *uri_processed; /* processed request */
 	int uri_twin;
 
@@ -137,7 +138,7 @@ struct request {
 	/*-Internal-*/
 	char *real_path; /* Absolute real path */
 	char *user_uri; /* ~user/...path */
-	char *query_string; /* ?... */
+	mk_pointer query_string; /* ?... */
 
 	char *virtual_user; /* Virtualhost user */
 	char *script_filename;
@@ -182,7 +183,7 @@ int Process_Request_Header(struct request *sr);
 int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
 int	Get_method_from_request(char *request);
 char	*FindIndex(char *pathfile);
-char	*Set_Page_Default(char *title,  char *message, char *signature);
+char	*Set_Page_Default(char *title, mk_pointer message, char *signature);
 mk_pointer Request_Find_Variable(char *request_body, char *string);
 void Request_Error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log);

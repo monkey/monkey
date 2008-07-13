@@ -30,7 +30,7 @@
 
 #include "monkey.h"
 
-#include "file.h"
+//#include "file.h"
 #include "str.h"
 #include "memory.h"
 #include "http.h"
@@ -40,7 +40,7 @@
 #include "logfile.h"
 #include "config.h"
 #include "utils.h"
-
+#include "file.h"
 /* POST METHOD */
 int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 {
@@ -79,8 +79,9 @@ int M_METHOD_Post(struct client_request *cr, struct request *s_request)
 	}
 
 	s_request->content_length=content_length_post;
-	return 0;
 	*/
+	return 0;
+	
 }
 
 /* Reuturn the POST variables sent in the request */

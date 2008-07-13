@@ -250,12 +250,13 @@ int GetDir(struct client_request *cr, struct request *sr)
 	struct stat *buffer;
 	struct f_list *file_list;
 	struct header_values *hd;
-	
+
 	int i,
  		count_file=-1,	  /* Cantidad de elementos        */
 	     max_file=0,		  /* Cantidad tope usada por GROW */
 		 transfer_type; /* Tipo de transferencia de datos */
 		 
+
 	if ((dir = opendir(sr->real_path)) == NULL)
 		return -1;
 

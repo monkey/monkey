@@ -51,7 +51,7 @@ char *strstr2(char *s, char *t);
 char *PutDate_string(time_t date);
 time_t PutDate_unix(char *date);
 
-char *get_real_string(char *req_uri);
+char *get_real_string(mk_pointer req_uri);
 
 char  *get_name_protocol(int remote_protocol);
 

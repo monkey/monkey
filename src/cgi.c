@@ -44,7 +44,9 @@
 #include "logfile.h"
 
 /* Main function to normal CGI scripts */
-int M_CGI_main(struct client_request *cr, struct request *sr, struct log_info *s_log, char remote_request[MAX_REQUEST_BODY])
+int M_CGI_main(struct client_request *cr, struct request *sr, 
+		struct log_info *s_log, 
+		mk_pointer remote_request)
 {
 	int cgi_status=0, checkdir;
 	struct stat f;
@@ -309,7 +311,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 vars needs for CGI scripts */
 char **M_CGI_env_set_basic(struct request *sr)
 {
-	char **arg=0, **ptr=0, auxint[10];
+	char **arg=0, **ptr=0; //, auxint[10];
 	
 	ptr = arg = (char **) mk_mem_malloc(sizeof(char *) * 30);
 

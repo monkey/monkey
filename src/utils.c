@@ -322,24 +322,24 @@ int set_daemon()
 
 
 
-char *get_real_string(char *req_uri){
+char *get_real_string(mk_pointer req_uri){
 	
 	int length=0, hex_result, auxchar;
 	int new_i=0, i=0;
 	char *buffer=0, hex[3];
 
-	if((i = mk_string_search(req_uri, "%"))<0)
+	if((i = mk_string_search(req_uri.data, "%"))<0)
 	{
 		return NULL;
 	}
 
-	length=strlen(req_uri);
+	length=req_uri.len;
 	buffer=mk_mem_malloc(length + 3);
 
 	do {
-		if(req_uri[i]=='%' && i+2<=length){
+		if(req_uri.data[i]=='%' && i+2<=length){
 			memset(hex,'\0', sizeof(hex));
-			strncpy(hex, req_uri+i+1, 2);
+			strncpy(hex, req_uri.data+i+1, 2);
 			hex[2]='\0';
 
 			if((hex_result=hex2int(hex))<=127){
@@ -362,7 +362,7 @@ char *get_real_string(char *req_uri){
 			continue;
 		}
 		else {
-			buffer[new_i] = req_uri[i];
+			buffer[new_i] = req_uri.data[i];
 		}
 		i++;
 		new_i++;

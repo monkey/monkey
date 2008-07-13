@@ -41,7 +41,7 @@ int User_main(struct client_request *cr, struct request *sr)
 	unsigned long len;
 
 	sr->user_home=VAR_ON;
-	
+
 	user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
 	offset=strlen(USER_HOME_STRING);	
 	limit=mk_string_search(sr->uri_processed+offset, "/");
@@ -52,9 +52,9 @@ int User_main(struct client_request *cr, struct request *sr)
 	strncpy(user, sr->uri_processed+offset, limit);	
 	user[limit]='\0';
 	
-	if(sr->uri[offset+limit]=='/')
+	if(sr->uri.data[offset+limit]=='/')
 	{
-		m_build_buffer(&sr->uri, &len,
+		m_build_buffer(&sr->uri.data, &sr->uri.len,
 				"%s", sr->uri_processed+offset+limit);
 	}
 
@@ -68,10 +68,13 @@ int User_main(struct client_request *cr, struct request *sr)
 	m_build_buffer(&user_server_root, &len, "%s/%s",s_user->pw_dir, config->user_dir);
 
 	if(sr->user_uri!=NULL)
+	{
 		m_build_buffer(&sr->real_path, &len, "%s%s",user_server_root, sr->user_uri);
+	}
 	else
+	{
 		m_build_buffer(&sr->real_path, &len, "%s",user_server_root);
-	
+	}
 	mk_mem_free(user_server_root);
 	return 0;
 }

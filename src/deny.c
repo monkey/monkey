@@ -144,10 +144,11 @@ int Deny_Check(struct request *req, char *client_ip)
 		}
 
 		/* Validando strings a denegar en el request */
-		if(req->uri){
-			if(aux_deny->type && DENY_URL && strstr(req->uri,aux_deny->value)){
-				return -1;
-			}			
+		if(req->uri.data){
+			/* FIXME */
+			//if(aux_deny->type && DENY_URL && strstr(req->uri,aux_deny->value)){
+			//	return -1;
+			//}			
 		}
 		aux_deny=aux_deny->next;
 	}

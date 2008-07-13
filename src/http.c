@@ -78,18 +78,18 @@ char *mk_http_method_check_str(int method)
 	return "";
 }
 
-int mk_http_method_get(char *body)
+int mk_http_method_get(mk_pointer body)
 {
 	int int_method, pos = 0, max_length_method = 5;
 	char *str_method;
 	
-	pos = mk_string_search(body, " ");
+	pos = mk_string_search(body.data, " ");
 	if(pos<=2 || pos>=max_length_method){
 		return -1;	
 	}
 	
 	str_method = mk_mem_malloc(max_length_method);
-	strncpy(str_method, body, pos);
+	strncpy(str_method, body.data, pos);
 	str_method[pos]='\0';
 
 	int_method = mk_http_method_check(str_method);
@@ -145,10 +145,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	/* Normal request default site */
 	if((strcmp(sr->uri_processed,"/"))==0)
+	{
 		m_build_buffer(&sr->real_path, &len, "%s", 
 				sr->host_conf->documentroot);
+	}
 
-	if(sr->user_home==VAR_OFF){
+	if(sr->user_home==VAR_OFF)
+	{
 		m_build_buffer(&sr->real_path, &len, "%s%s", 
 				sr->host_conf->documentroot, 
 				sr->uri_processed);

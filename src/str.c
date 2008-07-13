@@ -60,7 +60,8 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
  * Original version taken from google, modified in order
  * to send the position instead the substring.
  */
-int mk_string_search(char *string, char *search)
+
+int _mk_string_search(char *string, char *search, int n)
 {
 	char *p, *startn = 0, *np = 0;
 	int idx=-1, loop=0;
@@ -91,6 +92,19 @@ int mk_string_search(char *string, char *search)
 	}
 	return idx;
 }
+
+int mk_string_search(char *string, char *search)
+{
+	return _mk_string_search(string, search, -1);
+
+}
+
+int mk_string_search_n(char *string, char *search, int n)
+{
+	return _mk_string_search(string, search, n);
+
+}
+
 char *mk_string_remove_space(char *buf)
 {
     size_t bufsize;
@@ -135,9 +149,6 @@ char *mk_string_casestr(char *heystack, char *needle)
 
 char *mk_string_dup(const char *s)
 {
-	char *aux=0;
-	size_t size;
- 	
 	if(!s)
 		return NULL;
 

@@ -61,7 +61,6 @@ struct request *parse_client_request(struct client_request *cr)
 	int length_buf=0, length_end=0;
 	int pipelined=FALSE;
 	char *string_end=0, *check_normal_string=0, *check_old_string=0;
-	char *block=0;
 	struct request *cr_buf=0, *cr_search=0;
 
 	check_normal_string = strstr(cr->body, NORMAL_STRING_END);
@@ -100,10 +99,14 @@ struct request *parse_client_request(struct client_request *cr)
 		if(strncmp(cr->body+i, string_end, length_end)==0)
 		{
 			/* Allocating request block */
-			block = mk_string_copy_substr(cr->body, init_block, i);
-			
+			//block = mk_string_copy_substr(cr->body, init_block, i);
+				
 			cr_buf = alloc_request();
-			cr_buf->body = block;
+			
+			/* mk_pointer */
+			cr_buf->body.data = cr->body+init_block;
+			cr_buf->body.len = i-init_block;
+
 			cr_buf->method = mk_http_method_get(cr_buf->body);
 			cr_buf->next = NULL;
 
@@ -321,7 +324,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
-	
+
 	/* Method not allowed ? */
 	if(s_request->method==METHOD_NOT_ALLOWED){
 		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
@@ -389,6 +392,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 			return status;
 		}
 	}
+
 	status = mk_http_init(cr, s_request);
 
 	return status;
@@ -410,8 +414,8 @@ int Process_Request_Header(struct request *sr)
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
-	uri_init = mk_string_search(sr->body, " ") + 1;
-	uri_end = mk_string_search(sr->body+uri_init, " ") + uri_init;
+	uri_init = mk_string_search(sr->body.data, " ") + 1;
+	uri_end = mk_string_search(sr->body.data+uri_init, " ") + uri_init;
 
 	if(uri_end < uri_init)
 	{
@@ -419,47 +423,47 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Query String */
-	query_init = mk_string_search(sr->body+uri_init, "?");
+	query_init = mk_string_search(sr->body.data+uri_init, "?");
 	if(query_init > 0 && query_init <= uri_end)
 	{
 		query_init+=uri_init+1;
 		query_end = uri_end;
 		uri_end = query_init - 1;
-		sr->query_string = mk_string_copy_substr(sr->body, query_init, query_end);
+		sr->query_string = mk_pointer_create(sr->body.data, query_init, query_end);
 	}
 	
 	/* Request URI Part 2 */
-	sr->uri = sr->log->uri = (char *)mk_string_copy_substr(sr->body, uri_init, uri_end);
+	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end);
 	
-	if(strlen(sr->uri)<1)
+	if(sr->uri.len<1)
 	{
 		return -1;
 	}
 	
 	/* HTTP Version */
-	prot_init=mk_string_search(sr->body+uri_init+1," ")+uri_init+2;
+	prot_init=mk_string_search(sr->body.data+uri_init+1," ")+uri_init+2;
 
-	if(mk_string_search(sr->body, "\r\n")>0){
-		prot_end = mk_string_search(sr->body, "\r\n");
+	if(mk_string_search(sr->body.data, "\r\n")>0){
+		prot_end = mk_string_search(sr->body.data, "\r\n");
 		break_line = 2;
 	}
 	else{
-		prot_end = mk_string_search(sr->body, "\n");
+		prot_end = mk_string_search(sr->body.data, "\n");
 		break_line = 1;
 	}
 
 	if(prot_end!=prot_init && prot_end>0){
-		str_prot = mk_string_copy_substr(sr->body, prot_init, prot_end);
+		str_prot = mk_string_copy_substr(sr->body.data, prot_init, prot_end);
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
         	mk_mem_free(str_prot);
 	}
-	headers = sr->body+prot_end+break_line;
+	headers = sr->body.data+prot_end+break_line;
 
 	/* URI processed */
-	sr->uri_processed = get_real_string( sr->uri );
+	sr->uri_processed = get_real_string(sr->uri);
 	if(!sr->uri_processed)
 	{
-		sr->uri_processed = sr->uri;
+		sr->uri_processed = mk_pointer_to_buf(sr->uri);
 		sr->uri_twin = VAR_ON;
 	}
 
@@ -589,30 +593,39 @@ void Request_Error(int num_error, struct client_request *cr,
 {
 	unsigned long len;
 	char *page_default=0, *aux_message=0;
-			
+	mk_pointer message;
+
 	if(!s_log) {
 		s_log=mk_mem_malloc(sizeof(struct log_info));
 	}
 		
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
-			page_default=Set_Page_Default("Bad Request", "", s_request->host_conf->host_signature);
+			page_default=Set_Page_Default("Bad Request", 
+					s_request->uri, 
+					s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
 					"[error 400] Bad request");
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			page_default=Set_Page_Default("Forbidden", s_request->uri, s_request->host_conf->host_signature);
+			page_default=Set_Page_Default("Forbidden", 
+					s_request->uri, 
+					s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
 					"[error 403] Forbidden %s",s_request->uri);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
-			m_build_buffer(&aux_message, &len,
-					"The requested URL %.100s  was not found on this server.", 
-					(char *) s_request->uri);
-			page_default=Set_Page_Default("Not Found", aux_message, s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len, "[error 404] Not Found %s",s_request->uri);
+			m_build_buffer(&message.data, &message.len,
+					"The requested URL was not found on this server.");
+			page_default=Set_Page_Default("Not Found", 
+					message, 
+					s_request->host_conf->host_signature);
+			m_build_buffer(&s_log->error_msg, &len, 
+					"[error 404] Not Found %s",
+					s_request->uri);
+			mk_pointer_free(message);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
@@ -637,17 +650,19 @@ void Request_Error(int num_error, struct client_request *cr,
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
-			m_build_buffer(&aux_message, &len, 
+			m_build_buffer(&message.data, &message.len, 
 					"Problems found running %s ",
 					s_request->uri);
 			page_default=Set_Page_Default("Internal Server Error",
-					aux_message, s_request->host_conf->host_signature);
+					message, s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
 					"[error 411] Internal Server Error %s",s_request->uri);
+			mk_pointer_free(message);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			page_default=Set_Page_Default("HTTP Version Not Supported"," ",
+			mk_pointer_reset(message);
+			page_default=Set_Page_Default("HTTP Version Not Supported",message,
 				       s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len, 
 					"[error 505] HTTP Version Not Supported");
@@ -685,13 +700,17 @@ void Request_Error(int num_error, struct client_request *cr,
 }
 
 /* Build error page */
-char *Set_Page_Default(char *title, char *message, char *signature)
+char *Set_Page_Default(char *title, mk_pointer message, char *signature)
 {
 	unsigned long len;
 	char *page=0;
-
+	char *temp;
+	
+	temp = mk_pointer_to_buf(message);
 	m_build_buffer(&page, &len, "<HTML><BODY><H1>%s</H1>%s<BR><HR> \
-		<ADDRESS>%s</ADDRESS></BODY></HTML>", title, message, signature);
+		<ADDRESS>%s</ADDRESS></BODY></HTML>", title, temp, signature);
+
+	mk_mem_free(temp);
 	return (char *) page;
 }
 
@@ -746,25 +765,25 @@ int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
 /* Create a memory allocation in order to handle the request data */
 struct request *alloc_request()
 {
-    struct request *request=0;
+	struct request *request=0;
 
-    request = (struct request *) mk_mem_malloc_z(sizeof(struct request));
-    request->log = (struct log_info *) mk_mem_malloc_z(sizeof(struct log_info));
-    //request->log->ip=PutIP(remote);
+	request = (struct request *) mk_mem_malloc_z(sizeof(struct request));
+	request->log = (struct log_info *) mk_mem_malloc_z(sizeof(struct log_info));
+	//request->log->ip=PutIP(remote);
 
-    request->status=VAR_OFF; /* Request not processed yet */
-    request->make_log=VAR_ON; /* build log file of this request ? */
-    request->query_string=NULL;
+	request->status=VAR_OFF; /* Request not processed yet */
+	request->make_log=VAR_ON; /* build log file of this request ? */
+	//request->query_string=NULL;
+	
+	//request->log->datetime=PutTime();
+	request->log->final_response=M_HTTP_OK;
+	request->log->status=S_LOG_ON;
+	request->log->error_msg = NULL;
+	request->status=VAR_ON;
+	request->method=METHOD_NOT_FOUND;
 
-    //request->log->datetime=PutTime();
-    request->log->final_response=M_HTTP_OK;
-    request->log->status=S_LOG_ON;
-    request->log->error_msg = NULL;
-    request->status=VAR_ON;
-    request->method=METHOD_NOT_FOUND;
-
-    request->uri = NULL;
-    request->uri_processed = NULL;
+	mk_pointer_reset(request->uri);
+	request->uri_processed = NULL;
 	request->uri_twin = VAR_OFF;
 
  	request->accept.data = NULL;
@@ -782,44 +801,44 @@ struct request *alloc_request()
 	request->resume.data = NULL;
 	request->user_agent.data = NULL;
 
-    //request->accept = NULL;
-    //request->accept_language = NULL;
-    //request->accept_encoding = NULL;
-    //request->accept_charset = NULL;
-    //request->content_type = NULL;
-    //request->connection = NULL;
-    //request->cookies = NULL;
-    //request->host = NULL;
-    //request->if_modified_since = NULL;
-    //request->last_modified_since = NULL;
-    //request->range = NULL;
-    //request->referer = NULL;
-    //request->resume = NULL;
-    //request->user_agent = NULL;
+	//request->accept = NULL;
+	//request->accept_language = NULL;
+	//request->accept_encoding = NULL;
+	//request->accept_charset = NULL;
+	//request->content_type = NULL;
+	//request->connection = NULL;
+	//request->cookies = NULL;
+	//request->host = NULL;
+	//request->if_modified_since = NULL;
+	//request->last_modified_since = NULL;
+	//request->range = NULL;
+	//request->referer = NULL;
+	//request->resume = NULL;
+	//request->user_agent = NULL;
     
-    request->post_variables = NULL;
+	request->post_variables = NULL;
 
-    request->user_uri = NULL;
-    request->query_string = NULL;
+	request->user_uri = NULL;
+	mk_pointer_reset(request->query_string);
 
-    request->virtual_user = NULL;
-    request->script_filename = NULL;
-    request->real_path = NULL;
-    request->host_conf = config->hosts; 
+	request->virtual_user = NULL;
+	request->script_filename = NULL;
+	request->real_path = NULL;
+	request->host_conf = config->hosts; 
 
-    request->bytes_to_send = -1;
-    request->bytes_offset = 0;
-    request->fd_file = -1;
+	request->bytes_to_send = -1;
+	request->bytes_offset = 0;
+	request->fd_file = -1;
 
-    request->headers = (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
+	request->headers = (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
 
-    request->headers->content_type = NULL;
-    request->headers->last_modified = NULL;
-    request->headers->location = NULL;
-    request->headers->ranges[0]=-1;
-    request->headers->ranges[1]=-1;
+	request->headers->content_type = NULL;
+	request->headers->last_modified = NULL;
+	request->headers->location = NULL;
+	request->headers->ranges[0]=-1;
+	request->headers->ranges[1]=-1;
 
-    return (struct request *) request;
+	return (struct request *) request;
 }
 
 void free_list_requests(struct client_request *cr)
@@ -880,9 +899,11 @@ void free_request(struct request *sr)
             mk_mem_free(sr->log);
         }
 
-        mk_mem_free(sr->body);
-        mk_mem_free(sr->uri);
-        
+        mk_pointer_reset(sr->body);
+	//mk_mem_free(sr->body);
+        //mk_mem_free(sr->uri);
+        mk_pointer_reset(sr->uri);
+
 	if(sr->uri_twin==VAR_OFF)
 	{
 		mk_mem_free(sr->uri_processed);
@@ -907,12 +928,13 @@ void free_request(struct request *sr)
 	mk_mem_free(sr->post_variables);
  
         mk_mem_free(sr->user_uri);
-        mk_mem_free(sr->query_string);
- 
+        //mk_mem_free(sr->query_string);
+ 	mk_pointer_reset(sr->query_string);
+
         mk_mem_free(sr->virtual_user);
         mk_mem_free(sr->script_filename);
         mk_mem_free(sr->real_path);
-        mk_mem_free(sr);
+	mk_mem_free(sr);
 }
 
 /* Create a client request struct and put it on the

@@ -36,7 +36,7 @@ struct log_queue *_log_queue;
 struct log_info {
     int method;
     int protocol;
-    char *uri;
+    mk_pointer uri;
 
 	char *ip;
 	char *datetime;

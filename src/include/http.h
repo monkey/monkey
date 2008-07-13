@@ -47,7 +47,7 @@
 
 int mk_http_method_check(char *method);
 char *mk_http_method_check_str(int method);
-int mk_http_method_get(char *body);
+int mk_http_method_get(mk_pointer body);
 
 int mk_http_protocol_check(char *protocol);
 char *mk_http_protocol_check_str(int protocol);
