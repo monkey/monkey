@@ -127,13 +127,13 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 	switch(sh->status){
 		case M_HTTP_OK:	
 			mk_iov_add_entry(iov, RESP_HTTP_OK, LEN_RESP_HTTP_OK, 
-					BREAK_LINE, MK_IOV_NOT_FREE_BUF);
+					MK_IOV_BREAK_LINE, MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_HTTP_PARTIAL:	
 			mk_iov_add_entry(iov, RESP_HTTP_PARTIAL, 
 					LEN_RESP_HTTP_PARTIAL, 
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 			
@@ -141,7 +141,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			s_log->status=S_LOG_OFF;
 			mk_iov_add_entry(iov, RESP_REDIR_MOVED, 
 					LEN_RESP_REDIR_MOVED, 
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
@@ -149,7 +149,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			s_log->status=S_LOG_ON;
 			mk_iov_add_entry(iov, RESP_REDIR_MOVED_T, 
 					LEN_RESP_REDIR_MOVED_T,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 		
@@ -157,42 +157,42 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			s_log->status=S_LOG_OFF;
 			mk_iov_add_entry(iov, RESP_NOT_MODIFIED, 
 					LEN_RESP_NOT_MODIFIED,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
 			mk_iov_add_entry(iov, RESP_CLIENT_BAD_REQUEST, 
 					LEN_RESP_CLIENT_BAD_REQUEST,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_FORBIDDEN:
 			mk_iov_add_entry(iov, RESP_CLIENT_FORBIDDEN, 
 					LEN_RESP_CLIENT_FORBIDDEN,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
 			mk_iov_add_entry(iov, RESP_CLIENT_NOT_FOUND, 
 					LEN_RESP_CLIENT_NOT_FOUND,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
 			mk_iov_add_entry(iov, RESP_CLIENT_METHOD_NOT_ALLOWED, 
 					LEN_RESP_CLIENT_METHOD_NOT_ALLOWED,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
 			mk_iov_add_entry(iov, RESP_CLIENT_REQUEST_TIMEOUT, 
 					LEN_RESP_CLIENT_REQUEST_TIMEOUT,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			s_log->status=S_LOG_OFF;
 			break;
@@ -200,21 +200,21 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 		case M_CLIENT_LENGHT_REQUIRED:
 			mk_iov_add_entry(iov, RESP_CLIENT_LENGTH_REQUIRED,
 					LEN_RESP_CLIENT_LENGTH_REQUIRED,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
 			mk_iov_add_entry(iov, RESP_SERVER_INTERNAL_ERROR,
 					LEN_RESP_SERVER_INTERNAL_ERROR,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			mk_iov_add_entry(iov, RESP_SERVER_HTTP_VERSION_UNSUP,
 					LEN_RESP_SERVER_HTTP_VERSION_UNSUP,
-					BREAK_LINE,
+					MK_IOV_BREAK_LINE,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 	};
@@ -231,13 +231,13 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 	/* Informacion del server */
 	mk_iov_add_entry(iov, sr->host_conf->header_host_signature,
 			strlen(sr->host_conf->header_host_signature),
-			BREAK_LINE, MK_IOV_NOT_FREE_BUF);
+			MK_IOV_BREAK_LINE, MK_IOV_NOT_FREE_BUF);
 
 	/* Fecha */
 	date = PutDate_string(0);
 	m_build_buffer(&buffer, &len, "Date: %s", date);
 	mk_iov_add_entry(iov, buffer, len, 
-			BREAK_LINE, MK_IOV_FREE_BUF);
+			MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	mk_mem_free(date);
 
 	/* Location */
@@ -250,7 +250,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			sh->location);
 		
 		mk_iov_add_entry(iov, buffer, len, 
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 
 	/* Last-Modified */
@@ -262,7 +262,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			RH_LAST_MODIFIED,
 			sh->last_modified);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 	
 	/* Connection */
@@ -275,14 +275,14 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			config->keep_alive_timeout, 
 			config->max_keep_alive_request-cr->counter_connections);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 		m_build_buffer(
 			&buffer,
 			&len,
 			"Connection: Keep-Alive");
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 	else{
 		m_build_buffer(
@@ -290,7 +290,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			&len,
 			"Connection: close");
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 
 	/* Tipo de contenido de la informacion */
@@ -301,7 +301,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			"Content-Type: %s",
 			sh->content_type);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 	
 	/* Ranges */ 
@@ -311,7 +311,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			"Accept-Ranges: bytes", 
 			sh->content_type);
 	mk_iov_add_entry(iov, buffer, len,
-			BREAK_LINE, MK_IOV_FREE_BUF);
+			MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 	/* Tamaño total de la informacion a enviar */
 	if((sh->content_length!=0 && 
@@ -329,7 +329,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				RH_CONTENT_LENGTH, 
 				length);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 		m_build_buffer(
 				&buffer,
@@ -340,7 +340,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				(sh->content_length - 1), 
 				sh->content_length);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 		
 	/* yyy-xxx */
@@ -353,7 +353,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				RH_CONTENT_LENGTH, 
 				length);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 		m_build_buffer( 
 				&buffer,
@@ -365,7 +365,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				sh->content_length);
 		}
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 		/* -xxx */
 		if(sh->ranges[0]==-1 && sh->ranges[1]>=0){
@@ -376,7 +376,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 					RH_CONTENT_LENGTH,
 					sh->ranges[1]);
 			mk_iov_add_entry(iov, buffer, len,
-					BREAK_LINE, MK_IOV_FREE_BUF);
+					MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 
 			m_build_buffer(
 					&buffer,
@@ -387,7 +387,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 					(sh->content_length - 1),
 					sh->content_length);
 			mk_iov_add_entry(iov, buffer, len,
-					BREAK_LINE, MK_IOV_FREE_BUF);
+					MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 		}
 	}
 	else if(sh->content_length!=0)
@@ -399,7 +399,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				RH_CONTENT_LENGTH,
 				sh->content_length);
 		mk_iov_add_entry(iov, buffer, len, 
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}
 	else if(sh->status==M_REDIR_MOVED)
 	{
@@ -410,12 +410,12 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 				RH_CONTENT_LENGTH, 
 				sh->content_length);
 		mk_iov_add_entry(iov, buffer, len,
-				BREAK_LINE, MK_IOV_FREE_BUF);
+				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}	
 	
 	if(sh->cgi==SH_NOCGI)
 	{
-		mk_iov_add_separator(iov, BREAK_LINE);
+		mk_iov_add_separator(iov, MK_IOV_BREAK_LINE);
 	}
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 	mk_iov_send(fd, iov);

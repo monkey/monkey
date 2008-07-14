@@ -58,13 +58,18 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 
 	switch(sep)
 	{
-		case BREAK_LINE:
-			_sep = _BREAK_LINE;
-			len = LEN_BREAK_LINE;
+		case MK_IOV_BREAK_LINE:
+			_sep = _MK_IOV_BREAK_LINE;
+			len = LEN_MK_IOV_BREAK_LINE;
 			break;
-		case SPACE:
-			_sep = _SPACE;
-			len = LEN_SPACE;
+		case MK_IOV_SPACE:
+			_sep = _MK_IOV_SPACE;
+			len = LEN_MK_IOV_SPACE;
+			break;
+		case MK_IOV_NONE:
+			return mk_io->iov_idx;
+			_sep = _MK_IOV_NONE;
+			len = LEN_MK_IOV_NONE;
 			break;
 	}
 

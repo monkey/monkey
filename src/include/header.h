@@ -26,13 +26,17 @@
  * Response headers: We handle this as static global data in order
  * to save some process time when building the response header.
  */
-#define BREAK_LINE 0
-#define _BREAK_LINE "\r\n"
-#define LEN_BREAK_LINE 2
+#define MK_IOV_BREAK_LINE 0
+#define _MK_IOV_BREAK_LINE "\r\n"
+#define LEN_MK_IOV_BREAK_LINE 2
 
-#define SPACE 1
-#define _SPACE " "
-#define LEN_SPACE 1
+#define MK_IOV_SPACE 1
+#define _MK_IOV_SPACE " "
+#define LEN_MK_IOV_SPACE 1
+
+#define MK_IOV_NONE 2
+#define _MK_IOV_NONE ""
+#define LEN_MK_IOV_NONE 0
 
 #define RESP_HTTP_OK "HTTP/1.1 200 OK"
 #define LEN_RESP_HTTP_OK 15

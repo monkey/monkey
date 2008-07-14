@@ -183,22 +183,25 @@ int write_log(struct log_info *log, int host_pipe)
 	/* Register a successfull request */
 	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
 	{
-			mk_iov_add_entry(iov, log->ip, 0, SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, "-", 1, SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->datetime, 0, SPACE, MK_IOV_NOT_FREE_BUF);
-			
+			mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
+					MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+					MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, log->datetime, 0, MK_IOV_SPACE,
+					MK_IOV_NOT_FREE_BUF);
+
 			buf = mk_http_method_check_str(log->method);
-			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->uri.data, log->uri.len, SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, log->uri.data, log->uri.len, MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                         
 			buf = mk_http_protocol_check_str(log->protocol);
-			mk_iov_add_entry(iov, buf, strlen(buf), SPACE, MK_IOV_NOT_FREE_BUF);
+			mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
 
 			m_build_buffer(&buf, &len, "%i", log->final_response);
-                        mk_iov_add_entry(iov, buf, len, SPACE, MK_IOV_FREE_BUF);
+                        mk_iov_add_entry(iov, buf, len, MK_IOV_SPACE, MK_IOV_FREE_BUF);
 
 			buf = m_build_buffer(&buf, &len, "%i\n", log->size);
-			mk_iov_add_entry(iov, buf, len, SPACE, MK_IOV_FREE_BUF);
+			mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, MK_IOV_FREE_BUF);
 
 			mk_iov_send(host_pipe, iov);
 			mk_iov_free(iov);

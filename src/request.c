@@ -103,12 +103,13 @@ struct request *mk_request_parse(struct client_request *cr)
 			//block = mk_string_copy_substr(cr->body, init_block, i);
 				
 			cr_buf = mk_request_alloc();
-			
+	
 			/* mk_pointer */
 			cr_buf->body.data = cr->body+init_block;
 			cr_buf->body.len = i-init_block;
 
 			cr_buf->method = mk_http_method_get(cr_buf->body);
+			cr_buf->log->ip = cr->client_ip;
 			cr_buf->next = NULL;
 
 			i = init_block = (i+offset) + length_end;
@@ -722,7 +723,6 @@ struct request *mk_request_alloc()
 
 	request = (struct request *) mk_mem_malloc_z(sizeof(struct request));
 	request->log = (struct log_info *) mk_mem_malloc_z(sizeof(struct log_info));
-	//request->log->ip=PutIP(remote);
 
 	request->status=VAR_OFF; /* Request not processed yet */
 	request->make_log=VAR_ON; /* build log file of this request ? */
