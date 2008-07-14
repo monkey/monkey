@@ -22,6 +22,7 @@
 #include "conn_switch.h"
 #include "scheduler.h"
 #include "epoll.h"
+#include "request.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -42,7 +43,7 @@ int mk_conn_switch_write(int socket)
 	/* Get node from schedule list node which contains
 	 * the information regarding to the current client/socket
 	 */
-	cr = mk_get_client_request_from_fd(socket);
+	cr = mk_request_client_get(socket);
 	
 	if(!cr)
 	{
@@ -61,7 +62,7 @@ int mk_conn_switch_write(int socket)
 
 	if(ret <= 0)
 	{
-		free_list_requests(cr);
+		mk_request_free_list(cr);
 	
 		/* We need to ask to http_keepalive if this 
 		 * connection can continue working or we must 
@@ -70,7 +71,7 @@ int mk_conn_switch_write(int socket)
 
 		if(ka<0 || ret<0)
 		{
-			mk_remove_client_request(socket);
+			mk_request_client_remove(socket);
 			return -1;
 		}
 		else{

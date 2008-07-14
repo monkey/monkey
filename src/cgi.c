@@ -42,6 +42,7 @@
 #include "config.h"
 #include "support.h"
 #include "logfile.h"
+#include "socket.h"
 
 /* Main function to normal CGI scripts */
 int M_CGI_main(struct client_request *cr, struct request *sr, 
@@ -252,7 +253,8 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 		if(fdprintf(socket, NO_CHUNKED, "Transfer-Encoding: chunked\r\n")<0)
 			return -1;			
 
-		if(Socket_Timeout(socket, data, offset, config->timeout, ST_SEND)<0)
+		if(mk_socket_timeout(socket, data, offset, 
+					config->timeout, ST_SEND)<0)
 			return -1;				
 
 		if(fdprintf(socket, NO_CHUNKED, "\r\n\r\n")<0)
@@ -269,11 +271,11 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 		}
 	}
 	else{ /* HTTP/1.0 */
-		if(Socket_Timeout(socket, data, total_bytes, config->timeout, ST_SEND)<0){
+		if(mk_socket_timeout(socket, data, total_bytes, config->timeout, ST_SEND)<0){
 			return -1;			
 		}
 		if(buffer_empty==VAR_OFF && bytes>0)
-			if(Socket_Timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0){
+			if(mk_socket_timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0){
 				return -1;
 			}
 	}
@@ -288,7 +290,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 		}
 		else{
 			if(bytes>0) {
-				if(Socket_Timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0)
+				if(mk_socket_timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0)
 					return -1;								
 			}
 		}

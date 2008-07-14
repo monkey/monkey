@@ -48,6 +48,7 @@
 #include "str.h"
 #include "config.h"
 #include "chars.h"
+#include "socket.h"
 
 int SendFile(int socket, struct request *sr)
 {
@@ -170,7 +171,7 @@ int fdprintf(int fd, int type, const char *format, ...)
 	if(type==CHUNKED)
 		status = fdchunked(fd, buffer, length);
 	else
-		status = Socket_Timeout(fd, buffer, length, config->timeout, ST_SEND);
+		status = mk_socket_timeout(fd, buffer, length, config->timeout, ST_SEND);
 
 	mk_mem_free(buffer);
 	return status;
@@ -191,11 +192,11 @@ int fdchunked(int fd, char *data, int length)
 
 	memcpy(buffer, hexlength, lenhexlen);
 	memcpy(buffer+lenhexlen, data, length);
-	if((st_status=Socket_Timeout(fd, buffer, lenhexlen+length, config->timeout, ST_SEND))<0){
+	if((st_status=mk_socket_timeout(fd, buffer, lenhexlen+length, config->timeout, ST_SEND))<0){
 		mk_mem_free(buffer);
 		return st_status;	
 	}
-	if((st_status=Socket_Timeout(fd, "\r\n", 2, 1, ST_SEND))<0){
+	if((st_status=mk_socket_timeout(fd, "\r\n", 2, 1, ST_SEND))<0){
 		mk_mem_free(buffer);
 		return st_status;		
 	}	

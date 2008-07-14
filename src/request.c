@@ -36,6 +36,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 
+#include "request.h"
 #include "monkey.h"
 #include "http.h"
 #include "http_status.h"
@@ -55,7 +56,7 @@
 #include "method.h"
 #include "memory.h"
 
-struct request *parse_client_request(struct client_request *cr)
+struct request *mk_request_parse(struct client_request *cr)
 {
 	int i, init_block=0, n_blocks=0, offset=0;
 	int length_buf=0, length_end=0;
@@ -101,7 +102,7 @@ struct request *parse_client_request(struct client_request *cr)
 			/* Allocating request block */
 			//block = mk_string_copy_substr(cr->body, init_block, i);
 				
-			cr_buf = alloc_request();
+			cr_buf = mk_request_alloc();
 			
 			/* mk_pointer */
 			cr_buf->body.data = cr->body+init_block;
@@ -188,10 +189,10 @@ int mk_handler_read(int socket)
 	int bytes, efd;
 	struct client_request *cr;
 
-	cr = mk_get_client_request_from_fd(socket);
+	cr = mk_request_client_get(socket);
 	if(!cr)
 	{
-		cr = mk_create_client_request(socket);
+		cr = mk_request_client_create(socket);
 	}
 
 	bytes = read(socket, cr->body+cr->body_length,
@@ -243,7 +244,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 	 * Get node from schedule list node which contains
 	 * the information regarding to the current thread
 	 */
-	cr = mk_get_client_request_from_fd(socket);
+	cr = mk_request_client_get(socket);
 	
 	if(!cr)
 	{
@@ -252,7 +253,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 	
 	if(!cr->request)
 	{
-		if(!parse_client_request(cr))
+		if(!mk_request_parse(cr))
 		{
 			return -1;	
 		}
@@ -265,7 +266,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		/* Request not processed */
 		if(p_request->bytes_to_send < 0)
 		{
-			final_status = Process_Request(cr, p_request);
+			final_status = mk_request_process(cr, p_request);
 		}
 		/* Request with data to send */
 		else if(p_request->bytes_to_send>0)
@@ -291,12 +292,12 @@ int mk_handler_write(int socket, struct client_request *cr)
 	return 0;
 }
 
-int Process_Request(struct client_request *cr, struct request *s_request)
+int mk_request_process(struct client_request *cr, struct request *s_request)
 {
 	int status=0;
 	struct host *host;
 
-	status = Process_Request_Header(s_request);
+	status = mk_request_header_process(s_request);
 	if(status<0)
 	{
 		return EXIT_NORMAL;
@@ -306,14 +307,14 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
-		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, s_request->log);
+		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, s_request->log);
 		return EXIT_NORMAL;
 	}	
 	
 	/*  URL it's Allowed ? */ 
 	if(Deny_Check(s_request, cr->client_ip)==-1) {
 		s_request->log->final_response=M_CLIENT_FORBIDDEN;
-		Request_Error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -321,14 +322,14 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host.data && s_request->protocol==HTTP_PROTOCOL_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
-		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 
 	/* Method not allowed ? */
 	if(s_request->method==METHOD_NOT_ALLOWED){
 		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-		Request_Error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 
@@ -336,7 +337,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 	if(s_request->protocol == HTTP_PROTOCOL_UNKNOWN)
 	{
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
-		Request_Error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
+		mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -370,7 +371,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 				-3 : Internal Server Error
 			*/
 			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
-				Request_Error(s_request->log->final_response, 
+				mk_request_error(s_request->log->final_response, 
 						cr, s_request, 1, s_request->log);	
 			}
 			return cgi_status;
@@ -400,7 +401,7 @@ int Process_Request(struct client_request *cr, struct request *s_request)
 
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
-int Process_Request_Header(struct request *sr)
+int mk_request_header_process(struct request *sr)
 {
 	int uri_init=0, uri_end=0;
 	int query_init=0, query_end=0;
@@ -468,7 +469,7 @@ int Process_Request_Header(struct request *sr)
 	}
 
 	/* Host */
-	host = Request_Find_Variable(headers, RH_HOST);
+	host = mk_request_header_find(headers, RH_HOST);
 
 	if(host.data)
 	{
@@ -491,16 +492,16 @@ int Process_Request_Header(struct request *sr)
 	}
 	
 	/* Looking for headers */
-	sr->accept = Request_Find_Variable(headers, RH_ACCEPT);
-	sr->accept_charset = Request_Find_Variable(headers, RH_ACCEPT_CHARSET);
-	sr->accept_encoding = Request_Find_Variable(headers, RH_ACCEPT_ENCODING);
-	sr->accept_language = Request_Find_Variable(headers, RH_ACCEPT_LANGUAGE);
-	sr->cookies = Request_Find_Variable(headers, RH_COOKIE);
-	sr->connection = Request_Find_Variable(headers, RH_CONNECTION);
-	sr->referer = Request_Find_Variable(headers, RH_REFERER);
-	sr->user_agent = Request_Find_Variable(headers, RH_USER_AGENT);
-	sr->range = Request_Find_Variable(headers, RH_RANGE);
-	sr->if_modified_since = Request_Find_Variable(headers, RH_IF_MODIFIED_SINCE);
+	sr->accept = mk_request_header_find(headers, RH_ACCEPT);
+	sr->accept_charset = mk_request_header_find(headers, RH_ACCEPT_CHARSET);
+	sr->accept_encoding = mk_request_header_find(headers, RH_ACCEPT_ENCODING);
+	sr->accept_language = mk_request_header_find(headers, RH_ACCEPT_LANGUAGE);
+	sr->cookies = mk_request_header_find(headers, RH_COOKIE);
+	sr->connection = mk_request_header_find(headers, RH_CONNECTION);
+	sr->referer = mk_request_header_find(headers, RH_REFERER);
+	sr->user_agent = mk_request_header_find(headers, RH_USER_AGENT);
+	sr->range = mk_request_header_find(headers, RH_RANGE);
+	sr->if_modified_since = mk_request_header_find(headers, RH_IF_MODIFIED_SINCE);
 
 	/* Checking keepalive */
 	sr->keep_alive=VAR_OFF;
@@ -519,7 +520,7 @@ int Process_Request_Header(struct request *sr)
 }
 
 /* Return value of some variable sent in request */
-mk_pointer Request_Find_Variable(char *request_body,  char *string)
+mk_pointer mk_request_header_find(char *request_body,  char *string)
 {
 	mk_pointer var;
 	int pos_init_var=0, pos_end_var=0;
@@ -555,12 +556,12 @@ mk_pointer Request_Find_Variable(char *request_body,  char *string)
 }
 
 /* Look for some  index.xxx in pathfile */
-char *FindIndex(char *pathfile)
+char *mk_request_index(char *pathfile)
 {
 	unsigned long len;
 	char *file_aux=0;
 	struct indexfile *aux_index;
-	
+
 	aux_index=first_index;
 	
 	while(aux_index!=NULL) {
@@ -587,7 +588,7 @@ char *FindIndex(char *pathfile)
 }
 
 /* Send error responses */
-void Request_Error(int num_error, struct client_request *cr, 
+void mk_request_error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log)
 {
 	unsigned long len;
@@ -600,7 +601,7 @@ void Request_Error(int num_error, struct client_request *cr,
 		
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
-			page_default=Set_Page_Default("Bad Request", 
+			page_default=mk_request_set_default_page("Bad Request", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
@@ -608,7 +609,7 @@ void Request_Error(int num_error, struct client_request *cr,
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			page_default=Set_Page_Default("Forbidden", 
+			page_default=mk_request_set_default_page("Forbidden", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
@@ -618,7 +619,7 @@ void Request_Error(int num_error, struct client_request *cr,
 		case M_CLIENT_NOT_FOUND:
 			m_build_buffer(&message.data, &message.len,
 					"The requested URL was not found on this server.");
-			page_default=Set_Page_Default("Not Found", 
+			page_default=mk_request_set_default_page("Not Found", 
 					message, 
 					s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len, 
@@ -628,7 +629,7 @@ void Request_Error(int num_error, struct client_request *cr,
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			page_default=Set_Page_Default("Method Not Allowed",
+			page_default=mk_request_set_default_page("Method Not Allowed",
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 
@@ -652,7 +653,7 @@ void Request_Error(int num_error, struct client_request *cr,
 			m_build_buffer(&message.data, &message.len, 
 					"Problems found running %s ",
 					s_request->uri);
-			page_default=Set_Page_Default("Internal Server Error",
+			page_default=mk_request_set_default_page("Internal Server Error",
 					message, s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len,
 					"[error 411] Internal Server Error %s",s_request->uri);
@@ -661,7 +662,7 @@ void Request_Error(int num_error, struct client_request *cr,
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			mk_pointer_reset(message);
-			page_default=Set_Page_Default("HTTP Version Not Supported",message,
+			page_default=mk_request_set_default_page("HTTP Version Not Supported",message,
 				       s_request->host_conf->host_signature);
 			m_build_buffer(&s_log->error_msg, &len, 
 					"[error 505] HTTP Version Not Supported");
@@ -699,7 +700,8 @@ void Request_Error(int num_error, struct client_request *cr,
 }
 
 /* Build error page */
-char *Set_Page_Default(char *title, mk_pointer message, char *signature)
+char *mk_request_set_default_page(char *title, 
+		mk_pointer message, char *signature)
 {
 	unsigned long len;
 	char *page=0;
@@ -713,56 +715,8 @@ char *Set_Page_Default(char *title, mk_pointer message, char *signature)
 	return (char *) page;
 }
 
-/* Set Timeout for send() and recv() */
-int Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send)
-{
-	fd_set fds;
-	time_t init_time, max_time;
-	int n=0, status;
-	struct timeval tv;
-
-	init_time=time(NULL);
-	max_time = init_time + timeout;
-
-	FD_ZERO(&fds);
-	FD_SET(s,&fds);
-	
-	tv.tv_sec=timeout;
-	tv.tv_usec=0;
-
-	if(recv_send==ST_RECV)
-		n=select(s+1,&fds,NULL,NULL,&tv);  // recv 
-	else{
-		n=select(s+1,NULL,&fds,NULL,&tv);  // send 
-	}
-
-	switch(n){
-		case 0:
-				return -2;
-				break;
-		case -1:
-				//pthread_kill(pthread_self(), SIGPIPE);
-				return -1;
-	}
-	
-	if(recv_send==ST_RECV){
-		status=recv(s,buf,len, 0);
-	}
-	else{
-		status=send(s,buf,len, 0);
-	}
-
-	if( status < 0 ){
-		if(time(NULL) >= max_time){
-			//pthread_kill(pthread_self(), SIGPIPE);
-		}
-	}
-	
-	return status;
-}
-
 /* Create a memory allocation in order to handle the request data */
-struct request *alloc_request()
+struct request *mk_request_alloc()
 {
 	struct request *request=0;
 
@@ -772,7 +726,7 @@ struct request *alloc_request()
 
 	request->status=VAR_OFF; /* Request not processed yet */
 	request->make_log=VAR_ON; /* build log file of this request ? */
-	//request->query_string=NULL;
+	mk_pointer_reset(request->query_string);
 	
 	//request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
@@ -800,21 +754,6 @@ struct request *alloc_request()
 	request->resume.data = NULL;
 	request->user_agent.data = NULL;
 
-	//request->accept = NULL;
-	//request->accept_language = NULL;
-	//request->accept_encoding = NULL;
-	//request->accept_charset = NULL;
-	//request->content_type = NULL;
-	//request->connection = NULL;
-	//request->cookies = NULL;
-	//request->host = NULL;
-	//request->if_modified_since = NULL;
-	//request->last_modified_since = NULL;
-	//request->range = NULL;
-	//request->referer = NULL;
-	//request->resume = NULL;
-	//request->user_agent = NULL;
-    
 	request->post_variables = NULL;
 
 	request->user_uri = NULL;
@@ -840,7 +779,7 @@ struct request *alloc_request()
 	return (struct request *) request;
 }
 
-void free_list_requests(struct client_request *cr)
+void mk_request_free_list(struct client_request *cr)
 {
     struct request *sr=0, *before=0;
 
@@ -864,12 +803,12 @@ void free_list_requests(struct client_request *cr)
         else{
             cr->request = NULL;
         }
-        free_request(sr);
+        mk_request_free(sr);
     }
     cr->request = NULL;
 }
 
-void free_request(struct request *sr)
+void mk_request_free(struct request *sr)
 {
         /* I hate it, but I don't know another light way :( */
 	if(sr->fd_file>0)
@@ -899,8 +838,6 @@ void free_request(struct request *sr)
         }
 
         mk_pointer_reset(sr->body);
-	//mk_mem_free(sr->body);
-        //mk_mem_free(sr->uri);
         mk_pointer_reset(sr->uri);
 
 	if(sr->uri_twin==VAR_OFF)
@@ -908,26 +845,8 @@ void free_request(struct request *sr)
 		mk_mem_free(sr->uri_processed);
 	}
 
-        /*
-      	mk_mem_free(sr->accept);
-        mk_mem_free(sr->accept_language);
-        mk_mem_free(sr->accept_encoding);
-        mk_mem_free(sr->accept_charset);
-        mk_mem_free(sr->content_type);
-        mk_mem_free(sr->connection);
-        mk_mem_free(sr->cookies);
-        mk_mem_free(sr->host);
-        mk_mem_free(sr->if_modified_since);
-        mk_mem_free(sr->last_modified_since);
-        mk_mem_free(sr->range);
-        mk_mem_free(sr->referer);
-        mk_mem_free(sr->resume);
-        mk_mem_free(sr->user_agent);
-	*/
 	mk_mem_free(sr->post_variables);
- 
         mk_mem_free(sr->user_uri);
-        //mk_mem_free(sr->query_string);
  	mk_pointer_reset(sr->query_string);
 
         mk_mem_free(sr->virtual_user);
@@ -939,7 +858,7 @@ void free_request(struct request *sr)
 /* Create a client request struct and put it on the
  * main list
  */
-struct client_request *mk_create_client_request(int socket)
+struct client_request *mk_request_client_create(int socket)
 {
 	struct client_request *request_handler, *cr, *aux;
 
@@ -974,7 +893,7 @@ struct client_request *mk_create_client_request(int socket)
 	return (struct client_request *) cr;
 }
 
-struct client_request *mk_get_client_request_from_fd(int socket)
+struct client_request *mk_request_client_get(int socket)
 {
 	struct client_request *request_handler, *cr;
 
@@ -996,7 +915,7 @@ struct client_request *mk_get_client_request_from_fd(int socket)
  * From thread sched_list_node "list", remove the client_request
  * struct information 
  */
-struct client_request *mk_remove_client_request(int socket)
+struct client_request *mk_request_client_remove(int socket)
 {
 	struct client_request *request_handler, *cr, *aux;
 
@@ -1020,7 +939,6 @@ struct client_request *mk_remove_client_request(int socket)
 				}
 				aux->next = cr->next;
 			}
-			//free_list_requests(cr);
 			break;
 		}
 		cr = cr->next;

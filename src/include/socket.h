@@ -17,6 +17,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_SOCKET_H
+#define MK_SOCKET_H
+
+/* Socket_Timeout() */
+#define ST_RECV 0
+#define ST_SEND 1
+
+
 #define TCP_CORK_ON 1
 #define TCP_CORK_OFF 0
 
@@ -24,4 +32,8 @@ int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_nonblocking(int sockfd);
 char *mk_socket_get_ip(int socket);
 int mk_socket_close(int socket);
+int mk_socket_timeout(int s, char *buf, int len, 
+		int timeout, int recv_send);
+
+#endif
 

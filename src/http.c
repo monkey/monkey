@@ -163,7 +163,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	path_info = mk_file_get_info(sr->real_path);
 	if(!path_info){
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 
+		mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 
 				debug_error, sr->log);
 		return -1;
 	}
@@ -172,7 +172,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	if(path_info->is_link == MK_FILE_TRUE){
 		if(config->symlink==VAR_OFF){
 			sr->log->final_response=M_CLIENT_FORBIDDEN;
-			Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 
+			mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 
 					debug_error, sr->log);
 			return -1;
 		}		
@@ -182,7 +182,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			/*		
 			if(Deny_Check(linked_file)==-1) {
 				sr->log->final_response=M_CLIENT_FORBIDDEN;
-				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+				mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
 				return -1;
 			}
 			*/
@@ -226,7 +226,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		}
 	
 		/* looking for a index file */
-		index_file = (char *) FindIndex(sr->real_path);
+		index_file = (char *) mk_request_index(sr->real_path);
 
 		if(!index_file) {
 			/* No index file found, show the content directory */
@@ -236,13 +236,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 				getdir_res = GetDir(cr, sr);
 					
 				if(getdir_res == -1){
-					Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+					mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 					return -1;
 				}
 				return 0;
 			}
 			else {
-				Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+				mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 				return -1;
 			}
 		}
@@ -257,7 +257,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	/* read permission */ 
 	if(path_info->read_access == MK_FILE_FALSE){
-		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+		mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
 		return -1;	
 	}
 		
@@ -275,7 +275,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			
 			/* is it  normal file ? */
 			if(fcgi->is_directory==MK_FILE_TRUE || fcgi->exec_access==MK_FILE_FALSE){
-				Request_Error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
+				mk_request_error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
 				Mimetype_free(mime_info);
 				return -1;
 			}
@@ -318,7 +318,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 			if(cgi_status==M_CGI_TIMEOUT || 
 					cgi_status==M_CGI_INTERNAL_SERVER_ERR)
 			{
-				Request_Error(sr->log->final_response, cr, 
+				mk_request_error(sr->log->final_response, cr, 
 						sr, 1, sr->log);	
 			}
 
@@ -329,7 +329,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 	}
 	/* get file size */
 	if(path_info->size < 0) {
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
+		mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
 		Mimetype_free(mime_info);
 		return -1;
 	}
@@ -373,7 +373,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		if(sr->range.data!=NULL && config->resume==VAR_ON){
 			if(mk_http_range_parse(sr)<0)
 			{
-				Request_Error(M_CLIENT_BAD_REQUEST, cr, 
+				mk_request_error(M_CLIENT_BAD_REQUEST, cr, 
 					sr, 1, sr->log);
 				return -1;
 			}
@@ -405,7 +405,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		/* Calc bytes to send & offset */
 		if(mk_http_range_set(sr, path_info->size)!=0)
 		{
-			Request_Error(M_CLIENT_BAD_REQUEST, cr, 
+			mk_request_error(M_CLIENT_BAD_REQUEST, cr, 
 					sr, 1, sr->log);
 			return -1;
 		}
@@ -490,13 +490,15 @@ int mk_http_range_parse(struct request *sr)
 	if(!sr->range.data)
 		return -1;	
 
-	if((eq_pos = mk_string_search(sr->range.data, "="))<0)
+	if((eq_pos = mk_string_search_n(sr->range.data, "=",
+					sr->range.len))<0)
 		return -1;	
 
 	if(strncasecmp(sr->range.data, "Bytes", eq_pos)!=0)
 		return -1;	
 	
-	if((sep_pos = mk_string_search(sr->range.data, "-"))<0)
+	if((sep_pos = mk_string_search_n(sr->range.data, "-",
+					sr->range.len))<0)
 		return -1;
 	
 	len = sr->range.len;

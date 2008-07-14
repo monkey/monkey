@@ -60,7 +60,7 @@ int User_main(struct client_request *cr, struct request *sr)
 
 	if((s_user=getpwnam(user))==NULL){
 		mk_mem_free(user);
-		Request_Error(M_CLIENT_NOT_FOUND, cr, sr,1,sr->log);
+		mk_request_error(M_CLIENT_NOT_FOUND, cr, sr,1,sr->log);
 		return -1;
 	}
 	mk_mem_free(user);

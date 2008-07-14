@@ -38,10 +38,6 @@ int local_fd;
 un home de un usuario */
 #define USER_HOME_STRING "/~"
 
-/* Socket_Timeout() */
-#define ST_RECV 0
-#define ST_SEND 1
-
 /* Send_Header(...,int cgi) */
 #define SH_NOCGI 0
 #define SH_CGI 1
@@ -61,8 +57,6 @@ pthread_mutex_t  mutex_thread_counter;
 pthread_mutex_t  mutex_cgi_child;
 pthread_mutex_t  mutex_logfile;
 pthread_mutex_t  mutex_wait_register;
-//pthread_mutex_t  mutex_write_sched_list;
-
 
 /* Usuario real que que ejecuto
  el servidor */

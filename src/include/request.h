@@ -68,18 +68,6 @@ parametros de una peticion */
 #define EXIT_NORMAL -1
 #define EXIT_PCONNECTION 24
 
-/* 
- * Every client request has the status of the process, 
- * we handle it with different values.
- */
-#define MK_REQ_STAT_WAITING 0 // Not attended
-#define MK_REQ_STAT_READING 1 // Reading client request 
-#define MK_REQ_STAT_READING_DONE 2 // Reading request has done
-#define MK_REQ_STAT_PROCESSING 3 // Processing readed data
-#define MK_REQ_STAT_PROCESSING_DONE 4 // Processing data has done
-#define MK_REQ_STAT_WRITING 5 // Writing response to client
-#define MK_REQ_STAT_WRITING_DONE 6 // Writing process has done
-
 struct client_request
 {
     int pipelined; /* Pipelined request */
@@ -100,7 +88,6 @@ struct request {
 
 	int status;
 	int pipelined; /* Pipelined request */
-	//char *body;
 	mk_pointer body;
 
 	/*----First header of client request--*/
@@ -176,26 +163,28 @@ struct header_values {
 	char *location;
 };
 
-int Get_Request(struct client_request *s_request);
-int Process_Request(struct client_request *cr, struct request *s_request);
-int Process_Request_Header(struct request *sr);
+struct request *mk_request_parse(struct client_request *cr);
+int mk_request_process(struct client_request *cr, struct request *s_request);
+char *mk_request_index(char *pathfile);
 
-int	Socket_Timeout(int s, char *buf, int len, int timeout, int recv_send);
-int	Get_method_from_request(char *request);
-char	*FindIndex(char *pathfile);
-char	*Set_Page_Default(char *title, mk_pointer message, char *signature);
-mk_pointer Request_Find_Variable(char *request_body, char *string);
-void Request_Error(int num_error, struct client_request *cr, 
-                   struct request *s_request, int debug, struct log_info *s_log);
-int Validate_Request_Header(char *buf);
 
-struct request *alloc_request();
-void free_list_requests(struct client_request *cr);
-void free_request(struct request *sr);
+/* Custom HTML Page for errors */
+char *mk_request_set_default_page(char *title, mk_pointer message, char *signature);
 
-struct client_request *mk_create_client_request(int socket);
-struct client_request *mk_get_client_request_from_fd(int socket);
-struct client_request *mk_remove_client_request(int socket);
+int mk_request_header_process(struct request *sr);
+mk_pointer mk_request_header_find(char *request_body, char *string);
+
+void mk_request_error(int num_error, struct client_request *cr, 
+                   struct request *s_request, int debug, 
+		   struct log_info *s_log);
+
+struct request *mk_request_alloc();
+void mk_request_free_list(struct client_request *cr);
+void mk_request_free(struct request *sr);
+
+struct client_request *mk_request_client_create(int socket);
+struct client_request *mk_request_client_get(int socket);
+struct client_request *mk_request_client_remove(int socket);
 
 int mk_handler_read(int socket);
 int mk_handler_write(int socket, struct client_request *cr);

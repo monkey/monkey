@@ -30,7 +30,6 @@
 
 #include "monkey.h"
 
-//#include "file.h"
 #include "str.h"
 #include "memory.h"
 #include "http.h"
