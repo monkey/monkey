@@ -25,13 +25,22 @@
 #define S_LOG_OFF 1
 
 /* logfile.c */
-pthread_mutex_t mutex_log_queue;
+pthread_key_t timer;
 
+/*
 struct log_queue {
     struct log_info *info;
     struct log_queue *next;
 };
 struct log_queue *_log_queue;
+*/
+
+struct log_target {
+	int fd;
+	char *target;
+	struct log_target *next;
+};
+struct log_target *lt;
 
 struct log_info {
     int method;
@@ -50,12 +59,15 @@ struct log_info {
 char    *PutTime();
 char    *PutIP();
 char    *BaseName(char *name);
-int	 write_log(struct log_info *log, int host_pipe);
+int write_log(struct log_info *log, struct host *h);
 int	 add_log_pid();
 int	 remove_log_pid();
 
 void *start_worker_logger(void *args);
 int logger_add_request(struct log_info *log);
+
+void mk_logger_target_add(int fd, char *target);
+struct log_target *mk_logger_match(int fd);
 
 #endif
 

@@ -279,11 +279,11 @@ int mk_handler_write(int socket, struct client_request *cr)
 		 * If we got an error, we don't want to parse
 		 * and send information for another pipelined request
 		 */
+		write_log(p_request->log, p_request->host_conf);
 		if(final_status<0 || final_status > 0)
 		{
 			return final_status;
 		}
-		write_log(p_request->log, p_request->host_conf->logpipe[1]);
 		p_request = p_request->next;
 	}
 
@@ -728,7 +728,7 @@ struct request *mk_request_alloc()
 	request->make_log=VAR_ON; /* build log file of this request ? */
 	mk_pointer_reset(request->query_string);
 	
-	//request->log->datetime=PutTime();
+	request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
 	request->log->error_msg = NULL;
@@ -833,8 +833,9 @@ void mk_request_free(struct request *sr)
 
         
         if(sr->log){
-            mk_mem_free(sr->log->error_msg); 
-            mk_mem_free(sr->log);
+        	mk_mem_free(sr->log->error_msg); 
+		mk_mem_free(sr->log->datetime);
+		mk_mem_free(sr->log);
         }
 
         mk_pointer_reset(sr->body);

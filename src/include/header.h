@@ -35,8 +35,6 @@
 #define LEN_MK_IOV_SPACE 1
 
 #define MK_IOV_NONE 2
-#define _MK_IOV_NONE ""
-#define LEN_MK_IOV_NONE 0
 
 #define RESP_HTTP_OK "HTTP/1.1 200 OK"
 #define LEN_RESP_HTTP_OK 15

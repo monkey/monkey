@@ -82,7 +82,8 @@ struct host {
     char *host_signature;
     char *header_host_signature;
     int header_len_host_signature;
-    int logpipe[2];
+    int log_access[2];
+    int log_error[2];
     struct host *next;
 };
 

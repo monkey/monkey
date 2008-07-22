@@ -68,9 +68,6 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 			break;
 		case MK_IOV_NONE:
 			return mk_io->iov_idx;
-			_sep = _MK_IOV_NONE;
-			len = LEN_MK_IOV_NONE;
-			break;
 	}
 
 	mk_io->io[mk_io->iov_idx].iov_base = _sep;

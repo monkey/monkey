@@ -47,10 +47,52 @@
 
 #include <sys/sysinfo.h>
 
+void mk_logger_target_add(int fd, char *target)
+{
+	struct log_target *new, *aux;
+
+	new = mk_mem_malloc(sizeof(struct log_target));
+	new->fd = fd;
+	new->target = target;
+	new->next = NULL;
+
+	if(!lt)
+	{
+		lt = new;
+		return;
+	}
+
+	aux = lt;
+	while(aux->next)
+		aux = aux->next;
+
+	aux->next = new;
+}
+
+struct log_target *mk_logger_match(int fd)
+{
+	struct log_target *aux;
+
+	aux = lt;
+
+	while(aux)
+	{
+		if(aux->fd == fd)
+		{
+			return aux;
+		}
+		aux = aux->next;
+	}
+
+	return NULL;
+}
+
+
 void *start_worker_logger(void *args)
 {
 	int efd, max_events=config->nhosts;
-	int i, bytes, err;
+	int i, bytes, err, pipe;
+	struct log_target *target=0;
 	struct host *h=0;
 	int flog;
 	long slen;
@@ -84,10 +126,20 @@ void *start_worker_logger(void *args)
 
 	/* Creating poll */
 	efd = mk_epoll_create(max_events);
+
 	h = config->hosts;
 	while(h)
 	{
-		mk_epoll_add_client(efd, h->logpipe[0], MK_EPOLL_BEHAVIOR_DEFAULT);
+		/* Add access log file */
+		mk_epoll_add_client(efd, h->log_access[0], 
+				MK_EPOLL_BEHAVIOR_DEFAULT);
+		mk_logger_target_add(h->log_access[0], h->access_log_path);
+
+		/* Add error log file */
+		mk_epoll_add_client(efd, h->log_error[0],
+				MK_EPOLL_BEHAVIOR_DEFAULT);
+		mk_logger_target_add(h->log_error[0], h->error_log_path);
+
 		h = h->next;
 	}
 
@@ -112,22 +164,27 @@ void *start_worker_logger(void *args)
 
 		for(i=0; i< num_fds; i++)
 		{
+			target = mk_logger_match(events[i].data.fd);
+			/*
 			while(h)
 			{
-				if(events[i].data.fd==h->logpipe[0]){
+				if(events[i].data.fd==h->log_access[0] ||
+					events[i].data.fd==h->log_error[0])
+				{
 					break;
 				}
 				h = h->next;
 			}
+			*/
 
-			if(!h)
+			if(!target)
 			{
 				printf("\nERROR matching host/epoll_fd");
 				fflush(stdout);
 				continue;
 			}
 				
-			err = ioctl(h->logpipe[0], FIONREAD, &bytes);
+			err = ioctl(target->fd, FIONREAD, &bytes);
 			if(err == -1)
 			{
 				perror("err");
@@ -141,7 +198,7 @@ void *start_worker_logger(void *args)
 			{
 				timeout = clk+clock_ticks;
 				//fdop++;
-				flog = open(h->access_log_path, 
+				flog = open(target->target, 
 						O_WRONLY | O_CREAT , 0644);
 			
 				if(flog==-1)
@@ -167,7 +224,7 @@ void *start_worker_logger(void *args)
 
 /* Registra en archivos de logs: accesos
  y errores */
-int write_log(struct log_info *log, int host_pipe)
+int write_log(struct log_info *log, struct host *h)
 {
 	unsigned long len;
 	FILE *log_file=0;
@@ -178,7 +235,7 @@ int write_log(struct log_info *log, int host_pipe)
 		return 0;
 	}
 	
-	iov = mk_iov_create(20);
+	iov = mk_iov_create(16);
 
 	/* Register a successfull request */
 	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
@@ -187,7 +244,7 @@ int write_log(struct log_info *log, int host_pipe)
 					MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
 			mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
 					MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->datetime, 0, MK_IOV_SPACE,
+			mk_iov_add_entry(iov, log->datetime, strlen(log->datetime), MK_IOV_SPACE,
 					MK_IOV_NOT_FREE_BUF);
 
 			buf = mk_http_method_check_str(log->method);
@@ -202,17 +259,22 @@ int write_log(struct log_info *log, int host_pipe)
 
 			buf = m_build_buffer(&buf, &len, "%i\n", log->size);
 			mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, MK_IOV_FREE_BUF);
-
-			mk_iov_send(host_pipe, iov);
-			mk_iov_free(iov);
+			mk_iov_send(h->log_access[1], iov);
 	}
 	else{ /* Regiter some error */
-		if((log_file=fopen(log->host_conf->error_log_path,"a"))==NULL){
-			pthread_mutex_unlock(&mutex_logfile);
-			return -1;
-		}
-		fprintf(log_file, "%s - %s  %s\n", log->ip, log->datetime, log->error_msg);
+		mk_iov_add_entry(iov, log->ip, strlen(log->ip),
+				MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+		mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+				MK_IOV_NOT_FREE_BUF);
+		mk_iov_add_entry(iov, log->datetime, strlen(log->datetime), MK_IOV_SPACE,
+				MK_IOV_NOT_FREE_BUF);
+		
+		mk_iov_add_entry(iov, log->error_msg, strlen(log->error_msg), MK_IOV_SPACE,
+				MK_IOV_NOT_FREE_BUF);
+		mk_iov_send(h->log_error[1], iov);
+
 	}
+	mk_iov_free(iov);
 	return 0;	
 }
 
@@ -245,16 +307,19 @@ int remove_log_pid()
 	hora de conexi�n (Por Daniel R. Ome) */
 char *PutTime() {
 
-   time_t      fec_hora;
-   static char data[255];
+	time_t      fec_hora;
+   //static char data[128];
+   	short int len=64;
+	char *data=0;
 
-   if ( (fec_hora = time(NULL)) == -1 )
-      return 0;
+	data = mk_mem_malloc_z(len);
+	if ( (fec_hora = time(NULL)) == -1 )
+		return NULL;
 
-   strftime(data, 255, "[%d/%b/%G %T %z]",
-               (struct tm *)localtime((time_t *) &fec_hora));
+	strftime(data, len, "[%d/%b/%G %T %z]",
+		(struct tm *)localtime((time_t *) &fec_hora));
 
-   return (char *) data;
+	return (char *) data;
 }
 
 char *BaseName(char *name)

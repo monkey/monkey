@@ -210,6 +210,7 @@ int main(int argc, char **argv)
 
 	pthread_key_create(&request_handler, NULL);
 	pthread_key_create(&epoll_fd, NULL);
+	pthread_key_create(&timer, NULL);
 
 	for(i=0; i<num_threads; i++)
 	{

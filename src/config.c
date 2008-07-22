@@ -437,7 +437,12 @@ struct host *M_Config_Get_Host(char *path)
 			"Server: %s", host->host_signature);
 	host->header_len_host_signature = len;
 
-	if(pipe(host->logpipe)<0)
+	if(pipe(host->log_access)<0)
+	{
+		perror("pipe");
+	}
+
+	if(pipe(host->log_error)<0)
 	{
 		perror("pipe");
 	}
