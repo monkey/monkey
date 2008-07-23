@@ -36,5 +36,7 @@ mk_pointer mk_pointer_create(char *buf, long init, long end);
 void mk_pointer_free(mk_pointer p);
 void mk_pointer_reset(mk_pointer p);
 char *mk_pointer_to_buf(mk_pointer p);
+void mk_pointer_set(mk_pointer *p, char *data);
+
 #endif
 

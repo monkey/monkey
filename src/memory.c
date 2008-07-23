@@ -99,3 +99,9 @@ char *mk_pointer_to_buf(mk_pointer p)
 	return (char *) buf;
 }
 
+void mk_pointer_set(mk_pointer *p, char *data)
+{
+	p->data = data;
+	p->len = strlen(data);
+}
+

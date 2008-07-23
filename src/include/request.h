@@ -68,6 +68,26 @@ parametros de una peticion */
 #define EXIT_NORMAL -1
 #define EXIT_PCONNECTION 24
 
+/* Request error messages for log file */
+#define ERROR_MSG_400 "[error 400] Bad Request" 
+#define ERROR_MSG_403 "[error 403] Forbidden"
+#define ERROR_MSG_404 "[error 404] Not Found"
+#define ERROR_MSG_405 "[error 405] Method Not Allowed"
+#define ERROR_MSG_408 "[error 408] Request Timeout"
+#define ERROR_MSG_411 "[error 411] Length Required"
+#define ERROR_MSG_500 "[error 500] Internal Server Error"
+#define ERROR_MSG_505 "[error 505] HTTP Version Not Supported"
+
+/* mk pointers with error messages */
+mk_pointer request_error_msg_400;
+mk_pointer request_error_msg_403;
+mk_pointer request_error_msg_404;
+mk_pointer request_error_msg_405;
+mk_pointer request_error_msg_408;
+mk_pointer request_error_msg_411;
+mk_pointer request_error_msg_500;
+mk_pointer request_error_msg_505;
+
 struct client_request
 {
     int pipelined; /* Pipelined request */
@@ -185,6 +205,8 @@ void mk_request_free(struct request *sr);
 struct client_request *mk_request_client_create(int socket);
 struct client_request *mk_request_client_get(int socket);
 struct client_request *mk_request_client_remove(int socket);
+
+void mk_request_init_error_msgs();
 
 int mk_handler_read(int socket);
 int mk_handler_write(int socket, struct client_request *cr);

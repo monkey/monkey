@@ -279,10 +279,13 @@ int mk_handler_write(int socket, struct client_request *cr)
 		 * If we got an error, we don't want to parse
 		 * and send information for another pipelined request
 		 */
-		write_log(p_request->log, p_request->host_conf);
-		if(final_status<0 || final_status > 0)
+		if(final_status > 0)
 		{
 			return final_status;
+		}
+		else if(final_status <= 0)
+		{
+			write_log(p_request->log, p_request->host_conf);
 		}
 		p_request = p_request->next;
 	}
@@ -605,16 +608,15 @@ void mk_request_error(int num_error, struct client_request *cr,
 			page_default=mk_request_set_default_page("Bad Request", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len,
-					"[error 400] Bad request");
+			s_log->error_msg = request_error_msg_400; 
 			break;
 
 		case M_CLIENT_FORBIDDEN:
 			page_default=mk_request_set_default_page("Forbidden", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len,
-					"[error 403] Forbidden %s",s_request->uri);
+			s_log->error_msg = request_error_msg_403;
+			// req s_request->uri;
 			break;
 
 		case M_CLIENT_NOT_FOUND:
@@ -623,9 +625,8 @@ void mk_request_error(int num_error, struct client_request *cr,
 			page_default=mk_request_set_default_page("Not Found", 
 					message, 
 					s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len, 
-					"[error 404] Not Found %s",
-					s_request->uri);
+			s_log->error_msg = request_error_msg_404;
+			// req uri;
 			mk_pointer_free(message);
 			break;
 
@@ -635,19 +636,16 @@ void mk_request_error(int num_error, struct client_request *cr,
 					s_request->host_conf->host_signature);
 
 			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-			m_build_buffer(&s_log->error_msg, &len, 
-					"[error 405] Method Not Allowed");
+			s_log->error_msg = request_error_msg_405;
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
 			s_log->status=S_LOG_OFF;
-			m_build_buffer(&s_log->error_msg, &len,
-					"[error 408] Request Timeout");
+			s_log->error_msg = request_error_msg_408;
 			break;
 
 		case M_CLIENT_LENGHT_REQUIRED:
-			m_build_buffer(&s_log->error_msg, &len,
-					"[error 411] Length Required");
+			s_log->error_msg = request_error_msg_411;
 			break;
 			
 		case M_SERVER_INTERNAL_ERROR:
@@ -656,8 +654,8 @@ void mk_request_error(int num_error, struct client_request *cr,
 					s_request->uri);
 			page_default=mk_request_set_default_page("Internal Server Error",
 					message, s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len,
-					"[error 411] Internal Server Error %s",s_request->uri);
+			s_log->error_msg = request_error_msg_500;
+			// req uri
 			mk_pointer_free(message);
 			break;
 			
@@ -665,8 +663,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 			mk_pointer_reset(message);
 			page_default=mk_request_set_default_page("HTTP Version Not Supported",message,
 				       s_request->host_conf->host_signature);
-			m_build_buffer(&s_log->error_msg, &len, 
-					"[error 505] HTTP Version Not Supported");
+			s_log->error_msg = request_error_msg_505;
 			break;
 	}
 
@@ -731,7 +728,7 @@ struct request *mk_request_alloc()
 	request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
-	request->log->error_msg = NULL;
+	mk_pointer_reset(request->log->error_msg);
 	request->status=VAR_ON;
 	request->method=METHOD_NOT_FOUND;
 
@@ -833,7 +830,7 @@ void mk_request_free(struct request *sr)
 
         
         if(sr->log){
-        	mk_mem_free(sr->log->error_msg); 
+        	//mk_mem_free(sr->log->error_msg); 
 		mk_mem_free(sr->log->datetime);
 		mk_mem_free(sr->log);
         }
@@ -948,5 +945,17 @@ struct client_request *mk_request_client_remove(int socket)
 	mk_mem_free(cr);
 	mk_sched_set_request_handler(request_handler);
 	return NULL;
+}
+
+void mk_request_init_error_msgs()
+{
+	mk_pointer_set(&request_error_msg_400, ERROR_MSG_400);
+	mk_pointer_set(&request_error_msg_403, ERROR_MSG_403);
+	mk_pointer_set(&request_error_msg_404, ERROR_MSG_404); 
+	mk_pointer_set(&request_error_msg_405, ERROR_MSG_405);
+	mk_pointer_set(&request_error_msg_408, ERROR_MSG_408);
+	mk_pointer_set(&request_error_msg_411, ERROR_MSG_411);
+	mk_pointer_set(&request_error_msg_500, ERROR_MSG_500);
+	mk_pointer_set(&request_error_msg_505, ERROR_MSG_505);
 }
 

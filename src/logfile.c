@@ -91,7 +91,7 @@ struct log_target *mk_logger_match(int fd)
 void *start_worker_logger(void *args)
 {
 	int efd, max_events=config->nhosts;
-	int i, bytes, err, pipe;
+	int i, bytes, err;
 	struct log_target *target=0;
 	struct host *h=0;
 	int flog;
@@ -120,7 +120,7 @@ void *start_worker_logger(void *args)
 	 */
 	long buffer_limit;
 
-	/* Monkey allow just 50% of a pipe capacity */
+	/* Monkey allow just 75% of a pipe capacity */
 	pipe_size = sysconf(_SC_PAGESIZE)*16;
 	buffer_limit = (pipe_size*0.75);
 
@@ -150,7 +150,7 @@ void *start_worker_logger(void *args)
 	/* Reading pipe buffer */
 	while(1)
 	{
-		usleep(1000);
+		usleep(1200);
 
 		struct epoll_event events[max_events];
 		int num_fds = epoll_wait(efd, events, max_events, -1);
@@ -165,17 +165,6 @@ void *start_worker_logger(void *args)
 		for(i=0; i< num_fds; i++)
 		{
 			target = mk_logger_match(events[i].data.fd);
-			/*
-			while(h)
-			{
-				if(events[i].data.fd==h->log_access[0] ||
-					events[i].data.fd==h->log_error[0])
-				{
-					break;
-				}
-				h = h->next;
-			}
-			*/
 
 			if(!target)
 			{
@@ -227,11 +216,11 @@ void *start_worker_logger(void *args)
 int write_log(struct log_info *log, struct host *h)
 {
 	unsigned long len;
-	FILE *log_file=0;
 	char *buf;
 	struct mk_iov *iov;
 
-	if(log->status!=S_LOG_ON){
+	if(log->status!=S_LOG_ON)
+	{
 		return 0;
 	}
 	
@@ -269,8 +258,9 @@ int write_log(struct log_info *log, struct host *h)
 		mk_iov_add_entry(iov, log->datetime, strlen(log->datetime), MK_IOV_SPACE,
 				MK_IOV_NOT_FREE_BUF);
 		
-		mk_iov_add_entry(iov, log->error_msg, strlen(log->error_msg), MK_IOV_SPACE,
+		mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, MK_IOV_SPACE,
 				MK_IOV_NOT_FREE_BUF);
+		mk_iov_add_entry(iov, "\n", 1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 		mk_iov_send(h->log_error[1], iov);
 
 	}
