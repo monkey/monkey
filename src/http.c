@@ -199,14 +199,22 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 		  this string, if doesn't exist we send a redirection header
 		*/
 		if(sr->uri_processed[strlen(sr->uri_processed) - 1] != '/') {
+			char *host;
+			host = mk_pointer_to_buf(sr->host);
+
 			m_build_buffer(&location, &len, "%s/", sr->uri_processed);
 			if(config->serverport == config->standard_port)
+			{
 				m_build_buffer(&real_location, &len, "http://%s%s", 
-						sr->host, location);
+						host, location);
+			}
 			else
+			{
 				m_build_buffer(&real_location, &len, "http://%s:%i%s",
-						sr->host, config->serverport,
+						host, config->serverport,
 						location);
+			}
+			mk_mem_free(host);
 
 			sr->headers->status = M_REDIR_MOVED;
 			sr->headers->content_length = 0;
@@ -390,7 +398,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
 	if(sr->headers->content_length==0){
 		Mimetype_free(mime_info);
-		return -1;
+		return 0;
 	}
 
 	/* Sending file */

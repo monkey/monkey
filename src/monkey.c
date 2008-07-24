@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 		
 	Version();
 	Init_Signals();
-	M_Config_start_configure();
+	mk_config_start_configure();
 
 	/* 
         Benchmark mode overwrite some configuration directives in order 

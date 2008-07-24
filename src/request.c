@@ -46,7 +46,6 @@
 #include "config.h"
 #include "scheduler.h"
 #include "epoll.h"
-#include "vhost.h"
 #include "socket.h"
 #include "logfile.h"
 #include "utils.h"
@@ -347,7 +346,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	
 	if(s_request->host.data)
 	{
-		host=VHOST_Find(s_request->host);
+		host=mk_config_host_find(s_request->host);
 		if(host)
 		{
 			s_request->host_conf = host;
@@ -370,7 +369,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 			int cgi_status;
 			cgi_status=M_CGI_main(cr, s_request, s_request->log, s_request->body);
 			/* Codes:
-				-1 : Fallo de permisos
+				-1 : Permission problem
 				-2 : Timeout
 				-3 : Internal Server Error
 			*/
@@ -559,6 +558,7 @@ mk_pointer mk_request_header_find(char *request_body,  char *string)
 	return (mk_pointer) var;
 }
 
+/* FIXME: IMPROVE access and double allocation */
 /* Look for some  index.xxx in pathfile */
 char *mk_request_index(char *pathfile)
 {
@@ -567,8 +567,8 @@ char *mk_request_index(char *pathfile)
 	struct indexfile *aux_index;
 
 	aux_index=first_index;
-	
-	while(aux_index!=NULL) {
+
+	while(aux_index) {
 		if(pathfile[strlen(pathfile)-1]=='/')
 		{
 			m_build_buffer(&file_aux, &len,
@@ -580,7 +580,8 @@ char *mk_request_index(char *pathfile)
 					"%s%s",pathfile,aux_index->indexname);
 		}
 	
-		if(access(file_aux,F_OK)==0) {
+		if(access(file_aux,F_OK)==0)
+		{
 			mk_mem_free(file_aux);
 			return (char *) aux_index->indexname;
 		}
@@ -596,23 +597,25 @@ void mk_request_error(int num_error, struct client_request *cr,
                    struct request *s_request, int debug, struct log_info *s_log)
 {
 	unsigned long len;
-	char *page_default=0, *aux_message=0;
-	mk_pointer message;
+	char *aux_message=0;
+	mk_pointer message, page;
 
 	if(!s_log) {
 		s_log=mk_mem_malloc(sizeof(struct log_info));
 	}
-		
+	
+	mk_pointer_reset(page);
+
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
-			page_default=mk_request_set_default_page("Bad Request", 
+			mk_request_set_default_page(&page, "Bad Request", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_400; 
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			page_default=mk_request_set_default_page("Forbidden", 
+			mk_request_set_default_page(&page, "Forbidden", 
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_403;
@@ -622,7 +625,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 		case M_CLIENT_NOT_FOUND:
 			m_build_buffer(&message.data, &message.len,
 					"The requested URL was not found on this server.");
-			page_default=mk_request_set_default_page("Not Found", 
+			mk_request_set_default_page(&page, "Not Found", 
 					message, 
 					s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_404;
@@ -631,7 +634,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			page_default=mk_request_set_default_page("Method Not Allowed",
+			mk_request_set_default_page(&page, "Method Not Allowed",
 					s_request->uri, 
 					s_request->host_conf->host_signature);
 
@@ -652,7 +655,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 			m_build_buffer(&message.data, &message.len, 
 					"Problems found running %s ",
 					s_request->uri);
-			page_default=mk_request_set_default_page("Internal Server Error",
+			mk_request_set_default_page(&page, "Internal Server Error",
 					message, s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_500;
 			// req uri
@@ -661,16 +664,16 @@ void mk_request_error(int num_error, struct client_request *cr,
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			mk_pointer_reset(message);
-			page_default=mk_request_set_default_page("HTTP Version Not Supported",message,
+			mk_request_set_default_page(&page, "HTTP Version Not Supported",message,
 				       s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_505;
 			break;
 	}
 
 	s_log->final_response=num_error;
-	
+
 	s_request->headers->status = num_error;
-	s_request->headers->content_length = 0;
+	s_request->headers->content_length = page.len;
 	s_request->headers->location = NULL ;
 	s_request->headers->cgi = SH_NOCGI;
 	s_request->headers->pconnections_left = 0;
@@ -678,7 +681,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 	
 	if(aux_message) mk_mem_free(aux_message);
 	
-	if(!page_default)
+	if(!page.data)
 	{
 		s_request->headers->content_type = NULL;
 	}
@@ -692,25 +695,22 @@ void mk_request_error(int num_error, struct client_request *cr,
 	M_METHOD_send_headers(cr->socket, cr, s_request, s_log);
 
 	if(debug==1){
-		fdprintf(cr->socket, NO_CHUNKED, "%s", page_default);
-		mk_mem_free(page_default);
+		fdprintf(cr->socket, NO_CHUNKED, "%s", page.data);
+		mk_pointer_free(page);
 	}
 }
 
 /* Build error page */
-char *mk_request_set_default_page(char *title, 
+void mk_request_set_default_page(mk_pointer *page, char *title, 
 		mk_pointer message, char *signature)
 {
-	unsigned long len;
-	char *page=0;
 	char *temp;
 	
 	temp = mk_pointer_to_buf(message);
-	m_build_buffer(&page, &len, "<HTML><BODY><H1>%s</H1>%s<BR><HR> \
-		<ADDRESS>%s</ADDRESS></BODY></HTML>", title, temp, signature);
-
+	m_build_buffer(&page->data, &page->len, 
+			"<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>",
+			title, temp, signature);
 	mk_mem_free(temp);
-	return (char *) page;
 }
 
 /* Create a memory allocation in order to handle the request data */

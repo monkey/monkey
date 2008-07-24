@@ -17,6 +17,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "memory.h"
+
+#ifndef MK_CONFIG_H
+#define MK_CONFIG_H
+
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
 
 #define VALUE_ON "on"
@@ -88,13 +93,15 @@ struct host {
 };
 
 /* Functions */
-void	M_Config_start_configure(void);
-void	M_Config_read_files(char *path_conf, char *file_conf);
-void	M_Config_add_index(char *indexname);
-void	M_Config_print_error_msg(char *variable, char *path);
-void	M_Config_set_init_values(void);
+void mk_config_start_configure(void);
+void mk_config_read_files(char *path_conf, char *file_conf);
+void mk_config_add_index(char *indexname);
+void mk_config_print_error_msg(char *variable, char *path);
+void mk_config_set_init_values(void);
 
-int M_Config_Get_Bool(char *value);
-void M_Config_Read_Hosts(char *path);
-struct host *M_Config_Get_Host(char *path);
+int mk_config_get_bool(char *value);
+void mk_config_read_hosts(char *path);
+struct host *mk_config_get_host(char *path);
+struct host *mk_config_host_find(mk_pointer host);
 
+#endif

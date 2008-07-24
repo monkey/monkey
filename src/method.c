@@ -266,7 +266,6 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 	}
 	
 	/* Connection */
-
 	if(cr->counter_connections<config->max_keep_alive_request && config->keep_alive==VAR_ON){
 		m_build_buffer(
 			&buffer,
@@ -312,6 +311,9 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 			sh->content_type);
 	mk_iov_add_entry(iov, buffer, len,
 			MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
+
+	//printf("\n->sh->cl: %i", sh->content_length);
+	//fflush(stdout);
 
 	/* Tamaño total de la informacion a enviar */
 	if((sh->content_length!=0 && 
@@ -390,7 +392,7 @@ int M_METHOD_send_headers(int fd, struct client_request *cr,
 					MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 		}
 	}
-	else if(sh->content_length!=0)
+	else if(sh->content_length>=0)
 	{
 		m_build_buffer( 
 				&buffer,

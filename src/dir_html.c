@@ -305,14 +305,16 @@ int GetDir(struct client_request *cr, struct request *sr)
 	shell(file_list, count_file);
 
 	hd = mk_mem_malloc(sizeof(struct header_values));
+	hd->ranges[0] = -1;
+	hd->ranges[1] = -1;
+	hd->content_length = -1;
 	hd->status = M_HTTP_OK;
-	hd->content_length = 0;
 	m_build_buffer(&hd->content_type, &len, "text/html");
 	hd->location = NULL;
 	hd->cgi = SH_CGI;
 	hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
-
-    sr->headers = hd;
+	hd->last_modified = NULL;
+	sr->headers = hd;
 
 	if(sr->protocol==HTTP_PROTOCOL_11){
 		transfer_type=CHUNKED;

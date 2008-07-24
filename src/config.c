@@ -38,7 +38,7 @@
 #include "memory.h"
 
 /* Read configuration files */
-void M_Config_read_files(char *path_conf, char *file_conf)
+void mk_config_read_files(char *path_conf, char *file_conf)
 {
 	int bool;
 	unsigned long len;
@@ -81,22 +81,22 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable, "Port")==0) {
 			config->serverport=atoi(value);
 			if(!config->serverport>=1 && !config->serverport<=65535)
-				M_Config_print_error_msg("Port", path);
+				mk_config_print_error_msg("Port", path);
 		}
 
 		/* Timeout */
 		if(strcasecmp(variable,"Timeout")==0) {
 			config->timeout=atoi(value);
 			if(config->timeout<1 || !value)
-				M_Config_print_error_msg("Timeout", path);
+				mk_config_print_error_msg("Timeout", path);
 		}
 				
 		/* KeepAlive */
 		if(strcasecmp(variable,"KeepAlive")==0) {
-            bool = M_Config_Get_Bool(value);
+            bool = mk_config_get_bool(value);
             if(bool == VAR_ERR)
             {
-                M_Config_print_error_msg("KeepAlive", path);
+                mk_config_print_error_msg("KeepAlive", path);
             }
             else{
                 config->keep_alive=bool;
@@ -107,21 +107,21 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable,"MaxKeepAliveRequest")==0){
 			config->max_keep_alive_request=atoi(value);
 			if(config->max_keep_alive_request==0)
-			    M_Config_print_error_msg("MaxKeepAliveRequest", path);
+			    mk_config_print_error_msg("MaxKeepAliveRequest", path);
 		}
 		
 		/* KeepAliveTimeout */
 		if(strcasecmp(variable,"KeepAliveTimeout")==0){
 			config->keep_alive_timeout=atoi(value);
 			if(config->keep_alive_timeout==0)
-			    M_Config_print_error_msg("KeepAliveTimeout", path);
+			    mk_config_print_error_msg("KeepAliveTimeout", path);
 		}
 		
 		/* MaxClients */
 		if(strcasecmp(variable,"MaxClients")==0) { 
 			config->maxclients=atoi(value);
 			if(config->maxclients < 1)
-			    M_Config_print_error_msg("MaxClients", path);
+			    mk_config_print_error_msg("MaxClients", path);
 		}
 		
 		/* Pid File */
@@ -137,7 +137,7 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable,"Indexfile")==0) {
 			auxarg=value;
 			while(auxarg!=NULL) {
-					M_Config_add_index(auxarg);
+					mk_config_add_index(auxarg);
 					auxarg=strtok_r(NULL,"\"\t ", &last);
 			}
 		}
@@ -145,10 +145,10 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		/* HideVersion Variable */
 		if(strcasecmp(variable,"HideVersion")==0)
 		{
-			bool = M_Config_Get_Bool(value);
+			bool = mk_config_get_bool(value);
 			if(bool == VAR_ERR)
 			{
-				M_Config_print_error_msg("HideVersion", path);
+				mk_config_print_error_msg("HideVersion", path);
 			}
 			else{
 				config->hideversion=bool;
@@ -189,10 +189,10 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		/* Resume */
 		if(strcasecmp(variable, "Resume")==0)
 		{
-			bool = M_Config_Get_Bool(value);
+			bool = mk_config_get_bool(value);
 			if(bool == VAR_ERR)
 			{
-				M_Config_print_error_msg("Resume", path);
+				mk_config_print_error_msg("Resume", path);
 			}
 			else{
 				config->resume=bool;
@@ -202,10 +202,10 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		/* Symbolic Links */
 		if(strcasecmp(variable, "SymLink")==0)
 		{
-			bool = M_Config_Get_Bool(value);
+			bool = mk_config_get_bool(value);
 			if(bool == VAR_ERR)
  			{
-				M_Config_print_error_msg("SymLink", path);
+				mk_config_print_error_msg("SymLink", path);
 			}
 			else{
 				config->symlink=bool;
@@ -215,20 +215,20 @@ void M_Config_read_files(char *path_conf, char *file_conf)
 		if(strcasecmp(variable, "Max_IP")==0) {
 			config->max_ip = atoi(value);
 			if(config->max_ip < 0)
-			    M_Config_print_error_msg("Max_IP", path);
+			    mk_config_print_error_msg("Max_IP", path);
 		} 		
 
 		/* Including files */
 		if(strcasecmp(variable,"Include")==0) {
-			M_Config_read_files(path_conf, value);
+			mk_config_read_files(path_conf, value);
 		}
 	}
 	fclose(configfile);
 	mk_mem_free(path);
-	M_Config_Read_Hosts(path_conf);
+	mk_config_read_hosts(path_conf);
 }
 
-void M_Config_Read_Hosts(char *path)
+void mk_config_read_hosts(char *path)
 {
     DIR *dir;
     unsigned long len;
@@ -238,7 +238,7 @@ void M_Config_Read_Hosts(char *path)
     struct dirent *ent;
 
     m_build_buffer(&buf, &len, "%s/sites/default", path);
-    config->hosts = M_Config_Get_Host(buf);
+    config->hosts = mk_config_get_host(buf);
     config->nhosts++;
     mk_mem_free(buf);
 
@@ -264,7 +264,7 @@ void M_Config_Read_Hosts(char *path)
 
         m_build_buffer(&file, &len, "%s/sites/%s", path, ent->d_name);
 
-        new_host = (struct host *) M_Config_Get_Host(file);
+        new_host = (struct host *) mk_config_get_host(file);
         mk_mem_free(file);
         if(!new_host)
         {
@@ -276,6 +276,7 @@ void M_Config_Read_Hosts(char *path)
 	    config->nhosts++;
         }
     }
+    
     /*
     h = config->hosts;
     while(h)
@@ -297,7 +298,7 @@ void M_Config_Read_Hosts(char *path)
     */
 }
 
-int M_Config_Get_Bool(char *value)
+int mk_config_get_bool(char *value)
 {
     int on, off;
 
@@ -317,7 +318,7 @@ int M_Config_Get_Bool(char *value)
     }
 }
 
-struct host *M_Config_Get_Host(char *path)
+struct host *mk_config_get_host(char *path)
 {
 	unsigned long len=0;
     char buffer[255];
@@ -366,11 +367,11 @@ struct host *M_Config_Get_Host(char *path)
         if(strcasecmp(variable,"DocumentRoot")==0) {
             host->documentroot=mk_string_dup(value);
             if(stat(host->documentroot, &checkdir)==-1) {
-                fprintf(stderr, "ERROR: Invalid path to Server_root in %s.", path); 
+                fprintf(stderr, "ERROR: Invalid path to Server_root in %s\n\n", path); 
                 exit(1);
             }
             else if(!(checkdir.st_mode & S_IFDIR)) {
-                fprintf(stderr, "ERROR: DocumentRoot variable in %s has an invalid directory path.", path);
+                fprintf(stderr, "ERROR: DocumentRoot variable in %s has an invalid directory path\n\n", path);
                 exit(1);
             }
         }
@@ -389,7 +390,7 @@ struct host *M_Config_Get_Host(char *path)
         if(strcasecmp(variable,"GetDir")==0)
         {
             if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-                M_Config_print_error_msg("GetDir", path);
+                mk_config_print_error_msg("GetDir", path);
             else if(strcasecmp(value,VALUE_OFF)==0)
                      host->getdir=VAR_OFF;
         }
@@ -397,12 +398,12 @@ struct host *M_Config_Get_Host(char *path)
         /* Script_Alias del server */
         if(strcasecmp(variable,"ScriptAlias")==0)
         {
-            if(!value) M_Config_print_error_msg("ScriptAlias", path);
+            if(!value) mk_config_print_error_msg("ScriptAlias", path);
             host->scriptalias = (char **) mk_mem_malloc(sizeof(char *) * 3);
             host->scriptalias[0]=mk_string_dup(value);
             auxarg=strtok_r(NULL,"\"\t ", &last);
 
-            if(!auxarg) M_Config_print_error_msg("ScriptAlias", path);
+            if(!auxarg) mk_config_print_error_msg("ScriptAlias", path);
             host->scriptalias[1]=mk_string_dup(auxarg);
             host->scriptalias[2]='\0';
         }
@@ -452,7 +453,7 @@ struct host *M_Config_Get_Host(char *path)
 }
 
 /* Imprime error de configuracion y cierra */
-void M_Config_print_error_msg(char *variable, char *path)
+void mk_config_print_error_msg(char *variable, char *path)
 {
 	fprintf(stderr, "\nError: %s variable in %s has an invalid value.\n", variable, path);
 	fflush(stderr);
@@ -460,7 +461,7 @@ void M_Config_print_error_msg(char *variable, char *path)
 }
 
 /* Agrega distintos index.xxx */
-void M_Config_add_index(char *indexname)
+void mk_config_add_index(char *indexname)
 {
 	struct indexfile *new_index=0, *aux_index;
 
@@ -480,7 +481,7 @@ void M_Config_add_index(char *indexname)
 	}
 }
 
-void M_Config_set_init_values(void)
+void mk_config_set_init_values(void)
 {
 	/* Valores iniciales */
 	config->timeout=15;
@@ -500,16 +501,16 @@ void M_Config_set_init_values(void)
 }
 
 /* Lee la configuraci�n principal desde monkey.conf */
-void M_Config_start_configure(void)
+void mk_config_start_configure(void)
 {
 	unsigned long len;
 
-	M_Config_set_init_values();
-	M_Config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
+	mk_config_set_init_values();
+	mk_config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
 
 	/* if not index names defined, set default */
 	if(first_index==NULL) 
-		M_Config_add_index("index.html");			
+		mk_config_add_index("index.html");			
 
 	/* Load mimes */
 	Mimetype_Read_Config();
@@ -527,5 +528,21 @@ void M_Config_start_configure(void)
 		m_build_buffer(&config->server_software, &len,
 				"Monkey Server");
 	}
+}
+
+struct host *mk_config_host_find(mk_pointer host)
+{
+	struct host *aux_host;
+	
+	aux_host = config->hosts;
+
+	while(aux_host){
+		if(strncasecmp(aux_host->servername, host.data, host.len)==0)
+			break;
+		else
+			aux_host=aux_host->next;
+	}
+
+	return (struct host *) aux_host;
 }
 
