@@ -177,7 +177,8 @@ struct header_values {
 	int cgi;
 	int pconnections_left;
 	int ranges[2];
-		
+	int transfer_encoding;
+
 	char *content_type;
 	char *last_modified;
 	char *location;

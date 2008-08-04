@@ -243,7 +243,7 @@ int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
 	
     sr->headers = hd;
 
-	if(M_METHOD_send_headers(socket, cr, sr, s_log)<0){
+	if(mk_header_send(socket, cr, sr, s_log)<0){
 		return -1;	
 	}
 	

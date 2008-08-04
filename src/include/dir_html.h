@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,15 @@
  */
 
 /* dir_html.c */
+#ifndef MK_DIRHTML_H
+#define MK_DIRHTML_H
+
+#define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
+
 int  GetDir(struct client_request *cr, struct request *sr);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 struct f_list *get_dir_content(struct request *sr, char *path);
+
+#endif
 

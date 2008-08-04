@@ -97,22 +97,30 @@ int CheckFile(char *pathfile)
 
 /* Devuelve la fecha para enviarla 
  en el header */
-char *PutDate_string(time_t date) {
-
+mk_pointer PutDate_string(time_t date)
+{
+	int n, size=50;
 	char *date_gmt;
 	struct tm *gmt_tm;
+	mk_pointer pointer;
 	
+	mk_pointer_reset(pointer);
 	if(date==0){
 		if ( (date = time(NULL)) == -1 ){
-			return 0;
+			return pointer;
 		}
 	}
 
 	gmt_tm	= (struct tm *) gmtime(&date);
-	date_gmt = mk_mem_malloc(250);
+	date_gmt = mk_mem_malloc(size);
 
-	strftime(date_gmt,250,  DATEFORMAT, gmt_tm);
-	return (char *) date_gmt;
+	n = strftime(date_gmt, size-1,  DATEFORMAT, gmt_tm);
+	date_gmt[n] = '\0';
+	
+	pointer.data = date_gmt;
+	pointer.len = n;
+
+	return pointer;
 }
 
 time_t PutDate_unix(char *date)
@@ -140,7 +148,8 @@ int fdprintf(int fd, int type, const char *format, ...)
 	char *buffer = 0;
 	static size_t alloc = 0;
 	
-	if(!buffer) {
+	if(!buffer)
+	{
 		buffer = (char *)mk_mem_malloc(256);
 		if(!buffer)
 			return -1;

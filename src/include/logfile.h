@@ -27,14 +27,6 @@
 /* logfile.c */
 pthread_key_t timer;
 
-/*
-struct log_queue {
-    struct log_info *info;
-    struct log_queue *next;
-};
-struct log_queue *_log_queue;
-*/
-
 struct log_target {
 	int fd;
 	char *target;
@@ -43,17 +35,18 @@ struct log_target {
 struct log_target *lt;
 
 struct log_info {
-    int method;
-    int protocol;
-    mk_pointer uri;
+	int method;
+	int protocol;
+	mk_pointer uri;
 
 	char *ip;
 	char *datetime;
-	int   final_response; /* Ok: 200, Not Found 400, etc... */
-	int   size;
-	int   status; /* on/off : 301. */
+	int final_response; /* Ok: 200, Not Found 400, etc... */
+	int size;
+	int status; /* on/off : 301. */
 	mk_pointer error_msg;
-    struct host *host_conf;
+	
+	struct host *host_conf;
 };
 
 char    *PutTime();

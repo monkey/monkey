@@ -692,7 +692,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 				"text/html");
 	}
 
-	M_METHOD_send_headers(cr->socket, cr, s_request, s_log);
+	mk_header_send(cr->socket, cr, s_request, s_log);
 
 	if(debug==1){
 		fdprintf(cr->socket, NO_CHUNKED, "%s", page.data);
@@ -765,13 +765,8 @@ struct request *mk_request_alloc()
 	request->bytes_offset = 0;
 	request->fd_file = -1;
 
-	request->headers = (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
-
-	request->headers->content_type = NULL;
-	request->headers->last_modified = NULL;
-	request->headers->location = NULL;
-	request->headers->ranges[0]=-1;
-	request->headers->ranges[1]=-1;
+	/* Response Headers */
+	request->headers = mk_header_create();
 
 	return (struct request *) request;
 }
@@ -945,17 +940,5 @@ struct client_request *mk_request_client_remove(int socket)
 	mk_mem_free(cr);
 	mk_sched_set_request_handler(request_handler);
 	return NULL;
-}
-
-void mk_request_init_error_msgs()
-{
-	mk_pointer_set(&request_error_msg_400, ERROR_MSG_400);
-	mk_pointer_set(&request_error_msg_403, ERROR_MSG_403);
-	mk_pointer_set(&request_error_msg_404, ERROR_MSG_404); 
-	mk_pointer_set(&request_error_msg_405, ERROR_MSG_405);
-	mk_pointer_set(&request_error_msg_408, ERROR_MSG_408);
-	mk_pointer_set(&request_error_msg_411, ERROR_MSG_411);
-	mk_pointer_set(&request_error_msg_500, ERROR_MSG_500);
-	mk_pointer_set(&request_error_msg_505, ERROR_MSG_505);
 }
 

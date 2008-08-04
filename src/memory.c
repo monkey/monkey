@@ -24,6 +24,8 @@
 #include <pthread.h>
 
 #include "memory.h"
+#include "request.h"
+#include "header.h"
 
 void *mk_mem_malloc(size_t size)
 {
@@ -103,5 +105,29 @@ void mk_pointer_set(mk_pointer *p, char *data)
 {
 	p->data = data;
 	p->len = strlen(data);
+}
+
+void mk_mem_pointers_init()
+{
+	/* Error messages */
+	mk_pointer_set(&request_error_msg_400, ERROR_MSG_400);
+	mk_pointer_set(&request_error_msg_403, ERROR_MSG_403);
+	mk_pointer_set(&request_error_msg_404, ERROR_MSG_404); 
+	mk_pointer_set(&request_error_msg_405, ERROR_MSG_405);
+	mk_pointer_set(&request_error_msg_408, ERROR_MSG_408);
+	mk_pointer_set(&request_error_msg_411, ERROR_MSG_411);
+	mk_pointer_set(&request_error_msg_500, ERROR_MSG_500);
+	mk_pointer_set(&request_error_msg_505, ERROR_MSG_505);
+
+	/* Short server response headers */
+	mk_pointer_set(&mk_header_short_date, MK_HEADER_SHORT_DATE);
+	mk_pointer_set(&mk_header_short_location, MK_HEADER_SHORT_LOCATION);
+	mk_pointer_set(&mk_header_short_ct, MK_HEADER_SHORT_CT);
+
+	/* Server response headers */
+	mk_pointer_set(&mk_header_conn_ka, MK_HEADER_CONN_KA);
+	mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
+	mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
+	mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
 }
 

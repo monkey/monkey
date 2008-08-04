@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2007, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,9 @@
 #include "utils.h"
 #include "config.h"
 #include "method.h"
+#include "socket.h"
+#include "dir_html.h"
+#include "header.h"
 
 #define  DIRECTORIO		  "     -"
 
@@ -61,13 +64,15 @@
 
 /* Estructura de lista de archivos y directorios */
 struct f_list {
-	char	  path[MAX_PATH+1];			/* Ruta de acceso               */
-	char	  size[MAX_SIZE+1];			/* Tama�o del archivo           */
-	char	  ft_modif[MAX_TIME+1];	  /* Fecha y hora de modificacion */
+	long len;
+	char path[MAX_PATH+1];			/* Ruta de acceso               */
+	char size[MAX_SIZE+1];			/* Tama�o del archivo           */
+	char ft_modif[MAX_TIME+1];	  /* Fecha y hora de modificacion */
 };
 
-/* Ordenar cadenas de caracteres por el metodo SHELL */
-/* C�digo tomado del libro de Kernighan y Ritchie    */
+/* Sort string characters by shell method
+ * Code taken from Kernighan & Ritchie book 
+ */
 struct f_list *shell (struct f_list *b, int n)
 {
 	int				gap, i, j;
@@ -150,11 +155,13 @@ char *cut_string(char *str)
 struct f_list *add_element(struct f_list *object, char *string,
                               int *count, int *max, struct stat *buffer)
 {
+	long len;
 	off_t	tam = 0;
 	char	tipo;
 	struct f_list  *bak;
 
-	if ((tam = strlen(string)) >= MAX_PATH-5)
+	len = strlen(string);
+	if ((tam = len) >= MAX_PATH-5)
 		return (struct f_list *) object;
 
 	(*count) ++;
@@ -203,6 +210,7 @@ struct f_list *add_element(struct f_list *object, char *string,
 	/* Guardar el nombre del directorio o archivo para ingresar */
 	strncpy(object[*count].path, string, MAX_PATH);
 	object[*count].path[MAX_PATH] = ZERO;
+	object[*count].len = len;
 
 	return (struct f_list *) object;
 }
@@ -233,13 +241,123 @@ char *read_header_footer_file(char *file_path)
 	mk_mem_free(buffer);	
 	return (char *) file_content;
 }
- 
+
+int mk_dirhtml(struct client_request *cr, struct request *sr)
+{
+	/* general */
+	int i;
+	int file_count=-1, max_file;
+	char *data;
+
+	/* file info */
+	unsigned long len;
+	char *path;
+	struct stat buffer;
+
+	/* handle dir entries */
+	DIR *dir;
+	struct dirent *ent;
+	struct f_list *file_list;
+
+	if ((dir = opendir(sr->real_path)) == NULL)
+	{
+		return -1;
+	}
+	
+	if ((file_list = (struct f_list *) 
+			 mk_mem_malloc(sizeof(struct f_list))) == NULL)
+	{
+		closedir(dir);
+		return -1;
+	}
+
+	/* Leer los archivos y directorios */
+	while((ent = readdir(dir)) != NULL)
+	{
+		if (strcmp((char *) ent->d_name, "." )  == 0) continue;
+		if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
+
+		/*
+		if(strcmp(ent->d_name, sr->host_conf->header_file)==0 || 
+				strcmp(ent->d_name, 
+					sr->host_conf->footer_file)==0)
+		{
+			continue;	
+		}
+		*/
+
+		m_build_buffer(&path, &len, "%s%s", sr->real_path, ent->d_name);
+		
+		if(stat(path, &buffer)==-1)
+		{
+			mk_mem_free(path);
+			continue;
+		}
+
+		if(!ent->d_name || !file_list){
+			puts("error en buffer");	
+		}
+		
+		file_list = (struct f_list *) 
+			add_element(file_list, ent->d_name,
+					&file_count, &max_file, &buffer);
+
+		if (!file_list) {
+			mk_mem_free(path);
+			closedir(dir);
+			return -1;
+		}
+		mk_mem_free(path);
+ 	}
+
+	// FIXME: Need sort file list
+	
+	sr->headers->status = M_HTTP_OK;
+	sr->headers->cgi = SH_CGI;
+	m_build_buffer(&sr->headers->content_type, &len, "text/html");
+
+	// FIXME: Check this counter
+	//hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
+
+	if(sr->protocol==HTTP_PROTOCOL_11)
+	{
+		sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+	}
+	
+	/* Sending headers */
+	mk_header_send(cr->socket, cr, sr, sr->log);
+	
+	for (i=0; i<file_count; i++)
+	{
+		//char* c_str = check_string(file_list[i].path);
+		//char* x_str = cut_string(file_list[i].path);
+		char *c_str = file_list[i].path;
+		char *x_str = file_list[i].path;
+
+		//data = m_build_buffer_from_buffer(data,
+		/* printf( 	" %s  %s   <A HREF=\"%s\">%s</A>\n",*/
+		//	file_list[i].ft_modif, file_list[i].size,
+		//	c_str, x_str);
+
+		//mk_mem_free(c_str);
+		//mk_mem_free(x_str);
+	}
+
+	//mk_mem_free(file_list);
+	//mk_mem_free(data);
+	closedir(dir);
+	return -1;
+}
+
+
 /* Send information of current directory on HTML format
    Modified : 2007/01/21
    -> Add struct client_request support
 
    Modified : 2002/10/22 
    -> Chunked Transfer Encoding support added to HTTP/1.1
+
+  FIXME: REWRITE THIS SECTION >:)
 */
 int GetDir(struct client_request *cr, struct request *sr)
 {
@@ -256,7 +374,6 @@ int GetDir(struct client_request *cr, struct request *sr)
 	     max_file=0,		  /* Cantidad tope usada por GROW */
 		 transfer_type; /* Tipo de transferencia de datos */
 		 
-
 	if ((dir = opendir(sr->real_path)) == NULL)
 		return -1;
 
@@ -304,7 +421,7 @@ int GetDir(struct client_request *cr, struct request *sr)
 	/* Ordenar el arreglo de archivos y directorios */
 	shell(file_list, count_file);
 
-	hd = mk_mem_malloc(sizeof(struct header_values));
+	hd = mk_mem_malloc_z(sizeof(struct header_values));
 	hd->ranges[0] = -1;
 	hd->ranges[1] = -1;
 	hd->content_length = -1;
@@ -318,15 +435,16 @@ int GetDir(struct client_request *cr, struct request *sr)
 
 	if(sr->protocol==HTTP_PROTOCOL_11){
 		transfer_type=CHUNKED;
-		M_METHOD_send_headers(cr->socket, cr, sr, sr->log);
+		mk_header_send(cr->socket, cr, sr, sr->log);
 		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
 	}
 	else{
 		transfer_type=NO_CHUNKED;
-		M_METHOD_send_headers(cr->socket, cr, sr, sr->log);
+		mk_header_send(cr->socket, cr, sr, sr->log);
 		fdprintf(cr->socket, transfer_type, "\r\n");
 	}
 
+	//mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
 	content_buffer = m_build_buffer_from_buffer(content_buffer, 
 		"<HTML>\n<HEAD><TITLE>Index of %s</TITLE></HEAD>\n <BODY> \

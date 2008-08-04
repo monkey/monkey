@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 	num_threads = 3;
 	sched_list = NULL;
 
-	mk_request_init_error_msgs();
+	mk_mem_pointers_init();
 	
 	pthread_key_create(&request_handler, NULL);
 	pthread_key_create(&epoll_fd, NULL);

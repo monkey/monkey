@@ -48,7 +48,8 @@ int	fdchunked(int fd, char *data, int length);
 int	hex2int(char *pChars);
 char *strstr2(char *s, char *t);
 
-char *PutDate_string(time_t date);
+mk_pointer PutDate_string(time_t date);
+
 time_t PutDate_unix(char *date);
 
 char *get_real_string(mk_pointer req_uri);

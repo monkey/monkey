@@ -17,24 +17,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "request.h"
+#include "logfile.h"
+
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
-
-#include <sys/uio.h>
-
 /* 
  * Response headers: We handle this as static global data in order
  * to save some process time when building the response header.
  */
-#define MK_IOV_BREAK_LINE 0
-#define _MK_IOV_BREAK_LINE "\r\n"
-#define LEN_MK_IOV_BREAK_LINE 2
-
-#define MK_IOV_SPACE 1
-#define _MK_IOV_SPACE " "
-#define LEN_MK_IOV_SPACE 1
-
-#define MK_IOV_NONE 2
 
 #define RESP_HTTP_OK "HTTP/1.1 200 OK"
 #define LEN_RESP_HTTP_OK 15
@@ -76,22 +67,36 @@
 #define LEN_RESP_SERVER_HTTP_VERSION_UNSUP 39
 
 
-#define MK_IOV_FREE_BUF 1
-#define MK_IOV_NOT_FREE_BUF 0
+/* Short header values */
+#define MK_HEADER_SHORT_DATE "Date"
+#define MK_HEADER_SHORT_LOCATION "Location"
+#define MK_HEADER_SHORT_CT "Content-Type"
+#define MK_HEADER_SHORT_LOCATION "Location"
 
-struct mk_iov 
-{
-	struct iovec *io;
-	char **buf_to_free;
-	int iov_idx;
-	int buf_idx;
-};
+mk_pointer mk_header_short_date;
+mk_pointer mk_header_short_location;
+mk_pointer mk_header_short_ct;
 
-struct mk_iov *mk_iov_create(int n);
-int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, int sep, int free);
-int mk_iov_add_separator(struct mk_iov *mk_io, int sep);
-ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
-void mk_iov_free(struct mk_iov *mk_io);
+/* Accept ranges */
+#define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes"
+
+#define MK_HEADER_CONN_KA "Connection: Keep-Alive" 
+#define MK_HEADER_CONN_CLOSE "Connection: Close"
+
+/* Transfer Encoding */
+#define MK_HEADER_TE_TYPE_CHUNKED 0
+#define MK_HEADER_TE_CHUNKED "Transfer-Encoding: Chunked"
+
+/* mk pointers with response server headers */
+mk_pointer mk_header_conn_ka;
+mk_pointer mk_header_conn_close;
+mk_pointer mk_header_accept_ranges;
+mk_pointer mk_header_te_chunked;
+
+
+int mk_header_send(int fd, struct client_request *cr,
+		struct request *sr, struct log_info *s_log);
+struct header_values *mk_header_create();
 
 #endif
 
