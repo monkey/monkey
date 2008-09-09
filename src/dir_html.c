@@ -44,6 +44,8 @@
 #include "socket.h"
 #include "dir_html.h"
 #include "header.h"
+#include "file.h"
+#include "iov.h"
 
 #define  DIRECTORIO		  "     -"
 
@@ -62,6 +64,13 @@
 #define  SPACE				 ' '
 #define  ZERO				  '\0'
 
+struct mk_f_list
+{
+        char *name;
+        char *ft_modif;
+        struct file_info *info;
+};
+
 /* Estructura de lista de archivos y directorios */
 struct f_list {
 	long len;
@@ -78,8 +87,10 @@ struct f_list *shell (struct f_list *b, int n)
 	int				gap, i, j;
 	struct f_list  temp;
 
-	for (gap = n/2; gap > 0; gap /= 2)
-		for (i = gap; i <= n; i ++)
+        for (gap = n/2; gap > 0; gap /= 2)
+        {
+          for (i = gap; i <= n; i ++)
+          {         
 			for (j = i-gap;
 					j >= 0 && ((strcmp(b[j].path, b[j+gap].path))>0);
 					j -= gap)
@@ -88,9 +99,11 @@ struct f_list *shell (struct f_list *b, int n)
 				b[j]			  = b[j+gap];
 				b[j+gap]		 = temp;
 			}
-
+          }
+        }
 	return (struct f_list *)b;
 }
+
 
 /* Si encuentra un ' ' en la cadena lo reemplaza por su valor 
    en hexadecimal (%20). Autor: Eduardo Silva */
@@ -151,188 +164,156 @@ char *cut_string(char *str)
 	return mk_string_dup(str);
 }
 
-/* Agregar un elemento del directorio */
-struct f_list *add_element(struct f_list *object, char *string,
-                              int *count, int *max, struct stat *buffer)
+struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
 {
-	long len;
-	off_t	tam = 0;
-	char	tipo;
-	struct f_list  *bak;
+        int i;
+        int len_pre1 = 9, len_pre2 = 2, len_pre3 = 4;
+        int iov_len;
 
-	len = strlen(string);
-	if ((tam = len) >= MAX_PATH-5)
-		return (struct f_list *) object;
+        struct mk_iov *data_iov;
+        char *header = "<HTML><BODY>"; // 12
+        char *footer = "</BODY></HTML>"; // 14
 
-	(*count) ++;
-	/* Un elemento maxs ... */
-	/* Si object->count = 0 es */
-	/* el primer elemento      */
+        char *PRE1 = "<A href='";
+        char *PRE2 = "'>";
+        char *PRE3 = "</A>";
 
-	if ((*count) != 0){              /* Aumentar el tama�o del array */
-		if ((*count) >= (*max)) {
-			bak = (struct f_list *) mk_mem_realloc(object, (GROW+(*max)) * sizeof(struct f_list));
-	
-			(*max)+= GROW;
-			object = bak;
-		}
-	}
-	
-	/* Guardar la fecha y hora del elemento */
-	strftime(object[*count].ft_modif, 255, "%d-%b-%G %H:%M", 
-		(struct tm *)localtime((time_t *) &buffer->st_mtime));
-	
+        iov_len = (len*5) + 2;
+        data_iov = mk_iov_create(iov_len);
 
-	/* Es directorio o archivo ?? */
-	if (S_ISDIR(buffer->st_mode)) {
-		strncpy(object[*count].size, DIRECTORIO, MAX_SIZE);
+        mk_iov_add_entry(data_iov, header, 12, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 
-		/* Colocar el slash de terminacion */
-		string[tam++] = '/';
-		string[tam]	= ZERO;
-	} else {
-		tam = buffer->st_size;
+        for(i=0; i<len; i++)
+        {
+          mk_iov_add_entry(data_iov, PRE1, len_pre1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          mk_iov_add_entry(data_iov, PRE2, len_pre2, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          mk_iov_add_entry(data_iov, PRE3, len_pre3, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+        }
 
-		if (tam < 9999) {
-			tipo = 'b';
-		} else
-			if((tam /= 1024) < 9999) {
-				tipo = 'K';
-			} else
-				if((tam /= 1024) < 9999) {
-					tipo = 'M';
-				} else
-					tipo = 'G';
+        mk_iov_add_entry(data_iov, footer, 14, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 
-		sprintf(object[*count].size, "%5lu%c", (unsigned long )tam, tipo);
-	}
-
-	/* Guardar el nombre del directorio o archivo para ingresar */
-	strncpy(object[*count].path, string, MAX_PATH);
-	object[*count].path[MAX_PATH] = ZERO;
-	object[*count].len = len;
-
-	return (struct f_list *) object;
+        return (struct mk_iov *) data_iov;
 }
 
-char *read_header_footer_file(char *file_path)
+void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
+                            char *full_path, unsigned long *count)
 {
-	FILE *file;
-	int bytes;
-	char *file_content=0;
-	char *buffer;
-	struct stat f;
+        list[*count].name = file;
+        list[*count].info = (struct file_info *) mk_file_get_info(full_path);
 
-	stat(file_path, &f);	
-	file = fopen(file_path, "r");
-	if(!file)
-	{	
-		return NULL;
-	}	
-	
-	buffer = mk_mem_malloc_z(BUFFER_SOCKET);
-
-	while((bytes=fread(buffer,1, BUFFER_SOCKET, file)>0)){
-		file_content = m_build_buffer_from_buffer(file_content,"%s", buffer);
-		memset(buffer, '\0', sizeof(buffer));
-	}
-	fclose(file);
-	
-	mk_mem_free(buffer);	
-	return (char *) file_content;
+        *count = *count + 1;
 }
 
-int mk_dirhtml(struct client_request *cr, struct request *sr)
+int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
+                           char *path, unsigned long *list_len, int offset)
 {
-	/* general */
-	int i;
-	int file_count=-1, max_file;
-	char *data;
-
-	/* file info */
 	unsigned long len;
-	char *path;
-	struct stat buffer;
+        char *full_path;
+        struct dirent *ent;
 
-	/* handle dir entries */
-	DIR *dir;
-	struct dirent *ent;
-	struct f_list *file_list;
-
-	if ((dir = opendir(sr->real_path)) == NULL)
-	{
-		return -1;
-	}
-	
-	if ((file_list = (struct f_list *) 
-			 mk_mem_malloc(sizeof(struct f_list))) == NULL)
-	{
-		closedir(dir);
-		return -1;
-	}
-
-	/* Leer los archivos y directorios */
+	/* Before to send the information, we need to build
+         * the list of entries, this really sucks because the user
+         * always will want to have the information sorted, why we don't 
+         * add some spec to the HTTP protocol in order to send the information
+         * in a generic way and let the client choose how to show it
+         * as they does browsing a FTP server ???, we can save bandweight,
+         * let the cool firefox developers create different templates and
+         * we are going to have a more happy end users.
+         *
+         * that kind of ideas comes when you are in an airport just waiting :)
+         */
 	while((ent = readdir(dir)) != NULL)
 	{
-		if (strcmp((char *) ent->d_name, "." )  == 0) continue;
-		if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
+                if(strcmp((char *) ent->d_name, "." )  == 0) continue;
+                if(strcmp((char *) ent->d_name, ".." ) == 0) continue;
 
-		/*
-		if(strcmp(ent->d_name, sr->host_conf->header_file)==0 || 
-				strcmp(ent->d_name, 
-					sr->host_conf->footer_file)==0)
-		{
-			continue;	
-		}
-		*/
+                /* Look just for files and dirs */
+                if(ent->d_type!=DT_REG && ent->d_type!=DT_DIR)
+                {
+                        continue;
+                }
 
-		m_build_buffer(&path, &len, "%s%s", sr->real_path, ent->d_name);
+		m_build_buffer(&full_path, &len, "%s%s", path, ent->d_name);
 		
-		if(stat(path, &buffer)==-1)
-		{
-			mk_mem_free(path);
-			continue;
+		if(!ent->d_name)
+                {
+			puts("mk_dirhtml :: buffer error");
 		}
 
-		if(!ent->d_name || !file_list){
-			puts("error en buffer");	
-		}
-		
-		file_list = (struct f_list *) 
-			add_element(file_list, ent->d_name,
-					&file_count, &max_file, &buffer);
+		mk_dirhtml_add_element(file_list, ent->d_name, full_path, list_len);
 
-		if (!file_list) {
-			mk_mem_free(path);
-			closedir(dir);
+                if (!file_list)
+                {
+                        closedir(dir);
 			return -1;
 		}
-		mk_mem_free(path);
  	}
+        
+        return 0;
+}
 
-	// FIXME: Need sort file list
-	
+int mk_dirhtml_init(struct client_request *cr, struct request *sr)
+{
+        DIR *dir;
+        int ret, i, len;
+        //char *data;
+
+	/* file info */
+	unsigned long list_len=0;
+        struct mk_f_list *file_list;
+        struct mk_iov *html_list;
+ 
+        if(!(dir = opendir(sr->real_path)))
+        {
+                return -1;
+        }
+
+	/* handle dir entries */
+        printf("\nmk_dirhtml_init :: %s", sr->real_path);
+        fflush(stdout);
+
+        file_list = mk_mem_malloc(
+                                  sizeof(struct mk_f_list)*
+                                  MK_DIRHTML_BUFFER_LIMIT);
+
+        ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, 0);
+
+	// FIXME: Need sort file list	
+        sr->headers->transfer_encoding = NULL;
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;
+        sr->headers->breakline = MK_HEADER_BREAKLINE;
+
 	m_build_buffer(&sr->headers->content_type, &len, "text/html");
 
 	// FIXME: Check this counter
 	//hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
 
+        /*
 	if(sr->protocol==HTTP_PROTOCOL_11)
 	{
 		sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
 	}
-	
+	*/
+
 	/* Sending headers */
 	mk_header_send(cr->socket, cr, sr, sr->log);
-	
-	for (i=0; i<file_count; i++)
+
+        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+        html_list = mk_dirhtml_iov(file_list, list_len);
+        mk_iov_send(cr->socket, html_list);
+
+        for (i=0; i<list_len; i++)
 	{
-		//char* c_str = check_string(file_list[i].path);
+                printf("\n dir -> %s", file_list[i].name);
+                fflush(stdout);
+
+                //char* c_str = check_string(file_list[i].path);
 		//char* x_str = cut_string(file_list[i].path);
-		char *c_str = file_list[i].path;
-		char *x_str = file_list[i].path;
+		//char *c_str = file_list[i].path;
+		//char *x_str = file_list[i].path;
 
 		//data = m_build_buffer_from_buffer(data,
 		/* printf( 	" %s  %s   <A HREF=\"%s\">%s</A>\n",*/
@@ -341,13 +322,15 @@ int mk_dirhtml(struct client_request *cr, struct request *sr)
 
 		//mk_mem_free(c_str);
 		//mk_mem_free(x_str);
-	}
+        }
 
 	//mk_mem_free(file_list);
 	//mk_mem_free(data);
-	closedir(dir);
+
+        closedir(dir);
 	return -1;
 }
+
 
 
 /* Send information of current directory on HTML format
@@ -359,158 +342,4 @@ int mk_dirhtml(struct client_request *cr, struct request *sr)
 
   FIXME: REWRITE THIS SECTION >:)
 */
-int GetDir(struct client_request *cr, struct request *sr)
-{
-	unsigned long len;
-	DIR *dir;
-	struct dirent *ent;
-	char *path=0, *real_header_file, *real_footer_file, *content_buffer=0;
-	struct stat *buffer;
-	struct f_list *file_list;
-	struct header_values *hd;
 
-	int i,
- 		count_file=-1,	  /* Cantidad de elementos        */
-	     max_file=0,		  /* Cantidad tope usada por GROW */
-		 transfer_type; /* Tipo de transferencia de datos */
-		 
-	if ((dir = opendir(sr->real_path)) == NULL)
-		return -1;
-
-	if ((file_list = (struct f_list *) mk_mem_malloc(sizeof(struct f_list))) == NULL)
-	{
-		closedir(dir);
-		return -1;
-	}
-
-	if ((buffer = (struct stat *) mk_mem_malloc(sizeof(struct stat))) == NULL)
-	{
-		mk_mem_free(file_list);
-		closedir(dir);
-		return -1;
-	}
-
-	/* Leer los archivos y directorios */
-	while ((ent = readdir(dir)) != NULL) {
-		if (strcmp((char *) ent->d_name, "." )  == 0) continue;
-		if (strcmp((char *) ent->d_name, ".." ) == 0) continue;
-
-		if(strcmp(ent->d_name, sr->host_conf->header_file)==0 || strcmp(ent->d_name, sr->host_conf->footer_file)==0){
-			continue;	
-		}
-		
-		m_build_buffer(&path, &len, "%s%s", sr->real_path, ent->d_name);
-		
-		if (stat(path, buffer) == -1) continue;
-
-		if(!buffer || !ent->d_name || !file_list){
-			puts("error en buffer");	
-		}
-		
-		file_list = (struct f_list *) add_element(file_list, ent->d_name, &count_file, &max_file,
-                                                      buffer);
-		if (!file_list) {
-			mk_mem_free(path);
-			mk_mem_free(buffer);
-			closedir(dir);
-			return -1;
-		}
-		mk_mem_free(path);
- 	}
-
-	/* Ordenar el arreglo de archivos y directorios */
-	shell(file_list, count_file);
-
-	hd = mk_mem_malloc_z(sizeof(struct header_values));
-	hd->ranges[0] = -1;
-	hd->ranges[1] = -1;
-	hd->content_length = -1;
-	hd->status = M_HTTP_OK;
-	m_build_buffer(&hd->content_type, &len, "text/html");
-	hd->location = NULL;
-	hd->cgi = SH_CGI;
-	hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
-	hd->last_modified = NULL;
-	sr->headers = hd;
-
-	if(sr->protocol==HTTP_PROTOCOL_11){
-		transfer_type=CHUNKED;
-		mk_header_send(cr->socket, cr, sr, sr->log);
-		fdprintf(cr->socket, NO_CHUNKED, "Transfer-Encoding: Chunked\r\n\r\n");
-	}
-	else{
-		transfer_type=NO_CHUNKED;
-		mk_header_send(cr->socket, cr, sr, sr->log);
-		fdprintf(cr->socket, transfer_type, "\r\n");
-	}
-
-	//mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
-
-	content_buffer = m_build_buffer_from_buffer(content_buffer, 
-		"<HTML>\n<HEAD><TITLE>Index of %s</TITLE></HEAD>\n <BODY> \
-				 <H1>Index of %s</H1>", sr->uri_processed, sr->uri_processed);
-				 
-				 
-	m_build_buffer(&real_header_file, &len, 
-			"%s%s", sr->real_path, sr->host_conf->header_file);
-
-	if(real_header_file){
-		char *header_file_buffer=0;
-		
-		header_file_buffer = read_header_footer_file(real_header_file);
-		if(header_file_buffer){
-			content_buffer = m_build_buffer_from_buffer(content_buffer, "%s", header_file_buffer);
-		}
-		mk_mem_free(header_file_buffer);
-	}
-	
-	content_buffer = m_build_buffer_from_buffer(content_buffer,
-		"<BR> <PRE>    Modified        Size     Name\n<HR> \
-			 \n\t\t\t -   <A HREF=\"../\">Parent Directory</A>\n");
-	
-
-	for (i=0; i<=count_file; i++)
-	{
-		char* c_str = check_string(file_list[i].path);
-		char* x_str = cut_string(file_list[i].path);
-		
-		content_buffer = m_build_buffer_from_buffer(content_buffer,
-			" %s  %s   <A HREF=\"%s\">%s</A>\n",
-            file_list[i].ft_modif, file_list[i].size,
-            c_str, x_str);
-
-		mk_mem_free(c_str);
-		mk_mem_free(x_str);
-	}
-
-
-	content_buffer = m_build_buffer_from_buffer(content_buffer,"</PRE><HR>");
-	m_build_buffer(&real_footer_file, &len, "%s%s", 
-			sr->real_path, sr->host_conf->footer_file);
-
-	if(real_footer_file){
-		char *footer_file_buffer=0;
-		
-		footer_file_buffer = read_header_footer_file(real_footer_file);
-		if(footer_file_buffer){
-			content_buffer = m_build_buffer_from_buffer(content_buffer, "%s<HR>", footer_file_buffer);
-		}
-		mk_mem_free(footer_file_buffer);
-	}
-	
-	content_buffer = m_build_buffer_from_buffer(content_buffer,"<ADDRESS>%s</ADDRESS></BODY></HTML>\r\n\r\n", sr->host_conf->host_signature);
-
-	fdprintf(cr->socket, transfer_type, "%s", content_buffer);
-
-	if(transfer_type==CHUNKED)
-		fdprintf(cr->socket, CHUNKED, "");
-		
-	mk_mem_free(file_list);
-	mk_mem_free(buffer);
-	mk_mem_free(real_header_file);
-	mk_mem_free(real_footer_file);
-	mk_mem_free(content_buffer);
-	closedir(dir);
-
-	return 0;
-}

@@ -21,11 +21,18 @@
 #ifndef MK_DIRHTML_H
 #define MK_DIRHTML_H
 
+/* For every directory requested, don't send more than
+ * this limit of entries.
+ */
+#define MK_DIRHTML_BUFFER_LIMIT 30
+
 #define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
 
 int  GetDir(struct client_request *cr, struct request *sr);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
+
+int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 struct f_list *get_dir_content(struct request *sr, char *path);
 
 #endif

@@ -22,6 +22,9 @@
 
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
+
+#define MK_HEADER_BREAKLINE 1
+
 /* 
  * Response headers: We handle this as static global data in order
  * to save some process time when building the response header.

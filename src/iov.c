@@ -109,5 +109,3 @@ void mk_iov_free(struct mk_iov *mk_io)
 	mk_mem_free(mk_io->io);
 	mk_mem_free(mk_io);
 }
-
-

@@ -42,21 +42,21 @@ struct indexfile {
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
-#define RH_ACCEPT_CHARSET	"Accept-Charset:"
-#define RH_ACCEPT_ENCODING	"Accept-Encoding:"
-#define RH_ACCEPT_LANGUAGE	"Accept-Language:"
-#define RH_CONNECTION	"Connection:"
-#define RH_COOKIE	"Cookie:"
-#define RH_CONTENT_LENGTH	"Content-Length:"
-#define RH_CONTENT_RANGE	"Content-Range:"
+#define RH_ACCEPT_CHARSET "Accept-Charset:"
+#define RH_ACCEPT_ENCODING "Accept-Encoding:"
+#define RH_ACCEPT_LANGUAGE "Accept-Language:"
+#define RH_CONNECTION "Connection:"
+#define RH_COOKIE "Cookie:"
+#define RH_CONTENT_LENGTH "Content-Length:"
+#define RH_CONTENT_RANGE "Content-Range:"
 #define RH_CONTENT_TYPE	"Content-type:"
 #define RH_IF_MODIFIED_SINCE "If-Modified-Since:"
 #define RH_HOST	"Host:"
 #define RH_LAST_MODIFIED "Last-Modified:"
 #define RH_LAST_MODIFIED_SINCE "Last-Modified-Since:"
-#define RH_REFERER	"Referer:"
-#define RH_RANGE	"Range:"
-#define RH_USER_AGENT	"User-Agent:"
+#define RH_REFERER "Referer:"
+#define RH_RANGE "Range:"
+#define RH_USER_AGENT "User-Agent:"
 
 /* Aqui se registran temporalmente los 
 parametros de una peticion */
@@ -178,6 +178,7 @@ struct header_values {
 	int pconnections_left;
 	int ranges[2];
 	int transfer_encoding;
+        int breakline;
 
 	char *content_type;
 	char *last_modified;

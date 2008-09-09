@@ -67,6 +67,7 @@ struct file_info *mk_file_get_info(char *path)
 	}
 
 	/* Getting current user euid/egid */
+        /* FIXME: This should be global */ 
 	euid = geteuid();
 	egid = getegid();
 

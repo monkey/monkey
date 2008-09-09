@@ -242,7 +242,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         if(sr->host_conf->getdir==VAR_ON) {
                                 int getdir_res = 0;
 
-                                getdir_res = mk_dirhtml(cr, sr);
+                                getdir_res = mk_dirhtml_init(cr, sr);
                                         
                                 if(getdir_res == -1){
                                         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);

@@ -353,7 +353,7 @@ int mk_header_send(int fd, struct client_request *cr,
 				MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
 	}	
 	
-	if(sh->cgi==SH_NOCGI)
+	if(sh->cgi==SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE)
 	{
 		mk_iov_add_separator(iov, MK_IOV_BREAK_LINE);
 	}
@@ -363,6 +363,8 @@ int mk_header_send(int fd, struct client_request *cr,
 	
 	return 0;
 }
+
+//int mk_header_send_chunked(int len)
 
 struct header_values *mk_header_create()
 {
