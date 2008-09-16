@@ -383,7 +383,6 @@ char *get_real_string(mk_pointer req_uri){
 }
 
 
-
 	
 
 

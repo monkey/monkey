@@ -33,6 +33,8 @@ struct mk_iov *mk_iov_create(int n)
 	iov->io = mk_mem_malloc(n*sizeof(struct iovec));
 	iov->buf_to_free = mk_mem_malloc(n*sizeof(char));
 	iov->buf_idx = 0;
+        iov->total_len = 0;
+
 	return iov;
 }
 
@@ -42,6 +44,7 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
 	mk_io->io[mk_io->iov_idx].iov_base = buf;
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
+        mk_io->total_len += len;
 
 	mk_iov_add_separator(mk_io, sep);
 
@@ -83,6 +86,7 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 	mk_io->io[mk_io->iov_idx].iov_base = _sep;
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
+        mk_io->total_len += len;
 
 	return mk_io->iov_idx;
 }

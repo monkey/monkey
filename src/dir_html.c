@@ -166,8 +166,9 @@ char *cut_string(char *str)
 
 struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
 {
-        int i;
-        int len_pre1 = 9, len_pre2 = 2, len_pre3 = 4;
+        char *chunked_line;
+        int i, chunked_len;
+        int len_pre1 = 9, len_pre2 = 2, len_pre3 = 8;
         int iov_len;
 
         struct mk_iov *data_iov;
@@ -176,10 +177,13 @@ struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
 
         char *PRE1 = "<A href='";
         char *PRE2 = "'>";
-        char *PRE3 = "</A>";
+        char *PRE3 = "</A><BR>";
 
-        iov_len = (len*5) + 2;
+        iov_len = (len*5) + 2 + 1;
         data_iov = mk_iov_create(iov_len);
+        
+        /* tricky update, offset +1 to keep chunked data */
+        data_iov->iov_idx = 1;
 
         mk_iov_add_entry(data_iov, header, 12, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 
@@ -193,6 +197,11 @@ struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
         }
 
         mk_iov_add_entry(data_iov, footer, 14, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+
+        /* Total length to send */
+        chunked_line = (char *) mk_header_chunked_line(data_iov->total_len);
+        data_iov->io[0].iov_base = chunked_line; 
+        data_iov->io[0].iov_len = strlen(chunked_line);
 
         return (struct mk_iov *) data_iov;
 }
@@ -258,7 +267,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
         int ret, i, len;
-        //char *data;
+        char *chunked_line;
 
 	/* file info */
 	unsigned long list_len=0;
@@ -301,9 +310,11 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	/* Sending headers */
 	mk_header_send(cr->socket, cr, sr, sr->log);
 
-        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
         html_list = mk_dirhtml_iov(file_list, list_len);
+
+        mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
         mk_iov_send(cr->socket, html_list);
+        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
         for (i=0; i<list_len; i++)
 	{

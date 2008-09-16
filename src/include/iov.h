@@ -51,6 +51,7 @@ struct mk_iov
 	char **buf_to_free;
 	int iov_idx;
 	int buf_idx;
+        unsigned long total_len;
 };
 
 struct mk_iov *mk_iov_create(int n);

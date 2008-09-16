@@ -364,7 +364,15 @@ int mk_header_send(int fd, struct client_request *cr,
 	return 0;
 }
 
-//int mk_header_send_chunked(int len)
+char *mk_header_chunked_line(int len)
+{
+        char *buf;
+
+        buf = mk_mem_malloc_z(10);
+        snprintf(buf, 9, "%x%s", len, CRLF);
+
+        return (char *) buf;
+}
 
 struct header_values *mk_header_create()
 {
