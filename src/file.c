@@ -90,3 +90,42 @@ struct file_info *mk_file_get_info(char *path)
 	return f_info;
 }
 
+/* Read file content to a memory buffer,
+ * Use this function just for really SMALL files
+ */
+char *mk_file_to_buffer(char *path)
+{
+	FILE *fp;
+	char *buffer;
+	long bytes;
+	struct file_info *finfo;
+
+	if(!(finfo = mk_file_get_info(path)))
+	{
+		return NULL;
+	}
+
+	if(!(fp = fopen(path, "r")))
+	{
+		return NULL;
+	}
+
+	if(!(buffer = mk_mem_malloc(finfo->size)))
+	{
+		fclose(fp);
+		return NULL;
+	}
+	       
+	bytes = fread(buffer, 1, finfo->size, fp);
+	if(bytes < finfo->size)
+	{
+		mk_mem_free(buffer);
+		fclose(fp);
+		return NULL;
+	}
+	
+	fclose(fp);
+	return (char *) buffer;
+	
+}
+

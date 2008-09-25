@@ -270,7 +270,6 @@ int mk_dirhtml_conf()
         return ret;
 }
 
-
 /* 
  * Read the main configuration file for dirhtml: dirhtml.conf, 
  * it will alloc the dirhtml_conf struct
@@ -322,6 +321,11 @@ int mk_dirhtml_read_config(char *path)
         fclose(fileconf);
 
         return 0;
+}
+
+int mk_dirhtml_load_theme(char *theme_path)
+{
+
 }
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
