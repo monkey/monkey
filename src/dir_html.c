@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -265,6 +267,7 @@ int mk_dirhtml_conf()
         
         m_build_buffer(&themes_path, &len, "%s/dir_themes/", config->serverconf);
         ret = mk_dirhtml_read_config(themes_path);
+        printf("\n test theme: %s", dirhtml_conf->theme);
         mk_dirhtml_load_theme(dirhtml_conf->theme);
 
         return ret;
@@ -293,7 +296,7 @@ int mk_dirhtml_read_config(char *path)
         }
 
         /* alloc dirhtml config struct */
-        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
+        //        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
 
         while(fgets(buffer, 255, fileconf))
         {
@@ -315,23 +318,24 @@ int mk_dirhtml_read_config(char *path)
                  /* Server Name */
                  if(strcasecmp(variable,"Theme")==0)
                  {
-                   dirhtml_conf->theme = value;
+                         dirhtml_conf->theme = mk_string_dup(value);
                  }
         }
         fclose(fileconf);
-
         return 0;
 }
 
 int mk_dirhtml_load_theme(char *theme_path)
 {
-
+	printf("\nload theme: %s", theme_path);
+        return 0;
 }
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int ret, i, len;
+        int ret, i;
+        unsigned long len;
         char *chunked_line;
 
 	/* file info */
@@ -377,7 +381,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
         html_list = mk_dirhtml_iov(file_list, list_len);
 
-        mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
+        //mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
         mk_iov_send(cr->socket, html_list);
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
