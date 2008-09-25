@@ -36,6 +36,7 @@
 #include "logfile.h"
 #include "deny.h"
 #include "memory.h"
+#include "dir_html.h"
 
 /* Read configuration files */
 void mk_config_read_files(char *path_conf, char *file_conf)
@@ -327,9 +328,6 @@ struct host *mk_config_get_host(char *path)
     struct stat checkdir;
     struct host *host;
 
-    printf("[PARSING HOST FILE]: %s\n", path);
-    fflush(stdout);
-
     if( (configfile=fopen(path,"r"))==NULL ) {
         fprintf(stderr, "Error: I can't open %s file.\n", path);
         return NULL;
@@ -354,7 +352,6 @@ struct host *mk_config_get_host(char *path)
         value     = strtok_r(NULL, "\"\t ", &last);
 
         if (!variable || !value) continue;
-
 
         /* Server Name */
         if(strcasecmp(variable,"Servername")==0)
@@ -500,7 +497,7 @@ void mk_config_set_init_values(void)
 	config->user = NULL;
 }
 
-/* Lee la configuraci�n principal desde monkey.conf */
+/* read main configuration from monkey.conf */
 void mk_config_start_configure(void)
 {
 	unsigned long len;
@@ -514,7 +511,10 @@ void mk_config_start_configure(void)
 
 	/* Load mimes */
 	Mimetype_Read_Config();
-     
+
+        /* Load dir_html configuration */
+        mk_dirhtml_conf();
+
 	/* Load security rules */
 	Deny_Read_Config(); 
 

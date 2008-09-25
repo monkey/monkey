@@ -62,6 +62,8 @@ struct server_config {
 	/* max ip */
 	int max_ip;
 
+        struct dir_html_theme *dir_theme;
+
 	 /* configured host quantity */
 	int nhosts;	
 	struct host *hosts;
@@ -89,6 +91,7 @@ struct host {
     int header_len_host_signature;
     int log_access[2];
     int log_error[2];
+
     struct host *next;
 };
 

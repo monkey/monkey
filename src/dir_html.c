@@ -168,16 +168,9 @@ struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
 {
         char *chunked_line;
         int i, chunked_len;
-        int len_pre1 = 9, len_pre2 = 2, len_pre3 = 8;
         int iov_len;
 
         struct mk_iov *data_iov;
-        char *header = "<HTML><BODY>"; // 12
-        char *footer = "</BODY></HTML>"; // 14
-
-        char *PRE1 = "<A href='";
-        char *PRE2 = "'>";
-        char *PRE3 = "</A><BR>";
 
         iov_len = (len*5) + 2 + 1;
         data_iov = mk_iov_create(iov_len);
@@ -185,18 +178,18 @@ struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
         /* tricky update, offset +1 to keep chunked data */
         data_iov->iov_idx = 1;
 
-        mk_iov_add_entry(data_iov, header, 12, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+        //        mk_iov_add_entry(data_iov, header, 12, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 
         for(i=0; i<len; i++)
         {
-          mk_iov_add_entry(data_iov, PRE1, len_pre1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          mk_iov_add_entry(data_iov, PRE2, len_pre2, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          mk_iov_add_entry(data_iov, PRE3, len_pre3, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          //mk_iov_add_entry(data_iov, PRE1, len_pre1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          //mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          //mk_iov_add_entry(data_iov, PRE2, len_pre2, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          //mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+          //mk_iov_add_entry(data_iov, PRE3, len_pre3, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
         }
 
-        mk_iov_add_entry(data_iov, footer, 14, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+        //mk_iov_add_entry(data_iov, footer, 14, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
 
         /* Total length to send */
         chunked_line = (char *) mk_header_chunked_line(data_iov->total_len);
@@ -260,6 +253,74 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
 		}
  	}
         
+        return 0;
+}
+
+/* Read dirhtml config and themes */
+int mk_dirhtml_conf()
+{
+        int ret = 0;
+        unsigned long len;
+        char **themes_path;
+        
+        m_build_buffer(&themes_path, &len, "%s/dir_themes/", config->serverconf);
+        ret = mk_dirhtml_read_config(themes_path);
+        mk_dirhtml_load_theme(dirhtml_conf->theme);
+
+        return ret;
+}
+
+
+/* 
+ * Read the main configuration file for dirhtml: dirhtml.conf, 
+ * it will alloc the dirhtml_conf struct
+*/
+int mk_dirhtml_read_config(char *path)
+{
+        unsigned long len;
+        char **default_file;
+        char buffer[255];
+        FILE *fileconf;
+        char *variable, *value, *last;
+
+        struct dirhtml_config *dirhtml_conf;
+
+        m_build_buffer(&default_file, &len, "%sdirhtml.conf", path);
+
+        if(!(fileconf = fopen(default_file, "r")))
+        {
+          puts("Error: Cannot open dirhtml conf file");
+          return -1;
+        }
+
+        /* alloc dirhtml config struct */
+        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
+
+        while(fgets(buffer, 255, fileconf))
+        {
+                 len = strlen(buffer);
+                 if(buffer[len-1] == '\n') {
+                   buffer[--len] = 0;
+                   if(len && buffer[len-1] == '\r')
+                     buffer[--len] = 0;
+                 }
+        
+                 if(!buffer[0] || buffer[0] == '#')
+                          continue;
+            
+                 variable   = strtok_r(buffer, "\"\t ", &last);
+                 value     = strtok_r(NULL, "\"\t ", &last);
+
+                 if (!variable || !value) continue;
+
+                 /* Server Name */
+                 if(strcasecmp(variable,"Theme")==0)
+                 {
+                   dirhtml_conf->theme = value;
+                 }
+        }
+        fclose(fileconf);
+
         return 0;
 }
 

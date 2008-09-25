@@ -185,7 +185,8 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
 
 	/* Last-Modified */
-	if(sh->last_modified!=NULL){
+	if(sh->last_modified!=NULL)
+        {
 		m_build_buffer(
 			&buffer,
 			&len,
@@ -199,7 +200,8 @@ int mk_header_send(int fd, struct client_request *cr,
 	/* Connection */
 	if(cr->counter_connections<config->max_keep_alive_request && 
            config->keep_alive==VAR_ON &&
-           cr->request->keep_alive==VAR_ON){
+           cr->request->keep_alive==VAR_ON)
+        {
 		m_build_buffer(
 			&buffer,
 			&len,

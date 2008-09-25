@@ -28,12 +28,19 @@
 
 #define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
 
+struct dirhtml_config
+{
+        char *theme;
+};
+
+struct dirhtml_config *dirhtml_conf;
+
 int  GetDir(struct client_request *cr, struct request *sr);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 
+int mk_dirhtml_conf();
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 struct f_list *get_dir_content(struct request *sr, char *path);
 
 #endif
-
