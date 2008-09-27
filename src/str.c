@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -47,12 +49,14 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 	
 	if(pos_init > pos_end)
 	{
+                mk_mem_free(buffer);
 		return NULL;
 	}
 	
 	bytes =  pos_end - pos_init;
 	strncpy(buffer, string+pos_init, bytes);
 	buffer[bytes]='\0';
+
 	return (char *) buffer;	
 }
 
@@ -159,3 +163,10 @@ char *mk_string_dup(const char *s)
 	return strdup(s);
 }
 
+int mk_string_array_count(char *arr[])
+{
+        int i=0;
+
+        for(i=0; arr[i]; i++){}
+        return i;
+}

@@ -26,4 +26,5 @@ int mk_string_search_n(char *string, char *search, int n);
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
+int mk_string_array_count(char *arr[]);
 

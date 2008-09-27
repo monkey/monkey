@@ -113,8 +113,6 @@ int main(int argc, char **argv)
 	struct sched_list_node *sched;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
-        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
-
 	config->file_config=0;
 			
 	opterr = 0;

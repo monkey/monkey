@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -28,19 +30,48 @@
 
 #define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
 
+/* Theme files */
+#define MK_DIRHTML_FILE_HEADER "header.theme"
+#define MK_DIRHTML_FILE_ENTRY "entry.theme"
+#define MK_DIRHTML_FILE_FOOTER "footer.theme"
+
+/* Template tags */
+#define MK_DIRHTML_TPL_HEADER {"%_html_title_%"}
+#define MK_DIRHTML_TPL_ENTRY {\
+        "%_target_title_%",\
+        "%_target_url_%",\
+        "%_target_name_%"}
+
+#define MK_DIRHTML_TPL_FOOTER {}
+
+/* Main configuration of dirhtml module */
 struct dirhtml_config
 {
         char *theme;
+        char *theme_path;
 };
 
+/* Global config */
 struct dirhtml_config *dirhtml_conf;
+
+/* Used to keep splitted content of every template */
+struct dirhtml_template
+{
+        char *buf;
+        int len;
+};
 
 int  GetDir(struct client_request *cr, struct request *sr);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 
 int mk_dirhtml_conf();
+char *mk_dirhtml_load_file(char *filename);
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[]);
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
+int mk_dirhtml_read_config(char *path);
+int mk_dirhtml_theme_load();
+
 struct f_list *get_dir_content(struct request *sr, char *path);
 
 #endif

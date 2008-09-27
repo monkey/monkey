@@ -267,8 +267,11 @@ int mk_dirhtml_conf()
         
         m_build_buffer(&themes_path, &len, "%s/dir_themes/", config->serverconf);
         ret = mk_dirhtml_read_config(themes_path);
-        printf("\n test theme: %s", dirhtml_conf->theme);
-        mk_dirhtml_load_theme(dirhtml_conf->theme);
+
+        /* This function will load the default theme 
+         * setted in dirhtml_conf struct 
+         */
+        mk_dirhtml_theme_load();
 
         return ret;
 }
@@ -285,8 +288,6 @@ int mk_dirhtml_read_config(char *path)
         FILE *fileconf;
         char *variable, *value, *last;
 
-        struct dirhtml_config *dirhtml_conf;
-
         m_build_buffer(&default_file, &len, "%sdirhtml.conf", path);
 
         if(!(fileconf = fopen(default_file, "r")))
@@ -296,7 +297,7 @@ int mk_dirhtml_read_config(char *path)
         }
 
         /* alloc dirhtml config struct */
-        //        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
+        dirhtml_conf = mk_mem_malloc(sizeof(struct dirhtml_config));
 
         while(fgets(buffer, 255, fileconf))
         {
@@ -319,16 +320,103 @@ int mk_dirhtml_read_config(char *path)
                  if(strcasecmp(variable,"Theme")==0)
                  {
                          dirhtml_conf->theme = mk_string_dup(value);
+                         m_build_buffer(&dirhtml_conf->theme_path, &len, 
+                                        "%s%s/", path, dirhtml_conf->theme);
                  }
         }
         fclose(fileconf);
         return 0;
 }
 
-int mk_dirhtml_load_theme(char *theme_path)
+int mk_dirhtml_theme_load()
 {
-	printf("\nload theme: %s", theme_path);
+        unsigned long len;
+
+        /* List of Values */
+        char *lov_header[] = MK_DIRHTML_TPL_HEADER;
+        char *lov_entry[] = MK_DIRHTML_TPL_ENTRY;
+        char *lov_footer[] = MK_DIRHTML_TPL_FOOTER;
+
+        /* Data */
+	char *header, *entry, *footer;
+
+        /* Templates */
+        struct dirhtml_template *tpl_header, *tpl_entry, *tpl_footer;
+
+        /* Load theme files */
+        header = mk_dirhtml_load_file(MK_DIRHTML_FILE_HEADER);
+        entry = mk_dirhtml_load_file(MK_DIRHTML_FILE_ENTRY);
+        footer = mk_dirhtml_load_file(MK_DIRHTML_FILE_FOOTER);
+
+        if(!header || !entry || !footer)
+        {
+                mk_mem_free(header);
+                mk_mem_free(entry);
+                mk_mem_free(footer);
+                return -1;
+        }
+
+        /* Parse themes */
+        tpl_header = mk_dirhtml_theme_parse(header, lov_header);
+        tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
+        tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
+
         return 0;
+}
+
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
+{
+        int i=0, init=0, end, arr_len, str_len;
+
+        int buf_idx=0;
+        char **buf;
+        struct dirhtml_template *st_tpl;
+
+        arr_len = mk_string_array_count(tpl);
+        printf("\nCONTENT\n%s\n-----", content);
+
+        buf = mk_mem_malloc(sizeof(char *)*(arr_len+1));
+
+        for(i=0; i<arr_len; i++)
+        {
+                printf("\n\nparsing: %s", tpl[i]);
+                str_len = strlen(tpl[i]);
+
+                end = _mk_string_search(content, tpl[i], -1);
+                buf[buf_idx] = mk_string_copy_substr(content, init, end);
+                printf("\n%s", buf[buf_idx]);
+                init = end;
+                
+        }
+        
+        printf("\nparsing\n---%s\n", content);
+        fflush(stdout);
+
+        return NULL;
+}
+
+char *mk_dirhtml_load_file(char *filename)
+{
+        char *tmp=0, *data=0;
+        unsigned long len;
+
+        m_build_buffer(&tmp, &len, "%s%s",
+                       dirhtml_conf->theme_path, filename);
+
+        if(!tmp)
+        {
+                return NULL;
+        }
+
+        data = mk_file_to_buffer(tmp);
+        mk_mem_free(tmp);
+
+        if(!data)
+        {
+                return NULL;
+        }
+
+        return (char *) data;
 }
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
