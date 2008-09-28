@@ -31,4 +31,5 @@ struct file_info
 };
 
 struct file_info *mk_file_get_info(char *path);
+char *mk_file_to_buffer(char *path);
 

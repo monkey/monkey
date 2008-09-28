@@ -44,6 +44,9 @@
 
 #define MK_DIRHTML_TPL_FOOTER {}
 
+#define MK_DIRHTML_TAG_INIT "%_"
+#define MK_DIRHTML_TAG_END "_%"
+
 /* Main configuration of dirhtml module */
 struct dirhtml_config
 {
@@ -61,7 +64,6 @@ struct dirhtml_template
         int len;
 };
 
-int  GetDir(struct client_request *cr, struct request *sr);
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 

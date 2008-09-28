@@ -169,7 +169,7 @@ char *cut_string(char *str)
 struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
 {
         char *chunked_line;
-        int i, chunked_len;
+        int i;
         int iov_len;
 
         struct mk_iov *data_iov;
@@ -263,7 +263,7 @@ int mk_dirhtml_conf()
 {
         int ret = 0;
         unsigned long len;
-        char **themes_path;
+        char *themes_path;
         
         m_build_buffer(&themes_path, &len, "%s/dir_themes/", config->serverconf);
         ret = mk_dirhtml_read_config(themes_path);
@@ -283,7 +283,7 @@ int mk_dirhtml_conf()
 int mk_dirhtml_read_config(char *path)
 {
         unsigned long len;
-        char **default_file;
+        char *default_file;
         char buffer[255];
         FILE *fileconf;
         char *variable, *value, *last;
@@ -330,8 +330,6 @@ int mk_dirhtml_read_config(char *path)
 
 int mk_dirhtml_theme_load()
 {
-        unsigned long len;
-
         /* List of Values */
         char *lov_header[] = MK_DIRHTML_TPL_HEADER;
         char *lov_entry[] = MK_DIRHTML_TPL_ENTRY;
@@ -364,35 +362,90 @@ int mk_dirhtml_theme_load()
         return 0;
 }
 
+/* Search which tag exists first in content :
+ * ex: %_html_title_%
+ */
+int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
+{
+        int i, len, match;
+        
+        for(i=0; tpl[i]; i++){
+                len = strlen(tpl[i]);
+                match = _mk_string_search(content, tpl[i], -1);
+                if(match>=0){
+                        return i;
+                }
+        }
+
+        return -1;
+              
+}
+
+
 struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
 {
-        int i=0, init=0, end, arr_len, str_len;
-
-        int buf_idx=0;
-        char **buf;
+        int i=0, arr_len, cont_len;
+        int pos, last=0; /* 0=search init, 1=search end */
+        int n_tags=0, idx=0, tpl_idx=0;
         struct dirhtml_template *st_tpl;
 
+        if((cont_len = strlen(content))<=0){
+                return NULL;
+        };
+        
         arr_len = mk_string_array_count(tpl);
         printf("\nCONTENT\n%s\n-----", content);
 
-        buf = mk_mem_malloc(sizeof(char *)*(arr_len+1));
+        /* Alloc memory for the typical case where exist n_tags + null byte, 
+         * no repetitive tags
+         */
+        //buf = mk_mem_malloc(sizeof(char *)*(arr_len+1));
+        st_tpl = mk_mem_malloc(sizeof(struct dirhtml_template)*((arr_len*2)+1));
 
-        for(i=0; i<arr_len; i++)
+        /* Parsing content */
+        for(i=0; i<cont_len; i++)
         {
-                printf("\n\nparsing: %s", tpl[i]);
-                str_len = strlen(tpl[i]);
+                pos = _mk_string_search(content+last,
+                                                MK_DIRHTML_TAG_INIT, -1);
 
-                end = _mk_string_search(content, tpl[i], -1);
-                buf[buf_idx] = mk_string_copy_substr(content, init, end);
-                printf("\n%s", buf[buf_idx]);
-                init = end;
-                
+                printf("\npos: %i, last: %i", pos, last);
+                fflush(stdout);
+
+                if(pos<0){
+                        break;
+                }
+
+
+                tpl_idx = mk_dirhtml_theme_match_tag(content+pos, tpl);
+                if(tpl_idx>=0){
+
+                        if(pos>0){
+                                st_tpl[idx].buf = mk_string_copy_substr(content, 
+                                                                        last, pos+last);
+                                st_tpl[idx].len = strlen(st_tpl[idx].buf);
+                                idx++;
+                        }
+                        last += pos+strlen(tpl[i]);
+                        /* This means that a value need to be replaced */
+                        st_tpl[idx].buf = NULL;
+                        st_tpl[idx].len = tpl_idx;
+
+                        idx++;
+                        n_tags++;
+                }
         }
-        
-        printf("\nparsing\n---%s\n", content);
+
+        printf("\nidx: %i, last: %i, cont_len: %i", idx, last, cont_len);
         fflush(stdout);
 
-        return NULL;
+        if(last<cont_len){
+                st_tpl[idx].buf = mk_string_copy_substr(content, last, cont_len);
+                st_tpl[idx].len = strlen(st_tpl[idx].buf);
+                printf("\nBUF READY LEFT: %s", st_tpl[idx].buf);
+                fflush(stdout);
+        }
+
+        return (struct dirhtml_template *) st_tpl;
 }
 
 char *mk_dirhtml_load_file(char *filename)
@@ -447,7 +500,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, 0);
 
 	// FIXME: Need sort file list	
-        sr->headers->transfer_encoding = NULL;
+        sr->headers->transfer_encoding = -1;
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;
         sr->headers->breakline = MK_HEADER_BREAKLINE;
