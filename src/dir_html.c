@@ -359,8 +359,28 @@ int mk_dirhtml_theme_load()
         tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
         tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
 
+#ifdef DEBUG_THEME
+        /* Debug data */
+        mk_dirhtml_theme_debug(tpl_header, lov_header);
+        mk_dirhtml_theme_debug(tpl_entry, lov_entry);
+        mk_dirhtml_theme_debug(tpl_footer, lov_footer);
+#endif
         return 0;
 }
+
+#ifdef DEBUG_THEME
+int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
+{
+        int i;
+
+        printf("\nSTARTING DEBUG");
+        for(i=0; st_tpl[i].len!=EOF; i++){
+                printf("\n%i) %s", i, st_tpl[i].buf);
+                fflush(stdout);
+        }
+        return 0;
+}
+#endif
 
 /* Search which tag exists first in content :
  * ex: %_html_title_%
@@ -394,13 +414,14 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
         };
         
         arr_len = mk_string_array_count(tpl);
-        printf("\nCONTENT\n%s\n-----", content);
 
+/*
+        printf("\nCONTENT\n%s\n-----", content);
+*/
         /* Alloc memory for the typical case where exist n_tags + null byte, 
          * no repetitive tags
          */
-        //buf = mk_mem_malloc(sizeof(char *)*(arr_len+1));
-        st_tpl = mk_mem_malloc(sizeof(struct dirhtml_template)*((arr_len*2)+1));
+        st_tpl = mk_mem_malloc_z(sizeof(struct dirhtml_template)*((arr_len*2)+1));
 
         /* Parsing content */
         for(i=0; i<cont_len; i++)
@@ -408,8 +429,10 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
                 pos = _mk_string_search(content+last,
                                                 MK_DIRHTML_TAG_INIT, -1);
 
+                /*
                 printf("\npos: %i, last: %i", pos, last);
                 fflush(stdout);
+                */
 
                 if(pos<0){
                         break;
@@ -418,7 +441,6 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
 
                 tpl_idx = mk_dirhtml_theme_match_tag(content+pos, tpl);
                 if(tpl_idx>=0){
-
                         if(pos>0){
                                 st_tpl[idx].buf = mk_string_copy_substr(content, 
                                                                         last, pos+last);
@@ -426,6 +448,7 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
                                 idx++;
                         }
                         last += pos+strlen(tpl[i]);
+
                         /* This means that a value need to be replaced */
                         st_tpl[idx].buf = NULL;
                         st_tpl[idx].len = tpl_idx;
@@ -435,15 +458,18 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
                 }
         }
 
+/*
         printf("\nidx: %i, last: %i, cont_len: %i", idx, last, cont_len);
         fflush(stdout);
-
+*/
         if(last<cont_len){
                 st_tpl[idx].buf = mk_string_copy_substr(content, last, cont_len);
                 st_tpl[idx].len = strlen(st_tpl[idx].buf);
-                printf("\nBUF READY LEFT: %s", st_tpl[idx].buf);
-                fflush(stdout);
         }
+
+        idx++;
+        st_tpl[idx].buf = NULL;
+        st_tpl[idx].len = EOF;
 
         return (struct dirhtml_template *) st_tpl;
 }
