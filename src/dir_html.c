@@ -375,7 +375,14 @@ int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
 
         printf("\nSTARTING DEBUG");
         for(i=0; st_tpl[i].len!=EOF; i++){
-                printf("\n%i) %s", i, st_tpl[i].buf);
+                if(!st_tpl[i].buf)
+                {
+                        printf("\n%i %s", i, tpl[st_tpl[i].len]);
+                }
+                else{
+                        printf("\n%i) %s", i, st_tpl[i].buf);
+                }
+
                 fflush(stdout);
         }
         return 0;
@@ -415,10 +422,7 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
         
         arr_len = mk_string_array_count(tpl);
 
-/*
-        printf("\nCONTENT\n%s\n-----", content);
-*/
-        /* Alloc memory for the typical case where exist n_tags + null byte, 
+        /* Alloc memory for the typical case where exist n_tags, 
          * no repetitive tags
          */
         st_tpl = mk_mem_malloc_z(sizeof(struct dirhtml_template)*((arr_len*2)+1));
