@@ -63,6 +63,16 @@ struct dirhtml_template
         char *buf;
         int len;
 };
+struct dirhtml_template *mk_dirhtml_tpl_header;
+struct dirhtml_template *mk_dirhtml_tpl_entry;
+struct dirhtml_template *mk_dirhtml_tpl_footer;
+
+struct dirhtml_tplval
+{
+        char *tag;
+        char *value;
+        struct dirhtml_tplval *next;
+};
 
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);

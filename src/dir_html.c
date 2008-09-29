@@ -271,7 +271,7 @@ int mk_dirhtml_conf()
         /* This function will load the default theme 
          * setted in dirhtml_conf struct 
          */
-        mk_dirhtml_theme_load();
+        ret = mk_dirhtml_theme_load();
 
         return ret;
 }
@@ -339,7 +339,7 @@ int mk_dirhtml_theme_load()
 	char *header, *entry, *footer;
 
         /* Templates */
-        struct dirhtml_template *tpl_header, *tpl_entry, *tpl_footer;
+       // struct dirhtml_template *tpl_header, *tpl_entry, *tpl_footer;
 
         /* Load theme files */
         header = mk_dirhtml_load_file(MK_DIRHTML_FILE_HEADER);
@@ -355,15 +355,15 @@ int mk_dirhtml_theme_load()
         }
 
         /* Parse themes */
-        tpl_header = mk_dirhtml_theme_parse(header, lov_header);
-        tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
-        tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
+        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, lov_header);
+        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
+        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
 
 #ifdef DEBUG_THEME
         /* Debug data */
-        mk_dirhtml_theme_debug(tpl_header, lov_header);
-        mk_dirhtml_theme_debug(tpl_entry, lov_entry);
-        mk_dirhtml_theme_debug(tpl_footer, lov_footer);
+        mk_dirhtml_theme_debug(mk_dirhtml_tpl_header, lov_header);
+        mk_dirhtml_theme_debug(mk_dirhtml_tpl_entry, lov_entry);
+        mk_dirhtml_theme_debug(mk_dirhtml_tpl_footer, lov_footer);
 #endif
         return 0;
 }
@@ -373,7 +373,7 @@ int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
 {
         int i;
 
-        printf("\nSTARTING DEBUG");
+        printf("\n*-THEME DEBUG-*");
         for(i=0; st_tpl[i].len!=EOF; i++){
                 if(!st_tpl[i].buf)
                 {
@@ -405,7 +405,6 @@ int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
         }
 
         return -1;
-              
 }
 
 
@@ -478,6 +477,51 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
         return (struct dirhtml_template *) st_tpl;
 }
 
+int mk_dirhtml_theme_compose(char *tpl_tags, 
+                             struct dirhtml_template *tpl_tpl,
+                             struct dirhtml_tplval *tpl_values)
+{
+        int i;
+        printf("\ntpl: %s", tpl_tags[0]);
+        fflush(stdout);
+
+        for(i=0; tpl_tpl[i].len!=EOF; i++)
+        {
+                if(!tpl_tpl[i].buf){
+                        printf("\nindex: %i -> %s", tpl_tpl[i].len, tpl_tags[tpl_tpl[i].len]);
+                        fflush(stdout);
+                }
+                printf("\ntpl: %s", tpl_tpl[i].buf);
+                fflush(stdout);
+        }
+
+
+}
+
+struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, char *tag, char *value)
+{
+        struct dirhtml_tplval *check, *aux;
+
+        aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
+        aux->tag = tag;
+        aux->value = value;
+        aux->next = NULL;
+
+        if(!tplval){
+                tplval = aux;
+        }
+        else{
+                check = tplval;
+                while(check->next){
+                        check = check->next;
+                }
+
+                check->next = aux;
+        }
+
+        return (struct dirhtml_tplval *) aux;
+}
+
 char *mk_dirhtml_load_file(char *filename)
 {
         char *tmp=0, *data=0;
@@ -508,12 +552,14 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         int ret, i;
         unsigned long len;
         char *chunked_line;
+        char *tpl_tags[] = MK_DIRHTML_TPL_HEADER;
 
 	/* file info */
 	unsigned long list_len=0;
         struct mk_f_list *file_list;
         struct mk_iov *html_list;
- 
+        struct dirhtml_tplval *tplval_header=NULL;
+
         if(!(dir = opendir(sr->real_path)))
         {
                 return -1;
@@ -554,6 +600,12 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
         //mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
         mk_iov_send(cr->socket, html_list);
+
+        /* Creating response template */
+        tplval_header = mk_dirhtml_tag_assign(NULL, tpl_tags[0], "hola");
+        mk_dirhtml_theme_compose(tpl_tags, 
+                                 mk_dirhtml_tpl_header, tplval_header);
+
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
         for (i=0; i<list_len; i++)
