@@ -69,7 +69,7 @@ struct dirhtml_template *mk_dirhtml_tpl_footer;
 
 struct dirhtml_tplval
 {
-        char *tag;
+        int tag;
         char *value;
         struct dirhtml_tplval *next;
 };

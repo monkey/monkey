@@ -338,9 +338,6 @@ int mk_dirhtml_theme_load()
         /* Data */
 	char *header, *entry, *footer;
 
-        /* Templates */
-       // struct dirhtml_template *tpl_header, *tpl_entry, *tpl_footer;
-
         /* Load theme files */
         header = mk_dirhtml_load_file(MK_DIRHTML_FILE_HEADER);
         entry = mk_dirhtml_load_file(MK_DIRHTML_FILE_ENTRY);
@@ -477,33 +474,56 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
         return (struct dirhtml_template *) st_tpl;
 }
 
-int mk_dirhtml_theme_compose(char *tpl_tags, 
+int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
+{
+        int i;
+        for(i=0; tpl_tags[i]; i++)
+        {
+                if(strcmp(tpl_tags[i], tag)==0){
+                        return i;
+                }
+        }
+
+        return -1;
+}
+
+int mk_dirhtml_theme_compose(char *tpl_tags[], 
                              struct dirhtml_template *tpl_tpl,
                              struct dirhtml_tplval *tpl_values)
 {
         int i;
-        printf("\ntpl: %s", tpl_tags[0]);
-        fflush(stdout);
+        struct dirhtml_tplval *tpl_val = tpl_values;
 
-        for(i=0; tpl_tpl[i].len!=EOF; i++)
-        {
-                if(!tpl_tpl[i].buf){
-                        printf("\nindex: %i -> %s", tpl_tpl[i].len, tpl_tags[tpl_tpl[i].len]);
+        printf("\n*** printing THEME ***\n");
+
+        for(i=0; tpl_tpl[i].len!=EOF; i++){
+                if(!tpl_tpl[i].buf && tpl_tpl[i].len>=0){
+                        while(tpl_val){
+                                if(tpl_val->tag == tpl_tpl[i].len)
+                                {
+                                        printf("\n%i) %s", i, tpl_tags[tpl_tpl[i].len]);
+                                        fflush(stdout);
+                                }
+                                tpl_val = tpl_val->next;
+                        }
+                        
+                }
+                else{
+                        printf("\n%i) %s",i, tpl_tpl[i].buf);
                         fflush(stdout);
                 }
-                printf("\ntpl: %s", tpl_tpl[i].buf);
-                fflush(stdout);
         }
-
-
+        return 0;
 }
 
-struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, char *tag, char *value)
+struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, 
+                                             char *arr_tags,
+                                             int tag_id, char *value)
 {
         struct dirhtml_tplval *check, *aux;
-
+        
         aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
-        aux->tag = tag;
+        aux->tag = tag_id;
         aux->value = value;
         aux->next = NULL;
 
@@ -602,7 +622,8 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         mk_iov_send(cr->socket, html_list);
 
         /* Creating response template */
-        tplval_header = mk_dirhtml_tag_assign(NULL, tpl_tags[0], "hola");
+        tplval_header = mk_dirhtml_tag_assign(NULL, (char *[])MK_DIRHTML_TPL_HEADER, 0, "Index test name");
+
         mk_dirhtml_theme_compose(tpl_tags, 
                                  mk_dirhtml_tpl_header, tplval_header);
 
