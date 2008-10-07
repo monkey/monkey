@@ -109,7 +109,7 @@ struct f_list *shell (struct f_list *b, int n)
 
 /* Si encuentra un ' ' en la cadena lo reemplaza por su valor 
    en hexadecimal (%20). Autor: Eduardo Silva */
-char *check_string(char *str)
+char *mk_dirhtml_replace_empty_space(char *str)
 {
 	int cnt=0;
 	char *s, *f;
@@ -164,41 +164,6 @@ char *cut_string(char *str)
 	}
 
 	return mk_string_dup(str);
-}
-
-struct mk_iov *mk_dirhtml_iov(struct mk_f_list *list, int len)
-{
-        char *chunked_line;
-        int i;
-        int iov_len;
-
-        struct mk_iov *data_iov;
-
-        iov_len = (len*5) + 2 + 1;
-        data_iov = mk_iov_create(iov_len);
-        
-        /* tricky update, offset +1 to keep chunked data */
-        data_iov->iov_idx = 1;
-
-        //        mk_iov_add_entry(data_iov, header, 12, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-
-        for(i=0; i<len; i++)
-        {
-          //mk_iov_add_entry(data_iov, PRE1, len_pre1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          //mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          //mk_iov_add_entry(data_iov, PRE2, len_pre2, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          //mk_iov_add_entry(data_iov, list[i].name, strlen(list[i].name), MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-          //mk_iov_add_entry(data_iov, PRE3, len_pre3, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-        }
-
-        //mk_iov_add_entry(data_iov, footer, 14, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-
-        /* Total length to send */
-        chunked_line = (char *) mk_header_chunked_line(data_iov->total_len);
-        data_iov->io[0].iov_base = chunked_line; 
-        data_iov->io[0].iov_len = strlen(chunked_line);
-
-        return (struct mk_iov *) data_iov;
 }
 
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
@@ -352,9 +317,12 @@ int mk_dirhtml_theme_load()
         }
 
         /* Parse themes */
-        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, lov_header);
-        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
-        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
+        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, lov_header,
+                                                       &mk_dirhtml_tpl_header_cnt);
+        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry,
+                                                      &mk_dirhtml_tpl_entry_cnt);
+        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer,
+                                                       &mk_dirhtml_tpl_footer_cnt);
 
 #ifdef DEBUG_THEME
         /* Debug data */
@@ -405,7 +373,8 @@ int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
 }
 
 
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[],
+                                                unsigned long *tpl_length)
 {
         int i=0, arr_len, cont_len;
         int pos, last=0; /* 0=search init, 1=search end */
@@ -421,18 +390,14 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
         /* Alloc memory for the typical case where exist n_tags, 
          * no repetitive tags
          */
-        st_tpl = mk_mem_malloc_z(sizeof(struct dirhtml_template)*((arr_len*2)+1));
+        *tpl_length = (arr_len*2)+1;
+        st_tpl = mk_mem_malloc_z(sizeof(struct dirhtml_template)*(*tpl_length));
 
         /* Parsing content */
         for(i=0; i<cont_len; i++)
         {
                 pos = _mk_string_search(content+last,
                                                 MK_DIRHTML_TAG_INIT, -1);
-
-                /*
-                printf("\npos: %i, last: %i", pos, last);
-                fflush(stdout);
-                */
 
                 if(pos<0){
                         break;
@@ -458,10 +423,6 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
                 }
         }
 
-/*
-        printf("\nidx: %i, last: %i, cont_len: %i", idx, last, cont_len);
-        fflush(stdout);
-*/
         if(last<cont_len){
                 st_tpl[idx].buf = mk_string_copy_substr(content, last, cont_len);
                 st_tpl[idx].len = strlen(st_tpl[idx].buf);
@@ -487,37 +448,57 @@ int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
         return -1;
 }
 
-int mk_dirhtml_theme_compose(char *tpl_tags[], 
+
+struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[], 
                              struct dirhtml_template *tpl_tpl,
+                             int tpl_length,
                              struct dirhtml_tplval *tpl_values)
 {
+        /*
+         * tpl_tags = MK_DIRHTML_TPL_HEADER = {xy, yz}
+         * tpl_tpl = struct { char buf ; int len }
+         * tpl_values = struct {int tag, char *value, struct *next}
+         */
+
         int i;
         struct dirhtml_tplval *tpl_val = tpl_values;
+        struct mk_iov *iov;
 
-        printf("\n*** printing THEME ***\n");
+        iov = mk_iov_create(tpl_length);
 
         for(i=0; tpl_tpl[i].len!=EOF; i++){
+                /* check for dynamic value */
                 if(!tpl_tpl[i].buf && tpl_tpl[i].len>=0){
+                        printf("\ntpl_buf: %s", tpl_tpl[i].buf);
+                        fflush(stdout);
                         while(tpl_val){
                                 if(tpl_val->tag == tpl_tpl[i].len)
                                 {
-                                        printf("\n%i) %s", i, tpl_tags[tpl_tpl[i].len]);
+                                        //printf("\ntag %i == tpltpl %i", tpl_val->tag, tpl_tpl[i].len);
+                                        printf("\n%i) %s -> %i -> %s", i, tpl_tags[tpl_tpl[i].len], tpl_tpl[i].len,
+                                               tpl_val->value);
                                         fflush(stdout);
+                                        
+                                        mk_iov_add_entry(iov, tpl_val->value, tpl_val->len,
+                                                         MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+
+                                        //                              printf("\n%i) %s", i, tpl_val->value);
+                                        //fflush(stdout);
+                                        break;
                                 }
                                 tpl_val = tpl_val->next;
                         }
                         
-                }
+                } 
+                /* static */
                 else{
-                        printf("\n%i) %s",i, tpl_tpl[i].buf);
-                        fflush(stdout);
+                        mk_iov_add_entry(iov, tpl_tpl[i].buf, tpl_tpl[i].len, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
                 }
         }
-        return 0;
+        return (struct mk_iov *) iov;
 }
 
 struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, 
-                                             char *arr_tags,
                                              int tag_id, char *value)
 {
         struct dirhtml_tplval *check, *aux;
@@ -525,6 +506,7 @@ struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval,
         aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
         aux->tag = tag_id;
         aux->value = value;
+        aux->len = strlen(value);
         aux->next = NULL;
 
         if(!tplval){
@@ -572,22 +554,22 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         int ret, i;
         unsigned long len;
         char *chunked_line;
-        char *tpl_tags[] = MK_DIRHTML_TPL_HEADER;
+
+        char *tags_header[] = MK_DIRHTML_TPL_HEADER;
+        char *tags_entry[] = MK_DIRHTML_TPL_ENTRY;
+        char *tags_footer[] = MK_DIRHTML_TPL_FOOTER;
 
 	/* file info */
 	unsigned long list_len=0;
         struct mk_f_list *file_list;
-        struct mk_iov *html_list;
-        struct dirhtml_tplval *tplval_header=NULL;
-
+        struct mk_iov *iov_header, *iov_footer, *iov_entry;
+        struct dirhtml_tplval *tplval_header;
+        struct dirhtml_tplval *tplval_entry;
+        
         if(!(dir = opendir(sr->real_path)))
         {
                 return -1;
         }
-
-	/* handle dir entries */
-        printf("\nmk_dirhtml_init :: %s", sr->real_path);
-        fflush(stdout);
 
         file_list = mk_mem_malloc(
                                   sizeof(struct mk_f_list)*
@@ -603,9 +585,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
 	m_build_buffer(&sr->headers->content_type, &len, "text/html");
 
-	// FIXME: Check this counter
-	//hd->pconnections_left = config->max_keep_alive_request - cr->counter_connections;
-
         /*
 	if(sr->protocol==HTTP_PROTOCOL_11)
 	{
@@ -616,41 +595,33 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	/* Sending headers */
 	mk_header_send(cr->socket, cr, sr, sr->log);
 
-        html_list = mk_dirhtml_iov(file_list, list_len);
-
         //mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
-        mk_iov_send(cr->socket, html_list);
 
         /* Creating response template */
-        tplval_header = mk_dirhtml_tag_assign(NULL, (char *[])MK_DIRHTML_TPL_HEADER, 0, "Index test name");
+        tplval_header = mk_dirhtml_tag_assign(NULL, 0, sr->uri_processed);
 
-        mk_dirhtml_theme_compose(tpl_tags, 
-                                 mk_dirhtml_tpl_header, tplval_header);
+        /* HTML Header */
+        iov_header = mk_dirhtml_theme_compose(tags_header, mk_dirhtml_tpl_header, 
+                                              mk_dirhtml_tpl_header_cnt, tplval_header);
+
+        /* HTML Footer */
+        iov_footer = mk_dirhtml_theme_compose(tags_footer, mk_dirhtml_tpl_footer, 
+                                              mk_dirhtml_tpl_footer_cnt, NULL);
 
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+        mk_iov_send(cr->socket, iov_header);
 
         for (i=0; i<list_len; i++)
 	{
-                printf("\n dir -> %s", file_list[i].name);
-                fflush(stdout);
-
-                //char* c_str = check_string(file_list[i].path);
-		//char* x_str = cut_string(file_list[i].path);
-		//char *c_str = file_list[i].path;
-		//char *x_str = file_list[i].path;
-
-		//data = m_build_buffer_from_buffer(data,
-		/* printf( 	" %s  %s   <A HREF=\"%s\">%s</A>\n",*/
-		//	file_list[i].ft_modif, file_list[i].size,
-		//	c_str, x_str);
-
-		//mk_mem_free(c_str);
-		//mk_mem_free(x_str);
+                /* %_target_title_% */
+                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, file_list[i].name);
+                iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
+                                                     mk_dirhtml_tpl_entry_cnt, tplval_entry);
+                mk_iov_send(cr->socket, iov_entry);
         }
+        mk_iov_send(cr->socket, iov_footer);
 
-	//mk_mem_free(file_list);
-	//mk_mem_free(data);
-
+        close(cr->socket);
         closedir(dir);
 	return -1;
 }

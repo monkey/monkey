@@ -168,7 +168,8 @@ struct request {
 	struct request *next;
 
 	long bytes_to_send;
-	size_t bytes_offset;
+  //size_t bytes_offset;
+        off_t bytes_offset;
 };
 
 struct header_values {
