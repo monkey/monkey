@@ -81,32 +81,6 @@ struct f_list {
 	char ft_modif[MAX_TIME+1];	  /* Fecha y hora de modificacion */
 };
 
-/* Sort string characters by shell method
- * Code taken from Kernighan & Ritchie book 
- */
-struct f_list *shell (struct f_list *b, int n)
-{
-	int				gap, i, j;
-	struct f_list  temp;
-
-        for (gap = n/2; gap > 0; gap /= 2)
-        {
-          for (i = gap; i <= n; i ++)
-          {         
-			for (j = i-gap;
-					j >= 0 && ((strcmp(b[j].path, b[j+gap].path))>0);
-					j -= gap)
-			{
-				temp			  = b[j];
-				b[j]			  = b[j+gap];
-				b[j+gap]		 = temp;
-			}
-          }
-        }
-	return (struct f_list *)b;
-}
-
-
 /* Si encuentra un ' ' en la cadena lo reemplaza por su valor 
    en hexadecimal (%20). Autor: Eduardo Silva */
 char *mk_dirhtml_replace_empty_space(char *str)
@@ -193,6 +167,7 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
          *
          * that kind of ideas comes when you are in an airport just waiting :)
          */
+
 	while((ent = readdir(dir)) != NULL)
 	{
                 if(strcmp((char *) ent->d_name, "." )  == 0) continue;
@@ -548,6 +523,15 @@ char *mk_dirhtml_load_file(char *filename)
         return (char *) data;
 }
 
+int mk_dirhtml_entry_cmp(const void *a, const void *b)
+{
+        struct mk_f_list *f_a = (struct mk_f_list *) a;
+        struct mk_f_list *f_b = (struct mk_f_list *) b;
+
+        return strcmp(f_a->name, f_b->name);
+
+}
+
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
@@ -610,6 +594,8 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
         mk_iov_send(cr->socket, iov_header);
+
+        qsort(file_list, list_len, sizeof(struct mk_f_list), mk_dirhtml_entry_cmp);
 
         for (i=0; i<list_len; i++)
 	{
