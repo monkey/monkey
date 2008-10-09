@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -81,18 +83,16 @@ char *mk_http_method_check_str(int method)
 
 int mk_http_method_get(mk_pointer body)
 {
-        int int_method, pos = 0, max_length_method = 5;
+        int int_method, pos = 0;
+        int max_len_method = 5;
         char *str_method;
         
         pos = mk_string_search(body.data, " ");
-        if(pos<=2 || pos>=max_length_method){
+        if(pos<=2 || pos>=max_len_method){
                 return -1;      
         }
-        
-        str_method = mk_mem_malloc(max_length_method);
-        strncpy(str_method, body.data, pos);
-        str_method[pos]='\0';
 
+        str_method = mk_string_copy_substr(body.data, 0, pos);
         int_method = mk_http_method_check(str_method);
         mk_mem_free(str_method);
         

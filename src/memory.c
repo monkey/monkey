@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -99,6 +101,18 @@ char *mk_pointer_to_buf(mk_pointer p)
 
 	buf = strndup(p.data, p.len);
 	return (char *) buf;
+}
+
+void mk_pointer_print(mk_pointer p)
+{
+        int i;
+
+        printf("\nDEBUG MK_POINTER: '");
+        for(i=0; i<p.len; i++){
+                printf("%c", p.data[i]);
+        }
+        printf("'");
+        fflush(stdout);
 }
 
 void mk_pointer_set(mk_pointer *p, char *data)

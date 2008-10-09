@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -402,6 +404,14 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	return status;
 }
 
+int mk_request_uri_check(mk_pointer *uri)
+{
+        int n;
+
+        n = mk_string_search_n(uri->data, " ", uri->len);
+        return mk_string_search_n(uri->data, " ", uri->len);
+}
+
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
@@ -410,6 +420,7 @@ int mk_request_header_process(struct request *sr)
 	int query_init=0, query_end=0;
 	int prot_init=0, prot_end=0, pos_sep=0;
 	int break_line;
+        int fh_limit;
 	char *str_prot=0, *port=0;
 	char *headers;
 	mk_pointer host;
@@ -417,9 +428,11 @@ int mk_request_header_process(struct request *sr)
 	/* Method */
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
+
 	/* Request URI */
 	uri_init = mk_string_search(sr->body.data, " ") + 1;
-	uri_end = mk_string_search(sr->body.data+uri_init, " ") + uri_init;
+        fh_limit = mk_string_search(sr->body.data, "\n");
+        uri_end = mk_string_search_r(sr->body.data+uri_init, " ", fh_limit) + uri_init;
 
 	if(uri_end < uri_init)
 	{
@@ -438,14 +451,16 @@ int mk_request_header_process(struct request *sr)
 	
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end);
-	
+        mk_pointer_print(sr->uri);
+
 	if(sr->uri.len<1)
 	{
 		return -1;
 	}
-	
+
+
 	/* HTTP Version */
-	prot_init=mk_string_search(sr->body.data+uri_init+1," ")+uri_init+2;
+        prot_init = uri_init+sr->uri.len+1;
 
 	if(mk_string_search(sr->body.data, "\r\n")>0){
 		prot_end = mk_string_search(sr->body.data, "\r\n");
@@ -465,7 +480,8 @@ int mk_request_header_process(struct request *sr)
 
 	/* URI processed */
 	sr->uri_processed = get_real_string(sr->uri);
-	if(!sr->uri_processed)
+
+        if(!sr->uri_processed)
 	{
 		sr->uri_processed = mk_pointer_to_buf(sr->uri);
 		sr->uri_twin = VAR_ON;

@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -331,63 +333,56 @@ int set_daemon()
 }
 
 
+char *get_real_string(mk_pointer uri){
 
-char *get_real_string(mk_pointer req_uri){
-	
-	int length=0, hex_result, auxchar;
-	int new_i=0, i=0;
-	char *buffer=0, hex[3];
+        int i, hex_result, aux_char;
+        int buf_idx=0;
+        char *buf;
+        char hex[3];
 
-	if((i = mk_string_search(req_uri.data, "%"))<0)
+	if((i = mk_string_search_n(uri.data, "%", uri.len))<0)
 	{
 		return NULL;
 	}
 
-	length=req_uri.len;
-	buffer=mk_mem_malloc(length + 3);
+        buf = mk_mem_malloc_z(uri.len);
 
-	do {
-		if(req_uri.data[i]=='%' && i+2<=length){
-			memset(hex,'\0', sizeof(hex));
-			strncpy(hex, req_uri.data+i+1, 2);
-			hex[2]='\0';
+
+        if(i>0){
+                strncpy(buf, uri.data, i);
+                buf_idx = i;
+        }
+
+        mk_pointer_print(uri);
+        while(i<uri.len)
+        {
+                if(uri.data[i]=='%' && i+2<uri.len){
+                        memset(hex, '\0', sizeof(hex));
+                        strncpy(hex, uri.data+i+1,2);
+                        hex[2]='\0';
 
 			if((hex_result=hex2int(hex))<=127){
-				buffer[new_i]=toascii(hex_result);
-				i=i+3;
-				new_i++;
+				buf[buf_idx]=toascii(hex_result);
 			}
 			else {
-				if((auxchar=get_char(hex_result))!=-1){
-					buffer[new_i]=get_char(hex_result);
-					i=i+3;
-					new_i++;			
+				if((aux_char=get_char(hex_result))!=-1){
+					buf[buf_idx]=aux_char;
 				}
 				else{
-					mk_mem_free(buffer);
+					mk_mem_free(buf);
 					return NULL;
 				}
 			}
-			buffer[new_i+1]='\0';
-			continue;
-		}
-		else {
-			buffer[new_i] = req_uri.data[i];
-		}
-		i++;
-		new_i++;
-		buffer[new_i]='\0';
-	}while(i<length);
+                        i+=2;
+                }
+                else{
+                        buf[buf_idx] = uri.data[i];
+                }
+                i++;
+                buf_idx++;
+        }        
+        buf[buf_idx]='\0';
 
-	return (char *) buffer;
+        return (char *) buf;
 }
-
-
-	
-
-
-
-
-
-
 
