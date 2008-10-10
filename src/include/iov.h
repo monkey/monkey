@@ -42,8 +42,12 @@
 #define _MK_IOV_HEADER_VALUE ": "
 #define LEN_MK_IOV_HEADER_VALUE 2
 
+#define MK_IOV_SLASH 3
+#define _MK_IOV_SLASH "/"
+#define LEN_MK_IOV_SLASH 1
+
 /* avoid */
-#define MK_IOV_NONE 3
+#define MK_IOV_NONE 4
 
 struct mk_iov 
 {

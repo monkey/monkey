@@ -49,101 +49,19 @@
 #include "file.h"
 #include "iov.h"
 
-#define  DIRECTORIO		  "     -"
-
-/* Longitud de la cadena */
-#define  MAX_LEN_STR		 30
-
-/* Longitud de la fecha y hora */
-#define  MAX_TIME			 17
-
-/* Longitud del tama�o */
-#define  MAX_SIZE			  6
-
-/* Incremento */
-#define  GROW				  100
-
-#define  SPACE				 ' '
-#define  ZERO				  '\0'
-
 struct mk_f_list
 {
         char *name;
         char *ft_modif;
+        unsigned char type;
         struct file_info *info;
 };
 
-/* Estructura de lista de archivos y directorios */
-struct f_list {
-	long len;
-	char path[MAX_PATH+1];			/* Ruta de acceso               */
-	char size[MAX_SIZE+1];			/* Tama�o del archivo           */
-	char ft_modif[MAX_TIME+1];	  /* Fecha y hora de modificacion */
-};
-
-/* Si encuentra un ' ' en la cadena lo reemplaza por su valor 
-   en hexadecimal (%20). Autor: Eduardo Silva */
-char *mk_dirhtml_replace_empty_space(char *str)
-{
-	int cnt=0;
-	char *s, *f;
-	char *final_buffer=0;
-
-	if (str==NULL)
-		return str;
-
-	for(s=str;*s!='\0';++s)
-		if(*s==' ') cnt++;
-
-	if(cnt==0)
-		return mk_string_dup(str);
-
-	final_buffer=mk_mem_malloc(strlen(str)+1+(cnt*3));
-
-	for(f=final_buffer,s=str;*s!='\0';++s) {
-		if (*s==' ') {
-			*f++='%'; *f++='2'; *f++='0';
-		} else {
-			*f++=*s;
-		}
-	}
-
-	*f='\0';
-	return final_buffer;
-}
-
-/* Recortar la cadena si excede el ancho de MAX_LEN_STR */
-char *cut_string(char *str)
-{
-	int i, k, j, len;
-	char *s;
-
-	if ((len = strlen(str)) > MAX_LEN_STR) {
-		s=mk_mem_malloc(MAX_LEN_STR);
-		k = MAX_LEN_STR/2 - 2;
-		for (i=0; i<k; i++)
-			s[i] = str[i];
-
-		s[i++] = '.';
-		s[i++] = '.';
-		s[i++] = '.';
-		j		= i;
-		k		= len - k;
-
-		for (i=k; str[i]; i++, j++)
-			s[j] = str[i];
-
-		s[j] = ZERO;
-		return (char *) s;
-	}
-
-	return mk_string_dup(str);
-}
-
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
-                            char *full_path, unsigned long *count)
+                            unsigned char type, char *full_path, unsigned long *count)
 {
         list[*count].name = file;
+        list[*count].type = type;
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
 
         *count = *count + 1;
@@ -179,14 +97,15 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
                         continue;
                 }
 
-		m_build_buffer(&full_path, &len, "%s%s", path, ent->d_name);
-		
 		if(!ent->d_name)
                 {
 			puts("mk_dirhtml :: buffer error");
 		}
 
-		mk_dirhtml_add_element(file_list, ent->d_name, full_path, list_len);
+
+		m_build_buffer(&full_path, &len, "%s%s", path, ent->d_name);
+		mk_dirhtml_add_element(file_list, ent->d_name, ent->d_type,
+                                       full_path, list_len);
 
                 if (!file_list)
                 {
@@ -197,6 +116,8 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
         
         return 0;
 }
+
+
 
 /* Read dirhtml config and themes */
 int mk_dirhtml_conf()
@@ -455,7 +376,7 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
                                         fflush(stdout);
                                         
                                         mk_iov_add_entry(iov, tpl_val->value, tpl_val->len,
-                                                         MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+                                                         tpl_val->sep, MK_IOV_NOT_FREE_BUF);
 
                                         //                              printf("\n%i) %s", i, tpl_val->value);
                                         //fflush(stdout);
@@ -474,13 +395,14 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
 }
 
 struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, 
-                                             int tag_id, char *value)
+                                             int tag_id, int sep, char *value)
 {
         struct dirhtml_tplval *check, *aux;
         
         aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
         aux->tag = tag_id;
         aux->value = value;
+        aux->sep = sep;
         aux->len = strlen(value);
         aux->next = NULL;
 
@@ -535,9 +457,8 @@ int mk_dirhtml_entry_cmp(const void *a, const void *b)
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int ret, i;
+        int ret, i, sep;
         unsigned long len;
-        char *chunked_line;
 
         char *tags_header[] = MK_DIRHTML_TPL_HEADER;
         char *tags_entry[] = MK_DIRHTML_TPL_ENTRY;
@@ -582,7 +503,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         //mk_iov_add_entry(html_list, chunked_line, strlen(chunked_line), MK_IOV_NONE, MK_IOV_FREE_BUF);
 
         /* Creating response template */
-        tplval_header = mk_dirhtml_tag_assign(NULL, 0, sr->uri_processed);
+        tplval_header = mk_dirhtml_tag_assign(NULL, 0, MK_IOV_NONE, sr->uri_processed);
 
         /* HTML Header */
         iov_header = mk_dirhtml_theme_compose(tags_header, mk_dirhtml_tpl_header, 
@@ -600,7 +521,14 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         for (i=0; i<list_len; i++)
 	{
                 /* %_target_title_% */
-                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, file_list[i].name);
+                if(file_list[i].type==DT_DIR){
+                        sep = MK_IOV_SLASH;
+                }
+                else{
+                        sep = MK_IOV_NONE;
+                }
+
+                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
                 iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
                                                      mk_dirhtml_tpl_entry_cnt, tplval_entry);
                 mk_iov_send(cr->socket, iov_entry);

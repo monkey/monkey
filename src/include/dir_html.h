@@ -76,6 +76,7 @@ struct dirhtml_tplval
 {
         int tag;
         int len;
+        int sep; /* separator code after value */
         char *value;
         struct dirhtml_tplval *next;
 };

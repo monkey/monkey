@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -61,9 +63,9 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 	int len=0;
 	char *_sep=0;
 
-	switch(sep)
-	{
-		case MK_IOV_BREAK_LINE:
+        switch(sep){
+        
+                case MK_IOV_BREAK_LINE:
 			_sep = _MK_IOV_BREAK_LINE;
 			len = LEN_MK_IOV_BREAK_LINE;
 			break;
@@ -75,6 +77,10 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 			_sep = _MK_IOV_HEADER_VALUE;
 			len = LEN_MK_IOV_HEADER_VALUE;
 			break;
+                case MK_IOV_SLASH:
+                        _sep = _MK_IOV_SLASH;
+                        len = LEN_MK_IOV_SLASH;
+                        break;
 		case MK_IOV_NONE:
 			return mk_io->iov_idx;
 		default:
@@ -106,8 +112,11 @@ void mk_iov_free(struct mk_iov *mk_io)
 	limit = mk_io->buf_idx-1;
 	for(i=0; i<limit; i++)
 	{
-		// printf("\ngoing free (idx: %i/%i): %s",i, limit, mk_io->buf_to_free[i]);
-		// fflush(stdout);
+
+#ifdef DEBUG_IOV
+                printf("\nDEBUG IOV :: going free (idx: %i/%i): %s",i, limit, mk_io->buf_to_free[i]);
+                fflush(stdout);
+#endif
 		mk_mem_free(mk_io->buf_to_free[i]);
 	}
 	mk_mem_free(mk_io->io);

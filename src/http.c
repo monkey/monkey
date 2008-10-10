@@ -227,13 +227,17 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                 cr->counter_connections);
 
                         mk_header_send(cr->socket, cr, sr, sr->log);
+                        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
+                        /* 
+                         *  we do not free() real_location 
+                         *  as it's freed by iov 
+                         */
                         mk_mem_free(location);
-                        mk_mem_free(real_location);
                         sr->headers->location=NULL;
                         return 0;
                 }
-        
+
                 /* looking for a index file */
                 index_file = (char *) mk_request_index(sr->real_path);
 
