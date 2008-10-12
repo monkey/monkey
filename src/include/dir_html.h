@@ -61,8 +61,11 @@ struct dirhtml_config *dirhtml_conf;
 struct dirhtml_template
 {
         char *buf;
+        int tag;
         int len;
+        struct dirhtml_template *next;
 };
+
 struct dirhtml_template *mk_dirhtml_tpl_header;
 struct dirhtml_template *mk_dirhtml_tpl_entry;
 struct dirhtml_template *mk_dirhtml_tpl_footer;
@@ -86,7 +89,10 @@ char   *read_header_footer_file(char *file_path);
 
 int mk_dirhtml_conf();
 char *mk_dirhtml_load_file(char *filename);
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[], unsigned long *tpl_length);
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[]);
+struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header, 
+                                                      char *buf, int len, int tag);
+
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 int mk_dirhtml_read_config(char *path);
 int mk_dirhtml_theme_load();

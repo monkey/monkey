@@ -117,8 +117,6 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
         return 0;
 }
 
-
-
 /* Read dirhtml config and themes */
 int mk_dirhtml_conf()
 {
@@ -213,12 +211,9 @@ int mk_dirhtml_theme_load()
         }
 
         /* Parse themes */
-        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, lov_header,
-                                                       &mk_dirhtml_tpl_header_cnt);
-        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry,
-                                                      &mk_dirhtml_tpl_entry_cnt);
-        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer,
-                                                       &mk_dirhtml_tpl_footer_cnt);
+        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, lov_header);
+        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
+        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, lov_footer);
 
 #ifdef DEBUG_THEME
         /* Debug data */
@@ -232,19 +227,26 @@ int mk_dirhtml_theme_load()
 #ifdef DEBUG_THEME
 int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
 {
-        int i;
+        int i=0;
+        struct dirhtml_template *aux;
 
-        printf("\n*-THEME DEBUG-*");
-        for(i=0; st_tpl[i].len!=EOF; i++){
-                if(!st_tpl[i].buf)
+        aux = st_tpl;
+        printf("\n** DEBUG_THEME **");
+        
+        while(aux)
+        {
+                if(!aux->buf)
                 {
-                        printf("\n%i %s", i, tpl[st_tpl[i].len]);
+                        //printf("\n%i) %s", i, tpl[st_tpl[i].tag]);
+                        printf("\n%i) %s (tag=%i)", i, tpl[aux->tag], aux->tag);
                 }
                 else{
-                        printf("\n%i) %s", i, st_tpl[i].buf);
+                        printf("\n%i) %s", i, aux->buf);
                 }
 
                 fflush(stdout);
+                aux = aux->next;
+                i++;
         }
         return 0;
 }
@@ -268,16 +270,46 @@ int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
         return -1;
 }
 
+/* return the number of valid tags found in text string */
+int mk_dirhtml_content_count_tags(char *content, char *tpl[])
+{
+        int pos=0, count=0;
+        int len, tpl_idx;
+        int loop=0;
 
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[],
-                                                unsigned long *tpl_length)
+        len = strlen(content);
+        while(loop<len)
+        {
+                pos = _mk_string_search(content+loop, MK_DIRHTML_TAG_INIT, -1);
+                if(pos>=0){
+                        tpl_idx = mk_dirhtml_theme_match_tag(content+loop, tpl);
+                        if(tpl_idx>=0){
+                                count++;
+                        }
+                        loop+=pos;
+                }
+                else{
+                        break;
+                }
+                loop++;
+
+        }
+        return count;
+}
+
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
 {
         int i=0, arr_len, cont_len;
         int pos, last=0; /* 0=search init, 1=search end */
-        int n_tags=0, idx=0, tpl_idx=0;
-        struct dirhtml_template *st_tpl;
+        int n_tags=0, tpl_idx=0;
+        int c_tags=0;
 
-        if((cont_len = strlen(content))<=0){
+        char *_buf;
+        int _len;
+        struct dirhtml_template *st_tpl=0;
+
+        cont_len = strlen(content);
+        if(cont_len<=0){
                 return NULL;
         };
         
@@ -286,49 +318,97 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[],
         /* Alloc memory for the typical case where exist n_tags, 
          * no repetitive tags
          */
-        *tpl_length = (arr_len*2)+1;
-        st_tpl = mk_mem_malloc_z(sizeof(struct dirhtml_template)*(*tpl_length));
+        c_tags = mk_dirhtml_content_count_tags(content, tpl);
+
+        //st_tpl = (struct dirhtml_template **) mk_mem_malloc_z(sizeof(struct dirhtml_template)*(*tpl_length));
 
         /* Parsing content */
-        for(i=0; i<cont_len; i++)
+        while(i<cont_len)
         {
-                pos = _mk_string_search(content+last,
+                pos = _mk_string_search(content+i,
                                                 MK_DIRHTML_TAG_INIT, -1);
 
                 if(pos<0){
                         break;
                 }
 
+                tpl_idx = mk_dirhtml_theme_match_tag(content+i+pos, tpl);
 
-                tpl_idx = mk_dirhtml_theme_match_tag(content+pos, tpl);
                 if(tpl_idx>=0){
-                        if(pos>0){
-                                st_tpl[idx].buf = mk_string_copy_substr(content, 
-                                                                        last, pos+last);
-                                st_tpl[idx].len = strlen(st_tpl[idx].buf);
-                                idx++;
+                        
+                        _buf = mk_string_copy_substr(content, i, i+pos);
+                        _len = strlen(_buf);
+                        if(!st_tpl){
+                                st_tpl = mk_dirhtml_template_list_add(NULL, _buf, _len, -1);
                         }
-                        last += pos+strlen(tpl[i]);
+                        else{
+                                mk_dirhtml_template_list_add(&st_tpl, _buf, _len, -1);
+                        }
+                        i += (pos+strlen(tpl[tpl_idx]));
 
                         /* This means that a value need to be replaced */
-                        st_tpl[idx].buf = NULL;
-                        st_tpl[idx].len = tpl_idx;
-
-                        idx++;
+                        mk_dirhtml_template_list_add(&st_tpl, NULL, -1, tpl_idx);
                         n_tags++;
                 }
+                else{
+                        i++;
+                }
+                
         }
 
         if(last<cont_len){
-                st_tpl[idx].buf = mk_string_copy_substr(content, last, cont_len);
-                st_tpl[idx].len = strlen(st_tpl[idx].buf);
+                _buf = mk_string_copy_substr(content, i, cont_len);
+                _len = strlen(_buf);
+
+                if(n_tags<=0){
+                        st_tpl = mk_dirhtml_template_list_add(NULL, _buf, _len, -1);
+                }
+                else{
+                        mk_dirhtml_template_list_add(&st_tpl, _buf, _len, -1);
+                }
         }
 
-        idx++;
-        st_tpl[idx].buf = NULL;
-        st_tpl[idx].len = EOF;
-
+        /*
+        printf("\n**********FINAL LIST:");
+        aux = st_tpl;
+        while(aux){
+                printf("\n---\nbuf: %s", aux->buf);
+                printf("\nlen: %i", aux->len);
+                printf("\ntag: %i", aux->tag);
+                aux = aux->next;
+        }
+        fflush(stdout);
+        */
         return (struct dirhtml_template *) st_tpl;
+}
+
+struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header, 
+                                                      char *buf, int len, int tag)
+{
+        struct dirhtml_template *node, *aux;
+
+        node = mk_mem_malloc_z(sizeof(struct dirhtml_template));
+        if(!node)
+        {
+                return NULL;
+        }
+
+        node->buf = buf;
+        node->len = len;
+        node->tag = tag;
+        node->next = NULL;
+
+        if(!header){
+                return (struct dirhtml_template *) node;
+        }
+
+        aux = *header;
+        while((*aux).next!=NULL){
+                aux = (*aux).next;
+        }
+
+        (*aux).next = node;
+        return (struct dirhtml_template *) node;
 }
 
 int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
@@ -344,62 +424,79 @@ int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
         return -1;
 }
 
+int mk_dirhtml_template_len(struct dirhtml_template *tpl)
+{
+        int len=0;
+        struct dirhtml_template *aux;
+
+        aux = tpl;
+        while(aux){
+                len++;
+                aux = aux->next;
+        }
+
+        return len;
+}
 
 struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[], 
                              struct dirhtml_template *tpl_tpl,
-                             int tpl_length,
                              struct dirhtml_tplval *tpl_values)
 {
         /*
          * tpl_tags = MK_DIRHTML_TPL_HEADER = {xy, yz}
-         * tpl_tpl = struct { char buf ; int len }
+         * tpl_tpl = struct { char buf ; int len, int tag }
          * tpl_values = struct {int tag, char *value, struct *next}
          */
 
-        int i;
         struct dirhtml_tplval *tpl_val = tpl_values;
         struct mk_iov *iov;
+        struct dirhtml_template *tpl_list;
+        int tpl_len;
 
-        iov = mk_iov_create(tpl_length);
+        tpl_len = mk_dirhtml_template_len(tpl_tpl);
+        iov = mk_iov_create(tpl_len);
+        tpl_list = tpl_tpl;
 
-        for(i=0; tpl_tpl[i].len!=EOF; i++){
+        while(tpl_list){
                 /* check for dynamic value */
-                if(!tpl_tpl[i].buf && tpl_tpl[i].len>=0){
-                        printf("\ntpl_buf: %s", tpl_tpl[i].buf);
-                        fflush(stdout);
+                if(!tpl_list->buf && tpl_list->tag>=0){
+                        tpl_val = tpl_values;
                         while(tpl_val){
-                                if(tpl_val->tag == tpl_tpl[i].len)
+                                if(tpl_val->tag == tpl_list->tag)
                                 {
-                                        //printf("\ntag %i == tpltpl %i", tpl_val->tag, tpl_tpl[i].len);
-                                        printf("\n%i) %s -> %i -> %s", i, tpl_tags[tpl_tpl[i].len], tpl_tpl[i].len,
-                                               tpl_val->value);
-                                        fflush(stdout);
-                                        
                                         mk_iov_add_entry(iov, tpl_val->value, tpl_val->len,
                                                          tpl_val->sep, MK_IOV_NOT_FREE_BUF);
 
-                                        //                              printf("\n%i) %s", i, tpl_val->value);
-                                        //fflush(stdout);
                                         break;
                                 }
                                 tpl_val = tpl_val->next;
+                        }
+                        if(!tpl_val){
+                                break; 
                         }
                         
                 } 
                 /* static */
                 else{
-                        mk_iov_add_entry(iov, tpl_tpl[i].buf, tpl_tpl[i].len, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+                        mk_iov_add_entry(iov, tpl_list->buf, tpl_list->len, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
                 }
+                tpl_list = tpl_list->next;
         }
         return (struct mk_iov *) iov;
 }
 
-struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval, 
+struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval, 
                                              int tag_id, int sep, char *value)
 {
-        struct dirhtml_tplval *check, *aux;
+        struct dirhtml_tplval *check, *aux=0;
         
         aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
+        if(!aux){
+                printf("\nNULL?");
+                fflush(stdout);
+                return NULL;
+        }
+
         aux->tag = tag_id;
         aux->value = value;
         aux->sep = sep;
@@ -407,16 +504,16 @@ struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval *tplval,
         aux->next = NULL;
 
         if(!tplval){
-                tplval = aux;
+                return (struct dirhtml_tplval *) aux;
         }
-        else{
-                check = tplval;
-                while(check->next){
-                        check = check->next;
-                }
 
-                check->next = aux;
+        check = *tplval;
+        while((*check).next){
+                check = (*check).next;
         }
+
+        (*check).next = aux;
+
 
         return (struct dirhtml_tplval *) aux;
 }
@@ -506,16 +603,18 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         tplval_header = mk_dirhtml_tag_assign(NULL, 0, MK_IOV_NONE, sr->uri_processed);
 
         /* HTML Header */
-        iov_header = mk_dirhtml_theme_compose(tags_header, mk_dirhtml_tpl_header, 
-                                              mk_dirhtml_tpl_header_cnt, tplval_header);
+        iov_header = mk_dirhtml_theme_compose(tags_header,
+                                              mk_dirhtml_tpl_header, 
+                                              tplval_header);
 
         /* HTML Footer */
-        iov_footer = mk_dirhtml_theme_compose(tags_footer, mk_dirhtml_tpl_footer, 
-                                              mk_dirhtml_tpl_footer_cnt, NULL);
+        iov_footer = mk_dirhtml_theme_compose(tags_footer,
+                                              mk_dirhtml_tpl_footer, NULL);
 
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
         mk_iov_send(cr->socket, iov_header);
 
+        /* sort entries */
         qsort(file_list, list_len, sizeof(struct mk_f_list), mk_dirhtml_entry_cmp);
 
         for (i=0; i<list_len; i++)
@@ -528,9 +627,13 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                         sep = MK_IOV_NONE;
                 }
 
+
                 tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
+                mk_dirhtml_tag_assign(&tplval_entry, 1, sep, file_list[i].name);
+                mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
+
                 iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
-                                                     mk_dirhtml_tpl_entry_cnt, tplval_entry);
+                                                     tplval_entry);
                 mk_iov_send(cr->socket, iov_entry);
         }
         mk_iov_send(cr->socket, iov_footer);
