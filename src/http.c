@@ -47,17 +47,17 @@
 
 int mk_http_method_check(char *method)
 {
-        if(strcmp(method, HTTP_METHOD_GET_STR)==0)
+        if(strcasecmp(method, HTTP_METHOD_GET_STR)==0)
         {
                 return HTTP_METHOD_GET;
         }
         
-        if(strcmp(method, HTTP_METHOD_POST_STR)==0)
+        if(strcasecmp(method, HTTP_METHOD_POST_STR)==0)
         {
                 return HTTP_METHOD_POST;
         }
         
-        if(strcmp(method, HTTP_METHOD_HEAD_STR)==0)
+        if(strcasecmp(method, HTTP_METHOD_HEAD_STR)==0)
         {
                 return HTTP_METHOD_HEAD;
         }
@@ -101,15 +101,15 @@ int mk_http_method_get(mk_pointer body)
 
 int mk_http_protocol_check(char *protocol)
 {
-        if(strcmp(protocol, HTTP_PROTOCOL_11_STR)==0)
+        if(strcasecmp(protocol, HTTP_PROTOCOL_11_STR)==0)
         {
                 return HTTP_PROTOCOL_11;
         }
-        if(strcmp(protocol, HTTP_PROTOCOL_10_STR)==0)
+        if(strcasecmp(protocol, HTTP_PROTOCOL_10_STR)==0)
         {
                 return HTTP_PROTOCOL_10;
         }
-        if(strcmp(protocol, HTTP_PROTOCOL_09_STR)==0)
+        if(strcasecmp(protocol, HTTP_PROTOCOL_09_STR)==0)
         {
                 return HTTP_PROTOCOL_09;
         }
