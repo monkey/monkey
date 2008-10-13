@@ -53,6 +53,7 @@ struct mk_f_list
 {
         char *name;
         char *ft_modif;
+        char *size;
         unsigned char type;
         struct file_info *info;
 };
@@ -60,9 +61,12 @@ struct mk_f_list
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
                             unsigned char type, char *full_path, unsigned long *count)
 {
+        unsigned long len;
+
         list[*count].name = file;
         list[*count].type = type;
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
+        m_build_buffer(&list[*count].size, &len, "%i", list[*count].info->size);
 
         *count = *count + 1;
 }
@@ -628,9 +632,16 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 }
 
 
+                /* target title */
                 tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
+                /* target url */
                 mk_dirhtml_tag_assign(&tplval_entry, 1, sep, file_list[i].name);
+                /* target name */
                 mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
+                /* target time */
+                // mk_dirhtml_tag_assign(&tplval_entry, 3, sep, file_list[i].ft_modif);
+                /* target size */
+                mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, file_list[i].size);
 
                 iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
                                                      tplval_entry);

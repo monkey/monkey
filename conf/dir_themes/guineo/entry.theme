@@ -1,7 +1,19 @@
-<TR>
+<TR bgcolor="#ffffff">
 	<TD>
+		<P class="row">
+		&nbsp;
 		<A title='%_target_title_%' href='%_target_url_%'>
 			%_target_name_%
 		</A>
+		</P>
+	</TD>
+	<TD>
+		<p class="row">
+		</p>
+	</TD>
+	<TD>
+		<p class="row">
+			%_target_size_%
+		</p>
 	</TD>
 </TR>

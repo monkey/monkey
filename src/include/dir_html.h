@@ -38,9 +38,11 @@
 /* Template tags */
 #define MK_DIRHTML_TPL_HEADER {"%_html_title_%"}
 #define MK_DIRHTML_TPL_ENTRY {\
-        "%_target_title_%",\
+        "%_target_title_%",   \
         "%_target_url_%",\
-        "%_target_name_%"}
+        "%_target_name_%",\
+        "%_target_time_%",\
+        "%_target_size_%"}
 
 #define MK_DIRHTML_TPL_FOOTER {}
 
