@@ -58,15 +58,50 @@ struct mk_f_list
         struct file_info *info;
 };
 
+char mk_dirhtml_convert_size(off_t size)
+{
+        char type;
+
+        if(size < 9999){
+                type = MK_DIRHTML_SIZE_b;
+        }
+        else{
+                if((size /= 1024) < 9999) {
+                        type = MK_DIRHTML_SIZE_K;
+                }
+                else{
+                        if((size /= 1024) < 9999){
+                                type = MK_DIRHTML_SIZE_M;
+                        }
+                        else{
+                                type = MK_DIRHTML_SIZE_G;
+                        }
+                }
+        }
+
+        return type;
+}
+
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
                             unsigned char type, char *full_path, unsigned long *count)
 {
         unsigned long len;
+        off_t size;
+        char size_type;
 
         list[*count].name = file;
         list[*count].type = type;
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
-        m_build_buffer(&list[*count].size, &len, "%i", list[*count].info->size);
+
+        size = list[*count].info->size;
+        size_type = mk_dirhtml_convert_size(size);
+
+        if(type != DT_DIR){
+                m_build_buffer(&list[*count].size, &len, "%5lu%c", size, size_type);
+        }
+        else{
+                list[*count].size = MK_DIRHTML_SIZE_DIR;
+        }
 
         *count = *count + 1;
 }
@@ -496,8 +531,6 @@ struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval,
         
         aux = mk_mem_malloc(sizeof(struct dirhtml_tplval));
         if(!aux){
-                printf("\nNULL?");
-                fflush(stdout);
                 return NULL;
         }
 
@@ -640,6 +673,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
                 /* target time */
                 // mk_dirhtml_tag_assign(&tplval_entry, 3, sep, file_list[i].ft_modif);
+
                 /* target size */
                 mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, file_list[i].size);
 
