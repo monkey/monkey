@@ -58,28 +58,27 @@ struct mk_f_list
         struct file_info *info;
 };
 
-char mk_dirhtml_convert_size(off_t size)
+/* Function wrote by Max (Felipe Astroza), thanks! */
+char *mk_dirhtml_human_readable_size(off_t size)
 {
-        char type;
+        unsigned long u = 1024, i, len;
+        char *buf;
 
-        if(size < 9999){
-                type = MK_DIRHTML_SIZE_b;
+        for(i = 0; __units[i] != NULL; i++) {
+                if((size / u) == 0){
+                        break;
+                }
+                u *= 1024;
         }
-        else{
-                if((size /= 1024) < 9999) {
-                        type = MK_DIRHTML_SIZE_K;
-                }
-                else{
-                        if((size /= 1024) < 9999){
-                                type = MK_DIRHTML_SIZE_M;
-                        }
-                        else{
-                                type = MK_DIRHTML_SIZE_G;
-                        }
-                }
+        if(!i){
+                m_build_buffer(&buf, &len, "%u%s", size, __units[0]);
+        }
+        else {
+                float fsize = (float)((double)size / (u/1024));
+                m_build_buffer(&buf, &len, "%.1f%s\n", fsize, __units[i]);
         }
 
-        return type;
+        return buf;
 }
 
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
@@ -94,10 +93,9 @@ void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
 
         size = list[*count].info->size;
-        size_type = mk_dirhtml_convert_size(size);
 
         if(type != DT_DIR){
-                m_build_buffer(&list[*count].size, &len, "%5lu%c", size, size_type);
+                list[*count].size = mk_dirhtml_human_readable_size(size);
         }
         else{
                 list[*count].size = MK_DIRHTML_SIZE_DIR;
@@ -616,7 +614,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
         ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, 0);
 
-	// FIXME: Need sort file list	
+        /* Building headers */
         sr->headers->transfer_encoding = -1;
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;

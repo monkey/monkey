@@ -49,10 +49,8 @@
 #define MK_DIRHTML_TAG_INIT "%_"
 #define MK_DIRHTML_TAG_END "_%"
 
-#define MK_DIRHTML_SIZE_b 'b'
-#define MK_DIRHTML_SIZE_K 'K'
-#define MK_DIRHTML_SIZE_M 'M'
-#define MK_DIRHTML_SIZE_G 'G'
+static const char *__units[] = {"b", "K", "M", "G",
+                                "T", "P", "E", "Z","Y", NULL};
 #define MK_DIRHTML_SIZE_DIR "-"
 
 /* Main configuration of dirhtml module */
