@@ -52,7 +52,7 @@
 struct mk_f_list
 {
         char *name;
-        char *ft_modif;
+        char ft_modif[20];
         char *size;
         unsigned char type;
         struct file_info *info;
@@ -63,6 +63,8 @@ char *mk_dirhtml_human_readable_size(off_t size)
 {
         unsigned long u = 1024, i, len;
         char *buf;
+        static const char *__units[] = {"b", "K", "M", "G",
+                                "T", "P", "E", "Z","Y", NULL};
 
         for(i = 0; __units[i] != NULL; i++) {
                 if((size / u) == 0){
@@ -84,13 +86,17 @@ char *mk_dirhtml_human_readable_size(off_t size)
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
                             unsigned char type, char *full_path, unsigned long *count)
 {
-        unsigned long len;
         off_t size;
-        char size_type;
+        struct tm *st_time;
 
         list[*count].name = file;
         list[*count].type = type;
+
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
+
+        st_time = localtime((time_t *) &list[*count].info->last_modification);
+        strftime(list[*count].ft_modif, sizeof(list[*count].ft_modif),
+                 "%d-%b-%G %H:%M", st_time);
 
         size = list[*count].info->size;
 
@@ -665,12 +671,15 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
                 /* target title */
                 tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
+
                 /* target url */
                 mk_dirhtml_tag_assign(&tplval_entry, 1, sep, file_list[i].name);
+
                 /* target name */
                 mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
-                /* target time */
-                // mk_dirhtml_tag_assign(&tplval_entry, 3, sep, file_list[i].ft_modif);
+
+                /* target modification time */
+                mk_dirhtml_tag_assign(&tplval_entry, 3, sep, file_list[i].ft_modif);
 
                 /* target size */
                 mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, file_list[i].size);

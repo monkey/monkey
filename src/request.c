@@ -451,7 +451,6 @@ int mk_request_header_process(struct request *sr)
 	
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end);
-        mk_pointer_print(sr->uri);
 
 	if(sr->uri.len<1)
 	{

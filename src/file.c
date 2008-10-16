@@ -60,7 +60,7 @@ struct file_info *mk_file_get_info(char *path)
 
 	f_info->size = target.st_size;
 	f_info->last_modification = target.st_mtime;
-	
+
 	if(S_ISDIR(target.st_mode))
 	{
 		f_info->is_directory = MK_FILE_TRUE;
