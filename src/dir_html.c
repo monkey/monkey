@@ -679,7 +679,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
 
                 /* target modification time */
-                mk_dirhtml_tag_assign(&tplval_entry, 3, sep, file_list[i].ft_modif);
+                mk_dirhtml_tag_assign(&tplval_entry, 3, MK_IOV_NONE, file_list[i].ft_modif);
 
                 /* target size */
                 mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, file_list[i].size);
