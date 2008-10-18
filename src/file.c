@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "monkey.h"
 #include "file.h"
@@ -110,20 +111,22 @@ char *mk_file_to_buffer(char *path)
 		return NULL;
 	}
 
-	if(!(buffer = mk_mem_malloc(finfo->size)))
+        buffer = calloc(finfo->size+1, sizeof(char));
+	if(!buffer)
 	{
 		fclose(fp);
-		return NULL;
+                return NULL;
 	}
-	       
-	bytes = fread(buffer, 1, finfo->size, fp);
-	if(bytes < finfo->size)
+
+	bytes = fread(buffer, finfo->size, 1, fp);
+
+	if(bytes < 1)
 	{
 		mk_mem_free(buffer);
 		fclose(fp);
 		return NULL;
 	}
-	
+
 	fclose(fp);
 	return (char *) buffer;
 	

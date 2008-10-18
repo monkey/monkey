@@ -77,17 +77,27 @@ char *mk_dirhtml_human_readable_size(off_t size)
         }
         else {
                 float fsize = (float)((double)size / (u/1024));
-                m_build_buffer(&buf, &len, "%.1f%s\n", fsize, __units[i]);
+                m_build_buffer(&buf, &len, "%.1f%s", fsize, __units[i]);
         }
 
         return buf;
 }
 
 void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
-                            unsigned char type, char *full_path, unsigned long *count)
+                            unsigned char type, char *full_path,
+                            unsigned long *count,unsigned long *list_size)
 {
         off_t size;
+        int buf_size;
         struct tm *st_time;
+
+        if(*count==*list_size){
+                buf_size = *count+MK_DIRHTML_BUFFER_GROW;
+
+                list = (struct mk_f_list *)
+                        mk_mem_realloc(list, sizeof(struct mk_f_list )*(buf_size));
+                *list_size = buf_size;
+        }
 
         list[*count].name = file;
         list[*count].type = type;
@@ -111,7 +121,7 @@ void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
 }
 
 int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
-                           char *path, unsigned long *list_len, int offset)
+                           char *path, unsigned long *list_len, unsigned long *list_size)
 {
 	unsigned long len;
         char *full_path;
@@ -128,7 +138,6 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
          *
          * that kind of ideas comes when you are in an airport just waiting :)
          */
-
 	while((ent = readdir(dir)) != NULL)
 	{
                 if(strcmp((char *) ent->d_name, "." )  == 0) continue;
@@ -148,7 +157,7 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
 
 		m_build_buffer(&full_path, &len, "%s%s", path, ent->d_name);
 		mk_dirhtml_add_element(file_list, ent->d_name, ent->d_type,
-                                       full_path, list_len);
+                                       full_path, list_len, list_size);
 
                 if (!file_list)
                 {
@@ -497,7 +506,10 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
         int tpl_len;
 
         tpl_len = mk_dirhtml_template_len(tpl_tpl);
-        iov = mk_iov_create(tpl_len);
+
+        /* we duplicate the lenght in case we get separators */
+        iov = mk_iov_create(tpl_len*2); 
+
         tpl_list = tpl_tpl;
 
         while(tpl_list){
@@ -603,7 +615,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         char *tags_footer[] = MK_DIRHTML_TPL_FOOTER;
 
 	/* file info */
-	unsigned long list_len=0;
+	unsigned long list_len=0, list_size=0;
         struct mk_f_list *file_list;
         struct mk_iov *iov_header, *iov_footer, *iov_entry;
         struct dirhtml_tplval *tplval_header;
@@ -614,11 +626,9 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 return -1;
         }
 
-        file_list = mk_mem_malloc(
-                                  sizeof(struct mk_f_list)*
-                                  MK_DIRHTML_BUFFER_LIMIT);
-
-        ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, 0);
+        list_size = sizeof(struct mk_f_list)*MK_DIRHTML_BUFFER_GROW;
+        file_list = mk_mem_malloc(list_size);
+        ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, &list_size);
 
         /* Building headers */
         sr->headers->transfer_encoding = -1;

@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -55,6 +57,7 @@ struct mk_iov
 	char **buf_to_free;
 	int iov_idx;
 	int buf_idx;
+        int size;
         unsigned long total_len;
 };
 

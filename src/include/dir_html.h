@@ -27,6 +27,7 @@
  * this limit of entries.
  */
 #define MK_DIRHTML_BUFFER_LIMIT 30
+#define MK_DIRHTML_BUFFER_GROW 5
 
 #define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
 

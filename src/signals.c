@@ -44,9 +44,8 @@ switch( signo ) {
 
 	case SIGINT: 
 		remove_log_pid();
-		printf("%s => Interrupt from keyboard / Killing thread: %i\n", PutTime(), (int) pthread_self());
-                break;
-	
+		printf("\n\n%s => Interrupt from keyboard\n\n", PutTime());
+                exit(0);
 	case SIGHUP:
 		printf("%s => Hangup\n", PutTime());
 		Term_Signals();

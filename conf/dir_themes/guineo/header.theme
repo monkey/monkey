@@ -5,6 +5,7 @@
 			    text-align: center;
 			    color: #4a77a0;
 			    font-size: 12pt;
+			    font-weight: bold;
 		            }
 		.row {color: #6c95bc; font-size: 10pt; }
 		.title {color: #617691; font-size: 10pt; font-weight: bold;}

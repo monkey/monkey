@@ -36,6 +36,7 @@ struct mk_iov *mk_iov_create(int n)
 	iov->buf_to_free = mk_mem_malloc(n*sizeof(char));
 	iov->buf_idx = 0;
         iov->total_len = 0;
+        iov->size = n;
 
 	return iov;
 }
@@ -47,6 +48,14 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
         mk_io->total_len += len;
+
+#ifdef DEBUG_IOV
+        if(mk_io->iov_idx > mk_io->size){
+                printf("\nDEBUG IOV :: ERROR, Broke array size in:");
+                printf("\n          '''%s'''", buf); 
+                fflush(stdout);
+        }
+#endif
 
 	mk_iov_add_separator(mk_io, sep);
 
@@ -93,6 +102,14 @@ int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
         mk_io->total_len += len;
+
+#ifdef DEBUG_IOV
+        if(mk_io->iov_idx > mk_io->size){
+                printf("\nDEBUG IOV :: ERROR, Broke array size");
+                printf("\n          -> %s (len=%i)", _sep, len); 
+                fflush(stdout);
+        }
+#endif
 
 	return mk_io->iov_idx;
 }
