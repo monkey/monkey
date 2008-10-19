@@ -52,8 +52,8 @@
 struct mk_f_list
 {
         char *name;
-        char ft_modif[20];
         char *size;
+        char *ft_modif;
         unsigned char type;
         struct file_info *info;
 };
@@ -88,14 +88,14 @@ void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
                             unsigned long *count,unsigned long *list_size)
 {
         off_t size;
-        int buf_size;
+        int buf_size,n;
         struct tm *st_time;
 
-        if(*count==*list_size){
-                buf_size = *count+MK_DIRHTML_BUFFER_GROW;
+        if(*count+1==*list_size){
+                buf_size = *list_size+MK_DIRHTML_BUFFER_GROW;
 
                 list = (struct mk_f_list *)
-                        mk_mem_realloc(list, sizeof(struct mk_f_list )*(buf_size));
+                mk_mem_realloc(list, sizeof(struct mk_f_list)*(buf_size));
                 *list_size = buf_size;
         }
 
@@ -105,7 +105,10 @@ void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
         list[*count].info = (struct file_info *) mk_file_get_info(full_path);
 
         st_time = localtime((time_t *) &list[*count].info->last_modification);
-        strftime(list[*count].ft_modif, sizeof(list[*count].ft_modif),
+
+        list[*count].ft_modif = mk_mem_malloc_z(sizeof(char)*20);
+
+        n = strftime(list[*count].ft_modif, 20,
                  "%d-%b-%G %H:%M", st_time);
 
         size = list[*count].info->size;
@@ -540,7 +543,7 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
         return (struct mk_iov *) iov;
 }
 
-struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval, 
+struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval,
                                              int tag_id, int sep, char *value)
 {
         struct dirhtml_tplval *check, *aux=0;
@@ -560,6 +563,7 @@ struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval,
                 return (struct dirhtml_tplval *) aux;
         }
 
+        //*tpl_val = realloc(*tpl_val
         check = *tplval;
         while((*check).next){
                 check = (*check).next;
@@ -627,7 +631,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         }
 
         list_size = sizeof(struct mk_f_list)*MK_DIRHTML_BUFFER_GROW;
-        file_list = mk_mem_malloc(list_size);
+        file_list = (struct mk_f_list *) mk_mem_malloc(list_size);
         ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, &list_size);
 
         /* Building headers */
