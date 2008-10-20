@@ -252,7 +252,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                                         return -1;
                                 }
-                                return 0;
+                                return getdir_res;
                         }
                         else {
                                 mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);

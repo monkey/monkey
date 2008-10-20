@@ -647,7 +647,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	{
 		sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
 	}
-	*/
+        */
 
 	/* Sending headers */
 	mk_header_send(cr->socket, cr, sr, sr->log);
@@ -704,9 +704,9 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         }
         mk_iov_send(cr->socket, iov_footer);
 
-        close(cr->socket);
+        
         closedir(dir);
-	return -1;
+        return 0;
 }
 
 
