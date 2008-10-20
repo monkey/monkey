@@ -26,7 +26,7 @@
 #include "memory.h"
 #include "iov.h"
 
-struct mk_iov *mk_iov_create(int n)
+struct mk_iov *_mk_iov_alloc(int n)
 {
 	struct mk_iov *iov;
 
@@ -39,6 +39,20 @@ struct mk_iov *mk_iov_create(int n)
         iov->size = n;
 
 	return iov;
+}
+
+struct mk_iov *mk_iov_create(int n)
+{
+        return _mk_iov_alloc(n);
+}
+
+struct mk_iov *mk_iov_create_offset(int n, int offset)
+{
+        struct mk_iov *iov;
+
+        iov = _mk_iov_alloc(n);
+        iov->iov_idx = offset;
+        return iov;
 }
 
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, 

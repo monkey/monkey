@@ -563,7 +563,6 @@ struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval,
                 return (struct dirhtml_tplval *) aux;
         }
 
-        //*tpl_val = realloc(*tpl_val
         check = *tplval;
         while((*check).next){
                 check = (*check).next;
@@ -635,19 +634,17 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, &list_size);
 
         /* Building headers */
-        sr->headers->transfer_encoding = -1;
+        //sr->headers->transfer_encoding = -1;
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;
         sr->headers->breakline = MK_HEADER_BREAKLINE;
 
 	m_build_buffer(&sr->headers->content_type, &len, "text/html");
 
-        /*
 	if(sr->protocol==HTTP_PROTOCOL_11)
 	{
 		sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
 	}
-        */
 
 	/* Sending headers */
 	mk_header_send(cr->socket, cr, sr, sr->log);
@@ -682,9 +679,8 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                         sep = MK_IOV_NONE;
                 }
 
-
                 /* target title */
-                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
+                tplval_entry = mk_dirhtml_tag_assign(&tplval_entry, 0, sep, file_list[i].name);
 
                 /* target url */
                 mk_dirhtml_tag_assign(&tplval_entry, 1, sep, file_list[i].name);
@@ -703,7 +699,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 mk_iov_send(cr->socket, iov_entry);
         }
         mk_iov_send(cr->socket, iov_footer);
-
         
         closedir(dir);
         return 0;
