@@ -463,7 +463,7 @@ for arg in \$*; do
 
 	case "\$arg" in
 		start)
-			if [ "\$STATUS" == "yes"  ] ; then
+			if [ "\$STATUS" = "yes"  ] ; then
 				echo "Monkey is running... (PID=\$PIDMONKEY)"
 				exit 1
 			fi
@@ -478,17 +478,17 @@ for arg in \$*; do
 			fi
 		;;
 		stop)
-			if  [ "\$STATUS" == "no" ]; then
+			if  [ "\$STATUS" = "no" ]; then
 				echo "Monkey is not running."
 				exit 1
 			fi
-			kill \$PIDMONKEY
+			kill -9 \$PIDMONKEY
 			rm -rf \$PIDFILE > /dev/null
 			echo "Monkey stopped (\$PIDMONKEY)"
 			exit 0
 			;;
 		restart)
-			if  [ "\$STATUS" == "yes" ]; then
+			if  [ "\$STATUS" = "yes" ]; then
 				if ! kill \$PIDMONKEY  > /dev/null ; then
 					killall -9 monkey
 				else
