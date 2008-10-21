@@ -66,6 +66,10 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, int sep, int free
 int mk_iov_add_separator(struct mk_iov *mk_io, int sep);
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
 void mk_iov_free(struct mk_iov *mk_io);
+struct mk_iov *mk_iov_create_offset(int n, int offset);
+int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
+                int sep, int free, int idx);
+void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free);
 
 #endif
 

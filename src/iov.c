@@ -50,16 +50,43 @@ struct mk_iov *mk_iov_create_offset(int n, int offset)
 {
         struct mk_iov *iov;
 
-        iov = _mk_iov_alloc(n);
+        iov = _mk_iov_alloc(n+offset);
         iov->iov_idx = offset;
         return iov;
 }
 
-int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, 
-		int sep, int free)
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
+                      int sep, int free)
 {
-	mk_io->io[mk_io->iov_idx].iov_base = buf;
-	mk_io->io[mk_io->iov_idx].iov_len = len;
+        return _mk_iov_add(mk_io, buf, len, sep, free, mk_io->iov_idx);
+}
+
+int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
+                     int free, int idx)
+{
+       	mk_io->io[idx].iov_base = buf;
+	mk_io->io[idx].iov_len = len;
+        mk_io->total_len += len;
+
+        _mk_iov_set_free(mk_io, buf, free);
+
+        return 0;
+}
+
+void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free)
+{
+	if(free==MK_IOV_FREE_BUF)
+	{
+		mk_io->buf_to_free[mk_io->buf_idx] = (char *)buf;
+		mk_io->buf_idx++;
+	}
+}
+
+int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
+                      int sep, int free, int idx)
+{
+	mk_io->io[idx].iov_base = buf;
+	mk_io->io[idx].iov_len = len;
 	mk_io->iov_idx++;
         mk_io->total_len += len;
 
@@ -73,11 +100,8 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
 
 	mk_iov_add_separator(mk_io, sep);
 
-	if(free==MK_IOV_FREE_BUF)
-	{
-		mk_io->buf_to_free[mk_io->buf_idx] = (char *)buf;
-		mk_io->buf_idx++;
-	}
+        _mk_iov_set_free(mk_io, buf, free);
+
 	return mk_io->iov_idx;
 }
 
@@ -152,4 +176,16 @@ void mk_iov_free(struct mk_iov *mk_io)
 	}
 	mk_mem_free(mk_io->io);
 	mk_mem_free(mk_io);
+}
+
+void mk_iov_print(struct mk_iov *mk_io)
+{
+        int i;
+
+        for(i=0; i<mk_io->iov_idx; i++){
+                printf("\n%i len=%i) '%s'", i, mk_io->io[i].iov_len, (char *) mk_io->io[i].iov_base);
+                fflush(stdout);
+        }
+
+
 }
