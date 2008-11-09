@@ -19,9 +19,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/***********************************************/ 
-/* Modulo dir_html.c written by Daniel R. Ome */
-/***********************************************/
+/*
+ * Some history about this module
+ * ------------------------------
+ * 2008 - Rewrite module, suport dynamic themes by Eduardo
+ * 2008 - Felipe Astroza (max) provide the mk_dirhtml_human_readable_size_func()
+ * 2007 - Add struct client_request support by Eduardo
+ * 2002 - Original version written by Daniel R. Ome
+ */
 
 #include <dirent.h>
 #include <stdio.h>
@@ -217,8 +222,8 @@ int mk_dirhtml_read_config(char *path)
 
         if(!(fileconf = fopen(default_file, "r")))
         {
-          puts("Error: Cannot open dirhtml conf file");
-          return -1;
+                puts("Error: Cannot open dirhtml conf file");
+                return -1;
         }
 
         /* alloc dirhtml config struct */
