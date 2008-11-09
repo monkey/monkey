@@ -54,9 +54,11 @@ struct mk_f_list
         char *name;
         char *size;
         char *ft_modif;
-        unsigned char *type;
+        unsigned char type;
         struct file_info *info;
+        struct mk_f_list *next;
 };
+
 
 /* Function wrote by Max (Felipe Astroza), thanks! */
 char *mk_dirhtml_human_readable_size(off_t size)
@@ -83,52 +85,50 @@ char *mk_dirhtml_human_readable_size(off_t size)
         return buf;
 }
 
-void mk_dirhtml_add_element(struct mk_f_list *list, char *file,
+struct mk_f_list *mk_dirhtml_create_element(char *file,
                             unsigned char type, char *full_path,
-                            unsigned long *count,unsigned long *list_size)
+                            unsigned long *list_len)
 {
         off_t size;
-        int buf_size,n;
+        int n;
         struct tm *st_time;
+        struct mk_f_list *entry;
+        struct file_info *entry_info;
 
-        if(*count+1==*list_size){
-                buf_size = *list_size+MK_DIRHTML_BUFFER_GROW;
+        entry_info = mk_file_get_info(full_path);
 
-                list = (struct mk_f_list *)
-                mk_mem_realloc(list, sizeof(struct mk_f_list)*(buf_size));
-                *list_size = buf_size;
-        }
+        entry = mk_mem_malloc(sizeof(struct mk_f_list));
+        entry->name = file;
+        entry->type = type;
+        entry->info = entry_info;
+        entry->next = NULL;
 
-        list[*count].name = file;
-        list[*count].type = type;
+        st_time = localtime((time_t *) &entry_info->last_modification);
 
-        list[*count].info = (struct file_info *) mk_file_get_info(full_path);
+        entry->ft_modif = mk_mem_malloc_z(50);
+        n = strftime(entry->ft_modif, 50,
+                "%d-%b-%G %H:%M", st_time);
 
-        st_time = localtime((time_t *) &list[*count].info->last_modification);
-
-        list[*count].ft_modif = mk_mem_malloc_z(sizeof(char)*20);
-
-        n = strftime(list[*count].ft_modif, 20,
-                 "%d-%b-%G %H:%M", st_time);
-
-        size = list[*count].info->size;
+        size = entry->info->size;
 
         if(type != DT_DIR){
-                list[*count].size = mk_dirhtml_human_readable_size(size);
+                entry->size = mk_dirhtml_human_readable_size(size);
         }
         else{
-                list[*count].size = MK_DIRHTML_SIZE_DIR;
+                entry->size = MK_DIRHTML_SIZE_DIR;
         }
 
-        *count = *count + 1;
+        *list_len = *list_len + 1;
+
+        return entry;
 }
 
-int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
-                           char *path, unsigned long *list_len, unsigned long *list_size)
+struct mk_f_list *mk_dirhtml_create_list(DIR *dir, char *path, unsigned long *list_len)
 {
 	unsigned long len;
-        char *full_path;
+        char *full_path=0;
         struct dirent *ent;
+        struct mk_f_list *list=0, *entry=0, *last=0;
 
 	/* Before to send the information, we need to build
          * the list of entries, this really sucks because the user
@@ -141,6 +141,7 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
          *
          * that kind of ideas comes when you are in an airport just waiting :)
          */
+
 	while((ent = readdir(dir)) != NULL)
 	{
                 if(strcmp((char *) ent->d_name, "." )  == 0) continue;
@@ -151,7 +152,7 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
                 {
                         continue;
                 }
-
+                
 		if(!ent->d_name)
                 {
 			puts("mk_dirhtml :: buffer error");
@@ -159,17 +160,27 @@ int mk_dirhtml_create_list(DIR *dir, struct mk_f_list *file_list,
 
 
 		m_build_buffer(&full_path, &len, "%s%s", path, ent->d_name);
-		mk_dirhtml_add_element(file_list, ent->d_name, ent->d_type,
-                                       full_path, list_len, list_size);
 
-                if (!file_list)
+		entry = mk_dirhtml_create_element(ent->d_name, 
+                                                  ent->d_type,
+                                                  full_path, 
+                                                  list_len);
+
+                if (!entry)
                 {
-                        closedir(dir);
-			return -1;
+                        continue;
 		}
+
+                if(!list){
+                        list = entry;
+                }
+                else{
+                        last->next = entry;
+                }
+                last = entry;
  	}
         
-        return 0;
+        return list;
 }
 
 /* Read dirhtml config and themes */
@@ -640,7 +651,7 @@ int mk_dirhtml_send_chunked_end(int fd)
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int ret, i, sep;
+        int i, sep;
         unsigned long len;
 
         char *tags_header[] = MK_DIRHTML_TPL_HEADER;
@@ -648,8 +659,8 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         char *tags_footer[] = MK_DIRHTML_TPL_FOOTER;
 
 	/* file info */
-	unsigned long list_len=0, list_size=0;
-        struct mk_f_list *file_list;
+	unsigned long list_len=0;
+        struct mk_f_list *file_list, *entry, *toc;
         struct mk_iov *iov_header, *iov_footer, *iov_entry;
         struct dirhtml_tplval *tplval_header;
         struct dirhtml_tplval *tplval_entry;
@@ -659,9 +670,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 return -1;
         }
 
-        list_size = sizeof(struct mk_f_list)*MK_DIRHTML_BUFFER_GROW;
-        file_list = (struct mk_f_list *) mk_mem_malloc(list_size);
-        ret = mk_dirhtml_create_list(dir, file_list, sr->real_path, &list_len, &list_size);
+        file_list = mk_dirhtml_create_list(dir, sr->real_path, &list_len);
 
         /* Building headers */
         //sr->headers->transfer_encoding = -1;
@@ -694,13 +703,23 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
         mk_dirhtml_send(cr->socket, iov_header);
 
-        /* sort entries */
-        qsort(file_list, list_len, sizeof(struct mk_f_list), mk_dirhtml_entry_cmp);
+        /* Creating table of contents and sorting */
+        toc = mk_mem_malloc(sizeof(struct mk_f_list)*list_len);
+        entry = file_list;
+        i = 0;
+        while(entry)
+        {
+                toc[i] = *entry;
+                i++;
+                entry = entry->next;
+        }        
+        qsort(toc, list_len, sizeof(struct mk_f_list), mk_dirhtml_entry_cmp);
 
-        for (i=0; i<list_len; i++)
+        /* sending TOC */
+        for(i=0; i<list_len; i++)
 	{
                 /* %_target_title_% */
-                if(file_list[i].type==DT_DIR){
+                if(toc[i].type==DT_DIR){
                         sep = MK_IOV_SLASH;
                 }
                 else{
@@ -708,23 +727,24 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 }
 
                 /* target title */
-                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, file_list[i].name);
+                tplval_entry = mk_dirhtml_tag_assign(NULL, 0, sep, toc[i].name);
 
                 /* target url */
-                mk_dirhtml_tag_assign(&tplval_entry, 1, sep, file_list[i].name);
+                mk_dirhtml_tag_assign(&tplval_entry, 1, sep, toc[i].name);
 
                 /* target name */
-                mk_dirhtml_tag_assign(&tplval_entry, 2, sep, file_list[i].name);
+                mk_dirhtml_tag_assign(&tplval_entry, 2, sep, toc[i].name);
 
                 /* target modification time */
-                mk_dirhtml_tag_assign(&tplval_entry, 3, MK_IOV_NONE, file_list[i].ft_modif);
+                mk_dirhtml_tag_assign(&tplval_entry, 3, MK_IOV_NONE, toc[i].ft_modif);
 
                 /* target size */
-                mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, file_list[i].size);
+                mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, toc[i].size);
 
                 iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
                                                      tplval_entry);
                 mk_dirhtml_send(cr->socket, iov_entry);
+
         }
         mk_dirhtml_send(cr->socket, iov_footer);
         mk_dirhtml_send_chunked_end(cr->socket);
