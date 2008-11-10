@@ -23,6 +23,8 @@
 #ifndef MK_DIRHTML_H
 #define MK_DIRHTML_H
 
+#define MK_DIRHTML_DEFAULT_MIME "text/html"
+
 /* For every directory requested, don't send more than
  * this limit of entries.
  */

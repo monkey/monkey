@@ -171,6 +171,8 @@ struct mk_f_list *mk_dirhtml_create_list(DIR *dir, char *path, unsigned long *li
                                                   full_path, 
                                                   list_len);
 
+                mk_mem_free(full_path);
+
                 if (!entry)
                 {
                         continue;
@@ -653,6 +655,26 @@ int mk_dirhtml_send_chunked_end(int fd)
         return write(fd, _end, len);
 }
 
+void mk_dirhtml_free_list(struct mk_f_list *toc, unsigned long len)
+{
+        int i;
+        struct mk_f_list *entry;
+
+        for(i=0; i<len; i++)
+        {
+                entry = &toc[i];
+
+                if(entry->type != DT_DIR)
+                        mk_mem_free(entry->size);
+
+                mk_mem_free(entry->ft_modif);
+                mk_mem_free(entry->info);
+                mk_mem_free(toc[i]);
+        }
+        
+        mk_mem_free(toc);
+}
+
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
@@ -665,7 +687,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
 	/* file info */
 	unsigned long list_len=0;
-        struct mk_f_list *file_list, *entry, *toc;
+        struct mk_f_list *file_list, *entry, *toc, *last;
         struct mk_iov *iov_header, *iov_footer, *iov_entry;
         struct dirhtml_tplval *tplval_header;
         struct dirhtml_tplval *tplval_entry;
@@ -682,8 +704,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;
         sr->headers->breakline = MK_HEADER_BREAKLINE;
-
-	m_build_buffer(&sr->headers->content_type, &len, "text/html");
+        sr->headers->content_type = MK_DIRHTML_DEFAULT_MIME;
 
 	if(sr->protocol==HTTP_PROTOCOL_11)
 	{
@@ -750,23 +771,21 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                                                      tplval_entry);
                 mk_dirhtml_send(cr->socket, iov_entry);
 
+                mk_mem_free(tplval_entry);
+                mk_iov_free(iov_entry);
+
         }
         mk_dirhtml_send(cr->socket, iov_footer);
         mk_dirhtml_send_chunked_end(cr->socket);
 
         closedir(dir);
+
+        mk_mem_free(tplval_header);
+        mk_iov_free(iov_header);
+        mk_iov_free(iov_footer);
+        mk_dirhtml_free_list(toc, list_len);
+
         return 0;
 }
 
-
-
-/* Send information of current directory on HTML format
-   Modified : 2007/01/21
-   -> Add struct client_request support
-
-   Modified : 2002/10/22 
-   -> Chunked Transfer Encoding support added to HTTP/1.1
-
-  FIXME: REWRITE THIS SECTION >:)
-*/
 
