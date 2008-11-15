@@ -463,7 +463,7 @@ int mk_request_header_process(struct request *sr)
 	{
 		query_init+=uri_init+1;
 		query_end = uri_end;
-		uri_end = query_init - 1;
+		uri_end = query_init - 2;
 		sr->query_string = mk_pointer_create(sr->body.data, query_init, query_end);
 	}
 	
