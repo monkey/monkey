@@ -101,8 +101,6 @@ struct request *mk_request_parse(struct client_request *cr)
 		if(strncmp(cr->body+i, string_end, length_end)==0)
 		{
 			/* Allocating request block */
-			//block = mk_string_copy_substr(cr->body, init_block, i);
-				
 			cr_buf = mk_request_alloc();
 	
 			/* mk_pointer */
@@ -110,6 +108,7 @@ struct request *mk_request_parse(struct client_request *cr)
 			cr_buf->body.len = i-init_block;
 
 			cr_buf->method = mk_http_method_get(cr_buf->body);
+
 			cr_buf->log->ip = cr->client_ip;
 			cr_buf->next = NULL;
 
@@ -165,7 +164,7 @@ struct request *mk_request_parse(struct client_request *cr)
 		}
 
 		if(pipelined == FALSE){
-			/* All pipelined requests must been GET method */
+			/* All pipelined requests must use GET method */
 			return NULL;
 		}
 		else{
@@ -439,13 +438,21 @@ int mk_request_header_process(struct request *sr)
 	mk_pointer host;
 
 	/* Method */
+        //mk_pointer_print(sr->body.data);
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
 	uri_init = mk_string_search(sr->body.data, " ") + 1;
         fh_limit = mk_string_search(sr->body.data, "\n");
-        uri_end = mk_string_search_r(sr->body.data+uri_init, " ", fh_limit) + uri_init;
 
+        prot_init = uri_end = mk_string_search_r(sr->body.data, " ", fh_limit) - 1;
+        if(uri_end <= 0)
+        {
+                return -1;
+        }
+
+        prot_init += 2;
+        
 	if(uri_end < uri_init)
 	{
 		return -1;
@@ -471,10 +478,7 @@ int mk_request_header_process(struct request *sr)
 
 
 	/* HTTP Version */
-        prot_init = uri_init+sr->uri.len+1;
-
-	if(mk_string_search(sr->body.data, "\r\n")>0){
-		prot_end = mk_string_search(sr->body.data, "\r\n");
+	if( (prot_end = mk_string_search(sr->body.data, "\r\n"))>0){
 		break_line = 2;
 	}
 	else{
@@ -546,6 +550,7 @@ int mk_request_header_process(struct request *sr)
 			}
 		}
 	}
+
 	return 0;
 }
 
@@ -758,7 +763,8 @@ struct request *mk_request_alloc()
 
 	request->status=VAR_OFF; /* Request not processed yet */
 	request->make_log=VAR_ON; /* build log file of this request ? */
-	mk_pointer_reset(&request->query_string);
+
+        mk_pointer_reset(&request->body);
 	
 	request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
@@ -871,9 +877,9 @@ void mk_request_free(struct request *sr)
 	if(sr->uri_twin==VAR_OFF)
 	{
 		mk_mem_free(sr->uri_processed);
-	}
+        }
 
-	mk_mem_free(sr->post_variables);
+        mk_mem_free(sr->post_variables);
         mk_mem_free(sr->user_uri);
  	mk_pointer_reset(&sr->query_string);
 

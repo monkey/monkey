@@ -78,7 +78,14 @@ mk_pointer mk_pointer_create(char *buf, long init, long end)
 	mk_pointer p;
 
 	p.data = buf+init;
-	p.len = (end - init);
+
+        if(init!=end)
+        {
+                p.len = (end - init);
+        }
+        else{
+                p.len = 1;
+        }
 
 	return p;
 }

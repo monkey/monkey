@@ -78,7 +78,7 @@ char *mk_http_method_check_str(int method)
                                 return (char *) HTTP_METHOD_HEAD_STR;
         }
 
-        return "";
+        return NULL;
 }
 
 int mk_http_method_get(mk_pointer body)
@@ -132,7 +132,7 @@ char *mk_http_protocol_check_str(int protocol)
                 return (char *) HTTP_PROTOCOL_09_STR;
         }
 
-        return "";
+        return NULL;
 }
 
 int mk_http_init(struct client_request *cr, struct request *sr)
