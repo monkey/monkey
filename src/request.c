@@ -438,7 +438,6 @@ int mk_request_header_process(struct request *sr)
 	mk_pointer host;
 
 	/* Method */
-        //mk_pointer_print(sr->body.data);
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
@@ -469,7 +468,7 @@ int mk_request_header_process(struct request *sr)
 	}
 	
 	/* Request URI Part 2 */
-	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end);
+	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end+1);
 
 	if(sr->uri.len<1)
 	{

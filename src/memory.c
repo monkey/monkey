@@ -77,6 +77,7 @@ mk_pointer mk_pointer_create(char *buf, long init, long end)
 {
 	mk_pointer p;
 
+        mk_pointer_reset(&p);
 	p.data = buf+init;
 
         if(init!=end)

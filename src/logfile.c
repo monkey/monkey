@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -240,8 +242,11 @@ int write_log(struct log_info *log, struct host *h)
 			mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
 			mk_iov_add_entry(iov, log->uri.data, log->uri.len, MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                         
-			buf = mk_http_protocol_check_str(log->protocol);
-			mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                        if(log->protocol)
+                        {
+                                buf = mk_http_protocol_check_str(log->protocol);
+                                mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                        }
 
 			m_build_buffer(&buf, &len, "%i", log->final_response);
                         mk_iov_add_entry(iov, buf, len, MK_IOV_SPACE, MK_IOV_FREE_BUF);
