@@ -131,6 +131,7 @@ void mk_mem_pointers_init()
 	mk_pointer_set(&request_error_msg_408, ERROR_MSG_408);
 	mk_pointer_set(&request_error_msg_411, ERROR_MSG_411);
 	mk_pointer_set(&request_error_msg_500, ERROR_MSG_500);
+        mk_pointer_set(&request_error_msg_501, ERROR_MSG_501);
 	mk_pointer_set(&request_error_msg_505, ERROR_MSG_505);
 
 	/* Short server response headers */

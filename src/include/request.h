@@ -76,6 +76,7 @@ parametros de una peticion */
 #define ERROR_MSG_408 "[error 408] Request Timeout"
 #define ERROR_MSG_411 "[error 411] Length Required"
 #define ERROR_MSG_500 "[error 500] Internal Server Error"
+#define ERROR_MSG_501 "[error 501] Not Implemented"
 #define ERROR_MSG_505 "[error 505] HTTP Version Not Supported"
 
 /* mk pointers with error messages */
@@ -86,6 +87,7 @@ mk_pointer request_error_msg_405;
 mk_pointer request_error_msg_408;
 mk_pointer request_error_msg_411;
 mk_pointer request_error_msg_500;
+mk_pointer request_error_msg_501;
 mk_pointer request_error_msg_505;
 
 struct client_request

@@ -303,10 +303,23 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	struct host *host;
 
 	status = mk_request_header_process(s_request);
+
 	if(status<0)
 	{
 		return EXIT_NORMAL;
 	}
+
+        switch(s_request->method)
+        {
+                case METHOD_NOT_ALLOWED:
+                        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, 
+                                         s_request, 1, s_request->log);
+                        return EXIT_NORMAL;
+                case METHOD_NOT_FOUND:
+                        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr,
+                                         s_request, 1, s_request->log);
+                        return EXIT_NORMAL;
+        }
 
 	s_request->user_home=VAR_OFF;
 
@@ -427,7 +440,6 @@ int mk_request_header_process(struct request *sr)
 
 	/* Method */
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
-
 
 	/* Request URI */
 	uri_init = mk_string_search(sr->body.data, " ") + 1;
@@ -666,6 +678,14 @@ void mk_request_error(int num_error, struct client_request *cr,
 			s_log->error_msg = request_error_msg_411;
 			break;
 			
+                case M_SERVER_NOT_IMPLEMENTED:
+                        mk_request_set_default_page(&page, "Method Not Implemented",
+                                                    s_request->uri,
+                                                    s_request->host_conf->host_signature);
+                        s_log->final_response=M_SERVER_NOT_IMPLEMENTED;
+                        s_log->error_msg = request_error_msg_501;
+                        break;
+
 		case M_SERVER_INTERNAL_ERROR:
 			m_build_buffer(&message.data, &message.len, 
 					"Problems found running %s ",

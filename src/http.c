@@ -89,13 +89,13 @@ int mk_http_method_get(mk_pointer body)
         
         pos = mk_string_search(body.data, " ");
         if(pos<=2 || pos>=max_len_method){
-                return -1;      
+                return METHOD_NOT_FOUND;      
         }
 
         str_method = mk_string_copy_substr(body.data, 0, pos);
         int_method = mk_http_method_check(str_method);
         mk_mem_free(str_method);
-        
+
         return int_method;
 }
 

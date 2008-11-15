@@ -130,6 +130,12 @@ int mk_header_send(int fd, struct client_request *cr,
 					MK_IOV_NOT_FREE_BUF);
 			break;
 			
+                case M_SERVER_NOT_IMPLEMENTED:
+                        mk_iov_add_entry(iov, RESP_SERVER_NOT_IMPLEMENTED,
+                                   LEN_RESP_SERVER_NOT_IMPLEMENTED,
+                                   MK_IOV_BREAK_LINE,
+                                   MK_IOV_NOT_FREE_BUF);
+                        break;
 		case M_SERVER_INTERNAL_ERROR:
 			mk_iov_add_entry(iov, RESP_SERVER_INTERNAL_ERROR,
 					LEN_RESP_SERVER_INTERNAL_ERROR,
