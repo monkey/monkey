@@ -373,7 +373,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         mk_header_send(cr->socket, cr, sr, sr->log);    
                         Mimetype_free(mime_info);
                         mk_mem_free(path_info);
-                        mk_pointer_free(gmt_file_unix_time);
+                        mk_pointer_free(&gmt_file_unix_time);
                         return 0;
                 }
         }
@@ -393,7 +393,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         {
                                 mk_request_error(M_CLIENT_BAD_REQUEST, cr, 
                                         sr, 1, sr->log);
-                                mk_pointer_free(gmt_file_unix_time);
+                                mk_pointer_free(&gmt_file_unix_time);
                                 return -1;
                         }
                         if(sr->headers->ranges[0]>=0 || sr->headers->ranges[1]>=0)

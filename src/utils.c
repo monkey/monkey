@@ -106,7 +106,7 @@ mk_pointer PutDate_string(time_t date)
 	struct tm *gmt_tm;
 	mk_pointer pointer;
 	
-	mk_pointer_reset(pointer);
+	mk_pointer_reset(&pointer);
 	if(date==0){
 		if ( (date = time(NULL)) == -1 ){
 			return pointer;

@@ -83,16 +83,16 @@ mk_pointer mk_pointer_create(char *buf, long init, long end)
 	return p;
 }
 
-void mk_pointer_reset(mk_pointer p)
+void mk_pointer_reset(mk_pointer *p)
 {
-	p.data = NULL;
-	p.len = 0;
+	p->data = NULL;
+	p->len = 0;
 }
 
-void mk_pointer_free(mk_pointer p)
+void mk_pointer_free(mk_pointer *p)
 {
-	mk_mem_free(p.data);
-	p.len = 0;
+	mk_mem_free(p->data);
+	p->len = 0;
 }
 
 char *mk_pointer_to_buf(mk_pointer p)

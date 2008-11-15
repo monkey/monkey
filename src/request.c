@@ -619,7 +619,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 		s_log=mk_mem_malloc(sizeof(struct log_info));
 	}
 	
-	mk_pointer_reset(page);
+	mk_pointer_reset(&page);
 
 	switch(num_error) {
 		case M_CLIENT_BAD_REQUEST:
@@ -645,7 +645,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 					s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_404;
 			// req uri;
-			mk_pointer_free(message);
+			mk_pointer_free(&message);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
@@ -674,11 +674,11 @@ void mk_request_error(int num_error, struct client_request *cr,
 					message, s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_500;
 			// req uri
-			mk_pointer_free(message);
+			mk_pointer_free(&message);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			mk_pointer_reset(message);
+			mk_pointer_reset(&message);
 			mk_request_set_default_page(&page, "HTTP Version Not Supported",message,
 				       s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_505;
@@ -711,7 +711,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
 	if(debug==1){
 		fdprintf(cr->socket, NO_CHUNKED, "%s", page.data);
-		mk_pointer_free(page);
+		mk_pointer_free(&page);
 	}
 }
 
@@ -738,16 +738,16 @@ struct request *mk_request_alloc()
 
 	request->status=VAR_OFF; /* Request not processed yet */
 	request->make_log=VAR_ON; /* build log file of this request ? */
-	mk_pointer_reset(request->query_string);
+	mk_pointer_reset(&request->query_string);
 	
 	request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
-	mk_pointer_reset(request->log->error_msg);
+	mk_pointer_reset(&request->log->error_msg);
 	request->status=VAR_ON;
 	request->method=METHOD_NOT_FOUND;
 
-	mk_pointer_reset(request->uri);
+	mk_pointer_reset(&request->uri);
 	request->uri_processed = NULL;
 	request->uri_twin = VAR_OFF;
 
@@ -769,7 +769,7 @@ struct request *mk_request_alloc()
 	request->post_variables = NULL;
 
 	request->user_uri = NULL;
-	mk_pointer_reset(request->query_string);
+	mk_pointer_reset(&request->query_string);
 
 	request->virtual_user = NULL;
 	request->script_filename = NULL;
@@ -845,8 +845,8 @@ void mk_request_free(struct request *sr)
 		mk_mem_free(sr->log);
         }
 
-        mk_pointer_reset(sr->body);
-        mk_pointer_reset(sr->uri);
+        mk_pointer_reset(&sr->body);
+        mk_pointer_reset(&sr->uri);
 
 	if(sr->uri_twin==VAR_OFF)
 	{
@@ -855,7 +855,7 @@ void mk_request_free(struct request *sr)
 
 	mk_mem_free(sr->post_variables);
         mk_mem_free(sr->user_uri);
- 	mk_pointer_reset(sr->query_string);
+ 	mk_pointer_reset(&sr->query_string);
 
         mk_mem_free(sr->virtual_user);
         mk_mem_free(sr->script_filename);
