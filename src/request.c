@@ -600,18 +600,6 @@ char *mk_request_index(char *pathfile)
 	aux_index=first_index;
 
 	while(aux_index) {
-/*
-		if(pathfile[strlen(pathfile)-1]=='/')
-		{
-			m_build_buffer(&file_aux, &len,
-					"%s/%s",pathfile,aux_index->indexname);
-		}
-		else
-		{
-			m_build_buffer(&file_aux, &len,
-					"%s%s",pathfile,aux_index->indexname);
-		}
-*/
 		m_build_buffer(&file_aux, &len, "%s%s", pathfile, aux_index->indexname);
 	
 		if(access(file_aux,F_OK)==0)
