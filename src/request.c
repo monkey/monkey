@@ -589,7 +589,7 @@ mk_pointer mk_request_header_find(char *request_body,  char *string)
 	return (mk_pointer) var;
 }
 
-/* FIXME: IMPROVE access and double allocation */
+/* FIXME: IMPROVE access */
 /* Look for some  index.xxx in pathfile */
 char *mk_request_index(char *pathfile)
 {
@@ -600,6 +600,7 @@ char *mk_request_index(char *pathfile)
 	aux_index=first_index;
 
 	while(aux_index) {
+/*
 		if(pathfile[strlen(pathfile)-1]=='/')
 		{
 			m_build_buffer(&file_aux, &len,
@@ -610,6 +611,8 @@ char *mk_request_index(char *pathfile)
 			m_build_buffer(&file_aux, &len,
 					"%s%s",pathfile,aux_index->indexname);
 		}
+*/
+		m_build_buffer(&file_aux, &len, "%s%s", pathfile, aux_index->indexname);
 	
 		if(access(file_aux,F_OK)==0)
 		{
