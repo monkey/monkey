@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -32,6 +34,12 @@
 #include "socket.h"
 #include "utils.h"
 
+int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
+                            int sep, int free)
+{
+        return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
+}
+
 /* Send_Header , envia las cabeceras principales */
 int mk_header_send(int fd, struct client_request *cr,
 		struct request *sr, struct log_info *s_log)
@@ -50,104 +58,92 @@ int mk_header_send(int fd, struct client_request *cr,
 	/* Status Code */
 	switch(sh->status){
 		case M_HTTP_OK:	
-			mk_iov_add_entry(iov, RESP_HTTP_OK, 
-					LEN_RESP_HTTP_OK, 
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_http_ok,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_HTTP_PARTIAL:	
-			mk_iov_add_entry(iov, RESP_HTTP_PARTIAL, 
-					LEN_RESP_HTTP_PARTIAL, 
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_http_partial,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_REDIR_MOVED:
 			s_log->status=S_LOG_OFF;
-			mk_iov_add_entry(iov, RESP_REDIR_MOVED, 
-					LEN_RESP_REDIR_MOVED, 
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_redir_moved,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_REDIR_MOVED_T:
 			s_log->status=S_LOG_ON;
-			mk_iov_add_entry(iov, RESP_REDIR_MOVED_T, 
-					LEN_RESP_REDIR_MOVED_T,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_redir_moved_t,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 		
 		case M_NOT_MODIFIED:
 			s_log->status=S_LOG_OFF;
-			mk_iov_add_entry(iov, RESP_NOT_MODIFIED, 
-					LEN_RESP_NOT_MODIFIED,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_not_modified,
+                                         MK_IOV_BREAK_LINE,
+                                         MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_BAD_REQUEST:
-			mk_iov_add_entry(iov, RESP_CLIENT_BAD_REQUEST, 
-					LEN_RESP_CLIENT_BAD_REQUEST,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_bad_request, 
+                                         MK_IOV_BREAK_LINE,
+                                         MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_FORBIDDEN:
-			mk_iov_add_entry(iov, RESP_CLIENT_FORBIDDEN, 
-					LEN_RESP_CLIENT_FORBIDDEN,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_forbidden,
+                                         MK_IOV_BREAK_LINE,
+                                         MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_NOT_FOUND:
-			mk_iov_add_entry(iov, RESP_CLIENT_NOT_FOUND, 
-					LEN_RESP_CLIENT_NOT_FOUND,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_not_found,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_METHOD_NOT_ALLOWED:
-			mk_iov_add_entry(iov, RESP_CLIENT_METHOD_NOT_ALLOWED, 
-					LEN_RESP_CLIENT_METHOD_NOT_ALLOWED,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_method_not_allowed,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 
 		case M_CLIENT_REQUEST_TIMEOUT:
-			mk_iov_add_entry(iov, RESP_CLIENT_REQUEST_TIMEOUT, 
-					LEN_RESP_CLIENT_REQUEST_TIMEOUT,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_request_timeout,
+                                         MK_IOV_BREAK_LINE,
+                                         MK_IOV_NOT_FREE_BUF);
 			s_log->status=S_LOG_OFF;
 			break;
 
 		case M_CLIENT_LENGHT_REQUIRED:
-			mk_iov_add_entry(iov, RESP_CLIENT_LENGTH_REQUIRED,
-					LEN_RESP_CLIENT_LENGTH_REQUIRED,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_client_length_required,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 			
                 case M_SERVER_NOT_IMPLEMENTED:
-                        mk_iov_add_entry(iov, RESP_SERVER_NOT_IMPLEMENTED,
-                                   LEN_RESP_SERVER_NOT_IMPLEMENTED,
-                                   MK_IOV_BREAK_LINE,
-                                   MK_IOV_NOT_FREE_BUF);
+                        mk_header_iov_add_entry(iov, mk_hr_server_not_implemented,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
                         break;
+
 		case M_SERVER_INTERNAL_ERROR:
-			mk_iov_add_entry(iov, RESP_SERVER_INTERNAL_ERROR,
-					LEN_RESP_SERVER_INTERNAL_ERROR,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, mk_hr_server_internal_error,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
-			mk_iov_add_entry(iov, RESP_SERVER_HTTP_VERSION_UNSUP,
-					LEN_RESP_SERVER_HTTP_VERSION_UNSUP,
-					MK_IOV_BREAK_LINE,
-					MK_IOV_NOT_FREE_BUF);
+			mk_header_iov_add_entry(iov, 
+                                                mk_hr_server_http_version_unsup,
+                                                MK_IOV_BREAK_LINE,
+                                                MK_IOV_NOT_FREE_BUF);
 			break;
 	};
 
@@ -379,7 +375,7 @@ char *mk_header_chunked_line(int len)
         char *buf;
 
         buf = mk_mem_malloc_z(10);
-        snprintf(buf, 9, "%x%s", len, CRLF);
+        snprintf(buf, 9, "%x%s", len, MK_CRLF);
 
         return (char *) buf;
 }

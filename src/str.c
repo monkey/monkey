@@ -69,11 +69,13 @@ int _mk_string_search(char *string, char *search, int n)
 {
 	char *p, *startn = 0, *np = 0;
 	int idx=-1, loop=0;
+        int match_count = 0;
 
 	for (p = string; *p; p++) {
 		if (np) {
 			if (toupper(*p) == toupper(*np)) {
-				if (!*++np)
+				match_count++;
+                                if (!*++np)
 				{	
 					return idx;
 				}
@@ -81,11 +83,13 @@ int _mk_string_search(char *string, char *search, int n)
 			{
 				np = 0;
 				idx = -1;
+                                match_count = 0;
 			}
 		} else if (toupper(*p) == toupper(*search)) {
 			np = search + 1;
 			startn = p;
 			idx = loop;
+                        match_count++;
 			if(!*np)
 			{
 				return idx;
@@ -98,13 +102,24 @@ int _mk_string_search(char *string, char *search, int n)
 			return -1;
 		}
 	}
+
+        if(idx>=0)
+        {
+                if(match_count!=strlen(search))
+                        return -1;
+
+                printf("\nmatch_count: %i", match_count);
+                printf("\nidx: %i", idx);
+                printf("\nq='%s'", search);
+                printf("\ndata:\n---%s---", string);
+                fflush(stdout);
+        }
 	return idx;
 }
 
 int mk_string_search(char *string, char *search)
 {
 	return _mk_string_search(string, search, -1);
-
 }
 
 /* lookup string in reverse order */

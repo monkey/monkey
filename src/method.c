@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -34,7 +36,6 @@
 #include "memory.h"
 #include "http.h"
 #include "http_status.h"
-//#include "header.h"
 #include "socket.h"
 #include "logfile.h"
 #include "config.h"
@@ -42,71 +43,57 @@
 #include "file.h"
 
 /* POST METHOD */
-int M_METHOD_Post(struct client_request *cr, struct request *s_request)
+int M_METHOD_Post(struct client_request *cr, struct request *sr)
 {
-	/*
-	char *tmp;
+	mk_pointer tmp;
 	char buffer[MAX_REQUEST_BODY];
 	int content_length_post=0;
 	
-	if(!(tmp=Request_Find_Variable(s_request->body, RH_CONTENT_LENGTH))){
-		Request_Error(M_CLIENT_LENGHT_REQUIRED, cr, s_request,0,s_request->log);
+        tmp = mk_request_header_find(cr->body, RH_CONTENT_LENGTH);
+	if(!tmp.data){
+		mk_request_error(M_CLIENT_LENGHT_REQUIRED, 
+                              cr, sr, 0, sr->log);
 		return -1;
 	}
 
-	content_length_post = (int) atoi(tmp);
-	mk_mem_free(tmp);
-
+	content_length_post = (int) atoi(tmp.data);
+	
 	if(content_length_post<=0 || content_length_post >=MAX_REQUEST_BODY){
-		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);	
+		mk_request_error(M_CLIENT_BAD_REQUEST, 
+                              cr, sr, 0, sr->log);	
 		return -1;
 	}
 	
-	if(!(tmp = Request_Find_Variable(s_request->body, RH_CONTENT_TYPE))){
-		Request_Error(M_CLIENT_BAD_REQUEST, cr, s_request, 0, s_request->log);
+        tmp = mk_request_header_find(sr->body.data, RH_CONTENT_TYPE);
+        if(!tmp.data){
+		mk_request_error(M_CLIENT_BAD_REQUEST, 
+                              cr, sr, 0, sr->log);
 		return -1;
 	}
-	
-	s_request->content_type = tmp;
+	sr->content_type = tmp;
 
-	if(s_request->post_variables==NULL || strlen(s_request->post_variables)<=4) {
-		s_request->post_variables=NULL;
-		return -1;
-	}
-
-	if(strlen(s_request->post_variables) < content_length_post){
+	if(sr->post_variables.len < content_length_post){
 		content_length_post=strlen(buffer);
 	}
 
-	s_request->content_length=content_length_post;
-	*/
+	sr->content_length=content_length_post;
+	
 	return 0;
 	
 }
 
-/* Reuturn the POST variables sent in the request */
-char *M_Get_POST_Vars(char *request, int index, char *strend)
+/* Return POST variables sent in request */
+mk_pointer mk_method_post_get_vars(char *body, int index)
 {
-    int i=index;
-    int length, length_string_end;
-    int last_byte = 1;
+        int end;
+        char *str=0;
+        mk_pointer p;
 
-    length = strlen(request);
-    length_string_end = strlen(strend);
-    if(length_string_end == 2)
-    {
-        last_byte = 0;
-    }
+        end = mk_string_search(body+index, mk_endblock.data);
+        str = mk_string_copy_substr(body, index, index+end);
 
-    for(i=index; i<=length; i++)
-    {
-        if(strncmp(request+i, strend, length_string_end)==0)
-        {
-            break;
-        }
-    }
-    return mk_string_copy_substr(request, index, i-last_byte);
+        p.data = str;
+        p.len = end;
+
+        return p;
 }
-
-
-

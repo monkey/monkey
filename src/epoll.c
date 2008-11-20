@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -37,11 +39,11 @@ mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *),
 		int read, int write)
 {
 	mk_epoll_calls *calls;
-
 	calls = malloc(sizeof(mk_epoll_calls));
 	calls->func_switch = (void *) func_switch;
 	calls->read = (int) read;
 	calls->write = (int) write;
+
 	return calls;
 }
 
@@ -59,88 +61,93 @@ int mk_epoll_create(int max_events)
 
 void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 {
-	int i, ret;
+	int i, ret=-1;
 
-	pthread_mutex_lock(&mutex_wait_register);
-	pthread_mutex_unlock(&mutex_wait_register);
-	
-	while(1){
-		struct epoll_event events[max_events];
-		int num_fds = epoll_wait(efd, events, max_events, -1);
+        pthread_mutex_lock(&mutex_wait_register);
+        pthread_mutex_unlock(&mutex_wait_register);
+        
+        while(1){
+                
+                struct epoll_event events[max_events];
+                int num_fds = epoll_wait(efd, events, max_events, -1);
 
-		for(i=0; i< num_fds; i++) {
-			// Case 1: Error condition
-			if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-				close(events[i].data.fd);
-				continue;
-			}
-			assert(events[i].events & (EPOLLIN | EPOLLOUT));
+                for(i=0; i< num_fds; i++) {
+                        // Case 1: Error condition
+                        if (events[i].events & (EPOLLHUP | EPOLLERR)) {
+                                close(events[i].data.fd);
+                                continue;
+                        }
+                        assert(events[i].events & (EPOLLIN | EPOLLOUT));
 
-			if(events[i].events & EPOLLIN)
-			{
-				ret = (* calls->func_switch)((void *)calls->read, 
-						(void *)events[i].data.fd);
-				if(ret<0){
-					close(events[i].data.fd);
-				}
-			}
-			if(events[i].events & EPOLLOUT)
-			{
-				ret = (* calls->func_switch)((void *)calls->write,
-						(void *)events[i].data.fd);
-				if(ret<0){
-					close(events[i].data.fd);
-				}
-			}
-		}
-	}
+                        if(events[i].events & EPOLLIN)
+                        {
+                                ret = (* calls->func_switch)
+                                  ((void *)calls->read,
+                                   (void *)events[i].data.fd);
+                        }
+                        else if(events[i].events & EPOLLOUT)
+                        {
+                                ret = (* calls->func_switch)
+                                  ((void *)calls->write,
+                                   (void *)events[i].data.fd);
+                        }
+                        
+                        if(ret<0)
+                        {
+                                close(events[i].data.fd);
+                        }
+                }
+        }
 }
 
 int mk_epoll_add_client(int efd, int socket, int mode)
 {
-	int ret;
-	struct epoll_event event;
+        int ret;
+        struct epoll_event event;
 
-	event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
-	event.data.fd = socket;
+        event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+        event.data.fd = socket;
 
-	if(mode == MK_EPOLL_BEHAVIOR_TRIGGERED)
-	{
-		event.events |= EPOLLET;
-	}
+        if(mode == MK_EPOLL_BEHAVIOR_TRIGGERED)
+        {
+                event.events |= EPOLLET;
+        }
 
 
-	ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
-	if(ret < 0)
-	{
-		perror("epoll_ctl");
-	}
-	return ret;
+        ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
+        if(ret < 0)
+        {
+                perror("epoll_ctl");
+        }
+        return ret;
 }
 
 int mk_epoll_socket_change_mode(int efd, int socket, int mode)
 {
-	int ret;
-	struct epoll_event event;
-	
-	event.events = EPOLLET | EPOLLERR | EPOLLHUP;
-	event.data.fd = socket;
+        int ret;
+        struct epoll_event event;
+        
+        event.events = EPOLLET | EPOLLERR | EPOLLHUP;
+        event.data.fd = socket;
 
-	switch(mode)
-	{
-		case MK_EPOLL_READ:
-			event.events |= EPOLLIN;
-			break;
-		case MK_EPOLL_WRITE:
-			event.events |= EPOLLOUT;
-			break;
-	}
-	
-	ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
-	if(ret < 0)
-	{
-		perror("\nepoll_ctl");
-	}
-	return ret;
+        switch(mode)
+        {
+                case MK_EPOLL_READ:
+                        event.events |= EPOLLIN;
+                        break;
+                case MK_EPOLL_WRITE:
+                        event.events |= EPOLLOUT;
+                        break;
+                case MK_EPOLL_RW:
+                        event.events |= EPOLLIN | EPOLLOUT;
+                        break;
+        }
+        
+        ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
+        if(ret < 0)
+        {
+                perror("\nepoll_ctl");
+        }
+        return ret;
 }
 

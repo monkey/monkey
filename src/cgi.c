@@ -164,7 +164,7 @@ int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filena
 	else{
 		close(pipe_write[0]);
 		if(sr->method==HTTP_METHOD_POST){	
-			write(pipe_write[1], sr->post_variables, sr->content_length);
+			write(pipe_write[1], sr->post_variables.data, sr->content_length);
 		}
 		close(pipe_write[1]);
 		

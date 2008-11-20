@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2008, Eduardo Silva P.
@@ -31,14 +33,11 @@ struct indexfile {
 	struct indexfile *next;	
 } *first_index;
 
-#define NORMAL_STRING_END "\r\n\r\n"
-#define LEN_NORMAL_STRING_END 4
+#define MK_CRLF "\r\n"
+#define MK_ENDBLOCK "\r\n\r\n"
 
-#define OLD_STRING_END "\n\n"
-#define LEN_OLD_STRING_END 2
-
-#define CRLF "\r\n"
-#define CRLF_LEN 2
+mk_pointer mk_crlf;
+mk_pointer mk_endblock;
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
@@ -141,7 +140,7 @@ struct request {
 	/*---------------------*/
 	
 	/* POST */
-	char *post_variables;
+	mk_pointer post_variables;
 	/*-----------------*/
 
 	/*-Internal-*/

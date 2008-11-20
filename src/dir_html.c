@@ -635,9 +635,9 @@ int mk_dirhtml_send(int fd, struct mk_iov *data)
 {
         int n;
         unsigned long len;
-        char *buf;
+        char *buf=0;
 
-        m_build_buffer(&buf, &len, "%x%s", data->total_len, CRLF);
+        m_build_buffer(&buf, &len, "%x%s", data->total_len, MK_CRLF);
 
         /* Add chunked information */
         mk_iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);

@@ -22,7 +22,7 @@
 int M_METHOD_Get_and_Head(struct client_request *cr, 
 		struct request *s_request, int socket); 
 
-int M_METHOD_Post(struct client_request *cr, struct request *s_request);
+int M_METHOD_Post(struct client_request *cr, struct request *sr);
 int M_METHOD_send_headers(int fd, struct client_request *cr,
 		struct request *sr, struct log_info *s_log);
 
@@ -34,6 +34,7 @@ int M_METHOD_get_number(char *method);
 
 /* Return method name */
 char *M_METHOD_get_name(int method);
+mk_pointer mk_method_post_get_vars(char *body, int index);
 char *M_Get_POST_Vars(char *request, int index, char *strend);
 
 

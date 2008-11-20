@@ -62,43 +62,14 @@ struct request *mk_request_parse(struct client_request *cr)
 	int i, init_block=0, n_blocks=0, offset=0;
 	int length_buf=0, length_end=0;
 	int pipelined=FALSE;
-	char *string_end=0, *check_normal_string=0, *check_old_string=0;
 	struct request *cr_buf=0, *cr_search=0;
 
-	check_normal_string = strstr(cr->body, NORMAL_STRING_END);
-	if(check_normal_string)
-	{
-		if(check_old_string)
-		{
-			return FALSE;
-		}
-		else
-		{
-			string_end = NORMAL_STRING_END;
-			length_end = LEN_NORMAL_STRING_END;
-			offset = 0;
-		}
-	}
-	else if(check_old_string)
-	{
-		check_old_string = strstr(cr->body, OLD_STRING_END);
-		if(check_old_string)
-		{
-			string_end = OLD_STRING_END;
-			length_end = LEN_OLD_STRING_END;
-			offset = 1;
-		}
-		else{
-			return FALSE;
-		}
-	}
-
 	length_buf = cr->body_length;
-
 	init_block = 0;
-	for(i=0; i<= length_buf-length_end; i++)
+
+	for(i=0; i<= length_buf-mk_endblock.len; i++)
 	{
-		if(strncmp(cr->body+i, string_end, length_end)==0)
+		if(strncmp(cr->body+i, mk_endblock.data, mk_endblock.len)==0)
 		{
 			/* Allocating request block */
 			cr_buf = mk_request_alloc();
@@ -107,7 +78,7 @@ struct request *mk_request_parse(struct client_request *cr)
 			cr_buf->body.data = cr->body+init_block;
 			cr_buf->body.len = i-init_block;
 
-			cr_buf->method = mk_http_method_get(cr_buf->body);
+			cr_buf->method = mk_http_method_get(cr_buf->body.data);
 
 			cr_buf->log->ip = cr->client_ip;
 			cr_buf->next = NULL;
@@ -117,10 +88,13 @@ struct request *mk_request_parse(struct client_request *cr)
 			/* Looking for POST data */
 			if(cr_buf->method == HTTP_METHOD_POST)
 			{
-				cr_buf->post_variables = M_Get_POST_Vars(cr->body, i, string_end);
-				if(cr_buf->post_variables)
+				cr_buf->post_variables = \
+                                        mk_method_post_get_vars(cr->body, i);
+
+				if(cr_buf->post_variables.data)
 				{
-					i += strlen(cr_buf->post_variables) + length_end;
+					i += cr_buf->post_variables.len + 
+                                                length_end;
 				}
 			}
 
@@ -173,8 +147,8 @@ struct request *mk_request_parse(struct client_request *cr)
 	}
 
 	/* DEBUG BLOCKS 
-        // printf("*****************************************");
-	//fflush(stdout);	
+        printf("*****************************************");
+	fflush(stdout);	
 	cr_search = cr->request;
 	while(cr_search){
 		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
@@ -191,20 +165,20 @@ int mk_handler_read(int socket)
 	struct client_request *cr;
 
 	cr = mk_request_client_get(socket);
+
 	if(!cr)
 	{
 		cr = mk_request_client_create(socket);
 	}
 
-	bytes = read(socket, cr->body+cr->body_length,
-			MAX_REQUEST_BODY-cr->body_length-1);
-
-	if (bytes == -1) {
+        bytes = read(socket, cr->body+cr->body_length,
+                     MAX_REQUEST_BODY-cr->body_length-1);
+        
+	if (bytes < 0) {
 		if (errno == EAGAIN) {
 			return 1;
 		} 
 		else{
-			perror("read");
 			return -1;
 		}
 	}
@@ -215,22 +189,13 @@ int mk_handler_read(int socket)
 	if(bytes > 0)
 	{
 		cr->body_length+=bytes;
+
 		efd = mk_sched_get_thread_poll();
 
-		if(strncmp(cr->body+(cr->body_length-LEN_NORMAL_STRING_END),
-					NORMAL_STRING_END, 
-					LEN_NORMAL_STRING_END) == 0)
-		{
-			mk_epoll_socket_change_mode(efd, socket, 
-					MK_EPOLL_WRITE);
-		}
-		else if(strncmp(cr->body+(cr->body_length-LEN_OLD_STRING_END),
-					OLD_STRING_END,
-					LEN_OLD_STRING_END) == 0)
-		{
-			mk_epoll_socket_change_mode(efd, socket, 
-					MK_EPOLL_WRITE);
-		}
+                if(mk_http_pendient_request(cr)==0)
+                {
+                        mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_WRITE);
+                }
 	}
 
 	return 0;
@@ -324,14 +289,16 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
-		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, s_request->log);
+		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, 
+                                 s_request->log);
 		return EXIT_NORMAL;
 	}	
 	
 	/*  URL it's Allowed ? */ 
 	if(Deny_Check(s_request, cr->client_ip)==-1) {
 		s_request->log->final_response=M_CLIENT_FORBIDDEN;
-		mk_request_error(M_CLIENT_FORBIDDEN, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_FORBIDDEN, cr, s_request, 1,
+                                 s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -339,14 +306,16 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host.data && s_request->protocol==HTTP_PROTOCOL_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
-		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request,1,
+                                 s_request->log);
 		return EXIT_NORMAL;
 	}
 
 	/* Method not allowed ? */
 	if(s_request->method==METHOD_NOT_ALLOWED){
 		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-		mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request,1,s_request->log);
+		mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1,
+                                 s_request->log);
 		return EXIT_NORMAL;
 	}
 
@@ -354,7 +323,8 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	if(s_request->protocol == HTTP_PROTOCOL_UNKNOWN)
 	{
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
-		mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request,1,s_request->log);
+		mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
+                                 s_request->log);
 		return EXIT_NORMAL;
 	}
 	
@@ -379,17 +349,21 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 		int len=0;
 
 		len = strlen(s_request->host_conf->scriptalias[0]);
-		if((strncmp(s_request->host_conf->scriptalias[0], s_request->uri_processed, len))==0){
+		if((strncmp(s_request->host_conf->scriptalias[0], 
+                            s_request->uri_processed, len))==0){
 			int cgi_status;
-			cgi_status=M_CGI_main(cr, s_request, s_request->log, s_request->body);
+			cgi_status=M_CGI_main(cr, s_request, s_request->log, 
+                                              s_request->body);
 			/* Codes:
 				-1 : Permission problem
 				-2 : Timeout
 				-3 : Internal Server Error
 			*/
-			if(cgi_status==M_CGI_TIMEOUT || cgi_status==M_CGI_INTERNAL_SERVER_ERR){
+			if(cgi_status==M_CGI_TIMEOUT || 
+                           cgi_status==M_CGI_INTERNAL_SERVER_ERR)
+                        {
 				mk_request_error(s_request->log->final_response, 
-						cr, s_request, 1, s_request->log);	
+						cr, s_request, 1, s_request->log);
 			}
 			return cgi_status;
 		}
@@ -397,13 +371,13 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
 	/* is requesting an user home directory ? */
 	if(strncmp(s_request->uri_processed, USER_HOME_STRING, 
-        strlen(USER_HOME_STRING))==0 && config->user_dir){
+                   strlen(USER_HOME_STRING))==0 && config->user_dir)
+        {
 		if(User_main(cr, s_request)!=0)
 			return EXIT_NORMAL;
 	}
-
-	/* 
-	 * Handling method requested */
+ 
+	/* Handling method requested */
 	if(s_request->method==HTTP_METHOD_POST)
 	{
 		if((status=M_METHOD_Post(cr, s_request))==-1){
@@ -586,6 +560,7 @@ mk_pointer mk_request_header_find(char *request_body,  char *string)
 
 	var.data = t+pos_init_var;
 	var.len = pos_end_var - pos_init_var;
+
 	return (mk_pointer) var;
 }
 
@@ -782,7 +757,7 @@ struct request *mk_request_alloc()
 	request->resume.data = NULL;
 	request->user_agent.data = NULL;
 
-	request->post_variables = NULL;
+	request->post_variables.data = NULL;
 
 	request->user_uri = NULL;
 	mk_pointer_reset(&request->query_string);
@@ -869,7 +844,7 @@ void mk_request_free(struct request *sr)
 		mk_mem_free(sr->uri_processed);
         }
 
-        mk_mem_free(sr->post_variables);
+        mk_pointer_free(&sr->post_variables);
         mk_mem_free(sr->user_uri);
  	mk_pointer_reset(&sr->query_string);
 

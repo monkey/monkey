@@ -81,18 +81,18 @@ char *mk_http_method_check_str(int method)
         return NULL;
 }
 
-int mk_http_method_get(mk_pointer body)
+int mk_http_method_get(char *body)
 {
         int int_method, pos = 0;
         int max_len_method = 5;
         char *str_method;
         
-        pos = mk_string_search(body.data, " ");
+        pos = mk_string_search(body, " ");
         if(pos<=2 || pos>=max_len_method){
                 return METHOD_NOT_FOUND;      
         }
 
-        str_method = mk_string_copy_substr(body.data, 0, pos);
+        str_method = mk_string_copy_substr(body, 0, pos);
         int_method = mk_http_method_check(str_method);
         mk_mem_free(str_method);
 
@@ -564,3 +564,35 @@ int mk_http_range_parse(struct request *sr)
         return -1;      
 }
 
+/* 
+ * Check if client request still has pendient data 
+ * 
+ * Return 0 when all expected data has arrived or -1 when
+ * the connection is on a pendient status due to HTTP spec 
+ */
+int mk_http_pendient_request(struct client_request *cr)
+{
+        int n, method;
+        char *str;
+
+        n = mk_string_search(cr->body, mk_endblock.data);
+        if(n<=0)
+        {
+                return -1;
+        }
+        str = cr->body + n + mk_endblock.len;
+
+        method = mk_http_method_get(cr->body);
+        if(method == HTTP_METHOD_POST)
+        {
+                if(mk_string_search(str, MK_CRLF)>0)
+                {
+                      return 0;
+                }
+                else{
+                      return -1;
+                }
+        }
+
+        return 0;
+}
