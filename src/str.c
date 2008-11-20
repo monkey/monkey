@@ -107,12 +107,6 @@ int _mk_string_search(char *string, char *search, int n)
         {
                 if(match_count!=strlen(search))
                         return -1;
-
-                printf("\nmatch_count: %i", match_count);
-                printf("\nidx: %i", idx);
-                printf("\nq='%s'", search);
-                printf("\ndata:\n---%s---", string);
-                fflush(stdout);
         }
 	return idx;
 }
