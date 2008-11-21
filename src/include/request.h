@@ -106,7 +106,6 @@ struct client_request
 pthread_key_t request_handler;
 
 struct request {
-
 	int status;
 	int pipelined; /* Pipelined request */
 	mk_pointer body;
@@ -119,7 +118,7 @@ struct request {
 	int uri_twin;
 
 	int protocol;
-	/*------------------*/
+        /*------------------*/
 
 	/*---Request headers--*/
 	int  content_length;

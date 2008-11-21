@@ -169,7 +169,8 @@ void mk_iov_free(struct mk_iov *mk_io)
 	{
 
 #ifdef DEBUG_IOV
-                printf("\nDEBUG IOV :: going free (idx: %i/%i): %s",i, limit, mk_io->buf_to_free[i]);
+                printf("\nDEBUG IOV :: going free (idx: %i/%i): %s",i,
+                       limit, mk_io->buf_to_free[i]);
                 fflush(stdout);
 #endif
 		mk_mem_free(mk_io->buf_to_free[i]);
@@ -183,9 +184,8 @@ void mk_iov_print(struct mk_iov *mk_io)
         int i;
 
         for(i=0; i<mk_io->iov_idx; i++){
-                printf("\n%i len=%i) '%s'", i, mk_io->io[i].iov_len, (char *) mk_io->io[i].iov_base);
+                printf("\n%i len=%i) '%s'", i, mk_io->io[i].iov_len, 
+                       (char *) mk_io->io[i].iov_base);
                 fflush(stdout);
         }
-
-
 }

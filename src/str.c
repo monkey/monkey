@@ -67,48 +67,14 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 
 int _mk_string_search(char *string, char *search, int n)
 {
-	char *p, *startn = 0, *np = 0;
-	int idx=-1, loop=0;
-        int match_count = 0;
-
-	for (p = string; *p; p++) {
-		if (np) {
-			if (toupper(*p) == toupper(*np)) {
-				match_count++;
-                                if (!*++np)
-				{	
-					return idx;
-				}
-			} else
-			{
-				np = 0;
-				idx = -1;
-                                match_count = 0;
-			}
-		} else if (toupper(*p) == toupper(*search)) {
-			np = search + 1;
-			startn = p;
-			idx = loop;
-                        match_count++;
-			if(!*np)
-			{
-				return idx;
-			}
-		}
-
-		loop++;
-		if(loop>=n && n>=0)
-		{
-			return -1;
-		}
-	}
-
-        if(idx>=0)
+	char *np;
+        
+        np = strcasestr(string, search);
+        if(!np)
         {
-                if(match_count!=strlen(search))
-                        return -1;
+                return -1;
         }
-	return idx;
+        return (np-string);
 }
 
 int mk_string_search(char *string, char *search)
@@ -184,7 +150,7 @@ char *mk_string_casestr(char *heystack, char *needle)
 		return NULL;
 	}
 
-	return strcasestr(heystack, needle);
+	return strstr(heystack, needle);
 }
 
 char *mk_string_dup(const char *s)
