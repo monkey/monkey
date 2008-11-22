@@ -57,6 +57,23 @@ mk_pointer mk_endblock;
 #define RH_RANGE "Range:"
 #define RH_USER_AGENT "User-Agent:"
 
+mk_pointer mk_rh_accept;
+mk_pointer mk_rh_accept_charset;
+mk_pointer mk_rh_accept_encoding;
+mk_pointer mk_rh_accept_language;
+mk_pointer mk_rh_connection;
+mk_pointer mk_rh_cookie;
+mk_pointer mk_rh_content_length;
+mk_pointer mk_rh_content_range;
+mk_pointer mk_rh_content_type;
+mk_pointer mk_rh_if_modified_since;
+mk_pointer mk_rh_host;
+mk_pointer mk_rh_last_modified;
+mk_pointer mk_rh_last_modified_since;
+mk_pointer mk_rh_referer;
+mk_pointer mk_rh_range;
+mk_pointer mk_rh_user_agent;
+
 /* Aqui se registran temporalmente los 
 parametros de una peticion */
 #define MAX_REQUEST_METHOD 10
@@ -91,16 +108,18 @@ mk_pointer request_error_msg_505;
 
 struct client_request
 {
-    int pipelined; /* Pipelined request */
-    int socket;
-    int counter_connections; /* Count persistent connections */
-    int status; /* Request status */
+        int pipelined; /* Pipelined request */
+        int socket;
+        int counter_connections; /* Count persistent connections */
+        int status; /* Request status */
    
-    char *body; /* Original request sent */
-    char *client_ip;
-    int body_length;
-    struct request *request; /* Parsed request */
-    struct client_request *next;
+        char *body; /* Original request sent */
+        char *client_ip;
+        int body_length;
+        
+        int first_block_end;
+        struct request *request; /* Parsed request */
+        struct client_request *next;
 };
 
 pthread_key_t request_handler;
@@ -196,7 +215,7 @@ void  mk_request_set_default_page(mk_pointer *page,
 		char *title, mk_pointer message, char *signature);
 
 int mk_request_header_process(struct request *sr);
-mk_pointer mk_request_header_find(char *request_body, char *string);
+mk_pointer mk_request_header_find(char *request_body, mk_pointer header);
 
 void mk_request_error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, 

@@ -46,201 +46,204 @@
 #include "utils.h"
 #include "epoll.h"
 #include "iov.h"
+#include "clock.h"
 
 #include <sys/sysinfo.h>
 
 void mk_logger_target_add(int fd, char *target)
 {
-	struct log_target *new, *aux;
+        struct log_target *new, *aux;
 
-	new = mk_mem_malloc(sizeof(struct log_target));
-	new->fd = fd;
-	new->target = target;
-	new->next = NULL;
+        new = mk_mem_malloc(sizeof(struct log_target));
+        new->fd = fd;
+        new->target = target;
+        new->next = NULL;
 
-	if(!lt)
-	{
-		lt = new;
-		return;
-	}
+        if(!lt)
+        {
+                lt = new;
+                return;
+        }
 
-	aux = lt;
-	while(aux->next)
-		aux = aux->next;
+        aux = lt;
+        while(aux->next)
+                aux = aux->next;
 
-	aux->next = new;
+        aux->next = new;
 }
 
 struct log_target *mk_logger_match(int fd)
 {
-	struct log_target *aux;
+        struct log_target *aux;
 
-	aux = lt;
+        aux = lt;
 
-	while(aux)
-	{
-		if(aux->fd == fd)
-		{
-			return aux;
-		}
-		aux = aux->next;
-	}
+        while(aux)
+        {
+                if(aux->fd == fd)
+                {
+                        return aux;
+                }
+                aux = aux->next;
+        }
 
-	return NULL;
+        return NULL;
 }
 
 
 void *start_worker_logger(void *args)
 {
-	int efd, max_events=config->nhosts;
-	int i, bytes, err;
-	struct log_target *target=0;
-	struct host *h=0;
-	int flog;
-	long slen;
-	int fdop = 0;
-	int timeout;
-	int clock_ticks;
-	int clk;
+        int efd, max_events=config->nhosts;
+        int i, bytes, err;
+        struct log_target *target=0;
+        struct host *h=0;
+        int flog;
+        long slen;
+        int fdop = 0;
+        int timeout;
+        int clock_ticks;
+        int clk;
 
-	/* pipe_size:
-	 * ---------- 
-	 * Linux set a pipe size usingto the PAGE_SIZE, 
-	 * check linux/include/pipe_fs_i.h for details:
-	 *
-	 *       #define PIPE_SIZE               PAGE_SIZE
-	 *
-	 * In the same header file we can found that every 
-	 * pipe has 16 pages, so our real memory allocation
-	 * is: (PAGE_SIZE*PIPE_BUFFERS)
-	 */
-	long pipe_size;
-	
-	/* buffer_limit:
-	 * -------------
-	 * it means the maximum data that a monkey log pipe can contain.
-	 */
-	long buffer_limit;
+        /* pipe_size:
+         * ---------- 
+         * Linux set a pipe size usingto the PAGE_SIZE, 
+         * check linux/include/pipe_fs_i.h for details:
+         *
+         *       #define PIPE_SIZE               PAGE_SIZE
+         *
+         * In the same header file we can found that every 
+         * pipe has 16 pages, so our real memory allocation
+         * is: (PAGE_SIZE*PIPE_BUFFERS)
+         */
+        long pipe_size;
+        
+        /* buffer_limit:
+         * -------------
+         * it means the maximum data that a monkey log pipe can contain.
+         */
+        long buffer_limit;
 
-	/* Monkey allow just 75% of a pipe capacity */
-	pipe_size = sysconf(_SC_PAGESIZE)*16;
-	buffer_limit = (pipe_size*0.75);
+        /* Monkey allow just 75% of a pipe capacity */
+        pipe_size = sysconf(_SC_PAGESIZE)*16;
+        buffer_limit = (pipe_size*0.75);
 
-	/* Creating poll */
-	efd = mk_epoll_create(max_events);
+        /* Creating poll */
+        efd = mk_epoll_create(max_events);
 
-	h = config->hosts;
-	while(h)
-	{
-		/* Add access log file */
-		mk_epoll_add_client(efd, h->log_access[0], 
-				MK_EPOLL_BEHAVIOR_DEFAULT);
-		mk_logger_target_add(h->log_access[0], h->access_log_path);
+        h = config->hosts;
+        while(h)
+        {
+                /* Add access log file */
+                mk_epoll_add_client(efd, h->log_access[0], 
+                                MK_EPOLL_BEHAVIOR_DEFAULT);
+                mk_logger_target_add(h->log_access[0], h->access_log_path);
 
-		/* Add error log file */
-		mk_epoll_add_client(efd, h->log_error[0],
-				MK_EPOLL_BEHAVIOR_DEFAULT);
-		mk_logger_target_add(h->log_error[0], h->error_log_path);
+                /* Add error log file */
+                mk_epoll_add_client(efd, h->log_error[0],
+                                MK_EPOLL_BEHAVIOR_DEFAULT);
+                mk_logger_target_add(h->log_error[0], h->error_log_path);
 
-		h = h->next;
-	}
+                h = h->next;
+        }
 
-	/* set initial timeout */
-	clock_ticks = sysconf(_SC_CLK_TCK);
-	timeout = times(NULL) + clock_ticks;
-	
-	/* Reading pipe buffer */
-	while(1)
-	{
-		usleep(1200);
+        /* set initial timeout */
+        clock_ticks = sysconf(_SC_CLK_TCK);
+        timeout = times(NULL) + clock_ticks;
+        
+        /* Reading pipe buffer */
+        while(1)
+        {
+                usleep(1200);
 
-		struct epoll_event events[max_events];
-		int num_fds = epoll_wait(efd, events, max_events, -1);
+                struct epoll_event events[max_events];
+                int num_fds = epoll_wait(efd, events, max_events, -1);
 
-		clk = times(NULL);
+                clk = times(NULL);
 
-		if(!h)
-		{
-			h = config->hosts;
-		}
+                if(!h)
+                {
+                        h = config->hosts;
+                }
 
-		for(i=0; i< num_fds; i++)
-		{
-			target = mk_logger_match(events[i].data.fd);
+                for(i=0; i< num_fds; i++)
+                {
+                        target = mk_logger_match(events[i].data.fd);
 
-			if(!target)
-			{
-				printf("\nERROR matching host/epoll_fd");
-				fflush(stdout);
-				continue;
-			}
-				
-			err = ioctl(target->fd, FIONREAD, &bytes);
-			if(err == -1)
-			{
-				perror("err");
-			}
-		
-			if(bytes < buffer_limit && clk<timeout)
-			{
-				continue;
-			}
-			else
-			{
-				timeout = clk+clock_ticks;
-				//fdop++;
-				flog = open(target->target, 
-						O_WRONLY | O_CREAT , 0644);
-			
-				if(flog==-1)
-				{
-					perror("open");
-					continue;
-				}
+                        if(!target)
+                        {
+                                printf("\nERROR matching host/epoll_fd");
+                                fflush(stdout);
+                                continue;
+                        }
+                                
+                        err = ioctl(target->fd, FIONREAD, &bytes);
+                        if(err == -1)
+                        {
+                                perror("err");
+                        }
+                
+                        if(bytes < buffer_limit && clk<timeout)
+                        {
+                                continue;
+                        }
+                        else
+                        {
+                                timeout = clk+clock_ticks;
+                                //fdop++;
+                                flog = open(target->target, 
+                                                O_WRONLY | O_CREAT , 0644);
+                        
+                                if(flog==-1)
+                                {
+                                        perror("open");
+                                        continue;
+                                }
 
-				lseek(flog, 0, SEEK_END);
-				slen = splice(events[i].data.fd, NULL, flog,
-						NULL, bytes, SPLICE_F_MOVE);
-				if(slen==-1)
-				{
-					perror("splice");
-				}
-				close(flog);
-				//printf("\nfdop: %i", fdop);
-				//fflush(stdout);
-			}
-		}
-	}
+                                lseek(flog, 0, SEEK_END);
+                                slen = splice(events[i].data.fd, NULL, flog,
+                                                NULL, bytes, SPLICE_F_MOVE);
+                                if(slen==-1)
+                                {
+                                        perror("splice");
+                                }
+                                close(flog);
+                                //printf("\nfdop: %i", fdop);
+                                //fflush(stdout);
+                        }
+                }
+        }
 }
 
 /* Registra en archivos de logs: accesos
  y errores */
 int write_log(struct log_info *log, struct host *h)
 {
-	unsigned long len;
-	char *buf;
-	struct mk_iov *iov;
+        unsigned long len;
+        char *buf;
+        struct mk_iov *iov;
 
-	if(log->status!=S_LOG_ON)
-	{
-		return 0;
-	}
-	
-	iov = mk_iov_create(16);
+        if(log->status!=S_LOG_ON)
+        {
+                return 0;
+        }
 
-	/* Register a successfull request */
-	if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
-	{
-			mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
-					MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
-					MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->datetime, strlen(log->datetime), MK_IOV_SPACE,
-					MK_IOV_NOT_FREE_BUF);
+        iov = mk_iov_create(16);
+        /* Register a successfull request */
+        if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
+        {
+                mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
+                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+                                 MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, current_time.data, current_time.len, 
+                                 MK_IOV_SPACE,
+                                 MK_IOV_NOT_FREE_BUF);
 
-			buf = mk_http_method_check_str(log->method);
-			mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
-			mk_iov_add_entry(iov, log->uri.data, log->uri.len, MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                buf = mk_http_method_check_str(log->method);
+                mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, 
+                                 MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, log->uri.data, log->uri.len, 
+                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                         
                         if(log->protocol)
                         {
@@ -248,73 +251,54 @@ int write_log(struct log_info *log, struct host *h)
                                 mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                         }
 
-			m_build_buffer(&buf, &len, "%i", log->final_response);
+                        m_build_buffer(&buf, &len, "%i", log->final_response);
                         mk_iov_add_entry(iov, buf, len, MK_IOV_SPACE, MK_IOV_FREE_BUF);
 
-			buf = m_build_buffer(&buf, &len, "%i\n", log->size);
-			mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, MK_IOV_FREE_BUF);
-			mk_iov_send(h->log_access[1], iov);
-	}
-	else{ /* Regiter some error */
-		mk_iov_add_entry(iov, log->ip, strlen(log->ip),
-				MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
-		mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
-				MK_IOV_NOT_FREE_BUF);
-		mk_iov_add_entry(iov, log->datetime, strlen(log->datetime), MK_IOV_SPACE,
-				MK_IOV_NOT_FREE_BUF);
-		
-		mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, MK_IOV_SPACE,
-				MK_IOV_NOT_FREE_BUF);
-		mk_iov_add_entry(iov, "\n", 1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
-		mk_iov_send(h->log_error[1], iov);
+                        buf = m_build_buffer(&buf, &len, "%i\n", log->size);
+                        mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, MK_IOV_FREE_BUF);
+                        mk_iov_send(h->log_access[1], iov);
+        }
+        else{ /* Regiter some error */
+                mk_iov_add_entry(iov, log->ip, strlen(log->ip),
+                                MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+                                MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, current_time.data, current_time.len, MK_IOV_SPACE,
+                                MK_IOV_NOT_FREE_BUF);
+                
+                mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, MK_IOV_SPACE,
+                                MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "\n", 1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+                mk_iov_send(h->log_error[1], iov);
 
-	}
-	mk_iov_free(iov);
-	return 0;	
+        }
+        mk_iov_free(iov);
+        return 0;       
 }
 
 /* Write Monkey's PID */
 int add_log_pid()
 {
-	FILE *pid_file;
-		
-	remove(config->pid_file_path);
-	config->pid_status=VAR_OFF;
-	if((pid_file=fopen(config->pid_file_path,"w"))==NULL){
-		puts("Error: I can't log pid of monkey");
-		exit(1);
-	}
-	fprintf(pid_file,"%i", getpid());
-	fclose(pid_file);
-	config->pid_status=VAR_ON;
+        FILE *pid_file;
+                
+        remove(config->pid_file_path);
+        config->pid_status=VAR_OFF;
+        if((pid_file=fopen(config->pid_file_path,"w"))==NULL){
+                puts("Error: I can't log pid of monkey");
+                exit(1);
+        }
+        fprintf(pid_file,"%i", getpid());
+        fclose(pid_file);
+        config->pid_status=VAR_ON;
 
-	return 0;	
+        return 0;       
 }
 
 /* Elimina log del PID */
 int remove_log_pid()
 {
-		SetEGID_BACK();
-		return remove(config->pid_file_path);
-}
-
-/* Calcula y formatea la salida de la fecha y 
-	hora de conexi�n (Por Daniel R. Ome) */
-char *PutTime() {
-
-	time_t      fec_hora;
-   //static char data[128];
-   	short int len=64;
-	char *data=0;
-
-	data = mk_mem_malloc_z(len);
-	if ( (fec_hora = time(NULL)) == -1 )
-		return NULL;
-
-	strftime(data, len, "[%d/%b/%G %T %z]",
-		(struct tm *)localtime((time_t *) &fec_hora));
-
-	return (char *) data;
+                SetEGID_BACK();
+                return remove(config->pid_file_path);
 }
 
 char *BaseName(char *name)

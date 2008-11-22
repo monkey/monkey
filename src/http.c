@@ -580,6 +580,12 @@ int mk_http_pendient_request(struct client_request *cr)
         {
                 return -1;
         }
+
+        if(cr->first_block_end<0)
+        {
+                cr->first_block_end = n;
+        }
+
         str = cr->body + n + mk_endblock.len;
 
         method = mk_http_method_get(cr->body);

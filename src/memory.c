@@ -151,6 +151,24 @@ void mk_mem_pointers_init()
         mk_pointer_set(&mk_crlf, MK_CRLF);
         mk_pointer_set(&mk_endblock, MK_ENDBLOCK);
 
+        /* Client headers */
+        mk_pointer_set(&mk_rh_accept, RH_ACCEPT);
+        mk_pointer_set(&mk_rh_accept_charset, RH_ACCEPT_CHARSET);
+        mk_pointer_set(&mk_rh_accept_encoding, RH_ACCEPT_ENCODING);
+        mk_pointer_set(&mk_rh_accept_language, RH_ACCEPT_LANGUAGE);
+        mk_pointer_set(&mk_rh_connection, RH_CONNECTION);
+        mk_pointer_set(&mk_rh_cookie, RH_COOKIE);
+        mk_pointer_set(&mk_rh_content_length, RH_CONTENT_LENGTH);
+        mk_pointer_set(&mk_rh_content_range, RH_CONTENT_RANGE);
+        mk_pointer_set(&mk_rh_content_type, RH_CONTENT_TYPE);
+        mk_pointer_set(&mk_rh_if_modified_since, RH_IF_MODIFIED_SINCE);
+        mk_pointer_set(&mk_rh_host, RH_HOST);
+        mk_pointer_set(&mk_rh_last_modified, RH_LAST_MODIFIED);
+        mk_pointer_set(&mk_rh_last_modified_since, RH_LAST_MODIFIED_SINCE);
+        mk_pointer_set(&mk_rh_referer, RH_REFERER);
+        mk_pointer_set(&mk_rh_range, RH_RANGE);
+        mk_pointer_set(&mk_rh_user_agent, RH_USER_AGENT);
+
 	/* Server response first header */
         mk_pointer_set(&mk_hr_http_ok, MK_HR_HTTP_OK);
         mk_pointer_set(&mk_hr_http_partial, MK_HR_HTTP_PARTIAL);

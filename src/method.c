@@ -49,7 +49,7 @@ int M_METHOD_Post(struct client_request *cr, struct request *sr)
 	char buffer[MAX_REQUEST_BODY];
 	int content_length_post=0;
 	
-        tmp = mk_request_header_find(cr->body, RH_CONTENT_LENGTH);
+        tmp = mk_request_header_find(cr->body, mk_rh_content_length);
 	if(!tmp.data){
 		mk_request_error(M_CLIENT_LENGHT_REQUIRED, 
                               cr, sr, 0, sr->log);
@@ -64,7 +64,7 @@ int M_METHOD_Post(struct client_request *cr, struct request *sr)
 		return -1;
 	}
 	
-        tmp = mk_request_header_find(sr->body.data, RH_CONTENT_TYPE);
+        tmp = mk_request_header_find(sr->body.data, mk_rh_content_type);
         if(!tmp.data){
 		mk_request_error(M_CLIENT_BAD_REQUEST, 
                               cr, sr, 0, sr->log);

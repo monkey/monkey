@@ -46,6 +46,7 @@
 #include "modules.h"
 #include "memory.h"
 #include "dir_html.h"
+#include "clock.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -194,6 +195,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 	
+        /* Starting clock worker */
+        mk_clock_start_worker();
+
 	/* Running Monkey as daemon */
 	if(daemon)
 	{

@@ -32,6 +32,7 @@
 #include "utils.h"
 #include "logfile.h"
 #include "chars.h"
+#include "clock.h"
 
 /* (by Daniel R. Ome) */
 void signal_handler(int signo)
@@ -39,20 +40,20 @@ void signal_handler(int signo)
 
 switch( signo ) {
 	case SIGUSR2:
-		printf("%s => Monkey reconfiguration \n", PutTime()); /* Not ready */
+		printf("%s => Monkey reconfiguration \n", current_time.data); /* Not ready */
                 break;
 
 	case SIGINT: 
 		remove_log_pid();
-		printf("\n\n%s => Interrupt from keyboard\n\n", PutTime());
+		printf("\n\n%s => Interrupt from keyboard\n\n", current_time.data);
                 exit(0);
 	case SIGHUP:
-		printf("%s => Hangup\n", PutTime());
+		printf("%s => Hangup\n", current_time.data);
 		Term_Signals();
                 break;
 
 	case SIGBUS: 
-		printf("%s => Invalid memory reference\n", PutTime());
+		printf("%s => Invalid memory reference\n", current_time.data);
 		abort();
 		break;
  
@@ -60,11 +61,11 @@ switch( signo ) {
 		break;
    
 	case SIGSEGV: 
-		printf("%s => Invalid memory reference\n", PutTime());
+		printf("%s => Invalid memory reference\n", current_time.data);
 		break;
  
 	case SIGTERM:
-		printf("%s => Termination signal\n", PutTime());
+		printf("%s => Termination signal\n", current_time.data);
 		Term_Signals();						
                 break;
 	}

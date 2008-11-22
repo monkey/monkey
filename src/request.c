@@ -59,66 +59,71 @@
 
 struct request *mk_request_parse(struct client_request *cr)
 {
-	int i, init_block=0, n_blocks=0, offset=0;
-	int length_buf=0, length_end=0;
+	int i, n, init_block=0, n_blocks=0;
+	int length_buf;
 	int pipelined=FALSE;
 	struct request *cr_buf=0, *cr_search=0;
 
 	length_buf = cr->body_length;
 	init_block = 0;
 
-	for(i=0; i<= length_buf-mk_endblock.len; i++)
+	for(i=cr->first_block_end; i<=length_buf-mk_endblock.len; i++)
 	{
-		if(strncmp(cr->body+i, mk_endblock.data, mk_endblock.len)==0)
+                /* Allocating request block */
+		cr_buf = mk_request_alloc();
+	
+		/* mk_pointer */
+		cr_buf->body.data = cr->body+init_block;
+		cr_buf->body.len = i-init_block;
+
+		cr_buf->method = mk_http_method_get(cr_buf->body.data);
+
+		cr_buf->log->ip = cr->client_ip;
+		cr_buf->next = NULL;
+
+		i = init_block = i + mk_endblock.len;
+	
+		/* Looking for POST data */
+		if(cr_buf->method == HTTP_METHOD_POST)
 		{
-			/* Allocating request block */
-			cr_buf = mk_request_alloc();
-	
-			/* mk_pointer */
-			cr_buf->body.data = cr->body+init_block;
-			cr_buf->body.len = i-init_block;
+			cr_buf->post_variables = \
+                                       mk_method_post_get_vars(cr->body, i);
 
-			cr_buf->method = mk_http_method_get(cr_buf->body.data);
-
-			cr_buf->log->ip = cr->client_ip;
-			cr_buf->next = NULL;
-
-			i = init_block = (i+offset) + length_end;
-	
-			/* Looking for POST data */
-			if(cr_buf->method == HTTP_METHOD_POST)
+			if(cr_buf->post_variables.data)
 			{
-				cr_buf->post_variables = \
-                                        mk_method_post_get_vars(cr->body, i);
-
-				if(cr_buf->post_variables.data)
-				{
-					i += cr_buf->post_variables.len + 
-                                                length_end;
-				}
+				i = init_block = i+cr_buf->post_variables.len +
+                                                 mk_crlf.len;
 			}
-
-			if(!cr->request)
-			{	
-				cr->request = cr_buf;
-			}
-			else{
-				cr_search = cr->request;
-				while(cr_search)
-				{
-					if(cr_search->next==NULL)
-					{
-						cr_search->next = cr_buf;
-                        			break;
-					}
-					else
-					{
-						cr_search = cr_search->next;
-					}
-				}
-			}
-			n_blocks++;
 		}
+
+		if(!cr->request)
+		{	
+			cr->request = cr_buf;
+		}
+		else{
+			cr_search = cr->request;
+			while(cr_search)
+			{
+				if(cr_search->next==NULL)
+				{
+					cr_search->next = cr_buf;
+                       			break;
+				}
+				else
+				{
+					cr_search = cr_search->next;
+				}
+			}
+		}
+		n_blocks++;
+                n = mk_string_search(cr->body+i, mk_endblock.data);
+                if(n<=0)
+                {
+                        break;
+                }
+                else{
+                        i = i + n;
+                }
 	}
 
 	/* Checking pipelining connection */
@@ -476,7 +481,7 @@ int mk_request_header_process(struct request *sr)
 	}
 
 	/* Host */
-	host = mk_request_header_find(headers, RH_HOST);
+	host = mk_request_header_find(headers, mk_rh_host);
 
 	if(host.data)
 	{
@@ -499,16 +504,19 @@ int mk_request_header_process(struct request *sr)
 	}
 	
 	/* Looking for headers */
-	sr->accept = mk_request_header_find(headers, RH_ACCEPT);
-	sr->accept_charset = mk_request_header_find(headers, RH_ACCEPT_CHARSET);
-	sr->accept_encoding = mk_request_header_find(headers, RH_ACCEPT_ENCODING);
-	sr->accept_language = mk_request_header_find(headers, RH_ACCEPT_LANGUAGE);
-	sr->cookies = mk_request_header_find(headers, RH_COOKIE);
-	sr->connection = mk_request_header_find(headers, RH_CONNECTION);
-	sr->referer = mk_request_header_find(headers, RH_REFERER);
-	sr->user_agent = mk_request_header_find(headers, RH_USER_AGENT);
-	sr->range = mk_request_header_find(headers, RH_RANGE);
-	sr->if_modified_since = mk_request_header_find(headers, RH_IF_MODIFIED_SINCE);
+	sr->accept = mk_request_header_find(headers, mk_rh_accept);
+	sr->accept_charset = mk_request_header_find(headers, mk_rh_accept_charset);
+	sr->accept_encoding = mk_request_header_find(headers, 
+                                                           mk_rh_accept_encoding);
+	sr->accept_language = mk_request_header_find(headers, 
+                                                     mk_rh_accept_language);
+	sr->cookies = mk_request_header_find(headers, mk_rh_cookie);
+	sr->connection = mk_request_header_find(headers, mk_rh_connection);
+	sr->referer = mk_request_header_find(headers, mk_rh_referer);
+	sr->user_agent = mk_request_header_find(headers, mk_rh_user_agent);
+	sr->range = mk_request_header_find(headers, mk_rh_range);
+	sr->if_modified_since = mk_request_header_find(headers, 
+                                                     mk_rh_if_modified_since);
 
 	/* Checking keepalive */
 	sr->keep_alive=VAR_OFF;
@@ -528,38 +536,36 @@ int mk_request_header_process(struct request *sr)
 }
 
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_find(char *request_body,  char *string)
+mk_pointer mk_request_header_find(char *request_body,  mk_pointer header)
 {
 	mk_pointer var;
-	int pos_init_var=0, pos_end_var=0;
-	char *t;
+	char *p;
+        char *bl;
 
 	var.data = NULL;
 	var.len = 0;
 
-	/* looking for string on request_body ??? */	
-	if(!(t=(char *)mk_string_casestr(request_body, string)))
-	{
-		return var;
-	}
+        p = request_body;
+        while(p){
+                if(strncasecmp(p, header.data, header.len)==0)
+                {
+                        break;
+                }
+                p = strstr(p, MK_CRLF);
 
-	pos_init_var = strlen(string);
-	if((t+pos_init_var)[0]==' ')
-	{
-		pos_init_var++;
-	}
+                if(p)
+                {
+                        p += mk_crlf.len;
+                }
+                else
+                {
+                        return var;
+                }
+        }
 
-	pos_end_var = mk_string_search((char *)t, "\n") - 1;
-	if(pos_end_var<0)
-	{
-		pos_end_var = strlen(t);
-	}
-	if(pos_init_var<=0 || pos_end_var<=0){
-		return  var;	
-	}
-
-	var.data = t+pos_init_var;
-	var.len = pos_end_var - pos_init_var;
+        bl = strstr(p, MK_CRLF);
+        var.data = p+header.len+1;
+        var.len = bl-request_body;
 
 	return (mk_pointer) var;
 }
@@ -730,8 +736,7 @@ struct request *mk_request_alloc()
 	request->make_log=VAR_ON; /* build log file of this request ? */
 
         mk_pointer_reset(&request->body);
-	
-	request->log->datetime=PutTime();
+	//request->log->datetime=PutTime();
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
 	mk_pointer_reset(&request->log->error_msg);
@@ -832,7 +837,6 @@ void mk_request_free(struct request *sr)
         
         if(sr->log){
         	//mk_mem_free(sr->log->error_msg); 
-		mk_mem_free(sr->log->datetime);
 		mk_mem_free(sr->log);
         }
 
@@ -872,6 +876,7 @@ struct client_request *mk_request_client_create(int socket)
 	cr->body = mk_mem_malloc_z(MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();
 	cr->body_length = 0;
+        cr->first_block_end = -1;
 
 	if(!request_handler)
 	{
