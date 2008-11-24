@@ -317,13 +317,20 @@ int mk_header_send(int fd, struct client_request *cr,
                 }
 
 		/* -xxx */
-		if(sh->ranges[0]==-1 && sh->ranges[1]>=0){
+                if(sh->ranges[0]==-1 && sh->ranges[1]>0){
+                        length = (unsigned int)sh->ranges[1];
+
+                        if(length > sh->content_length){
+                                length        = sh->content_length;
+                                sh->ranges[1] = sh->content_length;
+                        }
+
 			m_build_buffer(
 					&buffer,
 					&len,
 					"%s %d", 
 					RH_CONTENT_LENGTH,
-					sh->ranges[1]);
+					length);
 			mk_iov_add_entry(iov, buffer, len,
 					mk_iov_break_line, MK_IOV_FREE_BUF);
 
@@ -334,7 +341,7 @@ int mk_header_send(int fd, struct client_request *cr,
 					RH_CONTENT_RANGE, 
 					(sh->content_length - sh->ranges[1]),
 					(sh->content_length - 1),
-					sh->content_length);
+					length);
 			mk_iov_add_entry(iov, buffer, len,
 					mk_iov_break_line, MK_IOV_FREE_BUF);
 		}

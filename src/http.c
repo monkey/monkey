@@ -475,8 +475,9 @@ int mk_http_range_set(struct request *sr, long file_size)
                 }
 
                 /* -xxx */
-                if(sh->ranges[0]==-1 && sh->ranges[1]>=0){
-                        sr->bytes_to_send = file_size - sh->ranges[1];
+                if(sh->ranges[0]==-1 && sh->ranges[1]>0){
+                        sr->bytes_to_send = sh->ranges[1];
+                        sr->bytes_offset  = file_size - sh->ranges[1];
                 }
 
                 if(sr->bytes_offset>file_size || sr->bytes_to_send>file_size)
