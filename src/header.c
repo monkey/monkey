@@ -311,9 +311,10 @@ int mk_header_send(int fd, struct client_request *cr,
                                        sh->ranges[0], 
                                        sh->ranges[1],
                                        sh->content_length);
-		}
-		mk_iov_add_entry(iov, buffer, len,
-				mk_iov_break_line, MK_IOV_FREE_BUF);
+
+                        mk_iov_add_entry(iov, buffer, len,
+                                         mk_iov_break_line, MK_IOV_FREE_BUF);
+                }
 
 		/* -xxx */
 		if(sh->ranges[0]==-1 && sh->ranges[1]>=0){
