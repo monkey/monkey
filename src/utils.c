@@ -353,7 +353,6 @@ char *get_real_string(mk_pointer uri){
                 buf_idx = i;
         }
 
-        mk_pointer_print(uri);
         while(i<uri.len)
         {
                 if(uri.data[i]=='%' && i+2<uri.len){

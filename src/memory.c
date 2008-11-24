@@ -28,6 +28,7 @@
 #include "memory.h"
 #include "request.h"
 #include "header.h"
+#include "http.h"
 
 void *mk_mem_malloc(size_t size)
 {
@@ -196,5 +197,13 @@ void mk_mem_pointers_init()
 	mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
 	mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
 	mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
+
+        mk_http_status_list_init();
 }
+
+
+
+
+
+
 

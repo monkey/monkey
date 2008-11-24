@@ -43,6 +43,7 @@
 #include "support.h"
 #include "logfile.h"
 #include "socket.h"
+#include "header.h"
 
 /* Main function to normal CGI scripts */
 int M_CGI_main(struct client_request *cr, struct request *sr, 

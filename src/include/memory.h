@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -22,9 +24,18 @@
 
 typedef struct
 {
-	char *data;
+        char *data;
 	unsigned long len;
 } mk_pointer;
+
+struct list_sint
+{
+        unsigned short int index;
+        mk_pointer value;
+        struct list_sint *next;
+};
+
+typedef struct list_sint mk_list_sint_t;
 
 void *mk_mem_malloc(size_t size);
 void *mk_mem_malloc_z(size_t size);

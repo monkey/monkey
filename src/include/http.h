@@ -57,4 +57,6 @@ int mk_http_keepalive_check(int socket, struct client_request *cr);
 int mk_http_range_set(struct request *sr, long file_size);
 int mk_http_range_parse(struct request *sr);
 
+void mk_http_status_list_init();
+
 #endif

@@ -47,6 +47,7 @@
 #include "epoll.h"
 #include "iov.h"
 #include "clock.h"
+#include "http.h"
 
 #include <sys/sysinfo.h>
 
@@ -221,6 +222,7 @@ int write_log(struct log_info *log, struct host *h)
         unsigned long len;
         char *buf;
         struct mk_iov *iov;
+        mk_pointer *status;
 
         if(log->status!=S_LOG_ON)
         {
@@ -248,14 +250,21 @@ int write_log(struct log_info *log, struct host *h)
                         if(log->protocol)
                         {
                                 buf = mk_http_protocol_check_str(log->protocol);
-                                mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                                mk_iov_add_entry(iov, buf, strlen(buf), 
+                                                 MK_IOV_SPACE, 
+                                                 MK_IOV_NOT_FREE_BUF);
                         }
 
-                        m_build_buffer(&buf, &len, "%i", log->final_response);
-                        mk_iov_add_entry(iov, buf, len, MK_IOV_SPACE, MK_IOV_FREE_BUF);
+                        status = (mk_pointer *)
+                                mk_http_status_get(log->final_response);
+
+                        mk_iov_add_entry(iov, status->data, status->len, 
+                                         MK_IOV_SPACE, 
+                                         MK_IOV_NOT_FREE_BUF);
 
                         buf = m_build_buffer(&buf, &len, "%i\n", log->size);
-                        mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, MK_IOV_FREE_BUF);
+                        mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, 
+                                         MK_IOV_FREE_BUF);
                         mk_iov_send(h->log_access[1], iov);
         }
         else{ /* Regiter some error */
@@ -263,11 +272,13 @@ int write_log(struct log_info *log, struct host *h)
                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
                                 MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, current_time.data, current_time.len, MK_IOV_SPACE,
-                                MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, current_time.data, current_time.len, 
+                                 MK_IOV_SPACE,
+                                 MK_IOV_NOT_FREE_BUF);
                 
-                mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, MK_IOV_SPACE,
-                                MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, 
+                                 MK_IOV_SPACE,
+                                 MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "\n", 1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
                 mk_iov_send(h->log_error[1], iov);
 
