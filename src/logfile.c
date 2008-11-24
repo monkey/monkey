@@ -234,24 +234,24 @@ int write_log(struct log_info *log, struct host *h)
         if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
         {
                 mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
-                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+                                 mk_iov_space, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "-", 1, mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
-                                 MK_IOV_SPACE,
+                                 mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
 
                 buf = mk_http_method_check_str(log->method);
-                mk_iov_add_entry(iov, buf, strlen(buf), MK_IOV_SPACE, 
+                mk_iov_add_entry(iov, buf, strlen(buf), mk_iov_space, 
                                  MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, log->uri.data, log->uri.len, 
-                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
+                                 mk_iov_space, MK_IOV_NOT_FREE_BUF);
                         
                         if(log->protocol)
                         {
                                 buf = mk_http_protocol_check_str(log->protocol);
                                 mk_iov_add_entry(iov, buf, strlen(buf), 
-                                                 MK_IOV_SPACE, 
+                                                 mk_iov_space, 
                                                  MK_IOV_NOT_FREE_BUF);
                         }
 
@@ -259,27 +259,27 @@ int write_log(struct log_info *log, struct host *h)
                                 mk_http_status_get(log->final_response);
 
                         mk_iov_add_entry(iov, status->data, status->len, 
-                                         MK_IOV_SPACE, 
+                                         mk_iov_space, 
                                          MK_IOV_NOT_FREE_BUF);
 
                         buf = m_build_buffer(&buf, &len, "%i\n", log->size);
-                        mk_iov_add_entry(iov, buf, len, MK_IOV_NONE, 
+                        mk_iov_add_entry(iov, buf, len, mk_iov_none, 
                                          MK_IOV_FREE_BUF);
                         mk_iov_send(h->log_access[1], iov);
         }
         else{ /* Regiter some error */
                 mk_iov_add_entry(iov, log->ip, strlen(log->ip),
-                                MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
+                                mk_iov_space, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "-", 1, mk_iov_space,
                                 MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
-                                 MK_IOV_SPACE,
+                                 mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
                 
                 mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, 
-                                 MK_IOV_SPACE,
+                                 mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "\n", 1, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "\n", 1, mk_iov_none, MK_IOV_NOT_FREE_BUF);
                 mk_iov_send(h->log_error[1], iov);
 
         }

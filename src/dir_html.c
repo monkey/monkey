@@ -540,8 +540,10 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
                         while(tpl_val){
                                 if(tpl_val->tag == tpl_list->tag)
                                 {
-                                        mk_iov_add_entry(iov, tpl_val->value, tpl_val->len,
-                                                         tpl_val->sep, MK_IOV_NOT_FREE_BUF);
+                                        mk_iov_add_entry(iov, tpl_val->value, 
+                                                         tpl_val->len,
+                                                         tpl_val->sep, 
+                                                         MK_IOV_NOT_FREE_BUF);
 
                                         break;
                                 }
@@ -554,7 +556,10 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
                 } 
                 /* static */
                 else{
-                        mk_iov_add_entry(iov, tpl_list->buf, tpl_list->len, MK_IOV_NONE, MK_IOV_NOT_FREE_BUF);
+                        mk_iov_add_entry(iov, tpl_list->buf, 
+                                         tpl_list->len, 
+                                         mk_iov_none, 
+                                         MK_IOV_NOT_FREE_BUF);
                 }
                 tpl_list = tpl_list->next;
         }
@@ -562,7 +567,7 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
 }
 
 struct dirhtml_tplval *mk_dirhtml_tag_assign(struct dirhtml_tplval **tplval,
-                                             int tag_id, int sep, char *value)
+                                             int tag_id, mk_pointer sep, char *value)
 {
         struct dirhtml_tplval *check, *aux=0;
         
@@ -678,11 +683,12 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int i, sep;
+        int i;
 
         char *tags_header[] = MK_DIRHTML_TPL_HEADER;
         char *tags_entry[] = MK_DIRHTML_TPL_ENTRY;
         char *tags_footer[] = MK_DIRHTML_TPL_FOOTER;
+        mk_pointer sep;
 
 	/* file info */
 	unsigned long list_len=0;
@@ -714,7 +720,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	mk_header_send(cr->socket, cr, sr, sr->log);
 
         /* Creating response template */
-        tplval_header = mk_dirhtml_tag_assign(NULL, 0, MK_IOV_NONE, sr->uri_processed);
+        tplval_header = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none, sr->uri_processed);
 
         /* HTML Header */
         iov_header = mk_dirhtml_theme_compose(tags_header,
@@ -745,10 +751,10 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	{
                 /* %_target_title_% */
                 if(toc[i]->type==DT_DIR){
-                        sep = MK_IOV_SLASH;
+                        sep = mk_iov_slash;
                 }
                 else{
-                        sep = MK_IOV_NONE;
+                        sep = mk_iov_none;
                 }
 
                 /* target title */
@@ -761,10 +767,10 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 mk_dirhtml_tag_assign(&tplval_entry, 2, sep, toc[i]->name);
 
                 /* target modification time */
-                mk_dirhtml_tag_assign(&tplval_entry, 3, MK_IOV_NONE, toc[i]->ft_modif);
+                mk_dirhtml_tag_assign(&tplval_entry, 3, mk_iov_none, toc[i]->ft_modif);
 
                 /* target size */
-                mk_dirhtml_tag_assign(&tplval_entry, 4, MK_IOV_NONE, toc[i]->size);
+                mk_dirhtml_tag_assign(&tplval_entry, 4, mk_iov_none, toc[i]->size);
 
                 iov_entry = mk_dirhtml_theme_compose(tags_entry, mk_dirhtml_tpl_entry,
                                                      tplval_entry);

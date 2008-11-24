@@ -56,7 +56,7 @@ struct mk_iov *mk_iov_create_offset(int n, int offset)
 }
 
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
-                      int sep, int free)
+                      mk_pointer sep, int free)
 {
         return _mk_iov_add(mk_io, buf, len, sep, free, mk_io->iov_idx);
 }
@@ -83,7 +83,7 @@ void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free)
 }
 
 int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
-                      int sep, int free, int idx)
+                      mk_pointer sep, int free, int idx)
 {
 	mk_io->io[idx].iov_base = buf;
 	mk_io->io[idx].iov_len = len;
@@ -105,41 +105,15 @@ int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
 	return mk_io->iov_idx;
 }
 
-int mk_iov_add_separator(struct mk_iov *mk_io, int sep)
+int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep)
 {
-	int len=0;
-	char *_sep=0;
+        if(sep.len==0)
+                return mk_io->iov_idx;
 
-        switch(sep){
-        
-                case MK_IOV_BREAK_LINE:
-			_sep = _MK_IOV_BREAK_LINE;
-			len = LEN_MK_IOV_BREAK_LINE;
-			break;
-		case MK_IOV_SPACE:
-			_sep = _MK_IOV_SPACE;
-			len = LEN_MK_IOV_SPACE;
-			break;
-		case MK_IOV_HEADER_VALUE:
-			_sep = _MK_IOV_HEADER_VALUE;
-			len = LEN_MK_IOV_HEADER_VALUE;
-			break;
-                case MK_IOV_SLASH:
-                        _sep = _MK_IOV_SLASH;
-                        len = LEN_MK_IOV_SLASH;
-                        break;
-		case MK_IOV_NONE:
-			return mk_io->iov_idx;
-		default:
-			printf("\nInvalid value");
-			fflush(stdout);
-			break;
-	}
-
-	mk_io->io[mk_io->iov_idx].iov_base = _sep;
-	mk_io->io[mk_io->iov_idx].iov_len = len;
+	mk_io->io[mk_io->iov_idx].iov_base = sep.data;
+	mk_io->io[mk_io->iov_idx].iov_len = sep.len;
 	mk_io->iov_idx++;
-        mk_io->total_len += len;
+        mk_io->total_len += sep.len;
 
 #ifdef DEBUG_IOV
         if(mk_io->iov_idx > mk_io->size){
@@ -188,4 +162,13 @@ void mk_iov_print(struct mk_iov *mk_io)
                        (char *) mk_io->io[i].iov_base);
                 fflush(stdout);
         }
+}
+
+void mk_iov_separators_init()
+{
+        mk_pointer_set(&mk_iov_break_line, MK_IOV_BREAK_LINE);
+        mk_pointer_set(&mk_iov_space, MK_IOV_SPACE);
+        mk_pointer_set(&mk_iov_header_value, MK_IOV_HEADER_VALUE);
+        mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);
+        mk_pointer_set(&mk_iov_none, MK_IOV_NONE);
 }

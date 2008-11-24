@@ -29,27 +29,46 @@
 
 /* iov separators */
 
-/* break line */
+/* break line 
 #define MK_IOV_BREAK_LINE 0
 #define _MK_IOV_BREAK_LINE "\r\n"
 #define LEN_MK_IOV_BREAK_LINE 2
+*/
 
-/* blank space */
+#define MK_IOV_BREAK_LINE "\r\n"
+
+/* blank space 
 #define MK_IOV_SPACE 1
 #define _MK_IOV_SPACE " "
 #define LEN_MK_IOV_SPACE 1
+*/
 
-/* header value */
+#define MK_IOV_SPACE " "
+
+#define MK_IOV_HEADER_VALUE ": "
+
+/* header value 
 #define MK_IOV_HEADER_VALUE 2
 #define _MK_IOV_HEADER_VALUE ": "
 #define LEN_MK_IOV_HEADER_VALUE 2
+*/
 
+#define MK_IOV_SLASH "/"
+/*
 #define MK_IOV_SLASH 3
 #define _MK_IOV_SLASH "/"
 #define LEN_MK_IOV_SLASH 1
+*/
+
 
 /* avoid */
-#define MK_IOV_NONE 4
+#define MK_IOV_NONE ""
+
+mk_pointer mk_iov_break_line;
+mk_pointer mk_iov_space;
+mk_pointer mk_iov_header_value;
+mk_pointer mk_iov_slash;
+mk_pointer mk_iov_none;
 
 struct mk_iov 
 {
@@ -62,15 +81,26 @@ struct mk_iov
 };
 
 struct mk_iov *mk_iov_create(int n);
-int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len, int sep, int free);
-int mk_iov_add_separator(struct mk_iov *mk_io, int sep);
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, 
+                     int len, mk_pointer sep, int free);
+
+int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
+
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
+
 void mk_iov_free(struct mk_iov *mk_io);
+
 struct mk_iov *mk_iov_create_offset(int n, int offset);
+
 int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
-                int sep, int free, int idx);
+                mk_pointer sep, int free, int idx);
+
 void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free);
+
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
                      int free, int idx);
+
+void mk_iov_separators_init();
+ 
 #endif
 
