@@ -237,7 +237,7 @@ int write_log(struct log_info *log, struct host *h)
                                  MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
                                  MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, current_time.data, current_time.len, 
+                mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
                                  MK_IOV_SPACE,
                                  MK_IOV_NOT_FREE_BUF);
 
@@ -272,7 +272,7 @@ int write_log(struct log_info *log, struct host *h)
                                 MK_IOV_SPACE, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, MK_IOV_SPACE,
                                 MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, current_time.data, current_time.len, 
+                mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
                                  MK_IOV_SPACE,
                                  MK_IOV_NOT_FREE_BUF);
                 

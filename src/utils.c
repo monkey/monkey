@@ -51,6 +51,7 @@
 #include "config.h"
 #include "chars.h"
 #include "socket.h"
+#include "clock.h"
 
 int SendFile(int socket, struct request *sr)
 {
@@ -116,7 +117,7 @@ mk_pointer PutDate_string(time_t date)
 	gmt_tm	= (struct tm *) gmtime(&date);
 	date_gmt = mk_mem_malloc(size);
 
-	n = strftime(date_gmt, size-1,  DATEFORMAT, gmt_tm);
+	n = strftime(date_gmt, size-1,  GMT_DATEFORMAT, gmt_tm);
 	date_gmt[n] = '\0';
 	
 	pointer.data = date_gmt;
@@ -130,7 +131,7 @@ time_t PutDate_unix(char *date)
 	time_t new_unix_time;
 	struct tm t_data;
 	
-	if(!strptime(date, DATEFORMAT, (struct tm *) &t_data)){
+	if(!strptime(date, GMT_DATEFORMAT, (struct tm *) &t_data)){
 		return -1;
 	}
 

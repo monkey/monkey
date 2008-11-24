@@ -33,6 +33,7 @@
 #include "config.h"
 #include "socket.h"
 #include "utils.h"
+#include "clock.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             int sep, int free)
@@ -49,7 +50,6 @@ int mk_header_send(int fd, struct client_request *cr,
 	char *buffer=0;
 	struct header_values *sh;
 	struct mk_iov *iov;
-	mk_pointer date;
 
 	sh = sr->headers;
 
@@ -162,15 +162,14 @@ int mk_header_send(int fd, struct client_request *cr,
 			MK_IOV_BREAK_LINE, MK_IOV_NOT_FREE_BUF);
 
 	/* Date */
-	date = PutDate_string(0);
 	mk_iov_add_entry(iov, 
 			mk_header_short_date.data,
 			mk_header_short_date.len,
 			MK_IOV_HEADER_VALUE, MK_IOV_NOT_FREE_BUF);
 	mk_iov_add_entry(iov,
-			date.data,
-			date.len, 
-			MK_IOV_BREAK_LINE, MK_IOV_FREE_BUF);
+			header_current_time.data,
+			header_current_time.len, 
+			MK_IOV_BREAK_LINE, MK_IOV_NOT_FREE_BUF);
 	
 	/* Location */
 	if(sh->location!=NULL)

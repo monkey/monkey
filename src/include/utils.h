@@ -32,8 +32,6 @@
 #define CHUNKED 0
 #define NO_CHUNKED 1
 
-#define DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
-
 #include "request.h"
 
 /* utils.c */

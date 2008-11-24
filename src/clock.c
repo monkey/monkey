@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+
 #include "memory.h"
 #include "clock.h"
 
@@ -44,29 +45,47 @@ int mk_clock_start_worker()
         return 0;
 }
 
-void mk_clock_set_time()
+void mk_clock_log_set_time()
 {
         time_t utime;
 
-        if(!current_time.data)
+        if(!log_current_time.data)
         {
-                current_time.data = mk_mem_malloc_z(30);
-                current_time.len = 28;
+                log_current_time.data = mk_mem_malloc_z(30);
+                log_current_time.len = 28;
         }
 
         if ((utime = time(NULL)) == -1)
         {
                 return;
         }
-        strftime(current_time.data, 30, "[%d/%b/%G %T %z]",
+        strftime(log_current_time.data, 30, "[%d/%b/%G %T %z]",
                  (struct tm *)localtime((time_t *) &utime));
+}
+
+void mk_clock_header_set_time()
+{
+        int n, len = 30;
+	time_t date;
+        struct tm *gmt_tm;
+
+        if(!header_current_time.data)
+        {
+                header_current_time.data = mk_mem_malloc_z(len);
+                header_current_time.len = len - 1;
+        }
+
+        date = time(NULL);
+	gmt_tm	= (struct tm *) gmtime(&date);
+	n = strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
 }
 
 void *_mk_clock_worker(void *args)
 {
         while(1)
         {
-                mk_clock_set_time();
+                mk_clock_log_set_time();
+                mk_clock_header_set_time();
                 sleep(1);
         }
 }

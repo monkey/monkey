@@ -24,7 +24,10 @@
 #ifndef MK_CLOCK_H
 #define MK_CLOCK_H
 
-mk_pointer current_time;
+mk_pointer log_current_time;
+mk_pointer header_current_time;
+
+#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
 
 int mk_clock_start_worker();
 void mk_clock_set_time();
