@@ -1,6 +1,8 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,7 +35,7 @@
 #include "monkey.h"
 
 /* Carga en estructura los mimetypes */
-void Mimetype_Read_Config()
+void mk_mimetype_read_config()
 {
 	char buffer[255], path[MAX_PATH];
 	char *name=0,*type=0, *last=0;
@@ -62,18 +64,18 @@ void Mimetype_Read_Config()
 		if (!name || !type) continue;
 		if (buffer[0] == '#') continue;
 
-		if(Mimetype_Add(name,type,NULL)!=0)
+		if(mk_mimetype_add(name,type,NULL)!=0)
 			puts("Error loading Mime Types");
 	}
 	fclose(mime_file);
 }
 
-int Mimetype_Add(char *name, char *type, char *bin_path)
+int mk_mimetype_add(char *name, char *type, char *bin_path)
 {
 	
-	struct mimetypes *new_mime, *aux_mime;
+	struct mimetype *new_mime, *aux_mime;
 	
-	new_mime = mk_mem_malloc_z(sizeof(struct mimetypes));
+	new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
 
 	new_mime->name = mk_string_dup(name);
 	new_mime->type = mk_string_dup(type);
@@ -87,16 +89,14 @@ int Mimetype_Add(char *name, char *type, char *bin_path)
 		aux_mime=first_mime;
 		while(aux_mime->next!=NULL)
 			aux_mime=aux_mime->next;
-		aux_mime->next=new_mime;
+		aux_mime->next = new_mime;
 	}
 	return 0;	
 }
 
-char **Mimetype_Find(char *filename)
+struct mimetype *mk_mimetype_find(char *filename)
 {
 	int j, len;
-	char *name;
-	char **mime;
 
 	j = len = strlen(filename);
 	
@@ -104,42 +104,31 @@ char **Mimetype_Find(char *filename)
 	while(filename[j]!='.' && j>=0) 
 		j--;
 
-	name = mk_string_copy_substr(filename, j+1, len);
-	mime = Mimetype_CMP(name);
-	mk_mem_free(name);
-	
-	return (char **) mime;
+        if(j==0){
+                return NULL;
+        }
+
+	return mk_mimetype_cmp(filename+j+1);
 }
 
 /* Busca mime type segun Request */
-char **Mimetype_CMP(char *name)
+struct mimetype *mk_mimetype_cmp(char *name)
 {
-	char **info;
-	struct mimetypes *aux_mime;
+	struct mimetype *aux_mime;
 	
 	aux_mime=first_mime;
 	while(aux_mime!=NULL) {
 		if(strcasecmp(aux_mime->name,name)==0) {
-			break;		 		  
+                        return aux_mime;
 		}
 		else 
 			aux_mime=aux_mime->next;
 	}
 
-	info=(char **) mk_mem_malloc(sizeof(char *) * 3);
-	if(aux_mime==NULL){
-		info[0]=MIMETYPE_DEFAULT;
-		info[1]=NULL;
-	}
-	else{
-		info[0]=aux_mime->type;
-		info[1]=aux_mime->script_bin_path;
-	}
-	info[2]='\0';
-	return info;
+        return NULL;
 }
 
-int Mimetype_free(char **arr)
+int mk_mimetype_free(char **arr)
 {
 	mk_mem_free(arr);
 	return 0;

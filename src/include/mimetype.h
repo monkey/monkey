@@ -26,19 +26,22 @@
 #define MAX_MIMETYPES_NOMBRE 15
 #define MAX_MIMETYPES_TIPO 55
 #define MAX_SCRIPT_BIN_PATH 255
-struct mimetypes {
-//	char *name[MAX_MIMETYPES_NOMBRE];
-//	char *type[MAX_MIMETYPES_TIPO];
-//	char *script_bin_path[MAX_SCRIPT_BIN_PATH];
+
+struct mimetype {
 	char *name;
 	char *type;
 	char *script_bin_path;
-	struct mimetypes *next;	 
+	struct mimetype *next;	 
 } *first_mime;
 
-int	 Mimetype_free(char **arr);
-void	Mimetype_Read_Config();
-int	 Mimetype_Add(char *name, char *type, char *bin_path);
-char	**Mimetype_Find(char *filename);
-char	**Mimetype_CMP(char *name);
+
+
+void mk_mimetype_read_config();
+
+int mk_mimetype_free(char **arr);
+int mk_mimetype_add(char *name, char *type, char *bin_path);
+
+struct mimetype *mk_mimetype_find(char *filename);
+struct mimetype *mk_mimetype_cmp(char *name);
+
 

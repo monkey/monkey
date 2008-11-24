@@ -386,3 +386,13 @@ char *get_real_string(mk_pointer uri){
         return (char *) buf;
 }
 
+void mk_utils_toupper(char *string)
+{
+        int i, len;
+        
+        len = strlen(string);
+        for(i=0; i<len; i++)
+        {
+                string[i] = toupper(string[i]);
+        }
+}

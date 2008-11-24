@@ -139,7 +139,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 {
         int debug_error=0, bytes=0;
         char *location=0, *real_location=0; /* ruta para redireccion */
-        char **mime_info;
+        struct mimetype *mime;
         mk_pointer gmt_file_unix_time; // gmt time of server file (unix time)
         struct file_info *path_info;
         unsigned long len;
@@ -263,7 +263,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 else{
                         mk_mem_free(path_info);
                         sr->real_path = 
-                                m_build_buffer_from_buffer(sr->real_path, "%s", index_file);
+                                m_build_buffer_from_buffer(sr->real_path, 
+                                                           "%s", index_file);
 
                         path_info = mk_file_get_info(sr->real_path);
                 }
@@ -276,16 +277,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
                 
         /* Matching MimeType  */
-        mime_info=Mimetype_Find(sr->real_path);
+        mime = mk_mimetype_find(sr->real_path);
 
-        /* FIXME:
-         *
-         * Some returns are not freeing all memory blocks allocated
-         */
-
-        if(mime_info[1]){
+        if(mime->script_bin_path){
                 struct file_info *fcgi;
-                fcgi = mk_file_get_info(mime_info[1]);
+                fcgi = mk_file_get_info(mime->script_bin_path);
                 
                 /* executable script (e.g PHP) ? */
                 if(fcgi){
@@ -295,7 +291,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         /* is it  normal file ? */
                         if(fcgi->is_directory==MK_FILE_TRUE || fcgi->exec_access==MK_FILE_FALSE){
                                 mk_request_error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
-                                Mimetype_free(mime_info);
                                 return -1;
                         }
                         /*
@@ -310,13 +305,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         sr->log->final_response=M_HTTP_OK;
                         sr->script_filename=mk_string_dup(sr->real_path);
 
-                        arg_script[0] = mime_info[1];
+                        arg_script[0] = mime->script_bin_path;
                         arg_script[1] = sr->script_filename;
                         arg_script[2] = NULL;
 
                         if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
                         {
-                                cgi_status=M_CGI_run(cr, sr, mime_info[1], arg_script);
+                                cgi_status=M_CGI_run(cr, sr, mime->script_bin_path, 
+                                                     arg_script);
                         }
                         
                         switch(cgi_status){
@@ -341,7 +337,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                                 sr, 1, sr->log);        
                         }
 
-                        Mimetype_free(mime_info);
                         mk_mem_free(fcgi);
                         return cgi_status;
                 }
@@ -349,7 +344,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* get file size */
         if(path_info->size < 0) {
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
-                Mimetype_free(mime_info);
                 return -1;
         }
         
@@ -364,7 +358,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 time_t date_client; // Date send by client
                 time_t date_file_server; // Date server file
         
-        
                 date_client = PutDate_unix(sr->if_modified_since.data);
                 date_file_server = PutDate_unix(gmt_file_unix_time.data);
 
@@ -372,7 +365,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 {
                         sr->headers->status = M_NOT_MODIFIED;
                         mk_header_send(cr->socket, cr, sr, sr->log);    
-                        Mimetype_free(mime_info);
                         mk_mem_free(path_info);
                         mk_pointer_free(&gmt_file_unix_time);
                         return 0;
@@ -387,7 +379,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->log->size = path_info->size;
         if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
         {
-                sr->headers->content_type = mime_info[0];
+                sr->headers->content_type = mime->name;
                 /* Range */
                 if(sr->range.data!=NULL && config->resume==VAR_ON){
                         if(mk_http_range_parse(sr)<0)
@@ -408,7 +400,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         mk_header_send(cr->socket, cr, sr, sr->log);
 
         if(sr->headers->content_length==0){
-                Mimetype_free(mime_info);
                 return 0;
         }
 
@@ -433,7 +424,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 bytes = SendFile(cr->socket, sr);
         }
 
-        Mimetype_free(mime_info);
         mk_mem_free(path_info);
         sr->headers->content_type=NULL;
 

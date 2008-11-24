@@ -178,7 +178,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 				printf("Error: AddScript variable in %s -> extension not found.\n", path);
 				exit(1);
 			}	
-			Mimetype_Add(mimescript[2],mimescript[0],mimescript[1]);
+			mk_mimetype_add(mimescript[2],mimescript[0],mimescript[1]);
 		}
 
 		/* User Variable */
@@ -510,7 +510,7 @@ void mk_config_start_configure(void)
 		mk_config_add_index("index.html");			
 
 	/* Load mimes */
-	Mimetype_Read_Config();
+	mk_mimetype_read_config();
 
         /* Load dir_html configuration */
         mk_dirhtml_conf();
