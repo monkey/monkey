@@ -371,15 +371,19 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }
         }
         sr->headers->status = M_HTTP_OK;
-        sr->headers->content_length = path_info->size;
         sr->headers->cgi = SH_NOCGI;
         sr->headers->last_modified = gmt_file_unix_time.data;
         sr->headers->location = NULL;
 
-        sr->log->size = path_info->size;
+        /* Object size for log and response headers */
+        sr->log->size = sr->headers->content_length = \
+                path_info->size;
+        sr->log->size_p = sr->headers->content_length_p = \
+                mk_utils_int2mkp(path_info->size);
+
         if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
         {
-                sr->headers->content_type = mime->name;
+                sr->headers->content_type = mime->type;
                 /* Range */
                 if(sr->range.data!=NULL && config->resume==VAR_ON){
                         if(mk_http_range_parse(sr)<0)

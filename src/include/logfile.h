@@ -44,7 +44,7 @@ struct log_info {
 	char *ip;
 	int final_response; /* Ok: 200, Not Found 400, etc... */
 	int size;
-        char *size_str;
+        mk_pointer size_p;
 	int status; /* on/off : 301. */
 	mk_pointer error_msg;
 	

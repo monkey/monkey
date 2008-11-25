@@ -219,7 +219,6 @@ void *start_worker_logger(void *args)
  y errores */
 int write_log(struct log_info *log, struct host *h)
 {
-        unsigned long len;
         char *buf;
         struct mk_iov *iov;
         mk_pointer *status;
@@ -230,42 +229,54 @@ int write_log(struct log_info *log, struct host *h)
         }
 
         iov = mk_iov_create(16);
+
         /* Register a successfull request */
         if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
         {
+                /* client IP address */
                 mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
                                  mk_iov_space, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
+
+                /* Date/time when object was requested */
                 mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
                                  mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
 
+                /* HTTP method required */
                 buf = mk_http_method_check_str(log->method);
                 mk_iov_add_entry(iov, buf, strlen(buf), mk_iov_space, 
                                  MK_IOV_NOT_FREE_BUF);
+
+                /* HTTP URI required */
                 mk_iov_add_entry(iov, log->uri.data, log->uri.len, 
                                  mk_iov_space, MK_IOV_NOT_FREE_BUF);
                         
-                        if(log->protocol)
-                        {
-                                buf = mk_http_protocol_check_str(log->protocol);
-                                mk_iov_add_entry(iov, buf, strlen(buf), 
-                                                 mk_iov_space, 
-                                                 MK_IOV_NOT_FREE_BUF);
-                        }
-
-                        status = (mk_pointer *)
-                                mk_http_status_get(log->final_response);
-
-                        mk_iov_add_entry(iov, status->data, status->len, 
+                if(log->protocol)
+                {
+                        buf = mk_http_protocol_check_str(log->protocol);
+                        mk_iov_add_entry(iov, buf, strlen(buf), 
                                          mk_iov_space, 
                                          MK_IOV_NOT_FREE_BUF);
+                }
 
-                        buf = m_build_buffer(&buf, &len, "%i\n", log->size);
-                        mk_iov_add_entry(iov, buf, len, mk_iov_none, 
-                                         MK_IOV_FREE_BUF);
-                        mk_iov_send(h->log_access[1], iov);
+                /* HTTP status code */
+                status = (mk_pointer *)
+                        mk_http_status_get(log->final_response);
+                mk_iov_add_entry(iov, status->data, status->len, 
+                                 mk_iov_space, 
+                                 MK_IOV_NOT_FREE_BUF);
+
+                /* object size */
+                mk_iov_add_entry(iov, 
+                                 log->size_p.data, 
+                                 log->size_p.len, 
+                                 mk_iov_lf,
+                                 MK_IOV_NOT_FREE_BUF);
+                
+                /* Send info to pipe */
+                mk_iov_send(h->log_access[1], iov);
         }
         else{ /* Regiter some error */
                 mk_iov_add_entry(iov, log->ip, strlen(log->ip),
@@ -276,10 +287,10 @@ int write_log(struct log_info *log, struct host *h)
                                  mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
                 
-                mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, 
-                                 mk_iov_space,
-                                 MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "\n", 1, mk_iov_none, 
+                mk_iov_add_entry(iov, 
+                                 log->error_msg.data, 
+                                 log->error_msg.len, 
+                                 mk_iov_lf,
                                  MK_IOV_NOT_FREE_BUF);
                 mk_iov_send(h->log_error[1], iov);
 

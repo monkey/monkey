@@ -396,3 +396,16 @@ void mk_utils_toupper(char *string)
                 string[i] = toupper(string[i]);
         }
 }
+
+mk_pointer mk_utils_int2mkp(int n)
+{
+        mk_pointer p;
+        char *buf;
+        unsigned long len;
+
+        m_build_buffer(&buf, &len, "%i", n);
+        p.data = buf;
+        p.len = len;
+
+        return p;
+}

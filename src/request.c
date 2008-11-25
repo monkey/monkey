@@ -739,9 +739,10 @@ struct request *mk_request_alloc()
 
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
-        request->log->size_str = NULL;
 
+        mk_pointer_reset(&request->log->size_p);
 	mk_pointer_reset(&request->log->error_msg);
+
 	request->status=VAR_ON;
 	request->method=METHOD_NOT_FOUND;
 

@@ -71,5 +71,7 @@ void M_free(void *ptr);
 int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 
+mk_pointer mk_utils_int2mkp(int n);
+
 #endif
 

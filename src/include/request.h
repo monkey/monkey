@@ -193,7 +193,10 @@ struct request {
 
 struct header_values {
 	int status;
+
 	int content_length;	
+        mk_pointer content_length_p;
+
 	int cgi;
 	int pconnections_left;
 	int ranges[2];
