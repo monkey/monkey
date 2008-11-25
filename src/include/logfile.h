@@ -1,6 +1,8 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,6 +44,7 @@ struct log_info {
 	char *ip;
 	int final_response; /* Ok: 200, Not Found 400, etc... */
 	int size;
+        char *size_str;
 	int status; /* on/off : 301. */
 	mk_pointer error_msg;
 	

@@ -166,7 +166,8 @@ void mk_iov_print(struct mk_iov *mk_io)
 
 void mk_iov_separators_init()
 {
-        mk_pointer_set(&mk_iov_break_line, MK_IOV_BREAK_LINE);
+        mk_pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
+        mk_pointer_set(&mk_iov_lf, MK_IOV_LF);
         mk_pointer_set(&mk_iov_space, MK_IOV_SPACE);
         mk_pointer_set(&mk_iov_header_value, MK_IOV_HEADER_VALUE);
         mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);

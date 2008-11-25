@@ -28,43 +28,15 @@
 #define MK_IOV_NOT_FREE_BUF 0
 
 /* iov separators */
-
-/* break line 
-#define MK_IOV_BREAK_LINE 0
-#define _MK_IOV_BREAK_LINE "\r\n"
-#define LEN_MK_IOV_BREAK_LINE 2
-*/
-
-#define MK_IOV_BREAK_LINE "\r\n"
-
-/* blank space 
-#define MK_IOV_SPACE 1
-#define _MK_IOV_SPACE " "
-#define LEN_MK_IOV_SPACE 1
-*/
-
+#define MK_IOV_CRLF "\r\n"
+#define MK_IOV_LF "\n"
 #define MK_IOV_SPACE " "
-
 #define MK_IOV_HEADER_VALUE ": "
-
-/* header value 
-#define MK_IOV_HEADER_VALUE 2
-#define _MK_IOV_HEADER_VALUE ": "
-#define LEN_MK_IOV_HEADER_VALUE 2
-*/
-
 #define MK_IOV_SLASH "/"
-/*
-#define MK_IOV_SLASH 3
-#define _MK_IOV_SLASH "/"
-#define LEN_MK_IOV_SLASH 1
-*/
-
-
-/* avoid */
 #define MK_IOV_NONE ""
 
-mk_pointer mk_iov_break_line;
+mk_pointer mk_iov_crlf;
+mk_pointer mk_iov_lf;
 mk_pointer mk_iov_space;
 mk_pointer mk_iov_header_value;
 mk_pointer mk_iov_slash;

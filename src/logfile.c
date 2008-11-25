@@ -279,7 +279,8 @@ int write_log(struct log_info *log, struct host *h)
                 mk_iov_add_entry(iov, log->error_msg.data, log->error_msg.len, 
                                  mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "\n", 1, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, "\n", 1, mk_iov_none, 
+                                 MK_IOV_NOT_FREE_BUF);
                 mk_iov_send(h->log_error[1], iov);
 
         }
