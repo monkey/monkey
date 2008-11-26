@@ -68,9 +68,16 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 int _mk_string_search(char *string, char *search, int n)
 {
 	char *np;
-        
+        int res;
+
         np = strcasestr(string, search);
         if(!np)
+        {
+                return -1;
+        }
+
+        res = np-string;
+        if(res>n && n>=0)
         {
                 return -1;
         }

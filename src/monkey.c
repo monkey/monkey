@@ -228,17 +228,22 @@ int main(int argc, char **argv)
 
 	sched = sched_list;
 	socklen_t socket_size = sizeof(remote);
-	
+
 	while(1)
 	{
-		if((remote_fd=accept(local_fd, (struct sockaddr *)&remote, &socket_size))==-1)
+		if((remote_fd=accept(local_fd, 
+                                     (struct sockaddr *)&remote, 
+                                     &socket_size))==-1)
 		{
 			perror("accept");
 			continue;
 		}
 
+                /* Note: Linux don't set TCP_NODELAY socket flag by default */
+                mk_socket_set_tcp_nodelay(remote_fd);
 		mk_socket_set_nonblocking(remote_fd);
-		mk_epoll_add_client(sched->epoll_fd, remote_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
+		mk_epoll_add_client(sched->epoll_fd, remote_fd, 
+                                    MK_EPOLL_BEHAVIOR_TRIGGERED);
 		
 		if(sched->next)
 		{

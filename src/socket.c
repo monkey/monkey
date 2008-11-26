@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -35,16 +37,24 @@
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
-	return setsockopt(fd, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+	return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
 }
 
 int mk_socket_set_nonblocking(int sockfd)
 {
-    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0)|O_NONBLOCK) == -1) {
-        perror("fcntl");
-	return -1;
-    }
-    return 0;
+        if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0)|O_NONBLOCK) == -1) {
+                perror("fcntl");
+                return -1;
+        }
+        return 0;
+}
+
+
+int mk_socket_set_tcp_nodelay(int sockfd)
+{
+        int on=1;
+        
+        return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
 char *mk_socket_get_ip(int socket)

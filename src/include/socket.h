@@ -24,12 +24,13 @@
 #define ST_RECV 0
 #define ST_SEND 1
 
-
 #define TCP_CORK_ON 1
 #define TCP_CORK_OFF 0
 
 int mk_socket_set_cork_flag(int fd, int state);
+int mk_socket_set_tcp_nodelay(int sockfd);
 int mk_socket_set_nonblocking(int sockfd);
+
 char *mk_socket_get_ip(int socket);
 int mk_socket_close(int socket);
 int mk_socket_timeout(int s, char *buf, int len, 

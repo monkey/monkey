@@ -410,7 +410,6 @@ int mk_request_header_process(struct request *sr)
 	int uri_init=0, uri_end=0;
 	int query_init=0, query_end=0;
 	int prot_init=0, prot_end=0, pos_sep=0;
-	int break_line;
         int fh_limit;
 	char *str_prot=0, *port=0;
 	char *headers;
@@ -420,8 +419,8 @@ int mk_request_header_process(struct request *sr)
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
 	/* Request URI */
-	uri_init = mk_string_search(sr->body.data, " ") + 1;
-        fh_limit = mk_string_search(sr->body.data, "\n");
+        uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
+        fh_limit = (index(sr->body.data, '\n') - sr->body.data);
 
         prot_init = uri_end = mk_string_search_r(sr->body.data, " ", fh_limit) - 1;
         if(uri_end <= 0)
@@ -437,8 +436,9 @@ int mk_request_header_process(struct request *sr)
 	}
 	
 	/* Query String */
-	query_init = mk_string_search(sr->body.data+uri_init, "?");
-	if(query_init > 0 && query_init <= uri_end)
+	//query_init = mk_string_search(sr->body.data+uri_init, "?");
+	query_init = (index(sr->body.data+uri_init, '?') - sr->body.data+uri_init);
+        if(query_init > 0 && query_init <= uri_end)
 	{
 		query_init+=uri_init+1;
 		query_end = uri_end;
@@ -456,20 +456,13 @@ int mk_request_header_process(struct request *sr)
 
 
 	/* HTTP Version */
-	if( (prot_end = mk_string_search(sr->body.data, "\r\n"))>0){
-		break_line = 2;
-	}
-	else{
-		prot_end = mk_string_search(sr->body.data, "\n");
-		break_line = 1;
-	}
-
+        prot_end = fh_limit-1;
 	if(prot_end!=prot_init && prot_end>0){
 		str_prot = mk_string_copy_substr(sr->body.data, prot_init, prot_end);
 		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
         	mk_mem_free(str_prot);
 	}
-	headers = sr->body.data+prot_end+break_line;
+	headers = sr->body.data+prot_end+mk_crlf.len;
 
 	/* URI processed */
 	sr->uri_processed = get_real_string(sr->uri);
