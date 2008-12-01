@@ -30,6 +30,7 @@
 #include <fcntl.h>
 
 #include "socket.h"
+#include "memory.h"
 
 /* 
  * Example from:
@@ -49,11 +50,10 @@ int mk_socket_set_nonblocking(int sockfd)
         return 0;
 }
 
-
 int mk_socket_set_tcp_nodelay(int sockfd)
 {
         int on=1;
-        
+
         return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
@@ -121,3 +121,49 @@ int mk_socket_timeout(int s, char *buf, int len,
 	return status;
 }
 
+int mk_socket_create()
+{
+        int sockfd;
+
+        if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+                perror("client: socket");
+                return -1;
+        }
+
+        return sockfd;
+}
+
+int mk_socket_connect(int sockfd, char *server, int port)
+{
+        int res;
+        struct sockaddr_in *remote;
+
+        remote = (struct sockaddr_in *)
+                mk_mem_malloc_z(sizeof(struct sockaddr_in));
+        remote->sin_family = AF_INET;
+        res = inet_pton(AF_INET, server, (void *)(&(remote->sin_addr.s_addr)));
+
+        if(res < 0)  
+        {
+                perror("Can't set remote->sin_addr.s_addr");
+                mk_mem_free(remote);
+                return -1;
+        }
+        else if(res == 0){
+                perror("Invalid IP address\n");
+                mk_mem_free(remote);
+                return -1;
+        }
+
+        remote->sin_port = htons(port);
+        if (connect(sockfd, 
+                    (struct sockaddr *)remote, 
+                    sizeof(struct sockaddr)) == -1)
+        {
+                close(sockfd);
+                perror("client: connect");
+                return -1;
+        }
+        //mk_mem_free(remote);
+        return 0;
+}

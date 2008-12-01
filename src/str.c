@@ -92,19 +92,18 @@ int mk_string_search(char *string, char *search)
 /* lookup string in reverse order */
 int mk_string_search_r(char *string, char *search, int n)
 {
-        int len = strlen(string);
         int i,j;
 
         if(n>=0){
                 j = n;
         }
         else{
-                j = len;
+                j = strlen(string);
         }
 
         for(i=j;i>=0;i--)
         {
-                if(string[i]==' '){
+                if(string[i]==search){
                         return i;
                 }
         }

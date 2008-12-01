@@ -78,7 +78,7 @@ struct request *mk_request_parse(struct client_request *cr)
 
 		cr_buf->method = mk_http_method_get(cr_buf->body.data);
 
-		cr_buf->log->ip = cr->client_ip;
+		cr_buf->log->ip = cr->ip;
 		cr_buf->next = NULL;
 
 		i = init_block = i + mk_endblock.len;
@@ -300,7 +300,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	}	
 	
 	/*  URL it's Allowed ? */ 
-	if(Deny_Check(s_request, cr->client_ip)==-1) {
+	if(Deny_Check(s_request, cr->ip.data)==-1) {
 		s_request->log->final_response=M_CLIENT_FORBIDDEN;
 		mk_request_error(M_CLIENT_FORBIDDEN, cr, s_request, 1,
                                  s_request->log);
@@ -349,31 +349,6 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	}
 	s_request->log->host_conf = s_request->host_conf;
 
-	/* CGI Request ? */
-	if(s_request->host_conf->scriptalias!=NULL){
-		int len=0;
-
-		len = strlen(s_request->host_conf->scriptalias[0]);
-		if((strncmp(s_request->host_conf->scriptalias[0], 
-                            s_request->uri_processed, len))==0){
-			int cgi_status;
-			cgi_status=M_CGI_main(cr, s_request, s_request->log, 
-                                              s_request->body);
-			/* Codes:
-				-1 : Permission problem
-				-2 : Timeout
-				-3 : Internal Server Error
-			*/
-			if(cgi_status==M_CGI_TIMEOUT || 
-                           cgi_status==M_CGI_INTERNAL_SERVER_ERR)
-                        {
-				mk_request_error(s_request->log->final_response, 
-						cr, s_request, 1, s_request->log);
-			}
-			return cgi_status;
-		}
-	}
-
 	/* is requesting an user home directory ? */
 	if(strncmp(s_request->uri_processed, USER_HOME_STRING, 
                    strlen(USER_HOME_STRING))==0 && config->user_dir)
@@ -408,7 +383,7 @@ and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
 {
 	int uri_init=0, uri_end=0;
-	int query_init=0, query_end=0;
+        char *query_init=0;
 	int prot_init=0, prot_end=0, pos_sep=0;
         int fh_limit;
 	char *str_prot=0, *port=0;
@@ -422,13 +397,14 @@ int mk_request_header_process(struct request *sr)
         uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
         fh_limit = (index(sr->body.data, '\n') - sr->body.data);
 
-        prot_init = uri_end = mk_string_search_r(sr->body.data, " ", fh_limit) - 1;
+        uri_end = mk_string_search_r(sr->body.data, ' ', 
+                                                fh_limit) - 1;
         if(uri_end <= 0)
         {
                 return -1;
         }
 
-        prot_init += 2;
+        prot_init = uri_end + 2;
         
 	if(uri_end < uri_init)
 	{
@@ -436,18 +412,24 @@ int mk_request_header_process(struct request *sr)
 	}
 	
 	/* Query String */
-	//query_init = mk_string_search(sr->body.data+uri_init, "?");
-	query_init = (index(sr->body.data+uri_init, '?') - sr->body.data+uri_init);
-        if(query_init > 0 && query_init <= uri_end)
+	query_init = index(sr->body.data+uri_init, '?');
+        if(query_init)
 	{
-		query_init+=uri_init+1;
-		query_end = uri_end;
-		uri_end = query_init - 2;
-		sr->query_string = mk_pointer_create(sr->body.data, query_init, query_end);
+                int init, end;
+
+                init = (int) (query_init-(sr->body.data+uri_init)) + uri_init;
+                if(init <= uri_end)
+                {
+                        end = uri_end ;
+                        uri_end = init - 1;
+                 
+                        sr->query_string = mk_pointer_create(sr->body.data, 
+                                                             init, end);
+                }
 	}
-	
 	/* Request URI Part 2 */
-	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, uri_init, uri_end+1);
+	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, 
+                                                   uri_init, uri_end+1);
 
 	if(sr->uri.len<1)
 	{
@@ -458,8 +440,11 @@ int mk_request_header_process(struct request *sr)
 	/* HTTP Version */
         prot_end = fh_limit-1;
 	if(prot_end!=prot_init && prot_end>0){
-		str_prot = mk_string_copy_substr(sr->body.data, prot_init, prot_end);
-		sr->protocol = sr->log->protocol = mk_http_protocol_check(str_prot);
+		str_prot = mk_string_copy_substr(sr->body.data, 
+                                                 prot_init, prot_end);
+		sr->protocol = sr->log->protocol = 
+                        mk_http_protocol_check(str_prot);
+
         	mk_mem_free(str_prot);
 	}
 	headers = sr->body.data+prot_end+mk_crlf.len;
@@ -574,12 +559,12 @@ char *mk_request_index(char *pathfile)
 	aux_index=first_index;
 
 	while(aux_index) {
-		m_build_buffer(&file_aux, &len, "%s%s", pathfile, aux_index->indexname);
+		m_build_buffer(&file_aux, &len, "%s%s", 
+                               pathfile, aux_index->indexname);
 	
 		if(access(file_aux,F_OK)==0)
 		{
-			mk_mem_free(file_aux);
-			return (char *) aux_index->indexname;
+			return (char *) file_aux;
 		}
 		mk_mem_free(file_aux);
 		aux_index=aux_index->next;
@@ -662,13 +647,15 @@ void mk_request_error(int num_error, struct client_request *cr,
 			mk_request_set_default_page(&page, "Internal Server Error",
 					message, s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_500;
-			// req uri
+
 			mk_pointer_free(&message);
 			break;
 			
 		case M_SERVER_HTTP_VERSION_UNSUP:
 			mk_pointer_reset(&message);
-			mk_request_set_default_page(&page, "HTTP Version Not Supported",message,
+			mk_request_set_default_page(&page, 
+                                                    "HTTP Version Not Supported",
+                                                    message,
 				       s_request->host_conf->host_signature);
 			s_log->error_msg = request_error_msg_505;
 			break;
@@ -678,7 +665,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
 	s_request->headers->status = num_error;
 	s_request->headers->content_length = page.len;
-	s_request->headers->location = NULL ;
+	s_request->headers->location = NULL;
 	s_request->headers->cgi = SH_NOCGI;
 	s_request->headers->pconnections_left = 0;
 	s_request->headers->last_modified = NULL;
@@ -697,9 +684,9 @@ void mk_request_error(int num_error, struct client_request *cr,
 	}
 
 	mk_header_send(cr->socket, cr, s_request, s_log);
-
+        
 	if(debug==1){
-		fdprintf(cr->socket, NO_CHUNKED, "%s", page.data);
+                write(cr->socket, page.data, page.len);
 		mk_pointer_free(&page);
 	}
 }
@@ -867,7 +854,10 @@ struct client_request *mk_request_client_create(int socket)
 	cr->counter_connections = 0;
 	cr->socket = socket;
 	cr->request = NULL;
-	cr->client_ip = mk_socket_get_ip(socket);
+
+        mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
+
+
 	cr->next = NULL;
 	cr->body = mk_mem_malloc_z(MAX_REQUEST_BODY);
 	request_handler = mk_sched_get_request_handler();

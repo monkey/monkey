@@ -68,6 +68,13 @@ void mk_mimetype_read_config()
 			puts("Error loading Mime Types");
 	}
 	fclose(mime_file);
+
+        /* Set default mime type */
+        mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
+        mimetype_default->name = MIMETYPE_DEFAULT_NAME;
+        mimetype_default->type = MIMETYPE_DEFAULT_TYPE;
+        mimetype_default->script_bin_path = NULL;
+        mimetype_default->next = NULL;
 }
 
 int mk_mimetype_add(char *name, char *type, char *bin_path)

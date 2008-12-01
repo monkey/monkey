@@ -118,7 +118,7 @@ int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep)
 #ifdef DEBUG_IOV
         if(mk_io->iov_idx > mk_io->size){
                 printf("\nDEBUG IOV :: ERROR, Broke array size");
-                printf("\n          -> %s (len=%i)", _sep, len); 
+                printf("\n          -> %s ( len=%i )", sep.data, (int) sep.len); 
                 fflush(stdout);
         }
 #endif

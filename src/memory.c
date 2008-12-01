@@ -25,11 +25,14 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#include "monkey.h"
+#include "config.h"
 #include "memory.h"
 #include "request.h"
 #include "header.h"
 #include "http.h"
 #include "iov.h"
+#include "cgi.h"
 
 void *mk_mem_malloc(size_t size)
 {
@@ -70,9 +73,7 @@ void *mk_mem_realloc(void* ptr, size_t size)
 	
 void mk_mem_free(void *ptr)
 {
-	if(ptr!=NULL){
-		free(ptr);
-	}
+	free(ptr);
 }
 
 mk_pointer mk_pointer_create(char *buf, long init, long end)
@@ -201,11 +202,13 @@ void mk_mem_pointers_init()
 
         mk_http_status_list_init();
         mk_iov_separators_init();
+        mk_palm_set_env();
+
+
+        /* Server */
+        mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
+        //        mk_pointer_set(&mk_monkey_port, config->port);
+
+        /* CGI */
+        mk_pointer_set(&mk_cgi_version, CGI_VERSION);
 }
-
-
-
-
-
-
-

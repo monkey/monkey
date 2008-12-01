@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2003, Eduardo Silva P.
@@ -29,6 +31,7 @@
 
 /* Base struct of server */
 struct server_config {
+        mk_pointer port;
 	char *serverconf;	/* path to configuration files */
 	char *server_addr;
 	char *server_software;

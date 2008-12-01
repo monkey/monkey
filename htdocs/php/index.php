@@ -7,6 +7,8 @@
 //
 //
 	echo phpinfo();
+
+//	echo "holaaaaaaaaaaaaaaaa";
 ?>
 
 </BODY>

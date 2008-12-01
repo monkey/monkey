@@ -22,6 +22,7 @@
 
 #include <pthread.h>
 #include <netinet/in.h>
+#include "memory.h"
 
 /* Sockets*/
 struct sockaddr_in remote;
@@ -57,6 +58,9 @@ pthread_mutex_t  mutex_thread_counter;
 pthread_mutex_t  mutex_cgi_child;
 pthread_mutex_t  mutex_logfile;
 pthread_mutex_t  mutex_wait_register;
+
+mk_pointer mk_monkey_protocol;
+mk_pointer mk_monkey_port;
 
 /* Usuario real que que ejecuto
  el servidor */

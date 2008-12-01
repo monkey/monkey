@@ -143,6 +143,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         mk_pointer gmt_file_unix_time; // gmt time of server file (unix time)
         struct file_info *path_info;
         unsigned long len;
+        char *palm;
 
         /* Normal request default site */
         if((strcmp(sr->uri_processed,"/"))==0)
@@ -163,6 +164,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
 
         path_info = mk_file_get_info(sr->real_path);
+
         if(!path_info){
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 
                                 debug_error, sr->log);
@@ -250,22 +252,23 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                 getdir_res = mk_dirhtml_init(cr, sr);
                                         
                                 if(getdir_res == -1){
-                                        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+                                        mk_request_error(M_CLIENT_FORBIDDEN, cr, 
+                                                         sr, 1, sr->log);
                                         return -1;
                                 }
                                 return getdir_res;
                         }
                         else {
-                                mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+                                mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 
+                                                 1, sr->log);
                                 return -1;
                         }
                 }
                 else{
                         mk_mem_free(path_info);
-                        sr->real_path = 
-                                m_build_buffer_from_buffer(sr->real_path, 
-                                                           "%s", index_file);
+                        mk_mem_free(sr->real_path);
 
+                        sr->real_path = index_file;
                         path_info = mk_file_get_info(sr->real_path);
                 }
         }
@@ -278,69 +281,18 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 
         /* Matching MimeType  */
         mime = mk_mimetype_find(sr->real_path);
-
-        if(mime->script_bin_path){
-                struct file_info *fcgi;
-                fcgi = mk_file_get_info(mime->script_bin_path);
-                
-                /* executable script (e.g PHP) ? */
-                if(fcgi){
-                        int cgi_status=0;
-                        char *arg_script[3];
-                        
-                        /* is it  normal file ? */
-                        if(fcgi->is_directory==MK_FILE_TRUE || fcgi->exec_access==MK_FILE_FALSE){
-                                mk_request_error(M_SERVER_INTERNAL_ERROR, cr, sr, 1, sr->log);
-                                return -1;
-                        }
-                        /*
-                         * FIXME: CHECK FOR TARGET PERMISSION AS GCI DOES
-                         *                      
-                         ftarget = mk_file_get_info(sr->script_filename);
-                        if(!ftarget)
-                        {
-                        
-                        }
-                        */
-                        sr->log->final_response=M_HTTP_OK;
-                        sr->script_filename=mk_string_dup(sr->real_path);
-
-                        arg_script[0] = mime->script_bin_path;
-                        arg_script[1] = sr->script_filename;
-                        arg_script[2] = NULL;
-
-                        if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
-                        {
-                                cgi_status=M_CGI_run(cr, sr, mime->script_bin_path, 
-                                                     arg_script);
-                        }
-                        
-                        switch(cgi_status){
-                                case -2:        /* Timeout */
-                                        sr->log->final_response=M_CLIENT_REQUEST_TIMEOUT;
-                                        break;
-                                case -3:  /* Internal server Error */
-                                        sr->log->final_response=M_SERVER_INTERNAL_ERROR;
-                                        break;
-                                case -1:
-                                        sr->make_log=VAR_OFF;
-                                        break;
-                                case 0:  /* Ok */
-                                        sr->log->final_response=M_HTTP_OK;
-                                        break;
-                        };      
-
-                        if(cgi_status==M_CGI_TIMEOUT || 
-                                        cgi_status==M_CGI_INTERNAL_SERVER_ERR)
-                        {
-                                mk_request_error(sr->log->final_response, cr, 
-                                                sr, 1, sr->log);        
-                        }
-
-                        mk_mem_free(fcgi);
-                        return cgi_status;
-                }
+        if(!mime)
+        {
+                mime = mimetype_default;
         }
+
+        palm = mk_palm_check_request(cr, sr);
+        if(palm)
+        {
+                mk_palm_send_response(cr, sr, palm);
+                return -1;
+        }
+
         /* get file size */
         if(path_info->size < 0) {
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
@@ -423,7 +375,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                         sr, 1, sr->log);
                         return -1;
                 }
-                
                 mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
                 bytes = SendFile(cr->socket, sr);
         }

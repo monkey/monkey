@@ -1,3 +1,5 @@
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2007, Eduardo Silva P.
@@ -44,350 +46,219 @@
 #include "logfile.h"
 #include "socket.h"
 #include "header.h"
+#include "iov.h"
 
-/* Main function to normal CGI scripts */
-int M_CGI_main(struct client_request *cr, struct request *sr, 
-		struct log_info *s_log, 
-		mk_pointer remote_request)
+struct palm *mk_palm_get_handler(char *file)
 {
-	int cgi_status=0, checkdir;
-	struct stat f;
+        struct palm *p;
+	int j, len;
 
-	sr->script_filename = (char *) M_CGI_alias(sr->uri_processed, 
-			sr->host_conf->scriptalias[0], 
-			sr->host_conf->scriptalias[1]);
 
-	checkdir=CheckDir(sr->script_filename);
-	stat(sr->script_filename, &f);
-
-	/*
-	if(AccessFile(f)!=0 ||  checkdir==0){
-		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
-		return -1;
-	}
-
-	if(ExecFile(sr->script_filename)!=0){
-		Request_Error(M_CLIENT_FORBIDDEN, cr, sr, 1, s_log);
-		return -1;
-	}
-	*/
-
-	if(sr->method==HTTP_METHOD_POST){
-		M_METHOD_Post(cr, sr);
-	}
+	j = len = strlen(file);
 	
-	cgi_status=M_CGI_run(cr, sr,sr->script_filename, NULL);
-	
-	switch(cgi_status){
-			case M_CGI_TIMEOUT:
-					s_log->final_response=M_CLIENT_REQUEST_TIMEOUT;
-					break;
-			case M_CGI_INTERNAL_SERVER_ERR:  /* Internal server Error */
-					s_log->final_response=M_SERVER_INTERNAL_ERROR;
-					break;
-			case M_CGI_OK:  /* Ok */
-					s_log->final_response=M_HTTP_OK;
-					break;
-	};	
+	/* looking for extension */
+	while(file[j]!='.' && j>=0) 
+		j--;
 
-	return cgi_status;
-}
-
-/* Return the real path of cgi_path */
-char *M_CGI_alias(char *path, char *query, char *newstring )
-{
-	int slash_offset=0;
-	char *aux=0, *buffer=0;
-	unsigned long len;
-
-	if(!path || !query)
-		return NULL;
-
-
-	if(path[strlen(query) - 1]!='/')
-		slash_offset++;
-	
-	m_build_buffer(&aux, &len, "%s",
-		       path+strlen(query)+slash_offset);
-	
-	if(newstring[strlen(newstring) - 1]!='/')
-		m_build_buffer(&buffer, &len, "%s/%s", newstring, aux);
-	else
-		m_build_buffer(&buffer, &len, "%s%s", newstring, aux);
-
-	mk_mem_free(aux);
-	return (char *) buffer;
-}
-
-/* Running CGI script */
-int M_CGI_run(struct client_request *cr, struct request *sr, char *script_filename, char **args)
-{
-	int return_status=0;
-	int pipe_fd[2];
-	int pipe_write[2];
-	pid_t pid;
-	pthread_t pid_thread;
-		
-	if(socketpair(AF_LOCAL, SOCK_STREAM, 0, pipe_fd )<0)
-		return M_CGI_INTERNAL_SERVER_ERR;
-
-	if(args!=NULL)
-		M_CGI_change_dir(args[1]);
-
-	pid_thread=pthread_self();
-	
-	pipe(pipe_write);
-	
-	M_CGI_register_child(pid_thread, pid=fork());
-	
-	if(pid==(pid_t) 0){
-		
-		close(pipe_fd[0]);
-		
-		if(dup2(pipe_fd[1], STDOUT_FILENO)==-1)
-			exit(1);	
-
-	    if(dup2(pipe_write[0], STDIN_FILENO)==-1)
-			exit(1);
-		
-        if(!args) {
-          args = (char **) alloca(sizeof(char *) * 1);
-          args[0] = NULL;
+        if(j==0){
+                return NULL;
         }
 
-		if(execve(script_filename, args, M_CGI_env_set_basic((struct request *) sr))==-1){
-			perror("execve");
-			exit(1);  /* Problemas al ejecutar */
-		}
-		else
-			exit(0);
-	}
-	else{
-		close(pipe_write[0]);
-		if(sr->method==HTTP_METHOD_POST){	
-			write(pipe_write[1], sr->post_variables.data, sr->content_length);
-		}
-		close(pipe_write[1]);
-		
-		close(pipe_fd[1]);
-		return_status=M_CGI_send(cr->socket, pipe_fd[0], cr, 
-				sr, sr->protocol);
-			
-		close(pipe_fd[0]);
-		while(waitpid(pid,NULL,0)>0);
-	}
-		
-	M_CGI_free_childs(pid_thread, M_CGI_CHILD_EXIT_OK);
+        p = palms;
+        while(p)
+        {
+                if(strcasecmp(file+j+1, p->ext)==0)
+                {
+                        return p;
+                }
+                p = p->next;
+        }
 
-	return return_status;
+        return NULL;
 }
 
-/* Read 'cgi_pipe' pipe data and send it to socket */
-int M_CGI_send(int socket, int cgi_pipe, struct client_request *cr,
-		struct request *sr, int remote_protocol)
+char *mk_palm_check_request(struct client_request *cr, struct request *sr)
 {
-	int bytes, total_bytes=0, spaces, buffer_empty=VAR_ON;
-	long offset;
-	char buffer[BUFFER_SOCKET +1], data[BUFFER_SOCKET +1];
-	struct header_values *hd;
-    struct log_info *s_log;
+        int sock, ret, n=0, total=0;
+        char *buf;
+        int len = 40024;
+        struct palm *p;
+        struct mk_iov *iov;
 
-    s_log = sr->log;
+        buf = mk_mem_malloc_z(len);
+        p = mk_palm_get_handler(sr->real_path);
+        if(p)
+        {
+                printf("\nPalm: redirecting to %s, port %i", p->host, p->port);
+                fflush(stdout);
+        }
+        else{
+                return NULL;
+        }
 
-	memset(data, '\0', sizeof(data));
-	do{
-		memset(buffer,'\0',sizeof(buffer));
-		bytes=recv(cgi_pipe, buffer, BUFFER_SOCKET, 0);
-		if(bytes>0)
-			buffer_empty=VAR_OFF;
-					
-		if(bytes<0){
-			return -1;
-		}
-			
-		if(total_bytes+bytes <= BUFFER_SOCKET && bytes>0){
-			memcpy(data+total_bytes, buffer, bytes);
-			total_bytes+=bytes;
-			buffer_empty=VAR_ON;
-		}	
-		else{
-			buffer_empty=VAR_OFF;
-			break;
-		}
-	}while(bytes>0);
-	
-	offset=mk_string_search(data,"\r\n\r\n");
-	spaces=4;
-	if(offset==-1){
-		if((offset=mk_string_search(data,"\n\n"))!=-1)
-			spaces=2;
-		else
-			return -1;		
-	}
+        sock = mk_socket_create();
+        ret = mk_socket_connect(sock, p->host, p->port);
 
-	/* Some CGI scrits send a redirect header, we must 
-	verify if 'Location' header has been sent from 
-	script, i was sent we send an '302 Found' header',
-	if not we send '200 OK' header */
-	if(mk_string_casestr(data, "Location:")!=NULL)
-		s_log->final_response=M_REDIR_MOVED_T;
-	else
-		s_log->final_response=M_HTTP_OK;
+        iov = mk_palm_create_env(cr, sr);
 
-	hd = mk_mem_malloc(sizeof(struct header_values));
-	hd->status = s_log->final_response;
-	hd->content_length = 0;
-	hd->content_type = NULL;
-	hd->location = NULL;
-	hd->cgi = SH_CGI;
-	hd->last_modified = NULL;
-	
-    sr->headers = hd;
+        mk_socket_set_cork_flag(sock, TCP_CORK_ON);
+        write(sock, sr->real_path, strlen(sr->real_path));
+        mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
 
-	if(mk_header_send(socket, cr, sr, s_log)<0){
-		return -1;	
-	}
-	
-	/* HTTP/1.1*/
-	if(remote_protocol==HTTP_PROTOCOL_11){
-		
-		if(fdprintf(socket, NO_CHUNKED, "Transfer-Encoding: chunked\r\n")<0)
-			return -1;			
 
-		if(mk_socket_timeout(socket, data, offset, 
-					config->timeout, ST_SEND)<0)
-			return -1;				
+        do {
+                n=read(sock, buf+total, len);
+                total+=n;
+        }while(n>0);
 
-		if(fdprintf(socket, NO_CHUNKED, "\r\n\r\n")<0)
-			return -1;			
-
-		if(( total_bytes-offset-spaces ) != 0 ){
-			if(fdchunked(socket, data+offset+spaces , total_bytes-offset-spaces)<0)
-				return -1;							
-		}
-
-		if(buffer_empty==VAR_OFF && bytes>0){
-			if(fdchunked(socket, buffer, bytes)<0)
-				return -1;				
-		}
-	}
-	else{ /* HTTP/1.0 */
-		if(mk_socket_timeout(socket, data, total_bytes, config->timeout, ST_SEND)<0){
-			return -1;			
-		}
-		if(buffer_empty==VAR_OFF && bytes>0)
-			if(mk_socket_timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0){
-				return -1;
-			}
-	}
-
-	do{
-		memset(buffer, '\0', sizeof(buffer));
-		bytes=recv(cgi_pipe, buffer, BUFFER_SOCKET, 0);		
-		if(remote_protocol==HTTP_PROTOCOL_11 && bytes > 0){
-			if(fdchunked(socket, buffer, bytes)<0){
-				return -1;							
-			}
-		}
-		else{
-			if(bytes>0) {
-				if(mk_socket_timeout(socket, buffer, bytes, config->timeout, ST_SEND)<0)
-					return -1;								
-			}
-		}
-	}while(bytes>0);
-
-	if(remote_protocol==HTTP_PROTOCOL_11){
-		if(fdprintf(socket, NO_CHUNKED, "0\r\n\r\n")<0){
-			return -1;																
-		}
-	}
-	else {
-		if(fdprintf(socket, NO_CHUNKED, "\r\n")<0){	
-			return -1;
-		}
-	}
-	return 0;		
+        return (char *)buf;
 }
 
-/* Here we build an array with basic internal 
-vars needs for CGI scripts */
-char **M_CGI_env_set_basic(struct request *sr)
+struct mk_iov *mk_palm_create_env(struct client_request *cr, 
+                                  struct request *sr)
 {
-	char **arg=0, **ptr=0; //, auxint[10];
-	
-	ptr = arg = (char **) mk_mem_malloc(sizeof(char *) * 30);
+        struct mk_iov *iov;
 
-	*ptr++ = M_CGI_env_add_var("DOCUMENT_ROOT", sr->host_conf->documentroot);
-	/*	
-	if(sr->method==HTTP_METHOD_POST && sr->content_length>0){
-		snprintf(auxint,10,"%i",sr->content_length);
-		*ptr++ = M_CGI_env_add_var("CONTENT_LENGTH",auxint);
-		*ptr++ = M_CGI_env_add_var("CONTENT_TYPE",sr->content_type);
-	}
-	
-	*ptr++ = M_CGI_env_add_var("SERVER_ADDR", config->server_addr);
-	
-	*ptr++ = M_CGI_env_add_var("SERVER_NAME",sr->host);
-	*ptr++ = M_CGI_env_add_var("SERVER_PROTOCOL", 
-			mk_http_protocol_check_str(MONKEY_HTTP_PROTOCOL));
+        iov = mk_iov_create(50);
 
-	*ptr++ = M_CGI_env_add_var("SERVER_SOFTWARE", config->server_software);
-	*ptr++ = M_CGI_env_add_var("SERVER_SIGNATURE", sr->host_conf->host_signature);
-	
-	if(sr->user_agent)
-		*ptr++ = M_CGI_env_add_var("HTTP_USER_AGENT",sr->user_agent);
+        mk_iov_add_entry(iov, mk_cgi_document_root.data, 
+                         mk_cgi_document_root.len, 
+                         mk_iov_equal,
+                         MK_IOV_NOT_FREE_BUF);
 
-	if(sr->accept)
-		*ptr++ = M_CGI_env_add_var("HTTP_ACCEPT", sr->accept);
-	
-	if(sr->accept_charset)
-		*ptr++ = M_CGI_env_add_var("HTTP_ACCEPT_CHARSET",sr->accept_charset);
-		
-	if(sr->accept_encoding)
-		*ptr++ = M_CGI_env_add_var("HTTP_ACCEPT_ENCODING",sr->accept_encoding);
+        mk_palm_iov_add_header(iov, mk_cgi_document_root, 
+                               sr->host_conf->documentroot);
 
-	if(sr->accept_language)
-		*ptr++ = M_CGI_env_add_var("HTTP_ACCEPT_LANGUAGE",sr->accept_language);
+        if(sr->method == HTTP_METHOD_POST && sr->content_length>0){
+                /* FIX Content length: 
+                mk_palm_iov_add_header(iov, mk_cgi_content_length,
+                                       sr->content_length);
+                */
+                mk_palm_iov_add_header(iov, mk_cgi_content_type,
+                                       sr->content_type);
+        }
 
-	if(sr->host)
-		*ptr++ = M_CGI_env_add_var("HTTP_HOST",sr->host);
+        mk_palm_iov_add_header(iov, mk_cgi_server_addr, config->server_addr);
+        mk_palm_iov_add_header(iov, mk_cgi_server_name, sr->host);
+        mk_palm_iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
+        mk_palm_iov_add_header(iov, mk_cgi_server_software, 
+                               config->server_software);
+        mk_palm_iov_add_header(iov, mk_cgi_server_signature, 
+                               sr->host_conf->host_signature);
 
-	if(sr->cookies)
-		*ptr++ = M_CGI_env_add_var("HTTP_COOKIE",sr->cookies);
-		
-	if(sr->referer)
-		*ptr++ = M_CGI_env_add_var("HTTP_REFERER",sr->referer);
-		
-	snprintf(auxint, 10, "%i", config->serverport);
-	*ptr++ = M_CGI_env_add_var("SERVER_PORT",auxint);
-	
-	snprintf(auxint,10,"CGI/%s",CGI_VERSION);
-	*ptr++ = M_CGI_env_add_var("GATEWAY_INTERFACE",auxint);
-	*ptr++ = M_CGI_env_add_var("REMOTE_ADDR","NO IP");
-	*ptr++ = M_CGI_env_add_var("REQUEST_URI", sr->uri);
-	*ptr++ = M_CGI_env_add_var("REQUEST_METHOD", mk_http_method_check_str(sr->method));
-	*ptr++ = M_CGI_env_add_var("SCRIPT_NAME",sr->uri);
-	*ptr++ = M_CGI_env_add_var("SCRIPT_FILENAME",sr->script_filename);
+        if(sr->user_agent.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_user_agent, 
+                                       sr->user_agent);
 
-	snprintf(auxint,10,"%i",remote.sin_port);
-	*ptr++ = M_CGI_env_add_var("REMOTE_PORT",auxint);
-	*ptr++ = M_CGI_env_add_var("QUERY_STRING",  sr->query_string);
-	*ptr++ = M_CGI_env_add_var("POST_VARS", sr->post_variables);
-	*ptr++ = '\0';
-	*/
-	return arg;
+        if(sr->accept.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_accept, sr->accept);
+        
+        if(sr->accept_charset.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_accept_charset, 
+                                       sr->accept_charset);
+
+        if(sr->accept_encoding.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_accept_encoding,
+                                       sr->accept_encoding);
+
+        if(sr->accept_language.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_accept_language, 
+                                       sr->accept_language);
+
+        if(sr->host.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host);
+
+        if(sr->cookies.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_cookie, sr->cookies);
+
+        if(sr->referer.data)
+                mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
+
+        mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_monkey_port);
+        mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
+        mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
+        mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
+        mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method);
+        mk_palm_iov_add_header(iov, mk_cgi_script_name, sr->uri);
+        mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->script_filename);
+        mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
+        mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
+        mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+
+        /* CRLF */
+        mk_iov_add_entry(iov, mk_crlf.data, mk_crlf.len, 
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        return iov;
 }
 
-/* Add new var to **arg */
-char *M_CGI_env_add_var(char *name, const char *value)
+void mk_palm_iov_add_header(struct mk_iov *iov, 
+                            mk_pointer header, mk_pointer value)
 {
-	unsigned long len;
-	char *variable=0;
+        mk_iov_add_entry(iov, header.data, header.len, 
+                         mk_iov_equal, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, value.data, value.len, 
+                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+}
 
-	m_build_buffer(&variable, &len, 
-			"%s=%s", name, value ? value : "");
-	return variable;
+int mk_palm_send_response(struct client_request *cr, struct request *sr,
+                          char *buf)
+{
+        int len;
+        int i;
+        char *s;
+        char *status_msg = "Status: ";
+
+        len = strlen(status_msg);
+        if(strncasecmp(buf, status_msg, len)==0)
+        {
+                i = mk_string_search(buf+len, " ");
+                s = mk_string_copy_substr(buf, len, len+i);
+                sr->headers->status = atoi(s); 
+                i = mk_string_search(buf, mk_crlf.data) + mk_crlf.len;
+        }
+        else{
+                i = 0;
+                sr->headers->status = M_HTTP_OK;
+        }
+
+        sr->headers->cgi = SH_CGI;
+        sr->headers->content_length = 0;
+
+        mk_socket_set_cork_flag(cr->socket, TCP_CORK_ON);
+        mk_header_send(cr->socket, cr, sr, sr->log);
+        write(cr->socket, buf+i, strlen(buf+i));
+        return 0;
+}
+
+void mk_palm_set_env()
+{
+        mk_pointer_set(&mk_cgi_document_root, MK_CGI_DOCUMENT_ROOT);
+        mk_pointer_set(&mk_cgi_content_length, MK_CGI_CONTENT_LENGTH);
+        mk_pointer_set(&mk_cgi_content_type, MK_CGI_CONTENT_TYPE);
+        mk_pointer_set(&mk_cgi_server_addr, MK_CGI_SERVER_ADDR);
+        mk_pointer_set(&mk_cgi_server_name, MK_CGI_SERVER_NAME);
+        mk_pointer_set(&mk_cgi_server_protocol, MK_CGI_SERVER_PROTOCOL);
+        mk_pointer_set(&mk_cgi_server_software, MK_CGI_SERVER_SOFTWARE);
+        mk_pointer_set(&mk_cgi_server_signature, MK_CGI_SERVER_SIGNATURE);
+        mk_pointer_set(&mk_cgi_http_user_agent, MK_CGI_HTTP_USER_AGENT);
+        mk_pointer_set(&mk_cgi_http_accept, MK_CGI_HTTP_ACCEPT);
+        mk_pointer_set(&mk_cgi_http_accept_charset, MK_CGI_HTTP_ACCEPT_CHARSET);
+        mk_pointer_set(&mk_cgi_http_accept_encoding, MK_CGI_HTTP_ACCEPT_ENCODING);
+        mk_pointer_set(&mk_cgi_http_accept_language, MK_CGI_HTTP_ACCEPT_LANGUAGE);
+        mk_pointer_set(&mk_cgi_http_host, MK_CGI_HTTP_HOST);
+        mk_pointer_set(&mk_cgi_http_cookie, MK_CGI_HTTP_COOKIE);
+        mk_pointer_set(&mk_cgi_http_referer, MK_CGI_HTTP_REFERER);
+        mk_pointer_set(&mk_cgi_server_port, MK_CGI_SERVER_PORT);
+        mk_pointer_set(&mk_cgi_cgi_version, MK_CGI_CGI_VERSION);
+        mk_pointer_set(&mk_cgi_gateway_interface, MK_CGI_GATEWAY_INTERFACE);
+        mk_pointer_set(&mk_cgi_remote_addr, MK_CGI_REMOTE_ADDR);
+        mk_pointer_set(&mk_cgi_request_uri, MK_CGI_REQUEST_URI);
+        mk_pointer_set(&mk_cgi_request_method, MK_CGI_REQUEST_METHOD);
+        mk_pointer_set(&mk_cgi_script_name, MK_CGI_SCRIPT_NAME);
+        mk_pointer_set(&mk_cgi_script_filename, MK_CGI_SCRIPT_FILENAME);
+        mk_pointer_set(&mk_cgi_remote_port, MK_CGI_REMOTE_PORT);
+        mk_pointer_set(&mk_cgi_query_string, MK_CGI_QUERY_STRING);
+        mk_pointer_set(&mk_cgi_post_vars, MK_CGI_POST_VARS);
 }
 
 /* Change dir work */
@@ -418,73 +289,4 @@ int M_CGI_change_dir(char *script)
 	mk_mem_free(aux);
 	
 	return status;
-}
-
-/* Register an child of thread */
-int M_CGI_register_child(pthread_t thread, pid_t pid)
-{
-	struct cgi_child *proc=0, *find=0;
-
-	if(pid <= 0){
-		return -1;
-	}
-	
-	pthread_mutex_lock(&mutex_cgi_child);
-	
-	proc = mk_mem_malloc(sizeof(struct cgi_child));
-	proc->thread_pid = (pthread_t) thread;
-	proc->pid = (pid_t) pid;
-	proc->next = NULL;
-	
-	if(cgi_child_index==NULL){	
-		cgi_child_index=proc;
-		pthread_mutex_unlock(&mutex_cgi_child);
-		return 0;
-	}
-	
-	find=cgi_child_index;
-	while(find->next!=NULL) 
-		find=find->next;
-
-	find->next=proc;
-	
-	pthread_mutex_unlock(&mutex_cgi_child);
-	return 0;
-}
-
-/* Killing childs from thread */
-int M_CGI_free_childs(pthread_t thread, int exit_type)
-{
-	struct cgi_child *c_aux, *c_aux2;
-	
-	pthread_mutex_lock(&mutex_cgi_child);
-	
-	c_aux=cgi_child_index;
-	
-	/* We need find all child of thread */
-	while(c_aux!=NULL){
-		if(pthread_equal(c_aux->thread_pid , thread)!=0){
-			if( (c_aux->pid > 0) && (exit_type == M_CGI_CHILD_EXIT_FAIL)){
-				/* I need to kill my child, i'm a bad Monkey >:) */
-				kill(c_aux->pid, SIGKILL);
-			}
-			if(c_aux==cgi_child_index){
-				cgi_child_index=cgi_child_index->next;
-				mk_mem_free(c_aux);
-				c_aux = cgi_child_index;
-				continue;
-			}
-			else{
-				c_aux2=cgi_child_index;
-				while(c_aux2->next!=c_aux)
-					c_aux2=c_aux2->next;
-				c_aux2->next=c_aux->next;
-				mk_mem_free(c_aux);
-			}
-		}	
-		c_aux=c_aux->next;	
-	}	
-	while(waitpid(-1,NULL, 0) > 0);
-	pthread_mutex_unlock(&mutex_cgi_child);
-	return 0;
 }

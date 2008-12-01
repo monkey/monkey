@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2003, Eduardo Silva P.
@@ -37,6 +39,7 @@
 #include "deny.h"
 #include "memory.h"
 #include "dir_html.h"
+#include "cgi.h"
 
 /* Read configuration files */
 void mk_config_read_files(char *path_conf, char *file_conf)
@@ -212,6 +215,32 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 				config->symlink=bool;
 			}
 		}
+
+
+                /* Monkey Palm Servers */
+                if(strcasecmp(variable, "Palm")==0){
+                        struct palm *new, *p;
+                        
+                        new = mk_mem_malloc(sizeof(struct palm));
+                        new->ext = strdup(value);
+                        new->mimetype = strdup(strtok_r(NULL,"\"\t ", &last));
+			new->host = strdup(strtok_r(NULL,"\"\t ", &last));
+                        new->port = atoi(strtok_r(NULL, "\"\t ", &last));
+                        new->next = NULL;
+
+                        if(!palms)
+                        {
+                                palms = new;
+                        }
+                        else{
+                                p = palms;
+                                while(p->next)
+                                        p = p->next;
+
+                                p->next = palms;
+                        }
+                }
+
 		/* Max connection per IP */
 		if(strcasecmp(variable, "Max_IP")==0) {
 			config->max_ip = atoi(value);

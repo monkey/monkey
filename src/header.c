@@ -346,7 +346,7 @@ int mk_header_send(int fd, struct client_request *cr,
 					mk_iov_crlf, MK_IOV_FREE_BUF);
 		}
 	}
-	else if(sh->content_length>=0 || sh->status==M_REDIR_MOVED)
+	else if(sh->content_length>=0)
 	{
 		mk_iov_add_entry(iov, mk_rh_content_length.data,
                                  mk_rh_content_length.len, 
@@ -356,6 +356,7 @@ int mk_header_send(int fd, struct client_request *cr,
                                  sh->content_length_p.len,
                                  mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
+        
 	
 	if(sh->cgi==SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE)
 	{

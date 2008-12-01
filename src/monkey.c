@@ -104,11 +104,7 @@ int main(int argc, char **argv)
 	int opt, remote_fd, benchmark_mode=FALSE;
 	char daemon = 0;
 
-	struct process *check_ip;
-	int ip_times=0, status_max_ip=CONX_OPEN;
 	int i, num_threads;
-	int epoll_server;
-	char *IP_client;
 	pthread_t tid;
 	pthread_attr_t thread_attr;
 

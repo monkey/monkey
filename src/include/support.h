@@ -18,5 +18,5 @@
  */
 
 #define MONKEY_HTTP_PROTOCOL HTTP_PROTOCOL_11 /* Protocolo oficial */
-#define CGI_VERSION "1.1" /* Version del soporte CGI */
+
 

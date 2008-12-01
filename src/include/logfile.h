@@ -39,9 +39,10 @@ struct log_target *lt;
 struct log_info {
 	int method;
 	int protocol;
-	mk_pointer uri;
 
-	char *ip;
+	mk_pointer uri;
+	mk_pointer ip;
+
 	int final_response; /* Ok: 200, Not Found 400, etc... */
 	int size;
         mk_pointer size_p;

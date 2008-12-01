@@ -21,7 +21,8 @@
 
 /* MIME Structs variables*/
 
-#define MIMETYPE_DEFAULT "text/plain"
+#define MIMETYPE_DEFAULT_TYPE "text/plain"
+#define MIMETYPE_DEFAULT_NAME "default"
 
 #define MAX_MIMETYPES_NOMBRE 15
 #define MAX_MIMETYPES_TIPO 55
@@ -34,7 +35,7 @@ struct mimetype {
 	struct mimetype *next;	 
 } *first_mime;
 
-
+struct mimetype *mimetype_default;
 
 void mk_mimetype_read_config();
 

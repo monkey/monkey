@@ -114,7 +114,10 @@ struct client_request
         int status; /* Request status */
    
         char *body; /* Original request sent */
-        char *client_ip;
+
+        mk_pointer ip;
+        mk_pointer port;
+
         int body_length;
         
         int first_block_end;

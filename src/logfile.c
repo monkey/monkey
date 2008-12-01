@@ -234,7 +234,7 @@ int write_log(struct log_info *log, struct host *h)
         if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
         {
                 /* client IP address */
-                mk_iov_add_entry(iov, log->ip, strlen(log->ip), 
+                mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
                                  mk_iov_space, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, mk_iov_space,
                                  MK_IOV_NOT_FREE_BUF);
@@ -278,8 +278,8 @@ int write_log(struct log_info *log, struct host *h)
                 /* Send info to pipe */
                 mk_iov_send(h->log_access[1], iov);
         }
-        else{ /* Regiter some error */
-                mk_iov_add_entry(iov, log->ip, strlen(log->ip),
+        else{ /* Register some error */
+                mk_iov_add_entry(iov, log->ip.data, log->ip.len,
                                 mk_iov_space, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, "-", 1, mk_iov_space,
                                 MK_IOV_NOT_FREE_BUF);

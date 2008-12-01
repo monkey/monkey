@@ -41,8 +41,6 @@ int	CheckFile(char *pathfile);
 int AccessFile(struct stat file);
 int	ExecFile(char *pathfile);
 int	set_daemon();
-int	fdprintf(int fd, int type, const char *format, ...);
-int	fdchunked(int fd, char *data, int length);
 int	hex2int(char *pChars);
 char *strstr2(char *s, char *t);
 
@@ -55,12 +53,6 @@ char *get_real_string(mk_pointer req_uri);
 char  *get_name_protocol(int remote_protocol);
 
 char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...);
-char *m_build_buffer_from_buffer(char *buffer, const char *format, ...);
-
-void *M_malloc(size_t size);
-char *M_strdup(const char *s);
-void *M_realloc(void* ptr, size_t size);
-void M_free(void *ptr);
 
 #define SYML_NOT -1
 #define SYML_OK 0
