@@ -25,7 +25,7 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
 int _mk_string_search(char *string, char *search, int n);
 int mk_string_search(char *string, char *search);
 int mk_string_search_n(char *string, char *search, int n);
-int mk_string_search_r(char *string, char *search, int n);
+int mk_string_search_r(char *string, char search, int n);
 
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);

@@ -164,6 +164,6 @@ int mk_socket_connect(int sockfd, char *server, int port)
                 perror("client: connect");
                 return -1;
         }
-        //mk_mem_free(remote);
+        mk_mem_free(remote);
         return 0;
 }

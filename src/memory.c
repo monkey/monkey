@@ -199,6 +199,7 @@ void mk_mem_pointers_init()
 	mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
 	mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
 	mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
+        mk_pointer_set(&mk_header_last_modified, MK_HEADER_LAST_MODIFIED);
 
         mk_http_status_list_init();
         mk_iov_separators_init();
@@ -211,4 +212,7 @@ void mk_mem_pointers_init()
 
         /* CGI */
         mk_pointer_set(&mk_cgi_version, CGI_VERSION);
+
+        /* Logfile */
+        mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);
 }

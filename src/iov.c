@@ -26,12 +26,12 @@
 #include "memory.h"
 #include "iov.h"
 
-struct mk_iov *_mk_iov_alloc(int n)
+struct mk_iov *mk_iov_create(int n, int offset)
 {
 	struct mk_iov *iov;
 
 	iov = mk_mem_malloc(sizeof(struct mk_iov));
-	iov->iov_idx = 0;
+	iov->iov_idx = offset;
 	iov->io = mk_mem_malloc(n*sizeof(struct iovec));
 	iov->buf_to_free = mk_mem_malloc(n*sizeof(char));
 	iov->buf_idx = 0;
@@ -41,52 +41,11 @@ struct mk_iov *_mk_iov_alloc(int n)
 	return iov;
 }
 
-struct mk_iov *mk_iov_create(int n)
-{
-        return _mk_iov_alloc(n);
-}
-
-struct mk_iov *mk_iov_create_offset(int n, int offset)
-{
-        struct mk_iov *iov;
-
-        iov = _mk_iov_alloc(n+offset);
-        iov->iov_idx = offset;
-        return iov;
-}
-
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                       mk_pointer sep, int free)
 {
-        return _mk_iov_add(mk_io, buf, len, sep, free, mk_io->iov_idx);
-}
-
-int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
-                     int free, int idx)
-{
-       	mk_io->io[idx].iov_base = buf;
-	mk_io->io[idx].iov_len = len;
-        mk_io->total_len += len;
-
-        _mk_iov_set_free(mk_io, buf, free);
-
-        return 0;
-}
-
-void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free)
-{
-	if(free==MK_IOV_FREE_BUF)
-	{
-		mk_io->buf_to_free[mk_io->buf_idx] = (char *)buf;
-		mk_io->buf_idx++;
-	}
-}
-
-int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
-                      mk_pointer sep, int free, int idx)
-{
-	mk_io->io[idx].iov_base = buf;
-	mk_io->io[idx].iov_len = len;
+	mk_io->io[mk_io->iov_idx].iov_base = buf;
+	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
         mk_io->total_len += len;
 
@@ -98,32 +57,42 @@ int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
         }
 #endif
 
-	mk_iov_add_separator(mk_io, sep);
-
-        _mk_iov_set_free(mk_io, buf, free);
+        /* Add separator */
+        if(sep.len > 0)
+        {
+                mk_io->io[mk_io->iov_idx].iov_base = sep.data;
+                mk_io->io[mk_io->iov_idx].iov_len = sep.len;
+                mk_io->iov_idx++; 
+                mk_io->total_len += sep.len;
+        }
+        
+        if(free == MK_IOV_FREE_BUF)
+        {
+                _mk_iov_set_free(mk_io, buf);
+        }
 
 	return mk_io->iov_idx;
 }
 
-int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep)
+int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
+                     int free, int idx)
 {
-        if(sep.len==0)
-                return mk_io->iov_idx;
+       	mk_io->io[idx].iov_base = buf;
+	mk_io->io[idx].iov_len = len;
+        mk_io->total_len += len;
 
-	mk_io->io[mk_io->iov_idx].iov_base = sep.data;
-	mk_io->io[mk_io->iov_idx].iov_len = sep.len;
-	mk_io->iov_idx++;
-        mk_io->total_len += sep.len;
-
-#ifdef DEBUG_IOV
-        if(mk_io->iov_idx > mk_io->size){
-                printf("\nDEBUG IOV :: ERROR, Broke array size");
-                printf("\n          -> %s ( len=%i )", sep.data, (int) sep.len); 
-                fflush(stdout);
+        if(free == MK_IOV_FREE_BUF)
+        {
+                _mk_iov_set_free(mk_io, buf);
         }
-#endif
 
-	return mk_io->iov_idx;
+        return 0;
+}
+
+void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
+{
+	mk_io->buf_to_free[mk_io->buf_idx] = (char *)buf;
+	mk_io->buf_idx++;
 }
 
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
@@ -135,6 +104,12 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 }
 
 void mk_iov_free(struct mk_iov *mk_io)
+{
+        mk_iov_free_marked(mk_io);
+	mk_mem_free(mk_io->io);
+	mk_mem_free(mk_io);
+}
+void mk_iov_free_marked(struct mk_iov *mk_io)
 {
 	int i, limit=0;
 
@@ -149,8 +124,8 @@ void mk_iov_free(struct mk_iov *mk_io)
 #endif
 		mk_mem_free(mk_io->buf_to_free[i]);
 	}
-	mk_mem_free(mk_io->io);
-	mk_mem_free(mk_io);
+
+        mk_io->iov_idx = 0;
 }
 
 void mk_iov_print(struct mk_iov *mk_io)
@@ -172,4 +147,5 @@ void mk_iov_separators_init()
         mk_pointer_set(&mk_iov_header_value, MK_IOV_HEADER_VALUE);
         mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);
         mk_pointer_set(&mk_iov_none, MK_IOV_NONE);
+        mk_pointer_set(&mk_iov_equal, MK_IOV_EQUAL);
 }

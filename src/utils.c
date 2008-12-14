@@ -108,6 +108,7 @@ mk_pointer PutDate_string(time_t date)
 	mk_pointer pointer;
 	
 	mk_pointer_reset(&pointer);
+        
 	if(date==0){
 		if ( (date = time(NULL)) == -1 ){
 			return pointer;
@@ -270,8 +271,11 @@ mk_pointer mk_utils_int2mkp(int n)
         mk_pointer p;
         char *buf;
         unsigned long len;
+        int size = 32;
 
-        m_build_buffer(&buf, &len, "%i", n);
+        buf = mk_mem_malloc(size);
+        len = snprintf(buf, 32, "%i", n);
+
         p.data = buf;
         p.len = len;
 

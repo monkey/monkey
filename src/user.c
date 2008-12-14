@@ -69,11 +69,13 @@ int User_main(struct client_request *cr, struct request *sr)
 
 	if(sr->user_uri!=NULL)
 	{
-		m_build_buffer(&sr->real_path, &len, "%s%s",user_server_root, sr->user_uri);
+		m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s",
+                               user_server_root, sr->user_uri);
 	}
 	else
 	{
-		m_build_buffer(&sr->real_path, &len, "%s",user_server_root);
+		m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s",
+                               user_server_root);
 	}
 	mk_mem_free(user_server_root);
 	return 0;

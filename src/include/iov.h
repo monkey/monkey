@@ -36,6 +36,8 @@
 #define MK_IOV_NONE ""
 #define MK_IOV_EQUAL "="
 
+#include "memory.h"
+
 mk_pointer mk_iov_crlf;
 mk_pointer mk_iov_lf;
 mk_pointer mk_iov_space;
@@ -54,7 +56,7 @@ struct mk_iov
         unsigned long total_len;
 };
 
-struct mk_iov *mk_iov_create(int n);
+struct mk_iov *mk_iov_create(int n, int offset);
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, 
                      int len, mk_pointer sep, int free);
 
@@ -64,17 +66,16 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
 
 void mk_iov_free(struct mk_iov *mk_io);
 
-struct mk_iov *mk_iov_create_offset(int n, int offset);
-
 int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
                 mk_pointer sep, int free, int idx);
 
-void _mk_iov_set_free(struct mk_iov *mk_io, char *buf, int free);
+void _mk_iov_set_free(struct mk_iov *mk_io, char *buf);
 
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
                      int free, int idx);
 
 void mk_iov_separators_init();
- 
+void mk_iov_free_marked(struct mk_iov *mk_io);
+
 #endif
 

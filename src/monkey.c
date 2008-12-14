@@ -47,6 +47,7 @@
 #include "memory.h"
 #include "dir_html.h"
 #include "clock.h"
+#include "cache.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -212,10 +213,11 @@ int main(int argc, char **argv)
 	sched_list = NULL;
 
 	mk_mem_pointers_init();
-	
+
 	pthread_key_create(&request_handler, NULL);
 	pthread_key_create(&epoll_fd, NULL);
 	pthread_key_create(&timer, NULL);
+        pthread_key_create(&mk_cache_iov_log, NULL);
 
 	for(i=0; i<num_threads; i++)
 	{
@@ -235,9 +237,6 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-                /* Note: Linux don't set TCP_NODELAY socket flag by default */
-                mk_socket_set_tcp_nodelay(remote_fd);
-		mk_socket_set_nonblocking(remote_fd);
 		mk_epoll_add_client(sched->epoll_fd, remote_fd, 
                                     MK_EPOLL_BEHAVIOR_TRIGGERED);
 		

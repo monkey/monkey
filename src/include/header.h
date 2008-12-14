@@ -81,12 +81,14 @@ mk_pointer mk_header_short_ct;
 #define MK_HEADER_TE_TYPE_CHUNKED 0
 #define MK_HEADER_TE_CHUNKED "Transfer-Encoding: Chunked"
 
+#define MK_HEADER_LAST_MODIFIED "Last-Modified"
+
 /* mk pointers with response server headers */
 mk_pointer mk_header_conn_ka;
 mk_pointer mk_header_conn_close;
 mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
-
+mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_request *cr,
 		struct request *sr, struct log_info *s_log);

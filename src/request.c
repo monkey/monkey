@@ -56,6 +56,7 @@
 #include "user.h"
 #include "method.h"
 #include "memory.h"
+#include "socket.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -173,6 +174,13 @@ int mk_handler_read(int socket)
 
 	if(!cr)
 	{
+                
+                /* Note: Linux don't set TCP_NODELAY socket flag by default, 
+                 * also we set the client socket on non-blocking mode
+                 */
+                mk_socket_set_tcp_nodelay(socket);
+                mk_socket_set_nonblocking(socket);
+
 		cr = mk_request_client_create(socket);
 	}
 
@@ -486,6 +494,8 @@ int mk_request_header_process(struct request *sr)
 	sr->accept_charset = mk_request_header_find(headers, mk_rh_accept_charset);
 	sr->accept_encoding = mk_request_header_find(headers, 
                                                            mk_rh_accept_encoding);
+
+
 	sr->accept_language = mk_request_header_find(headers, 
                                                      mk_rh_accept_language);
 	sr->cookies = mk_request_header_find(headers, mk_rh_cookie);
@@ -543,18 +553,21 @@ mk_pointer mk_request_header_find(char *request_body,  mk_pointer header)
 
         bl = strstr(p, MK_CRLF);
         var.data = p+header.len+1;
-        var.len = bl-request_body;
+        var.len = bl-var.data;
 
 	return (mk_pointer) var;
 }
 
 /* FIXME: IMPROVE access */
 /* Look for some  index.xxx in pathfile */
-char *mk_request_index(char *pathfile)
+mk_pointer mk_request_index(char *pathfile)
 {
 	unsigned long len;
 	char *file_aux=0;
+        mk_pointer f;
 	struct indexfile *aux_index;
+
+        mk_pointer_reset(&f);
 
 	aux_index=first_index;
 
@@ -564,13 +577,15 @@ char *mk_request_index(char *pathfile)
 	
 		if(access(file_aux,F_OK)==0)
 		{
-			return (char *) file_aux;
+                        f.data = file_aux;
+                        f.len = len;
+			return f;
 		}
 		mk_mem_free(file_aux);
 		aux_index=aux_index->next;
 	}
 
-	return NULL;
+	return f;
 }
 
 /* Send error responses */
@@ -668,7 +683,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 	s_request->headers->location = NULL;
 	s_request->headers->cgi = SH_NOCGI;
 	s_request->headers->pconnections_left = 0;
-	s_request->headers->last_modified = NULL;
+	mk_pointer_reset(&s_request->headers->last_modified);
 	
 	if(aux_message) mk_mem_free(aux_message);
 	
@@ -752,7 +767,7 @@ struct request *mk_request_alloc()
 
 	request->virtual_user = NULL;
 	request->script_filename = NULL;
-	request->real_path = NULL;
+	mk_pointer_reset(&request->real_path);
 	request->host_conf = config->hosts; 
 
 	request->bytes_to_send = -1;
@@ -803,7 +818,7 @@ void mk_request_free(struct request *sr)
 	}
 	if(sr->headers){
             mk_mem_free(sr->headers->location);
-            mk_mem_free(sr->headers->last_modified);
+            mk_pointer_free(&sr->headers->last_modified);
             /*
                 mk_mem_free(sr->headers->content_type);
                  headers->content_type never it's allocated 
@@ -837,7 +852,7 @@ void mk_request_free(struct request *sr)
 
         mk_mem_free(sr->virtual_user);
         mk_mem_free(sr->script_filename);
-        mk_mem_free(sr->real_path);
+        mk_pointer_free(&sr->real_path);
 	mk_mem_free(sr);
 }
 
@@ -911,7 +926,7 @@ struct client_request *mk_request_client_remove(int socket)
 
 	request_handler = mk_sched_get_request_handler();
 	cr = request_handler;
-	
+
 	while(cr)
 	{
 		if(cr->socket == socket)

@@ -44,6 +44,7 @@
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
 #include "request.h"
+#include "memory.h"
 
 int mk_http_method_check(char *method);
 char *mk_http_method_check_str(int method);
@@ -57,6 +58,8 @@ int mk_http_keepalive_check(int socket, struct client_request *cr);
 int mk_http_range_set(struct request *sr, long file_size);
 int mk_http_range_parse(struct request *sr);
 
+mk_pointer *mk_http_status_get(short int code);
 void mk_http_status_list_init();
+int mk_http_pendient_request(struct client_request *cr);
 
 #endif

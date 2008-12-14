@@ -31,6 +31,7 @@
 #include <sys/epoll.h>
 
 #include "monkey.h"
+#include "socket.h"
 #include "epoll.h"
 
 #define MAX_EVENTS 5000
@@ -104,6 +105,7 @@ int mk_epoll_add_client(int efd, int socket, int mode)
 {
         int ret;
         struct epoll_event event;
+        
 
         event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
         event.data.fd = socket;

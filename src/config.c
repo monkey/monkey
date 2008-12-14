@@ -351,128 +351,133 @@ int mk_config_get_bool(char *value)
 struct host *mk_config_get_host(char *path)
 {
 	unsigned long len=0;
-    char buffer[255];
-    char *variable=0, *value=0, *last=0, *auxarg=0;
-    FILE *configfile;
-    struct stat checkdir;
-    struct host *host;
+        char buffer[255];
+        char *variable=0, *value=0, *last=0, *auxarg=0;
+        FILE *configfile;
+        struct stat checkdir;
+        struct host *host;
 
-    if( (configfile=fopen(path,"r"))==NULL ) {
-        fprintf(stderr, "Error: I can't open %s file.\n", path);
-        return NULL;
-    }
-
-    host = mk_mem_malloc_z(sizeof(struct host));
-    host->servername = 0;
-    host->file = mk_string_dup(path);
-
-    while(fgets(buffer,255,configfile)) {
-        len = strlen(buffer);
-        if(buffer[len-1] == '\n') {
-            buffer[--len] = 0;
-            if(len && buffer[len-1] == '\r')
-                buffer[--len] = 0;
+        if( (configfile=fopen(path,"r"))==NULL ) {
+                fprintf(stderr, "Error: I can't open %s file.\n", path);
+                return NULL;
         }
+
+        host = mk_mem_malloc_z(sizeof(struct host));
+        host->servername = 0;
+        host->file = mk_string_dup(path);
+
+        while(fgets(buffer,255,configfile)) {
+                len = strlen(buffer);
+                if(buffer[len-1] == '\n') {
+                        buffer[--len] = 0;
+                        if(len && buffer[len-1] == '\r')
+                                buffer[--len] = 0;
+                }
         
-        if(!buffer[0] || buffer[0] == '#')
-            continue;
+                if(!buffer[0] || buffer[0] == '#')
+                        continue;
             
-        variable   = strtok_r(buffer, "\"\t ", &last);
-        value     = strtok_r(NULL, "\"\t ", &last);
+                variable   = strtok_r(buffer, "\"\t ", &last);
+                value     = strtok_r(NULL, "\"\t ", &last);
 
-        if (!variable || !value) continue;
+                if (!variable || !value) continue;
 
-        /* Server Name */
-        if(strcasecmp(variable,"Servername")==0)
-	{
-		m_build_buffer(&host->servername, &len,
-			    "%s", value);
-	}
+                /* Server Name */
+                if(strcasecmp(variable,"Servername")==0)
+                        {
+                                m_build_buffer(&host->servername, &len,
+                                               "%s", value);
+                        }
 
-        /* Ubicacion directorio servidor */
-        if(strcasecmp(variable,"DocumentRoot")==0) {
-            host->documentroot=mk_string_dup(value);
-            if(stat(host->documentroot, &checkdir)==-1) {
-                fprintf(stderr, "ERROR: Invalid path to Server_root in %s\n\n", path); 
-                exit(1);
-            }
-            else if(!(checkdir.st_mode & S_IFDIR)) {
-                fprintf(stderr, "ERROR: DocumentRoot variable in %s has an invalid directory path\n\n", path);
-                exit(1);
-            }
-        }
+                /* Ubicacion directorio servidor */
+                if(strcasecmp(variable,"DocumentRoot")==0) {
 
-        /* Access log */
-        if(strcasecmp(variable,"AccessLog")==0) 
-            m_build_buffer(&host->access_log_path, 
-			    &len,"%s", value);
+                        host->documentroot.data=mk_string_dup(value);
+                        host->documentroot.len = strlen(value);
+
+                        if(stat(host->documentroot.data, &checkdir)==-1) {
+                                fprintf(stderr, 
+                                        "ERROR: Invalid path to Server_root in %s\n\n", path); 
+                                exit(1);
+                        }
+                        else if(!(checkdir.st_mode & S_IFDIR)) {
+                                fprintf(stderr, 
+                                        "ERROR: DocumentRoot variable in %s has an invalid directory path\n\n", path);
+                                exit(1);
+                        }
+                }
+
+                /* Access log */
+                if(strcasecmp(variable,"AccessLog")==0) 
+                        m_build_buffer(&host->access_log_path, 
+                                       &len,"%s", value);
         
-        /* Error log */
-        if(strcasecmp(variable,"ErrorLog")==0)
-            m_build_buffer(&host->error_log_path, &len,
-			    "%s", value);
+                /* Error log */
+                if(strcasecmp(variable,"ErrorLog")==0)
+                        m_build_buffer(&host->error_log_path, &len,
+                                       "%s", value);
 
-        /* GetDir Variable */
-        if(strcasecmp(variable,"GetDir")==0)
-        {
-            if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-                mk_config_print_error_msg("GetDir", path);
-            else if(strcasecmp(value,VALUE_OFF)==0)
-                     host->getdir=VAR_OFF;
+                /* GetDir Variable */
+                if(strcasecmp(variable,"GetDir")==0)
+                        {
+                                if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
+                                        mk_config_print_error_msg("GetDir", path);
+                                else if(strcasecmp(value,VALUE_OFF)==0)
+                                        host->getdir=VAR_OFF;
+                        }
+
+                /* Script_Alias del server */
+                if(strcasecmp(variable,"ScriptAlias")==0)
+                        {
+                                if(!value) mk_config_print_error_msg("ScriptAlias", path);
+                                host->scriptalias = (char **) mk_mem_malloc(sizeof(char *) * 3);
+                                host->scriptalias[0]=mk_string_dup(value);
+                                auxarg=strtok_r(NULL,"\"\t ", &last);
+
+                                if(!auxarg) mk_config_print_error_msg("ScriptAlias", path);
+                                host->scriptalias[1]=mk_string_dup(auxarg);
+                                host->scriptalias[2]='\0';
+                        }
+
+                if(strcasecmp(variable, "Header_file")==0)
+                        m_build_buffer(&host->header_file, &len,
+                                       "%s", value);
+
+                if(strcasecmp(variable, "Footer_file")==0)
+                        m_build_buffer(&host->footer_file, &len,
+                                       "%s", value);
+
         }
-
-        /* Script_Alias del server */
-        if(strcasecmp(variable,"ScriptAlias")==0)
-        {
-            if(!value) mk_config_print_error_msg("ScriptAlias", path);
-            host->scriptalias = (char **) mk_mem_malloc(sizeof(char *) * 3);
-            host->scriptalias[0]=mk_string_dup(value);
-            auxarg=strtok_r(NULL,"\"\t ", &last);
-
-            if(!auxarg) mk_config_print_error_msg("ScriptAlias", path);
-            host->scriptalias[1]=mk_string_dup(auxarg);
-            host->scriptalias[2]='\0';
-        }
-
-        if(strcasecmp(variable, "Header_file")==0)
-            m_build_buffer(&host->header_file, &len,
-			    "%s", value);
-
-        if(strcasecmp(variable, "Footer_file")==0)
-            m_build_buffer(&host->footer_file, &len,
-			    "%s", value);
-
-    }
-    fclose(configfile);
-    if(!host->servername)
-    {
-        return NULL;
-    }
+        fclose(configfile);
+        if(!host->servername)
+                {
+                        return NULL;
+                }
 
 	/* Server Signature */
 	if(config->hideversion==VAR_OFF){
 		m_build_buffer(&host->host_signature, &len,
-				"Monkey/%s Server (Host: %s, Port: %i)",
-				VERSION, host->servername, config->serverport);
+                               "Monkey/%s Server (Host: %s, Port: %i)",
+                               VERSION, host->servername, config->serverport);
 	}
 	else{
 		m_build_buffer(&host->host_signature, &len, 
-				"Monkey Server (Host: %s, Port: %i)",
-				host->servername, config->serverport);
+                               "Monkey Server (Host: %s, Port: %i)",
+                               host->servername, config->serverport);
 	}
-	m_build_buffer(&host->header_host_signature, &len, 
-			"Server: %s", host->host_signature);
-	host->header_len_host_signature = len;
+	m_build_buffer(&host->header_host_signature.data, 
+                       &host->header_host_signature.len, 
+                       "Server: %s", host->host_signature);
 
 	if(pipe(host->log_access)<0)
-	{
-		perror("pipe");
-	}
+                {
+                        perror("pipe");
+                }
 
 	if(pipe(host->log_error)<0)
-	{
-		perror("pipe");
-	}
+                {
+                        perror("pipe");
+                }
 
 	host->next = NULL;
 	return host;
@@ -520,7 +525,6 @@ void mk_config_set_init_values(void)
 	config->resume=VAR_ON;
 	config->standard_port=80;
 	config->serverport=2001;
-	config->server_addr=NULL;
 	config->symlink=VAR_OFF;
 	config->nhosts = 0;
 	config->user = NULL;
@@ -550,12 +554,15 @@ void mk_config_start_configure(void)
 	/* Basic server information */
 	if(config->hideversion==VAR_OFF)
 	{
-		m_build_buffer(&config->server_software, &len, "Monkey/%s (%s)",VERSION,OS);
+		m_build_buffer(&config->server_software.data, 
+                               &len, "Monkey/%s (%s)",VERSION,OS);
+                config->server_software.len = len;
 	}
 	else
 	{
-		m_build_buffer(&config->server_software, &len,
+		m_build_buffer(&config->server_software.data, &len,
 				"Monkey Server");
+                config->server_software.len = len;
 	}
 }
 

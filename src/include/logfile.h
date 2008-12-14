@@ -26,6 +26,10 @@
 #define S_LOG_ON 0
 #define S_LOG_OFF 1
 
+#define MK_LOGFILE_IOV_DASH " - "
+
+mk_pointer mk_logfile_iov_dash;
+
 /* logfile.c */
 pthread_key_t timer;
 

@@ -89,8 +89,8 @@ int mk_string_search(char *string, char *search)
 	return _mk_string_search(string, search, -1);
 }
 
-/* lookup string in reverse order */
-int mk_string_search_r(char *string, char *search, int n)
+/* lookup char in reverse order */
+int mk_string_search_r(char *string, char search, int n)
 {
         int i,j;
 

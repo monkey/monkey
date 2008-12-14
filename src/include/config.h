@@ -33,8 +33,8 @@
 struct server_config {
         mk_pointer port;
 	char *serverconf;	/* path to configuration files */
-	char *server_addr;
-	char *server_software;
+	mk_pointer server_addr;
+	mk_pointer server_software;
 	char *user;
 	char *user_dir;
 	char *pid_file_path; /* pid of server */
@@ -77,7 +77,7 @@ struct server_config *config;
 struct host {
     char *file; /* configuration file */
     char *servername; /* host name */
-    char *documentroot;
+    mk_pointer documentroot;
 
     char *access_log_path; /* access log file */
     char *error_log_path;  /* error log file */
@@ -90,8 +90,8 @@ struct host {
     char *cgi_path;
     char **scriptalias;
     char *host_signature;
-    char *header_host_signature;
-    int header_len_host_signature;
+    mk_pointer header_host_signature;
+
     int log_access[2];
     int log_error[2];
 

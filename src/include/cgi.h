@@ -125,5 +125,9 @@ char **M_CGI_env_set_basic(struct request *s_request);
 
 struct mk_iov *mk_palm_create_env(struct client_request *cr, 
                                   struct request *sr);
-
-
+void mk_palm_iov_add_header(struct mk_iov *iov, 
+                            mk_pointer header, mk_pointer value);
+char *mk_palm_check_request(struct client_request *cr, struct request *sr);
+int mk_palm_send_response(struct client_request *cr, struct request *sr,
+                          char *buf);
+void mk_palm_set_env();

@@ -81,18 +81,14 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
 {
         int sock, ret, n=0, total=0;
         char *buf;
-        int len = 40024;
+        int len = 50024;
         struct palm *p;
         struct mk_iov *iov;
 
         buf = mk_mem_malloc_z(len);
-        p = mk_palm_get_handler(sr->real_path);
-        if(p)
+        p = mk_palm_get_handler(sr->real_path.data);
+        if(!p)
         {
-                printf("\nPalm: redirecting to %s, port %i", p->host, p->port);
-                fflush(stdout);
-        }
-        else{
                 return NULL;
         }
 
@@ -101,11 +97,13 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
 
         iov = mk_palm_create_env(cr, sr);
 
+        mk_socket_set_tcp_nodelay(sock);
         mk_socket_set_cork_flag(sock, TCP_CORK_ON);
-        write(sock, sr->real_path, strlen(sr->real_path));
+        mk_iov_send(sock, iov);
+        write(sock, "\r\n\r\n", 2);
+        fflush(stdout);
         mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
-
-
+        
         do {
                 n=read(sock, buf+total, len);
                 total+=n;
@@ -119,15 +117,23 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
 {
         struct mk_iov *iov;
 
-        iov = mk_iov_create(50);
+        iov = mk_iov_create(100, 0);
+
+        mk_iov_add_entry(iov, sr->real_path.data,
+                         sr->real_path.len,
+                         mk_crlf,
+                         MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov, mk_cgi_document_root.data, 
                          mk_cgi_document_root.len, 
                          mk_iov_equal,
                          MK_IOV_NOT_FREE_BUF);
+        
 
-        mk_palm_iov_add_header(iov, mk_cgi_document_root, 
-                               sr->host_conf->documentroot);
+        mk_iov_add_entry(iov, sr->host_conf->documentroot.data,
+                         sr->host_conf->documentroot.len, mk_iov_crlf,
+                         MK_IOV_NOT_FREE_BUF);
+
 
         if(sr->method == HTTP_METHOD_POST && sr->content_length>0){
                 /* FIX Content length: 
@@ -138,13 +144,14 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                                        sr->content_type);
         }
 
-        mk_palm_iov_add_header(iov, mk_cgi_server_addr, config->server_addr);
+
+        //mk_palm_iov_add_header(iov, mk_cgi_server_addr, config->server_addr);
         mk_palm_iov_add_header(iov, mk_cgi_server_name, sr->host);
         mk_palm_iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
         mk_palm_iov_add_header(iov, mk_cgi_server_software, 
                                config->server_software);
-        mk_palm_iov_add_header(iov, mk_cgi_server_signature, 
-                               sr->host_conf->host_signature);
+        //        mk_palm_iov_add_header(iov, mk_cgi_server_signature, 
+        //                       sr->host_conf->host_signature);
 
         if(sr->user_agent.data)
                 mk_palm_iov_add_header(iov, mk_cgi_http_user_agent, 
@@ -173,17 +180,20 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
 
         if(sr->referer.data)
                 mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
-
-        mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_monkey_port);
+        
+        //        mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_monkey_port);
         mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
         mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
         mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
-        mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method);
+        //mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method);
         mk_palm_iov_add_header(iov, mk_cgi_script_name, sr->uri);
-        mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->script_filename);
-        mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
-        mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
-        mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+
+
+        /* real path is not an mk_pointer */
+        mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
+        //mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
+        //mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
+        //mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
         /* CRLF */
         mk_iov_add_entry(iov, mk_crlf.data, mk_crlf.len, 
@@ -208,7 +218,7 @@ int mk_palm_send_response(struct client_request *cr, struct request *sr,
         char *s;
         char *status_msg = "Status: ";
 
-        len = strlen(status_msg);
+        len = 8;
         if(strncasecmp(buf, status_msg, len)==0)
         {
                 i = mk_string_search(buf+len, " ");

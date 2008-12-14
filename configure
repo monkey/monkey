@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-VERSION="-git"
+VERSION="0.10.0-git"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 
@@ -371,7 +371,7 @@ OBJ	= monkey.o method.o mimetype.o request.o \\
 	dir_html.o deny.o cgi.o user.o utils.o \\
 	chars.o epoll.o scheduler.o str.o memory.o \\
 	conn_switch.o iov.o http.o file.o socket.o \\
-	clock.o $add_obj_mod
+	clock.o cache.o $add_obj_mod
 
 all: modules ../bin/monkey
 

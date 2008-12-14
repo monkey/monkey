@@ -148,14 +148,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* Normal request default site */
         if((strcmp(sr->uri_processed,"/"))==0)
         {
-                m_build_buffer(&sr->real_path, &len, "%s", 
+                m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s", 
                                 sr->host_conf->documentroot);
         }
 
         if(sr->user_home==VAR_OFF)
         {
-                m_build_buffer(&sr->real_path, &len, "%s%s", 
-                                sr->host_conf->documentroot, 
+                m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s", 
+                                sr->host_conf->documentroot.data, 
                                 sr->uri_processed);
         }
         
@@ -163,7 +163,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 debug_error=1;
         }
 
-        path_info = mk_file_get_info(sr->real_path);
+        path_info = mk_file_get_info(sr->real_path.data);
 
         if(!path_info){
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 
@@ -182,7 +182,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 else{
                         int n;
                         char linked_file[MAX_PATH];
-                        n = readlink(sr->real_path, linked_file, MAX_PATH);
+                        n = readlink(sr->real_path.data, linked_file, MAX_PATH);
                         /*              
                         if(Deny_Check(linked_file)==-1) {
                                 sr->log->final_response=M_CLIENT_FORBIDDEN;
@@ -196,7 +196,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* is it a valid directory ? */
         if(path_info->is_directory == MK_FILE_TRUE) {
                 /* This pointer never must be freed */
-                char *index_file = 0; 
+                mk_pointer index_file;
 
                 /* 
                   We have to check if exist an slash to the end of
@@ -242,9 +242,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }
 
                 /* looking for a index file */
-                index_file = (char *) mk_request_index(sr->real_path);
+                index_file = mk_request_index(sr->real_path.data);
 
-                if(!index_file) {
+                if(!index_file.data) {
                         /* No index file found, show the content directory */
                         if(sr->host_conf->getdir==VAR_ON) {
                                 int getdir_res = 0;
@@ -266,10 +266,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }
                 else{
                         mk_mem_free(path_info);
-                        mk_mem_free(sr->real_path);
+                        mk_pointer_free(&sr->real_path);
 
                         sr->real_path = index_file;
-                        path_info = mk_file_get_info(sr->real_path);
+                        path_info = mk_file_get_info(sr->real_path.data);
                 }
         }
 
@@ -280,7 +280,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
                 
         /* Matching MimeType  */
-        mime = mk_mimetype_find(sr->real_path);
+        mime = mk_mimetype_find(sr->real_path.data);
         if(!mime)
         {
                 mime = mimetype_default;
@@ -324,7 +324,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
         sr->headers->status = M_HTTP_OK;
         sr->headers->cgi = SH_NOCGI;
-        sr->headers->last_modified = gmt_file_unix_time.data;
+        sr->headers->last_modified = gmt_file_unix_time;
         sr->headers->location = NULL;
 
         /* Object size for log and response headers */
@@ -365,7 +365,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         {
                 /* O_NOATIME will just work if process owner has 
                  * root privileges */
-                sr->fd_file = open(sr->real_path, 
+                sr->fd_file = open(sr->real_path.data, 
                                    O_RDONLY|O_NOATIME|O_NONBLOCK);
 
                 /* Calc bytes to send & offset */

@@ -53,7 +53,7 @@ int mk_header_send(int fd, struct client_request *cr,
 
 	sh = sr->headers;
 
-	iov = mk_iov_create(45);
+	iov = mk_iov_create(45, 0);
 
 	/* Status Code */
 	switch(sh->status){
@@ -157,8 +157,8 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
 
 	/* Informacion del server */
-	mk_iov_add_entry(iov, sr->host_conf->header_host_signature,
-			strlen(sr->host_conf->header_host_signature),
+	mk_iov_add_entry(iov, sr->host_conf->header_host_signature.data,
+			sr->host_conf->header_host_signature.len,
 			mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 
 	/* Date */
@@ -186,16 +186,14 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
 
 	/* Last-Modified */
-	if(sh->last_modified!=NULL)
+	if(sh->last_modified.len>0)
         {
-		m_build_buffer(
-			&buffer,
-			&len,
-			"%s %s",
-			RH_LAST_MODIFIED,
-			sh->last_modified);
-		mk_iov_add_entry(iov, buffer, len,
-				mk_iov_crlf, MK_IOV_FREE_BUF);
+		mk_iov_add_entry(iov, mk_header_last_modified.data, 
+                                 mk_header_last_modified.len,
+				mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, sh->last_modified.data, 
+                                 sh->last_modified.len,
+                                 mk_iov_crlf, MK_IOV_FREE_BUF);
 	}
 	
 	/* Connection */
@@ -356,15 +354,16 @@ int mk_header_send(int fd, struct client_request *cr,
                                  sh->content_length_p.len,
                                  mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
-        
-	
+        	
 	if(sh->cgi==SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE)
 	{
-		mk_iov_add_separator(iov, mk_iov_crlf);
+		mk_iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
+                           mk_iov_none, MK_IOV_NOT_FREE_BUF);
 	}
 
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 	mk_iov_send(fd, iov);
+        
         mk_iov_free(iov);
 	
 	return 0;
@@ -390,7 +389,7 @@ struct header_values *mk_header_create()
 	headers->content_length = -1;
 	headers->transfer_encoding = -1;
 	headers->content_type = NULL;
-	headers->last_modified = NULL;
+	mk_pointer_reset(&headers->last_modified);
 	headers->location = NULL;
 
 	return headers;

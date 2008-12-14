@@ -165,7 +165,7 @@ struct request {
 	/*-----------------*/
 
 	/*-Internal-*/
-	char *real_path; /* Absolute real path */
+	mk_pointer real_path; /* Absolute real path */
 	char *user_uri; /* ~user/...path */
 	mk_pointer query_string; /* ?... */
 
@@ -207,13 +207,13 @@ struct header_values {
         int breakline;
 
 	char *content_type;
-	char *last_modified;
+	mk_pointer last_modified;
 	char *location;
 };
 
 struct request *mk_request_parse(struct client_request *cr);
 int mk_request_process(struct client_request *cr, struct request *s_request);
-char *mk_request_index(char *pathfile);
+mk_pointer mk_request_index(char *pathfile);
 
 
 /* Custom HTML Page for errors */

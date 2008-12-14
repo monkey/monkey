@@ -14,7 +14,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Library General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  Youu should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
@@ -48,6 +48,7 @@
 #include "iov.h"
 #include "clock.h"
 #include "http.h"
+#include "cache.h"
 
 #include <sys/sysinfo.h>
 
@@ -100,7 +101,6 @@ void *start_worker_logger(void *args)
         struct host *h=0;
         int flog;
         long slen;
-        int fdop = 0;
         int timeout;
         int clock_ticks;
         int clk;
@@ -190,7 +190,6 @@ void *start_worker_logger(void *args)
                         else
                         {
                                 timeout = clk+clock_ticks;
-                                //fdop++;
                                 flog = open(target->target, 
                                                 O_WRONLY | O_CREAT , 0644);
                         
@@ -208,11 +207,19 @@ void *start_worker_logger(void *args)
                                         perror("splice");
                                 }
                                 close(flog);
-                                //printf("\nfdop: %i", fdop);
-                                //fflush(stdout);
                         }
                 }
         }
+}
+
+struct mk_iov *mk_log_iov_get()
+{
+        return (struct mk_iov *) pthread_getspecific(mk_cache_iov_log);
+}
+
+void mk_log_iov_free(struct mk_iov *iov)
+{
+        mk_iov_free_marked(iov);
 }
 
 /* Registra en archivos de logs: accesos
@@ -228,22 +235,20 @@ int write_log(struct log_info *log, struct host *h)
                 return 0;
         }
 
-        iov = mk_iov_create(16);
+        iov = mk_log_iov_get();
+
+        /* client IP address */
+        mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
+                         mk_logfile_iov_dash, MK_IOV_NOT_FREE_BUF);
+
+        /* Date/time when object was requested */
+        mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
+                         mk_iov_space,
+                         MK_IOV_NOT_FREE_BUF);
 
         /* Register a successfull request */
         if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
         {
-                /* client IP address */
-                mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
-                                 mk_iov_space, MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "-", 1, mk_iov_space,
-                                 MK_IOV_NOT_FREE_BUF);
-
-                /* Date/time when object was requested */
-                mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
-                                 mk_iov_space,
-                                 MK_IOV_NOT_FREE_BUF);
-
                 /* HTTP method required */
                 buf = mk_http_method_check_str(log->method);
                 mk_iov_add_entry(iov, buf, strlen(buf), mk_iov_space, 
@@ -279,14 +284,6 @@ int write_log(struct log_info *log, struct host *h)
                 mk_iov_send(h->log_access[1], iov);
         }
         else{ /* Register some error */
-                mk_iov_add_entry(iov, log->ip.data, log->ip.len,
-                                mk_iov_space, MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, "-", 1, mk_iov_space,
-                                MK_IOV_NOT_FREE_BUF);
-                mk_iov_add_entry(iov, log_current_time.data, log_current_time.len, 
-                                 mk_iov_space,
-                                 MK_IOV_NOT_FREE_BUF);
-                
                 mk_iov_add_entry(iov, 
                                  log->error_msg.data, 
                                  log->error_msg.len, 
@@ -295,7 +292,7 @@ int write_log(struct log_info *log, struct host *h)
                 mk_iov_send(h->log_error[1], iov);
 
         }
-        mk_iov_free(iov);
+        mk_log_iov_free(iov);
         return 0;       
 }
 

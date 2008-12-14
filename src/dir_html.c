@@ -529,7 +529,7 @@ struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[],
         tpl_len = mk_dirhtml_template_len(tpl_tpl);
 
         /* we duplicate the lenght in case we get separators */
-        iov = mk_iov_create_offset(tpl_len*2, 1); 
+        iov = mk_iov_create(tpl_len*2, 1); 
 
         tpl_list = tpl_tpl;
 
@@ -697,12 +697,12 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         struct dirhtml_tplval *tplval_header;
         struct dirhtml_tplval *tplval_entry;
         
-        if(!(dir = opendir(sr->real_path)))
+        if(!(dir = opendir(sr->real_path.data)))
         {
                 return -1;
         }
 
-        file_list = mk_dirhtml_create_list(dir, sr->real_path, &list_len);
+        file_list = mk_dirhtml_create_list(dir, sr->real_path.data, &list_len);
 
         /* Building headers */
 	sr->headers->status = M_HTTP_OK;

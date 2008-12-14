@@ -107,6 +107,9 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
      
 	thconf = thread_conf;
 
+        /* Init specific thread cache */
+        mk_cache_thread_init();
+
 	mk_epoll_calls *callers;
 	callers = mk_epoll_set_callers((void *)mk_conn_switch,
 			MK_CONN_SWITCH_READ, 
@@ -114,6 +117,8 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 
 	mk_sched_set_thread_poll(thconf->epoll_fd);
 	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);
+
+
 	return 0;
 }
 
