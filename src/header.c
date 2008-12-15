@@ -339,7 +339,7 @@ int mk_header_send(int fd, struct client_request *cr,
 					RH_CONTENT_RANGE, 
 					(sh->content_length - sh->ranges[1]),
 					(sh->content_length - 1),
-					length);
+					sh->content_length);
 			mk_iov_add_entry(iov, buffer, len,
 					mk_iov_crlf, MK_IOV_FREE_BUF);
 		}
