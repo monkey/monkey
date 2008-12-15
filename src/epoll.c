@@ -78,7 +78,6 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
                                 close(events[i].data.fd);
                                 continue;
                         }
-                        assert(events[i].events & (EPOLLIN | EPOLLOUT));
 
                         if(events[i].events & EPOLLIN)
                         {
