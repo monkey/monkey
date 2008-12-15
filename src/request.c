@@ -299,6 +299,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
         }
 
 	s_request->user_home=VAR_OFF;
+        s_request->log->method = s_request->method;
 
 	/* Valid request URI? */
 	if(s_request->uri_processed==NULL){
@@ -552,8 +553,8 @@ mk_pointer mk_request_header_find(char *request_body,  mk_pointer header)
         }
 
         bl = strstr(p, MK_CRLF);
-        var.data = p+header.len+1;
-        var.len = bl-var.data;
+        var.data = p + header.len+1;
+        var.len = bl - var.data;
 
 	return (mk_pointer) var;
 }
