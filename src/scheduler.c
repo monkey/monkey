@@ -30,6 +30,7 @@
 #include "memory.h"
 #include "epoll.h"
 #include "request.h"
+#include "cache.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)

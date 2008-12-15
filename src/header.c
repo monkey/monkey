@@ -34,11 +34,22 @@
 #include "socket.h"
 #include "utils.h"
 #include "clock.h"
+#include "cache.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
 {
         return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
+}
+
+struct mk_iov *mk_header_iov_get()
+{
+        return (struct mk_iov *) pthread_getspecific(mk_cache_iov_header);
+}
+
+void mk_header_iov_free(struct mk_iov *iov)
+{
+        mk_iov_free_marked(iov);
 }
 
 /* Send_Header , envia las cabeceras principales */
@@ -53,7 +64,7 @@ int mk_header_send(int fd, struct client_request *cr,
 
 	sh = sr->headers;
 
-	iov = mk_iov_create(45, 0);
+	iov = mk_header_iov_get();
 
 	/* Status Code */
 	switch(sh->status){
@@ -152,7 +163,7 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
 	
 	if(fd_status<0){
-		mk_iov_free(iov);
+		mk_header_iov_free(iov);
 		return -1;		
 	}
 
@@ -193,7 +204,7 @@ int mk_header_send(int fd, struct client_request *cr,
 				mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, sh->last_modified.data, 
                                  sh->last_modified.len,
-                                 mk_iov_crlf, MK_IOV_FREE_BUF);
+                                 mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
 	
 	/* Connection */
@@ -364,7 +375,7 @@ int mk_header_send(int fd, struct client_request *cr,
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 	mk_iov_send(fd, iov);
         
-        mk_iov_free(iov);
+        mk_header_iov_free(iov);
 	
 	return 0;
 }

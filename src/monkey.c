@@ -218,6 +218,7 @@ int main(int argc, char **argv)
 	pthread_key_create(&epoll_fd, NULL);
 	pthread_key_create(&timer, NULL);
         pthread_key_create(&mk_cache_iov_log, NULL);
+        pthread_key_create(&mk_cache_iov_header, NULL);
 
 	for(i=0; i<num_threads; i++)
 	{
