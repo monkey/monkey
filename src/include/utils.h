@@ -24,7 +24,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #define TRUE 1
 #define FALSE 0
 
@@ -33,6 +32,7 @@
 #define NO_CHUNKED 1
 
 #include "request.h"
+#include "memory.h"
 
 /* utils.c */
 int SendFile(int socket, struct request *request);

@@ -379,14 +379,6 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	return status;
 }
 
-int mk_request_uri_check(mk_pointer *uri)
-{
-        int n;
-
-        n = mk_string_search_n(uri->data, " ", uri->len);
-        return mk_string_search_n(uri->data, " ", uri->len);
-}
-
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
@@ -472,7 +464,7 @@ int mk_request_header_process(struct request *sr)
 
 	if(host.data)
 	{
-		if((pos_sep = mk_string_search_n(host.data, ":", host.len))>=0)
+		if((pos_sep = mk_string_char_search(host.data, ':', host.len))>=0)
 		{
 			sr->host.data = host.data;
 			sr->host.len = pos_sep;

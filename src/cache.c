@@ -36,6 +36,7 @@ void mk_cache_thread_init()
         cache_iov_log = mk_iov_create(25, 0);
         pthread_setspecific(mk_cache_iov_log, (void *) cache_iov_log);
 
+        /* Cache iov header struct */
         cache_iov_header = mk_iov_create(45, 0);
         pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
 }

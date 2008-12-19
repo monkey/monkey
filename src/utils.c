@@ -75,7 +75,7 @@ int SendFile(int socket, struct request *sr)
 int CheckDir(char *pathfile)
 {
 	struct stat path;
-	
+
 	if(stat(pathfile,&path)==-1)
 		return -1;
 		
@@ -103,28 +103,24 @@ int CheckFile(char *pathfile)
 mk_pointer PutDate_string(time_t date)
 {
 	int n, size=50;
-	char *date_gmt;
+        mk_pointer date_gmt;
 	struct tm *gmt_tm;
-	mk_pointer pointer;
 	
-	mk_pointer_reset(&pointer);
-        
+        mk_pointer_reset(&date_gmt);
+
 	if(date==0){
 		if ( (date = time(NULL)) == -1 ){
-			return pointer;
+                        return date_gmt;
 		}
 	}
 
+        date_gmt.data = mk_mem_malloc(size);
 	gmt_tm	= (struct tm *) gmtime(&date);
-	date_gmt = mk_mem_malloc(size);
+	n = strftime(date_gmt.data, size-1,  GMT_DATEFORMAT, gmt_tm);
+	date_gmt.data[n] = '\0';
+	date_gmt.len = n;
 
-	n = strftime(date_gmt, size-1,  GMT_DATEFORMAT, gmt_tm);
-	date_gmt[n] = '\0';
-	
-	pointer.data = date_gmt;
-	pointer.len = n;
-
-	return pointer;
+        return date_gmt;
 }
 
 time_t PutDate_unix(char *date)
@@ -210,7 +206,7 @@ char *get_real_string(mk_pointer uri){
         char *buf;
         char hex[3];
 
-	if((i = mk_string_search_n(uri.data, "%", uri.len))<0)
+	if((i = mk_string_char_search(uri.data, '%', uri.len))<0)
 	{
 		return NULL;
 	}

@@ -25,6 +25,17 @@
 pthread_key_t mk_cache_iov_log;
 pthread_key_t mk_cache_iov_header;
 
+struct mk_cache_date_t {
+        time_t unix_time;
+        time_t expire;
+        time_t last_access;
+        mk_pointer date;
+};
+
+struct mk_cache_date_t *mk_cache_file_date;
+
+
 void mk_cache_thread_init();
+char *mk_cache_file_date_get(time_t time);
 
 #endif

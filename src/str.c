@@ -60,6 +60,23 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 	return (char *) buffer;	
 }
 
+int mk_string_char_search(char *string, int c, int n)
+{
+        int i;
+
+        if(n<0)
+        {
+                n = strlen(string);
+        }
+
+        for(i=0; i<n; i++)
+        {
+                if(string[i]==c)
+                        return i;
+        }
+
+        return -1;
+}
 /* Get position of a substring.
  * Original version taken from google, modified in order
  * to send the position instead the substring.
