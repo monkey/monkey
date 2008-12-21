@@ -39,15 +39,15 @@
 #define MK_DIRHTML_FILE_FOOTER "footer.theme"
 
 /* Template tags */
-#define MK_DIRHTML_TPL_HEADER {"%_html_title_%"}
+#define MK_DIRHTML_TPL_HEADER {"%_html_title_%", NULL}
 #define MK_DIRHTML_TPL_ENTRY {\
         "%_target_title_%",   \
         "%_target_url_%",\
         "%_target_name_%",\
         "%_target_time_%",\
-        "%_target_size_%"}
+        "%_target_size_%", NULL}
 
-#define MK_DIRHTML_TPL_FOOTER {}
+#define MK_DIRHTML_TPL_FOOTER {NULL}
 
 #define MK_DIRHTML_TAG_INIT "%_"
 #define MK_DIRHTML_TAG_END "_%"
