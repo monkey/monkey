@@ -33,7 +33,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
 	iov = mk_mem_malloc(sizeof(struct mk_iov));
 	iov->iov_idx = offset;
 	iov->io = mk_mem_malloc(n*sizeof(struct iovec));
-	iov->buf_to_free = mk_mem_malloc(n*sizeof(char));
+	iov->buf_to_free = mk_mem_malloc(n*sizeof(char *));
 	iov->buf_idx = 0;
         iov->total_len = 0;
         iov->size = n;
@@ -113,7 +113,8 @@ void mk_iov_free_marked(struct mk_iov *mk_io)
 {
 	int i, limit=0;
 
-	limit = mk_io->buf_idx-1;
+	limit = mk_io->buf_idx;
+
 	for(i=0; i<limit; i++)
 	{
 
