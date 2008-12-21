@@ -205,7 +205,7 @@ int mk_handler_read(int socket)
 
 		efd = mk_sched_get_thread_poll();
 
-                if(mk_http_pendient_request(cr)==0)
+                if(mk_http_pending_request(cr)==0)
                 {
                         mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_WRITE);
                 }

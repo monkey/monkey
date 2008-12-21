@@ -512,12 +512,12 @@ int mk_http_range_parse(struct request *sr)
 }
 
 /* 
- * Check if client request still has pendient data 
+ * Check if client request still has pending data 
  * 
  * Return 0 when all expected data has arrived or -1 when
  * the connection is on a pendient status due to HTTP spec 
  */
-int mk_http_pendient_request(struct client_request *cr)
+int mk_http_pending_request(struct client_request *cr)
 {
         int n, method;
         char *str;
