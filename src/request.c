@@ -336,6 +336,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	/* Validating protocol version */
 	if(s_request->protocol == HTTP_PROTOCOL_UNKNOWN)
 	{
+
 		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
 		mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
                                  s_request->log);
@@ -391,6 +392,11 @@ int mk_request_header_process(struct request *sr)
 	char *headers;
 	mk_pointer host;
 
+        /* If verification fails it will return always
+         * a bad request status
+         */
+        sr->log->final_response = M_CLIENT_BAD_REQUEST;
+
 	/* Method */
 	sr->method_str = (char *) mk_http_method_check_str(sr->method);
 
@@ -400,6 +406,7 @@ int mk_request_header_process(struct request *sr)
 
         uri_end = mk_string_search_r(sr->body.data, ' ', 
                                                 fh_limit) - 1;
+
         if(uri_end <= 0)
         {
                 return -1;
@@ -448,6 +455,7 @@ int mk_request_header_process(struct request *sr)
 
         	mk_mem_free(str_prot);
 	}
+
 	headers = sr->body.data+prot_end+mk_crlf.len;
 
 	/* URI processed */
@@ -513,6 +521,7 @@ int mk_request_header_process(struct request *sr)
 		}
 	}
 
+        sr->log->final_response = M_HTTP_OK;
 	return 0;
 }
 
