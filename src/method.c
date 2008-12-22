@@ -42,22 +42,38 @@
 #include "utils.h"
 #include "file.h"
 
+long int mk_method_post_content_length(char *body)
+{
+        long int len;
+        mk_pointer tmp;
+
+        tmp = mk_request_header_find(body, mk_rh_content_length);
+        if(!tmp.data)
+        {
+                return -2;
+        }
+	
+        len = atoi(tmp.data);
+        
+        return len;
+}
+
+
 /* POST METHOD */
 int M_METHOD_Post(struct client_request *cr, struct request *sr)
 {
 	mk_pointer tmp;
 	char buffer[MAX_REQUEST_BODY];
-	int content_length_post=0;
+	long content_length_post=0;
 	
-        tmp = mk_request_header_find(cr->body, mk_rh_content_length);
-	if(!tmp.data){
+        content_length_post = mk_method_post_content_length(cr->body);
+	if(content_length_post == -2)
+        {
 		mk_request_error(M_CLIENT_LENGHT_REQUIRED, 
                               cr, sr, 0, sr->log);
 		return -1;
 	}
 
-	content_length_post = (int) atoi(tmp.data);
-	
 	if(content_length_post<=0 || content_length_post >=MAX_REQUEST_BODY){
 		mk_request_error(M_CLIENT_BAD_REQUEST, 
                               cr, sr, 0, sr->log);	
@@ -85,15 +101,18 @@ int M_METHOD_Post(struct client_request *cr, struct request *sr)
 /* Return POST variables sent in request */
 mk_pointer mk_method_post_get_vars(char *body, int index)
 {
-        int end;
+        long len=1;
         char *str=0;
         mk_pointer p;
 
-        end = mk_string_search(body+index, mk_endblock.data);
-        str = mk_string_copy_substr(body, index, index+end);
+        str = mk_string_copy_substr(body, index, strlen(body));
+        if(str)
+        {
+                len = strlen(str);
+        }
 
         p.data = str;
-        p.len = end;
+        p.len = len;
 
         return p;
 }

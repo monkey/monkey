@@ -258,6 +258,7 @@ int write_log(struct log_info *log, struct host *h)
                 mk_iov_add_entry(iov, log->uri.data, log->uri.len, 
                                  mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
+
                 if(log->protocol)
                 {
                         buf = mk_http_protocol_check_str(log->protocol);

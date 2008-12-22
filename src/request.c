@@ -87,13 +87,12 @@ struct request *mk_request_parse(struct client_request *cr)
 		/* Looking for POST data */
 		if(cr_buf->method == HTTP_METHOD_POST)
 		{
-			cr_buf->post_variables = \
-                                       mk_method_post_get_vars(cr->body, i);
+			cr_buf->post_variables =
+                                mk_method_post_get_vars(cr->body, i);
 
-			if(cr_buf->post_variables.data)
+			if(cr_buf->post_variables.len >= 0)
 			{
-				i = init_block = i+cr_buf->post_variables.len +
-                                                 mk_crlf.len;
+				i = init_block = i+cr_buf->post_variables.len;
 			}
 		}
 
@@ -162,6 +161,7 @@ struct request *mk_request_parse(struct client_request *cr)
 		cr_search = cr_search->next;
 	}
 	*/
+
 	return cr->request;
 }
 

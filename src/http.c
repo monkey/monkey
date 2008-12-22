@@ -515,19 +515,21 @@ int mk_http_range_parse(struct request *sr)
  * Check if client request still has pending data 
  * 
  * Return 0 when all expected data has arrived or -1 when
- * the connection is on a pendient status due to HTTP spec 
+ * the connection is on a pending status due to HTTP spec 
  */
 int mk_http_pending_request(struct client_request *cr)
 {
         int n, method;
+        long len;
         char *str;
 
         n = mk_string_search(cr->body, mk_endblock.data);
+
         if(n<=0)
         {
                 return -1;
         }
-
+        
         if(cr->first_block_end<0)
         {
                 cr->first_block_end = n;
@@ -538,9 +540,22 @@ int mk_http_pending_request(struct client_request *cr)
         method = mk_http_method_get(cr->body);
         if(method == HTTP_METHOD_POST)
         {
-                if(mk_string_search(str, MK_CRLF)>0)
+                /* At this point we should have the content-lenght
+                 * sent by the client
+                 */
+                len = mk_method_post_content_length(cr->body);
+        
+                if(len < 0)
                 {
-                      return 0;
+                        /* If we don't have it, there's a error which
+                         * which be handled by another functions, we 
+                         * just think that all data has arrived
+                         */
+                        return 0;
+                }
+                else if(len >= strlen(str))
+                {
+                        return 0;
                 }
                 else{
                       return -1;
