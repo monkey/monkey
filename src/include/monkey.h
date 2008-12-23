@@ -30,7 +30,7 @@ struct sockaddr_in remote;
 int local_fd;
 
 /* CONSTANTES DEL SERVIDOR */
-#define MAX_REQUEST_BODY 10240 /* Maximo buffer del request */
+#define MAX_REQUEST_BODY 1024 /* Maximo buffer del request */
 #define BUFFER_SOCKET 4096 /* Maximo buffer de envio */
 
 #define MAX_PATH 1024 /* Largo m�ximo para rutas (archivos) */

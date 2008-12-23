@@ -186,7 +186,7 @@ int mk_handler_read(int socket)
 
         bytes = read(socket, cr->body+cr->body_length,
                      MAX_REQUEST_BODY-cr->body_length-1);
-        
+
 	if (bytes < 0) {
 		if (errno == EAGAIN) {
 			return 1;
@@ -208,6 +208,13 @@ int mk_handler_read(int socket)
                 if(mk_http_pending_request(cr)==0)
                 {
                         mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_WRITE);
+                }
+                else if(cr->body_length+1 >= MAX_REQUEST_BODY)
+                {
+                        /* Request is incomplete and our buffer is full, 
+                         * close connection 
+                         */
+                        return -1;
                 }
 	}
 
