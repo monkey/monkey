@@ -60,12 +60,16 @@ int mk_socket_set_tcp_nodelay(int sockfd)
 char *mk_socket_get_ip(int socket)
 {
 	struct sockaddr_in m_addr;
-	socklen_t len;
+	socklen_t len = 16;
+        char *ipv4;
+        
+        ipv4 = mk_mem_malloc(len);
+        if(!ipv4)
+        {
+                return NULL;
+        }
 
-	len = sizeof(m_addr);
-	getpeername(socket, (struct sockaddr*)&m_addr, &len);
-
-	return inet_ntoa(m_addr.sin_addr);
+        return (char *) inet_ntop(AF_INET, &m_addr.sin_addr, ipv4, len);
 }
 
 int mk_socket_close(int socket)

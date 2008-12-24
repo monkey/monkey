@@ -956,6 +956,8 @@ struct client_request *mk_request_client_remove(int socket)
 		}
 		cr = cr->next;
 	}
+
+        mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
 	mk_sched_set_request_handler(request_handler);
