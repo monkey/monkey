@@ -377,7 +377,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	/* Handling method requested */
 	if(s_request->method==HTTP_METHOD_POST)
 	{
-		if((status=M_METHOD_Post(cr, s_request))==-1){
+		if((status=mk_method_post(cr, s_request))==-1){
 			return status;
 		}
 	}

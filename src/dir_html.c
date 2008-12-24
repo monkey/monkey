@@ -310,7 +310,6 @@ int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
         {
                 if(!aux->buf)
                 {
-                        //printf("\n%i) %s", i, tpl[st_tpl[i].tag]);
                         printf("\n%i) %s (tag=%i)", i, tpl[aux->tag], aux->tag);
                 }
                 else{
@@ -392,8 +391,6 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[])
          * no repetitive tags
          */
         c_tags = mk_dirhtml_content_count_tags(content, tpl);
-
-        //st_tpl = (struct dirhtml_template **) mk_mem_malloc_z(sizeof(struct dirhtml_template)*(*tpl_length));
 
         /* Parsing content */
         while(i<cont_len)

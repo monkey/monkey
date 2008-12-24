@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2008, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,22 +19,8 @@
 
 /* method.c */
 
-int M_METHOD_Get_and_Head(struct client_request *cr, 
-		struct request *s_request, int socket); 
-
-int M_METHOD_Post(struct client_request *cr, struct request *sr);
-int M_METHOD_send_headers(int fd, struct client_request *cr,
-		struct request *sr, struct log_info *s_log);
-
-/* Get request range */
-int M_METHOD_get_range(char *header, int range_from_to[2]);
-
-/* Return value assigned to Method called */
-int M_METHOD_get_number(char *method); 
-
-/* Return method name */
-char *M_METHOD_get_name(int method);
+int mk_method_post(struct client_request *cr, struct request *sr);
 mk_pointer mk_method_post_get_vars(char *body, int index);
-char *M_Get_POST_Vars(char *request, int index, char *strend);
+long int mk_method_post_content_length(char *body);
 
 

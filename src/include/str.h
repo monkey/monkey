@@ -22,6 +22,8 @@
 
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
 
+
+int mk_string_char_search(char *string, int c, int n);
 int _mk_string_search(char *string, char *search, int n);
 int mk_string_search(char *string, char *search);
 int mk_string_search_n(char *string, char *search, int n);

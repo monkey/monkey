@@ -60,7 +60,7 @@ long int mk_method_post_content_length(char *body)
 
 
 /* POST METHOD */
-int M_METHOD_Post(struct client_request *cr, struct request *sr)
+int mk_method_post(struct client_request *cr, struct request *sr)
 {
 	mk_pointer tmp;
 	char buffer[MAX_REQUEST_BODY];
