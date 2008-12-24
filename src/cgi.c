@@ -85,7 +85,6 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         struct palm *p;
         struct mk_iov *iov;
 
-        buf = mk_mem_malloc_z(len);
         p = mk_palm_get_handler(sr->real_path.data);
         if(!p)
         {
@@ -104,6 +103,7 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         fflush(stdout);
         mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
         
+        buf = mk_mem_malloc_z(len);
         do {
                 n=read(sock, buf+total, len);
                 total+=n;
