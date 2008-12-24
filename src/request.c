@@ -850,7 +850,7 @@ void mk_request_free(struct request *sr)
         mk_pointer_reset(&sr->body);
         mk_pointer_reset(&sr->uri);
 
-	if(sr->uri_twin==VAR_OFF)
+	if(sr->uri_twin==VAR_ON)
 	{
 		mk_mem_free(sr->uri_processed);
         }
@@ -880,7 +880,6 @@ struct client_request *mk_request_client_create(int socket)
 	cr->request = NULL;
 
         mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
-
 
 	cr->next = NULL;
 	cr->body = mk_mem_malloc_z(MAX_REQUEST_BODY);

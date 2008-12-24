@@ -106,7 +106,7 @@ struct mimetype *mk_mimetype_find(char *filename)
 	int j, len;
 
 	j = len = strlen(filename);
-	
+
 	/* looking for extension */
 	while(filename[j]!='.' && j>=0) 
 		j--;
