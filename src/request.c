@@ -270,7 +270,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		}
 		else if(final_status <= 0)
 		{
-			write_log(p_request->log, p_request->host_conf);
+			mk_logger_write_log(p_request->log, p_request->host_conf);
 		}
 		p_request = p_request->next;
 	}

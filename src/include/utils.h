@@ -40,7 +40,6 @@ int	CheckDir(char *pathfile);
 int	CheckFile(char *pathfile);
 int AccessFile(struct stat file);
 int	ExecFile(char *pathfile);
-int	set_daemon();
 int	hex2int(char *pChars);
 char *strstr2(char *s, char *t);
 
@@ -63,6 +62,7 @@ char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 int Check_symlink(const char *path);
 char *get_end_position(char *buf);
 
+int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
 
 #endif

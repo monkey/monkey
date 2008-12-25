@@ -23,8 +23,9 @@
 #include "request.h"
 
 /* user.c */
-int	User_main(struct client_request *cr, struct request *sr);/* struct request */
-int	SetUIDGID();
-int	SetEGID_BACK();
+int User_main(struct client_request *cr, struct request *sr);
+
+int mk_user_set_uidgid();
+int mk_user_undo_uidgid();
 
 #endif

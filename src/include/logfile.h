@@ -56,13 +56,9 @@ struct log_info {
 	struct host *host_conf;
 };
 
-char    *PutTime();
-char    *PutIP();
-char    *BaseName(char *name);
-int write_log(struct log_info *log, struct host *h);
-int	 add_log_pid();
-int	 remove_log_pid();
-
+int mk_logger_write_log(struct log_info *log, struct host *h);
+int mk_logger_register_pid();
+int mk_logger_remove_pid();
 
 void *mk_logger_worker_init(void *args);
 

@@ -180,8 +180,8 @@ char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 	return *buffer;
 }
 
-/* run monkey as daemon, evil monkey! >:) */
-int set_daemon()
+/* Run current process in background mode (daemon, evil Monkey >:) */
+int mk_utils_set_daemon()
 {
 	 switch (fork())
   	  {

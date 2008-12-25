@@ -56,14 +56,14 @@
 	static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-void MonkeyPid()
+void mk_pid()
 {
         printf("\n** Server details **");
         printf("\nProcess PID: %i\n", getpid());
         fflush(stdout);
 }
 
-void Version()
+void mk_version()
 { 
 	printf("Monkey HTTP Daemon %s\n",VERSION);
 	printf("Built : %s\n", MONKEY_BUILT);
@@ -71,7 +71,7 @@ void Version()
 	fflush(stdout);
 }
 
-void Help()
+void mk_help()
 {
 	printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
 	printf("Available options:\n");
@@ -108,11 +108,11 @@ int main(int argc, char **argv)
 	{
 		switch (opt) {
 			case 'v': 
-				Version() ; 
+				mk_version() ; 
 				exit(0); 
 				break;
 			case 'h':
-				Help();
+				mk_help();
 				break;
 			case 'D':
 				daemon = 1;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 				break;
 			case '?':
 				printf("Monkey: Invalid option or option needs an argument.\n");
-				Help();
+				mk_help();
 				break;
 		}
 	}   
@@ -135,8 +135,7 @@ int main(int argc, char **argv)
 	if(!config->file_config)
 		config->file_config=MONKEY_PATH_CONF;
 		
-	Version();
-        MonkeyPid();
+	mk_version();
 	mk_signal_init();
 	mk_config_start_configure();
 
@@ -160,13 +159,19 @@ int main(int argc, char **argv)
 	/* Running Monkey as daemon */
 	if(daemon)
 	{
-		set_daemon();
+		mk_utils_set_daemon();
 	}
-		
-	add_log_pid(); /* Register Pid of monkey */
+
+        /* Print server details */
+        mk_pid();
+
+        /* Register PID of Monkey */
+	mk_logger_register_pid();
+
+        /* Change process owner */
+	mk_user_set_uidgid();
 
 
-	SetUIDGID(); 	/* Changing user */
 	mk_mem_pointers_init();
 
         /* Create thread keys */

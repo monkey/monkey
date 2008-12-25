@@ -210,19 +210,19 @@ void *mk_logger_worker_init(void *args)
         }
 }
 
-struct mk_iov *mk_log_iov_get()
+struct mk_iov *mk_logger_iov_get()
 {
         return (struct mk_iov *) pthread_getspecific(mk_cache_iov_log);
 }
 
-void mk_log_iov_free(struct mk_iov *iov)
+void mk_logger_iov_free(struct mk_iov *iov)
 {
         mk_iov_free_marked(iov);
 }
 
 /* Registra en archivos de logs: accesos
  y errores */
-int write_log(struct log_info *log, struct host *h)
+int mk_logger_write_log(struct log_info *log, struct host *h)
 {
         char *buf;
         struct mk_iov *iov;
@@ -233,7 +233,7 @@ int write_log(struct log_info *log, struct host *h)
                 return 0;
         }
 
-        iov = mk_log_iov_get();
+        iov = mk_logger_iov_get();
 
         /* client IP address */
         mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
@@ -291,12 +291,12 @@ int write_log(struct log_info *log, struct host *h)
                 mk_iov_send(h->log_error[1], iov);
 
         }
-        mk_log_iov_free(iov);
+        mk_logger_iov_free(iov);
         return 0;       
 }
 
 /* Write Monkey's PID */
-int add_log_pid()
+int mk_logger_register_pid()
 {
         FILE *pid_file;
                 
@@ -314,17 +314,8 @@ int add_log_pid()
 }
 
 /* Elimina log del PID */
-int remove_log_pid()
+int mk_logger_remove_pid()
 {
-                SetEGID_BACK();
+                mk_user_undo_uidgid();
                 return remove(config->pid_file_path);
-}
-
-char *BaseName(char *name)
-{
-   char *base;
-
-   base = rindex (name, '/');
-   
-   return base ? base : name;
 }

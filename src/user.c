@@ -82,7 +82,7 @@ int User_main(struct client_request *cr, struct request *sr)
 }
 
 /* Cambia el usuario del proceso */
-int SetUIDGID()
+int mk_user_set_uidgid()
 {
    struct passwd   *usr;
 
@@ -118,7 +118,7 @@ int SetUIDGID()
 }
 
 /* Vuelve el proceso a su usuario original */
-int SetEGID_BACK()
+int mk_user_undo_uidgid()
 {
 	if(EUID==0){
 		setegid(EGID);

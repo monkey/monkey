@@ -45,7 +45,7 @@ switch( signo ) {
                 break;
 
 	case SIGINT: 
-		remove_log_pid();
+		mk_logger_remove_pid();
 		printf("\n\n%s => Interrupt from keyboard\n\n",
                        log_current_time.data);
                 exit(0);
