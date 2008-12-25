@@ -59,17 +59,20 @@ int mk_socket_set_tcp_nodelay(int sockfd)
 
 char *mk_socket_get_ip(int socket)
 {
-	struct sockaddr_in m_addr;
-	socklen_t len = 16;
+        int ipv4_len = 16;
+        socklen_t len;
         char *ipv4;
-        
-        ipv4 = mk_mem_malloc(len);
+	struct sockaddr_in m_addr;
+
+        ipv4 = mk_mem_malloc(ipv4_len);
         if(!ipv4)
         {
                 return NULL;
         }
-
-        return (char *) inet_ntop(AF_INET, &m_addr.sin_addr, ipv4, len);
+ 
+        len = sizeof(m_addr);
+        getpeername(socket, (struct sockaddr*)&m_addr,  &len);
+        return (char *) inet_ntop(PF_INET, &m_addr.sin_addr, ipv4, 16);
 }
 
 int mk_socket_close(int socket)

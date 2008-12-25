@@ -222,7 +222,7 @@ int main(int argc, char **argv)
 
 	for(i=0; i<num_threads; i++)
 	{
-		mk_sched_launch_thread(200);
+		mk_sched_launch_thread(40);
 	}
 
 	sched = sched_list;
