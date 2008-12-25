@@ -278,7 +278,7 @@ void mk_config_read_hosts(char *path)
         exit(1);
     }
 
-	m_build_buffer(&buf, &len, "%s/sites/", path);
+    m_build_buffer(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf)))
         exit(1);
 
@@ -306,7 +306,7 @@ void mk_config_read_hosts(char *path)
 	    config->nhosts++;
         }
     }
-    
+    closedir(dir);
     /*
     h = config->hosts;
     while(h)
