@@ -38,5 +38,8 @@ int mk_socket_timeout(int s, char *buf, int len,
 
 int mk_socket_create();
 int mk_socket_connect(int sockfd, char *server, int port);
+void mk_socket_reset(int socket);
+int mk_socket_server(int port);
+
 #endif
 

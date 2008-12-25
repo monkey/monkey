@@ -27,7 +27,7 @@
 /* Sockets*/
 struct sockaddr_in remote;
 
-int local_fd;
+int server_fd;
 
 /* CONSTANTES DEL SERVIDOR */
 #define MAX_REQUEST_BODY 1024 /* Maximo buffer del request */

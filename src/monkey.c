@@ -58,14 +58,11 @@
 #define CONX_CLOSED 0
 #define CONX_OPEN 1
 		
-void ResetSocket(int fd)
+void MonkeyPid()
 {
-	int status=1;
-	
-	if(setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&status,sizeof(int))==-1) {
-		perror("setsockopt");
-		exit(1);
-	}	
+        printf("\n** Server details **");
+        printf("\nProcess PID: %i\n", getpid());
+        fflush(stdout);
 }
 
 void Version()
@@ -109,7 +106,6 @@ int main(int argc, char **argv)
 	pthread_t tid;
 	pthread_attr_t thread_attr;
 
-	struct sockaddr_in local_sockaddr_in;
 	struct sched_list_node *sched;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
@@ -148,6 +144,7 @@ int main(int argc, char **argv)
 		config->file_config=MONKEY_PATH_CONF;
 		
 	Version();
+        MonkeyPid();
 	Init_Signals();
 	mk_config_start_configure();
 
@@ -163,28 +160,10 @@ int main(int argc, char **argv)
 		set_benchmark_conf();
 	}
 
-	local_fd=socket(PF_INET,SOCK_STREAM,0);
-	local_sockaddr_in.sin_family=AF_INET;
-	local_sockaddr_in.sin_port=htons(config->serverport);
-	local_sockaddr_in.sin_addr.s_addr=INADDR_ANY;
-	memset(&(local_sockaddr_in.sin_zero),'\0',8);
-
-	ResetSocket(local_fd);
-
-	if(bind(local_fd,(struct sockaddr *)&local_sockaddr_in,sizeof(struct sockaddr))!=0){
-		puts("Error: Port busy.");
-		exit(1);
-	}		     
-	
-	if((listen(local_fd, 1024))!=0) {
-		perror("listen");
-		exit(1);
-	}
-
+        server_fd = mk_socket_server(config->serverport);
 
 	/* logger-worker */ 
 	pthread_attr_init(&thread_attr);
-	pthread_mutex_init(&mutex_logfile, (pthread_mutexattr_t *) NULL);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 	if(pthread_create(&tid, &thread_attr, start_worker_logger, NULL)<0)
 	{
@@ -230,7 +209,7 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
-		if((remote_fd=accept(local_fd, 
+		if((remote_fd=accept(server_fd, 
                                      (struct sockaddr *)&remote, 
                                      &socket_size))==-1)
 		{

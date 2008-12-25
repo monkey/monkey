@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <time.h>
 #include <arpa/inet.h>
@@ -28,6 +29,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "socket.h"
 #include "memory.h"
@@ -173,4 +175,48 @@ int mk_socket_connect(int sockfd, char *server, int port)
         }
         mk_mem_free(remote);
         return 0;
+}
+
+void mk_socket_reset(int socket)
+{
+	int status=1;
+	
+	if(setsockopt(socket,SOL_SOCKET,SO_REUSEADDR,&status,sizeof(int))==-1) {
+		perror("setsockopt");
+		exit(1);
+	}	
+}
+
+/* Just IPv4 for now... */
+int mk_socket_server(int port)
+{
+        int fd;
+	struct sockaddr_in local_sockaddr_in;
+
+        fd=socket(PF_INET,SOCK_STREAM,0);
+	local_sockaddr_in.sin_family=AF_INET;
+	local_sockaddr_in.sin_port=htons(port);
+	local_sockaddr_in.sin_addr.s_addr=INADDR_ANY;
+	memset(&(local_sockaddr_in.sin_zero),'\0',8);
+
+        /* Avoid bind issues, reset socket */
+	mk_socket_reset(fd);
+
+	if(bind(fd,(struct sockaddr *)&local_sockaddr_in,
+                sizeof(struct sockaddr))!=0)
+        {
+		puts("Error: Port busy.");
+		exit(1);
+	}		     
+	
+        /* Listen queue:
+         * The queue limit is given by /proc/sys/net/core/somaxconn
+         * we need to add a dynamic function to get that value on fly
+         */
+	if((listen(fd, 1024))!=0) {
+		perror("listen");
+		exit(1);
+	}
+
+        return fd;
 }
