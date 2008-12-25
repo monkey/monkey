@@ -81,9 +81,6 @@ struct host {
 
     char *access_log_path; /* access log file */
     char *error_log_path;  /* error log file */
-    char *header_file;  /* Path file with information about directory shown */
-    char *footer_file;   /* Path file with information about directory shown */
-
     int  getdir; /* allow show directory info ? */
 
     char *cgi_alias;

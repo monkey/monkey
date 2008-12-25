@@ -438,15 +438,6 @@ struct host *mk_config_get_host(char *path)
                                 host->scriptalias[1]=mk_string_dup(auxarg);
                                 host->scriptalias[2]='\0';
                         }
-
-                if(strcasecmp(variable, "Header_file")==0)
-                        m_build_buffer(&host->header_file, &len,
-                                       "%s", value);
-
-                if(strcasecmp(variable, "Footer_file")==0)
-                        m_build_buffer(&host->footer_file, &len,
-                                       "%s", value);
-
         }
         fclose(configfile);
         if(!host->servername)
