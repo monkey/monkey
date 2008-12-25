@@ -14,24 +14,28 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Library General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  Youu should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* clock.h */
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#ifndef MK_CLOCK_H
-#define MK_CLOCK_H
+pthread_t mk_worker_spawn(void (*func)(void *))
+{
+        pthread_t tid;
+        pthread_attr_t thread_attr;
 
-mk_pointer log_current_time;
-mk_pointer header_current_time;
+	pthread_attr_init(&thread_attr);
+	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+	if(pthread_create(&tid, &thread_attr, (void *) func, NULL)<0)
+	{
+		perror("pthread_create");
+		exit(1);
+	}
 
-#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
-
-void *mk_clock_worker_init(void *args);
-void mk_clock_set_time();
-
-
-#endif
-
+        return tid;
+}

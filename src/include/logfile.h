@@ -63,7 +63,9 @@ int write_log(struct log_info *log, struct host *h);
 int	 add_log_pid();
 int	 remove_log_pid();
 
-void *start_worker_logger(void *args);
+
+void *mk_logger_worker_init(void *args);
+
 int logger_add_request(struct log_info *log);
 
 void mk_logger_target_add(int fd, char *target);

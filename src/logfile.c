@@ -93,7 +93,7 @@ struct log_target *mk_logger_match(int fd)
 }
 
 
-void *start_worker_logger(void *args)
+void *mk_logger_worker_init(void *args)
 {
         int efd, max_events=config->nhosts;
         int i, bytes, err;

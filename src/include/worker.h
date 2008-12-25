@@ -14,24 +14,14 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Library General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  Youu should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* clock.h */
+#ifndef MK_WORKER_H
+#define MK_WORKER_H
 
-#ifndef MK_CLOCK_H
-#define MK_CLOCK_H
-
-mk_pointer log_current_time;
-mk_pointer header_current_time;
-
-#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
-
-void *mk_clock_worker_init(void *args);
-void mk_clock_set_time();
-
+pthread_t mk_worker_spawn(void (*func)(void *));
 
 #endif
-

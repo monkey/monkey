@@ -48,6 +48,7 @@
 #include "dir_html.h"
 #include "clock.h"
 #include "cache.h"
+#include "worker.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -103,9 +104,6 @@ int main(int argc, char **argv)
 	char daemon = 0;
 
 	int i, num_threads;
-	pthread_t tid;
-	pthread_attr_t thread_attr;
-
 	struct sched_list_node *sched;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
@@ -163,16 +161,9 @@ int main(int argc, char **argv)
         server_fd = mk_socket_server(config->serverport);
 
 	/* logger-worker */ 
-	pthread_attr_init(&thread_attr);
-	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-	if(pthread_create(&tid, &thread_attr, start_worker_logger, NULL)<0)
-	{
-		perror("pthread_create");
-		exit(1);
-	}
-	
+        mk_worker_spawn((void *)mk_logger_worker_init);
         /* Starting clock worker */
-        mk_clock_start_worker();
+        mk_worker_spawn((void *)mk_clock_worker_init);
 
 	/* Running Monkey as daemon */
 	if(daemon)

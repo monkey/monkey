@@ -30,21 +30,6 @@
 #include "memory.h"
 #include "clock.h"
 
-int mk_clock_start_worker()
-{
-        pthread_t tid;
-        pthread_attr_t thread_attr;
-
-        pthread_attr_init(&thread_attr);
-        if(pthread_create(&tid, &thread_attr, _mk_clock_worker, NULL)<0)
-        {
-                perror("pthread_create");
-                exit(1);
-        }
-
-        return 0;
-}
-
 void mk_clock_log_set_time()
 {
         time_t utime;
@@ -80,7 +65,7 @@ void mk_clock_header_set_time()
 	n = strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
 }
 
-void *_mk_clock_worker(void *args)
+void *mk_clock_worker_init(void *args)
 {
         while(1)
         {
