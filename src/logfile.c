@@ -102,7 +102,6 @@ void *start_worker_logger(void *args)
         int flog;
         long slen;
         int timeout;
-        int clock_ticks;
         int clk;
 
         /* pipe_size:
@@ -147,9 +146,7 @@ void *start_worker_logger(void *args)
                 h = h->next;
         }
 
-        /* set initial timeout */
-        clock_ticks = sysconf(_SC_CLK_TCK);
-        timeout = times(NULL) + clock_ticks;
+        timeout = time(NULL) + 3;
         
         /* Reading pipe buffer */
         while(1)
@@ -159,7 +156,7 @@ void *start_worker_logger(void *args)
                 struct epoll_event events[max_events];
                 int num_fds = epoll_wait(efd, events, max_events, -1);
 
-                clk = times(NULL);
+                clk = time(NULL);
 
                 if(!h)
                 {
@@ -183,13 +180,14 @@ void *start_worker_logger(void *args)
                                 perror("err");
                         }
                 
-                        if(bytes < buffer_limit && clk<timeout)
+                        
+                        if(bytes < buffer_limit && clk<=timeout)
                         {
-                                continue;
+                                break;
                         }
                         else
                         {
-                                timeout = clk+clock_ticks;
+                                timeout = clk+3;
                                 flog = open(target->target, 
                                                 O_WRONLY | O_CREAT , 0644);
                         

@@ -72,7 +72,7 @@ char *mk_socket_get_ip(int socket)
  
         len = sizeof(m_addr);
         getpeername(socket, (struct sockaddr*)&m_addr,  &len);
-        return (char *) inet_ntop(PF_INET, &m_addr.sin_addr, ipv4, 16);
+        return (char *) inet_ntop(PF_INET, &m_addr.sin_addr, ipv4, ipv4_len);
 }
 
 int mk_socket_close(int socket)
