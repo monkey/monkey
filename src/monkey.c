@@ -21,8 +21,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -49,6 +48,7 @@
 #include "clock.h"
 #include "cache.h"
 #include "worker.h"
+#include "server.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -56,9 +56,6 @@
 	static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-#define CONX_CLOSED 0
-#define CONX_OPEN 1
-		
 void MonkeyPid()
 {
         printf("\n** Server details **");
@@ -100,11 +97,8 @@ void set_benchmark_conf()
 /* MAIN */
 int main(int argc, char **argv)
 {
-	int opt, remote_fd, benchmark_mode=FALSE;
+	int opt, benchmark_mode=FALSE;
 	char daemon = 0;
-
-	int i, num_threads;
-	struct sched_list_node *sched;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
 	config->file_config=0;
@@ -158,8 +152,6 @@ int main(int argc, char **argv)
 		set_benchmark_conf();
 	}
 
-        server_fd = mk_socket_server(config->serverport);
-
 	/* logger-worker */ 
         mk_worker_spawn((void *)mk_logger_worker_init);
         /* clock-worker */
@@ -173,52 +165,21 @@ int main(int argc, char **argv)
 		
 	add_log_pid(); /* Register Pid of monkey */
 
-#ifdef MOD_MYSQL
-	mod_mysql_init();
-#endif
 
 	SetUIDGID(); 	/* Changing user */
-
-	num_threads = 3;
-	sched_list = NULL;
-
 	mk_mem_pointers_init();
 
+        /* Create thread keys */
 	pthread_key_create(&request_handler, NULL);
 	pthread_key_create(&epoll_fd, NULL);
 	pthread_key_create(&timer, NULL);
         pthread_key_create(&mk_cache_iov_log, NULL);
         pthread_key_create(&mk_cache_iov_header, NULL);
 
-	for(i=0; i<num_threads; i++)
-	{
-		mk_sched_launch_thread(40);
-	}
+        /* Starting the server */
+        mk_server_launch_workers();
+        mk_server_loop(server_fd);
 
-	sched = sched_list;
-	socklen_t socket_size = sizeof(remote);
-
-	while(1)
-	{
-		if((remote_fd=accept(server_fd, 
-                                     (struct sockaddr *)&remote, 
-                                     &socket_size))==-1)
-		{
-			perror("accept");
-			continue;
-		}
-
-		mk_epoll_add_client(sched->epoll_fd, remote_fd, 
-                                    MK_EPOLL_BEHAVIOR_TRIGGERED);
-		
-		if(sched->next)
-		{
-			sched = sched->next;
-		}
-		else{
-			sched = sched_list;
-		}
-	}
 	return 0;
 }
 

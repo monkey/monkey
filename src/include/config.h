@@ -32,15 +32,19 @@
 /* Base struct of server */
 struct server_config {
         mk_pointer port;
+
 	char *serverconf;	/* path to configuration files */
+
 	mk_pointer server_addr;
 	mk_pointer server_software;
+
 	char *user;
 	char *user_dir;
 	char *pid_file_path; /* pid of server */
 	char *file_config;
 	char **request_headers_allowed;
 
+        int  workers; /* number of worker threads */
 	int  symlink; /* symbolic links */
 	int  serverport; /* port */
 	int  timeout;  /* max time to wait for a new connection */

@@ -81,11 +81,18 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 
 		if (!variable || !value) continue;
 
-		/* Puerto de conexion */
+		/* Connection port */
 		if(strcasecmp(variable, "Port")==0) {
 			config->serverport=atoi(value);
 			if(!config->serverport>=1 && !config->serverport<=65535)
 				mk_config_print_error_msg("Port", path);
+		}
+
+      		/* MaxClients */
+		if(strcasecmp(variable,"Workers")==0) { 
+			config->workers=atoi(value);
+			if(config->maxclients < 1)
+			    mk_config_print_error_msg("Workers", path);
 		}
 
 		/* Timeout */
@@ -97,17 +104,18 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 				
 		/* KeepAlive */
 		if(strcasecmp(variable,"KeepAlive")==0) {
-            bool = mk_config_get_bool(value);
-            if(bool == VAR_ERR)
-            {
-                mk_config_print_error_msg("KeepAlive", path);
-            }
-            else{
-                config->keep_alive=bool;
-            }
-        }
+                        bool = mk_config_get_bool(value);
+                        if(bool == VAR_ERR)
+                        {
+                                        mk_config_print_error_msg("KeepAlive", 
+                                                                  path);
+                        }
+                        else{
+                                config->keep_alive=bool;
+                        }
+                }
 
-    	/* MaxKeepAliveRequest */
+                /* MaxKeepAliveRequest */
 		if(strcasecmp(variable,"MaxKeepAliveRequest")==0){
 			config->max_keep_alive_request=atoi(value);
 			if(config->max_keep_alive_request==0)

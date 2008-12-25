@@ -24,9 +24,6 @@
 #include <netinet/in.h>
 #include "memory.h"
 
-/* Sockets*/
-struct sockaddr_in remote;
-
 int server_fd;
 
 /* CONSTANTES DEL SERVIDOR */
