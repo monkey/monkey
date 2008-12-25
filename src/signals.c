@@ -35,7 +35,7 @@
 #include "clock.h"
 
 /* (by Daniel R. Ome) */
-void signal_handler(int signo)
+void mk_signal_handler(int signo)
 {
 
 switch( signo ) {
@@ -52,7 +52,7 @@ switch( signo ) {
 	case SIGHUP:
 		printf("%s => Hangup\n", 
                        log_current_time.data);
-		Term_Signals();
+		mk_signal_term();
                 break;
 
 	case SIGBUS: 
@@ -72,25 +72,25 @@ switch( signo ) {
 	case SIGTERM:
 		printf("%s => Termination signal\n",
                        log_current_time.data);
-		Term_Signals();						
+		mk_signal_term();
                 break;
 	}
 
 	pthread_exit(NULL);
 }
 
-void Init_Signals()
+void mk_signal_init()
 {
-	signal(SIGHUP , (void *) signal_handler);
-	signal(SIGINT , (void *) signal_handler);
-	signal(SIGPIPE, (void *) signal_handler);
-	signal(SIGBUS,  (void *) signal_handler);
-	signal(SIGSEGV, (void *) signal_handler);
-	signal(SIGTERM, (void *) signal_handler);
-	signal(SIGUSR2, (void *) signal_handler);
+	signal(SIGHUP , (void *) mk_signal_handler);
+	signal(SIGINT , (void *) mk_signal_handler);
+	signal(SIGPIPE, (void *) mk_signal_handler);
+	signal(SIGBUS,  (void *) mk_signal_handler);
+	signal(SIGSEGV, (void *) mk_signal_handler);
+	signal(SIGTERM, (void *) mk_signal_handler);
+	signal(SIGUSR2, (void *) mk_signal_handler);
 }
 
-void Term_Signals()
+void mk_signal_term()
 {
 	signal(SIGHUP , (void *) SIG_DFL);
 	signal(SIGINT , (void *) SIG_DFL);

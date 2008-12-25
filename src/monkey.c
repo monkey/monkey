@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 		
 	Version();
         MonkeyPid();
-	Init_Signals();
+	mk_signal_init();
 	mk_config_start_configure();
 
 	/* 
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
 	/* logger-worker */ 
         mk_worker_spawn((void *)mk_logger_worker_init);
-        /* Starting clock worker */
+        /* clock-worker */
         mk_worker_spawn((void *)mk_clock_worker_init);
 
 	/* Running Monkey as daemon */
