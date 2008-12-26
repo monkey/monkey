@@ -548,12 +548,7 @@ mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
 {
         int i;
 	mk_pointer var;
-	char *p;
-        char *bl;
-        /*
-        printf("\nusing ntoc: %p", toc);
-        fflush(stdout);
-        */
+
 	var.data = NULL;
 	var.len = 0;
 
@@ -987,13 +982,12 @@ struct header_toc *mk_request_header_toc_create(int len)
 
         p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
 
-        /*
         for(i=0; i<len; i++)
         {
                 p[i].init = NULL;
                 p[i].end = NULL;
                 p[i].status = 0;
-                } */      
+        }
         return p;
 }
 

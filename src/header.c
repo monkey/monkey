@@ -234,7 +234,7 @@ int mk_header_send(int fd, struct client_request *cr,
 				mk_header_conn_close.len,
 				mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
-
+        
 	/* Content type */
 	if(sh->content_type)
 	{
