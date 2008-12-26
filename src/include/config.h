@@ -45,6 +45,8 @@ struct server_config {
 	char **request_headers_allowed;
 
         int  workers; /* number of worker threads */
+        int  worker_capacity; /* how many clients per thread... */
+
 	int  symlink; /* symbolic links */
 	int  serverport; /* port */
 	int  timeout;  /* max time to wait for a new connection */

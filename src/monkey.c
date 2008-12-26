@@ -56,10 +56,12 @@
 	static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-void mk_pid()
+void mk_details()
 {
-        printf("\n** Server details **");
-        printf("\nProcess PID: %i\n", getpid());
+        printf("* process PID is %i", getpid());
+        printf("\n* %i threads, %i client connections per thread, total %i\n", 
+               config->workers, config->worker_capacity,
+               config->workers*config->worker_capacity);
         fflush(stdout);
 }
 
@@ -151,9 +153,8 @@ int main(int argc, char **argv)
 		set_benchmark_conf();
 	}
 
-	/* logger-worker */ 
+	/* Workers: logger and clock */ 
         mk_worker_spawn((void *)mk_logger_worker_init);
-        /* clock-worker */
         mk_worker_spawn((void *)mk_clock_worker_init);
 
 	/* Running Monkey as daemon */
@@ -161,9 +162,6 @@ int main(int argc, char **argv)
 	{
 		mk_utils_set_daemon();
 	}
-
-        /* Print server details */
-        mk_pid();
 
         /* Register PID of Monkey */
 	mk_logger_register_pid();
@@ -181,8 +179,13 @@ int main(int argc, char **argv)
         pthread_key_create(&mk_cache_iov_log, NULL);
         pthread_key_create(&mk_cache_iov_header, NULL);
 
-        /* Starting the server */
+        /* Launch monkey http workers */
         mk_server_launch_workers();
+
+        /* Print server details */
+        mk_details();
+
+        /* Server loop, let's listen for incoming clients */
         mk_server_loop(server_fd);
 
 	return 0;
