@@ -47,7 +47,7 @@ long int mk_method_post_content_length(char *body)
         long int len;
         mk_pointer tmp;
 
-        tmp = mk_request_header_find(body, mk_rh_content_length);
+        tmp = mk_request_header_find(NULL, 0, body, mk_rh_content_length);
         if(!tmp.data)
         {
                 return -2;
@@ -80,7 +80,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
 		return -1;
 	}
 	
-        tmp = mk_request_header_find(sr->body.data, mk_rh_content_type);
+        tmp = mk_request_header_find(NULL, 0, sr->body.data, mk_rh_content_type);
         if(!tmp.data){
 		mk_request_error(M_CLIENT_BAD_REQUEST, 
                               cr, sr, 0, sr->log);

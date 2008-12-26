@@ -178,6 +178,7 @@ int main(int argc, char **argv)
 	pthread_key_create(&timer, NULL);
         pthread_key_create(&mk_cache_iov_log, NULL);
         pthread_key_create(&mk_cache_iov_header, NULL);
+        pthread_key_create(&mk_cache_header_toc, NULL);
 
         /* Launch monkey http workers */
         mk_server_launch_workers();
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
         /* Print server details */
         mk_details();
 
-        /* Server loop, let's listen for incoming clients */
+        /* Server loop, let's listen for incomming clients */
         mk_server_loop(server_fd);
 
 	return 0;

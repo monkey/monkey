@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include "iov.h"
 #include "cache.h"
+#include "request.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +32,7 @@ void mk_cache_thread_init()
 {
         struct mk_iov *cache_iov_log;
         struct mk_iov *cache_iov_header;
+        struct header_toc *cache_header_toc;
 
         /* Cache iov log struct */
         cache_iov_log = mk_iov_create(25, 0);
@@ -39,5 +41,8 @@ void mk_cache_thread_init()
         /* Cache iov header struct */
         cache_iov_header = mk_iov_create(45, 0);
         pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
-}
 
+        /* Cache header toc, monkey just search for 11 headers in request */
+        cache_header_toc = mk_mem_malloc(sizeof(struct header_toc)*11);
+        pthread_setspecific(mk_cache_header_toc, (void *) cache_header_toc);
+}

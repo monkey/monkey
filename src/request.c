@@ -57,6 +57,7 @@
 #include "method.h"
 #include "memory.h"
 #include "socket.h"
+#include "cache.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -474,8 +475,13 @@ int mk_request_header_process(struct request *sr)
 		sr->uri_twin = VAR_ON;
 	}
 
-	/* Host */
-	host = mk_request_header_find(headers, mk_rh_host);
+        /* Creating table of content (index) for request headers */
+        int toc_len = 11;
+        struct header_toc *toc = mk_request_header_toc_create(toc_len);
+        mk_request_header_toc_parse(toc, headers, toc_len);
+
+        /* Host */
+	host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
 
 	if(host.data)
 	{
@@ -497,21 +503,25 @@ int mk_request_header_process(struct request *sr)
 		sr->host.data=NULL;
 	}
 	
-	/* Looking for headers */
-	sr->accept = mk_request_header_find(headers, mk_rh_accept);
-	sr->accept_charset = mk_request_header_find(headers, mk_rh_accept_charset);
-	sr->accept_encoding = mk_request_header_find(headers, 
+        /* Looking for headers */
+	sr->accept = mk_request_header_find(toc, toc_len, headers, mk_rh_accept);
+	sr->accept_charset = mk_request_header_find(toc, toc_len, headers, 
+                                                    mk_rh_accept_charset);
+	sr->accept_encoding = mk_request_header_find(toc, toc_len, headers, 
                                                            mk_rh_accept_encoding);
 
 
-	sr->accept_language = mk_request_header_find(headers, 
+	sr->accept_language = mk_request_header_find(toc, toc_len, headers, 
                                                      mk_rh_accept_language);
-	sr->cookies = mk_request_header_find(headers, mk_rh_cookie);
-	sr->connection = mk_request_header_find(headers, mk_rh_connection);
-	sr->referer = mk_request_header_find(headers, mk_rh_referer);
-	sr->user_agent = mk_request_header_find(headers, mk_rh_user_agent);
-	sr->range = mk_request_header_find(headers, mk_rh_range);
-	sr->if_modified_since = mk_request_header_find(headers, 
+	sr->cookies = mk_request_header_find(toc, toc_len, headers, mk_rh_cookie);
+	sr->connection = mk_request_header_find(toc, toc_len, headers, 
+                                                mk_rh_connection);
+	sr->referer = mk_request_header_find(toc, toc_len, headers, 
+                                             mk_rh_referer);
+	sr->user_agent = mk_request_header_find(toc, toc_len, headers, 
+                                                mk_rh_user_agent);
+	sr->range = mk_request_header_find(toc, toc_len, headers, mk_rh_range);
+	sr->if_modified_since = mk_request_header_find(toc, toc_len, headers, 
                                                      mk_rh_if_modified_since);
 
 	/* Checking keepalive */
@@ -533,38 +543,44 @@ int mk_request_header_process(struct request *sr)
 }
 
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_find(char *request_body,  mk_pointer header)
+mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len, 
+                                  char *request_body,  mk_pointer header)
 {
+        int i;
 	mk_pointer var;
 	char *p;
         char *bl;
-
+        /*
+        printf("\nusing ntoc: %p", toc);
+        fflush(stdout);
+        */
 	var.data = NULL;
 	var.len = 0;
 
-        p = request_body;
-        while(p){
-                if(strncasecmp(p, header.data, header.len)==0)
+        /* new code */
+        if(toc)
+        {
+                for(i=0; i<toc_len; i++)
                 {
-                        break;
-                }
-                p = strstr(p, MK_CRLF);
+                        if(toc[i].status == 1)
+                        {
+                                continue;
+                        }
 
-                if(p)
-                {
-                        p += mk_crlf.len;
-                }
-                else
-                {
-                        return var;
+                        if(!toc[i].init)
+                                break;
+
+                        if(strncasecmp(toc[i].init, header.data, header.len)==0)
+                        {
+                                var.data = toc[i].init + header.len + 1;
+                                var.len = toc[i].end - toc[i].init;
+                                toc[i].status = 1;
+                                return var;
+                        }
                 }
         }
 
-        bl = strstr(p, MK_CRLF);
-        var.data = p + header.len+1;
-        var.len = bl - var.data;
-
-	return (mk_pointer) var;
+        return var;
 }
 
 /* FIXME: IMPROVE access */
@@ -964,3 +980,43 @@ struct client_request *mk_request_client_remove(int socket)
 	return NULL;
 }
 
+struct header_toc *mk_request_header_toc_create(int len)
+{
+        int i;
+        struct header_toc *p;
+
+        p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
+
+        /*
+        for(i=0; i<len; i++)
+        {
+                p[i].init = NULL;
+                p[i].end = NULL;
+                p[i].status = 0;
+                } */      
+        return p;
+}
+
+void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
+{
+        char *p, *l;
+        int i;
+
+        p = data;
+        for(i=0; i<len && p; i++)
+        {
+                l = strstr(p, MK_CRLF);
+
+                if(l)
+                {
+                        toc[i].init = p;
+                        toc[i].end = l;
+
+                        p = l + mk_crlf.len;
+                }
+                else
+                {
+                        break;
+                }
+        }
+}

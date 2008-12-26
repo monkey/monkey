@@ -127,6 +127,13 @@ struct client_request
 
 pthread_key_t request_handler;
 
+struct header_toc {
+        char *init;
+        char *end;
+        int status; /* 0: not found, 1: found = skip! */
+        struct header_toc *next;
+};
+
 struct request {
 	int status;
 	int pipelined; /* Pipelined request */
@@ -221,7 +228,8 @@ void  mk_request_set_default_page(mk_pointer *page,
 		char *title, mk_pointer message, char *signature);
 
 int mk_request_header_process(struct request *sr);
-mk_pointer mk_request_header_find(char *request_body, mk_pointer header);
+mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
+                                  char *request_body, mk_pointer header);
 
 void mk_request_error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, 
@@ -239,5 +247,9 @@ void mk_request_init_error_msgs();
 
 int mk_handler_read(int socket);
 int mk_handler_write(int socket, struct client_request *cr);
+
+
+struct header_toc *mk_request_header_toc_create(int len);
+void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len);
 
 #endif

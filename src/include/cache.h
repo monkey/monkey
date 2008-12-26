@@ -24,6 +24,7 @@
 
 pthread_key_t mk_cache_iov_log;
 pthread_key_t mk_cache_iov_header;
+pthread_key_t mk_cache_header_toc;
 
 struct mk_cache_date_t {
         time_t unix_time;
