@@ -7,7 +7,7 @@
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  (at your option) any later version. 
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -55,7 +55,6 @@ int mk_socket_set_nonblocking(int sockfd)
 int mk_socket_set_tcp_nodelay(int sockfd)
 {
         int on=1;
-
         return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
@@ -193,6 +192,7 @@ int mk_socket_server(int port)
         int fd;
 	struct sockaddr_in local_sockaddr_in;
 
+        /* Create server socket */
         fd=socket(PF_INET,SOCK_STREAM,0);
 	local_sockaddr_in.sin_family=AF_INET;
 	local_sockaddr_in.sin_port=htons(port);

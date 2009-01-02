@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 	mk_mem_pointers_init();
 
         /* Create thread keys */
-	pthread_key_create(&request_handler, NULL);
+	pthread_key_create(&request_index, NULL);
 	pthread_key_create(&epoll_fd, NULL);
 	pthread_key_create(&timer, NULL);
         pthread_key_create(&mk_cache_iov_log, NULL);

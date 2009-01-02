@@ -24,6 +24,9 @@
 #ifndef MK_CLOCK_H
 #define MK_CLOCK_H
 
+#include <time.h>
+
+time_t log_current_utime;
 mk_pointer log_current_time;
 mk_pointer header_current_time;
 
@@ -31,7 +34,6 @@ mk_pointer header_current_time;
 
 void *mk_clock_worker_init(void *args);
 void mk_clock_set_time();
-
 
 #endif
 

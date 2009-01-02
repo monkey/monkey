@@ -88,12 +88,14 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 				mk_config_print_error_msg("Port", path);
 		}
 
+
       		/* MaxClients */
 		if(strcasecmp(variable,"Workers")==0) { 
 			config->workers=atoi(value);
 			if(config->maxclients < 1)
 			    mk_config_print_error_msg("Workers", path);
 		}
+
 
 		/* Timeout */
 		if(strcasecmp(variable,"Timeout")==0) {

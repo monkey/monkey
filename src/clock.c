@@ -44,6 +44,8 @@ void mk_clock_log_set_time()
         {
                 return;
         }
+
+        log_current_utime = utime;
         strftime(log_current_time.data, 30, "[%d/%b/%G %T %z]",
                  (struct tm *)localtime((time_t *) &utime));
 }

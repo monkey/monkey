@@ -106,6 +106,12 @@ mk_pointer request_error_msg_500;
 mk_pointer request_error_msg_501;
 mk_pointer request_error_msg_505;
 
+struct request_idx
+{
+        struct client_request *first;
+        struct client_request *last;
+};
+
 struct client_request
 {
         int pipelined; /* Pipelined request */
@@ -121,11 +127,12 @@ struct client_request
         int body_length;
         
         int first_block_end;
+        time_t connection_timeout;
         struct request *request; /* Parsed request */
         struct client_request *next;
 };
 
-pthread_key_t request_handler;
+pthread_key_t request_index;
 
 struct header_toc {
         char *init;
@@ -197,7 +204,6 @@ struct request {
 	struct request *next;
 
 	long bytes_to_send;
-  //size_t bytes_offset;
         off_t bytes_offset;
 };
 

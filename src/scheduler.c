@@ -119,18 +119,17 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	mk_sched_set_thread_poll(thconf->epoll_fd);
 	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);
 
-
 	return 0;
 }
 
-struct client_request *mk_sched_get_request_handler()
+struct request_idx *mk_sched_get_request_index()
 {
-	return (struct client_request *) pthread_getspecific(request_handler);
+	return (struct request_idx *) pthread_getspecific(request_index);
 }
 
-void mk_sched_set_request_handler(struct client_request *hr)
+void mk_sched_set_request_index(struct request_idx *ri)
 {
-	pthread_setspecific(request_handler, (void *)hr);
+	pthread_setspecific(request_index, (void *)ri);
 }
 
 void mk_sched_set_thread_poll(int epoll)

@@ -86,7 +86,7 @@ int mk_http_method_get(char *body)
         int int_method, pos = 0;
         int max_len_method = 5;
         char *str_method;
-        
+
         pos = mk_string_search(body, " ");
         if(pos<=2 || pos>=max_len_method){
                 return METHOD_NOT_FOUND;      

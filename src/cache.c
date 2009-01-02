@@ -30,9 +30,14 @@
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {
+        struct request_idx *cache_request_idx;
         struct mk_iov *cache_iov_log;
         struct mk_iov *cache_iov_header;
         struct header_toc *cache_header_toc;
+
+        /* client request index */
+        cache_request_idx = mk_mem_malloc(sizeof(struct request_idx));
+        pthread_setspecific(request_index, (void *) cache_request_idx);
 
         /* Cache iov log struct */
         cache_iov_log = mk_iov_create(25, 0);

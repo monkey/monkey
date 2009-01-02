@@ -58,6 +58,7 @@
 #include "memory.h"
 #include "socket.h"
 #include "cache.h"
+#include "clock.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -881,9 +882,10 @@ void mk_request_free(struct request *sr)
  */
 struct client_request *mk_request_client_create(int socket)
 {
-	struct client_request *request_handler, *cr, *aux;
+        struct request_idx *request_index;
+	struct client_request *cr;
 
-	cr = mk_mem_malloc_z(sizeof(struct client_request));
+	cr = mk_mem_malloc(sizeof(struct client_request));
 
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
@@ -892,37 +894,36 @@ struct client_request *mk_request_client_create(int socket)
 
         mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
 
+        /* creation time in unix time */
+        //        cr->connection_timeout = log_current_utime + config->timeout;
+
 	cr->next = NULL;
-	cr->body = mk_mem_malloc_z(MAX_REQUEST_BODY);
-	request_handler = mk_sched_get_request_handler();
+	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
 	cr->body_length = 0;
         cr->first_block_end = -1;
 
-	if(!request_handler)
+
+        request_index = mk_sched_get_request_index();
+	if(!request_index->first)
 	{
-		request_handler = cr;
+		request_index->first = request_index->last = cr;
+                mk_sched_set_request_index(request_index);
 	}
 	else{
-		aux = request_handler;
-		while(aux->next!=NULL)
-		{
-			aux = aux->next;
-		}
-
-		aux->next = cr;
+                request_index->last->next = cr;
+                request_index->last = cr;
 	}
 
-	mk_sched_set_request_handler(request_handler);
-	request_handler = mk_sched_get_request_handler();
-	return (struct client_request *) cr;
+        return (struct client_request *) cr;
 }
 
 struct client_request *mk_request_client_get(int socket)
 {
-	struct client_request *request_handler, *cr;
+	struct request_idx *request_index;
+        struct client_request *cr;
 
-	request_handler = mk_sched_get_request_handler();
-	cr = request_handler;
+	request_index = mk_sched_get_request_index();
+	cr = request_index->first;
 	while(cr!=NULL)
 	{
 		if(cr->socket == socket)
@@ -941,27 +942,32 @@ struct client_request *mk_request_client_get(int socket)
  */
 struct client_request *mk_request_client_remove(int socket)
 {
-	struct client_request *request_handler, *cr, *aux;
+	struct request_idx *request_index;
+        struct client_request *cr, *aux;
 
-	request_handler = mk_sched_get_request_handler();
-	cr = request_handler;
+	request_index = mk_sched_get_request_index();
+	cr = request_index->first;
 
 	while(cr)
 	{
 		if(cr->socket == socket)
 		{
-			if(cr==request_handler)
+			if(cr==request_index->first)
 			{
-				request_handler = cr->next;
+				request_index->first = cr->next;
 			}
 			else
 			{
-				aux = request_handler;
+				aux = request_index->first;
 				while(aux->next!=cr)
 				{
 					aux = aux->next;
 				}
 				aux->next = cr->next;
+                                if(!aux->next)
+                                {
+                                        request_index->last = aux;
+                                }
 			}
 			break;
 		}
@@ -971,7 +977,7 @@ struct client_request *mk_request_client_remove(int socket)
         mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
-	mk_sched_set_request_handler(request_handler);
+
 	return NULL;
 }
 

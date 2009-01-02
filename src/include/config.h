@@ -63,7 +63,6 @@ struct server_config {
 
 	/* counter of threads working */
 	int thread_counter;
-
 	/* real user */
 	uid_t egid;
 	gid_t euid;

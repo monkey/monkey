@@ -68,7 +68,6 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
         pthread_mutex_unlock(&mutex_wait_register);
         
         while(1){
-                
                 struct epoll_event events[max_events];
                 int num_fds = epoll_wait(efd, events, max_events, -1);
 
