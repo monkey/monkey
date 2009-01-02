@@ -46,7 +46,7 @@
 #include "request.h"
 #include "memory.h"
 
-int mk_http_method_check(char *method);
+int mk_http_method_check(mk_pointer method);
 char *mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
 

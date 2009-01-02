@@ -45,23 +45,29 @@
 
 #define O_NOATIME       01000000
 
-int mk_http_method_check(char *method)
+int mk_http_method_check(mk_pointer method)
 {
-        if(strcasecmp(method, HTTP_METHOD_GET_STR)==0)
+        if(strncasecmp(method.data, 
+                       HTTP_METHOD_GET_STR,
+                       method.len)==0)
         {
                 return HTTP_METHOD_GET;
         }
         
-        if(strcasecmp(method, HTTP_METHOD_POST_STR)==0)
+        if(strncasecmp(method.data, 
+                       HTTP_METHOD_POST_STR,
+                       method.len)==0)
         {
                 return HTTP_METHOD_POST;
         }
         
-        if(strcasecmp(method, HTTP_METHOD_HEAD_STR)==0)
+        if(strncasecmp(method.data, 
+                       HTTP_METHOD_HEAD_STR,
+                       method.len)==0)
         {
                 return HTTP_METHOD_HEAD;
         }
-        
+
         return METHOD_NOT_FOUND;
 }
 
@@ -85,16 +91,19 @@ int mk_http_method_get(char *body)
 {
         int int_method, pos = 0;
         int max_len_method = 5;
-        char *str_method;
+        mk_pointer method;
+
+        //        mk_pointer_reset(&method);
 
         pos = mk_string_search(body, " ");
         if(pos<=2 || pos>=max_len_method){
                 return METHOD_NOT_FOUND;      
         }
 
-        str_method = mk_string_copy_substr(body, 0, pos);
-        int_method = mk_http_method_check(str_method);
-        mk_mem_free(str_method);
+        method.data = body;
+        method.len = (unsigned long) pos;
+
+        int_method = mk_http_method_check(method);
 
         return int_method;
 }
