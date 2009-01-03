@@ -569,7 +569,7 @@ mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                         if(strncasecmp(toc[i].init, header.data, header.len)==0)
                         {
                                 var.data = toc[i].init + header.len + 1;
-                                var.len = toc[i].end - toc[i].init;
+                                var.len = toc[i].end - var.data;
                                 toc[i].status = 1;
                                 return var;
                         }
