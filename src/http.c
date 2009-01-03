@@ -230,7 +230,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         mk_mem_free(host);
 
                         sr->headers->status = M_REDIR_MOVED;
-                        sr->headers->content_length = 0;
+                        sr->headers->content_length = -1;
                         sr->headers->content_type = NULL;
                         sr->headers->location = real_location;
                         sr->headers->cgi = SH_NOCGI;
