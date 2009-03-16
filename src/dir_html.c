@@ -225,6 +225,7 @@ int mk_dirhtml_read_config(char *path)
         if(!(fileconf = fopen(default_file, "r")))
         {
                 puts("Error: Cannot open dirhtml conf file");
+                mk_mem_free(default_file);
                 return -1;
         }
 
@@ -257,6 +258,7 @@ int mk_dirhtml_read_config(char *path)
                  }
         }
         fclose(fileconf);
+        mk_mem_free(default_file);
         return 0;
 }
 
