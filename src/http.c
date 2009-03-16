@@ -312,9 +312,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->headers->pconnections_left = (int) 
                 (config->max_keep_alive_request - cr->counter_connections);
 
+       
         gmt_file_unix_time = 
                 PutDate_string((time_t) path_info->last_modification);
-
+        
         if(sr->if_modified_since.data && sr->method==HTTP_METHOD_GET){
                 time_t date_client; // Date send by client
                 time_t date_file_server; // Date server file

@@ -42,7 +42,7 @@ void *mk_mem_malloc(size_t size)
 		perror("malloc");
 		return NULL;						
 	}
-	return (void *) aux;
+	return aux;
 }
 
 void *mk_mem_malloc_z(size_t size)
@@ -55,7 +55,8 @@ void *mk_mem_malloc_z(size_t size)
 		return NULL;
 	}
 
-	memset(buf, '\0', size);
+        bzero(buf, size);
+	
 	return buf;
 }
 
