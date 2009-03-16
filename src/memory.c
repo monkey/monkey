@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2008, Eduardo Silva P.
+ *  Copyright (C) 2001-2009, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ void *mk_mem_malloc_z(size_t size)
 		return NULL;
 	}
 
-	memset(buf, '\0', sizeof(size));
+	memset(buf, '\0', size);
 	return buf;
 }
 
