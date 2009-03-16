@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2002, Eduardo Silva P.
@@ -35,8 +37,8 @@
 
 int User_main(struct client_request *cr, struct request *sr)
 {
-	int limit, offset;
-	char *user=0, *user_server_root=0;
+        int limit, offset;
+        char *user=0, *user_server_root=0;
 	struct passwd *s_user;
 	unsigned long len;
 
@@ -54,8 +56,17 @@ int User_main(struct client_request *cr, struct request *sr)
 	
 	if(sr->uri.data[offset+limit]=='/')
 	{
-		m_build_buffer(&sr->uri.data, &sr->uri.len,
-				"%s", sr->uri_processed+offset+limit);
+                m_build_buffer(&sr->uri.data, &sr->uri.len,
+                               "%s", sr->uri_processed+offset+limit);
+
+                /* Extract URI portion after /~user */
+                sr->user_uri = (char*)mk_mem_malloc_z(sr->uri.len + 1);
+                char* src = sr->uri.data;
+                char* dst = sr->user_uri;
+
+                while (*src != ' ' && src < (sr->uri.data + sr->uri.len)){
+                        *dst++ = *src++;
+                }
 	}
 
 	if((s_user=getpwnam(user))==NULL){
