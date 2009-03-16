@@ -37,6 +37,8 @@ void mk_cache_thread_init()
 
         /* client request index */
         cache_request_idx = mk_mem_malloc(sizeof(struct request_idx));
+        cache_request_idx->first = NULL;
+        cache_request_idx->last  = NULL;
         pthread_setspecific(request_index, (void *) cache_request_idx);
 
         /* Cache iov log struct */
