@@ -294,6 +294,11 @@ int mk_dirhtml_theme_load()
         mk_dirhtml_theme_debug(mk_dirhtml_tpl_entry, lov_entry);
         mk_dirhtml_theme_debug(mk_dirhtml_tpl_footer, lov_footer);
 #endif
+        
+        mk_mem_free(header);
+        mk_mem_free(entry);
+        mk_mem_free(footer);
+
         return 0;
 }
 
