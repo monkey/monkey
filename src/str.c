@@ -54,8 +54,8 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 	}
 	
 	bytes =  pos_end - pos_init;
-	strncpy(buffer, string+pos_init, bytes);
-	buffer[bytes]='\0';
+        memcpy(buffer, string+pos_init, bytes);
+        buffer[bytes]='\0';
 
 	return (char *) buffer;	
 }
