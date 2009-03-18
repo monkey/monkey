@@ -373,7 +373,7 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
 
 	mk_socket_set_cork_flag(fd, TCP_CORK_ON);
-	mk_iov_send(fd, iov);
+	mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
         
         mk_header_iov_free(iov);
 	

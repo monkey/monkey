@@ -234,7 +234,7 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
         }
 
         iov = mk_logger_iov_get();
-
+        
         /* client IP address */
         mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
                          mk_logfile_iov_dash, MK_IOV_NOT_FREE_BUF);
@@ -280,7 +280,7 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
                                  MK_IOV_NOT_FREE_BUF);
                 
                 /* Send info to pipe */
-                mk_iov_send(h->log_access[1], iov);
+                mk_iov_send(h->log_access[1], iov, MK_IOV_SEND_TO_PIPE);
         }
         else{ /* Register some error */
                 mk_iov_add_entry(iov, 
@@ -288,7 +288,7 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
                                  log->error_msg.len, 
                                  mk_iov_lf,
                                  MK_IOV_NOT_FREE_BUF);
-                mk_iov_send(h->log_error[1], iov);
+                mk_iov_send(h->log_error[1], iov, MK_IOV_SEND_TO_PIPE);
 
         }
         mk_logger_iov_free(iov);

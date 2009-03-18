@@ -36,6 +36,9 @@
 #define MK_IOV_NONE ""
 #define MK_IOV_EQUAL "="
 
+#define MK_IOV_SEND_TO_SOCKET 0
+#define MK_IOV_SEND_TO_PIPE 1
+
 #include "memory.h"
 
 mk_pointer mk_iov_crlf;
@@ -62,7 +65,7 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf,
 
 int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
 
-ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to);
 
 void mk_iov_free(struct mk_iov *mk_io);
 

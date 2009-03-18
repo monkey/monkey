@@ -157,15 +157,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* Normal request default site */
         if((strcmp(sr->uri_processed,"/"))==0)
         {
-                m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s", 
-                                sr->host_conf->documentroot);
+                sr->real_path.data = strdup(sr->host_conf->documentroot.data);
+                sr->real_path.len = sr->host_conf->documentroot.len;
         }
 
         if(sr->user_home==VAR_OFF)
-        {
-                m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s", 
-                                sr->host_conf->documentroot.data, 
-                                sr->uri_processed);
+        { 
+                mk_buffer_cat(&sr->real_path, sr->host_conf->documentroot.data,
+                                              sr->uri_processed);               
         }
         
         if(sr->method!=HTTP_METHOD_HEAD){
@@ -550,15 +549,15 @@ int mk_http_pending_request(struct client_request *cr)
         method = mk_http_method_get(cr->body);
         if(method == HTTP_METHOD_POST)
         {
-                /* At this point we should have the content-lenght
+                /* At this point we should have the content-length
                  * sent by the client
                  */
                 len = mk_method_post_content_length(cr->body);
         
                 if(len < 0)
                 {
-                        /* If we don't have it, there's a error which
-                         * which be handled by another functions, we 
+                        /* If we don't have it, there's an error which
+                         * will be handled by another functions, we 
                          * just think that all data has arrived
                          */
                         return 0;

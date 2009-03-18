@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "monkey.h"
 #include "config.h"
@@ -470,15 +471,16 @@ struct host *mk_config_get_host(char *path)
                        &host->header_host_signature.len, 
                        "Server: %s", host->host_signature);
 
-	if(pipe(host->log_access)<0)
-                {
-                        perror("pipe");
-                }
+	if(pipe(host->log_access)<0){
+                perror("pipe");
+        }
 
-	if(pipe(host->log_error)<0)
-                {
-                        perror("pipe");
-                }
+	if(pipe(host->log_error)<0){
+                perror("pipe");
+        }
+
+        fcntl(host->log_access[1], F_SETFL, O_NONBLOCK);
+        fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
 
 	host->next = NULL;
 	return host;

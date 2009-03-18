@@ -19,7 +19,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define _GNU_SOURCE
+#include <fcntl.h>
+
+#include <sys/uio.h>
+#include <sys/mman.h>
+#include <errno.h>
+
 #include <stdio.h>
+
 #include "monkey.h"
 
 #include "header.h"
@@ -95,12 +103,35 @@ void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
 	mk_io->buf_idx++;
 }
 
-ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
 {
-	ssize_t n;
+	ssize_t n=-1;
 
-	n = writev(fd, mk_io->io, mk_io->iov_idx);
-	return n;
+        if(to==MK_IOV_SEND_TO_SOCKET){
+                n = writev(fd, mk_io->io, mk_io->iov_idx);
+                if(n<0){
+                        perror("writev");
+                }
+        }
+        else if(to==MK_IOV_SEND_TO_PIPE){ 
+                /* for some reason, vmsplice is not working as expected for us, 
+                 * maybe we need to fix something here, at the moment
+                 * we will keep using writev to push the iovec struct to the pipe
+                 *
+                 * n = vmsplice(fd, mk_io->io, mk_io->iov_idx, 
+                 *              SPLICE_F_GIFT);
+                 *
+                 * if(n<0){
+                 *    perror("vmsplice");
+                 * }
+                 */
+                n = writev(fd, mk_io->io, mk_io->iov_idx);
+                if(n<0){
+                        perror("writev");
+                }
+        }
+
+        return n;
 }
 
 void mk_iov_free(struct mk_iov *mk_io)

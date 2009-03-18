@@ -137,6 +137,27 @@ time_t PutDate_unix(char *date)
 	return (new_unix_time);
 }
 
+int mk_buffer_cat(mk_pointer *p, char *buf1, char *buf2){
+
+        int len1, len2;
+
+        len1 = strlen(buf1);
+        len2 = strlen(buf2);
+
+        /* alloc space */
+        p->data = (char *) mk_mem_malloc(len1+len2+1);
+
+        /* copy data */
+        strncpy(p->data, buf1, len1);
+        strncpy(p->data+len1, buf2, len2);
+        p->data[len1+len2]='\0';
+
+        /* assign len */
+        p->len = len1+len2;
+
+        return 0;
+}
+
 char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
 {
 	va_list	ap;

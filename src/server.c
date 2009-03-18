@@ -93,7 +93,7 @@ void mk_server_loop(int server_fd)
 
 		mk_epoll_add_client(sched->epoll_fd, remote_fd, 
                                     MK_EPOLL_BEHAVIOR_TRIGGERED);
-                
+
 		if(sched->next)
 		{
 			sched = sched->next;
