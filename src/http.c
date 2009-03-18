@@ -294,12 +294,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 mime = mimetype_default;
         }
 
+        
         palm = mk_palm_check_request(cr, sr);
         if(palm)
         {
                 mk_palm_send_response(cr, sr, palm);
                 return -1;
         }
+        
 
         /* get file size */
         if(path_info->size < 0) {

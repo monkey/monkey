@@ -148,8 +148,8 @@ int mk_buffer_cat(mk_pointer *p, char *buf1, char *buf2){
         p->data = (char *) mk_mem_malloc(len1+len2+1);
 
         /* copy data */
-        strncpy(p->data, buf1, len1);
-        strncpy(p->data+len1, buf2, len2);
+        memcpy(p->data, buf1, len1);
+        memcpy(p->data+len1, buf2, len2);
         p->data[len1+len2]='\0';
 
         /* assign len */
