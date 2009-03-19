@@ -216,4 +216,15 @@ void mk_mem_pointers_init()
 
         /* Logfile */
         mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);
+
+        /* HTTP */
+        mk_pointer_set(&mk_http_method_get_p, HTTP_METHOD_GET_STR);
+        mk_pointer_set(&mk_http_method_post_p, HTTP_METHOD_POST_STR);
+        mk_pointer_set(&mk_http_method_head_p, HTTP_METHOD_HEAD_STR);
+        mk_pointer_reset(&mk_http_method_null_p);
+
+        mk_pointer_set(&mk_http_protocol_09_p, HTTP_PROTOCOL_09_STR);
+        mk_pointer_set(&mk_http_protocol_10_p, HTTP_PROTOCOL_10_STR);
+        mk_pointer_set(&mk_http_protocol_11_p, HTTP_PROTOCOL_11_STR);
+        mk_pointer_reset(&mk_http_protocol_null_p);
 }

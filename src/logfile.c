@@ -224,9 +224,8 @@ void mk_logger_iov_free(struct mk_iov *iov)
  y errores */
 int mk_logger_write_log(struct log_info *log, struct host *h)
 {
-        char *buf;
         struct mk_iov *iov;
-        mk_pointer *status;
+        mk_pointer *status, method, protocol;
 
         if(log->status!=S_LOG_ON)
         {
@@ -248,8 +247,8 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
         if(log->final_response==M_HTTP_OK || log->final_response==M_REDIR_MOVED_T)
         {
                 /* HTTP method required */
-                buf = mk_http_method_check_str(log->method);
-                mk_iov_add_entry(iov, buf, strlen(buf), mk_iov_space, 
+                method = mk_http_method_check_str(log->method);
+                mk_iov_add_entry(iov, method.data, method.len, mk_iov_space, 
                                  MK_IOV_NOT_FREE_BUF);
 
                 /* HTTP URI required */
@@ -259,8 +258,8 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
 
                 if(log->protocol)
                 {
-                        buf = mk_http_protocol_check_str(log->protocol);
-                        mk_iov_add_entry(iov, buf, strlen(buf), 
+                        protocol = mk_http_protocol_check_str(log->protocol);
+                        mk_iov_add_entry(iov, protocol.data, protocol.len, 
                                          mk_iov_space, 
                                          MK_IOV_NOT_FREE_BUF);
                 }

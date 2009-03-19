@@ -71,20 +71,19 @@ int mk_http_method_check(mk_pointer method)
         return METHOD_NOT_FOUND;
 }
 
-char *mk_http_method_check_str(int method)
+mk_pointer mk_http_method_check_str(int method)
 {
         switch(method){
                 case HTTP_METHOD_GET:
-                                return (char *) HTTP_METHOD_GET_STR;
-                                
+                        return mk_http_method_get_p;
+                        
                 case HTTP_METHOD_POST:
-                                return (char *) HTTP_METHOD_POST_STR;
+                        return mk_http_method_post_p;
                                 
                 case HTTP_METHOD_HEAD:
-                                return (char *) HTTP_METHOD_HEAD_STR;
+                        return mk_http_method_head_p;
         }
-
-        return NULL;
+        return mk_http_method_null_p;
 }
 
 int mk_http_method_get(char *body)
@@ -126,22 +125,22 @@ int mk_http_protocol_check(char *protocol)
         return HTTP_PROTOCOL_UNKNOWN;
 }
 
-char *mk_http_protocol_check_str(int protocol)
+mk_pointer mk_http_protocol_check_str(int protocol)
 {
         if(protocol==HTTP_PROTOCOL_11)
         {
-                return (char *) HTTP_PROTOCOL_11_STR;
+                return mk_http_protocol_11_p;
         }
         if(protocol==HTTP_PROTOCOL_10)
         {
-                return (char *) HTTP_PROTOCOL_10_STR;
+                return mk_http_protocol_10_p;
         }
         if(protocol==HTTP_PROTOCOL_09)
         {
-                return (char *) HTTP_PROTOCOL_09_STR;
+                return mk_http_protocol_09_p;
         }
 
-        return NULL;
+        return mk_http_protocol_null_p;
 }
 
 int mk_http_init(struct client_request *cr, struct request *sr)
@@ -288,7 +287,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
                 
         /* Matching MimeType  */
-        mime = mk_mimetype_find(sr->real_path.data);
+        mime = mk_mimetype_find(&sr->real_path);
         if(!mime)
         {
                 mime = mimetype_default;

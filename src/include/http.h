@@ -29,6 +29,11 @@
 #define HTTP_METHOD_POST_STR "POST"
 #define HTTP_METHOD_HEAD_STR "HEAD"
 
+mk_pointer mk_http_method_get_p;
+mk_pointer mk_http_method_post_p;
+mk_pointer mk_http_method_head_p;
+mk_pointer mk_http_method_null_p;
+
 /* Method status */
 #define METHOD_NOT_ALLOWED (-1)
 #define METHOD_NOT_FOUND (-2)
@@ -43,15 +48,21 @@
 #define HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
+mk_pointer mk_http_protocol_09_p;
+mk_pointer mk_http_protocol_10_p;
+mk_pointer mk_http_protocol_11_p;
+mk_pointer mk_http_protocol_null_p;
+
 #include "request.h"
 #include "memory.h"
 
 int mk_http_method_check(mk_pointer method);
-char *mk_http_method_check_str(int method);
+//char *mk_http_method_check_str(int method);
+mk_pointer mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
 
 int mk_http_protocol_check(char *protocol);
-char *mk_http_protocol_check_str(int protocol);
+mk_pointer mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct client_request *cr, struct request *sr);
 int mk_http_keepalive_check(int socket, struct client_request *cr);

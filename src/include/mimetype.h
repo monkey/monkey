@@ -20,6 +20,7 @@
 /* mimetype.c */
 
 /* MIME Structs variables*/
+#include "memory.h"
 
 #define MIMETYPE_DEFAULT_TYPE "text/plain"
 #define MIMETYPE_DEFAULT_NAME "default"
@@ -42,7 +43,7 @@ void mk_mimetype_read_config();
 int mk_mimetype_free(char **arr);
 int mk_mimetype_add(char *name, char *type, char *bin_path);
 
-struct mimetype *mk_mimetype_find(char *filename);
+struct mimetype *mk_mimetype_find(mk_pointer *filename);
 struct mimetype *mk_mimetype_cmp(char *name);
 
 

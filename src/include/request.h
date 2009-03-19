@@ -148,7 +148,7 @@ struct request {
 
 	/*----First header of client request--*/
 	int method;
-	char *method_str;
+	mk_pointer method_p;
 	mk_pointer uri;  /* original request */
 	char *uri_processed; /* processed request */
 	int uri_twin;

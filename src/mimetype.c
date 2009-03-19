@@ -101,21 +101,21 @@ int mk_mimetype_add(char *name, char *type, char *bin_path)
 	return 0;	
 }
 
-struct mimetype *mk_mimetype_find(char *filename)
+struct mimetype *mk_mimetype_find(mk_pointer *filename)
 {
 	int j, len;
 
-	j = len = strlen(filename);
+	j = len = filename->len;
 
 	/* looking for extension */
-	while(filename[j]!='.' && j>=0) 
+	while(filename->data[j]!='.' && j>=0) 
 		j--;
 
         if(j==0){
                 return NULL;
         }
 
-	return mk_mimetype_cmp(filename+j+1);
+	return mk_mimetype_cmp(filename->data+j+1);
 }
 
 /* Busca mime type segun Request */

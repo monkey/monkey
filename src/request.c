@@ -254,12 +254,12 @@ int mk_handler_write(int socket, struct client_request *cr)
 		/* Request not processed */
 		if(p_request->bytes_to_send < 0)
 		{
-			final_status = mk_request_process(cr, p_request);
+                        final_status = mk_request_process(cr, p_request);
 		}
 		/* Request with data to send */
 		else if(p_request->bytes_to_send>0)
 		{
-			bytes = SendFile(socket, p_request);
+                        bytes = SendFile(socket, p_request);
 			final_status = bytes;
 		}
 		/*
@@ -268,11 +268,11 @@ int mk_handler_write(int socket, struct client_request *cr)
 		 */
 		if(final_status > 0)
 		{
-			return final_status;
+                        return final_status;
 		}
 		else if(final_status <= 0)
 		{
-			mk_logger_write_log(p_request->log, p_request->host_conf);
+                        mk_logger_write_log(p_request->log, p_request->host_conf);
 		}
 		p_request = p_request->next;
 	}
@@ -407,7 +407,7 @@ int mk_request_header_process(struct request *sr)
         sr->log->final_response = M_CLIENT_BAD_REQUEST;
 
 	/* Method */
-	sr->method_str = (char *) mk_http_method_check_str(sr->method);
+	sr->method_p = mk_http_method_check_str(sr->method);
 
 	/* Request URI */
         uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;

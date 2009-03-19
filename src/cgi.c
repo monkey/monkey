@@ -48,16 +48,16 @@
 #include "header.h"
 #include "iov.h"
 
-struct palm *mk_palm_get_handler(char *file)
+struct palm *mk_palm_get_handler(mk_pointer *file)
 {
         struct palm *p;
 	int j, len;
 
 
-	j = len = strlen(file);
+	j = len = file->len;
 	
 	/* looking for extension */
-	while(file[j]!='.' && j>=0) 
+	while(file->data[j]!='.' && j>=0) 
 		j--;
 
         if(j==0){
@@ -67,7 +67,7 @@ struct palm *mk_palm_get_handler(char *file)
         p = palms;
         while(p)
         {
-                if(strcasecmp(file+j+1, p->ext)==0)
+                if(strcasecmp(file->data+j+1, p->ext)==0)
                 {
                         return p;
                 }
@@ -85,7 +85,7 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         struct palm *p;
         struct mk_iov *iov;
 
-        p = mk_palm_get_handler(sr->real_path.data);
+        p = mk_palm_get_handler(&sr->real_path);
         if(!p)
         {
                 return NULL;
