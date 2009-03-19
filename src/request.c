@@ -701,6 +701,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
 	s_request->headers->status = num_error;
 	s_request->headers->content_length = page.len;
+        s_request->headers->content_length_p = mk_utils_int2mkp(page.len);
 	s_request->headers->location = NULL;
 	s_request->headers->cgi = SH_NOCGI;
 	s_request->headers->pconnections_left = 0;
