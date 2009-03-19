@@ -25,6 +25,7 @@
 #define MK_CONFIG_H
 
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
+#define MK_WORKERS_DEFAULT 1
 
 #define VALUE_ON "on"
 #define VALUE_OFF "off"
