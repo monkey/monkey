@@ -14,13 +14,9 @@
 #     "..", this we sould do in the following form:
 #
 #		URL ..
-#
+#               URL passwd
 
-URL ../etc/
 URL ..
-URL *
-URL //
-URL passwd
 
 #  b) Restriction for IP:
 #
@@ -64,8 +60,5 @@ URL passwd
 #     IP  169.12?.1*      (Block access to IPs 169.123.1.41,
 #                          169.127.15.1, 169.120.198.125, etc)
 #
-#     A little complicated, but interesintg :)
+#     very interesintg :)
 #
-
-IP 207.46.197.102
-

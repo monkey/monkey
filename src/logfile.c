@@ -189,7 +189,7 @@ void *mk_logger_worker_init(void *args)
                         {
                                 timeout = clk+3;
                                 flog = open(target->target, 
-                                                O_WRONLY | O_CREAT , 0644);
+                                            O_WRONLY | O_CREAT , 0644);
                         
                                 if(flog==-1)
                                 {
