@@ -190,9 +190,10 @@ void *mk_logger_worker_init(void *args)
                                 timeout = clk+3;
                                 flog = open(target->target, 
                                             O_WRONLY | O_CREAT , 0644);
-                        
+                                
                                 if(flog==-1)
                                 {
+                                        printf("\n* error: check your logfile file permission");
                                         perror("open");
                                         continue;
                                 }

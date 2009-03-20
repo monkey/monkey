@@ -141,6 +141,8 @@ int main(int argc, char **argv)
 	mk_signal_init();
 	mk_config_start_configure();
 
+        server_fd = mk_socket_server(config->serverport);
+
 	/* 
         Benchmark mode overwrite some configuration directives in order 
         to disable some limit numbers as number of clients, request per 
@@ -166,10 +168,7 @@ int main(int argc, char **argv)
         /* Register PID of Monkey */
 	mk_logger_register_pid();
 
-        /* Change process owner */
-	mk_user_set_uidgid();
-
-
+        
 	mk_mem_pointers_init();
 
         /* Create thread keys */
@@ -182,6 +181,9 @@ int main(int argc, char **argv)
 
         /* Launch monkey http workers */
         mk_server_launch_workers();
+
+        /* Change process owner */
+	mk_user_set_uidgid();
 
         /* Print server details */
         mk_details();

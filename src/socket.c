@@ -25,7 +25,6 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -182,7 +181,7 @@ void mk_socket_reset(int socket)
 	
 	if(setsockopt(socket,SOL_SOCKET,SO_REUSEADDR,&status,sizeof(int))==-1) {
 		perror("setsockopt");
-		exit(1);
+                exit(1);
 	}	
 }
 
@@ -203,9 +202,10 @@ int mk_socket_server(int port)
 	mk_socket_reset(fd);
 
 	if(bind(fd,(struct sockaddr *)&local_sockaddr_in,
-                sizeof(struct sockaddr))!=0)
+                sizeof(struct sockaddr)) != 0)
         {
-		puts("Error: Port busy.");
+                perror("bind");
+                puts("Error: Port cannot be used.");
 		exit(1);
 	}		     
 	

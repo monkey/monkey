@@ -79,8 +79,6 @@ void mk_server_loop(int server_fd)
 	struct sched_list_node *sched = sched_list;
 	socklen_t socket_size = sizeof(struct sockaddr_in);
 
-        server_fd = mk_socket_server(config->serverport);
-
 	while(1)
 	{
 		if((remote_fd=accept(server_fd, 

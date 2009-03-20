@@ -1,3 +1,5 @@
+/*-*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -73,12 +75,11 @@ struct file_info *mk_file_get_info(char *path)
 	egid = getegid();
 
 	/* Checking read access */
-	if( (target.st_mode & S_IRUSR && target.st_uid == euid) || 
-			(target.st_mode & S_IRGRP && target.st_gid == egid) ||
-			(target.st_mode & S_IROTH))
-	{
-		f_info->read_access = MK_FILE_TRUE;
-	}
+        if( (target.st_mode & S_IRUSR && target.st_uid == euid) ||
+            (target.st_mode & S_IRGRP && target.st_gid == egid) ||
+            (target.st_mode & S_IROTH)){
+                f_info->read_access = MK_FILE_TRUE;
+        }
 
 	/* Checking execution access */
 	if( (target.st_mode & S_IXUSR && target.st_uid == euid) ||

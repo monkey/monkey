@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/resource.h>
+#include <sys/types.h>
+#include <grp.h>
 
 #include "monkey.h"
 #include "http.h"
@@ -113,13 +115,20 @@ int mk_user_set_uidgid()
          printf("Error: Invalid user '%s'\n", config->user);
          exit(1);
       }
-      /* Cambiar el UID y el GID del proceso */
-      if(setegid(usr->pw_gid)==-1) {
-         printf("I can't change the GID to %u\n", usr->pw_gid);
-         exit(1);
+
+
+      if (initgroups(config->user, usr->pw_gid) != 0) {
+              exit(1);
       }
 
-      if(seteuid(usr->pw_uid)==-1) {
+      /* Cambiar el UID y el GID del proceso */
+      if(setgid(usr->pw_gid)==-1) {
+         printf("I can't change the GID to %u\n", usr->pw_gid);
+         exit(1);
+         }
+
+
+      if(setuid(usr->pw_uid)==-1) {
          printf("I can't change the UID to %u\n", usr->pw_uid);
          exit(1);
       }
