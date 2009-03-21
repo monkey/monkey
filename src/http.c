@@ -378,6 +378,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 sr->fd_file = open(sr->real_path.data, 
                                    O_RDONLY|O_NONBLOCK);
 
+                if(sr->fd_file == -1){
+                        perror("open");
+                        return -1;
+                }
+
                 /* Calc bytes to send & offset */
                 if(mk_http_range_set(sr, path_info->size)!=0)
                 {
