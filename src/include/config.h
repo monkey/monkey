@@ -24,6 +24,8 @@
 #ifndef MK_CONFIG_H
 #define MK_CONFIG_H
 
+#define O_NOATIME       01000000
+
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
 #define MK_WORKERS_DEFAULT 1
 
@@ -76,6 +78,8 @@ struct server_config {
 	 /* configured host quantity */
 	int nhosts;	
 	struct host *hosts;
+
+        mode_t open_flags;
 };
 
 struct server_config *config;
@@ -110,6 +114,8 @@ void mk_config_set_init_values(void);
 
 int mk_config_get_bool(char *value);
 void mk_config_read_hosts(char *path);
+void mk_config_sanity_check();
+
 struct host *mk_config_get_host(char *path);
 struct host *mk_config_host_find(mk_pointer host);
 

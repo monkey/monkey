@@ -179,11 +179,13 @@ int main(int argc, char **argv)
         pthread_key_create(&mk_cache_iov_header, NULL);
         pthread_key_create(&mk_cache_header_toc, NULL);
 
-        /* Launch monkey http workers */
-        mk_server_launch_workers();
-
         /* Change process owner */
 	mk_user_set_uidgid();
+
+        mk_config_sanity_check();
+
+        /* Launch monkey http workers */
+        mk_server_launch_workers();
 
         /* Print server details */
         mk_details();

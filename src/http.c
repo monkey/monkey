@@ -43,8 +43,6 @@
 #include "logfile.h"
 #include "header.h"
 
-#define O_NOATIME       01000000
-
 int mk_http_method_check(mk_pointer method)
 {
         if(strncasecmp(method.data, 
@@ -373,10 +371,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
                         && path_info->size>0)
         {
-                /* O_NOATIME will just work if process owner has 
-                 * root privileges */
-                sr->fd_file = open(sr->real_path.data, 
-                                   O_RDONLY|O_NONBLOCK);
+                sr->fd_file = open(sr->real_path.data, config->open_flags);
 
                 if(sr->fd_file == -1){
                         perror("open");

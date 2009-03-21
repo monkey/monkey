@@ -532,6 +532,7 @@ void mk_config_set_init_values(void)
 	config->symlink=VAR_OFF;
 	config->nhosts = 0;
 	config->user = NULL;
+        config->open_flags = O_RDONLY | O_NONBLOCK;
 }
 
 /* read main configuration from monkey.conf */
@@ -586,3 +587,18 @@ struct host *mk_config_host_find(mk_pointer host)
 	return (struct host *) aux_host;
 }
 
+void mk_config_sanity_check()
+{
+        /* Check O_NOATIME for current user, flag will just be used 
+         * if running user is allowed to.
+         */
+        int fd, flags=config->open_flags;
+
+        flags |= O_NOATIME;
+        fd = open(config->file_config, flags);
+
+        if(fd > -1){
+                config->open_flags = flags;
+                close(fd);
+        }
+}
