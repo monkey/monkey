@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2008, Eduardo Silva P.
+ *  Copyright (C) 2001-2009, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #ifndef MK_DIRHTML_H
 #define MK_DIRHTML_H
 
+#define MK_DIRHTML_URL "/_mktheme"
 #define MK_DIRHTML_DEFAULT_MIME "text/html"
 
 /* For every directory requested, don't send more than
@@ -39,15 +40,14 @@
 #define MK_DIRHTML_FILE_FOOTER "footer.theme"
 
 /* Template tags */
-#define MK_DIRHTML_TPL_HEADER {"%_html_title_%", NULL}
+#define MK_DIRHTML_TPL_GLOBAL {"%_html_title_%", "%_theme_path_%", NULL}
+
 #define MK_DIRHTML_TPL_ENTRY {\
         "%_target_title_%",   \
         "%_target_url_%",\
         "%_target_name_%",\
         "%_target_time_%",\
         "%_target_size_%", NULL}
-
-#define MK_DIRHTML_TPL_FOOTER {NULL}
 
 #define MK_DIRHTML_TAG_INIT "%_"
 #define MK_DIRHTML_TAG_END "_%"
@@ -70,38 +70,48 @@ struct dirhtml_template
         int tag;
         int len;
         struct dirhtml_template *next;
+        char **tpl; /* array of theme tags: [%_xaa__%, %_xyz_%] */
+
+        //char *lov_tpl[]; /* template array values, eg: MK_DIRHTML_TPL_GLOBAL */
 };
 
+/* Templates for header, entries and footer */
 struct dirhtml_template *mk_dirhtml_tpl_header;
 struct dirhtml_template *mk_dirhtml_tpl_entry;
 struct dirhtml_template *mk_dirhtml_tpl_footer;
 
-/* length counters */
-unsigned long mk_dirhtml_tpl_header_cnt;
-unsigned long mk_dirhtml_tpl_entry_cnt;
-unsigned long mk_dirhtml_tpl_footer_cnt;
-
-struct dirhtml_tplval
+struct dirhtml_value
 {
         int tag;
         int len;
         mk_pointer sep; /* separator code after value */
+
+        /* string data */
+        int len;
         char *value;
-        struct dirhtml_tplval *next;
+
+        /* next node */
+        struct dirhtml_value *next;
 };
+
+struct dirhtml_value *mk_dirhtml_value_global;
 
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 
 int mk_dirhtml_conf();
 char *mk_dirhtml_load_file(char *filename);
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *tpl[]);
+struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[]);
 struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header, 
-                                                      char *buf, int len, int tag);
+                                                      char *buf, int len, 
+                                                      char *tpl[], int tag);
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 int mk_dirhtml_read_config(char *path);
 int mk_dirhtml_theme_load();
+struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
+                                             int tag_id, mk_pointer sep, 
+                                             char *value);
 
 struct f_list *get_dir_content(struct request *sr, char *path);
 
