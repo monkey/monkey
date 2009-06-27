@@ -664,7 +664,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 			s_log->error_msg = request_error_msg_408;
 			break;
 
-		case M_CLIENT_LENGHT_REQUIRED:
+		case M_CLIENT_LENGTH_REQUIRED:
 			s_log->error_msg = request_error_msg_411;
 			break;
 			

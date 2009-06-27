@@ -69,7 +69,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
         content_length_post = mk_method_post_content_length(cr->body);
 	if(content_length_post == -2)
         {
-		mk_request_error(M_CLIENT_LENGHT_REQUIRED, 
+		mk_request_error(M_CLIENT_LENGTH_REQUIRED, 
                               cr, sr, 0, sr->log);
 		return -1;
 	}

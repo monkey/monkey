@@ -132,7 +132,7 @@ int mk_header_send(int fd, struct client_request *cr,
 			s_log->status=S_LOG_OFF;
 			break;
 
-		case M_CLIENT_LENGHT_REQUIRED:
+		case M_CLIENT_LENGTH_REQUIRED:
 			mk_header_iov_add_entry(iov, mk_hr_client_length_required,
                                                 mk_iov_crlf,
                                                 MK_IOV_NOT_FREE_BUF);
