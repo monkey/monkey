@@ -16,5 +16,6 @@
 		<p class="row">
 			%_target_size_%
 		</p>
+		%_theme_path_%
 	</TD>
 </TR>

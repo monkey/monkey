@@ -39,19 +39,19 @@
 #define MK_DIRHTML_FILE_ENTRY "entry.theme"
 #define MK_DIRHTML_FILE_FOOTER "footer.theme"
 
-/* Template tags */
-#define MK_DIRHTML_TPL_GLOBAL {"%_html_title_%", "%_theme_path_%", NULL}
-
-#define MK_DIRHTML_TPL_ENTRY {\
-        "%_target_title_%",   \
-        "%_target_url_%",\
-        "%_target_name_%",\
-        "%_target_time_%",\
-        "%_target_size_%", NULL}
-
 #define MK_DIRHTML_TAG_INIT "%_"
 #define MK_DIRHTML_TAG_END "_%"
 #define MK_DIRHTML_SIZE_DIR "-"
+
+struct mk_f_list
+{
+        char *name;
+        char *size;
+        char *ft_modif;
+        unsigned char type;
+        struct file_info *info;
+        struct mk_f_list *next;
+};
 
 /* Main configuration of dirhtml module */
 struct dirhtml_config
@@ -67,12 +67,10 @@ struct dirhtml_config *dirhtml_conf;
 struct dirhtml_template
 {
         char *buf;
-        int tag;
+        int tag_id;
         int len;
         struct dirhtml_template *next;
-        char **tpl; /* array of theme tags: [%_xaa__%, %_xyz_%] */
-
-        //char *lov_tpl[]; /* template array values, eg: MK_DIRHTML_TPL_GLOBAL */
+        char **tags; /* array of theme tags: [%_xaa__%, %_xyz_%] */
 };
 
 /* Templates for header, entries and footer */
@@ -82,8 +80,7 @@ struct dirhtml_template *mk_dirhtml_tpl_footer;
 
 struct dirhtml_value
 {
-        int tag;
-        int len;
+        int tag_id;
         mk_pointer sep; /* separator code after value */
 
         /* string data */
@@ -92,6 +89,8 @@ struct dirhtml_value
 
         /* next node */
         struct dirhtml_value *next;
+
+        char **tags; /* array of tags which values correspond */
 };
 
 struct dirhtml_value *mk_dirhtml_value_global;
@@ -101,18 +100,36 @@ char   *read_header_footer_file(char *file_path);
 
 int mk_dirhtml_conf();
 char *mk_dirhtml_load_file(char *filename);
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[]);
-struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header, 
+
+struct dirhtml_template 
+*mk_dirhtml_template_create(char *content);
+
+struct dirhtml_template 
+*mk_dirhtml_template_list_add(struct dirhtml_template **header, 
                                                       char *buf, int len, 
-                                                      char *tpl[], int tag);
+                                                      char **tpl, int tag);
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 int mk_dirhtml_read_config(char *path);
 int mk_dirhtml_theme_load();
+int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl);
+
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
                                              int tag_id, mk_pointer sep, 
-                                             char *value);
+                                            char *value, char **tags);
 
 struct f_list *get_dir_content(struct request *sr, char *path);
 
+static const char *_tags_global[] = {\
+        "%_html_title_%",            \
+        "%_theme_path_%",            \
+        NULL};
+
+static const char *_tags_entry[] =\
+        {"%_target_title_%",               \
+         "%_target_url_%",                 \
+         "%_target_name_%",                \
+         "%_target_time_%",                \
+         "%_target_size_%",                \
+         NULL};
 #endif

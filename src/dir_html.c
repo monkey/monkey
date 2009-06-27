@@ -54,16 +54,23 @@
 #include "file.h"
 #include "iov.h"
 
-struct mk_f_list
-{
-        char *name;
-        char *size;
-        char *ft_modif;
-        unsigned char type;
-        struct file_info *info;
-        struct mk_f_list *next;
-};
-
+/* DIR_HTML logic:
+ * ---------------
+ * [Monkey Start]
+ * |
+ * *--> mk_dirhtml_conf()
+ *      |
+ *      *--> mk_dirhtml_read_config()
+ *      *--> mk_dirhtml_theme_load()
+ *           |
+ *           *--> mk_dirhtml_load_file() (FILE_HEADER, FILE_ENTRY, FILE_FOOTER)
+ *           *--> mk_dirhtml_template_create()
+ *                |
+ *                *-->
+ *
+ *
+ *
+ */
 
 /* Function wrote by Max (Felipe Astroza), thanks! */
 char *mk_dirhtml_human_readable_size(off_t size)
@@ -187,7 +194,7 @@ struct mk_f_list *mk_dirhtml_create_list(DIR *dir, char *path,
                 }
                 last = entry;
  	}
-        
+
         return list;
 }
 
@@ -200,7 +207,7 @@ int mk_dirhtml_conf()
         
         m_build_buffer(&themes_path, &len, "%s/dir_themes/", config->serverconf);
         ret = mk_dirhtml_read_config(themes_path);
-
+        
         /* This function will load the default theme 
          * setted in dirhtml_conf struct 
          */
@@ -265,9 +272,6 @@ int mk_dirhtml_read_config(char *path)
 
 int mk_dirhtml_theme_load()
 {
-        /* List of Values */
-        char *lov_entry[] = MK_DIRHTML_TPL_ENTRY;
-
         /* Data */
 	char *header, *entry, *footer;
 
@@ -285,20 +289,17 @@ int mk_dirhtml_theme_load()
         }
 
         /* Parse themes */
-        mk_dirhtml_tpl_header = mk_dirhtml_theme_parse(header, NULL);
-        mk_dirhtml_tpl_entry = mk_dirhtml_theme_parse(entry, lov_entry);
-        mk_dirhtml_tpl_footer = mk_dirhtml_theme_parse(footer, NULL);
+        mk_dirhtml_tpl_header = mk_dirhtml_template_create(header);
+        mk_dirhtml_tpl_entry = mk_dirhtml_template_create(entry);
+        mk_dirhtml_tpl_footer = mk_dirhtml_template_create(footer);
 
 #ifdef DEBUG_THEME
         /* Debug data */
-        mk_dirhtml_theme_debug(mk_dirhtml_tpl_header, lov_global);
-        mk_dirhtml_theme_debug(mk_dirhtml_tpl_entry, lov_entry);
-        mk_dirhtml_theme_debug(mk_dirhtml_tpl_footer, lov_global);
+        mk_dirhtml_theme_debug(&mk_dirhtml_tpl_header);
+        mk_dirhtml_theme_debug(&mk_dirhtml_tpl_entry);
+        mk_dirhtml_theme_debug(&mk_dirhtml_tpl_footer);
+
 #endif
-
-        mk_dirhtml_value_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
-                                                        MK_DIRHTML_URL);
-
         mk_mem_free(header);
         mk_mem_free(entry);
         mk_mem_free(footer);
@@ -307,24 +308,22 @@ int mk_dirhtml_theme_load()
 }
 
 #ifdef DEBUG_THEME
-int mk_dirhtml_theme_debug(struct dirhtml_template *st_tpl, char *tpl[])
+int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl)
 {
         int i=0;
         struct dirhtml_template *aux;
 
-        aux = st_tpl;
+        aux = *st_tpl;
+
         printf("\n** DEBUG_THEME **");
-        
+        fflush(stdout);
+
         while(aux)
         {
-                if(!aux->buf)
-                {
-                        printf("\n%i) %s (tag=%i)", i, tpl[aux->tag], aux->tag);
+                printf("\n%i) len=%i, tag_id=%i", i, aux->len, aux->tag_id);
+                if(aux->tag_id >= 0){
+                        printf(" (%s) ",aux->tags[aux->tag_id]);
                 }
-                else{
-                        printf("\n%i) %s", i, aux->buf);
-                }
-
                 fflush(stdout);
                 aux = aux->next;
                 i++;
@@ -378,7 +377,7 @@ int mk_dirhtml_content_count_tags(char *content, char *tpl[])
         return count;
 }
 
-struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
+struct dirhtml_template *mk_dirhtml_template_create(char *content)
 {
         int i=0, cont_len;
         int pos, last=0; /* 0=search init, 1=search end */
@@ -388,7 +387,6 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
         int _len;
 
         /* Global keys */
-        char *lov_global[] = MK_DIRHTML_TPL_GLOBAL;
         char **_tpl=0;
 
         /* Template to return */
@@ -410,21 +408,24 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
                 }
 
                 /* Checking global tag, if it's not found, proceed with 
-                 * template specified in *extra[]
+                 * 'entry tags'
                  */
-                _tpl = lov_global;
-                tpl_idx = mk_dirhtml_theme_match_tag(content+i+pos, lov_global);
+                _tpl = (char **) _tags_global;
+                tpl_idx = mk_dirhtml_theme_match_tag(content+i+pos, _tpl);
 
-                /* if global template do not match, use the extra specified */
+                /* if global template do not match, use the entry tags */
                 if(tpl_idx < 0){
-                        _tpl = extra;
+                        _tpl = (char **) _tags_entry;
                         tpl_idx = mk_dirhtml_theme_match_tag(content+i+pos, _tpl);
                 }
-
+                
+                /* if tag found is known, we add them to our list */
                 if(tpl_idx>=0){
                         
                         _buf = mk_string_copy_substr(content, i, i+pos);
                         _len = strlen(_buf);
+
+                        /* Dummy if/else to create or pass a created st_tpl */
                         if(!st_tpl){
                                 st_tpl = mk_dirhtml_template_list_add(NULL, 
                                                                       _buf, 
@@ -435,7 +436,9 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
                         else{
                                 mk_dirhtml_template_list_add(&st_tpl, 
                                                              _buf, 
-                                                             _len, _tpl, -1);
+                                                             _len, 
+                                                             _tpl, 
+                                                             -1);
                         }
                         i += (pos+strlen(_tpl[tpl_idx]));
 
@@ -446,8 +449,7 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
                 }
                 else{
                         i++;
-                }
-                
+                }     
         }
 
         if(last<cont_len){
@@ -464,23 +466,13 @@ struct dirhtml_template *mk_dirhtml_theme_parse(char *content, char *extra[])
                 }
         }
 
-        /*
-        printf("\n**********FINAL LIST:");
-        aux = st_tpl;
-        while(aux){
-                printf("\n---\nbuf: %s", aux->buf);
-                printf("\nlen: %i", aux->len);
-                printf("\ntag: %i", aux->tag);
-                aux = aux->next;
-        }
-        fflush(stdout);
-        */
         return st_tpl;
 }
 
-struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header, 
-                                                      char *buf, int len, 
-                                                      char *tpl[], int tag)
+struct dirhtml_template 
+*mk_dirhtml_template_list_add(struct dirhtml_template **header,
+                              char *buf, int len, 
+                              char **tpl, int tag_id)
 {
         struct dirhtml_template *node, *aux;
 
@@ -490,23 +482,18 @@ struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **
                 return NULL;
         }
 
+        
         node->buf = buf;
         node->len = len;
-        node->tag = tag;
-        node->tpl = tpl;
+        node->tag_id = tag_id;
+        node->tags = tpl;
         node->next = NULL;
 
-        if(tag != -1){
-                /*
-                printf("\nadd template: %i, %s %p\n", 
-                       node->tag,
-                       node->tpl[node->tag],
-                       node->tpl);
-                
-                fflush(stdout);
-                */
+        /*
+        if(tag_id >= 0){
+                printf("\n  -> %s", node->tags[node->tag_id]);
         }
-
+        */
         if(!header){
                 return (struct dirhtml_template *) node;
         }
@@ -547,95 +534,61 @@ int mk_dirhtml_template_len(struct dirhtml_template *tpl)
         return len;
 }
 
-struct mk_iov *mk_dirhtml_theme_compose(char *tpl_tags[], 
-                             struct dirhtml_template *tpl_tpl,
+struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
                              struct dirhtml_value *values)
 {
         /*
-         * tpl_tags = MK_DIRHTML_TPL_HEADER = {xy, yz}
-         * tpl_tpl = struct { char buf ; int len, int tag }
-         * tpl_values = struct {int tag, char *value, struct *next}
+         * template = struct { char buf ; int len, int tag }
+         * values = struct {int tag, char *value, struct *next}
          */
 
-        struct dirhtml_value *tpl_val = values; //dirhtml_tplval ?
         struct mk_iov *iov;
-        struct dirhtml_template *tpl_list;
-        int tpl_len;
-        char *aux;
+        struct dirhtml_template *tpl = template;
+        struct dirhtml_value *val = values;
 
-        tpl_len = mk_dirhtml_template_len(tpl_tpl);
+        int tpl_len;
+
+        tpl_len = mk_dirhtml_template_len(template);
 
         /* we duplicate the lenght in case we get separators */
         iov = mk_iov_create(tpl_len*2, 1); 
+        tpl = template;
 
-        tpl_list = tpl_tpl;
-
-        while(tpl_list){
+        while(tpl){
                 /* check for dynamic value */
-                if(!tpl_list->buf && tpl_list->tag>=0){
-                        /* specific tags */
-                        printf("\n->idx: %i %p", tpl_list->tag, tpl_list->tpl);
-                        fflush(stdout);
-
-                        /*tpl_val*/ aux = tpl_list->tpl[tpl_list->tag];//tpl_values
-                        printf("\naux: %s", aux);
-                        fflush(stdout);
-
-                        /*test */
-                        printf("\nusing tag_id: %i", tpl_list->tag);
-                        fflush(stdout);
-
-                        printf("\ntest - > '%s'", tpl_val->value);
-                        fflush(stdout);
-                        
-
-                        /* / test */
-
-                        printf("\naddress: %p", tpl_val);
-                        printf("\n-->%s\n\n", tpl_val->value);
-                        fflush(stdout);
-
-                        
-                        mk_iov_add_entry(iov, 
-                                         tpl_val->value,
-                                         tpl_val->len,
-                                         tpl_val->sep,
-                                         MK_IOV_NOT_FREE_BUF);
-
-                        /*
-                        while(tpl_val){
-                                if(tpl_val->tag == tpl_list->tag)
-                                {
-                                        mk_iov_add_entry(iov, tpl_val->value, 
-                                                         tpl_val->len,
-                                                         tpl_val->sep, 
-                                                         MK_IOV_NOT_FREE_BUF);
-
+                if(!tpl->buf && tpl->tag_id>=0){
+                        val = values;
+                        while(val){
+                                if(val->tags == tpl->tags && 
+                                   val->tag_id == tpl->tag_id){
+                                        mk_iov_add_entry(iov, 
+                                                 val->value,
+                                                 val->len,
+                                                 val->sep,
+                                                 MK_IOV_NOT_FREE_BUF);
                                         break;
                                 }
-                                tpl_val = tpl_val->next;
+                                else{
+                                        val = val->next;
+                                }
                                 
                         }
-                        if(!tpl_val){
-                                break; 
-                        }
-                        */
                 } 
                 /* static */
                 else{
-                        mk_iov_add_entry(iov, tpl_list->buf, 
-                                         tpl_list->len, 
+                        mk_iov_add_entry(iov, tpl->buf, 
+                                         tpl->len, 
                                          mk_iov_none, 
                                          MK_IOV_NOT_FREE_BUF);
                 }
-                tpl_list = tpl_list->next;
+                tpl = tpl->next;
         }
         return (struct mk_iov *) iov;
 }
 
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
                                              int tag_id, mk_pointer sep, 
-                                             char *value)
+                                            char *value, char **tags)
 {
         struct dirhtml_value *check, *aux=0;
         
@@ -644,9 +597,10 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
                 return NULL;
         }
 
-        aux->tag = tag_id;
+        aux->tag_id = tag_id;
         aux->value = value;
         aux->sep = sep;
+        aux->tags = tags;
 
         if(value){
                 aux->len = strlen(value);
@@ -751,20 +705,18 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int i;
-
-        char *lov_global[] = MK_DIRHTML_TPL_GLOBAL;
-        char *lov_entry[] = MK_DIRHTML_TPL_ENTRY;
+        int i=0;
 
         mk_pointer sep;
 
 	/* file info */
 	unsigned long list_len=0;
+        
         struct mk_f_list *file_list, *entry, **toc;
         struct mk_iov *iov_header, *iov_footer, *iov_entry;
-        struct dirhtml_value *values_header;
-        struct dirhtml_value *values_entry;
-        
+        struct dirhtml_value *values_global = 0;
+        struct dirhtml_value *values_entry = 0;
+
         if(!(dir = opendir(sr->real_path.data)))
         {
                 return -1;
@@ -788,24 +740,23 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 
         /* Creating response template */
 
-        /* Assign value for %_html_title_% */
-        values_header = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
-                                              sr->uri_processed);
+        /* Set %_html_title_% */
+        values_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
+                                              sr->uri_processed, 
+                                              (char **) _tags_global);
 
-        printf("\n******************** Header ************************");
-        fflush(stdout);
+        /* Set %_theme_path_% */
+        mk_dirhtml_tag_assign(&values_global, 1, mk_iov_none, 
+                              dirhtml_conf->theme_path, 
+                              (char **) _tags_global);
+
         /* HTML Header */
-        iov_header = mk_dirhtml_theme_compose(lov_global,
-                                              mk_dirhtml_tpl_header, 
-                                              values_header);
-
-        printf("\n******************** Footer ************************");
-        fflush(stdout);
+        iov_header = mk_dirhtml_theme_compose(mk_dirhtml_tpl_header, 
+                                              values_global);
 
         /* HTML Footer */
-        iov_footer = mk_dirhtml_theme_compose(lov_global,
-                                              mk_dirhtml_tpl_footer, 
-                                              NULL);
+        iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer, 
+                                              values_global);
 
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
         mk_dirhtml_send(cr->socket, iov_header);
@@ -834,36 +785,44 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 }
 
                 /* target title */
-                values_entry = mk_dirhtml_tag_assign(NULL, 0, sep, toc[i]->name);
+                values_entry = mk_dirhtml_tag_assign(NULL, 0, sep,
+                                      toc[i]->name, 
+                                      (char **) _tags_entry);
 
                 /* target url */
-                mk_dirhtml_tag_assign(&values_entry, 1, sep, toc[i]->name);
+                mk_dirhtml_tag_assign(&values_entry, 1, sep, 
+                                      toc[i]->name, 
+                                      (char **) _tags_entry);
 
                 /* target name */
-                mk_dirhtml_tag_assign(&values_entry, 2, sep, toc[i]->name);
+                mk_dirhtml_tag_assign(&values_entry, 2, sep, 
+                                      toc[i]->name, 
+                                      (char **) _tags_entry);
 
                 /* target modification time */
                 mk_dirhtml_tag_assign(&values_entry, 3, mk_iov_none, 
-                                      toc[i]->ft_modif);
+                                      toc[i]->ft_modif, 
+                                      (char **) _tags_entry);
 
                 /* target size */
-                mk_dirhtml_tag_assign(&values_entry, 4, mk_iov_none, toc[i]->size);
+                mk_dirhtml_tag_assign(&values_entry, 4, mk_iov_none, 
+                                      toc[i]->size, 
+                                      (char **) _tags_entry);
 
-                iov_entry = mk_dirhtml_theme_compose(lov_entry, 
-                                                     mk_dirhtml_tpl_entry,
+                iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
                                                      values_entry);
+
                 mk_dirhtml_send(cr->socket, iov_entry);
 
                 mk_mem_free(values_entry);
                 mk_iov_free(iov_entry);
-
         }
         mk_dirhtml_send(cr->socket, iov_footer);
         mk_dirhtml_send_chunked_end(cr->socket);
 
         closedir(dir);
 
-        mk_mem_free(values_header);
+        mk_mem_free(values_global);
         mk_iov_free(iov_header);
         mk_iov_free(iov_footer);
         mk_dirhtml_free_list(toc, list_len);
