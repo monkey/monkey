@@ -187,7 +187,7 @@ int mk_handler_read(int socket)
 	}
 
         bytes = read(socket, cr->body+cr->body_length,
-                     MAX_REQUEST_BODY-cr->body_length-1);
+                     MAX_REQUEST_BODY-cr->body_length);
 
 	if (bytes < 0) {
 		if (errno == EAGAIN) {
