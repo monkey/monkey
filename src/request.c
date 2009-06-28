@@ -477,7 +477,7 @@ int mk_request_header_process(struct request *sr)
 	}
 
         /* Creating table of content (index) for request headers */
-        int toc_len = 11;
+        int toc_len = MK_KNOWN_HEADERS;
         struct header_toc *toc = mk_request_header_toc_create(toc_len);
         mk_request_header_toc_parse(toc, headers, toc_len);
 
@@ -669,7 +669,8 @@ void mk_request_error(int num_error, struct client_request *cr,
 			break;
 			
                 case M_SERVER_NOT_IMPLEMENTED:
-                        mk_request_set_default_page(&page, "Method Not Implemented",
+                        mk_request_set_default_page(&page, 
+                                                    "Method Not Implemented",
                                                     s_request->uri,
                                                     s_request->host_conf->host_signature);
                         s_log->final_response=M_SERVER_NOT_IMPLEMENTED;

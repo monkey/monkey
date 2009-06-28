@@ -41,13 +41,18 @@
 #include "config.h"
 #include "utils.h"
 #include "file.h"
+#include "cache.h"
 
 long int mk_method_post_content_length(char *body)
 {
+        struct header_toc* toc = NULL;
         long int len;
         mk_pointer tmp;
 
-        tmp = mk_request_header_find(NULL, 0, body, mk_rh_content_length);
+        toc = pthread_getspecific(mk_cache_header_toc);
+        tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, body,
+                                     mk_rh_content_length);
+
         if(!tmp.data)
         {
                 return -2;
@@ -62,14 +67,15 @@ long int mk_method_post_content_length(char *body)
 /* POST METHOD */
 int mk_method_post(struct client_request *cr, struct request *sr)
 {
+        struct header_toc* toc = NULL;
 	mk_pointer tmp;
 	char buffer[MAX_REQUEST_BODY];
 	long content_length_post=0;
-	
+
         content_length_post = mk_method_post_content_length(cr->body);
 	if(content_length_post == -2)
         {
-		mk_request_error(M_CLIENT_LENGTH_REQUIRED, 
+		mk_request_error(M_CLIENT_LENGTH_REQUIRED,
                               cr, sr, 0, sr->log);
 		return -1;
 	}
@@ -79,8 +85,11 @@ int mk_method_post(struct client_request *cr, struct request *sr)
                               cr, sr, 0, sr->log);	
 		return -1;
 	}
-	
-        tmp = mk_request_header_find(NULL, 0, sr->body.data, mk_rh_content_type);
+
+        toc = pthread_getspecific(mk_cache_header_toc);
+        tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, sr->body.data,
+                                     mk_rh_content_type);
+
         if(!tmp.data){
 		mk_request_error(M_CLIENT_BAD_REQUEST, 
                               cr, sr, 0, sr->log);

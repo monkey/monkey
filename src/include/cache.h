@@ -22,6 +22,9 @@
 #ifndef MK_CACHE_H
 #define MK_CACHE_H
 
+#define MK_KNOWN_HEADERS 11  /* Number of different headers that
+                              * Monkey knows about 
+                              */
 pthread_key_t mk_cache_iov_log;
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;

@@ -49,7 +49,10 @@ void mk_cache_thread_init()
         cache_iov_header = mk_iov_create(45, 0);
         pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
 
-        /* Cache header toc, monkey just search for 11 headers in request */
-        cache_header_toc = mk_mem_malloc(sizeof(struct header_toc)*11);
+        /* Cache header toc, monkey just search for MK_KNOWN_HEADERS
+         * in request 
+         */
+        cache_header_toc = mk_mem_malloc(sizeof(struct header_toc)*
+                                         MK_KNOWN_HEADERS);
         pthread_setspecific(mk_cache_header_toc, (void *) cache_header_toc);
 }
