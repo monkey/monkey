@@ -150,6 +150,6 @@ SymLink Off
 # -------------
 # Associate and connect files extensions with a Palm Server 
 #
-# Palm php application/x-httpd-php 127.0.0.1 2008
+# Palm php application/x-httpd-php 127.0.0.1 2009
 
 EOF
