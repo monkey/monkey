@@ -439,13 +439,14 @@ int mk_request_header_process(struct request *sr)
                 init = (int) (query_init-(sr->body.data+uri_init)) + uri_init;
                 if(init <= uri_end)
                 {
-                        end = uri_end ;
+                        end = uri_end;
                         uri_end = init - 1;
                  
                         sr->query_string = mk_pointer_create(sr->body.data, 
-                                                             init, end);
+                                                             init+1, end+1);
                 }
 	}
+        
 	/* Request URI Part 2 */
 	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, 
                                                    uri_init, uri_end+1);
@@ -542,6 +543,13 @@ int mk_request_header_process(struct request *sr)
 	}
 
         sr->log->final_response = M_HTTP_OK;
+
+        /*
+        mk_pointer_print(sr->method_p);
+        mk_pointer_print(sr->uri);
+        mk_pointer_print(sr->query_string);
+        */
+
 	return 0;
 }
 

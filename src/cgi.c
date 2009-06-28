@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2007, Eduardo Silva P.
+ *  Copyright (C) 2001-2009, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@ struct palm *mk_palm_get_handler(mk_pointer *file)
         struct palm *p;
 	int j, len;
 
-
 	j = len = file->len;
 	
 	/* looking for extension */
@@ -99,8 +98,10 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         mk_socket_set_tcp_nodelay(sock);
         mk_socket_set_cork_flag(sock, TCP_CORK_ON);
         mk_iov_send(sock, iov, MK_IOV_SEND_TO_SOCKET);
+
         write(sock, "\r\n\r\n", 2);
         fflush(stdout);
+
         mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
         
         buf = mk_mem_malloc_z(len);
@@ -192,7 +193,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
         /* real path is not an mk_pointer */
         mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
         //mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
-        //mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
+        mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
         //mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
         /* CRLF */
