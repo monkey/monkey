@@ -96,6 +96,7 @@ tiff	   	image/tiff
 tif		image/tiff
 wbmp	   	image/vnd.wap.wbmp
 ras		image/x-cmu-raster
+ico             image/x-icon
 pnm		image/x-portable-anymap
 pbm		image/x-portable-bitmap
 pgm		image/x-portable-graymap
@@ -114,7 +115,6 @@ wrl		model/vrml
 vmrl	   	model/vrml
 
 css		text/css
-html	   	text/html
 htm		text/html
 asc		text/plain
 txt		text/plain
