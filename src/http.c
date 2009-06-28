@@ -526,6 +526,8 @@ int mk_http_range_parse(struct request *sr)
  * 
  * Return 0 when all expected data has arrived or -1 when
  * the connection is on a pending status due to HTTP spec 
+ *
+ * This function is called from request.c :: mk_handler_read(..)
  */
 int mk_http_pending_request(struct client_request *cr)
 {

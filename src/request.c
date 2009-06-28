@@ -194,17 +194,18 @@ int mk_handler_read(int socket)
 			return 1;
 		} 
 		else{
-			return -1;
-		}
+                        mk_request_client_remove(socket);
+                        return -1;
+                }
 	}
 	if (bytes == 0){
-		return -1;
+                mk_request_client_remove(socket);
+                return -1;
 	}
 
 	if(bytes > 0)
 	{
 		cr->body_length+=bytes;
-
 		efd = mk_sched_get_thread_poll();
 
                 if(mk_http_pending_request(cr)==0)
@@ -216,6 +217,7 @@ int mk_handler_read(int socket)
                         /* Request is incomplete and our buffer is full, 
                          * close connection 
                          */
+                        mk_request_client_remove(socket);
                         return -1;
                 }
 	}
