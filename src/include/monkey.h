@@ -26,11 +26,10 @@
 
 int server_fd;
 
-/* CONSTANTES DEL SERVIDOR */
-#define MAX_REQUEST_BODY 1024 /* Maximo buffer del request */
-#define BUFFER_SOCKET 4096 /* Maximo buffer de envio */
-
-#define MAX_PATH 1024 /* Largo m�ximo para rutas (archivos) */
+/* Max buf length sent by client */
+#define MAX_REQUEST_BODY 1024 
+/* Max Path lenth */
+#define MAX_PATH 1024 
 
 /* String que define la llamada a 
 un home de un usuario */
@@ -65,4 +64,3 @@ gid_t EGID;
 gid_t EUID;
 
 #endif
-
