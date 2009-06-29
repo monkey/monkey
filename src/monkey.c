@@ -58,7 +58,8 @@
 
 void mk_details()
 {
-        printf("* process PID is %i", getpid());
+        printf("* Process ID is %i", getpid());
+        printf("\n* Server socket listening on Port %i", config->serverport);
         printf("\n* %i threads, %i client connections per thread, total %i\n", 
                config->workers, config->worker_capacity,
                config->workers*config->worker_capacity);
