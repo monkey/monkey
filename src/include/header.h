@@ -42,7 +42,7 @@
 #define MK_HR_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout"
 #define MK_HR_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required"
 #define MK_HR_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error"
-#define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Method Not Implemented"
+#define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented"
 #define MK_HR_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported"
 
 /* mk pointer for header responses */
