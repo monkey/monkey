@@ -170,7 +170,7 @@ struct request *mk_request_parse(struct client_request *cr)
 int mk_handler_read(int socket)
 {
 	int bytes, efd;
-	struct client_request *cr;
+        struct client_request *cr;
 
 	cr = mk_request_client_get(socket);
 
@@ -206,6 +206,8 @@ int mk_handler_read(int socket)
 	if(bytes > 0)
 	{
 		cr->body_length+=bytes;
+                cr->body[cr->body_length] = '\0';
+
 		efd = mk_sched_get_thread_poll();
 
                 if(mk_http_pending_request(cr)==0)
