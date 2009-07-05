@@ -942,7 +942,7 @@ struct client_request *mk_request_client_get(int socket)
 	{
 		if(cr->socket == socket)
 		{
-			break;
+                        break;
 		}
 		cr = cr->next;
 	}

@@ -56,16 +56,4 @@ ScriptAlias /cgi-bin/ $cgibin
 
 GetDir on
 
-# Header_file and Footer_file
-# ---------------------------
-#
-# This variables allow you show information of configured files when 
-# full directories are shown
-#
-Header_file .header
-Footer_file .footer
-#
-#
-#  This files could exist in directories to show.
-
 EOF
