@@ -157,8 +157,7 @@ struct mk_f_list *mk_dirhtml_create_list(DIR *dir, char *path,
 
 	while((ent = readdir(dir)) != NULL)
 	{
-                if(strcmp((char *) ent->d_name, "." )  == 0) continue;
-                if(strcmp((char *) ent->d_name, ".." ) == 0) continue;
+                if(ent->d_name[0] == '.') continue;
 
                 /* Look just for files and dirs */
                 if(ent->d_type!=DT_REG && ent->d_type!=DT_DIR)
