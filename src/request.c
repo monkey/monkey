@@ -629,6 +629,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 	unsigned long len;
 	char *aux_message=0;
 	mk_pointer message, page;
+        long n;
 
 	if(!s_log) {
 		s_log=mk_mem_malloc(sizeof(struct log_info));
@@ -737,7 +738,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 	mk_header_send(cr->socket, cr, s_request, s_log);
         
 	if(debug==1){
-                write(cr->socket, page.data, page.len);
+                n = write(cr->socket, page.data, page.len);
 		mk_pointer_free(&page);
 	}
 }

@@ -99,7 +99,7 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         mk_socket_set_cork_flag(sock, TCP_CORK_ON);
         mk_iov_send(sock, iov, MK_IOV_SEND_TO_SOCKET);
 
-        write(sock, "\r\n\r\n", 2);
+        n = write(sock, "\r\n\r\n", 2);
         fflush(stdout);
 
         mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
@@ -216,6 +216,7 @@ int mk_palm_send_response(struct client_request *cr, struct request *sr,
 {
         int len;
         int i;
+        long n;
         char *s;
         char *status_msg = "Status: ";
 
@@ -237,7 +238,7 @@ int mk_palm_send_response(struct client_request *cr, struct request *sr,
 
         mk_socket_set_cork_flag(cr->socket, TCP_CORK_ON);
         mk_header_send(cr->socket, cr, sr, sr->log);
-        write(cr->socket, buf+i, strlen(buf+i));
+        n = write(cr->socket, buf+i, strlen(buf+i));
         return 0;
 }
 
