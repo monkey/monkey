@@ -30,6 +30,7 @@
 #include <grp.h>
 
 #include "monkey.h"
+#include "user.h"
 #include "http.h"
 #include "http_status.h"
 #include "memory.h"
@@ -133,6 +134,8 @@ int mk_user_set_uidgid()
          exit(1);
       }
 
+      egid = geteuid();
+      euid = getegid();
    }
    return 0;
 }

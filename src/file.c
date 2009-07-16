@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2008, Eduardo Silva P.
+ *  Copyright (C) 2008-2009, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,13 +27,11 @@
 
 #include "monkey.h"
 #include "file.h"
+#include "user.h"
 #include "memory.h"
 
 struct file_info *mk_file_get_info(char *path)
 {
-	gid_t egid;
-	uid_t euid;
-
 	struct file_info *f_info;
 	struct stat f, target;
 
@@ -68,11 +66,6 @@ struct file_info *mk_file_get_info(char *path)
 	{
 		f_info->is_directory = MK_FILE_TRUE;
 	}
-
-	/* Getting current user euid/egid */
-        /* FIXME: This should be global */ 
-	euid = geteuid();
-	egid = getegid();
 
 	/* Checking read access */
         if( (target.st_mode & S_IRUSR && target.st_uid == euid) ||

@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2003, Eduardo Silva P.
+ *  Copyright (C) 2001-2009, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 #define MK_USER_H
 
 #include "request.h"
+
+gid_t egid;
+uid_t euid;
 
 /* user.c */
 int User_main(struct client_request *cr, struct request *sr);
