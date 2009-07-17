@@ -272,33 +272,3 @@ void mk_palm_set_env()
         mk_pointer_set(&mk_cgi_query_string, MK_CGI_QUERY_STRING);
         mk_pointer_set(&mk_cgi_post_vars, MK_CGI_POST_VARS);
 }
-
-/* Change dir work */
-int M_CGI_change_dir(char *script)
-{
-	int i, status;
-	char *aux=0;
-
-	if(CheckDir(script)==0){
-		return chdir(script);
-	}	
-	
-	for(i=strlen(script); i>0 ;i--){
-		if(script[i]=='/')
-			break;	
-	}
-
-	aux = mk_mem_malloc(i+2);
-	strncpy(aux,script,i+1);
-	aux[i+1]='\0';
-
-	if(CheckDir(aux)!=0){
-		mk_mem_free(aux);
-		return -1;
-	}
-
-	status = chdir(aux);
-	mk_mem_free(aux);
-	
-	return status;
-}
