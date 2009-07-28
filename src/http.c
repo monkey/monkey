@@ -319,7 +319,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 time_t date_file_server; // Date server file
         
                 date_client = PutDate_unix(sr->if_modified_since.data);
-                date_file_server = PutDate_unix(gmt_file_unix_time.data);
+                date_file_server = path_info->last_modification;
 
                 if( (date_file_server <= date_client) && (date_client > 0) )
                 {
@@ -531,7 +531,6 @@ int mk_http_range_parse(struct request *sr)
 int mk_http_pending_request(struct client_request *cr)
 {
         int n, method;
-        long len;
         char *str;
 
         n = mk_string_search(cr->body, mk_endblock.data);
@@ -552,8 +551,6 @@ int mk_http_pending_request(struct client_request *cr)
 
         if(method == HTTP_METHOD_POST)
         {
-                int post_end = 0;
-
                 if(cr->first_block_end > 0){
                         /* if first block has ended, we need to verify if exists 
                          * a previous block end, that will means that the POST 
