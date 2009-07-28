@@ -193,6 +193,7 @@ int mk_socket_server(int port)
 
         /* Create server socket */
         fd=socket(PF_INET,SOCK_STREAM,0);
+        mk_socket_set_tcp_nodelay(fd);
         mk_socket_set_nonblocking(fd);
 
 	local_sockaddr_in.sin_family=AF_INET;

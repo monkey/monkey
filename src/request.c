@@ -929,7 +929,7 @@ struct client_request *mk_request_client_create(int socket)
 struct client_request *mk_request_client_get(int socket)
 {
 	struct request_idx *request_index;
-        struct client_request *cr;
+        struct client_request *cr=NULL;
 
 	request_index = mk_sched_get_request_index();
 	cr = request_index->first;
