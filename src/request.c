@@ -64,14 +64,12 @@
 struct request *mk_request_parse(struct client_request *cr)
 {
 	int i, n, init_block=0, n_blocks=0;
-	int length_buf;
 	int pipelined=FALSE;
 	struct request *cr_buf=0, *cr_search=0;
 
-	length_buf = cr->body_length;
 	init_block = 0;
 
-	for(i=cr->first_block_end; i<=length_buf-mk_endblock.len; i++)
+	for(i=cr->first_block_end; i<=cr->body_length-mk_endblock.len; i++)
 	{
                 /* Allocating request block */
 		cr_buf = mk_request_alloc();
@@ -177,7 +175,6 @@ int mk_handler_read(int socket)
 
 	if(!cr)
 	{
-                
                 /* Note: Linux don't set TCP_NODELAY socket flag by default, 
                  * also we set the client socket on non-blocking mode
                  */
@@ -209,10 +206,8 @@ int mk_handler_read(int socket)
 		cr->body_length+=bytes;
                 cr->body[cr->body_length] = '\0';
 
-		efd = mk_sched_get_thread_poll();
-
-                if(mk_http_pending_request(cr)==0)
-                {
+                if(mk_http_pending_request(cr)==0){
+                        efd = mk_sched_get_thread_poll();
                         mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_WRITE);
                 }
                 else if(cr->body_length+1 >= MAX_REQUEST_BODY)

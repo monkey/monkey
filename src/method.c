@@ -49,13 +49,17 @@ long int mk_method_post_content_length(char *body)
         long int len;
         mk_pointer tmp;
 
+        /* obs: Table of Content (toc) is created when the full
+         * request has arrived, this function cannot be used from
+         * mk_http_pending_request().
+         */
         toc = pthread_getspecific(mk_cache_header_toc);
         tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, body,
                                      mk_rh_content_length);
 
         if(!tmp.data)
         {
-                return -2;
+                return -1;
         }
 	
         len = atoi(tmp.data);

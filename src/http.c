@@ -535,7 +535,7 @@ int mk_http_pending_request(struct client_request *cr)
         char *str;
 
         n = mk_string_search(cr->body, mk_endblock.data);
-
+        
         if(n<=0)
         {
                 return -1;
@@ -549,27 +549,26 @@ int mk_http_pending_request(struct client_request *cr)
         str = cr->body + n + mk_endblock.len;
 
         method = mk_http_method_get(cr->body);
+
         if(method == HTTP_METHOD_POST)
         {
-                /* At this point we should have the content-length
-                 * sent by the client
-                 */
-                len = mk_method_post_content_length(cr->body);
-        
-                if(len < 0)
-                {
-                        /* If we don't have it, there's an error which
-                         * will be handled by another functions, we 
-                         * just think that all data has arrived
+                int post_end = 0;
+
+                if(cr->first_block_end > 0){
+                        /* if first block has ended, we need to verify if exists 
+                         * a previous block end, that will means that the POST 
+                         * method has sent the whole information. 
+                         * just for ref: pipelining is not allowed with POST
                          */
-                        return 0;
-                }
-                else if(len >= strlen(str))
-                {
-                        return 0;
+                        if(cr->first_block_end ==  cr->body_length-mk_endblock.len){
+                                return -1;
+                        }
+                        else{
+                                return 0;
+                        }
                 }
                 else{
-                      return -1;
+                        return -1;
                 }
         }
 
