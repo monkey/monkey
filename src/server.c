@@ -78,26 +78,35 @@ void mk_server_loop(int server_fd)
         struct sockaddr_in sockaddr;
 	struct sched_list_node *sched = sched_list;
 	socklen_t socket_size = sizeof(struct sockaddr_in);
+        int efd, n_fds;
+        struct epoll_event events[1];
 
+        /* set non blocking server socket */
+        mk_socket_set_nonblocking(server_fd);
+
+        efd = mk_epoll_create(1);
+        mk_epoll_add_client(efd, server_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
+ 
 	while(1)
 	{
-		if((remote_fd=accept(server_fd, 
-                                     (struct sockaddr *)&sockaddr, 
-                                     &socket_size))==-1)
-		{
-                        continue;
-		}
+                n_fds = epoll_wait(efd, events, 1, -1);
+                if((events[0].events & EPOLLIN) && n_fds == 1){
+                        if((remote_fd=accept(server_fd, 
+                                             (struct sockaddr *)&sockaddr, 
+                                             &socket_size))==-1){
+                                continue;
+                        }
 
-		mk_epoll_add_client(sched->epoll_fd, remote_fd, 
+                        mk_epoll_add_client(sched->epoll_fd, remote_fd, 
                                     MK_EPOLL_BEHAVIOR_TRIGGERED);
 
-		if(sched->next)
-		{
-			sched = sched->next;
-		}
-		else{
-			sched = sched_list;
-		}
+                        if(sched->next){
+                                sched = sched->next;
+                        }
+                        else{
+                                sched = sched_list;
+                        }
+                }
 	}
 
 }
