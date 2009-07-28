@@ -30,20 +30,20 @@
  * to save some process time when building the response header.
  */
 
-#define MK_HR_HTTP_OK "HTTP/1.1 200 OK"
-#define MK_HR_HTTP_PARTIAL "HTTP/1.1 206 Partial Content"
-#define MK_HR_REDIR_MOVED "HTTP/1.1 301 Moved Permanently"
-#define MK_HR_REDIR_MOVED_T "HTTP/1.1 302 Found"
-#define MK_HR_NOT_MODIFIED "HTTP/1.1 304 Not Modified"
-#define MK_HR_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request"
-#define MK_HR_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden"
-#define MK_HR_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found"
-#define MK_HR_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed"
-#define MK_HR_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout"
-#define MK_HR_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required"
-#define MK_HR_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error"
-#define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented"
-#define MK_HR_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported"
+#define MK_HR_HTTP_OK "HTTP/1.1 200 OK" MK_CRLF
+#define MK_HR_HTTP_PARTIAL "HTTP/1.1 206 Partial Content" MK_CRLF
+#define MK_HR_REDIR_MOVED "HTTP/1.1 301 Moved Permanently" MK_CRLF
+#define MK_HR_REDIR_MOVED_T "HTTP/1.1 302 Found" MK_CRLF
+#define MK_HR_NOT_MODIFIED "HTTP/1.1 304 Not Modified" MK_CRLF
+#define MK_HR_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request" MK_CRLF
+#define MK_HR_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden" MK_CRLF
+#define MK_HR_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found" MK_CRLF
+#define MK_HR_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed" MK_CRLF
+#define MK_HR_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout" MK_CRLF
+#define MK_HR_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required" MK_CRLF
+#define MK_HR_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error" MK_CRLF
+#define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented" MK_CRLF
+#define MK_HR_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported" MK_CRLF
 
 /* mk pointer for header responses */
 mk_pointer mk_hr_http_ok;
@@ -74,8 +74,8 @@ mk_pointer mk_header_short_ct;
 /* Accept ranges */
 #define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes"
 
-#define MK_HEADER_CONN_KA "Connection: Keep-Alive" 
-#define MK_HEADER_CONN_CLOSE "Connection: Close"
+#define MK_HEADER_CONN_KA "Connection: Keep-Alive" MK_CRLF
+#define MK_HEADER_CONN_CLOSE "Connection: Close" MK_CRLF
 
 /* Transfer Encoding */
 #define MK_HEADER_TE_TYPE_CHUNKED 0
