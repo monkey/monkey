@@ -31,7 +31,7 @@
 
 struct mimetype {
 	char *name;
-	char *type;
+	mk_pointer type;
 	char *script_bin_path;
 	struct mimetype *next;	 
 } *first_mime;

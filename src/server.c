@@ -85,7 +85,6 @@ void mk_server_loop(int server_fd)
                                      (struct sockaddr *)&sockaddr, 
                                      &socket_size))==-1)
 		{
-                        perror("accept");
                         continue;
 		}
 

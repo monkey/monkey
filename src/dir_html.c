@@ -728,7 +728,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	sr->headers->status = M_HTTP_OK;
 	sr->headers->cgi = SH_CGI;
         sr->headers->breakline = MK_HEADER_BREAKLINE;
-        sr->headers->content_type = MK_DIRHTML_DEFAULT_MIME;
+        sr->headers->content_type = mk_dirhtml_default_mime;
 
 	if(sr->protocol==HTTP_PROTOCOL_11)
 	{

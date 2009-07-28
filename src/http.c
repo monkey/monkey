@@ -227,7 +227,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
                         sr->headers->status = M_REDIR_MOVED;
                         sr->headers->content_length = -1;
-                        sr->headers->content_type = NULL;
+                        mk_pointer_reset(&sr->headers->content_type);
                         sr->headers->location = real_location;
                         sr->headers->cgi = SH_NOCGI;
                         sr->headers->pconnections_left = 
@@ -358,7 +358,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }
         }
         else{ /* without content-type */
-                sr->headers->content_type = NULL;
+                mk_pointer_reset(&sr->headers->content_type);
         }
 
         mk_header_send(cr->socket, cr, sr, sr->log);
@@ -390,7 +390,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
 
         mk_mem_free(path_info);
-        sr->headers->content_type=NULL;
 
         return bytes;
 }

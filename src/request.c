@@ -726,13 +726,11 @@ void mk_request_error(int num_error, struct client_request *cr,
 	
 	if(!page.data)
 	{
-		s_request->headers->content_type = NULL;
+          mk_pointer_reset(&s_request->headers->content_type);
 	}
 	else
 	{
-		m_build_buffer(&s_request->headers->content_type,
-				&len,
-				"text/html");
+          mk_pointer_set(&s_request->headers->content_type, "text/html");
 	}
 
 	mk_header_send(cr->socket, cr, s_request, s_log);

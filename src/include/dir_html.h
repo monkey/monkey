@@ -60,6 +60,9 @@ struct dirhtml_config
         char *theme_path;
 };
 
+
+mk_pointer mk_dirhtml_default_mime;
+
 /* Global config */
 struct dirhtml_config *dirhtml_conf;
 

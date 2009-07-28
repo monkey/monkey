@@ -235,7 +235,7 @@ int mk_header_send(int fd, struct client_request *cr,
 	}
         
 	/* Content type */
-	if(sh->content_type)
+	if(sh->content_type.len>0)
 	{
 		mk_iov_add_entry(iov,
 				mk_header_short_ct.data,
@@ -243,8 +243,8 @@ int mk_header_send(int fd, struct client_request *cr,
 				mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
 
 		mk_iov_add_entry(iov,
-				sh->content_type,
-				strlen(sh->content_type),
+				sh->content_type.data,
+				sh->content_type.len,
 				mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
 	
@@ -402,7 +402,7 @@ struct header_values *mk_header_create()
 	headers->ranges[1]=-1;
 	headers->content_length = -1;
 	headers->transfer_encoding = -1;
-	headers->content_type = NULL;
+	mk_pointer_reset(&headers->content_type);
 	mk_pointer_reset(&headers->last_modified);
 	headers->location = NULL;
 

@@ -72,7 +72,7 @@ void mk_mimetype_read_config()
         /* Set default mime type */
         mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
         mimetype_default->name = MIMETYPE_DEFAULT_NAME;
-        mimetype_default->type = MIMETYPE_DEFAULT_TYPE;
+        mk_pointer_set(&mimetype_default->type, MIMETYPE_DEFAULT_TYPE);
         mimetype_default->script_bin_path = NULL;
         mimetype_default->next = NULL;
 }
@@ -85,7 +85,7 @@ int mk_mimetype_add(char *name, char *type, char *bin_path)
 	new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
 
 	new_mime->name = mk_string_dup(name);
-	new_mime->type = mk_string_dup(type);
+	mk_pointer_set(&new_mime->type, mk_string_dup(type));
 	new_mime->script_bin_path = mk_string_dup(bin_path);
 
 	new_mime->next=NULL;

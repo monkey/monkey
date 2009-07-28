@@ -33,6 +33,7 @@
 #include "http.h"
 #include "iov.h"
 #include "cgi.h"
+#include "dir_html.h"
 
 void *mk_mem_malloc(size_t size)
 {
@@ -227,4 +228,7 @@ void mk_mem_pointers_init()
         mk_pointer_set(&mk_http_protocol_10_p, HTTP_PROTOCOL_10_STR);
         mk_pointer_set(&mk_http_protocol_11_p, HTTP_PROTOCOL_11_STR);
         mk_pointer_reset(&mk_http_protocol_null_p);
+
+        /* Dir HTML */
+        mk_pointer_set(&mk_dirhtml_default_mime, MK_DIRHTML_DEFAULT_MIME);
 }

@@ -220,7 +220,7 @@ struct header_values {
 	int transfer_encoding;
         int breakline;
 
-	char *content_type;
+	mk_pointer content_type;
 	mk_pointer last_modified;
 	char *location;
 };
