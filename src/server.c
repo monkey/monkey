@@ -81,9 +81,6 @@ void mk_server_loop(int server_fd)
         int efd, n_fds;
         struct epoll_event events[1];
 
-        /* set non blocking server socket */
-        mk_socket_set_nonblocking(server_fd);
-
         efd = mk_epoll_create(1);
         mk_epoll_add_client(efd, server_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
  

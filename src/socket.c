@@ -208,7 +208,7 @@ int mk_socket_server(int port)
                 sizeof(struct sockaddr)) != 0)
         {
                 perror("bind");
-                puts("Error: Port cannot be used.");
+                printf("Error: Port %i cannot be used\n", port);
 		exit(1);
 	}		     
 	
