@@ -54,6 +54,19 @@
 #include "file.h"
 #include "iov.h"
 
+char *_tags_global[] = {\
+        "%_html_title_%",            \
+        "%_theme_path_%",            \
+        NULL};
+
+char *_tags_entry[] =\
+        {"%_target_title_%",               \
+         "%_target_url_%",                 \
+         "%_target_name_%",                \
+         "%_target_time_%",                \
+         "%_target_size_%",                \
+         NULL};
+
 /* DIR_HTML logic:
  * ---------------
  * [Monkey Start]

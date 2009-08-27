@@ -123,16 +123,5 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
 
 struct f_list *get_dir_content(struct request *sr, char *path);
 
-static const char *_tags_global[] = {\
-        "%_html_title_%",            \
-        "%_theme_path_%",            \
-        NULL};
 
-static const char *_tags_entry[] =\
-        {"%_target_title_%",               \
-         "%_target_url_%",                 \
-         "%_target_name_%",                \
-         "%_target_time_%",                \
-         "%_target_size_%",                \
-         NULL};
 #endif

@@ -621,7 +621,6 @@ mk_pointer mk_request_index(char *pathfile)
 void mk_request_error(int num_error, struct client_request *cr, 
                    struct request *s_request, int debug, struct log_info *s_log)
 {
-	unsigned long len;
 	char *aux_message=0;
 	mk_pointer message, page;
         long n;
