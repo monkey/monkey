@@ -81,6 +81,24 @@ void mk_server_loop(int server_fd)
         int efd, n_fds;
         struct epoll_event events[1];
 
+        while(1){
+                remote_fd = accept(server_fd, (struct sockaddr *)&sockaddr,
+                                   &socket_size);
+
+                if(remote_fd == -1){
+                        continue;
+                }
+                mk_epoll_add_client(sched->epoll_fd, remote_fd, 
+                                    MK_EPOLL_BEHAVIOR_TRIGGERED);
+
+                if(sched->next){
+                        sched = sched->next;
+                }
+                else{
+                        sched = sched_list;
+                }
+       }
+        /*
         efd = mk_epoll_create(1);
         mk_epoll_add_client(efd, server_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
  
@@ -105,5 +123,5 @@ void mk_server_loop(int server_fd)
                         }
                 }
 	}
-
+        */
 }
