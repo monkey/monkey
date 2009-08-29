@@ -78,7 +78,13 @@ struct request *mk_request_parse(struct client_request *cr)
 		cr_buf->body.data = cr->body+init_block;
 		cr_buf->body.len = i-init_block;
 
-		cr_buf->method = mk_http_method_get(cr_buf->body.data);
+                if(i==cr->first_block_end){
+                  cr_buf->method = cr->first_method;
+                }
+                else{
+                  cr_buf->method = mk_http_method_get(cr_buf->body.data);
+                }
+
 
 		cr_buf->log->ip = cr->ip;
 		cr_buf->next = NULL;
@@ -909,7 +915,7 @@ struct client_request *mk_request_client_create(int socket)
 	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
 	cr->body_length = 0;
         cr->first_block_end = -1;
-
+        cr->first_method = HTTP_METHOD_UNKNOWN;
 
         request_index = mk_sched_get_request_index();
 	if(!request_index->first)

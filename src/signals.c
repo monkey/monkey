@@ -62,6 +62,8 @@ switch( signo ) {
 		break;
  
 	case SIGPIPE:
+                printf("\n sigpipe");
+                fflush(stdout);
 		break;
    
 	case SIGSEGV: 

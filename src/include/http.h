@@ -21,6 +21,7 @@
 #define MK_HTTP_H
 
 /* Methods */
+#define HTTP_METHOD_UNKNOWN (-1)
 #define HTTP_METHOD_GET (0)
 #define HTTP_METHOD_POST (1)
 #define HTTP_METHOD_HEAD (2)

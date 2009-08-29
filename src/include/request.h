@@ -118,8 +118,6 @@ struct client_request
         int socket;
         int counter_connections; /* Count persistent connections */
         int status; /* Request status */
-        int pending_times;
-
         char *body; /* Original request sent */
 
         mk_pointer ip;
@@ -128,6 +126,8 @@ struct client_request
         int body_length;
         
         int first_block_end;
+        int first_method;
+
         time_t connection_timeout;
         struct request *request; /* Parsed request */
         struct client_request *next;

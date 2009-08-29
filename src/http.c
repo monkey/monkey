@@ -530,13 +530,13 @@ int mk_http_range_parse(struct request *sr)
  */
 int mk_http_pending_request(struct client_request *cr)
 {
-        int n, method;
+        int n;
         char *str;
 
         n = mk_string_search(cr->body, mk_endblock.data);
         
         if(n<=0)
-        {
+         {
                 return -1;
         }
         
@@ -547,9 +547,11 @@ int mk_http_pending_request(struct client_request *cr)
 
         str = cr->body + n + mk_endblock.len;
 
-        method = mk_http_method_get(cr->body);
+        if(cr->first_method == HTTP_METHOD_UNKNOWN){
+                cr->first_method = mk_http_method_get(cr->body);
+        }
 
-        if(method == HTTP_METHOD_POST)
+        if(cr->first_method == HTTP_METHOD_POST)
         {
                 if(cr->first_block_end > 0){
                         /* if first block has ended, we need to verify if exists 

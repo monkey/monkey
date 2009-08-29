@@ -39,7 +39,7 @@
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
-	return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
+      	return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
 }
 
 int mk_socket_set_nonblocking(int sockfd)
@@ -145,7 +145,7 @@ int mk_socket_connect(int sockfd, char *server, int port)
         int res;
         struct sockaddr_in *remote;
 
-        remote = (struct sockaddr_in *)
+        remote = (struct sockaddr_in *) 
                 mk_mem_malloc_z(sizeof(struct sockaddr_in));
         remote->sin_family = AF_INET;
         res = inet_pton(AF_INET, server, (void *)(&(remote->sin_addr.s_addr)));
@@ -193,8 +193,8 @@ int mk_socket_server(int port)
 
         /* Create server socket */
         fd=socket(PF_INET,SOCK_STREAM,0);
-        //mk_socket_set_tcp_nodelay(fd);
-                mk_socket_set_nonblocking(fd);
+        mk_socket_set_tcp_nodelay(fd);
+        //mk_socket_set_nonblocking(fd);
 
 	local_sockaddr_in.sin_family=AF_INET;
 	local_sockaddr_in.sin_port=htons(port);

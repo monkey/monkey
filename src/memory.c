@@ -37,9 +37,10 @@
 
 void *mk_mem_malloc(size_t size)
 {
-	char *aux=0;
+	void *aux=0;
 
-	if((aux=malloc(size))==NULL){
+        //if((aux=memalign(getpagesize(), size))==NULL){
+        if((aux=malloc(size))==NULL){
 		perror("malloc");
 		return NULL;						
 	}

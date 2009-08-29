@@ -52,7 +52,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                       mk_pointer sep, int free)
 {
-	mk_io->io[mk_io->iov_idx].iov_base = buf;
+	mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
 	mk_io->io[mk_io->iov_idx].iov_len = len;
 	mk_io->iov_idx++;
         mk_io->total_len += len;
@@ -118,12 +118,17 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
                  * maybe we need to fix something here, at the moment
                  * we will keep using writev to push the iovec struct to the pipe
                  *
-                 * n = vmsplice(fd, (const struct iovec *) mk_io->io, mk_io->iov_idx, 
-                 *             SPLICE_F_GIFT);
-                 *
+                 * n = vmsplice(fd, 
+                 *            (const struct iovec *) mk_io->io, 
+                 *             mk_io->iov_idx, 
+                 *             //SPLICE_F_GIFT);
+                 *             0);
                  * if(n<0){
-                 *    perror("vmsplice");
+                 *   perror("vmsplice");
                  * }
+                 *
+                 *  mk_iov_free(mk_io);
+                 * return n;
                  */
                 n = writev(fd, mk_io->io, mk_io->iov_idx);
                 
