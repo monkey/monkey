@@ -156,8 +156,7 @@ void *mk_logger_worker_init(void *args)
                 struct epoll_event events[max_events];
                 int num_fds = epoll_wait(efd, events, max_events, -1);
 
-                clk = time(NULL);
-
+                clk = log_current_utime;
                 if(!h)
                 {
                         h = config->hosts;
