@@ -1,5 +1,4 @@
-
- /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 
 /*  Monkey HTTP Daemon
  *  ------------------
@@ -532,20 +531,20 @@ int mk_request_header_process(struct request *sr)
 	sr->if_modified_since = mk_request_header_find(toc, toc_len, headers, 
                                                      mk_rh_if_modified_since);
 
-	/* Checking keepalive */
-	sr->keep_alive=VAR_OFF;
-	if(sr->connection.data)
-	{
-		if(sr->protocol==HTTP_PROTOCOL_11 || 
-				sr->protocol==HTTP_PROTOCOL_10)
-		{
-			if(mk_string_casestr(sr->connection.data,"Keep-Alive"))
-			{
-				sr->keep_alive=VAR_ON;
-			}
-		}
-	}
-
+	/* Default Keepalive is off */
+	sr->keep_alive = VAR_OFF;
+        if(sr->connection.data){
+                if(mk_string_casestr(sr->connection.data, "Keep-Alive")){
+                        sr->keep_alive = VAR_ON;
+                }
+        }
+        else{
+                /* Default value for HTTP/1.1 */
+                if(sr->protocol==HTTP_PROTOCOL_11){
+                        /* Assume keep-alive connection */
+                        sr->keep_alive = VAR_ON;
+                }
+        }
         sr->log->final_response = M_HTTP_OK;
 
         /*
