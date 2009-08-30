@@ -77,9 +77,7 @@ int mk_conn_switch_write(int socket)
                         return -1;
 		}
 		else{
-			memset(cr->body, '\0', sizeof(cr->body));
-			cr->body_length = 0;
-			cr->counter_connections++;
+                        mk_request_ka_next(cr);
 			efd = mk_sched_get_thread_poll();
 			mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_READ);
 			return 0;

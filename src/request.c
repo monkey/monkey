@@ -78,14 +78,13 @@ struct request *mk_request_parse(struct client_request *cr)
 		cr_buf->body.len = i-init_block;
 
                 if(i==cr->first_block_end){
-                  cr_buf->method = cr->first_method;
+                        cr_buf->method = cr->first_method;
                 }
                 else{
-                  cr_buf->method = mk_http_method_get(cr_buf->body.data);
+                        cr_buf->method = mk_http_method_get(cr_buf->body.data);
                 }
 
-
-		cr_buf->log->ip = cr->ip;
+                cr_buf->log->ip = cr->ip;
 		cr_buf->next = NULL;
 
 		i = init_block = i + mk_endblock.len;
@@ -1032,4 +1031,13 @@ void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
                         break;
                 }
         }
+}
+
+void mk_request_ka_next(struct client_request *cr)
+{
+        bzero(cr->body, sizeof(cr->body));
+        cr->first_method = -1;
+        cr->first_block_end = -1;
+        cr->body_length = 0;
+        cr->counter_connections++;
 }

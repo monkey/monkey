@@ -262,4 +262,5 @@ int mk_handler_write(int socket, struct client_request *cr);
 struct header_toc *mk_request_header_toc_create(int len);
 void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len);
 
+void mk_request_ka_next(struct client_request *cr);
 #endif

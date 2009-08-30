@@ -536,10 +536,10 @@ int mk_http_pending_request(struct client_request *cr)
         n = mk_string_search(cr->body, mk_endblock.data);
         
         if(n<=0)
-         {
+        {
                 return -1;
         }
-        
+
         if(cr->first_block_end<0)
         {
                 cr->first_block_end = n;
