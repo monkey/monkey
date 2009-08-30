@@ -373,12 +373,15 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 	s_request->log->host_conf = s_request->host_conf;
 
 	/* is requesting an user home directory ? */
-	if(strncmp(s_request->uri_processed, USER_HOME_STRING, 
-                   strlen(USER_HOME_STRING))==0 && config->user_dir)
-        {
-		if(User_main(cr, s_request)!=0)
-			return EXIT_NORMAL;
-	}
+        if(config->user_dir){
+                if(strncmp(s_request->uri_processed, 
+                           mk_user_home.data,
+                           mk_user_home.len)==0){
+                        if(mk_user_init(cr, s_request)!=0){
+                                return EXIT_NORMAL;
+                        }
+                }
+        }
  
 	/* Handling method requested */
 	if(s_request->method==HTTP_METHOD_POST)

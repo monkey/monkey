@@ -22,12 +22,16 @@
 
 #include "request.h"
 
+/* User home string */
+#define MK_USER_HOME "/~"
+
+mk_pointer mk_user_home;
+
 gid_t egid;
 uid_t euid;
 
 /* user.c */
-int User_main(struct client_request *cr, struct request *sr);
-
+int mk_user_init(struct client_request *cr, struct request *sr);
 int mk_user_set_uidgid();
 int mk_user_undo_uidgid();
 

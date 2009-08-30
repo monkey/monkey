@@ -31,10 +31,6 @@ int server_fd;
 /* Max Path lenth */
 #define MAX_PATH 1024 
 
-/* String que define la llamada a 
-un home de un usuario */
-#define USER_HOME_STRING "/~"
-
 /* Send_Header(...,int cgi) */
 #define SH_NOCGI 0
 #define SH_CGI 1

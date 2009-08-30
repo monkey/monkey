@@ -38,9 +38,10 @@
 #include "utils.h"
 #include "config.h"
 
-int User_main(struct client_request *cr, struct request *sr)
+int mk_user_init(struct client_request *cr, struct request *sr)
 {
-        int limit, offset;
+        int limit;
+        int offset = mk_user_home.len;
         char *user=0, *user_server_root=0;
 	struct passwd *s_user;
 	unsigned long len;
@@ -48,7 +49,6 @@ int User_main(struct client_request *cr, struct request *sr)
 	sr->user_home=VAR_ON;
 
 	user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
-	offset=strlen(USER_HOME_STRING);	
 	limit=mk_string_search(sr->uri_processed+offset, "/");
 
 	if(limit==-1)
