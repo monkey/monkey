@@ -428,7 +428,7 @@ int mk_request_header_process(struct request *sr)
         }
 
         prot_init = uri_end + 2;
-        
+
 	if(uri_end < uri_init)
 	{
 		return -1;

@@ -385,7 +385,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                         sr, 1, sr->log);
                         return -1;
                 }
-                mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+              
                 bytes = SendFile(cr->socket, sr);
         }
 

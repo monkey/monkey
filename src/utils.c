@@ -60,6 +60,10 @@ int SendFile(int socket, struct request *sr)
 	nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
 			sr->bytes_to_send);
 
+        if(sr->bytes_offset == nbytes){
+                mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
+        }
+
 	if (nbytes == -1) {
 		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
 		return -1;
