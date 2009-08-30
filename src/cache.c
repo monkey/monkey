@@ -42,7 +42,7 @@ void mk_cache_thread_init()
         pthread_setspecific(request_index, (void *) cache_request_idx);
 
         /* Cache iov log struct */
-        cache_iov_log = mk_iov_create(25, 0);
+        cache_iov_log = mk_iov_create(15, 0);
         pthread_setspecific(mk_cache_iov_log, (void *) cache_iov_log);
 
         /* Cache iov header struct */

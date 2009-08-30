@@ -749,8 +749,8 @@ void mk_request_set_default_page(mk_pointer *page, char *title,
 	
 	temp = mk_pointer_to_buf(message);
 	m_build_buffer(&page->data, &page->len, 
-			"<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>",
-			title, temp, signature);
+                       MK_REQUEST_DEFAULT_PAGE,
+                       title, temp, signature);
 	mk_mem_free(temp);
 }
 
@@ -818,7 +818,7 @@ struct request *mk_request_alloc()
 void mk_request_free_list(struct client_request *cr)
 {
     struct request *sr=0, *before=0;
-
+    
     /* sr = last node */
 
     while(cr->request)

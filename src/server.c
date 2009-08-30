@@ -78,8 +78,6 @@ void mk_server_loop(int server_fd)
         struct sockaddr_in sockaddr;
 	struct sched_list_node *sched = sched_list;
 	socklen_t socket_size = sizeof(struct sockaddr_in);
-        int efd, n_fds;
-        struct epoll_event events[1];
 
         while(1){
                 remote_fd = accept(server_fd, (struct sockaddr *)&sockaddr,

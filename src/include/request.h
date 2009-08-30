@@ -26,6 +26,8 @@
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
 
+#define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
+
 /* Handle index file names: index.* */
 #define MAX_INDEX_NOMBRE 50
 struct indexfile {
@@ -224,6 +226,7 @@ struct header_values {
 	mk_pointer last_modified;
 	char *location;
 };
+
 
 struct request *mk_request_parse(struct client_request *cr);
 int mk_request_process(struct client_request *cr, struct request *s_request);
