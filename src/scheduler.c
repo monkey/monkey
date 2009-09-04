@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -26,6 +28,7 @@
 
 #include "monkey.h"
 #include "conn_switch.h"
+#include "signal.h"
 #include "scheduler.h"
 #include "memory.h"
 #include "epoll.h"
@@ -61,7 +64,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 }
 
 /*
- * Launch a thread which will be listening 
+ * Create thread which will be listening 
  * for incomings file descriptors
  */
 int mk_sched_launch_thread(int max_events)
@@ -69,7 +72,7 @@ int mk_sched_launch_thread(int max_events)
 	int efd;
 	pthread_t tid;
 	pthread_attr_t attr;
-	sched_thread_conf *thconf;
+        sched_thread_conf *thconf;
 	pthread_mutex_t mutex_wait_register;
 
 	/* Creating epoll file descriptor */
@@ -102,10 +105,14 @@ int mk_sched_launch_thread(int max_events)
 	return 0;
 }
 
+/* created thread, all this calls are in the thread context */
 void *mk_sched_launch_epoll_loop(void *thread_conf)
 {
 	sched_thread_conf *thconf;
-     
+
+        /* Avoid SIGPIPE signals */
+        mk_signal_thread_sigpipe_safe();
+
 	thconf = thread_conf;
 
         /* Init specific thread cache */
@@ -142,3 +149,20 @@ int mk_sched_get_thread_poll()
 	return (int) pthread_getspecific(epoll_fd);
 }
 
+struct sched_list_node *mk_sched_get_thread_conf()
+{
+        struct sched_list_node *node;
+        pthread_t current;
+
+        current = pthread_self();
+        node = sched_list;
+        while(node){
+                if(pthread_equal(node->tid, current) != 0){
+                        return node;
+                }
+                node = node->next;
+        }
+
+        return NULL;
+
+}

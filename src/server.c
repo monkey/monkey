@@ -31,6 +31,7 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "socket.h"
+#include "cheetah.h"
 
 /* Return the number of clients that can be attended 
  * at the same time per worker thread
@@ -96,30 +97,4 @@ void mk_server_loop(int server_fd)
                         sched = sched_list;
                 }
        }
-        /*
-        efd = mk_epoll_create(1);
-        mk_epoll_add_client(efd, server_fd, MK_EPOLL_BEHAVIOR_TRIGGERED);
- 
-	while(1)
-	{
-                n_fds = epoll_wait(efd, events, 1, -1);
-                if((events[0].events & EPOLLIN) && n_fds == 1){
-                        if((remote_fd=accept(server_fd, 
-                                             (struct sockaddr *)&sockaddr, 
-                                             &socket_size))==-1){
-                                continue;
-                        }
-
-                        mk_epoll_add_client(sched->epoll_fd, remote_fd, 
-                                    MK_EPOLL_BEHAVIOR_TRIGGERED);
-
-                        if(sched->next){
-                                sched = sched->next;
-                        }
-                        else{
-                                sched = sched_list;
-                        }
-                }
-	}
-        */
 }

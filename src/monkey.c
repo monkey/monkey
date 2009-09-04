@@ -50,6 +50,10 @@
 #include "worker.h"
 #include "server.h"
 
+#ifdef CHEETAH
+#include "cheetah.h"
+#endif
+
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 #else
@@ -81,6 +85,7 @@ void mk_help()
 	printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
 	printf("  -c directory\tspecify directory from configuration files\n");
 	printf("  -D\t\trun Monkey as daemon\n");
+        printf("  -S\t\tLaunch Cheetah Shell!\n");
 	printf("  -v\t\tshow version number\n");
 	printf("  -h\t\tthis help\n\n");
 	exit(0);
@@ -101,13 +106,14 @@ void set_benchmark_conf()
 int main(int argc, char **argv)
 {
 	int opt, benchmark_mode=FALSE;
-	char daemon = 0;
+	int cheetah = 0;
+        int daemon = 0;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
 	config->file_config=0;
 			
 	opterr = 0;
-	while ((opt = getopt(argc, argv, "bDvhc:")) != -1)
+	while ((opt = getopt(argc, argv, "bDSvhc:")) != -1)
 	{
 		switch (opt) {
 			case 'v': 
@@ -120,6 +126,9 @@ int main(int argc, char **argv)
 			case 'D':
 				daemon = 1;
 				break;
+                        case 'S':
+                                cheetah = 1;
+                                break;
 			case 'c':
 				if (strlen(optarg) != 0) {
 					config->file_config=optarg;
@@ -135,6 +144,11 @@ int main(int argc, char **argv)
 		}
 	}   
 
+        if(cheetah && daemon){
+                printf("Monkey: cannot run Cheetah Shell with Monkey in Daemon mode\n");
+                return -1;
+        }
+
 	if(!config->file_config)
 		config->file_config=MONKEY_PATH_CONF;
 		
@@ -142,6 +156,7 @@ int main(int argc, char **argv)
 	mk_signal_init();
 	mk_config_start_configure();
 
+        mk_init_time = time(NULL);
         server_fd = mk_socket_server(config->serverport);
 
 	/* 
@@ -190,6 +205,13 @@ int main(int argc, char **argv)
 
         /* Print server details */
         mk_details();
+
+        /* Cheetah Shell */
+#ifdef CHEETAH
+        if(cheetah){
+                mk_worker_spawn((void *)mk_cheetah_init);
+        }
+#endif
 
         /* Server loop, let's listen for incomming clients */
         mk_server_loop(server_fd);

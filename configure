@@ -52,60 +52,6 @@ messages_en()
 	esac
 }
 
-messages_es()
-{
-	case "$*" in
-		"1")
-			echo "+ Creando conf/monkey.conf"
-		;;
-		"2")
-			echo "+ Creando Makefile"
-		;;
-		"3")
-			echo "+ Creando src/Makefile"
-		;;
-		"4")
-			echo "+ Creando src/include/info.h"
-		;;
-		"5")
-			echo "+ Creando banana script"
-		;;
-		"6")
-			echo -n "Configuracion completa, tipee 'make"
-		;;
-		"7")
-			echo -n "+ Checkeando Pthreads lib.........."
-		;;
-	esac
-}
-
-messages_fr()
-{
-	case "$*" in
-		"1")
-			echo "+ Creating conf/monkey.conf"
-		;;
-		"2")
-			echo "+ Creating Makefile"
-		;;
-		"3")
-			echo "+ Creating src/Makefile"
-		;;
-		"4")
-			echo "+ Creating src/include/info.h"
-		;;
-		"5")
-			echo "+ Creating banana script"
-		;;
-		"6")
-			echo -n "Configuration done, just type 'make"
-		;;
-		"7")
-			echo -n "+ Checking for Pthreads lib.........."
-		;;
-	esac
-}
-
 make_conf()
 {
 cat $INCDIR/config.path lang/"$*"/mconf lang/"$*"/sites/default > makeconf.sh
@@ -145,7 +91,12 @@ main()
 	actual_path=`pwd`
 	rm -rf src/extras/inf/*
 	
-# Checking loaded modules 
+        if [ "$cheetah" = "on" ]; then
+            cheetah_obj="cheetah.o"
+            internal_options="-DCHEETAH"
+        fi
+
+        # Checking loaded modules 
 	if [ "$modules" = "on" ]; then
 		add_obj_mod="modules.o"
 		echo "Modules loaded :"
@@ -225,7 +176,7 @@ EOF
 	fi
 
 	messages_$lang "3"
-	create_makefile2 mod_libs mod_defs mod_obj make_script add_obj_mod
+	create_makefile2 mod_libs mod_defs mod_obj make_script add_obj_mod cheetah_obj
 
 	messages_$lang "4"
 	create_info sysconfdir SYSNAME VERSION
@@ -340,10 +291,6 @@ EOF
 create_makefile2()
 {
 
-if [ $SYSNAME = "SunOS" ]; then
-	MORE_LIBS="-lsocket"
-fi
-
 if test -z $CC ; then
 	CC="gcc"
 fi
@@ -371,7 +318,7 @@ OBJ	= monkey.o method.o mimetype.o request.o \\
 	dir_html.o deny.o cgi.o user.o utils.o \\
 	chars.o epoll.o scheduler.o str.o memory.o \\
 	conn_switch.o iov.o http.o file.o socket.o \\
-	clock.o cache.o worker.o server.o $add_obj_mod
+	clock.o cache.o worker.o server.o $add_obj_mod $cheetah_obj
 
 all: modules ../bin/monkey
 
@@ -578,10 +525,13 @@ for arg in $*; do
 			modules="on"
 			mod_mysql="on"
 			;;
+                --with-cheetah-shell*)
+                        cheetah="on"
+                        ;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
-			echo "Copyright 2001-2002"
+			echo "Copyright 2001-2009"
 			echo "Developed by Eduardo Silva"
 			echo "Monkey Home   : http://monkeyd.sf.net"
 			echo "Contact Email : edsiper@users.sf.net"
@@ -605,11 +555,12 @@ for arg in $*; do
 			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
 			echo "  --lang=[en|es]	Language to configuration files (default English)"
 			echo 
-			echo "Modules :"
+			echo "Extra features :"
 			echo "  All modules are optional features, neither of them are loaded by default,"
 			echo "  the available modules are:"
 			echo
 			echo "  --load-mod_mysql	Load MySQL Support (read MODULES file for details)." 
+			echo "  --with-cheetah-shell	Include Cheetah Shell!!!"
 			echo
 			exit 1
 			;;
@@ -635,8 +586,6 @@ if [ -z "$lang" ]; then
 	echo 
 	echo "+ Choose configure language: "
 	echo " -> [en] English"
-	echo " -> [es] Spanish"
-	echo " -> [fr] French"
 	echo 
 	echo -n " -> Option (default English) : "
 	lang="en"
@@ -647,7 +596,7 @@ if [ -z "$lang" ]; then
 		lang="en"
 	fi
 
-	if [ $lang != "es" ] && [ $lang != "en" ] && [ $lang != "fr" ]; then
+	if [ $lang != "en" ]; then
 		echo " -> Error: Language not available"
 		exit 1
 	fi
@@ -655,5 +604,5 @@ if [ -z "$lang" ]; then
 fi
 
 # starting main function 
-main prefix lang bindir cgibin sysconfdir datadir logdir modules mod_mysql SYSNAME VERSION
+main prefix lang bindir cgibin sysconfdir datadir logdir modules mod_mysql cheetah SYSNAME VERSION
 exit 0

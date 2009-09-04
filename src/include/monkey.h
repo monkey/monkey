@@ -54,6 +54,9 @@ pthread_mutex_t  mutex_wait_register;
 mk_pointer mk_monkey_protocol;
 mk_pointer mk_monkey_port;
 
+/* Monkey init time */
+time_t mk_init_time;
+
 /* Usuario real que que ejecuto
  el servidor */
 gid_t EGID;

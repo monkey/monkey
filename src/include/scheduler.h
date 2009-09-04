@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -20,16 +22,20 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
+/* Global struct */
 struct sched_list_node{
 	short int idx;
 	pthread_t tid;
 	int epoll_fd;
+        int active_connections;
+        int closed_connections;
 	struct client_request *request_handler;
 	struct sched_list_node *next;
 };
 
 struct sched_list_node *sched_list;
 
+/* Struct under thread context */
 typedef struct {
 	int epoll_fd;
 	int max_events;
@@ -47,5 +53,6 @@ void mk_sched_set_request_index(struct request_idx *ri);
 int mk_sched_get_thread_poll();
 void mk_sched_set_thread_poll(int epoll);
 
-#endif
+struct sched_list_node *mk_sched_get_thread_conf();
 
+#endif

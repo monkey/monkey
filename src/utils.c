@@ -60,7 +60,7 @@ int SendFile(int socket, struct request *sr)
 	nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
 			sr->bytes_to_send);
 
-        if(sr->bytes_offset == nbytes){
+        if(nbytes > 0 && sr->bytes_offset == sr->bytes_to_send){
                 mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
         }
 

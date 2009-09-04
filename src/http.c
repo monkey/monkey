@@ -560,7 +560,13 @@ int mk_http_pending_request(struct client_request *cr)
                          * just for ref: pipelining is not allowed with POST
                          */
                         if(cr->first_block_end ==  cr->body_length-mk_endblock.len){
-                                return -1;
+                                /* Content-length is required, if is it not found, 
+                                 * we pass as successfull in order to raise the error
+                                 * later
+                                 */
+                                if(mk_method_post_content_length(cr->body) < 0){
+                                        return 0;
+                                }
                         }
                         else{
                                 return 0;

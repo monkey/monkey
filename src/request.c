@@ -59,6 +59,7 @@
 #include "socket.h"
 #include "cache.h"
 #include "clock.h"
+#include "scheduler.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -899,6 +900,7 @@ struct client_request *mk_request_client_create(int socket)
 {
         struct request_idx *request_index;
 	struct client_request *cr;
+        struct sched_list_node *thread_node;
 
 	cr = mk_mem_malloc(sizeof(struct client_request));
 
@@ -922,12 +924,16 @@ struct client_request *mk_request_client_create(int socket)
 	if(!request_index->first)
 	{
 		request_index->first = request_index->last = cr;
-                mk_sched_set_request_index(request_index);
 	}
 	else{
                 request_index->last->next = cr;
                 request_index->last = cr;
 	}
+        mk_sched_set_request_index(request_index);
+
+        thread_node = mk_sched_get_thread_conf();
+        thread_node->active_connections++;
+        //        mk_sched_set_thread_conf(thconf);
 
         return (struct client_request *) cr;
 }
@@ -959,6 +965,7 @@ struct client_request *mk_request_client_remove(int socket)
 {
 	struct request_idx *request_index;
         struct client_request *cr, *aux;
+        struct sched_list_node *thread_node;
 
 	request_index = mk_sched_get_request_index();
 	cr = request_index->first;
@@ -992,6 +999,10 @@ struct client_request *mk_request_client_remove(int socket)
         mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
+
+        thread_node = mk_sched_get_thread_conf();
+        thread_node->active_connections--;
+        thread_node->closed_connections++;
 
 	return NULL;
 }

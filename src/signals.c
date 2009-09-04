@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2003, Eduardo Silva P.
@@ -78,14 +80,14 @@ switch( signo ) {
                 break;
 	}
 
-	pthread_exit(NULL);
+        pthread_exit(NULL);
 }
 
 void mk_signal_init()
 {
 	signal(SIGHUP , (void *) mk_signal_handler);
 	signal(SIGINT , (void *) mk_signal_handler);
-	signal(SIGPIPE, (void *) mk_signal_handler);
+        signal(SIGPIPE, (void *) mk_signal_handler);
 	signal(SIGBUS,  (void *) mk_signal_handler);
 	signal(SIGSEGV, (void *) mk_signal_handler);
 	signal(SIGTERM, (void *) mk_signal_handler);
@@ -103,3 +105,11 @@ void mk_signal_term()
 	signal(SIGUSR2, (void *) SIG_DFL);
 }
 
+void mk_signal_thread_sigpipe_safe()
+{
+        sigset_t set, old;
+
+        sigemptyset(&set);
+        sigaddset(&set, SIGPIPE);
+        pthread_sigmask(SIG_BLOCK, &set, &old);
+}
