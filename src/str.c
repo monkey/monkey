@@ -173,7 +173,7 @@ char *mk_string_casestr(char *heystack, char *needle)
 		return NULL;
 	}
 
-	return strstr(heystack, needle);
+	return strcasestr(heystack, needle);
 }
 
 char *mk_string_dup(const char *s)
