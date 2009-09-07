@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/epoll.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 #include <string.h>
 
 #include "monkey.h"
@@ -42,6 +44,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 
 	sr = mk_mem_malloc_z(sizeof(struct sched_list_node)); 
 	sr->tid = tid;
+        sr->pid = -1;
 	sr->epoll_fd = efd;
 	sr->request_handler = NULL;
 	sr->next = NULL;
@@ -109,6 +112,7 @@ int mk_sched_launch_thread(int max_events)
 void *mk_sched_launch_epoll_loop(void *thread_conf)
 {
 	sched_thread_conf *thconf;
+        struct sched_list_node *thinfo;
 
         /* Avoid SIGPIPE signals */
         mk_signal_thread_sigpipe_safe();
@@ -122,6 +126,16 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	callers = mk_epoll_set_callers((void *)mk_conn_switch,
 			MK_CONN_SWITCH_READ, 
 			MK_CONN_SWITCH_WRITE);
+        
+        /* Nasty way to export task id */
+        usleep(1000);
+        thinfo = mk_sched_get_thread_conf();
+        while(!thinfo){
+                thinfo = mk_sched_get_thread_conf();
+        }
+        
+        /* Glibc doesn't export to user space the gettid() syscall */
+        thinfo->pid = syscall(__NR_gettid);
 
 	mk_sched_set_thread_poll(thconf->epoll_fd);
 	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);

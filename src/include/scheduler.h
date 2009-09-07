@@ -26,6 +26,7 @@
 struct sched_list_node{
 	short int idx;
 	pthread_t tid;
+        pid_t pid;
 	int epoll_fd;
         int active_connections;
         int closed_connections;
