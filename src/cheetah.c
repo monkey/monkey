@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <time.h>
 
 #include "monkey.h"
@@ -55,6 +56,27 @@
 #define MK_CHEETAH_ONEDAY  86400
 #define MK_CHEETAH_ONEHOUR  3600
 #define MK_CHEETAH_ONEMINUTE  60
+
+void mk_cheetah_print_running_user()
+{
+        struct passwd pwd;
+        struct passwd *result;
+        char *buf;
+        size_t bufsize;
+        uid_t uid;
+
+        bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+        if (bufsize == -1){
+                bufsize = 16384;
+        }
+        
+        buf = mk_mem_malloc(bufsize);
+        uid = getuid();
+        getpwuid_r(uid, &pwd, buf, bufsize, &result);
+
+        printf("%s\n", pwd.pw_name);
+        mk_mem_free(buf);
+}
 
 void mk_cheetah_cmd_uptime()
 {
@@ -159,7 +181,10 @@ void mk_cheetah_cmd(char *cmd)
                 printf("\nMonkey Version     : %s\n", VERSION);
                 printf("Configutarion path : %s\n", config->serverconf);
                 printf("Process ID         : %i\n", getpid());
-                printf("Process User       : %i\n", getuid());
+
+                printf("Process User       : ");
+                mk_cheetah_print_running_user();
+
                 printf("Server Port        : %i\n", config->serverport);
                 printf("Worker Threads     : %i (per configuration: %i)\n", 
                        nthreads, 
