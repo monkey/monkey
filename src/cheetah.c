@@ -136,6 +136,7 @@ void mk_cheetah_cmd_workers()
 
         while(sl){
                 printf("* Worker %i\n", sl->idx);
+                printf("      - Task ID            : %i\n", sl->pid);
                 printf("      - Memory usage       : comming soon...\n");
                 printf("      - Active Connections : %i\n", 
                        sl->active_connections);
