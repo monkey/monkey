@@ -52,10 +52,51 @@
 #define MK_CHEETAH_QUIT_SC "\\q"
 
 #define MK_CHEETAH_PROMPT "cheetah> "
-
+#define MK_CHEETAH_PROC_TASK "/proc/%i/task/%i/stat"
 #define MK_CHEETAH_ONEDAY  86400
 #define MK_CHEETAH_ONEHOUR  3600
 #define MK_CHEETAH_ONEMINUTE  60
+
+void mk_cheetah_print_worker_memory_usage(pid_t pid)
+{
+        int last, init, n, c = 0;
+        char *buf;
+        char *value;
+        pid_t ppid;
+        FILE *f;
+        
+        ppid = getpid();
+        buf = mk_mem_malloc_z(1024);
+        sprintf(buf, MK_CHEETAH_PROC_TASK, ppid, pid);
+
+        f = fopen(buf, "r");
+        if(!f){
+                printf("Cannot get details\n");
+                return;
+        }
+
+        buf = fgets(buf, 1024, f);
+        if(!buf){
+                printf("Cannot format details\n");
+                return;
+        }
+        fclose(f);
+
+        last = 0;
+        init = 0;
+        while((n = mk_string_search(buf+last, " ")) > 0){
+                if(c == 23){
+                        value = mk_string_copy_substr(buf, init, last+n);
+                        printf("%s\n", value);
+                        mk_mem_free(buf);
+                        mk_mem_free(value);
+                        return;
+                }
+                init = last+n+1;
+                last += n +1;
+                c++;
+        }
+}
 
 void mk_cheetah_print_running_user()
 {
@@ -137,7 +178,11 @@ void mk_cheetah_cmd_workers()
         while(sl){
                 printf("* Worker %i\n", sl->idx);
                 printf("      - Task ID            : %i\n", sl->pid);
-                printf("      - Memory usage       : comming soon...\n");
+
+                /* Memory Usage */
+                printf("      - Memory usage       : ");                
+                mk_cheetah_print_worker_memory_usage(sl->pid);
+
                 printf("      - Active Connections : %i\n", 
                        sl->active_connections);
                 printf("      - Closed Connections : %i\n",

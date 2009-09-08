@@ -29,7 +29,6 @@
 #include "utils.h"
 #include "memory.h"
 
-
 #include <stdio.h>
 
 /* Return a buffer with a new string from string */
