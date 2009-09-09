@@ -22,14 +22,22 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
+#define MK_SCHEDULER_ACTIVE_NONE 0
+#define MK_SCHEDULER_ACTIVE_UP 1
+#define MK_SCHEDULER_ACTIVE_DOWN -1
+
+#define MK_SCHEDULER_CLOSED_NONE 0
+#define MK_SCHEDULER_CLOSED_UP 1
+#define MK_SCHEDULER_CLOSED_DOWN -1
+
 /* Global struct */
 struct sched_list_node{
 	short int idx;
 	pthread_t tid;
         pid_t pid;
 	int epoll_fd;
-        int active_connections;
-        int closed_connections;
+        int active_requests;
+        int closed_requests;
 	struct client_request *request_handler;
 	struct sched_list_node *next;
 };
@@ -55,5 +63,6 @@ int mk_sched_get_thread_poll();
 void mk_sched_set_thread_poll(int epoll);
 
 struct sched_list_node *mk_sched_get_thread_conf();
+void mk_sched_update_thread_status(int active, int closed);
 
 #endif

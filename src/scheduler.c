@@ -36,6 +36,7 @@
 #include "epoll.h"
 #include "request.h"
 #include "cache.h"
+#include "config.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
@@ -180,3 +181,33 @@ struct sched_list_node *mk_sched_get_thread_conf()
         return NULL;
 
 }
+
+void mk_sched_update_thread_status(int active, int closed)
+{
+        struct sched_list_node *thnode;
+
+        if(config->cheetah == VAR_OFF){
+                return;
+        }
+
+        thnode = mk_sched_get_thread_conf();
+
+        switch(active){
+                case MK_SCHEDULER_ACTIVE_UP:
+                        thnode->active_requests++;
+                        break;
+                case MK_SCHEDULER_ACTIVE_DOWN:
+                        thnode->active_requests--;
+                        break;
+        }
+
+        switch(closed){
+                case MK_SCHEDULER_CLOSED_UP:
+                        thnode->closed_requests++;
+                        break;
+                case MK_SCHEDULER_CLOSED_DOWN:
+                        thnode->closed_requests--;
+                        break;
+        }
+}
+

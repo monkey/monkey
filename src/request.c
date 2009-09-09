@@ -59,7 +59,6 @@
 #include "socket.h"
 #include "cache.h"
 #include "clock.h"
-#include "scheduler.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -177,7 +176,6 @@ int mk_handler_read(int socket)
         struct client_request *cr;
 
 	cr = mk_request_client_get(socket);
-
 	if(!cr)
 	{
                 /* Note: Linux don't set TCP_NODELAY socket flag by default, 
@@ -187,7 +185,21 @@ int mk_handler_read(int socket)
                 mk_socket_set_nonblocking(socket);
 
 		cr = mk_request_client_create(socket);
-	}
+	
+                /* Update requests counter */
+                mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
+                                              MK_SCHEDULER_CLOSED_DOWN);
+        }
+        else{
+                /* If cr struct already exists, that could means that we 
+                 * are facing a keepalive connection, need to verify, if it 
+                 * applies we increase the thread status for active connections
+                 */
+                if(cr->counter_connections > 1 && cr->body_length == 0){
+                        mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
+                                                      MK_SCHEDULER_CLOSED_NONE);
+                }
+        }
 
         bytes = read(socket, cr->body+cr->body_length,
                      MAX_REQUEST_BODY-cr->body_length);
@@ -900,7 +912,6 @@ struct client_request *mk_request_client_create(int socket)
 {
         struct request_idx *request_index;
 	struct client_request *cr;
-        struct sched_list_node *thread_node;
 
 	cr = mk_mem_malloc(sizeof(struct client_request));
 
@@ -931,10 +942,10 @@ struct client_request *mk_request_client_create(int socket)
 	}
         mk_sched_set_request_index(request_index);
 
-        thread_node = mk_sched_get_thread_conf();
-        thread_node->active_connections++;
-        //        mk_sched_set_thread_conf(thconf);
 
+        mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
+                                      MK_SCHEDULER_CLOSED_NONE);
+        
         return (struct client_request *) cr;
 }
 
@@ -965,7 +976,6 @@ struct client_request *mk_request_client_remove(int socket)
 {
 	struct request_idx *request_index;
         struct client_request *cr, *aux;
-        struct sched_list_node *thread_node;
 
 	request_index = mk_sched_get_request_index();
 	cr = request_index->first;
@@ -995,14 +1005,16 @@ struct client_request *mk_request_client_remove(int socket)
 		}
 		cr = cr->next;
 	}
+        
+        /* No keep alive connection */
+        if(cr->counter_connections == 0){
+                mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_DOWN,
+                                              MK_SCHEDULER_CLOSED_UP);
+        }
 
         mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
-
-        thread_node = mk_sched_get_thread_conf();
-        thread_node->active_connections--;
-        thread_node->closed_connections++;
 
 	return NULL;
 }

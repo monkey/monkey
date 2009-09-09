@@ -71,6 +71,9 @@ int mk_conn_switch_write(int socket)
 		 * close it.
 		 */
 
+                mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_DOWN,
+                                              MK_SCHEDULER_CLOSED_UP);
+
 		if(ka<0 || ret<0)
 		{
                         mk_request_client_remove(socket);

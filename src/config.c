@@ -533,6 +533,7 @@ void mk_config_set_init_values(void)
 	config->nhosts = 0;
 	config->user = NULL;
         config->open_flags = O_RDONLY | O_NONBLOCK;
+        config->cheetah = VAR_OFF;
 }
 
 /* read main configuration from monkey.conf */

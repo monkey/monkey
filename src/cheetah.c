@@ -32,6 +32,7 @@
 #include "scheduler.h"
 #include "info.h"
 #include "request.h"
+#include "str.h"
 
 #define MK_CHEETAH_STATUS "status"
 #define MK_CHEETAH_STATUS_SC "\\s"
@@ -177,16 +178,16 @@ void mk_cheetah_cmd_workers()
 
         while(sl){
                 printf("* Worker %i\n", sl->idx);
-                printf("      - Task ID            : %i\n", sl->pid);
+                printf("      - Task ID           : %i\n", sl->pid);
 
                 /* Memory Usage */
-                printf("      - Memory usage       : ");                
+                printf("      - Memory usage      : ");                
                 mk_cheetah_print_worker_memory_usage(sl->pid);
 
-                printf("      - Active Connections : %i\n", 
-                       sl->active_connections);
-                printf("      - Closed Connections : %i\n",
-                       sl->closed_connections);
+                printf("      - Active Requests   : %i\n", 
+                       sl->active_requests);
+                printf("      - Closed Requests   : %i\n",
+                       sl->closed_requests);
                 sl = sl->next;
         }
 }
@@ -294,6 +295,7 @@ void mk_cheetah_loop()
 
 void *mk_cheetah_init(void *args)
 {
+        config->cheetah = VAR_ON;
         mk_cheetah_loop();
         return 0;
 }
