@@ -130,7 +130,7 @@ struct client_request
         int first_block_end;
         int first_method;
 
-        time_t connection_timeout;
+        time_t init_time;
         struct request *request; /* Parsed request */
         struct client_request *next;
 };

@@ -923,7 +923,7 @@ struct client_request *mk_request_client_create(int socket)
         mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
 
         /* creation time in unix time */
-        //        cr->connection_timeout = log_current_utime + config->timeout;
+        cr->init_time = log_current_utime;
 
 	cr->next = NULL;
 	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
