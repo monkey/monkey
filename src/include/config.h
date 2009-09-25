@@ -24,6 +24,9 @@
 #ifndef MK_CONFIG_H
 #define MK_CONFIG_H
 
+#include <unistd.h>
+#include <sys/types.h>
+
 #define O_NOATIME       01000000
 
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"

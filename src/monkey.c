@@ -200,6 +200,8 @@ int main(int argc, char **argv)
 
         mk_config_sanity_check();
 
+        mk_plugin_get_list();
+
         /* Launch monkey http workers */
         mk_server_launch_workers();
 
