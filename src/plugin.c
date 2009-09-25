@@ -66,6 +66,7 @@ void *mk_plugin_register(void *handler)
         p->name = mk_plugin_load_symbol(handler, "_name");
         p->version = mk_plugin_load_symbol(handler, "_version");
         p->stages = (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
+        p->next = NULL;
 
         if(!p->name || !p->version || !p->stages){
                 mk_mem_free(p);
