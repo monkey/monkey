@@ -41,6 +41,7 @@
 #include "memory.h"
 #include "dir_html.h"
 #include "cgi.h"
+#include "plugin.h"
 
 /* Read configuration files */
 void mk_config_read_files(char *path_conf, char *file_conf)
@@ -534,6 +535,9 @@ void mk_config_set_init_values(void)
 	config->user = NULL;
         config->open_flags = O_RDONLY | O_NONBLOCK;
         config->cheetah = VAR_OFF;
+
+        /* Plugins */
+        config->plugins = mk_mem_malloc_z(sizeof(struct plugins));
 }
 
 /* read main configuration from monkey.conf */

@@ -84,6 +84,7 @@ struct server_config {
 
         mode_t open_flags;
         int cheetah; /* VAR_ON / VAR_OFF */
+        struct plugins *plugins;
 };
 
 struct server_config *config;

@@ -57,6 +57,52 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
         return s;
 }
 
+
+void mk_plugin_register_add_to_stage(struct plugin *st, struct plugin *p)
+{
+        struct plugin *list;
+
+        if(!st){
+                st = p;
+                return;
+        }
+
+        list = st;
+
+        while(list->next){
+                list = list->next;
+        }
+
+        list->next = p;
+}
+
+void mk_plugin_register_stages(struct plugin *p)
+{
+        if(*p->stages & MK_PLUGIN_STAGE_10){
+                mk_plugin_register_add_to_stage(config->plugins->stage_10, p);
+        }
+
+        if(*p->stages & MK_PLUGIN_STAGE_20){
+                mk_plugin_register_add_to_stage(config->plugins->stage_20, p);   
+        }
+
+        if(*p->stages & MK_PLUGIN_STAGE_30){
+                mk_plugin_register_add_to_stage(config->plugins->stage_30, p);
+        }
+
+        if(*p->stages & MK_PLUGIN_STAGE_40){
+                mk_plugin_register_add_to_stage(config->plugins->stage_40, p);
+        }
+
+        if(*p->stages & MK_PLUGIN_STAGE_50){
+                mk_plugin_register_add_to_stage(config->plugins->stage_50, p);
+        }
+
+        if(*p->stages & MK_PLUGIN_STAGE_60){
+                mk_plugin_register_add_to_stage(config->plugins->stage_60, p);
+        }
+}
+
 void *mk_plugin_register(void *handler)
 {
         struct plugin *p;
@@ -73,6 +119,7 @@ void *mk_plugin_register(void *handler)
                 return NULL;
         }
 
+        mk_plugin_register_stages(p);
         return p;
 }
 

@@ -28,11 +28,11 @@
 #define MK_PLUGIN_
 
 #define MK_PLUGIN_STAGE_10 ((__uint32_t) 1)  /* Before server's loop */
-#define MK_PLUGIN_STAGE_20 2  /* Accepted connection */
-#define MK_PLUGIN_STAGE_30 4  /* Connection assigned to worker thread */
-#define MK_PLUGIN_STAGE_40 8  /* Object Handler */
-#define MK_PLUGIN_STAGE_50 16 /* Request ended */
-#define MK_PLUGIN_STAGE_60 32 /* Connection closed */
+#define MK_PLUGIN_STAGE_20 ((__uint32_t) 2)  /* Accepted connection */
+#define MK_PLUGIN_STAGE_30 ((__uint32_t) 4)  /* Connection assigned */
+#define MK_PLUGIN_STAGE_40 ((__uint32_t) 8)  /* Object Handler */
+#define MK_PLUGIN_STAGE_50 ((__uint32_t) 16) /* Request ended */
+#define MK_PLUGIN_STAGE_60 ((__uint32_t) 32) /* Connection closed */
 
 struct plugins {
         struct plugin *stage_10;
