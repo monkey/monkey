@@ -180,7 +180,6 @@ struct sched_list_node *mk_sched_get_thread_conf()
         }
 
         return NULL;
-
 }
 
 

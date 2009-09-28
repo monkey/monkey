@@ -52,6 +52,7 @@ messages_en()
 	esac
 }
 
+# Create configuration files under 'conf/'
 make_conf()
 {
 cat $INCDIR/config.path lang/"$*"/mconf lang/"$*"/sites/default > makeconf.sh
@@ -87,54 +88,10 @@ fi
 main()
 {
     local_dirs
-	dir=0
-	actual_path=`pwd`
-	rm -rf src/extras/inf/*
+    dir=0
+    actual_path=`pwd`
+    rm -rf src/extras/inf/*
 	
-        if [ "$cheetah" = "on" ]; then
-            cheetah_obj="cheetah.o"
-            internal_options="-DCHEETAH"
-        fi
-
-        # Checking loaded modules 
-	if [ "$modules" = "on" ]; then
-		add_obj_mod="modules.o"
-		echo "Modules loaded :"
-		
-cat > $INCDIR/modules.h <<EOF
-char **MOD_Read_Config(char *mod_name);
-char *MOD_get_ptr_value(char **ptr, char *var);
-
-EOF
-
-		##### MOD_MYSQL #####
-		if [ "$mod_mysql" = "on" ]; then
-			echo "* MySQL Module -> Running mod_mysql configure"
-			cd src/extras/mod_mysql && ./configure
-			cd ../../../
-		fi
-		
-		echo
-	fi
-
-	if test -f src/extras/inf/libmod.info ; then
-		mod_libs=`cat src/extras/inf/libmod.info`
-	fi
-	if test -f src/extras/inf/obj.info ; then
-		mod_obj=`cat src/extras/inf/obj.info`
-	fi
-	if test -f src/extras/inf/defs.info ; then
-		mod_defs=`cat src/extras/inf/defs.info`
-	fi
-
-	if test -f src/extras/inf/make_script.info ; then
-		make_script=`cat src/extras/inf/make_script.info`
-	fi
-	
-# end check
-
-	echo "Language : $lang"
-	echo
 
 	if [ "$prefix" != "$actual_path" ]; then
 		dir=1
@@ -159,10 +116,19 @@ EOF
 	if [ "$logdir" != "$actual_path/logs" ]; then
 		dir=1
 	fi
-	
+
+        echo 
+	echo "Checking dependencies"
+        echo "====================="
+        echo 
 	messages_$lang "7"
 	check_lib lang
-	
+
+        echo 
+        echo "Creating Makefiles and scripts"
+        echo "=============================="
+        echo 
+
 	messages_$lang "1"
 	create_conf prefix bindir cgibin sysconfdir datadir logdir
 
@@ -183,7 +149,6 @@ EOF
 	
 	messages_$lang "5"
 	create_banana_script bindir logdir
-	
 	echo 
 	messages_$lang "6"
 
@@ -193,9 +158,11 @@ EOF
 		echo "' "
 	fi
 	echo
+
+        create_makefile_plugins
 }
 
-# Checkea biblioteca PTHREADS
+# Check pthreads lib
 check_lib()
 {
 cat > check.c <<EOF
@@ -215,13 +182,13 @@ rm -fr check* configure.log a.out
 }
 
 
-# Creando Makefile
+# Create Makefile
 create_makefile1()
 {
 cat > Makefile << EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
-default:
+default: 
 	@(cd src; make all)
 	@echo  
 	@echo  " Running Monkey :"
@@ -231,6 +198,10 @@ default:
 	@echo 
 	@echo  "  For more help use '-h' option."		
 	@echo 
+
+plugins:
+	@(cd src/plugins; make all)
+
 clean:
 	@(cd src; make clean)
 distclean:
@@ -287,7 +258,7 @@ install:
 EOF
 }
 
-# Creando src/Makefile
+# Create monkey/src/Makefile
 create_makefile2()
 {
 
@@ -312,22 +283,26 @@ CFLAGS	= \$(DEFS) -g -O2 -Wall
 INCDIR  = ./include
 LDFLAGS	= 
 DESTDIR	= ../bin/monkey
-LIBS	= -lpthread $mod_libs $MORE_LIBS
+LIBS	= -ldl -lpthread $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
 	header.o config.o logfile.o signals.o \\
 	dir_html.o deny.o cgi.o user.o utils.o \\
 	chars.o epoll.o scheduler.o str.o memory.o \\
 	conn_switch.o iov.o http.o file.o socket.o \\
-	clock.o cache.o worker.o server.o $add_obj_mod $cheetah_obj
+	clock.o cache.o worker.o server.o plugin.o \\
+        $add_obj_mod
 
-all: modules ../bin/monkey
+all: ../bin/monkey
 
-modules:
-	$make_script
-	
 ../bin/monkey: \$(OBJ)
+	echo "Compiling Monkey"
+	echo "================"
 	\$(CC) \$(CFLAGS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
 	$STRIP ../bin/monkey
+	echo
+	printf "Compiling Plugins"
+	echo "================="
+	@(cd plugins && make all && cd ..)
 	
 clean:
 	rm -rf *.o
@@ -343,6 +318,18 @@ distclean:
 .c.o:
 	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
 EOF
+}
+
+create_makefile_plugins()
+{
+    cd src/plugins
+    list=`echo */ "" | sed "s/\/ /\n/g"`
+    cat > Makefile <<EOF
+all:
+EOF
+    for i in $list;
+      do echo "\t@(cd $i && make && cd ..)" >> Makefile;
+    done
 }
 
 # Creando include/info.h
@@ -582,27 +569,8 @@ echo "*                                          *"
 echo "********************************************"
 echo "System   : $SYSINFO"
 
-if [ -z "$lang" ]; then
-	echo 
-	echo "+ Choose configure language: "
-	echo " -> [en] English"
-	echo 
-	echo -n " -> Option (default English) : "
-	lang="en"
-	read lang
-	echo
-
-	if [ -z "$lang" ]; then
-		lang="en"
-	fi
-
-	if [ $lang != "en" ]; then
-		echo " -> Error: Language not available"
-		exit 1
-	fi
-
-fi
+lang="en"
 
 # starting main function 
-main prefix lang bindir cgibin sysconfdir datadir logdir modules mod_mysql cheetah SYSNAME VERSION
+main prefix lang bindir cgibin sysconfdir datadir logdir modules SYSNAME VERSION
 exit 0
