@@ -49,6 +49,7 @@
 #include "cache.h"
 #include "worker.h"
 #include "server.h"
+#include "plugin.h"
 
 #ifdef CHEETAH
 #include "cheetah.h"
@@ -155,8 +156,8 @@ int main(int argc, char **argv)
 	mk_version();
 	mk_signal_init();
 	mk_config_start_configure();
+        mk_plugin_init();
 
-        mk_init_time = time(NULL);
         server_fd = mk_socket_server(config->serverport);
 
 	/* 
@@ -200,20 +201,14 @@ int main(int argc, char **argv)
 
         mk_config_sanity_check();
 
-        mk_plugin_get_list();
-
         /* Launch monkey http workers */
         mk_server_launch_workers();
 
         /* Print server details */
         mk_details();
 
-        /* Cheetah Shell */
-#ifdef CHEETAH
-        if(cheetah){
-                mk_worker_spawn((void *)mk_cheetah_init);
-        }
-#endif
+        /* Plugins Stage 10 */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_10);
 
         /* Server loop, let's listen for incomming clients */
         mk_server_loop(server_fd);

@@ -48,7 +48,19 @@ struct plugin {
         char *version;
         void *handler;
         __uint32_t *stages;
+
+        /* Plugin external functions */
+        int (*call_init)(void *api);
+        int (*call_stage_10)();
+
         struct plugin *next;
+};
+
+struct plugin_api {
+        struct server_config *config;
+        struct sched_list_node **sched_list;
+
+        void (*malloc)(void *);
 };
 
 typedef char mk_plugin_data_t[];
@@ -56,6 +68,7 @@ typedef __uint32_t mk_plugin_stage_t;
 
 struct plugins *plgs;
 
+void mk_plugin_init();
 void mk_plugin_stage_run(mk_plugin_stage_t stage);
 
 #endif

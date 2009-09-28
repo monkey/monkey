@@ -48,7 +48,7 @@ void *mk_mem_malloc(size_t size)
 	return aux;
 }
 
-void *mk_mem_malloc_z(size_t size)
+extern void *mk_mem_malloc_z(size_t size)
 {
 	char *buf=0;
 

@@ -22,6 +22,8 @@
 #ifndef MK_WORKER_H
 #define MK_WORKER_H
 
+#include <pthread.h>
+
 pthread_t mk_worker_spawn(void (*func)(void *));
 
 #endif

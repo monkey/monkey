@@ -64,6 +64,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 	}
 	sr->idx = aux->idx + 1;
 	aux->next = sr;
+
 	return 0;
 }
 

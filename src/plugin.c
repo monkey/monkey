@@ -30,6 +30,8 @@
 
 #include "config.h"
 #include "plugin.h"
+#include "monkey.h"
+#include "scheduler.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -57,17 +59,16 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
         return s;
 }
 
-
-void mk_plugin_register_add_to_stage(struct plugin *st, struct plugin *p)
+void mk_plugin_register_add_to_stage(struct plugin **st, struct plugin *p)
 {
         struct plugin *list;
 
-        if(!st){
-                st = p;
+        if(!*st){
+                *st = p;
                 return;
         }
 
-        list = st;
+        list = *st;
 
         while(list->next){
                 list = list->next;
@@ -79,27 +80,27 @@ void mk_plugin_register_add_to_stage(struct plugin *st, struct plugin *p)
 void mk_plugin_register_stages(struct plugin *p)
 {
         if(*p->stages & MK_PLUGIN_STAGE_10){
-                mk_plugin_register_add_to_stage(config->plugins->stage_10, p);
+                mk_plugin_register_add_to_stage(&config->plugins->stage_10, p);
         }
 
         if(*p->stages & MK_PLUGIN_STAGE_20){
-                mk_plugin_register_add_to_stage(config->plugins->stage_20, p);   
+                mk_plugin_register_add_to_stage(&config->plugins->stage_20, p);   
         }
 
         if(*p->stages & MK_PLUGIN_STAGE_30){
-                mk_plugin_register_add_to_stage(config->plugins->stage_30, p);
+                mk_plugin_register_add_to_stage(&config->plugins->stage_30, p);
         }
 
         if(*p->stages & MK_PLUGIN_STAGE_40){
-                mk_plugin_register_add_to_stage(config->plugins->stage_40, p);
+                mk_plugin_register_add_to_stage(&config->plugins->stage_40, p);
         }
 
         if(*p->stages & MK_PLUGIN_STAGE_50){
-                mk_plugin_register_add_to_stage(config->plugins->stage_50, p);
+                mk_plugin_register_add_to_stage(&config->plugins->stage_50, p);
         }
 
         if(*p->stages & MK_PLUGIN_STAGE_60){
-                mk_plugin_register_add_to_stage(config->plugins->stage_60, p);
+                mk_plugin_register_add_to_stage(&config->plugins->stage_60, p);
         }
 }
 
@@ -112,6 +113,12 @@ void *mk_plugin_register(void *handler)
         p->name = mk_plugin_load_symbol(handler, "_name");
         p->version = mk_plugin_load_symbol(handler, "_version");
         p->stages = (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
+
+        /* Plugin external function */
+        p->call_init = (int (*)()) mk_plugin_load_symbol(handler, 
+                                                         "_mk_plugin_init");
+        p->call_stage_10 = (int (*)()) mk_plugin_load_symbol(handler, 
+                                                             "_mk_plugin_stage_10");
         p->next = NULL;
 
         if(!p->name || !p->version || !p->stages){
@@ -123,7 +130,7 @@ void *mk_plugin_register(void *handler)
         return p;
 }
 
-void mk_plugin_get_list()
+void mk_plugin_init()
 {
         int len;
         char *path;
@@ -131,7 +138,13 @@ void mk_plugin_get_list()
         char buffer[255];
         FILE *fconf;
         void *handle;
-        
+        struct plugin *p;
+        struct plugin_api *api;
+
+        api = mk_mem_malloc_z(sizeof(struct plugin_api));
+        api->config = config;
+        api->sched_list = &sched_list;
+
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
 
@@ -158,9 +171,13 @@ void mk_plugin_get_list()
 
                 if(strcasecmp(key, "LoadPlugin")==0){
                         handle = mk_plugin_load(value);
-                        if(!mk_plugin_register(handle)){
+                        p = mk_plugin_register(handle);
+                        if(!p){
                                 fprintf(stderr, "Plugin error: %s", value);
                                 dlclose(handle);
+                        }
+                        else{
+                                p->call_init(&api);
                         }
                 }
         }
@@ -170,5 +187,13 @@ void mk_plugin_get_list()
 
 void mk_plugin_stage_run(mk_plugin_stage_t stage)
 {
+        struct plugin *p;
 
+        if(stage & MK_PLUGIN_STAGE_10){
+                p = config->plugins->stage_10;
+                while(p){
+                        p->call_stage_10();
+                        p = p->next;
+                }
+        }
 }

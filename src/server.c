@@ -31,7 +31,6 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "socket.h"
-#include "cheetah.h"
 
 /* Return the number of clients that can be attended 
  * at the same time per worker thread
