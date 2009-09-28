@@ -188,10 +188,6 @@ void mk_sched_update_thread_status(int active, int closed)
 {
         struct sched_list_node *thnode;
 
-        if(config->cheetah == VAR_OFF){
-                return;
-        }
-
         thnode = mk_sched_get_thread_conf();
 
         switch(active){

@@ -185,7 +185,7 @@ int mk_handler_read(int socket)
                 mk_socket_set_nonblocking(socket);
 
 		cr = mk_request_client_create(socket);
-	
+
                 /* Update requests counter */
                 mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
                                               MK_SCHEDULER_CLOSED_DOWN);

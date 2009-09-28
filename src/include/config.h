@@ -83,7 +83,6 @@ struct server_config {
 	struct host *hosts;
 
         mode_t open_flags;
-        int cheetah; /* VAR_ON / VAR_OFF */
         struct plugins *plugins;
 };
 
