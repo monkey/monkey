@@ -327,9 +327,13 @@ create_makefile_plugins()
     cat > Makefile <<EOF
 all:
 EOF
+    dir=`pwd`
+    echo -n > ../../conf/plugins.load;
     for i in $list;
-      do echo "\t@(cd $i && make && cd ..)" >> Makefile;
-    done
+	do 
+	      echo "\t@(cd $i && make && cd ..)" >> Makefile;
+	      echo "LoadPlugin $dir/$i/monkey-$i.so" >> ../../conf/plugins.load;
+	done	
 }
 
 # Creando include/info.h
