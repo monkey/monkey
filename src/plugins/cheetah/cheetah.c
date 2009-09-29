@@ -70,13 +70,14 @@ struct plugin_api *papi;
 void mk_cheetah_print_worker_memory_usage(pid_t pid)
 {
         int last, init, n, c = 0;
+        int s = 1024;
         char *buf;
         char *value;
         pid_t ppid;
         FILE *f;
         
         ppid = getpid();
-        buf = malloc(1024);
+        buf = papi->malloc(s);
         sprintf(buf, MK_CHEETAH_PROC_TASK, ppid, pid);
 
         f = fopen(buf, "r");
@@ -85,7 +86,7 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
                 return;
         }
 
-        buf = fgets(buf, 1024, f);
+        buf = fgets(buf, s, f);
         if(!buf){
                 printf("Cannot format details\n");
                 return;

@@ -144,6 +144,7 @@ void mk_plugin_init()
         api = mk_mem_malloc_z(sizeof(struct plugin_api));
         api->config = config;
         api->sched_list = &sched_list;
+        api->malloc = (void *) mk_mem_malloc;
 
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);

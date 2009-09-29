@@ -59,8 +59,8 @@ struct plugin {
 struct plugin_api {
         struct server_config *config;
         struct sched_list_node **sched_list;
-
-        void (*malloc)(void *);
+        /* Functions */
+        void *(*malloc)(int *);
 };
 
 typedef char mk_plugin_data_t[];
