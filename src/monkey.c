@@ -91,21 +91,10 @@ void mk_help()
 	exit(0);
 }
 
-
-	
-void set_benchmark_conf()
-{
-	const int max_int = 65000;
-
-	config->max_keep_alive_request = max_int;
-	config->maxclients = max_int;
-	config->max_ip = 0;
-}
-
 /* MAIN */
 int main(int argc, char **argv)
 {
-	int opt, benchmark_mode=FALSE;
+	int opt;
 	int cheetah = 0;
         int daemon = 0;
 	
@@ -134,9 +123,6 @@ int main(int argc, char **argv)
 					config->file_config=optarg;
 					break;
 				}
-			case 'b':
-				benchmark_mode = TRUE;
-				break;
 			case '?':
 				printf("Monkey: Invalid option or option needs an argument.\n");
 				mk_help();
@@ -149,27 +135,16 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-	if(!config->file_config)
+	if(!config->file_config){
 		config->file_config=MONKEY_PATH_CONF;
-		
+        }
+
 	mk_version();
 	mk_signal_init();
 	mk_config_start_configure();
         mk_plugin_init();
 
         server_fd = mk_socket_server(config->serverport);
-
-	/* 
-        Benchmark mode overwrite some configuration directives in order 
-        to disable some limit numbers as number of clients, request per 
-        client, same ip connected, etc
-	*/
-	if(benchmark_mode)
-	{
-		printf("*** Running Monkey in Benchmark mode ***\n");
-		fflush(stdout);
-		set_benchmark_conf();
-	}
 
 	/* Workers: logger and clock */ 
         mk_worker_spawn((void *)mk_logger_worker_init);

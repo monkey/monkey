@@ -586,6 +586,9 @@ mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
         {
                 for(i=0; i<toc_len; i++)
                 {
+                        /* status = 1 means that the toc entry was already
+                         * checked by monkey 
+                         */
                         if(toc[i].status == 1)
                         {
                                 continue;
@@ -1049,7 +1052,6 @@ void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
                 {
                         toc[i].init = p;
                         toc[i].end = l;
-
                         p = l + mk_crlf.len;
                 }
                 else
