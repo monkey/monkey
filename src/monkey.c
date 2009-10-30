@@ -44,7 +44,6 @@
 #include "config.h"
 #include "modules.h"
 #include "memory.h"
-#include "dir_html.h"
 #include "clock.h"
 #include "cache.h"
 #include "worker.h"

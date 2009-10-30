@@ -76,7 +76,7 @@ class Child:
                 break
             else:
                 buf += data
-                if buf[-4:] == "\r\n\r\n":
+                if buf[-4:] == '\r\n\r\n':
                     break;
    
         return buf
@@ -129,7 +129,7 @@ class Child:
 
     
     def write_to_parent(self, message):
-        time.sleep(1)
+        #time.sleep(1)
         n = os.write(self.int_w, message)
         # print "Child wrote: ", n
 

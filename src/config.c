@@ -39,7 +39,6 @@
 #include "logfile.h"
 #include "deny.h"
 #include "memory.h"
-#include "dir_html.h"
 #include "cgi.h"
 #include "plugin.h"
 
@@ -555,7 +554,7 @@ void mk_config_start_configure(void)
 	mk_mimetype_read_config();
 
         /* Load dir_html configuration */
-        mk_dirhtml_conf();
+        //mk_dirhtml_conf();
 
 	/* Load security rules */
 	Deny_Read_Config(); 

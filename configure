@@ -119,14 +119,14 @@ main()
 
         echo 
 	echo "Checking dependencies"
-        echo "====================="
+        @echo "====================="
         echo 
 	messages_$lang "7"
 	check_lib lang
 
         echo 
-        echo "Creating Makefiles and scripts"
-        echo "=============================="
+        @echo "Creating Makefiles and scripts"
+        @echo "=============================="
         echo 
 
 	messages_$lang "1"

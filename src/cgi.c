@@ -100,7 +100,6 @@ char *mk_palm_check_request(struct client_request *cr, struct request *sr)
         mk_iov_send(sock, iov, MK_IOV_SEND_TO_SOCKET);
 
         n = write(sock, "\r\n\r\n", 2);
-        fflush(stdout);
 
         mk_socket_set_cork_flag(sock, TCP_CORK_OFF);
         
