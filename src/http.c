@@ -564,10 +564,12 @@ int mk_http_pending_request(struct client_request *cr)
                                  * later
                                  */
                                 if(mk_method_post_content_length(cr->body) < 0){
+                                        cr->status = MK_REQUEST_STATUS_COMPLETED;
                                         return 0;
                                 }
                         }
                         else{
+                                cr->status = MK_REQUEST_STATUS_COMPLETED;
                                 return 0;
                         }
                 }
@@ -576,6 +578,7 @@ int mk_http_pending_request(struct client_request *cr)
                 }
         }
 
+        cr->status = MK_REQUEST_STATUS_COMPLETED;
         return 0;
 }
 

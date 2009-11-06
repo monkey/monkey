@@ -119,14 +119,14 @@ main()
 
         echo 
 	echo "Checking dependencies"
-        @echo "====================="
+        echo "====================="
         echo 
 	messages_$lang "7"
 	check_lib lang
 
         echo 
-        @echo "Creating Makefiles and scripts"
-        @echo "=============================="
+        echo "Creating Makefiles and scripts"
+        echo "=============================="
         echo 
 
 	messages_$lang "1"
@@ -295,13 +295,13 @@ OBJ	= monkey.o method.o mimetype.o request.o \\
 all: ../bin/monkey
 
 ../bin/monkey: \$(OBJ)
-	echo "Compiling Monkey"
-	echo "================"
+	@echo "Compiling Monkey"
+	@echo "================"
 	\$(CC) \$(CFLAGS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
 	$STRIP ../bin/monkey
-	echo
-	printf "Compiling Plugins"
-	echo "================="
+	@echo
+	@echo "Compiling Plugins"
+	@echo "================="
 	@(cd plugins && make all && cd ..)
 	
 clean:

@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	config->file_config=0;
 			
 	opterr = 0;
-	while ((opt = getopt(argc, argv, "bDSvhc:")) != -1)
+	while ((opt = getopt(argc, argv, "DSvhc:")) != -1)
 	{
 		switch (opt) {
 			case 'v': 

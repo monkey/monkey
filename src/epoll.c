@@ -32,6 +32,10 @@
 
 #include "monkey.h"
 #include "socket.h"
+#include "clock.h"
+#include "request.h"
+#include "config.h"
+#include "scheduler.h"
 #include "epoll.h"
 
 #define MAX_EVENTS 5000
@@ -63,15 +67,22 @@ int mk_epoll_create(int max_events)
 void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 {
 	int i, ret=-1;
+        int num_fds;
+        int fds_timeout;
+        struct epoll_event events[max_events];
+        struct request_idx  *req_idx;
+        struct client_request *req_cl;
 
         pthread_mutex_lock(&mutex_wait_register);
         pthread_mutex_unlock(&mutex_wait_register);
         
-        while(1){
-                struct epoll_event events[max_events];
-                int num_fds = epoll_wait(efd, events, max_events, -1);
+        fds_timeout = log_current_utime + config->timeout;
 
-                for(i=0; i< num_fds; i++) {
+        while(1){
+                num_fds = epoll_wait(efd, events, 
+                                     max_events, MK_EPOLL_WAIT_TIMEOUT);
+
+                for(i=0; i<num_fds; i++) {
                         // Case 1: Error condition
                         if (events[i].events & (EPOLLHUP | EPOLLERR)) {
                                 close(events[i].data.fd);
@@ -96,6 +107,26 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
                                 close(events[i].data.fd);
                         }
                 }
+
+                /* Check timeouts */
+                if(log_current_utime >= fds_timeout){
+                        /* Update next timeout */
+                        fds_timeout = log_current_utime + config->timeout;
+
+                        req_idx = mk_sched_get_request_index();
+                        req_cl = req_idx->first;
+
+                        while(req_cl){
+                                if(req_cl->status == MK_REQUEST_STATUS_INCOMPLETE){
+                                        if(req_cl->init_time + 
+                                           config->timeout >= log_current_utime){
+                                                close(req_cl->socket);
+                                        }
+                                }
+                                req_cl = req_cl->next;
+                        }
+                }
+
         }
 }
 

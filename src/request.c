@@ -921,8 +921,9 @@ struct client_request *mk_request_client_create(int socket)
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
 	cr->socket = socket;
-	cr->request = NULL;
-
+	cr->status = MK_REQUEST_STATUS_INCOMPLETE;
+        cr->request = NULL;
+        
         mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
 
         /* creation time in unix time */

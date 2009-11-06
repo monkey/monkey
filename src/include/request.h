@@ -83,6 +83,9 @@ parametros de una peticion */
 #define MAX_REQUEST_PROTOCOL 10
 #define MAX_SCRIPTALIAS 3
 
+#define MK_REQUEST_STATUS_INCOMPLETE -1
+#define MK_REQUEST_STATUS_COMPLETED 0
+
 #define EXIT_NORMAL -1
 #define EXIT_PCONNECTION 24
 
