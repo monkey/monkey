@@ -915,7 +915,9 @@ struct client_request *mk_request_client_create(int socket)
 {
         struct request_idx *request_index;
 	struct client_request *cr;
+        struct sched_connection *sc;
 
+        sc = mk_sched_get_connection(NULL, socket);
 	cr = mk_mem_malloc(sizeof(struct client_request));
 
 	cr->pipelined = FALSE;
@@ -927,7 +929,7 @@ struct client_request *mk_request_client_create(int socket)
         mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
 
         /* creation time in unix time */
-        cr->init_time = log_current_utime;
+        cr->init_time = sc->arrive_time;
 
 	cr->next = NULL;
 	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);

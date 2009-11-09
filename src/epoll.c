@@ -70,8 +70,10 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
         int num_fds;
         int fds_timeout;
         struct epoll_event events[max_events];
-        struct request_idx  *req_idx;
-        struct client_request *req_cl;
+        struct sched_list_node *sched;
+
+        /* Get thread conf */
+        sched = mk_sched_get_thread_conf();
 
         pthread_mutex_lock(&mutex_wait_register);
         pthread_mutex_unlock(&mutex_wait_register);
@@ -104,29 +106,15 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
                         
                         if(ret<0)
                         {
-                                close(events[i].data.fd);
+                                mk_sched_remove_client(&sched, events[i].data.fd);
                         }
                 }
 
-                /* Check timeouts */
+                /* Check timeouts and update next one */
                 if(log_current_utime >= fds_timeout){
-                        /* Update next timeout */
+                        mk_sched_check_timeouts(&sched);
                         fds_timeout = log_current_utime + config->timeout;
-
-                        req_idx = mk_sched_get_request_index();
-                        req_cl = req_idx->first;
-
-                        while(req_cl){
-                                if(req_cl->status == MK_REQUEST_STATUS_INCOMPLETE){
-                                        if(req_cl->init_time + 
-                                           config->timeout >= log_current_utime){
-                                                close(req_cl->socket);
-                                        }
-                                }
-                                req_cl = req_cl->next;
-                        }
                 }
-
         }
 }
 

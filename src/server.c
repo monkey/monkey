@@ -60,16 +60,14 @@ int mk_server_worker_capacity(int nworkers)
 /* Here we launch the worker threads to attend clients */
 void mk_server_launch_workers()
 {
-        int i, limit;
+        int i;
 
-        limit = mk_server_worker_capacity(config->workers);
+        config->worker_capacity = mk_server_worker_capacity(config->workers);
         
         for(i=0; i<config->workers; i++)
         {
-                mk_sched_launch_thread(limit);
+                mk_sched_launch_thread(config->worker_capacity);
         }
-
-        config->worker_capacity = limit;
 }
 
 void mk_server_loop(int server_fd)
@@ -86,8 +84,9 @@ void mk_server_loop(int server_fd)
                 if(remote_fd == -1){
                         continue;
                 }
-                mk_epoll_add_client(sched->epoll_fd, remote_fd, 
-                                    MK_EPOLL_BEHAVIOR_TRIGGERED);
+
+                /* Assign socket to worker thread */
+                mk_sched_add_client(&sched, remote_fd);
 
                 if(sched->next){
                         sched = sched->next;

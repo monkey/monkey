@@ -30,6 +30,17 @@
 #define MK_SCHEDULER_CLOSED_UP 1
 #define MK_SCHEDULER_CLOSED_DOWN -1
 
+#define MK_SCHEDULER_CONN_AVAILABLE -1
+#define MK_SCHEDULER_CONN_PENDING 0
+#define MK_SCHEDULER_CONN_PROCESS 1
+
+
+struct sched_connection {
+        int socket;
+        int status;
+        time_t arrive_time;
+};
+
 /* Global struct */
 struct sched_list_node{
 	short int idx;
@@ -38,6 +49,7 @@ struct sched_list_node{
 	int epoll_fd;
         int active_requests;
         int closed_requests;
+        struct sched_connection *queue;
 	struct client_request *request_handler;
 	struct sched_list_node *next;
 };
@@ -65,4 +77,10 @@ void mk_sched_set_thread_poll(int epoll);
 struct sched_list_node *mk_sched_get_thread_conf();
 void mk_sched_update_thread_status(int active, int closed);
 
+
+int mk_sched_check_timeouts(struct sched_list_node **sched);
+int mk_sched_add_client(struct sched_list_node **sched, int remote_fd);
+int mk_sched_remove_client(struct sched_list_node **sched, int remote_fd);
+struct sched_connection *mk_sched_get_connection(struct sched_list_node **sched, 
+                                                 int remote_fd);
 #endif
