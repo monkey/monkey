@@ -883,8 +883,20 @@ void mk_request_free(struct request *sr)
 
         
         if(sr->log){
+                /*
+                 * We do not free log->size_p, as if it was
+                 * used due to an error, it points to the 
+                 * same memory block than header->content_length_p
+                 * points to, we just reset it.
+                 */
                 mk_pointer_reset(&sr->log->size_p);
-                //mk_mem_free(sr->log->error_msg); 
+
+                /*
+                 * sr->log->error_msg just point to
+                 * local data on request.c, no 
+                 * dynamic allocation is made
+                 */
+
 		mk_mem_free(sr->log);
         }
 
