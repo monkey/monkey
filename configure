@@ -328,11 +328,16 @@ create_makefile_plugins()
 all:
 EOF
     dir=`pwd`
-    echo -n > ../../conf/plugins.load;
+    plugins_load="../../conf/plugins.load"
+    echo -n > $plugins_load
+    echo "# Monkey plugins are loaded on run, by default all " >> $plugins_load
+    echo "# plugins are disabled, if you want to enable" >> $plugins_load
+    echo "# one, just remove the comment character for each line\n" >> $plugins_load
+
     for i in $list;
 	do 
 	      echo "\t@(cd $i && make && cd ..)" >> Makefile;
-	      echo "LoadPlugin $dir/$i/monkey-$i.so" >> ../../conf/plugins.load;
+	      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../../conf/plugins.load;
 	done	
 }
 
