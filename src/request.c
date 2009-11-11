@@ -225,7 +225,8 @@ int mk_handler_read(int socket)
 
                 if(mk_http_pending_request(cr)==0){
                         efd = mk_sched_get_thread_poll();
-                        mk_epoll_socket_change_mode(efd, socket, MK_EPOLL_WRITE);
+                        mk_epoll_socket_change_mode(efd, socket, 
+                                                    MK_EPOLL_WRITE);
                 }
                 else if(cr->body_length+1 >= MAX_REQUEST_BODY)
                 {
@@ -886,6 +887,7 @@ void mk_request_free(struct request *sr)
 
         
         if(sr->log){
+                mk_pointer_free(&sr->log->size_p);
         	//mk_mem_free(sr->log->error_msg); 
 		mk_mem_free(sr->log);
         }

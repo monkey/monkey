@@ -531,7 +531,7 @@ int mk_http_pending_request(struct client_request *cr)
 {
         int n;
         char *str;
-
+        
         n = mk_string_search(cr->body, mk_endblock.data);
         
         if(n<=0)
