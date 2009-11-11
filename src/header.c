@@ -411,6 +411,7 @@ struct header_values *mk_header_create()
 	headers->ranges[1]=-1;
 	headers->content_length = -1;
 	headers->transfer_encoding = -1;
+        mk_pointer_reset(&headers->content_length_p);
 	mk_pointer_reset(&headers->content_type);
 	mk_pointer_reset(&headers->last_modified);
 	headers->location = NULL;

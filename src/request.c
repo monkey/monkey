@@ -649,10 +649,6 @@ void mk_request_error(int num_error, struct client_request *cr,
 	mk_pointer message, page;
         long n;
 
-	if(!s_log) {
-		s_log=mk_mem_malloc(sizeof(struct log_info));
-	}
-	
 	mk_pointer_reset(&page);
 
 	switch(num_error) {
@@ -787,7 +783,6 @@ struct request *mk_request_alloc()
 
 	request->log->final_response=M_HTTP_OK;
 	request->log->status=S_LOG_ON;
-
         mk_pointer_reset(&request->log->size_p);
 	mk_pointer_reset(&request->log->error_msg);
 
@@ -871,6 +866,7 @@ void mk_request_free(struct request *sr)
 	}
 	if(sr->headers){
             mk_mem_free(sr->headers->location);
+            mk_pointer_free(&sr->headers->content_length_p);
             mk_pointer_free(&sr->headers->last_modified);
             /*
                 mk_mem_free(sr->headers->content_type);
@@ -887,8 +883,8 @@ void mk_request_free(struct request *sr)
 
         
         if(sr->log){
-                mk_pointer_free(&sr->log->size_p);
-        	//mk_mem_free(sr->log->error_msg); 
+                mk_pointer_reset(&sr->log->size_p);
+                //mk_mem_free(sr->log->error_msg); 
 		mk_mem_free(sr->log);
         }
 
