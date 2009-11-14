@@ -257,10 +257,10 @@ void mk_cheetah_cmd_help()
         printf("\nhelp       (\\h)    Print this help");
         printf("\nstatus     (\\s)    Display general web server information");
         printf("\nuptime     (\\u)    Display how long the web server has been running");
-        printf("\nplugins    (\\g)    Show loaded plugins and it's stages");
+        printf("\nplugins    (\\g)    List loaded plugins and associated stages");
         printf("\nvhosts     (\\v)    List virtual hosts configured");
         printf("\nworkers    (\\w)    Show thread workers information");
-        printf("\nquit       (\\q)    Exist Cheetah shell :_(\n");
+        printf("\nquit       (\\q)    Exit Cheetah shell :_(\n");
 }
 
 void mk_cheetah_cmd(char *cmd)
