@@ -233,8 +233,13 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
         }
         else if(stage & MK_PLUGIN_STAGE_40){
                 p = config->plugins->stage_40;
+                printf("\np: %p", p);
+                fflush(stdout);
+
                 while(p){
                         ret = p->call_stage_40(cr, sr);
+                        printf("\nrun!");
+                        fflush(stdout);
                         if(ret == 0){
                                 return 0;
                         }

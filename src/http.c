@@ -218,8 +218,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
 
         /* read permissions and check file */ 
-        if(sr->file_info->read_access == MK_FILE_FALSE ||
-           sr->file_info->is_directory == MK_FILE_TRUE){
+        if(sr->file_info->read_access == MK_FILE_FALSE){
                 mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                 return -1;      
         }
@@ -233,6 +232,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
         /* Plugin Stage 40: look for handlers for this request */
         if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr) == 0){
+                return -1;
+        }
+
+        if(sr->file_info->is_directory == MK_FILE_TRUE){
+                mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                 return -1;
         }
 
