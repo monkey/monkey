@@ -22,6 +22,11 @@
 #ifndef MK_PLUGIN_H
 #define MK_PLUGIN_H 
 
+#include "request.h"
+#include "memory.h"
+#include "iov.h"
+#include "socket.h"
+
 #define MK_PLUGIN_LOAD "plugins.load"
 
 #define MK_PLUGIN_ERROR -1  /* plugin execution error */
@@ -52,6 +57,7 @@ struct plugin {
         /* Plugin external functions */
         int (*call_init)(void *api);
         int (*call_stage_10)();
+        int (*call_stage_40)(struct client_request *, struct request *);
 
         struct plugin *next;
 };
@@ -59,8 +65,36 @@ struct plugin {
 struct plugin_api {
         struct server_config *config;
         struct sched_list_node **sched_list;
-        /* Functions */
-        void *(*malloc)(int *);
+
+        /* Exporting Functions */
+        void *(*mem_alloc)(int);
+        void *(*mem_alloc_z)(int);
+        void *(*mem_free)(void *);
+        void *(*str_build)(char **, unsigned long *, const char *, ...);
+        void *(*str_dup)(const char *);
+        void *(*str_search)(char *, char *);
+        void *(*str_search_n)(char *, char *, int);
+        void *(*str_copy_substr)(const char *, int, int);
+        void *(*file_to_buffer)(char *);
+        void *(*file_get_info)(char *);
+        void *(*header_send)(int, 
+                             struct client_request *, 
+                             struct request *, 
+                             struct log_info *);
+        void *(*iov_create)(int, int);
+        void *(*iov_free)(struct mk_iov *);
+        void *(*iov_add_entry)(struct mk_iov *,
+                               char *,
+                               int,
+                               mk_pointer,
+                               int);
+        void *(*iov_set_entry)(struct mk_iov*,
+                               char *,
+                               int,
+                               int,
+                               int);
+        void *(*iov_send)(int, struct mk_iov *, int);
+        void *(*socket_cork_flag)(int, int);
 };
 
 typedef char mk_plugin_data_t[];
@@ -69,6 +103,8 @@ typedef __uint32_t mk_plugin_stage_t;
 struct plugins *plgs;
 
 void mk_plugin_init();
-void mk_plugin_stage_run(mk_plugin_stage_t stage);
+void mk_plugin_stage_run(mk_plugin_stage_t stage,
+                         struct client_request *cr,
+                         struct request *sr);
 
 #endif

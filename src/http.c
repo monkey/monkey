@@ -41,6 +41,7 @@
 #include "mimetype.h"
 #include "logfile.h"
 #include "header.h"
+#include "plugin.h"
 
 int mk_http_method_check(mk_pointer method)
 {
@@ -197,6 +198,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         
                 }                       
         }
+
+        /* Plugin Stage 40 */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr);
+
         /* is it a valid directory ? */
         if(path_info->is_directory == MK_FILE_TRUE) {
                 /* This pointer never must be freed */

@@ -130,7 +130,6 @@ int mk_string_search_r(char *string, char search, int n)
 int mk_string_search_n(char *string, char *search, int n)
 {
 	return _mk_string_search(string, search, n);
-
 }
 
 char *mk_string_remove_space(char *buf)

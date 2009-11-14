@@ -31,7 +31,13 @@
 #include "config.h"
 #include "plugin.h"
 #include "monkey.h"
+#include "request.h"
 #include "scheduler.h"
+#include "utils.h"
+#include "str.h"
+#include "file.h"
+#include "header.h"
+#include "iov.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -117,8 +123,12 @@ void *mk_plugin_register(void *handler)
         /* Plugin external function */
         p->call_init = (int (*)()) mk_plugin_load_symbol(handler, 
                                                          "_mk_plugin_init");
-        p->call_stage_10 = (int (*)()) mk_plugin_load_symbol(handler, 
-                                                             "_mk_plugin_stage_10");
+        p->call_stage_10 = (int (*)()) 
+                mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
+
+        p->call_stage_40 = (int (*)())
+                mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
+
         p->next = NULL;
 
         if(!p->name || !p->version || !p->stages){
@@ -142,9 +152,29 @@ void mk_plugin_init()
         struct plugin_api *api;
 
         api = mk_mem_malloc_z(sizeof(struct plugin_api));
+        
+        /* Setup and connections list */
         api->config = config;
         api->sched_list = &sched_list;
-        api->malloc = (void *) mk_mem_malloc;
+        
+        /* API plugins funcions */
+        api->mem_alloc = (void *) mk_mem_malloc;
+        api->mem_alloc_z = (void *) mk_mem_malloc_z;
+        api->mem_free = (void *) mk_mem_free;
+        api->str_build = (void *) m_build_buffer;
+        api->str_dup = (void *) mk_string_dup;
+        api->str_search = (void *) mk_string_search;
+        api->str_search_n = (void *) mk_string_search_n;
+        api->str_copy_substr = (void *) mk_string_copy_substr;
+        api->file_to_buffer = (void *) mk_file_to_buffer;
+        api->file_get_info = (void *) mk_file_get_info;
+        api->header_send = (void *) mk_header_send;
+        api->iov_create = (void *) mk_iov_create;
+        api->iov_free = (void *) mk_iov_free;
+        api->iov_add_entry = (void *) mk_iov_add_entry;
+        api->iov_set_entry = (void *) mk_iov_set_entry;
+        api->iov_send = (void *) mk_iov_send;
+        api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
 
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
@@ -186,7 +216,9 @@ void mk_plugin_init()
         fclose(fconf);
 }
 
-void mk_plugin_stage_run(mk_plugin_stage_t stage)
+void mk_plugin_stage_run(mk_plugin_stage_t stage,
+                         struct client_request *cr,
+                         struct request *sr)
 {
         struct plugin *p;
 
@@ -194,6 +226,13 @@ void mk_plugin_stage_run(mk_plugin_stage_t stage)
                 p = config->plugins->stage_10;
                 while(p){
                         p->call_stage_10();
+                        p = p->next;
+                }
+        }
+        else if(stage & MK_PLUGIN_STAGE_40){
+                p = config->plugins->stage_40;
+                while(p){
+                        p->call_stage_40(cr, sr);
                         p = p->next;
                 }
         }

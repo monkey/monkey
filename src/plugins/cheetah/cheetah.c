@@ -65,7 +65,7 @@ mk_plugin_data_t _version = "1.0";
 mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_10;
 
 time_t init_time;
-struct plugin_api *papi;
+struct plugin_api *mk_api;
 
 void mk_cheetah_print_worker_memory_usage(pid_t pid)
 {
@@ -77,7 +77,7 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
         FILE *f;
         
         ppid = getpid();
-        buf = papi->malloc(s);
+        buf = mk_api->mem_alloc(s);
         sprintf(buf, MK_CHEETAH_PROC_TASK, ppid, pid);
 
         f = fopen(buf, "r");
@@ -167,7 +167,7 @@ void mk_cheetah_cmd_vhosts()
 {
         struct host *host;
         
-        host = papi->config->hosts;
+        host = mk_api->config->hosts;
 
         while(host){
                 printf("* VHost '%s'\n", host->servername);
@@ -188,7 +188,7 @@ void mk_cheetah_cmd_vhosts()
 void mk_cheetah_cmd_workers()
 {
         struct sched_list_node *sl;
-        sl = *papi->sched_list;
+        sl = *mk_api->sched_list;
 
         while(sl){
                 printf("* Worker %i\n", sl->idx);
@@ -232,7 +232,7 @@ void mk_cheetah_cmd(char *cmd)
         struct sched_list_node *sl;
 
         
-        sl = *papi->sched_list;
+        sl = *mk_api->sched_list;
         while(sl){
                 nthreads++;
                 sl = sl->next;
@@ -241,16 +241,16 @@ void mk_cheetah_cmd(char *cmd)
         if(strcmp(cmd, MK_CHEETAH_STATUS) == 0 || 
            strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0){
                 printf("\nMonkey Version     : %s\n", VERSION);
-                printf("Configutarion path : %s\n", papi->config->serverconf);
+                printf("Configutarion path : %s\n", mk_api->config->serverconf);
                 printf("Process ID         : %i\n", getpid());
 
                 printf("Process User       : ");
                 mk_cheetah_print_running_user();
 
-                printf("Server Port        : %i\n", papi->config->serverport);
+                printf("Server Port        : %i\n", mk_api->config->serverport);
                 printf("Worker Threads     : %i (per configuration: %i)\n", 
                        nthreads, 
-                       papi->config->workers);
+                       mk_api->config->workers);
         }
         else if(strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
                 strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0){
@@ -319,7 +319,7 @@ void *mk_cheetah_init(void *args)
  */
 int _mk_plugin_init(void **api)
 {
-        papi = *api;
+        mk_api = *api;
         return 0;
 }
 
