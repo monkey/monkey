@@ -110,14 +110,15 @@ void mk_plugin_register_stages(struct plugin *p)
         }
 }
 
-void *mk_plugin_register(void *handler)
+void *mk_plugin_register(void *handler, char *path)
 {
         struct plugin *p;
 
         p = mk_mem_malloc_z(sizeof(struct plugin));
-        p->handler = handler;
         p->name = mk_plugin_load_symbol(handler, "_name");
         p->version = mk_plugin_load_symbol(handler, "_version");
+        p->path = mk_string_dup(path);
+        p->handler = handler;
         p->stages = (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
 
         /* Plugin external function */
@@ -202,7 +203,7 @@ void mk_plugin_init()
 
                 if(strcasecmp(key, "LoadPlugin")==0){
                         handle = mk_plugin_load(value);
-                        p = mk_plugin_register(handle);
+                        p = mk_plugin_register(handle, value);
                         if(!p){
                                 fprintf(stderr, "Plugin error: %s", value);
                                 dlclose(handle);

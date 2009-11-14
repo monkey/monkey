@@ -44,6 +44,10 @@
 
 #define MK_CHEETAH_UPTIME "uptime"
 #define MK_CHEETAH_UPTIME_SC "\\u"
+
+#define MK_CHEETAH_PLUGINS "plugins"
+#define MK_CHEETAH_PLUGINS_SC "\\g"
+
 #define MK_CHEETAH_VHOSTS "vhosts"
 #define MK_CHEETAH_VHOSTS_SC "\\v"
 
@@ -163,6 +167,38 @@ void mk_cheetah_cmd_uptime()
                seconds, (seconds > 1) ? "s" : "");
 }
 
+void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
+{
+        struct plugin *p;
+
+        if(!list){
+                return;
+        }
+
+        p = list;
+        printf("* %s", stage);
+        printf("\n     Loaded plugins on this stage");
+        printf("\n     ----------------------------");
+        while(p){
+                printf("\n     %s v%s on \"%s\"", p->name, p->version, p->path);
+                p = p->next;
+        }
+
+        printf("\n\n");
+}
+
+void mk_cheetah_cmd_plugins()
+{
+        struct plugins *p = mk_api->config->plugins;
+
+        mk_cheetah_cmd_plugins_print(p->stage_10, "STAGE_10");
+        mk_cheetah_cmd_plugins_print(p->stage_20, "STAGE_20");
+        mk_cheetah_cmd_plugins_print(p->stage_30, "STAGE_30");
+        mk_cheetah_cmd_plugins_print(p->stage_40, "STAGE_40");
+        mk_cheetah_cmd_plugins_print(p->stage_50, "STAGE_50");
+        mk_cheetah_cmd_plugins_print(p->stage_60, "STAGE_60");
+}
+
 void mk_cheetah_cmd_vhosts()
 {
         struct host *host;
@@ -221,6 +257,7 @@ void mk_cheetah_cmd_help()
         printf("\nhelp       (\\h)    Print this help");
         printf("\nstatus     (\\s)    Display general web server information");
         printf("\nuptime     (\\u)    Display how long the web server has been running");
+        printf("\nplugins    (\\g)    Show loaded plugins and it's stages");
         printf("\nvhosts     (\\v)    List virtual hosts configured");
         printf("\nworkers    (\\w)    Show thread workers information");
         printf("\nquit       (\\q)    Exist Cheetah shell :_(\n");
@@ -255,6 +292,10 @@ void mk_cheetah_cmd(char *cmd)
         else if(strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
                 strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0){
                 mk_cheetah_cmd_uptime();
+        }
+        else if(strcmp(cmd, MK_CHEETAH_PLUGINS) == 0 ||
+                strcmp(cmd, MK_CHEETAH_PLUGINS_SC) == 0){
+                mk_cheetah_cmd_plugins();
         }
         else if(strcmp(cmd, MK_CHEETAH_WORKERS) == 0 ||
                 strcmp(cmd, MK_CHEETAH_WORKERS_SC) == 0){

@@ -51,6 +51,7 @@ struct plugins {
 struct plugin {
         char *name;
         char *version;
+        char *path;
         void *handler;
         __uint32_t *stages;
 
@@ -64,6 +65,7 @@ struct plugin {
 
 struct plugin_api {
         struct server_config *config;
+        struct plugins *plugins;
         struct sched_list_node **sched_list;
 
         /* Exporting Functions */
@@ -99,8 +101,6 @@ struct plugin_api {
 
 typedef char mk_plugin_data_t[];
 typedef __uint32_t mk_plugin_stage_t;
-
-struct plugins *plgs;
 
 void mk_plugin_init();
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
