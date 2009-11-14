@@ -147,7 +147,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         char *location=0, *real_location=0; /* ruta para redireccion */
         struct mimetype *mime;
         mk_pointer gmt_file_unix_time; // gmt time of server file (unix time)
-        struct file_info *path_info;
         unsigned long len;
         char *palm;
 
@@ -168,16 +167,16 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 debug_error=1;
         }
 
-        path_info = mk_file_get_info(sr->real_path.data);
+        sr->file_info = mk_file_get_info(sr->real_path.data);
 
-        if(!path_info){
+        if(!sr->file_info){
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 
                                 debug_error, sr->log);
                 return -1;
         }
 
         /* Check symbolic link file */
-        if(path_info->is_link == MK_FILE_TRUE){
+        if(sr->file_info->is_link == MK_FILE_TRUE){
                 if(config->symlink==VAR_OFF){
                         sr->log->final_response=M_CLIENT_FORBIDDEN;
                         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 
@@ -203,7 +202,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr);
 
         /* is it a valid directory ? */
-        if(path_info->is_directory == MK_FILE_TRUE) {
+        if(sr->file_info->is_directory == MK_FILE_TRUE) {
                 /* This pointer never must be freed */
                 mk_pointer index_file;
 
@@ -274,16 +273,16 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                         }
                 }
                 else{
-                        mk_mem_free(path_info);
+                        mk_mem_free(sr->file_info);
                         mk_pointer_free(&sr->real_path);
 
                         sr->real_path = index_file;
-                        path_info = mk_file_get_info(sr->real_path.data);
+                        sr->file_info = mk_file_get_info(sr->real_path.data);
                 }
         }
 
         /* read permission */ 
-        if(path_info->read_access == MK_FILE_FALSE){
+        if(sr->file_info->read_access == MK_FILE_FALSE){
                 mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                 return -1;      
         }
@@ -305,7 +304,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         
 
         /* get file size */
-        if(path_info->size < 0) {
+        if(sr->file_info->size < 0) {
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
                 return -1;
         }
@@ -316,20 +315,19 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
        
         gmt_file_unix_time = 
-                PutDate_string((time_t) path_info->last_modification);
+                PutDate_string((time_t) sr->file_info->last_modification);
         
         if(sr->if_modified_since.data && sr->method==HTTP_METHOD_GET){
                 time_t date_client; // Date send by client
                 time_t date_file_server; // Date server file
         
                 date_client = PutDate_unix(sr->if_modified_since.data);
-                date_file_server = path_info->last_modification;
+                date_file_server = sr->file_info->last_modification;
 
                 if( (date_file_server <= date_client) && (date_client > 0) )
                 {
                         sr->headers->status = M_NOT_MODIFIED;
                         mk_header_send(cr->socket, cr, sr, sr->log);    
-                        mk_mem_free(path_info);
                         mk_pointer_free(&gmt_file_unix_time);
                         return 0;
                 }
@@ -340,10 +338,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->headers->location = NULL;
 
         /* Object size for log and response headers */
-        sr->log->size = sr->headers->content_length = \
-                path_info->size;
-        sr->log->size_p = sr->headers->content_length_p = \
-                mk_utils_int2mkp(path_info->size);
+        sr->log->size = sr->headers->content_length = sr->file_info->size;
+        sr->log->size_p = sr->headers->content_length_p = 
+                mk_utils_int2mkp(sr->file_info->size);
 
         if(sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST)
         {
@@ -373,7 +370,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
         /* Sending file */
         if((sr->method==HTTP_METHOD_GET || sr->method==HTTP_METHOD_POST) 
-                        && path_info->size>0)
+                        && sr->file_info->size>0)
         {
                 sr->fd_file = open(sr->real_path.data, config->open_flags);
 
@@ -383,7 +380,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }
 
                 /* Calc bytes to send & offset */
-                if(mk_http_range_set(sr, path_info->size)!=0)
+                if(mk_http_range_set(sr, sr->file_info->size)!=0)
                 {
                         mk_request_error(M_CLIENT_BAD_REQUEST, cr, 
                                         sr, 1, sr->log);
@@ -392,8 +389,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
               
                 bytes = SendFile(cr->socket, sr);
         }
-
-        mk_mem_free(path_info);
 
         return bytes;
 }

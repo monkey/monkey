@@ -204,6 +204,7 @@ struct request {
 	/* file descriptors */
 	int fd_file;
 
+        struct file_info *file_info;
 	struct host *host_conf;
 	struct log_info *log; /* Request Log */
 	struct header_values *headers; /* headers response */

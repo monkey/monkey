@@ -813,6 +813,7 @@ struct request *mk_request_alloc()
 	request->user_uri = NULL;
 	mk_pointer_reset(&request->query_string);
 
+        request->file_info = NULL;
 	request->virtual_user = NULL;
 	request->script_filename = NULL;
 	mk_pointer_reset(&request->real_path);
@@ -912,6 +913,7 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->user_uri);
  	mk_pointer_reset(&sr->query_string);
 
+        mk_mem_free(sr->file_info);
         mk_mem_free(sr->virtual_user);
         mk_mem_free(sr->script_filename);
         mk_pointer_free(&sr->real_path);
