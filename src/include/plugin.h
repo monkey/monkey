@@ -96,6 +96,7 @@ struct plugin_api {
                                int,
                                int);
         void *(*iov_send)(int, struct mk_iov *, int);
+        void *(*pointer_set)(mk_pointer *, char *);
         void *(*socket_cork_flag)(int, int);
 };
 

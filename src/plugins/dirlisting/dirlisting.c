@@ -237,6 +237,7 @@ int mk_dirhtml_conf()
          * setted in dirhtml_conf struct 
          */
         ret = mk_dirhtml_theme_load();
+        mk_api->pointer_set(&mk_dirhtml_default_mime, MK_DIRHTML_DEFAULT_MIME);
 
         return ret;
 }

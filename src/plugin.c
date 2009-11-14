@@ -175,6 +175,7 @@ void mk_plugin_init()
         api->iov_add_entry = (void *) mk_iov_add_entry;
         api->iov_set_entry = (void *) mk_iov_set_entry;
         api->iov_send = (void *) mk_iov_send;
+        api->pointer_set = (void *) mk_pointer_set;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
 
         path = mk_mem_malloc_z(1024);
@@ -233,13 +234,8 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
         }
         else if(stage & MK_PLUGIN_STAGE_40){
                 p = config->plugins->stage_40;
-                printf("\np: %p", p);
-                fflush(stdout);
-
                 while(p){
                         ret = p->call_stage_40(cr, sr);
-                        printf("\nrun!");
-                        fflush(stdout);
                         if(ret == 0){
                                 return 0;
                         }
