@@ -144,16 +144,14 @@ mk_pointer mk_http_protocol_check_str(int protocol)
 int mk_http_init(struct client_request *cr, struct request *sr)
 {
         int debug_error=0, bytes=0;
-        char *location=0, *real_location=0; /* ruta para redireccion */
         struct mimetype *mime;
         mk_pointer gmt_file_unix_time; // gmt time of server file (unix time)
-        unsigned long len;
         char *palm;
 
         /* Normal request default site */
         if((strcmp(sr->uri_processed,"/"))==0)
         {
-                sr->real_path.data = strdup(sr->host_conf->documentroot.data);
+                sr->real_path.data = mk_string_dup(sr->host_conf->documentroot.data);
                 sr->real_path.len = sr->host_conf->documentroot.len;
         }
 
@@ -198,84 +196,22 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 }                       
         }
 
-        /* Plugin Stage 40 */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr);
-
         /* is it a valid directory ? */
         if(sr->file_info->is_directory == MK_FILE_TRUE) {
-                /* This pointer never must be freed */
-                mk_pointer index_file;
-
-                /* 
-                  We have to check if exist an slash to the end of
-                  this string, if doesn't exist we send a redirection header
-                */
-                if(sr->uri_processed[strlen(sr->uri_processed) - 1] != '/') {
-                        char *host;
-                        host = mk_pointer_to_buf(sr->host);
-
-                        m_build_buffer(&location, &len, "%s/", sr->uri_processed);
-                        if(config->serverport == config->standard_port)
-                        {
-                                m_build_buffer(&real_location, &len, "http://%s%s", 
-                                                host, location);
-                        }
-                        else
-                        {
-                                m_build_buffer(&real_location, &len, "http://%s:%i%s",
-                                                host, config->serverport,
-                                                location);
-                        }
-                        mk_mem_free(host);
-
-                        sr->headers->status = M_REDIR_MOVED;
-                        sr->headers->content_length = -1;
-                        mk_pointer_reset(&sr->headers->content_type);
-                        sr->headers->location = real_location;
-                        sr->headers->cgi = SH_NOCGI;
-                        sr->headers->pconnections_left = 
-                                (config->max_keep_alive_request - 
-                                cr->counter_connections);
-
-                        mk_header_send(cr->socket, cr, sr, sr->log);
-                        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
-
-                        /* 
-                         *  we do not free() real_location 
-                         *  as it's freed by iov 
-                         */
-                        mk_mem_free(location);
-                        sr->headers->location=NULL;
-                        return 0;
+                /* Send redirect header if end slash is not found */
+                if(mk_http_directory_redirect_check(cr, sr) == -1){
+                        /* Redirect has been sent */
+                        return -1;
                 }
 
                 /* looking for a index file */
+                mk_pointer index_file;
                 index_file = mk_request_index(sr->real_path.data);
 
-                if(!index_file.data) {
-                        /* No index file found, show the content directory */
-                        if(sr->host_conf->getdir==VAR_ON) {
-                                int getdir_res = 0;
-
-                                //getdir_res = mk_dirhtml_init(cr, sr);
-                                        
-                                if(getdir_res == -1){
-                                        mk_request_error(M_CLIENT_FORBIDDEN, cr, 
-                                                         sr, 1, sr->log);
-                                        return -1;
-                                }
-                                return getdir_res;
-                        }
-                        else {
-                                mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 
-                                                 1, sr->log);
-                                return -1;
-                        }
-                }
-                else{
+                if(index_file.data) {
                         mk_mem_free(sr->file_info);
                         mk_pointer_free(&sr->real_path);
-
+                        
                         sr->real_path = index_file;
                         sr->file_info = mk_file_get_info(sr->real_path.data);
                 }
@@ -294,7 +230,12 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 mime = mimetype_default;
         }
 
-        
+        /* Plugin Stage 40: look for handlers for this request */
+        if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr) == 0){
+                return -1;
+        }
+
+        /* FIXME: Move palm code to a plugin */
         palm = mk_palm_check_request(cr, sr);
         if(palm)
         {
@@ -391,6 +332,59 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
 
         return bytes;
+}
+
+int mk_http_directory_redirect_check(struct client_request *cr,
+                                     struct request *sr)
+{
+        char *host;
+        char *location=0;
+        char *real_location=0;
+        unsigned long len;
+
+        /* 
+         * We have to check if exist an slash to the end of
+         * this string, if doesn't exist we send a redirection header
+         */
+        if(sr->uri_processed[strlen(sr->uri_processed) - 1] == '/') {
+                return 0;
+        }
+
+        host = mk_pointer_to_buf(sr->host);
+                
+        m_build_buffer(&location, &len, "%s/", sr->uri_processed);
+        if(config->serverport == config->standard_port)
+        {
+                m_build_buffer(&real_location, &len, "http://%s%s", 
+                               host, location);
+        }
+        else{
+                m_build_buffer(&real_location, &len, "http://%s:%i%s",
+                               host, config->serverport,
+                               location);
+        }
+        
+        mk_mem_free(host);
+        
+        sr->headers->status = M_REDIR_MOVED;
+        sr->headers->content_length = -1;
+        mk_pointer_reset(&sr->headers->content_type);
+        sr->headers->location = real_location;
+        sr->headers->cgi = SH_NOCGI;
+        sr->headers->pconnections_left = 
+                (config->max_keep_alive_request - 
+                 cr->counter_connections);
+        
+        mk_header_send(cr->socket, cr, sr, sr->log);
+        mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+
+        /* 
+         *  we do not free() real_location 
+         *  as it's freed by iov 
+         */
+        mk_mem_free(location);
+        sr->headers->location=NULL;
+        return -1;
 }
 
 /* 

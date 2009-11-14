@@ -103,8 +103,8 @@ typedef __uint32_t mk_plugin_stage_t;
 struct plugins *plgs;
 
 void mk_plugin_init();
-void mk_plugin_stage_run(mk_plugin_stage_t stage,
-                         struct client_request *cr,
-                         struct request *sr);
+int mk_plugin_stage_run(mk_plugin_stage_t stage,
+                        struct client_request *cr,
+                        struct request *sr);
 
 #endif

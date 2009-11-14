@@ -216,10 +216,11 @@ void mk_plugin_init()
         fclose(fconf);
 }
 
-void mk_plugin_stage_run(mk_plugin_stage_t stage,
+int mk_plugin_stage_run(mk_plugin_stage_t stage,
                          struct client_request *cr,
                          struct request *sr)
 {
+        int ret;
         struct plugin *p;
 
         if(stage & MK_PLUGIN_STAGE_10){
@@ -232,8 +233,13 @@ void mk_plugin_stage_run(mk_plugin_stage_t stage,
         else if(stage & MK_PLUGIN_STAGE_40){
                 p = config->plugins->stage_40;
                 while(p){
-                        p->call_stage_40(cr, sr);
+                        ret = p->call_stage_40(cr, sr);
+                        if(ret == 0){
+                                return 0;
+                        }
                         p = p->next;
                 }
         }
+
+        return -1;
 }
