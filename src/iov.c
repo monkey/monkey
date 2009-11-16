@@ -52,10 +52,12 @@ struct mk_iov *mk_iov_create(int n, int offset)
 int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                       mk_pointer sep, int free)
 {
-	mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
-	mk_io->io[mk_io->iov_idx].iov_len = len;
-	mk_io->iov_idx++;
-        mk_io->total_len += len;
+        if(buf){
+                mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
+                mk_io->io[mk_io->iov_idx].iov_len = len;
+                mk_io->iov_idx++;
+                mk_io->total_len += len;
+        }
 
 #ifdef DEBUG_IOV
         if(mk_io->iov_idx > mk_io->size){

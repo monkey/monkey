@@ -690,12 +690,19 @@ int mk_dirhtml_send(int fd, struct mk_iov *data)
         unsigned long len;
         char *buf=0;
 
-        mk_api->str_build(&buf, &len, "%x%s", data->total_len, MK_CRLF);
+        /* Chunk header */
+        mk_api->str_build(&buf, &len, "%x%s", data->total_len - 1, MK_CRLF);
+
+        int i, calc=0;
+        for(i=0; i< data->iov_idx; i++){
+                //                printf("\n'%s' len:%i", data->io[i].iov_base, data->io[i].iov_len);
+                fflush(stdout);
+                calc += data->io[i].iov_len;
+        }
 
         /* Add chunked information */
         mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
         n = (int) mk_api->iov_send(fd, data, MK_IOV_SEND_TO_SOCKET);
-
         return n;
 }
 
@@ -784,8 +791,8 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer, 
                                               values_global);
 
-        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         mk_dirhtml_send(cr->socket, iov_header);
+        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
 
         /* Creating table of contents and sorting */
         toc = mk_api->mem_alloc(sizeof(struct mk_f_list)*list_len);
