@@ -684,24 +684,20 @@ int mk_dirhtml_entry_cmp(const void *a, const void *b)
         return strcmp((*f_a)->name, (*f_b)->name);
 }
 
-int mk_dirhtml_send(int fd, struct mk_iov *data)
+int mk_dirhtml_send(int fd, struct request *sr, struct mk_iov *data)
 {
         int n;
         unsigned long len;
         char *buf=0;
 
-        /* Chunk header */
-        mk_api->str_build(&buf, &len, "%x%s", data->total_len - 1, MK_CRLF);
-
-        int i, calc=0;
-        for(i=0; i< data->iov_idx; i++){
-                //                printf("\n'%s' len:%i", data->io[i].iov_base, data->io[i].iov_len);
-                fflush(stdout);
-                calc += data->io[i].iov_len;
+        if(sr->protocol >= HTTP_PROTOCOL_11){
+                /* Chunk header */
+                mk_api->str_build(&buf, &len, "%x%s", 
+                                  data->total_len - 1, MK_CRLF);
+                
+                /* Add chunked information */
+                mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
         }
-
-        /* Add chunked information */
-        mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
         n = (int) mk_api->iov_send(fd, data, MK_IOV_SEND_TO_SOCKET);
         return n;
 }
@@ -763,7 +759,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         sr->headers->breakline = MK_HEADER_BREAKLINE;
         sr->headers->content_type = mk_dirhtml_default_mime;
 
-	if(sr->protocol==HTTP_PROTOCOL_11)
+	if(sr->protocol >= HTTP_PROTOCOL_11)
 	{
 		sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
 	}
@@ -791,7 +787,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer, 
                                               values_global);
 
-        mk_dirhtml_send(cr->socket, iov_header);
+        mk_dirhtml_send(cr->socket, sr, iov_header);
         mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
 
         /* Creating table of contents and sorting */
@@ -845,13 +841,16 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
                                                      values_entry);
 
-                mk_dirhtml_send(cr->socket, iov_entry);
+                mk_dirhtml_send(cr->socket, sr, iov_entry);
 
                 mk_api->mem_free(values_entry);
                 mk_api->iov_free(iov_entry);
         }
-        mk_dirhtml_send(cr->socket, iov_footer);
-        mk_dirhtml_send_chunked_end(cr->socket);
+        mk_dirhtml_send(cr->socket, sr, iov_footer);
+
+        if(sr->protocol >= HTTP_PROTOCOL_11){
+                mk_dirhtml_send_chunked_end(cr->socket);
+        }
 
         closedir(dir);
 
