@@ -577,7 +577,7 @@ struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
         tpl_len = mk_dirhtml_template_len(template);
 
         /* we duplicate the lenght in case we get separators */
-        iov = mk_api->iov_create(tpl_len*2, 1); 
+        iov = mk_api->iov_create(tpl_len*2, 1);
         tpl = template;
 
         while(tpl){
@@ -650,6 +650,27 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
 
 
         return (struct dirhtml_value *) aux;
+}
+
+void mk_dirhtml_tag_free_list(struct dirhtml_value **list)
+{
+        struct dirhtml_value *prev, *target;
+
+        target = *list;
+        while(target){
+                while((*target).next){
+                        prev = target;
+                        target = (*target).next;
+                }
+                mk_api->mem_free(target);
+
+                if(target == *list){
+                        break;
+                }
+                (*prev).next = NULL;
+                target = *list;
+        }
+        *list = NULL;
 }
 
 char *mk_dirhtml_load_file(char *filename)
@@ -734,7 +755,7 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
-        int i=0;
+        int i=0, n;
 
         mk_pointer sep;
 
@@ -765,10 +786,9 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 	}
 
 	/* Sending headers */
-	mk_api->header_send(cr->socket, cr, sr, sr->log);
+	n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
 
         /* Creating response template */
-
         /* Set %_html_title_% */
         values_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
                                               sr->uri_processed, 
@@ -787,7 +807,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer, 
                                               values_global);
 
-        mk_dirhtml_send(cr->socket, sr, iov_header);
         mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
 
         /* Creating table of contents and sorting */
@@ -801,6 +820,19 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 entry = entry->next;
         }        
         qsort(toc, list_len, sizeof(*toc), mk_dirhtml_entry_cmp);
+
+        n = mk_dirhtml_send(cr->socket, sr, iov_header);
+
+        if(n < 0){
+                closedir(dir);
+
+                mk_dirhtml_tag_free_list(&values_global);
+                mk_api->iov_free(iov_header);
+                mk_api->iov_free(iov_footer);
+                mk_dirhtml_free_list(toc, list_len);
+                return 0;
+        }
+
 
         /* sending TOC */
         for(i=0; i<list_len; i++)
@@ -841,20 +873,27 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
                                                      values_entry);
 
-                mk_dirhtml_send(cr->socket, sr, iov_entry);
+                /* send entry */
+                n = mk_dirhtml_send(cr->socket, sr, iov_entry);
 
-                mk_api->mem_free(values_entry);
+                /* free entry list */
+                mk_dirhtml_tag_free_list(&values_entry);
                 mk_api->iov_free(iov_entry);
-        }
-        mk_dirhtml_send(cr->socket, sr, iov_footer);
 
-        if(sr->protocol >= HTTP_PROTOCOL_11){
+                if(n<0){
+                        break;
+                }
+        }
+
+        n = mk_dirhtml_send(cr->socket, sr, iov_footer);
+
+        if(sr->protocol >= HTTP_PROTOCOL_11 && n >= 0){
                 mk_dirhtml_send_chunked_end(cr->socket);
         }
 
         closedir(dir);
 
-        mk_api->mem_free(values_global);
+        mk_dirhtml_tag_free_list(&values_global);
         mk_api->iov_free(iov_header);
         mk_api->iov_free(iov_footer);
         mk_dirhtml_free_list(toc, list_len);

@@ -113,6 +113,7 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
                 n = writev(fd, mk_io->io, mk_io->iov_idx);
                 if(n<0){
                         perror("writev");
+                        return n;
                 }
         }
         else if(to==MK_IOV_SEND_TO_PIPE){ 
@@ -145,6 +146,7 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
 void mk_iov_free(struct mk_iov *mk_io)
 {
         mk_iov_free_marked(mk_io);
+        mk_mem_free(mk_io->buf_to_free);
 	mk_mem_free(mk_io->io);
 	mk_mem_free(mk_io);
 }
