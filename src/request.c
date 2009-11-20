@@ -418,7 +418,7 @@ int mk_request_header_process(struct request *sr)
         char *query_init=0;
 	int prot_init=0, prot_end=0, pos_sep=0;
         int fh_limit;
-	char *str_prot=0, *port=0;
+	char *port=0;
 	char *headers;
 	mk_pointer host;
 
@@ -434,8 +434,7 @@ int mk_request_header_process(struct request *sr)
         uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
         fh_limit = (index(sr->body.data, '\n') - sr->body.data);
 
-        uri_end = mk_string_search_r(sr->body.data, ' ', 
-                                                fh_limit) - 1;
+        uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
 
         if(uri_end <= 0)
         {
@@ -479,12 +478,8 @@ int mk_request_header_process(struct request *sr)
 	/* HTTP Version */
         prot_end = fh_limit-1;
 	if(prot_end!=prot_init && prot_end>0){
-		str_prot = mk_string_copy_substr(sr->body.data, 
-                                                 prot_init, prot_end);
 		sr->protocol = sr->log->protocol = 
-                        mk_http_protocol_check(str_prot);
-
-        	mk_mem_free(str_prot);
+                        mk_http_protocol_check(sr->body.data+prot_init, prot_end-prot_init);
 	}
 
 	headers = sr->body.data+prot_end+mk_crlf.len;

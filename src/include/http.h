@@ -62,7 +62,7 @@ int mk_http_method_check(mk_pointer method);
 mk_pointer mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
 
-int mk_http_protocol_check(char *protocol);
+int mk_http_protocol_check(char *protocol, int len);
 mk_pointer mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct client_request *cr, struct request *sr);

@@ -65,6 +65,7 @@ char *mk_socket_get_ip(int socket)
 	struct sockaddr_in m_addr;
 
         ipv4 = mk_mem_malloc(ipv4_len);
+
         if(!ipv4)
         {
                 return NULL;

@@ -121,18 +121,14 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
                  * maybe we need to fix something here, at the moment
                  * we will keep using writev to push the iovec struct to the pipe
                  *
+                 *
                  * n = vmsplice(fd, 
                  *            (const struct iovec *) mk_io->io, 
-                 *             mk_io->iov_idx, 
-                 *             //SPLICE_F_GIFT);
-                 *             0);
-                 * if(n<0){
-                 *   perror("vmsplice");
-                 * }
-                 *
-                 *  mk_iov_free(mk_io);
+                 *            mk_io->iov_idx, 
+                 *            SPLICE_F_GIFT);
                  * return n;
                  */
+
                 n = writev(fd, mk_io->io, mk_io->iov_idx);
                 
                 if(n<0){

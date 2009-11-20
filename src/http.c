@@ -90,9 +90,8 @@ int mk_http_method_get(char *body)
         int max_len_method = 5;
         mk_pointer method;
 
-        //        mk_pointer_reset(&method);
-
-        pos = mk_string_search(body, " ");
+        /* Max method length is 4 (POST/HEAD) */
+        pos = mk_string_char_search(body, ' ', 4);
         if(pos<=2 || pos>=max_len_method){
                 return METHOD_NOT_FOUND;      
         }
@@ -105,17 +104,17 @@ int mk_http_method_get(char *body)
         return int_method;
 }
 
-int mk_http_protocol_check(char *protocol)
+int mk_http_protocol_check(char *protocol, int len)
 {
-        if(strcasecmp(protocol, HTTP_PROTOCOL_11_STR)==0)
+        if(strncasecmp(protocol, HTTP_PROTOCOL_11_STR, len)==0)
         {
                 return HTTP_PROTOCOL_11;
         }
-        if(strcasecmp(protocol, HTTP_PROTOCOL_10_STR)==0)
+        if(strncasecmp(protocol, HTTP_PROTOCOL_10_STR, len)==0)
         {
                 return HTTP_PROTOCOL_10;
         }
-        if(strcasecmp(protocol, HTTP_PROTOCOL_09_STR)==0)
+        if(strncasecmp(protocol, HTTP_PROTOCOL_09_STR, len)==0)
         {
                 return HTTP_PROTOCOL_09;
         }
@@ -528,10 +527,18 @@ int mk_http_range_parse(struct request *sr)
  */
 int mk_http_pending_request(struct client_request *cr)
 {
-        int n;
+        int n,len;
         char *str;
         
-        n = mk_string_search(cr->body, mk_endblock.data);
+        len = cr->body_length;
+        
+        /* try to match CRLF end */
+        if(strcmp(cr->body+len-mk_endblock.len, mk_endblock.data) == 0){
+                n = len-mk_endblock.len;
+        }
+        else{
+                n = mk_string_search(cr->body, mk_endblock.data);
+        }
         
         if(n<=0)
         {
