@@ -35,6 +35,7 @@
 #include "utils.h"
 #include "clock.h"
 #include "cache.h"
+#include "http.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
@@ -181,7 +182,37 @@ int mk_header_send(int fd, struct client_request *cr,
 			header_current_time.data,
 			header_current_time.len, 
 			mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
-	
+        
+	/* Connection */
+        if(config->keep_alive == VAR_ON &&
+           cr->request->connection.data != NULL &&
+           cr->request->keep_alive == VAR_ON &&
+           (cr->counter_connections < config->max_keep_alive_request)){
+                m_build_buffer(
+                               &buffer,
+                               &len,
+                               "Keep-Alive: timeout=%i, max=%i" 
+                               MK_CRLF,
+                               config->keep_alive_timeout, 
+                               (config->max_keep_alive_request -
+                                cr->counter_connections)
+                               );
+                mk_iov_add_entry(iov, buffer, len,
+                                 mk_iov_none, MK_IOV_FREE_BUF);
+                mk_iov_add_entry(iov,
+                                 mk_header_conn_ka.data,
+                                 mk_header_conn_ka.len,
+                                 mk_iov_none, 
+                                 MK_IOV_NOT_FREE_BUF);
+        }
+        else if(sr->protocol >= HTTP_PROTOCOL_11){
+                mk_iov_add_entry(iov,
+                                 mk_header_conn_close.data,
+                                 mk_header_conn_close.len,
+                                 mk_iov_none, 
+                                 MK_IOV_NOT_FREE_BUF);
+        }
+
 	/* Location */
 	if(sh->location!=NULL)
 	{
@@ -207,38 +238,6 @@ int mk_header_send(int fd, struct client_request *cr,
                                  mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 	}
 	
-	/* Connection */
-        if(config->keep_alive == VAR_ON){
-                /* Explicit request */
-                if(cr->request->connection.data != NULL &&
-                   cr->request->keep_alive == VAR_ON &&
-                   (cr->counter_connections < config->max_keep_alive_request)){
-                        m_build_buffer(
-                                       &buffer,
-                                       &len,
-                                       "Keep-Alive: timeout=%i, max=%i" 
-                                       MK_CRLF,
-                                       config->keep_alive_timeout, 
-                                       (config->max_keep_alive_request -
-                                        cr->counter_connections)
-                                       );
-                        mk_iov_add_entry(iov, buffer, len,
-                                         mk_iov_none, MK_IOV_FREE_BUF);
-                        mk_iov_add_entry(iov,
-                                         mk_header_conn_ka.data,
-                                         mk_header_conn_ka.len,
-                                         mk_iov_none, 
-                                         MK_IOV_NOT_FREE_BUF);
-                }
-                else{
-                        mk_iov_add_entry(iov,
-                                         mk_header_conn_close.data,
-                                         mk_header_conn_close.len,
-                                         mk_iov_none, 
-                                         MK_IOV_NOT_FREE_BUF);
-                }
-        }
-
 	/* Content type */
 	if(sh->content_type.len>0)
 	{

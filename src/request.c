@@ -558,12 +558,6 @@ int mk_request_header_process(struct request *sr)
         }
         sr->log->final_response = M_HTTP_OK;
 
-        /*
-        mk_pointer_print(sr->method_p);
-        mk_pointer_print(sr->uri);
-        mk_pointer_print(sr->query_string);
-        */
-
 	return 0;
 }
 
