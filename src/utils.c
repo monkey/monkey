@@ -75,33 +75,6 @@ int SendFile(int socket, struct request *sr)
 	return sr->bytes_to_send;
 }
 
-/* It's a valid directory ? */
-int CheckDir(char *pathfile)
-{
-	struct stat path;
-
-	if(stat(pathfile,&path)==-1)
-		return -1;
-		
-	if(!(path.st_mode & S_IFDIR))
-		return -1;
-		
-	return 0;
-}
-
-int CheckFile(char *pathfile)
-{
-	struct stat path;
-
-	if(stat(pathfile,&path)==-1)
-		return -1;
-		
-	if(!(path.st_mode & S_IFREG))
-		return -1;
-		
-	return 0;
-}
-
 /* Devuelve la fecha para enviarla 
  en el header */
 mk_pointer PutDate_string(time_t date)

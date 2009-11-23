@@ -171,31 +171,6 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 			}
 		}
 		
-		/* Scripts */
-		if(strcasecmp(variable,"AddScript")==0){
-			char *mimescript[4];
-
-			mimescript[0]=value; /* Mime Type */
-			mimescript[1]=strtok_r(NULL,"\"\t ", &last); /* Bin Path */
-			mimescript[2]=strtok_r(NULL,"\"\t ", &last); /* Ext */
-			mimescript[3]='\0';
-			
-			if(strlen(mimescript[0])<1){
-				printf("Error: AddScript variable in %s -> mime type not found.\n", path);
-				exit(1);
-			}	
-
-			if(access(mimescript[1],X_OK)!=0 || CheckFile(mimescript[1])!=0){
-				printf("Error: AddScript variable in %s -> binary file not valid.\n", path);
-				exit(1);
-			}
-			if(strlen(mimescript[2])<1){
-				printf("Error: AddScript variable in %s -> extension not found.\n", path);
-				exit(1);
-			}	
-			mk_mimetype_add(mimescript[2],mimescript[0],mimescript[1]);
-		}
-
 		/* User Variable */
 		if(strcasecmp(variable,"User")==0) {
 			m_build_buffer(&config->user, &len,
