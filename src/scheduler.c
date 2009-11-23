@@ -249,7 +249,6 @@ int mk_sched_remove_client(struct sched_list_node **sched, int remote_fd)
                 sc->status = MK_SCHEDULER_CONN_AVAILABLE;
                 return 0;
         }
-
         return -1;
 }
 

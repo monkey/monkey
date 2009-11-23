@@ -762,8 +762,8 @@ struct request *mk_request_alloc()
 {
 	struct request *request=0;
 
-	request = (struct request *) mk_mem_malloc(sizeof(struct request));
-	request->log = (struct log_info *) mk_mem_malloc(sizeof(struct log_info));
+	request = mk_mem_malloc(sizeof(struct request));
+	request->log = mk_mem_malloc(sizeof(struct log_info));
 
 	request->status=VAR_OFF; /* Request not processed yet */
 	request->make_log=VAR_ON; /* build log file of this request ? */

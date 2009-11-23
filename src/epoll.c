@@ -66,11 +66,12 @@ int mk_epoll_create(int max_events)
 
 void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
 {
-	int i, ret=-1;
+	int i, fd, ret=-1;
         int num_fds;
         int fds_timeout;
         struct epoll_event events[max_events];
         struct sched_list_node *sched;
+        struct client_request *cr;
 
         /* Get thread conf */
         sched = mk_sched_get_thread_conf();
@@ -85,12 +86,17 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
                                      max_events, MK_EPOLL_WAIT_TIMEOUT);
 
                 for(i=0; i<num_fds; i++) {
+                        fd = events[i].data.fd;
                         // Case 1: Error condition
                         if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-                                close(events[i].data.fd);
+                                mk_sched_remove_client(&sched, fd);
+                                cr = mk_request_client_get(fd);
+                                if(cr){
+                                        mk_request_client_remove(fd);
+                                }
                                 continue;
                         }
-
+                        
                         if(events[i].events & EPOLLIN)
                         {
                                 ret = (* calls->func_switch)
