@@ -21,7 +21,7 @@
 
 #include "monkey.h"
 #include "http.h"
-#include "conn_switch.h"
+#include "connection.h"
 #include "scheduler.h"
 #include "epoll.h"
 #include "request.h"
@@ -29,7 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 
-int mk_conn_switch_read(int socket)
+int mk_conn_read(int socket)
 {
 	int ret;
 
@@ -37,7 +37,7 @@ int mk_conn_switch_read(int socket)
 	return ret;
 }
 
-int mk_conn_switch_write(int socket)
+int mk_conn_write(int socket)
 {
 	int ret=-1, ka, efd;
 	struct client_request *cr;
@@ -95,21 +95,18 @@ int mk_conn_switch_write(int socket)
 	return -1;
 }
 
-int mk_conn_switch(int action, int socket)
+int mk_conn_error(int socket)
 {
-	int status=-1; 
-	
-	switch(action)
-	{
-		case MK_CONN_SWITCH_READ:
-			status = mk_conn_switch_read(socket);
-			break;
-		case MK_CONN_SWITCH_WRITE:
-			status = mk_conn_switch_write(socket);
-			break;
-	}
+        struct client_request *cr;
+        struct sched_list_node *sched;
 
-	return status;
+        sched = mk_sched_get_thread_conf();
+        mk_sched_remove_client(&sched, socket);
+        cr = mk_request_client_get(socket);
+        if(cr){
+                mk_request_client_remove(socket);
+        }
+
+        return 0;
 }
-
 

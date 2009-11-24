@@ -40,16 +40,18 @@
 
 #define MAX_EVENTS 5000
 
-mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *),
-		int read, int write)
+mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
+                                         void (*write)(void *),
+                                         void (*error)(void *))
 {
-	mk_epoll_calls *calls;
-	calls = malloc(sizeof(mk_epoll_calls));
-	calls->func_switch = (void *) func_switch;
-	calls->read = (int) read;
-	calls->write = (int) write;
+	mk_epoll_handlers *handler;
 
-	return calls;
+	handler = malloc(sizeof(mk_epoll_handlers));
+	handler->read = (void *) read;
+        handler->write = (void *) write;
+        handler->error = (void *) error;
+
+	return handler;
 }
 
 int mk_epoll_create(int max_events)
@@ -64,14 +66,13 @@ int mk_epoll_create(int max_events)
 	return efd;
 }
 
-void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
+void *mk_epoll_init(int efd, mk_epoll_handlers *handler, int max_events)
 {
 	int i, fd, ret=-1;
         int num_fds;
         int fds_timeout;
         struct epoll_event events[max_events];
         struct sched_list_node *sched;
-        struct client_request *cr;
 
         /* Get thread conf */
         sched = mk_sched_get_thread_conf();
@@ -89,30 +90,22 @@ void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events)
                         fd = events[i].data.fd;
                         // Case 1: Error condition
                         if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-                                mk_sched_remove_client(&sched, fd);
-                                cr = mk_request_client_get(fd);
-                                if(cr){
-                                        mk_request_client_remove(fd);
-                                }
+                                (* handler->error)((void *)fd);
                                 continue;
                         }
                         
                         if(events[i].events & EPOLLIN)
                         {
-                                ret = (* calls->func_switch)
-                                  ((void *)calls->read,
-                                   (void *)events[i].data.fd);
+                                ret = (* handler->read)((void *) fd);
                         }
                         else if(events[i].events & EPOLLOUT)
                         {
-                                ret = (* calls->func_switch)
-                                  ((void *)calls->write,
-                                   (void *)events[i].data.fd);
+                                ret = (* handler->write)((void *) fd);
                         }
-                        
+
                         if(ret<0)
                         {
-                                mk_sched_remove_client(&sched, events[i].data.fd);
+                                mk_sched_remove_client(&sched, fd);
                         }
                 }
 

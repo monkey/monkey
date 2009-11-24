@@ -522,14 +522,12 @@ void mk_config_start_configure(void)
 	mk_config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
 
 	/* if not index names defined, set default */
-	if(first_index==NULL) 
+	if(first_index==NULL){
 		mk_config_add_index("index.html");			
+        }
 
 	/* Load mimes */
 	mk_mimetype_read_config();
-
-        /* Load dir_html configuration */
-        //mk_dirhtml_conf();
 
 	/* Load security rules */
 	Deny_Read_Config(); 

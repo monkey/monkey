@@ -29,7 +29,7 @@
 #include <string.h>
 
 #include "monkey.h"
-#include "conn_switch.h"
+#include "connection.h"
 #include "signal.h"
 #include "scheduler.h"
 #include "memory.h"
@@ -132,11 +132,11 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
         /* Init specific thread cache */
         mk_cache_thread_init();
 
-	mk_epoll_calls *callers;
-	callers = mk_epoll_set_callers((void *)mk_conn_switch,
-			MK_CONN_SWITCH_READ, 
-			MK_CONN_SWITCH_WRITE);
-        
+	mk_epoll_handlers *handler;
+	handler = mk_epoll_set_handlers((void *) mk_conn_read,
+                                        (void *) mk_conn_write, 
+                                        (void *) mk_conn_error);
+
         /* Nasty way to export task id */
         usleep(1000);
         thinfo = mk_sched_get_thread_conf();
@@ -148,7 +148,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
         thinfo->pid = syscall(__NR_gettid);
 
 	mk_sched_set_thread_poll(thconf->epoll_fd);
-	mk_epoll_init(thconf->epoll_fd, callers, thconf->max_events);
+	mk_epoll_init(thconf->epoll_fd, handler, thconf->max_events);
 
 	return 0;
 }

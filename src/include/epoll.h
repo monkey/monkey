@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2008, Eduardo Silva P.
@@ -29,16 +31,17 @@
 #define MK_EPOLL_BEHAVIOR_TRIGGERED 3
 
 typedef struct {
-	int (*func_switch)(void *, void *);
-	int read;
-	int write;
-} mk_epoll_calls;
+        int (*read)(void *);
+        int (*write)(void *);
+        int (*error)(void *);
+} mk_epoll_handlers;
 
 int mk_epoll_create(int max_events);
-void *mk_epoll_init(int efd, mk_epoll_calls *calls, int max_events);
+void *mk_epoll_init(int efd, mk_epoll_handlers *handler, int max_events);
 
-mk_epoll_calls *mk_epoll_set_callers(void (*func_switch)(void *), int read, 
-                                     int write);
+mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
+                                         void (*write)(void *),
+                                         void (*error)(void *));
 
 int mk_epoll_add_client(int efd, int socket, int mode);
 int mk_epoll_socket_change_mode(int efd, int socket, int mode);
