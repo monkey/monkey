@@ -277,7 +277,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		/* Request with data to send */
 		else if(p_request->bytes_to_send>0)
 		{
-                        bytes = SendFile(socket, p_request);
+                        bytes = SendFile(socket, cr, p_request);
 			final_status = bytes;
 		}
 		/*
@@ -808,6 +808,7 @@ struct request *mk_request_alloc()
 	mk_pointer_reset(&request->real_path);
 	request->host_conf = config->hosts; 
 
+        request->loop = 0;
 	request->bytes_to_send = -1;
 	request->bytes_offset = 0;
 	request->fd_file = -1;

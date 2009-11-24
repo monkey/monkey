@@ -35,9 +35,7 @@
 #include "memory.h"
 
 /* utils.c */
-int SendFile(int socket, struct request *request);
-int	CheckDir(char *pathfile);
-int	CheckFile(char *pathfile);
+int SendFile(int socket, struct client_request *cr, struct request *request);
 int AccessFile(struct stat file);
 int	ExecFile(char *pathfile);
 int	hex2int(char *pChars);

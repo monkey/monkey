@@ -53,14 +53,14 @@
 #include "socket.h"
 #include "clock.h"
 
-int SendFile(int socket, struct request *sr)
+int SendFile(int socket, struct client_request *cr, struct request *sr)
 {
 	long int nbytes=0;
 
 	nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
 			sr->bytes_to_send);
 
-        if(nbytes > 0 && sr->bytes_offset == sr->bytes_to_send){
+        if(nbytes > 0 && sr->loop == 0){
                 mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
         }
 
@@ -72,6 +72,8 @@ int SendFile(int socket, struct request *sr)
 	{
 		sr->bytes_to_send-=nbytes;
 	}
+
+        sr->loop++;
 	return sr->bytes_to_send;
 }
 

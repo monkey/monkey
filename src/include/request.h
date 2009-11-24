@@ -210,6 +210,7 @@ struct request {
 	struct header_values *headers; /* headers response */
 	struct request *next;
 
+        long loop;
 	long bytes_to_send;
         off_t bytes_offset;
 };

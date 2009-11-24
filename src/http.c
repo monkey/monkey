@@ -331,8 +331,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                                         sr, 1, sr->log);
                         return -1;
                 }
-              
-                bytes = SendFile(cr->socket, sr);
+                bytes = SendFile(cr->socket, cr, sr);
         }
 
         return bytes;
