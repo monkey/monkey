@@ -816,7 +816,7 @@ struct request *mk_request_alloc()
 	/* Response Headers */
 	request->headers = mk_header_create();
 
-	return (struct request *) request;
+	return request;
 }
 
 void mk_request_free_list(struct client_request *cr)
@@ -954,7 +954,7 @@ struct client_request *mk_request_client_create(int socket)
         mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
                                       MK_SCHEDULER_CLOSED_NONE);
         
-        return (struct client_request *) cr;
+        return cr;
 }
 
 struct client_request *mk_request_client_get(int socket)
@@ -973,7 +973,7 @@ struct client_request *mk_request_client_get(int socket)
 		cr = cr->next;
 	}
 
-	return (struct client_request *) cr;
+	return cr;
 }
 
 /*

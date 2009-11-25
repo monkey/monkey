@@ -248,7 +248,7 @@ char *get_real_string(mk_pointer uri){
         }        
         buf[buf_idx]='\0';
 
-        return (char *) buf;
+        return buf;
 }
 
 void mk_utils_toupper(char *string)

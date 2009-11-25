@@ -560,7 +560,7 @@ struct host *mk_config_host_find(mk_pointer host)
 			aux_host=aux_host->next;
 	}
 
-	return (struct host *) aux_host;
+	return aux_host;
 }
 
 void mk_config_sanity_check()

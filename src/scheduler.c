@@ -155,7 +155,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 
 struct request_idx *mk_sched_get_request_index()
 {
-	return (struct request_idx *) pthread_getspecific(request_index);
+	return pthread_getspecific(request_index);
 }
 
 void mk_sched_set_request_index(struct request_idx *ri)
@@ -170,7 +170,7 @@ void mk_sched_set_thread_poll(int epoll)
 
 int mk_sched_get_thread_poll()
 {
-	return (int) pthread_getspecific(epoll_fd);
+	return pthread_getspecific(epoll_fd);
 }
 
 struct sched_list_node *mk_sched_get_thread_conf()

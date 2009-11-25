@@ -212,7 +212,7 @@ void *mk_logger_worker_init(void *args)
 
 struct mk_iov *mk_logger_iov_get()
 {
-        return (struct mk_iov *) pthread_getspecific(mk_cache_iov_log);
+        return pthread_getspecific(mk_cache_iov_log);
 }
 
 void mk_logger_iov_free(struct mk_iov *iov)

@@ -45,7 +45,7 @@ int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
 
 struct mk_iov *mk_header_iov_get()
 {
-        return (struct mk_iov *) pthread_getspecific(mk_cache_iov_header);
+        return pthread_getspecific(mk_cache_iov_header);
 }
 
 void mk_header_iov_free(struct mk_iov *iov)
@@ -394,7 +394,7 @@ char *mk_header_chunked_line(int len)
         buf = mk_mem_malloc_z(10);
         snprintf(buf, 9, "%x%s", len, MK_CRLF);
 
-        return (char *) buf;
+        return buf;
 }
 
 struct header_values *mk_header_create()
