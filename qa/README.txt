@@ -1,7 +1,7 @@
 Monkey QA Test scripts
 ======================
 This QA test script package has been written by 
-Carlos Ghan (charly.brown.uy@gmail.com). 
+Carlos Ghan (charlie.brown.uy@gmail.com). 
 
 In order to run this test you will need the
 HTTP Test Tool installed in your system, you can 
