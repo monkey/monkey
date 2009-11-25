@@ -1,0 +1,5 @@
+# Global server settings
+SET PORT=2001
+SET HOST=localhost
+SET HTTPVER=HTTP/1.1
+_LOG_LEVEL 4
