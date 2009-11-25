@@ -135,7 +135,9 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 	mk_epoll_handlers *handler;
 	handler = mk_epoll_set_handlers((void *) mk_conn_read,
                                         (void *) mk_conn_write, 
-                                        (void *) mk_conn_error);
+                                        (void *) mk_conn_error,
+                                        (void *) mk_conn_close,
+                                        (void *) mk_conn_timeout);
 
         /* Nasty way to export task id */
         usleep(1000);

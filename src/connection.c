@@ -110,3 +110,22 @@ int mk_conn_error(int socket)
         return 0;
 }
 
+int mk_conn_close(int socket)
+{
+        struct sched_list_node *sched;
+
+        sched = mk_sched_get_thread_conf();
+        mk_sched_remove_client(&sched, socket);
+
+        return 0;
+}
+
+int mk_conn_timeout(int socket)
+{
+        struct sched_list_node *sched;
+
+        sched = mk_sched_get_thread_conf();
+        mk_sched_check_timeouts(&sched);
+
+        return 0;
+}

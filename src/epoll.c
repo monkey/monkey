@@ -42,7 +42,9 @@
 
 mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
                                          void (*write)(void *),
-                                         void (*error)(void *))
+                                         void (*error)(void *),
+                                         void (*close)(void *),
+                                         void (*timeout)(void *))
 {
 	mk_epoll_handlers *handler;
 
@@ -50,7 +52,8 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
 	handler->read = (void *) read;
         handler->write = (void *) write;
         handler->error = (void *) error;
-
+        handler->close = (void *) close;
+        handler->timeout = (void *) timeout;
 	return handler;
 }
 
@@ -105,7 +108,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers *handler, int max_events)
 
                         if(ret<0)
                         {
-                                mk_sched_remove_client(&sched, fd);
+                                (* handler->close)((void *) fd);
                         }
                 }
 
