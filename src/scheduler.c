@@ -30,7 +30,6 @@
 
 #include "monkey.h"
 #include "connection.h"
-#include "signal.h"
 #include "scheduler.h"
 #include "memory.h"
 #include "epoll.h"
@@ -38,6 +37,7 @@
 #include "cache.h"
 #include "config.h"
 #include "clock.h"
+#include "signals.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
@@ -170,7 +170,7 @@ void mk_sched_set_thread_poll(int epoll)
 
 int mk_sched_get_thread_poll()
 {
-	return pthread_getspecific(epoll_fd);
+	return (int) pthread_getspecific(epoll_fd);
 }
 
 struct sched_list_node *mk_sched_get_thread_conf()
