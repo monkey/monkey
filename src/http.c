@@ -91,7 +91,7 @@ int mk_http_method_get(char *body)
         mk_pointer method;
 
         /* Max method length is 4 (POST/HEAD) */
-        pos = mk_string_char_search(body, ' ', 4);
+        pos = mk_string_char_search(body, ' ', 5);
         if(pos<=2 || pos>=max_len_method){
                 return METHOD_NOT_FOUND;      
         }
