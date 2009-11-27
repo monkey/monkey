@@ -115,6 +115,7 @@ int mk_sched_launch_thread(int max_events)
 	/* Register working thread */
 	mk_sched_register_thread(tid, efd);
 	pthread_mutex_unlock(&mutex_wait_register);
+
 	return 0;
 }
 
@@ -131,6 +132,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 
         /* Init specific thread cache */
         mk_cache_thread_init();
+        mk_plugin_worker_startup();
 
 	mk_epoll_handlers *handler;
 	handler = mk_epoll_set_handlers((void *) mk_conn_read,

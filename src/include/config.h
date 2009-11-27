@@ -83,7 +83,7 @@ struct server_config {
 	struct host *hosts;
 
         mode_t open_flags;
-        struct plugins *plugins;
+        struct plugin_stages *plugins;
 };
 
 struct server_config *config;

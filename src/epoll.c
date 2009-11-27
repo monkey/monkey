@@ -54,6 +54,7 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
         handler->error = (void *) error;
         handler->close = (void *) close;
         handler->timeout = (void *) timeout;
+
 	return handler;
 }
 

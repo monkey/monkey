@@ -39,7 +39,7 @@
 #define MK_PLUGIN_STAGE_50 ((__uint32_t) 16) /* Request ended */
 #define MK_PLUGIN_STAGE_60 ((__uint32_t) 32) /* Connection closed */
 
-struct plugins {
+struct plugin_stages {
         struct plugin *stage_10;
         struct plugin *stage_20;
         struct plugin *stage_30;
@@ -47,6 +47,13 @@ struct plugins {
         struct plugin *stage_50;
         struct plugin *stage_60;
 };
+
+struct plugin_list {
+        struct plugin *p;
+        struct plugin_list *next;
+};
+
+struct plugin_list *plg_list;
 
 struct plugin {
         char *name;
@@ -57,6 +64,7 @@ struct plugin {
 
         /* Plugin external functions */
         int (*call_init)(void *api);
+        int (*call_worker_init)();
         int (*call_stage_10)();
         int (*call_stage_40)(struct client_request *, struct request *);
 

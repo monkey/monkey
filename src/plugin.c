@@ -85,6 +85,25 @@ void mk_plugin_register_add_to_stage(struct plugin **st, struct plugin *p)
 
 void mk_plugin_register_stages(struct plugin *p)
 {
+        struct plugin_list *new, *list;
+
+        /* Main plugin list */
+        new = mk_mem_malloc(sizeof(struct plugin_list));
+        new->p = p;
+        new->next = NULL;
+
+        if(!plg_list){
+                plg_list = new;
+        }
+        else{
+                list = plg_list;
+                while(list->next){
+                        list = list->next;
+                }
+                list->next = new;
+        }
+
+        /* Assign plugin to stages */
         if(*p->stages & MK_PLUGIN_STAGE_10){
                 mk_plugin_register_add_to_stage(&config->plugins->stage_10, p);
         }
@@ -124,6 +143,10 @@ void *mk_plugin_register(void *handler, char *path)
         /* Plugin external function */
         p->call_init = (int (*)()) mk_plugin_load_symbol(handler, 
                                                          "_mk_plugin_init");
+
+        p->call_worker_init = (int (*)()) mk_plugin_load_symbol(handler,
+                                                                "_mk_plugin_worker_init");
+
         p->call_stage_10 = (int (*)()) 
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
 
@@ -244,4 +267,22 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
         }
 
         return -1;
+}
+
+/* This function is called by every created worker
+ * for plugins which need to set some data under a thread
+ * context 
+ */
+void mk_plugin_worker_startup()
+{
+        struct plugin_list *plg;
+
+        plg = plg_list;
+        
+        while(plg){
+                if(plg->p->call_worker_init){
+                        plg->p->call_worker_init();
+                }
+                plg = plg->next;
+        }
 }
