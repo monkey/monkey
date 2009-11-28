@@ -74,7 +74,7 @@ void mk_version()
 { 
 	printf("Monkey HTTP Daemon %s\n",VERSION);
 	printf("Built : %s\n", MONKEY_BUILT);
-	printf("Home  : http://monkeyd.sourceforge.net\n");
+	printf("Home  : http://www.monkey-project.com\n");
 	fflush(stdout);
 }
 
