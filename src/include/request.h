@@ -239,8 +239,7 @@ mk_pointer mk_request_index(char *pathfile);
 
 
 /* Custom HTML Page for errors */
-void  mk_request_set_default_page(mk_pointer *page,
-		char *title, mk_pointer message, char *signature);
+mk_pointer *mk_request_set_default_page(char *title, mk_pointer message, char *signature);
 
 int mk_request_header_process(struct request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
