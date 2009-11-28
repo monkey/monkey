@@ -714,8 +714,11 @@ void mk_request_error(int num_error, struct client_request *cr,
 	s_log->final_response=num_error;
 
 	s_request->headers->status = num_error;
-	s_request->headers->content_length = page->len;
-        s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
+        if(page){
+                s_request->headers->content_length = page->len;
+                s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
+        }
+   
 	s_request->headers->location = NULL;
 	s_request->headers->cgi = SH_NOCGI;
 	s_request->headers->pconnections_left = 0;
@@ -723,7 +726,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 	
 	if(aux_message) mk_mem_free(aux_message);
 	
-	if(!page->data)
+	if(!page)
 	{
           mk_pointer_reset(&s_request->headers->content_type);
 	}
