@@ -336,7 +336,7 @@ EOF
 
     for i in $list;
 	do 
-	      echo "\t@(cd $i && make && cd ..)" >> Makefile;
+	      echo "	@(cd $i && make && cd ..)" >> Makefile;
 	      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../../conf/plugins.load;
 	done	
 }
