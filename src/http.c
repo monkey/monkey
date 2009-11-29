@@ -167,6 +167,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->file_info = mk_file_get_info(sr->real_path.data);
 
         if(!sr->file_info){
+                /* if the resource requested doesn't exists, let's 
+                 * check if some plugin would like to handle it
+                 */
+                if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr) == 0){
+                        return -1;
+                }
+
                 mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 
                                 debug_error, sr->log);
                 return -1;
