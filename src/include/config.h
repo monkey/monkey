@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 
 /*  Monkey HTTP Daemon
@@ -34,6 +35,17 @@
 
 #define VALUE_ON "on"
 #define VALUE_OFF "off"
+
+#define MK_CONFIG_VAL_STR 0
+#define MK_CONFIG_VAL_NUM 1
+#define MK_CONFIG_VAL_BOOL 2
+
+struct mk_config {
+        char *key;
+        char *val;
+        struct mk_config *next;
+};
+
 
 /* Base struct of server */
 struct server_config {

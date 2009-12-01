@@ -42,15 +42,125 @@
 #include "cgi.h"
 #include "plugin.h"
 
+struct mk_config *mk_config_create(char *path)
+{
+        FILE *f;
+        int len;
+        char buf[255];
+        char *key=0, *val=0, *last=0;
+        struct mk_config *cnf=0, *new, *p;
+
+	if((f=fopen(path, "r")) == NULL) {
+		fprintf(stderr, "\nConfig Error: I can't open %s file.", path);
+		exit(1);
+	}
+
+        /* looking for configuration directives */
+        while(fgets(buf, 255, f)){
+		len = strlen(buf);
+		if(buf[len-1] == '\n') {
+			buf[--len] = 0;
+			if(len && buf[len-1] == '\r')
+				buf[--len] = 0;
+		}
+
+		if(!buf[0] || buf[0] == '#')
+			continue;
+
+                key = strtok_r(buf, "\"\t ", &last);
+                val = strtok_r(NULL, "\"\t ", &last);
+
+                if(!key || !val){
+                        continue;
+                }
+
+                /* Allow new entry found */
+                new = mk_mem_malloc(sizeof(struct mk_config));
+                new->key = mk_string_dup(key);
+                new->val = mk_string_dup(val);
+                new->next = NULL;
+
+                /* Link to main list */
+                if(!cnf){
+                        cnf = new;
+                }
+                else{
+                        p = cnf;
+                        while(p->next){
+                                p = p->next;
+                        }
+                        p->next = new;
+                }
+        }
+
+        fclose(f);
+        return cnf;
+}
+
+void mk_config_free(struct mk_config *cnf)
+{
+        struct mk_config *prev=0, *target;
+
+        target = cnf;
+        while(target){
+                while(target->next){
+                        prev = target;
+                        target = target->next;
+                }
+
+                mk_mem_free(target);
+
+                if(target == cnf){
+                        return;
+                }
+                prev->next = NULL;
+                target = cnf;
+        }
+}
+
+void *mk_config_getval(struct mk_config *cnf, char *key, int mode)
+{
+        int on, off;
+        struct mk_config *p;
+
+        p = cnf;
+        while(p){
+                if(strcasecmp(p->key, key) == 0){
+                        switch(mode){
+                        case MK_CONFIG_VAL_STR:
+                                return (void *) p->val;
+                        case MK_CONFIG_VAL_NUM:
+                                return (void *) atoi(p->val);
+                        case MK_CONFIG_VAL_BOOL:
+                                on = strcasecmp(p->val, VALUE_ON);
+                                off = strcasecmp(p->val,VALUE_OFF);
+
+                                if(on!=0 && off!=0){
+                                        return (void *) -1;
+                                }
+                                else if(on>=0){
+                                        return (void *) VAR_ON;
+                                }
+                                else{
+                                        return (void *) VAR_OFF;
+                                }
+                        }
+                }
+                else{
+                        p = p->next;
+                }
+        }
+        return NULL;
+}
+
 /* Read configuration files */
 void mk_config_read_files(char *path_conf, char *file_conf)
 {
-	int bool;
 	unsigned long len;
-	char *path=0, buffer[255];
-	char *variable=0, *value=0, *last=0, *auxarg=0;
-	FILE *configfile;
+	char *path=0;
+	char *last=0;
 	struct stat checkdir;
+        struct mk_config *cnf;
 
 	config->serverconf = mk_string_dup(path_conf);
         config->workers = MK_WORKERS_DEFAULT;
@@ -62,186 +172,127 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 	
 	m_build_buffer(&path, &len, "%s/%s", path_conf, file_conf);
 
-	if( (configfile=fopen(path,"r"))==NULL ) {
-		fprintf(stderr, "Error: I can't open %s file.\n", path);
-		exit(1);
-	}
+        cnf = mk_config_create(path);
+        
+        /* Connection port */
+        config->serverport = (int) mk_config_getval(cnf, 
+                                                    "Port", 
+                                                    MK_CONFIG_VAL_NUM);
+        if(!config->serverport>=1 && !config->serverport<=65535){
+                mk_config_print_error_msg("Port", path);
+        }
+        
+        /* Number of thread workers */
+        config->workers = (int) mk_config_getval(cnf, 
+                                                 "Workers", 
+                                                 MK_CONFIG_VAL_NUM);
+        if(config->maxclients < 1){
+                mk_config_print_error_msg("Workers", path);
+        }
 
-	while(fgets(buffer,255,configfile)) {
-		len = strlen(buffer);
-		if(buffer[len-1] == '\n') {
-			buffer[--len] = 0;
-			if(len && buffer[len-1] == '\r')
-				buffer[--len] = 0;
-		}
-		
-		if(!buffer[0] || buffer[0] == '#')
-			continue;
-			
-		variable   = strtok_r(buffer, "\"\t ", &last);
-		value	  = strtok_r(NULL, "\"\t ", &last);
-
-		if (!variable || !value) continue;
-
-		/* Connection port */
-		if(strcasecmp(variable, "Port")==0) {
-			config->serverport=atoi(value);
-			if(!config->serverport>=1 && !config->serverport<=65535)
-				mk_config_print_error_msg("Port", path);
-		}
-
-
-      		/* MaxClients */
-		if(strcasecmp(variable,"Workers")==0) { 
-			config->workers=atoi(value);
-			if(config->maxclients < 1)
-			    mk_config_print_error_msg("Workers", path);
-		}
-
-
-		/* Timeout */
-		if(strcasecmp(variable,"Timeout")==0) {
-			config->timeout=atoi(value);
-			if(config->timeout<1 || !value)
-				mk_config_print_error_msg("Timeout", path);
-		}
+        /* Timeout */
+        config->timeout = (int) mk_config_getval(cnf, 
+                                                 "Timeout", 
+                                                 MK_CONFIG_VAL_NUM);
+        if(config->timeout < 1){
+                mk_config_print_error_msg("Timeout", path);
+        }
 				
-		/* KeepAlive */
-		if(strcasecmp(variable,"KeepAlive")==0) {
-                        bool = mk_config_get_bool(value);
-                        if(bool == VAR_ERR)
-                        {
-                                        mk_config_print_error_msg("KeepAlive", 
-                                                                  path);
-                        }
-                        else{
-                                config->keep_alive=bool;
-                        }
+        /* KeepAlive */
+        config->keep_alive = (int) mk_config_getval(cnf, 
+                                                    "KeepAlive", 
+                                                    MK_CONFIG_VAL_BOOL);
+        if(config->keep_alive == VAR_ERR){
+                mk_config_print_error_msg("KeepAlive", path);
+        }
+
+        /* MaxKeepAliveRequest */
+        config->max_keep_alive_request = (int) mk_config_getval(cnf, 
+                                                                "MaxKeepAliveRequest",
+                                                                MK_CONFIG_VAL_NUM);
+        if(config->max_keep_alive_request == 0){
+                mk_config_print_error_msg("MaxKeepAliveRequest", path);
+        }
+		
+        /* KeepAliveTimeout */
+        config->keep_alive_timeout = (int) mk_config_getval(cnf, 
+                                                            "KeepAliveTimeout",
+                                                            MK_CONFIG_VAL_NUM);
+        if(config->keep_alive_timeout == 0){
+                mk_config_print_error_msg("KeepAliveTimeout", path);
+        }
+		
+        /* Pid File */
+        config->pid_file_path = mk_config_getval(cnf, 
+                                                 "PidFile", 
+                                                 MK_CONFIG_VAL_STR);
+
+        /* Home user's directory /~ */
+        config->user_dir = mk_config_getval(cnf, "UserDir", MK_CONFIG_VAL_STR);
+		
+        /* Index files */
+        char *index, *aux;
+        aux = index = mk_config_getval(cnf, "Indexfile", MK_CONFIG_VAL_STR);
+        while(aux!=NULL) {
+                mk_config_add_index(aux);
+                aux=strtok_r(NULL,"\"\t ", &last);
+        }
+
+        /* HideVersion Variable */
+        config->hideversion = (int) mk_config_getval(cnf, 
+                                                     "HideVersion", 
+                                                     MK_CONFIG_VAL_BOOL);
+        if(config->hideversion == VAR_ERR){
+                mk_config_print_error_msg("HideVersion", path);
+        }
+		
+        /* User Variable */
+        config->user = mk_config_getval(cnf, "User", MK_CONFIG_VAL_STR);
+		
+        /* Resume */
+	config->resume = (int) mk_config_getval(cnf, 
+                                                "Resume", 
+                                                MK_CONFIG_VAL_BOOL);
+        if(config->resume == VAR_ERR){
+                mk_config_print_error_msg("Resume", path);
+        }
+		
+        /* Symbolic Links */
+	config->symlink = (int) mk_config_getval(cnf, 
+                                                 "SymLink", 
+                                                 MK_CONFIG_VAL_BOOL);
+        if(config->symlink == VAR_ERR){
+                mk_config_print_error_msg("SymLink", path);
+        }
+        
+
+        /* Monkey Palm Servers */
+        char *palm;
+        palm = mk_config_getval(cnf, "Palm", MK_CONFIG_VAL_STR);
+        if(palm){
+                struct palm *new, *p;
+                last = palm;
+                new = mk_mem_malloc(sizeof(struct palm));
+                new->ext = strdup(strtok_r(NULL, "\"\t ", &last));
+                new->mimetype = strdup(strtok_r(NULL,"\"\t ", &last));
+                new->host = strdup(strtok_r(NULL,"\"\t ", &last));
+                new->port = atoi(strtok_r(NULL, "\"\t ", &last));
+                new->next = NULL;
+
+                if(!palms){
+                        palms = new;
                 }
-
-                /* MaxKeepAliveRequest */
-		if(strcasecmp(variable,"MaxKeepAliveRequest")==0){
-			config->max_keep_alive_request=atoi(value);
-			if(config->max_keep_alive_request==0)
-			    mk_config_print_error_msg("MaxKeepAliveRequest", path);
-		}
-		
-		/* KeepAliveTimeout */
-		if(strcasecmp(variable,"KeepAliveTimeout")==0){
-			config->keep_alive_timeout=atoi(value);
-			if(config->keep_alive_timeout==0)
-			    mk_config_print_error_msg("KeepAliveTimeout", path);
-		}
-		
-		/* MaxClients */
-		if(strcasecmp(variable,"MaxClients")==0) { 
-			config->maxclients=atoi(value);
-			if(config->maxclients < 1)
-			    mk_config_print_error_msg("MaxClients", path);
-		}
-		
-		/* Pid File */
-		if(strcasecmp(variable,"PidFile")==0)
-			m_build_buffer(&config->pid_file_path, &len, "%s", value);
-
-		/* Directorio para /~ */
-		if(strcasecmp(variable,"UserDir")==0){
-			m_build_buffer(&config->user_dir, &len, "%s", value);
-		}
-		
-		/* Variable INDEX */
-		if(strcasecmp(variable,"Indexfile")==0) {
-			auxarg=value;
-			while(auxarg!=NULL) {
-					mk_config_add_index(auxarg);
-					auxarg=strtok_r(NULL,"\"\t ", &last);
-			}
-		}
-
-		/* HideVersion Variable */
-		if(strcasecmp(variable,"HideVersion")==0)
-		{
-			bool = mk_config_get_bool(value);
-			if(bool == VAR_ERR)
-			{
-				mk_config_print_error_msg("HideVersion", path);
-			}
-			else{
-				config->hideversion=bool;
-			}
-		}
-		
-		/* User Variable */
-		if(strcasecmp(variable,"User")==0) {
-			m_build_buffer(&config->user, &len,
-					"%s", value);
-		}
-		
-		/* Resume */
-		if(strcasecmp(variable, "Resume")==0)
-		{
-			bool = mk_config_get_bool(value);
-			if(bool == VAR_ERR)
-			{
-				mk_config_print_error_msg("Resume", path);
-			}
-			else{
-				config->resume=bool;
-			}
-		}
-		
-		/* Symbolic Links */
-		if(strcasecmp(variable, "SymLink")==0)
-		{
-			bool = mk_config_get_bool(value);
-			if(bool == VAR_ERR)
- 			{
-				mk_config_print_error_msg("SymLink", path);
-			}
-			else{
-				config->symlink=bool;
-			}
-		}
-
-
-                /* Monkey Palm Servers */
-                if(strcasecmp(variable, "Palm")==0){
-                        struct palm *new, *p;
-                        
-                        new = mk_mem_malloc(sizeof(struct palm));
-                        new->ext = strdup(value);
-                        new->mimetype = strdup(strtok_r(NULL,"\"\t ", &last));
-			new->host = strdup(strtok_r(NULL,"\"\t ", &last));
-                        new->port = atoi(strtok_r(NULL, "\"\t ", &last));
-                        new->next = NULL;
-
-                        if(!palms)
-                        {
-                                palms = new;
+                else{
+                        p = palms;
+                        while(p->next){
+                                p = p->next;
                         }
-                        else{
-                                p = palms;
-                                while(p->next)
-                                        p = p->next;
-
-                                p->next = palms;
-                        }
+                        p->next = palms;
                 }
+        }
 
-		/* Max connection per IP */
-		if(strcasecmp(variable, "Max_IP")==0) {
-			config->max_ip = atoi(value);
-			if(config->max_ip < 0)
-			    mk_config_print_error_msg("Max_IP", path);
-		} 		
-
-		/* Including files */
-		if(strcasecmp(variable,"Include")==0) {
-			mk_config_read_files(path_conf, value);
-		}
-	}
-	fclose(configfile);
 	mk_mem_free(path);
+        mk_config_free(cnf);
 	mk_config_read_hosts(path_conf);
 }
 
@@ -315,122 +366,56 @@ void mk_config_read_hosts(char *path)
     */
 }
 
-int mk_config_get_bool(char *value)
-{
-    int on, off;
-
-    on = strcasecmp(value, VALUE_ON);
-    off = strcasecmp(value,VALUE_OFF);
-
-    if(on!=0 && off!=0)
-    {
-        return -1;
-    }
-    else if(on>=0)
-    {
-        return VAR_ON;
-    }
-    else{
-        return VAR_OFF;
-    }
-}
-
 struct host *mk_config_get_host(char *path)
 {
 	unsigned long len=0;
-        char buffer[255];
-        char *variable=0, *value=0, *last=0, *auxarg=0;
-        FILE *configfile;
         struct stat checkdir;
         struct host *host;
+        struct mk_config *cnf;
 
-        if( (configfile=fopen(path,"r"))==NULL ) {
-                fprintf(stderr, "Error: I can't open %s file.\n", path);
-                return NULL;
-        }
+        cnf = mk_config_create(path);
 
         host = mk_mem_malloc_z(sizeof(struct host));
         host->servername = 0;
         host->file = mk_string_dup(path);
 
-        while(fgets(buffer,255,configfile)) {
-                len = strlen(buffer);
-                if(buffer[len-1] == '\n') {
-                        buffer[--len] = 0;
-                        if(len && buffer[len-1] == '\r')
-                                buffer[--len] = 0;
-                }
-        
-                if(!buffer[0] || buffer[0] == '#')
-                        continue;
-            
-                variable   = strtok_r(buffer, "\"\t ", &last);
-                value     = strtok_r(NULL, "\"\t ", &last);
-
-                if (!variable || !value) continue;
-
-                /* Server Name */
-                if(strcasecmp(variable,"Servername")==0)
-                        {
-                                m_build_buffer(&host->servername, &len,
-                                               "%s", value);
-                        }
-
-                /* Ubicacion directorio servidor */
-                if(strcasecmp(variable,"DocumentRoot")==0) {
-
-                        host->documentroot.data=mk_string_dup(value);
-                        host->documentroot.len = strlen(value);
-
-                        if(stat(host->documentroot.data, &checkdir)==-1) {
-                                fprintf(stderr, 
-                                        "ERROR: Invalid path to Server_root in %s\n\n", path); 
-                                exit(1);
-                        }
-                        else if(!(checkdir.st_mode & S_IFDIR)) {
-                                fprintf(stderr, 
-                                        "ERROR: DocumentRoot variable in %s has an invalid directory path\n\n", path);
-                                exit(1);
-                        }
-                }
-
-                /* Access log */
-                if(strcasecmp(variable,"AccessLog")==0) 
-                        m_build_buffer(&host->access_log_path, 
-                                       &len,"%s", value);
-        
-                /* Error log */
-                if(strcasecmp(variable,"ErrorLog")==0)
-                        m_build_buffer(&host->error_log_path, &len,
-                                       "%s", value);
-
-                /* GetDir Variable */
-                if(strcasecmp(variable,"GetDir")==0)
-                        {
-                                if(strcasecmp(value,VALUE_ON) && strcasecmp(value,VALUE_OFF))
-                                        mk_config_print_error_msg("GetDir", path);
-                                else if(strcasecmp(value,VALUE_OFF)==0)
-                                        host->getdir=VAR_OFF;
-                        }
-
-                /* Script_Alias del server */
-                if(strcasecmp(variable,"ScriptAlias")==0)
-                        {
-                                if(!value) mk_config_print_error_msg("ScriptAlias", path);
-                                host->scriptalias = (char **) mk_mem_malloc(sizeof(char *) * 3);
-                                host->scriptalias[0]=mk_string_dup(value);
-                                auxarg=strtok_r(NULL,"\"\t ", &last);
-
-                                if(!auxarg) mk_config_print_error_msg("ScriptAlias", path);
-                                host->scriptalias[1]=mk_string_dup(auxarg);
-                                host->scriptalias[2]='\0';
-                        }
+        host->servername = mk_config_getval(cnf, "Servername", MK_CONFIG_VAL_STR);
+        host->documentroot.data = mk_config_getval(cnf,
+                                                   "DocumentRoot",
+                                                   MK_CONFIG_VAL_STR);
+        host->documentroot.len = strlen(host->documentroot.data);
+        if(stat(host->documentroot.data, &checkdir)==-1) {
+                fprintf(stderr, 
+                        "ERROR: Invalid path to Server_root in %s\n\n", 
+                        path); 
+                exit(1);
         }
-        fclose(configfile);
-        if(!host->servername)
-                {
-                        return NULL;
-                }
+        else if(!(checkdir.st_mode & S_IFDIR)) {
+                fprintf(stderr, 
+                        "ERROR: DocumentRoot variable in %s has an invalid directory path\n\n", 
+                        path);
+                exit(1);
+        }
+
+        /* Access log */
+        host->access_log_path = mk_config_getval(cnf, 
+                                                 "AccessLog", 
+                                                 MK_CONFIG_VAL_STR);
+        /* Error log */
+        host->error_log_path = mk_config_getval(cnf,
+                                                "ErrorLog",
+                                                MK_CONFIG_VAL_STR);
+
+        /* Get directory */
+        host->getdir = (int) mk_config_getval(cnf, "GetDir", MK_CONFIG_VAL_BOOL);
+        if(host->getdir == VAR_ERR){
+                mk_config_print_error_msg("GetDir", path);
+        }
+
+        if(!host->servername){
+                mk_config_free(cnf);
+                return NULL;
+        }
 
 	/* Server Signature */
 	if(config->hideversion==VAR_OFF){
@@ -459,6 +444,7 @@ struct host *mk_config_get_host(char *path)
         fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
 
 	host->next = NULL;
+        mk_config_free(cnf);
 	return host;
 }
 
