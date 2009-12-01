@@ -1,0 +1,16 @@
+Monkey Plugins
+==============
+Plugins are extra features which modifies the Monkey behavior, all of them
+are shared libraries which are loaded on runtime. 
+
+Each plugin is loaded per configuration instruction and it will work on a 
+defined stage. Monkey has different cycles since a connection is accepted until
+it's finished. Stages are defined as levels:
+
+MK_PLUGIN_STAGE_10: Server has not yet entered in the server loop, no 
+		    listeners yet available
+MK_PLUGIN_STAGE_20: Accepted connection
+MK_PLUGIN_STAGE_30: Connection assigned to worker thread
+MK_PLUGIN_STAGE_40: Object Handler
+MK_PLUGIN_STAGE_50: Request ended
+MK_PLUGIN_STAGE_60: Connection closed
