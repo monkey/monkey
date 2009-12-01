@@ -200,7 +200,7 @@ default:
 	@echo 
 
 plugins:
-	@(cd src/plugins; make all)
+	@(cd plugins; make all)
 
 clean:
 	@(cd src; make clean)
@@ -302,7 +302,7 @@ all: ../bin/monkey
 	@echo
 	@echo "Compiling Plugins"
 	@echo "================="
-	@(cd plugins && make all && cd ..)
+	@(cd ../plugins && make all && cd ..)
 	
 clean:
 	rm -rf *.o
@@ -322,13 +322,13 @@ EOF
 
 create_makefile_plugins()
 {
-    cd src/plugins
+    cd plugins
     list=`echo */ "" | sed "s/\/ /\n/g"`
     cat > Makefile <<EOF
 all:
 EOF
     dir=`pwd`
-    plugins_load="../../conf/plugins.load"
+    plugins_load="../conf/plugins.load"
     echo -n > $plugins_load
     echo "# Monkey plugins are loaded on run, by default all " >> $plugins_load
     echo "# plugins are disabled, if you want to enable" >> $plugins_load
@@ -338,7 +338,7 @@ EOF
     for i in $list;
 	do 
 	      echo "	@(cd $i && make && cd ..)" >> Makefile;
-	      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../../conf/plugins.load;
+	      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load;
 	done	
 }
 
