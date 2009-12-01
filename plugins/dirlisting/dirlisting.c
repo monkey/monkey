@@ -910,6 +910,11 @@ int _mk_plugin_init(void **api)
 
 int _mk_plugin_stage_40(struct client_request *cr, struct request *sr)
 {
+        /* Validate file/directory */
+        if(!sr->file_info){
+                return -1;
+        }
+
         /* This plugin just handle directories */
         if(sr->file_info->is_directory == MK_FILE_FALSE){
                 return -1;
