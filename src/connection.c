@@ -41,6 +41,10 @@ int mk_conn_write(int socket)
 {
 	int ret=-1, ka, efd;
 	struct client_request *cr;
+        struct sched_list_node *sched;
+        
+        sched = mk_sched_get_thread_conf();
+        mk_sched_update_conn_status(&sched, socket, MK_SCHEDULER_CONN_PROCESS);
 
 	/* Get node from schedule list node which contains
 	 * the information regarding to the current client/socket

@@ -51,7 +51,7 @@ struct sched_list_node{
         int closed_requests;
         struct sched_connection *queue;
 	struct client_request *request_handler;
-	struct sched_list_node *next;
+        struct sched_list_node *next;
 };
 
 struct sched_list_node *sched_list;
@@ -83,4 +83,7 @@ int mk_sched_add_client(struct sched_list_node **sched, int remote_fd);
 int mk_sched_remove_client(struct sched_list_node **sched, int remote_fd);
 struct sched_connection *mk_sched_get_connection(struct sched_list_node **sched, 
                                                  int remote_fd);
+int mk_sched_update_conn_status(struct sched_list_node **sched, 
+                                int remote_fd, int status);
+
 #endif

@@ -312,3 +312,21 @@ int mk_sched_check_timeouts(struct sched_list_node **sched)
 
         return 0;
 }
+
+int mk_sched_update_conn_status(struct sched_list_node **sched,
+                                int remote_fd, int status)
+{
+        int i;
+
+        if(!*sched){
+                return -1;
+        }
+
+        for(i=0; i<config->workers; i++){
+                if((*sched)->queue[i].socket == remote_fd){
+                        (*sched)->queue[i].status = status;
+                        return 0;
+                }
+        }
+        return 0;
+}
