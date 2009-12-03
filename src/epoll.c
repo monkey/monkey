@@ -40,11 +40,11 @@
 
 #define MAX_EVENTS 5000
 
-mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(void *),
-                                         void (*write)(void *),
-                                         void (*error)(void *),
-                                         void (*close)(void *),
-                                         void (*timeout)(void *))
+mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(int),
+                                         void (*write)(int),
+                                         void (*error)(int),
+                                         void (*close)(int),
+                                         void (*timeout)(int))
 {
 	mk_epoll_handlers *handler;
 
@@ -94,28 +94,28 @@ void *mk_epoll_init(int efd, mk_epoll_handlers *handler, int max_events)
                         fd = events[i].data.fd;
                         // Case 1: Error condition
                         if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-                                (* handler->error)((void *)fd);
+                                (* handler->error)(fd);
                                 continue;
                         }
                         
                         if(events[i].events & EPOLLIN)
                         {
-                                ret = (* handler->read)((void *) fd);
+                                ret = (* handler->read)(fd);
                         }
                         else if(events[i].events & EPOLLOUT)
                         {
-                                ret = (* handler->write)((void *) fd);
+                                ret = (* handler->write)(fd);
                         }
 
                         if(ret<0)
                         {
-                                (* handler->close)((void *) fd);
+                                (* handler->close)(fd);
                         }
                 }
 
                 /* Check timeouts and update next one */
                 if(log_current_utime >= fds_timeout){
-                        mk_sched_check_timeouts(&sched);
+                        mk_sched_check_timeouts(sched);
                         fds_timeout = log_current_utime + config->timeout;
                 }
         }

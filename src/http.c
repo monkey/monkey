@@ -535,7 +535,7 @@ int mk_http_pending_request(struct client_request *cr)
 {
         int n,len;
         char *str;
-        
+
         len = cr->body_length;
         
         /* try to match CRLF end */

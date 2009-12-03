@@ -22,6 +22,7 @@
 /* request.c */
 
 #include "memory.h"
+#include "scheduler.h"
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
@@ -259,7 +260,7 @@ struct client_request *mk_request_client_remove(int socket);
 
 void mk_request_init_error_msgs();
 
-int mk_handler_read(int socket);
+int mk_handler_read(int socket, struct client_request *cr);
 int mk_handler_write(int socket, struct client_request *cr);
 
 

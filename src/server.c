@@ -86,7 +86,7 @@ void mk_server_loop(int server_fd)
                 }
 
                 /* Assign socket to worker thread */
-                mk_sched_add_client(&sched, remote_fd);
+                mk_sched_add_client(sched, remote_fd);
 
                 if(sched->next){
                         sched = sched->next;

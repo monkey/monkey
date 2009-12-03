@@ -38,6 +38,7 @@
 #include "config.h"
 #include "clock.h"
 #include "signals.h"
+#include "plugin.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
@@ -195,46 +196,44 @@ struct sched_list_node *mk_sched_get_thread_conf()
 }
 
 
-void mk_sched_update_thread_status(int active, int closed)
+void mk_sched_update_thread_status(struct sched_list_node *sched,
+                                   int active, int closed)
 {
-        struct sched_list_node *thnode;
-
-        thnode = mk_sched_get_thread_conf();
+        if(!sched){
+                sched = mk_sched_get_thread_conf();
+        }
 
         switch(active){
                 case MK_SCHEDULER_ACTIVE_UP:
-                        thnode->active_requests++;
+                        sched->active_requests++;
                         break;
                 case MK_SCHEDULER_ACTIVE_DOWN:
-                        thnode->active_requests--;
+                        sched->active_requests--;
                         break;
         }
 
         switch(closed){
                 case MK_SCHEDULER_CLOSED_UP:
-                        thnode->closed_requests++;
+                        sched->closed_requests++;
                         break;
                 case MK_SCHEDULER_CLOSED_DOWN:
-                        thnode->closed_requests--;
+                        sched->closed_requests--;
                         break;
         }
 }
 
-int mk_sched_add_client(struct sched_list_node **sched, int remote_fd)
+int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
 {
         int i;
-        struct sched_list_node *l;
-
-        l = (struct sched_list_node *) *sched;
 
         /* Look for an available slot */
         for(i=0; i<config->worker_capacity; i++){
-                if(l->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE){
-                        l->queue[i].socket = remote_fd;
-                        l->queue[i].status = MK_SCHEDULER_CONN_PENDING;
-                        l->queue[i].arrive_time = log_current_utime;
+                if(sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE){
+                        sched->queue[i].socket = remote_fd;
+                        sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
+                        sched->queue[i].arrive_time = log_current_utime;
 
-                        mk_epoll_add_client(l->epoll_fd, remote_fd,
+                        mk_epoll_add_client(sched->epoll_fd, remote_fd,
                                             MK_EPOLL_BEHAVIOR_TRIGGERED);
                         return 0;
                 }
@@ -243,10 +242,10 @@ int mk_sched_add_client(struct sched_list_node **sched, int remote_fd)
         return -1;
 }
 
-int mk_sched_remove_client(struct sched_list_node **sched, int remote_fd)
+int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
         struct sched_connection *sc;
-
+        
         sc = mk_sched_get_connection(sched, remote_fd);
         if(sc){
                 close(remote_fd);
@@ -256,42 +255,36 @@ int mk_sched_remove_client(struct sched_list_node **sched, int remote_fd)
         return -1;
 }
 
-struct sched_connection *mk_sched_get_connection(struct sched_list_node **sched, 
+struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched, 
                                                  int remote_fd)
 {
         int i;
-        struct sched_list_node *l;
 
         if(!sched){
-                l = mk_sched_get_thread_conf();
-        }
-        else{
-                l = (struct sched_list_node *) *sched;
+                sched = mk_sched_get_thread_conf();
         }
 
         for(i=0; i<config->worker_capacity; i++){
-                if(l->queue[i].socket == remote_fd){
-                        return &l->queue[i];
+                if(sched->queue[i].socket == remote_fd){
+                        return &sched->queue[i];
                 }
         }
 
         return NULL;
 }
 
-int mk_sched_check_timeouts(struct sched_list_node **sched)
+int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
         int i;
         struct request_idx *req_idx;
         struct client_request *req_cl;
-        struct sched_list_node *l;
-
-        l = (struct sched_list_node *) *sched;
 
         /* PENDING CONN TIMEOUT */
         for(i=0; i<config->worker_capacity; i++){
-                if(l->queue[i].status == MK_SCHEDULER_CONN_PENDING){
-                        if(l->queue[i].arrive_time + config->timeout <= log_current_utime){
-                                mk_sched_remove_client(&l, l->queue[i].socket);
+                if(sched->queue[i].status == MK_SCHEDULER_CONN_PENDING){
+                        if(sched->queue[i].arrive_time + config->timeout <= 
+                           log_current_utime){
+                                mk_sched_remove_client(sched, sched->queue[i].socket);
                         }
                 }
         }
@@ -313,18 +306,18 @@ int mk_sched_check_timeouts(struct sched_list_node **sched)
         return 0;
 }
 
-int mk_sched_update_conn_status(struct sched_list_node **sched,
+int mk_sched_update_conn_status(struct sched_list_node *sched,
                                 int remote_fd, int status)
 {
         int i;
 
-        if(!*sched){
+        if(!sched){
                 return -1;
         }
 
         for(i=0; i<config->workers; i++){
-                if((*sched)->queue[i].socket == remote_fd){
-                        (*sched)->queue[i].status = status;
+                if(sched->queue[i].socket == remote_fd){
+                        sched->queue[i].status = status;
                         return 0;
                 }
         }

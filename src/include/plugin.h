@@ -115,5 +115,6 @@ void mk_plugin_init();
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
                         struct client_request *cr,
                         struct request *sr);
+void mk_plugin_worker_startup();
 
 #endif

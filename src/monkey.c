@@ -50,10 +50,6 @@
 #include "server.h"
 #include "plugin.h"
 
-#ifdef CHEETAH
-#include "cheetah.h"
-#endif
-
 #if defined(__DATE__) && defined(__TIME__)
 	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 #else
@@ -85,7 +81,6 @@ void mk_help()
 	printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
 	printf("  -c directory\tspecify directory from configuration files\n");
 	printf("  -D\t\trun Monkey as daemon\n");
-        printf("  -S\t\tLaunch Cheetah Shell!\n");
 	printf("  -v\t\tshow version number\n");
 	printf("  -h\t\tthis help\n\n");
 	exit(0);
@@ -95,7 +90,6 @@ void mk_help()
 int main(int argc, char **argv)
 {
 	int opt;
-	int cheetah = 0;
         int daemon = 0;
 	
 	config = mk_mem_malloc(sizeof(struct server_config));
@@ -115,9 +109,6 @@ int main(int argc, char **argv)
 			case 'D':
 				daemon = 1;
 				break;
-                        case 'S':
-                                cheetah = 1;
-                                break;
 			case 'c':
 				if (strlen(optarg) != 0) {
 					config->file_config=optarg;
@@ -129,11 +120,6 @@ int main(int argc, char **argv)
 				break;
 		}
 	}   
-
-        if(cheetah && daemon){
-                printf("Monkey: cannot run Cheetah Shell with Monkey in Daemon mode\n");
-                return -1;
-        }
 
 	if(!config->file_config){
 		config->file_config=MONKEY_PATH_CONF;

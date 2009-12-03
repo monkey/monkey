@@ -170,36 +170,9 @@ struct request *mk_request_parse(struct client_request *cr)
 	return cr->request;
 }
 
-int mk_handler_read(int socket)
+int mk_handler_read(int socket, struct client_request *cr)
 {
-	int bytes, efd;
-        struct client_request *cr;
-
-	cr = mk_request_client_get(socket);
-	if(!cr)
-	{
-                /* Note: Linux don't set TCP_NODELAY socket flag by default, 
-                 * also we set the client socket on non-blocking mode
-                 */
-                mk_socket_set_tcp_nodelay(socket);
-                mk_socket_set_nonblocking(socket);
-
-		cr = mk_request_client_create(socket);
-
-                /* Update requests counter */
-                mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
-                                              MK_SCHEDULER_CLOSED_DOWN);
-        }
-        else{
-                /* If cr struct already exists, that could means that we 
-                 * are facing a keepalive connection, need to verify, if it 
-                 * applies we increase the thread status for active connections
-                 */
-                if(cr->counter_connections > 1 && cr->body_length == 0){
-                        mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
-                                                      MK_SCHEDULER_CLOSED_NONE);
-                }
-        }
+	int bytes;
 
         bytes = read(socket, cr->body+cr->body_length,
                      MAX_REQUEST_BODY-cr->body_length);
@@ -222,23 +195,9 @@ int mk_handler_read(int socket)
 	{
 		cr->body_length+=bytes;
                 cr->body[cr->body_length] = '\0';
-
-                if(mk_http_pending_request(cr)==0){
-                        efd = mk_sched_get_thread_poll();
-                        mk_epoll_socket_change_mode(efd, socket, 
-                                                    MK_EPOLL_WRITE);
-                }
-                else if(cr->body_length+1 >= MAX_REQUEST_BODY)
-                {
-                        /* Request is incomplete and our buffer is full, 
-                         * close connection 
-                         */
-                        mk_request_client_remove(socket);
-                        return -1;
-                }
 	}
 
-	return 0;
+	return bytes;
 }
 
 int mk_handler_write(int socket, struct client_request *cr)
@@ -250,8 +209,6 @@ int mk_handler_write(int socket, struct client_request *cr)
 	 * Get node from schedule list node which contains
 	 * the information regarding to the current thread
 	 */
-	cr = mk_request_client_get(socket);
-	
 	if(!cr)
 	{
 		return -1;
@@ -955,7 +912,8 @@ struct client_request *mk_request_client_create(int socket)
         mk_sched_set_request_index(request_index);
 
 
-        mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_UP,
+        mk_sched_update_thread_status(NULL,
+                                      MK_SCHEDULER_ACTIVE_UP,
                                       MK_SCHEDULER_CLOSED_NONE);
         
         return cr;
@@ -1020,10 +978,10 @@ struct client_request *mk_request_client_remove(int socket)
         
         /* No keep alive connection */
         if(cr->counter_connections == 0){
-                mk_sched_update_thread_status(MK_SCHEDULER_ACTIVE_DOWN,
+                mk_sched_update_thread_status(NULL,
+                                              MK_SCHEDULER_ACTIVE_DOWN,
                                               MK_SCHEDULER_CLOSED_UP);
-        }
-
+                                              }
         mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
