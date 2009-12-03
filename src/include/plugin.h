@@ -106,6 +106,9 @@ struct plugin_api {
         void *(*iov_send)(int, struct mk_iov *, int);
         void *(*pointer_set)(mk_pointer *, char *);
         void *(*socket_cork_flag)(int, int);
+        void *(*config_create)(char *);
+        void *(*config_free)(struct mk_config *);
+        void *(*config_getval)(struct mk_config *, char *, int);
 };
 
 typedef char mk_plugin_data_t[];

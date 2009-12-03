@@ -128,6 +128,12 @@ void mk_config_add_index(char *indexname);
 void mk_config_print_error_msg(char *variable, char *path);
 void mk_config_set_init_values(void);
 
+/* config helpers */
+struct mk_config *mk_config_create(char *path);
+void mk_config_free(struct mk_config *cnf);
+void *mk_config_getval(struct mk_config *cnf, char *key, int mode);
+
+
 int mk_config_get_bool(char *value);
 void mk_config_read_hosts(char *path);
 void mk_config_sanity_check();

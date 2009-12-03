@@ -200,6 +200,10 @@ void mk_plugin_init()
         api->iov_send = (void *) mk_iov_send;
         api->pointer_set = (void *) mk_pointer_set;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
+        api->config_create = (void *) mk_config_create;
+        api->config_free = (void *) mk_config_free;
+        api->config_getval = (void *) mk_config_getval;
+
 
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
