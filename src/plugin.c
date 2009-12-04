@@ -153,6 +153,9 @@ void *mk_plugin_register(void *handler, char *path)
         p->call_stage_20 = (int (*)())
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_20");
 
+        p->call_stage_30 = (int (*)())
+                mk_plugin_load_symbol(handler, "_mk_plugin_stage_30");
+
         p->call_stage_40 = (int (*)())
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
 
@@ -267,14 +270,30 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
         if(stage & MK_PLUGIN_STAGE_20){
                 p = config->plugins->stage_20;
                 while(p){ 
-                        ret = p->call_stage_20(socket, conx, NULL);
-                        if(ret != 0){
-                                return ret;
+                        ret = p->call_stage_20(socket, conx, cr);
+                        switch(ret){
+                                case MK_PLUGIN_RET_CLOSE_CONX:
+                                        return MK_PLUGIN_RET_CLOSE_CONX;
                         }
+
                         p = p->next;
                 }
         }
-        else if(stage & MK_PLUGIN_STAGE_40){
+ 
+        if(stage & MK_PLUGIN_STAGE_30){
+                p = config->plugins->stage_30;
+                while(p){ 
+                        ret = p->call_stage_30(cr, sr);
+                        switch(ret){
+                                case MK_PLUGIN_RET_CLOSE_CONX:
+                                        return MK_PLUGIN_RET_CLOSE_CONX;
+                        }
+
+                        p = p->next;
+                }
+        }
+
+        if(stage & MK_PLUGIN_STAGE_40){
                 p = config->plugins->stage_40;
                 while(p){
                         ret = p->call_stage_40(cr, sr);

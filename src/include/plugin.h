@@ -41,7 +41,7 @@
 
 #define MK_PLUGIN_RET_CLOSE_CONX 100
 #define MK_PLUGIN_RET_OWNER 200
-#define MK_PLUGIN_RET_UNKNOWN 300
+#define MK_PLUGIN_RET_CONTINUE 300
 
 
 struct plugin_stages {
@@ -74,6 +74,7 @@ struct plugin {
         int (*call_stage_20)(unsigned int, 
                              struct sched_connection *, 
                              struct client_request *);
+        int (*call_stage_30)(struct client_request *, struct request *);
         int (*call_stage_40)(struct client_request *, struct request *);
 
         struct plugin *next;

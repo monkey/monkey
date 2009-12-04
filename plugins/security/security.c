@@ -19,6 +19,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,7 +31,7 @@
 /* Plugin data for register */
 mk_plugin_data_t _name = "Security";
 mk_plugin_data_t _version = "0.1";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_20;
+mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_20 | MK_PLUGIN_STAGE_30;
 
 struct plugin_api *mk_api;
 struct mk_config *conf;
@@ -85,7 +86,7 @@ int mk_security_conf()
 
 int mk_security_check_ip(char *ipv4)
 {
-        unsigned int i;
+        unsigned int i=0;
         struct mk_security *p;
 
         p = rules;
@@ -117,6 +118,25 @@ int mk_security_check_ip(char *ipv4)
         }
 }
 
+int mk_security_check_url(mk_pointer url)
+{
+        int n;
+        struct mk_security *p;
+
+        p = rules;
+        while(p){
+                if(p->type == MK_SECURITY_TYPE_URL){
+                        n = (int) mk_api->str_search_n(url.data,p->value,url.len);
+                        if(n>=0){
+                                return -1;
+                        }
+                }
+                p = p->next;
+        }
+
+        return 0;
+}
+
 int _mk_plugin_init(void **api)
 {
         mk_api = *api;
@@ -127,15 +147,20 @@ int _mk_plugin_init(void **api)
         return 0;
 }
 
-int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx, 
-                        struct client_request *cr)
+int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
 {
-        if(!cr){
-                if(mk_security_check_ip(conx->ipv4)!=0){
-                        return MK_PLUGIN_RET_CLOSE_CONX;
-                }
+        if(mk_security_check_ip(conx->ipv4)!=0){
+                return MK_PLUGIN_RET_CLOSE_CONX;
         }
 
-        return -1;
+        return MK_PLUGIN_RET_CONTINUE;
 }
 
+int _mk_plugin_stage_30(struct client_request *cr, struct request *sr)
+{
+        if(mk_security_check_url(sr->uri) < 0){
+                return MK_PLUGIN_RET_CLOSE_CONX;
+        }
+        
+        return MK_PLUGIN_RET_CONTINUE;
+}
