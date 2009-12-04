@@ -183,7 +183,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
         
         //        mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_monkey_port);
         mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
-        mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
+        //mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
         mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
         //mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method);
         mk_palm_iov_add_header(iov, mk_cgi_script_name, sr->uri);

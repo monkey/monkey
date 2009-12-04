@@ -224,15 +224,32 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 
 int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
 {
-        int i;
+        unsigned int i, ret;
 
         /* Look for an available slot */
         for(i=0; i<config->worker_capacity; i++){
                 if(sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE){
+                        /* Set IP */
+                        bzero(sched->queue[i].ipv4, 17);
+                        mk_socket_get_ip(remote_fd, sched->queue[i].ipv4);
+                        
+                        /* Before to continue, we need run plugin stage 20 */
+                        ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, 
+                                                  remote_fd, 
+                                                  &sched->queue[i],
+                                                  NULL, NULL);
+
+                        /* Close connection, otherwise continue */
+                        if(ret == MK_PLUGIN_RET_CLOSE_CONX){
+                                mk_conn_close(remote_fd);
+                                return MK_PLUGIN_RET_CLOSE_CONX;
+                        }
+
+                        /* Socket and status */
                         sched->queue[i].socket = remote_fd;
                         sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
                         sched->queue[i].arrive_time = log_current_utime;
-
+                        
                         mk_epoll_add_client(sched->epoll_fd, remote_fd,
                                             MK_EPOLL_BEHAVIOR_TRIGGERED);
                         return 0;
@@ -262,6 +279,10 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
 
         if(!sched){
                 sched = mk_sched_get_thread_conf();
+                if(!sched){
+                        close(remote_fd);
+                        return NULL;
+                }
         }
 
         for(i=0; i<config->worker_capacity; i++){

@@ -84,7 +84,6 @@ struct request *mk_request_parse(struct client_request *cr)
                         cr_buf->method = mk_http_method_get(cr_buf->body.data);
                 }
 
-                cr_buf->log->ip = cr->ip;
 		cr_buf->next = NULL;
 
 		i = init_block = i + mk_endblock.len;
@@ -247,7 +246,7 @@ int mk_handler_write(int socket, struct client_request *cr)
 		}
 		else if(final_status <= 0)
 		{
-                        mk_logger_write_log(p_request->log, p_request->host_conf);
+                        mk_logger_write_log(cr, p_request->log, p_request->host_conf);
 		}
 		p_request = p_request->next;
 	}
@@ -292,15 +291,6 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 		return EXIT_NORMAL;
 	}	
 	
-	/*  URL it's Allowed ? */ 
-	if(Deny_Check(s_request, cr->ip.data)==-1) {
-		s_request->log->final_response=M_CLIENT_FORBIDDEN;
-		mk_request_error(M_CLIENT_FORBIDDEN, cr, s_request, 1,
-                                 s_request->log);
-		return EXIT_NORMAL;
-	}
-	
-
 	/* HTTP/1.1 needs Host header */
 	if(!s_request->host.data && s_request->protocol==HTTP_PROTOCOL_11){
 		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
@@ -879,9 +869,12 @@ struct client_request *mk_request_client_create(int socket)
         struct request_idx *request_index;
 	struct client_request *cr;
         struct sched_connection *sc;
-
+        
         sc = mk_sched_get_connection(NULL, socket);
 	cr = mk_mem_malloc(sizeof(struct client_request));
+
+        /* IPv4 Address */
+        cr->ipv4 = (char *) sc->ipv4;
 
 	cr->pipelined = FALSE;
 	cr->counter_connections = 0;
@@ -889,8 +882,6 @@ struct client_request *mk_request_client_create(int socket)
 	cr->status = MK_REQUEST_STATUS_INCOMPLETE;
         cr->request = NULL;
         
-        mk_pointer_set(&cr->ip, mk_socket_get_ip(socket));
-
         /* creation time in unix time */
         cr->init_time = sc->arrive_time;
 
@@ -982,7 +973,7 @@ struct client_request *mk_request_client_remove(int socket)
                                               MK_SCHEDULER_ACTIVE_DOWN,
                                               MK_SCHEDULER_CLOSED_UP);
                                               }
-        mk_pointer_free(&cr->ip);
+        //mk_pointer_free(&cr->ip);
 	mk_mem_free(cr->body);
 	mk_mem_free(cr);
 

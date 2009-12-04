@@ -31,7 +31,7 @@ int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_tcp_nodelay(int sockfd);
 int mk_socket_set_nonblocking(int sockfd);
 
-char *mk_socket_get_ip(int socket);
+int mk_socket_get_ip(int socket, char *ipv4);
 int mk_socket_close(int socket);
 int mk_socket_timeout(int s, char *buf, int len, 
 		int timeout, int recv_send);

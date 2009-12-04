@@ -51,7 +51,7 @@ struct mk_config *mk_config_create(char *path)
         struct mk_config *cnf=0, *new, *p;
 
 	if((f=fopen(path, "r")) == NULL) {
-		fprintf(stderr, "\nConfig Error: I can't open %s file.", path);
+		fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
 		exit(1);
 	}
 

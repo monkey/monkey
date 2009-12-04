@@ -57,24 +57,17 @@ int mk_socket_set_tcp_nodelay(int sockfd)
         return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
-char *mk_socket_get_ip(int socket)
+int mk_socket_get_ip(int socket, char *ipv4)
 {
         int ipv4_len = 16;
         socklen_t len;
-        char *ipv4;
 	struct sockaddr_in m_addr;
 
-        ipv4 = mk_mem_malloc(ipv4_len);
-
-        if(!ipv4)
-        {
-                return NULL;
-        }
- 
         len = sizeof(m_addr);
         getpeername(socket, (struct sockaddr*)&m_addr,  &len);
         inet_ntop(PF_INET, &m_addr.sin_addr, ipv4, ipv4_len);
-        return ipv4;
+
+        return 0;
 }
 
 int mk_socket_close(int socket)

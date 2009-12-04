@@ -31,6 +31,7 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "socket.h"
+#include "plugin.h"
 
 /* Return the number of clients that can be attended 
  * at the same time per worker thread
@@ -72,7 +73,7 @@ void mk_server_launch_workers()
 
 void mk_server_loop(int server_fd)
 {
-        int remote_fd;
+        int remote_fd, ret;
         struct sockaddr_in sockaddr;
 	struct sched_list_node *sched = sched_list;
 	socklen_t socket_size = sizeof(struct sockaddr_in);
@@ -84,7 +85,7 @@ void mk_server_loop(int server_fd)
                 if(remote_fd == -1){
                         continue;
                 }
-
+                
                 /* Assign socket to worker thread */
                 mk_sched_add_client(sched, remote_fd);
 

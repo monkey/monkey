@@ -39,6 +39,11 @@
 #define MK_PLUGIN_STAGE_50 ((__uint32_t) 16) /* Request ended */
 #define MK_PLUGIN_STAGE_60 ((__uint32_t) 32) /* Connection closed */
 
+#define MK_PLUGIN_RET_CLOSE_CONX 100
+#define MK_PLUGIN_RET_OWNER 200
+#define MK_PLUGIN_RET_UNKNOWN 300
+
+
 struct plugin_stages {
         struct plugin *stage_10;
         struct plugin *stage_20;
@@ -66,6 +71,9 @@ struct plugin {
         int (*call_init)(void *api);
         int (*call_worker_init)();
         int (*call_stage_10)();
+        int (*call_stage_20)(unsigned int, 
+                             struct sched_connection *, 
+                             struct client_request *);
         int (*call_stage_40)(struct client_request *, struct request *);
 
         struct plugin *next;
@@ -109,6 +117,7 @@ struct plugin_api {
         void *(*config_create)(char *);
         void *(*config_free)(struct mk_config *);
         void *(*config_getval)(struct mk_config *, char *, int);
+        void *(*sched_get_connection)(struct sched_list_node *, int);
 };
 
 typedef char mk_plugin_data_t[];
@@ -116,6 +125,8 @@ typedef __uint32_t mk_plugin_stage_t;
 
 void mk_plugin_init();
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
+                        unsigned int socket,
+                        struct sched_connection *conx,
                         struct client_request *cr,
                         struct request *sr);
 void mk_plugin_worker_startup();

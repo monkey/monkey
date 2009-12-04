@@ -150,6 +150,9 @@ void *mk_plugin_register(void *handler, char *path)
         p->call_stage_10 = (int (*)()) 
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
 
+        p->call_stage_20 = (int (*)())
+                mk_plugin_load_symbol(handler, "_mk_plugin_stage_20");
+
         p->call_stage_40 = (int (*)())
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
 
@@ -203,8 +206,8 @@ void mk_plugin_init()
         api->config_create = (void *) mk_config_create;
         api->config_free = (void *) mk_config_free;
         api->config_getval = (void *) mk_config_getval;
-
-
+        api->sched_get_connection = (void *) mk_sched_get_connection;
+        
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
 
@@ -246,8 +249,10 @@ void mk_plugin_init()
 }
 
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
-                         struct client_request *cr,
-                         struct request *sr)
+                        unsigned int socket,
+                        struct sched_connection *conx,
+                        struct client_request *cr,
+                        struct request *sr)
 {
         int ret;
         struct plugin *p;
@@ -256,6 +261,16 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 p = config->plugins->stage_10;
                 while(p){
                         p->call_stage_10();
+                        p = p->next;
+                }
+        }
+        if(stage & MK_PLUGIN_STAGE_20){
+                p = config->plugins->stage_20;
+                while(p){ 
+                        ret = p->call_stage_20(socket, conx, NULL);
+                        if(ret != 0){
+                                return ret;
+                        }
                         p = p->next;
                 }
         }

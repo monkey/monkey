@@ -170,7 +170,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 /* if the resource requested doesn't exists, let's 
                  * check if some plugin would like to handle it
                  */
-                if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr) == 0){
+                if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr) == 0){
                         return -1;
                 }
 
@@ -237,7 +237,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
 
         /* Plugin Stage 40: look for handlers for this request */
-        if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr, sr) == 0){
+        if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr) == 0){
                 return -1;
         }
 

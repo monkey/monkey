@@ -9,8 +9,8 @@ it's finished. Stages are defined as levels:
 
 MK_PLUGIN_STAGE_10: Server has not yet entered in the server loop, no 
 		    listeners yet available
-MK_PLUGIN_STAGE_20: Accepted connection
-MK_PLUGIN_STAGE_30: Connection assigned to worker thread
+MK_PLUGIN_STAGE_20: Accepted connection has not been assigned to worker thread
+MK_PLUGIN_STAGE_30: HTTP Request received
 MK_PLUGIN_STAGE_40: Object Handler
 MK_PLUGIN_STAGE_50: Request ended
 MK_PLUGIN_STAGE_60: Connection closed

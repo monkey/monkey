@@ -56,7 +56,7 @@ struct log_info {
 	struct host *host_conf;
 };
 
-int mk_logger_write_log(struct log_info *log, struct host *h);
+int mk_logger_write_log(struct client_request *cr, struct log_info *log, struct host *h);
 int mk_logger_register_pid();
 int mk_logger_remove_pid();
 

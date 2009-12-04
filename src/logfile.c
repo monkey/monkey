@@ -222,10 +222,12 @@ void mk_logger_iov_free(struct mk_iov *iov)
 
 /* Registra en archivos de logs: accesos
  y errores */
-int mk_logger_write_log(struct log_info *log, struct host *h)
+int mk_logger_write_log(struct client_request *cr, struct log_info *log, struct host *h)
 {
         struct mk_iov *iov;
         mk_pointer *status, method, protocol;
+        struct sched_list_node *sched;
+        struct sched_connection *conx;
 
         if(log->status!=S_LOG_ON)
         {
@@ -233,9 +235,12 @@ int mk_logger_write_log(struct log_info *log, struct host *h)
         }
 
         iov = mk_logger_iov_get();
-        
+
+        sched = mk_sched_get_thread_conf();
+        conx = mk_sched_get_connection(sched, cr->socket);
+
         /* client IP address */
-        mk_iov_add_entry(iov, log->ip.data, log->ip.len, 
+        mk_iov_add_entry(iov, conx->ipv4, 16, 
                          mk_logfile_iov_dash, MK_IOV_NOT_FREE_BUF);
 
         /* Date/time when object was requested */

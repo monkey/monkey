@@ -168,7 +168,7 @@ int main(int argc, char **argv)
         mk_details();
 
         /* Plugins Stage 10 */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_10, NULL, NULL);
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
 
         /* Server loop, let's listen for incomming clients */
         mk_server_loop(server_fd);

@@ -126,8 +126,7 @@ struct client_request
         int status; /* Request status */
         char *body; /* Original request sent */
 
-        mk_pointer ip;
-        mk_pointer port;
+        char *ipv4;
 
         int body_length;
         
