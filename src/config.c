@@ -37,7 +37,6 @@
 #include "mimetype.h"
 #include "info.h"
 #include "logfile.h"
-#include "deny.h"
 #include "memory.h"
 #include "cgi.h"
 #include "plugin.h"
@@ -514,9 +513,6 @@ void mk_config_start_configure(void)
 
 	/* Load mimes */
 	mk_mimetype_read_config();
-
-	/* Load security rules */
-	Deny_Read_Config(); 
 
 	/* Basic server information */
 	if(config->hideversion==VAR_OFF)

@@ -52,7 +52,6 @@
 #include "logfile.h"
 #include "utils.h"
 #include "header.h"
-#include "deny.h"
 #include "user.h"
 #include "method.h"
 #include "memory.h"

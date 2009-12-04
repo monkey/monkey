@@ -73,7 +73,7 @@ void mk_server_launch_workers()
 
 void mk_server_loop(int server_fd)
 {
-        int remote_fd, ret;
+        int remote_fd;
         struct sockaddr_in sockaddr;
 	struct sched_list_node *sched = sched_list;
 	socklen_t socket_size = sizeof(struct sockaddr_in);
