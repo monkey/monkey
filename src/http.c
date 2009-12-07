@@ -164,6 +164,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 debug_error=1;
         }
 
+        if(mk_string_search_n(sr->uri.data, HTTP_DIRECTORY_BACKWARD, 
+                              sr->uri.len) >= 0){
+                sr->log->final_response=M_CLIENT_FORBIDDEN;
+                mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 
+                                 debug_error, sr->log);
+                return -1;
+        }
+
         /* Plugin Stage 30: look for handlers for this request */
         if(mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cr, sr) == 
            MK_PLUGIN_RET_CLOSE_CONX){

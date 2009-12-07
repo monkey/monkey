@@ -20,6 +20,9 @@
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
+/* Hard coded restrictions */
+#define HTTP_DIRECTORY_BACKWARD ".."
+
 /* Methods */
 #define HTTP_METHOD_UNKNOWN (-1)
 #define HTTP_METHOD_GET (0)
