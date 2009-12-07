@@ -736,6 +736,7 @@ struct request *mk_request_alloc()
 	request->accept_language.data = NULL;
 	request->accept_encoding.data = NULL;
 	request->accept_charset.data = NULL;
+        request->content_length = 0;
 	request->content_type.data = NULL;
 	request->connection.data = NULL;	
 	request->cookies.data = NULL; 

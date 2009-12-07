@@ -52,7 +52,7 @@ void mk_cache_thread_init()
         /* Cache header toc, monkey just search for MK_KNOWN_HEADERS
          * in request 
          */
-        cache_header_toc = mk_mem_malloc(sizeof(struct header_toc)*
-                                         MK_KNOWN_HEADERS);
+        cache_header_toc = mk_mem_malloc_z(sizeof(struct header_toc)*
+                                           MK_KNOWN_HEADERS);
         pthread_setspecific(mk_cache_header_toc, (void *) cache_header_toc);
 }
