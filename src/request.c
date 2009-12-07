@@ -1004,7 +1004,6 @@ void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
         for(i=0; i<len && p; i++)
         {
                 l = strstr(p, MK_CRLF);
-
                 if(l)
                 {
                         toc[i].init = p;

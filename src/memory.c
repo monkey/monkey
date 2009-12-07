@@ -44,6 +44,7 @@ void *mk_mem_malloc(size_t size)
 		perror("malloc");
 		return NULL;						
 	}
+
 	return aux;
 }
 

@@ -25,8 +25,8 @@
 #include <sys/uio.h>
 #include <sys/mman.h>
 #include <errno.h>
-
 #include <stdio.h>
+#include <limits.h>
 
 #include "monkey.h"
 
@@ -40,8 +40,8 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
 	iov = mk_mem_malloc(sizeof(struct mk_iov));
 	iov->iov_idx = offset;
-	iov->io = mk_mem_malloc(n*sizeof(struct iovec));
-	iov->buf_to_free = mk_mem_malloc(n*sizeof(char *));
+	iov->io = mk_mem_malloc_z(n*sizeof(struct iovec));
+	iov->buf_to_free = mk_mem_malloc_z(n*sizeof(char *));
 	iov->buf_idx = 0;
         iov->total_len = 0;
         iov->size = n;
@@ -112,7 +112,40 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
         if(to==MK_IOV_SEND_TO_SOCKET){
                 n = writev(fd, mk_io->io, mk_io->iov_idx);
                 if(n<0){
+                        /*
                         perror("writev");
+                        switch(errno){
+                        case EBADF:
+                                printf("\nEBADF");
+                                break;
+                        case EFAULT:
+                                printf("\nEFAULT");
+                                break;
+                        case EFBIG:
+                                printf("\nEFBIG");
+                                break;
+                        case EINTR:
+                                printf("\nEINTR");
+                                break;
+                        case EINVAL:
+                                printf("\nEINVAL");
+                                break;
+                        case EIO:
+                                printf("\nEIO");
+                                break;
+                        case ENOMEM:
+                                printf("\nENOMEM");
+                                break;
+                        case ENOSPC:
+                                printf("\nENOSPC");
+                                break;
+                        case ENXIO:
+                                printf("\nENXIO");
+                                break;
+
+                        }
+                        fflush(stdout);
+                        */
                         return n;
                 }
         }

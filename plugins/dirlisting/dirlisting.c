@@ -131,7 +131,7 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
 
         entry_info = mk_api->file_get_info(full_path);
 
-        entry = mk_api->mem_alloc(sizeof(struct mk_f_list));
+        entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
         entry->name = file;
         entry->type = type;
         entry->info = entry_info;
@@ -577,7 +577,7 @@ struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
         tpl_len = mk_dirhtml_template_len(template);
 
         /* we duplicate the lenght in case we get separators */
-        iov = mk_api->iov_create(tpl_len*2, 1);
+        iov = (struct mk_iov *) mk_api->iov_create(tpl_len*2, 1);
         tpl = template;
 
         while(tpl){
@@ -756,7 +756,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
 {
         DIR *dir;
         int i=0, n;
-
         mk_pointer sep;
 
 	/* file info */
@@ -807,8 +806,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer, 
                                               values_global);
 
-        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
-
         /* Creating table of contents and sorting */
         toc = mk_api->mem_alloc(sizeof(struct mk_f_list)*list_len);
         entry = file_list;
@@ -832,7 +829,6 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 mk_dirhtml_free_list(toc, list_len);
                 return 0;
         }
-
 
         /* sending TOC */
         for(i=0; i<list_len; i++)
@@ -876,16 +872,22 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                 /* send entry */
                 n = mk_dirhtml_send(cr->socket, sr, iov_entry);
 
-                /* free entry list */
-                mk_dirhtml_tag_free_list(&values_entry);
-                mk_api->iov_free(iov_entry);
+                if( (i%20) == 0 && i > 0){
+                        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+                        mk_api->socket_cork_flag(cr->socket, TCP_CORK_ON);
+                }
 
                 if(n<0){
                         break;
                 }
+
+                /* free entry list */
+                mk_dirhtml_tag_free_list(&values_entry);
+                mk_api->iov_free(iov_entry);
         }
 
         n = mk_dirhtml_send(cr->socket, sr, iov_footer);
+        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
 
         if(sr->protocol >= HTTP_PROTOCOL_11 && n >= 0){
                 mk_dirhtml_send_chunked_end(cr->socket);

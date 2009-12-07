@@ -205,7 +205,7 @@ int mk_header_send(int fd, struct client_request *cr,
                                  mk_iov_none, 
                                  MK_IOV_NOT_FREE_BUF);
         }
-        else if(sr->protocol >= HTTP_PROTOCOL_11){
+        else if(sr->protocol >= HTTP_PROTOCOL_10 || sr->content_length==0){
                 mk_iov_add_entry(iov,
                                  mk_header_conn_close.data,
                                  mk_header_conn_close.len,

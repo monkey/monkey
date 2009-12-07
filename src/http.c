@@ -237,17 +237,18 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                 return -1;      
         }
-                
+ 
+        /* Plugin Stage 40: look for handlers for this request */
+        if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr) == 0){
+                return -1;
+        }
+
+               
         /* Matching MimeType  */
         mime = mk_mimetype_find(&sr->real_path);
         if(!mime)
         {
                 mime = mimetype_default;
-        }
-
-        /* Plugin Stage 40: look for handlers for this request */
-        if(mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr) == 0){
-                return -1;
         }
 
         if(sr->file_info->is_directory == MK_FILE_TRUE){
