@@ -67,7 +67,7 @@ struct mk_config *mk_config_create(char *path)
 			continue;
 
                 key = strtok_r(buf, "\"\t ", &last);
-                val = strtok_r(NULL, "\"\t\n", &last);
+                val = strtok_r(NULL, "\n", &last);
 
                 if(!key || !val){
                         continue;

@@ -28,6 +28,7 @@
 #include "request.h"
 #include "utils.h"
 #include "memory.h"
+#include "str.h"
 
 #include <stdio.h>
 
@@ -188,4 +189,56 @@ int mk_string_array_count(char *arr[])
 
         for(i=0; arr[i]; i++){}
         return i;
+}
+
+struct mk_string_line *mk_string_split_line(char *line)
+{
+        unsigned int i=0, len, val_len;
+        int end;
+        char *val;
+        struct mk_string_line *sl=0, *new, *p;
+
+        if(!line){
+                return NULL;
+        }
+        
+        len = strlen(line);
+
+        while(i<len){
+                end = mk_string_char_search(line+i, ' ', len-i);
+
+                if(end>=0 && end+i<len){
+                        end+=i;
+                        val = mk_string_copy_substr(line, i , end);
+                        val_len = end - i;
+                }
+                else{
+                        val = mk_string_copy_substr(line, i, len);
+                        val_len = len - i;
+                        end = len;
+                        
+                }
+
+                /* Alloc node */
+                new = mk_mem_malloc(sizeof(struct mk_string_line));
+                new->val = val;
+                new->len = val_len;
+                new->next = NULL;
+
+                /* Link node */
+                if(!sl){
+                        sl = new;
+                }
+                else{
+                        p = sl;
+                        while(p->next){
+                                p = p->next;
+                        }
+                        
+                        p->next = new;
+                }
+                i = end+1;
+        }
+
+        return sl;
 }

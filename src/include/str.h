@@ -19,9 +19,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef MK_STR_H
+#define MK_STR_H
+
+struct mk_string_line {
+        char *val;
+        int len;
+        struct mk_string_line *next;
+};
 
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
-
 
 int mk_string_char_search(char *string, int c, int n);
 int _mk_string_search(char *string, char *search, int n);
@@ -33,4 +40,6 @@ char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
 int mk_string_array_count(char *arr[]);
+struct mk_string_line *mk_string_split_line(char *line);
 
+#endif

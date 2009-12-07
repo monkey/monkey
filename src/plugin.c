@@ -196,6 +196,7 @@ void mk_plugin_init()
         api->str_search = (void *) mk_string_search;
         api->str_search_n = (void *) mk_string_search_n;
         api->str_copy_substr = (void *) mk_string_copy_substr;
+        api->str_split_line = (void *) mk_string_split_line;
         api->file_to_buffer = (void *) mk_file_to_buffer;
         api->file_get_info = (void *) mk_file_get_info;
         api->header_send = (void *) mk_header_send;

@@ -26,6 +26,7 @@
 #include "memory.h"
 #include "iov.h"
 #include "socket.h"
+#include "config.h"
 
 #define MK_PLUGIN_LOAD "plugins.load"
 
@@ -42,7 +43,6 @@
 #define MK_PLUGIN_RET_CLOSE_CONX 100
 #define MK_PLUGIN_RET_OWNER 200
 #define MK_PLUGIN_RET_CONTINUE 300
-
 
 struct plugin_stages {
         struct plugin *stage_10;
@@ -94,6 +94,7 @@ struct plugin_api {
         void *(*str_search)(char *, char *);
         void *(*str_search_n)(char *, char *, int);
         void *(*str_copy_substr)(const char *, int, int);
+        void *(*str_split_line)(const char *);
         void *(*file_to_buffer)(char *);
         void *(*file_get_info)(char *);
         void *(*header_send)(int, 
