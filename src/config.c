@@ -264,32 +264,6 @@ void mk_config_read_files(char *path_conf, char *file_conf)
                 mk_config_print_error_msg("SymLink", path);
         }
         
-
-        /* Monkey Palm Servers */
-        char *palm;
-        palm = mk_config_getval(cnf, "Palm", MK_CONFIG_VAL_STR);
-        if(palm){
-                struct palm *new, *p;
-                last = palm;
-                new = mk_mem_malloc(sizeof(struct palm));
-                new->ext = strdup(strtok_r(NULL, "\"\t ", &last));
-                new->mimetype = strdup(strtok_r(NULL,"\"\t ", &last));
-                new->host = strdup(strtok_r(NULL,"\"\t ", &last));
-                new->port = atoi(strtok_r(NULL, "\"\t ", &last));
-                new->next = NULL;
-
-                if(!palms){
-                        palms = new;
-                }
-                else{
-                        p = palms;
-                        while(p->next){
-                                p = p->next;
-                        }
-                        p->next = palms;
-                }
-        }
-
 	mk_mem_free(path);
         mk_config_free(cnf);
 	mk_config_read_hosts(path_conf);
