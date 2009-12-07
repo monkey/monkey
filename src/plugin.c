@@ -37,6 +37,7 @@
 #include "str.h"
 #include "file.h"
 #include "header.h"
+#include "memory.h"
 #include "iov.h"
 
 void *mk_plugin_load(char *path)
@@ -206,6 +207,7 @@ void mk_plugin_init()
         api->iov_set_entry = (void *) mk_iov_set_entry;
         api->iov_send = (void *) mk_iov_send;
         api->pointer_set = (void *) mk_pointer_set;
+        api->pointer_print = (void *) mk_pointer_print;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
         api->config_create = (void *) mk_config_create;
         api->config_free = (void *) mk_config_free;

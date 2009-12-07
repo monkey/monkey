@@ -33,6 +33,7 @@
 #define MK_PLUGIN_ERROR -1  /* plugin execution error */
 #define MK_PLUGIN_
 
+#define MK_PLUGIN_STAGE_00 ((__uint32_t) 0)  /* Dummy plugin */
 #define MK_PLUGIN_STAGE_10 ((__uint32_t) 1)  /* Before server's loop */
 #define MK_PLUGIN_STAGE_20 ((__uint32_t) 2)  /* Accepted connection */
 #define MK_PLUGIN_STAGE_30 ((__uint32_t) 4)  /* Connection assigned */
@@ -115,6 +116,7 @@ struct plugin_api {
                                int);
         void *(*iov_send)(int, struct mk_iov *, int);
         void *(*pointer_set)(mk_pointer *, char *);
+        void *(*pointer_print)(mk_pointer);
         void *(*socket_cork_flag)(int, int);
         void *(*config_create)(char *);
         void *(*config_free)(struct mk_config *);
