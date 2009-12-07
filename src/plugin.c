@@ -209,6 +209,9 @@ void mk_plugin_init()
         api->pointer_set = (void *) mk_pointer_set;
         api->pointer_print = (void *) mk_pointer_print;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
+        api->socket_connect = (void *) mk_socket_connect;
+        api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
+        api->socket_create = (void *) mk_socket_create;
         api->config_create = (void *) mk_config_create;
         api->config_free = (void *) mk_config_free;
         api->config_getval = (void *) mk_config_getval;

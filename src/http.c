@@ -145,7 +145,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         int debug_error=0, bytes=0;
         struct mimetype *mime;
         mk_pointer gmt_file_unix_time; // gmt time of server file (unix time)
-        char *palm;
 
         /* Normal request default site */
         if((strcmp(sr->uri_processed,"/"))==0)
@@ -263,15 +262,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
                 return -1;
         }
-
-        /* FIXME: Move palm code to a plugin */
-        palm = mk_palm_check_request(cr, sr);
-        if(palm)
-        {
-                mk_palm_send_response(cr, sr, palm);
-                return -1;
-        }
-        
 
         /* get file size */
         if(sr->file_info->size < 0) {

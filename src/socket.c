@@ -143,6 +143,7 @@ int mk_socket_connect(int sockfd, char *server, int port)
         remote = (struct sockaddr_in *) 
                 mk_mem_malloc_z(sizeof(struct sockaddr_in));
         remote->sin_family = AF_INET;
+
         res = inet_pton(AF_INET, server, (void *)(&(remote->sin_addr.s_addr)));
 
         if(res < 0)  
@@ -163,7 +164,7 @@ int mk_socket_connect(int sockfd, char *server, int port)
                     sizeof(struct sockaddr)) == -1)
         {
                 close(sockfd);
-                perror("client: connect");
+                perror("connect");
                 return -1;
         }
         mk_mem_free(remote);

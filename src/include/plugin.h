@@ -118,6 +118,9 @@ struct plugin_api {
         void *(*pointer_set)(mk_pointer *, char *);
         void *(*pointer_print)(mk_pointer);
         void *(*socket_cork_flag)(int, int);
+        void *(*socket_set_tcp_nodelay)(int);
+        void *(*socket_connect)(int, char *, int);
+        void *(*socket_create)();
         void *(*config_create)(char *);
         void *(*config_free)(struct mk_config *);
         void *(*config_getval)(struct mk_config *, char *, int);
