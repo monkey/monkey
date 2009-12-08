@@ -79,6 +79,7 @@ class Child:
                 if buf[-4:] == '\r\n\r\n':
                     break;
    
+        print buf
         return buf
 
     def parse_request(self, data):
@@ -136,7 +137,7 @@ class Child:
     def read_data(self, fd):
         buf = os.read(fd, 1024)
         os.write(self.int_w, buf)
-        # print "Child got: ", buf
+        print "Child got: ", buf
 
     def get_pid(self):
         return self._pid

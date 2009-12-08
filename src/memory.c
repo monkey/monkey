@@ -207,7 +207,7 @@ void mk_mem_pointers_init()
 
         mk_http_status_list_init();
         mk_iov_separators_init();
-        mk_palm_set_env();
+//        mk_palm_set_env();
 
 
         /* Server */

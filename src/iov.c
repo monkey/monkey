@@ -205,7 +205,7 @@ void mk_iov_print(struct mk_iov *mk_io)
         int i;
 
         for(i=0; i<mk_io->iov_idx; i++){
-                printf("\n%i len=%i) '%s'", i, mk_io->io[i].iov_len, 
+                printf("\n%i len=%i)\n'%s'", i, mk_io->io[i].iov_len, 
                        (char *) mk_io->io[i].iov_base);
                 fflush(stdout);
         }

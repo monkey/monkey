@@ -206,6 +206,7 @@ void mk_plugin_init()
         api->iov_add_entry = (void *) mk_iov_add_entry;
         api->iov_set_entry = (void *) mk_iov_set_entry;
         api->iov_send = (void *) mk_iov_send;
+        api->iov_print = (void *) mk_iov_print;
         api->pointer_set = (void *) mk_pointer_set;
         api->pointer_print = (void *) mk_pointer_print;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
