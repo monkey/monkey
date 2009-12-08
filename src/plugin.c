@@ -173,14 +173,11 @@ void *mk_plugin_register(void *handler, char *path)
 
 void mk_plugin_init()
 {
-        int len;
         char *path;
-        char *key, *value, *last;
-        char buffer[255];
-        FILE *fconf;
         void *handle;
         struct plugin *p;
         struct plugin_api *api;
+        struct mk_config *cnf;
 
         api = mk_mem_malloc_z(sizeof(struct plugin_api));
         
@@ -221,41 +218,25 @@ void mk_plugin_init()
         path = mk_mem_malloc_z(1024);
         snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
 
-	if((fconf=fopen(path, "r"))==NULL) {
-		fprintf(stderr, "Error: I can't open %s file.\n", path);
-		exit(1);
-	}
+        /* Read configuration file */
+        cnf = mk_config_create(path);
 
-        while(fgets(buffer, 255, fconf)) {
-		len = strlen(buffer);
-		if(buffer[len-1] == '\n') {
-			buffer[--len] = 0;
-			if(len && buffer[len-1] == '\r')
-				buffer[--len] = 0;
-		}
-		
-		if(!buffer[0] || buffer[0] == '#')
-			continue;
-
-		key = strtok_r(buffer, "\"\t ", &last);
-		value = strtok_r(NULL, "\"\t ", &last);
-
-		if (!key || !value) continue;
-
-                if(strcasecmp(key, "LoadPlugin")==0){
-                        handle = mk_plugin_load(value);
-                        p = mk_plugin_register(handle, value);
+        while(cnf) {
+                if(strcasecmp(cnf->key, "LoadPlugin") == 0){
+                        handle = mk_plugin_load(cnf->val);
+                        p = mk_plugin_register(handle, cnf->val);
                         if(!p){
-                                fprintf(stderr, "Plugin error: %s", value);
+                                fprintf(stderr, "Plugin error: %s", cnf->val);
                                 dlclose(handle);
                         }
                         else{
                                 p->call_init(&api);
                         }
                 }
+                cnf = cnf->next;
         }
 
-        fclose(fconf);
+        mk_mem_free(path);
 }
 
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
