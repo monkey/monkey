@@ -46,6 +46,7 @@
 #define MK_PLUGIN_RET_CONTINUE 300
 
 struct plugin_stages {
+        struct plugin *stage_00;
         struct plugin *stage_10;
         struct plugin *stage_20;
         struct plugin *stage_30;
@@ -83,7 +84,7 @@ struct plugin {
 
 struct plugin_api {
         struct server_config *config;
-        struct plugins *plugins;
+        struct plugin_list *plugins;
         struct sched_list_node **sched_list;
 
         /* Exporting Functions */

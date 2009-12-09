@@ -105,6 +105,10 @@ void mk_plugin_register_stages(struct plugin *p)
         }
 
         /* Assign plugin to stages */
+        if(*p->stages & MK_PLUGIN_STAGE_00){
+                mk_plugin_register_add_to_stage(&config->plugins->stage_00, p);
+        }
+
         if(*p->stages & MK_PLUGIN_STAGE_10){
                 mk_plugin_register_add_to_stage(&config->plugins->stage_10, p);
         }
@@ -148,6 +152,9 @@ void *mk_plugin_register(void *handler, char *path)
         p->call_worker_init = (int (*)()) mk_plugin_load_symbol(handler,
                                                                 "_mk_plugin_worker_init");
 
+        p->call_stage_10 = (int (*)())
+                mk_plugin_load_symbol(handler, "_mk_plugin_stage_00");
+
         p->call_stage_10 = (int (*)()) 
                 mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
 
@@ -184,7 +191,7 @@ void mk_plugin_init()
         /* Setup and connections list */
         api->config = config;
         api->sched_list = &sched_list;
-        
+
         /* API plugins funcions */
         api->mem_alloc = (void *) mk_mem_malloc;
         api->mem_alloc_z = (void *) mk_mem_malloc_z;
@@ -236,6 +243,7 @@ void mk_plugin_init()
                 cnf = cnf->next;
         }
 
+        api->plugins = plg_list;
         mk_mem_free(path);
 }
 
