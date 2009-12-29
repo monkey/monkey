@@ -119,6 +119,7 @@ struct plugin_api {
         void *(*iov_print)(struct mk_iov *);
         void *(*pointer_set)(mk_pointer *, char *);
         void *(*pointer_print)(mk_pointer);
+        void *(*plugin_load_symbol)(void *, char *);
         void *(*socket_cork_flag)(int, int);
         void *(*socket_set_tcp_nodelay)(int);
         void *(*socket_connect)(int, char *, int);

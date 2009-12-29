@@ -184,6 +184,7 @@ void mk_plugin_init()
         void *handle;
         struct plugin *p;
         struct plugin_api *api;
+        struct plugin_list *plist;
         struct mk_config *cnf;
 
         api = mk_mem_malloc_z(sizeof(struct plugin_api));
@@ -213,6 +214,7 @@ void mk_plugin_init()
         api->iov_print = (void *) mk_iov_print;
         api->pointer_set = (void *) mk_pointer_set;
         api->pointer_print = (void *) mk_pointer_print;
+        api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
         api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
         api->socket_connect = (void *) mk_socket_connect;
         api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
@@ -243,7 +245,9 @@ void mk_plugin_init()
                 cnf = cnf->next;
         }
 
+
         api->plugins = plg_list;
+        plist = plg_list;
         mk_mem_free(path);
 }
 
