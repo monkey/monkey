@@ -46,7 +46,7 @@ class BigPalm:
         exit(0)
     def print_info(self):
         print "Monkey Palm Server", VERSION
-        print "Visit us: http://monkeyd.sourceforge.net"
+        print "Visit us: http://www.monkey-project.com"
 
     def create_palms(self):
         print self.conf.get_handlers()
