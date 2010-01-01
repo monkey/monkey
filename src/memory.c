@@ -32,14 +32,12 @@
 #include "header.h"
 #include "http.h"
 #include "iov.h"
-#include "cgi.h"
 #include "user.h"
 
 void *mk_mem_malloc(size_t size)
 {
 	void *aux=0;
 
-        //if((aux=memalign(getpagesize(), size))==NULL){
         if((aux=malloc(size))==NULL){
 		perror("malloc");
 		return NULL;						
@@ -213,9 +211,6 @@ void mk_mem_pointers_init()
         /* Server */
         mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
         //        mk_pointer_set(&mk_monkey_port, config->port);
-
-        /* CGI */
-        mk_pointer_set(&mk_cgi_version, CGI_VERSION);
 
         /* Logfile */
         mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);

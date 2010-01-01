@@ -43,7 +43,6 @@
 #include "http.h"
 #include "http_status.h"
 #include "string.h"
-#include "cgi.h"
 #include "str.h"
 #include "config.h"
 #include "scheduler.h"

@@ -34,7 +34,6 @@
 #include "file.h"
 #include "utils.h"
 #include "config.h"
-#include "cgi.h"
 #include "str.h"
 #include "method.h"
 #include "socket.h"

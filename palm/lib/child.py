@@ -79,7 +79,12 @@ class Child:
                 if buf[-4:] == '\r\n\r\n':
                     break;
    
-        print buf
+        try:
+            if os.environ['PALM_DEBUG'] is not None:
+                print buf
+        except:
+            pass
+
         return buf
 
     def parse_request(self, data):
@@ -98,6 +103,13 @@ class Child:
             val = line[sep+1:]
 
             request.add_header(key, val)
+
+        try:
+            if os.environ['PALM_DEBUG'] is not None:
+                for h in request.headers:
+                    print h + ' = \'' + request.headers[h] + '\''
+        except:
+            pass
 
         return request
 
@@ -130,9 +142,9 @@ class Child:
 
     
     def write_to_parent(self, message):
-        #time.sleep(1)
+        time.sleep(1)
         n = os.write(self.int_w, message)
-        # print "Child wrote: ", n
+        print "Child wrote: ", n
 
     def read_data(self, fd):
         buf = os.read(fd, 1024)

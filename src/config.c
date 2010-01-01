@@ -38,7 +38,6 @@
 #include "info.h"
 #include "logfile.h"
 #include "memory.h"
-#include "cgi.h"
 #include "plugin.h"
 
 struct mk_config *mk_config_create(char *path)
