@@ -2,7 +2,7 @@
  ============================
 
  For optimum functioning, i recommend that Monkey be compiled with GCC >= 
- 2.95.3 .
+ 2.95.3 and be running on a Linux OS with kernel >= 2.6.28.
 
  Like every source program we must run 'configure' script and later
  'make':

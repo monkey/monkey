@@ -32,12 +32,6 @@ Workers 5
 
 Timeout 15
 
-# MaxClients :
-# ------------
-# Limit on the number of clients who can simultaneously connect. 
-
-MaxClients 20 
-
 # PidFile:
 # --------
 # File where the server guards the process number when starting.
@@ -81,24 +75,6 @@ Resume on
 
 User nobody
 
-# AddScript
-# ------------
-# If you which to process some file through an interpreter like PHP, you
-# can specify it with the following format:
-#
-#    AddScript mime_type source_path_binary extension
-#
-#  Example for PHP4.x:
-#  --------------------
-#   AddScript application/x-httpd-php /home/my_home/php/bin/php php
-#
-#   The above example defines that whatever file, it's extension being
-#   "php", should be processed through by "/home/my_home/php/bin/php"
-#
-
-#AddScript application/x-httpd-php /home/my_home/php/bin/php php
-#AddScript application/x-httpd-php /home/my_home/php/bin/php php3
-
 # -----------------
 #  ADVANCED CONFIG
 # -----------------
@@ -123,33 +99,11 @@ MaxKeepAliveRequest 20
 
 KeepAliveTimeout 15 
 
-# Include
-# -------
-# Allow you have your configure file in separate files.
-#
-# Example:
-#	Include something.conf
-
-# Max_IP
-# ------
-#
-# Allow define the maximum of client connections 
-# from same IP address to server (value = 0 disable this feature).
-
-Max_IP 5
-
 # SymLink
 # -------
 # Allow request to symbolic link files.
 #
 
 SymLink Off
-
-
-# Palm protocol
-# -------------
-# Associate and connect files extensions with a Palm Server 
-#
-# Palm php application/x-httpd-php 127.0.0.1 2009
 
 EOF

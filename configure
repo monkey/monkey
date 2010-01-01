@@ -60,7 +60,6 @@ chmod 755 makeconf.sh
 ./makeconf.sh
 rm makeconf.sh
 rm $INCDIR/config.path
-cp lang/"$*"/monkey.deny conf/
 cp lang/"$*"/INSTALL ./
 cp lang/"$*"/README ./
 }
@@ -87,11 +86,9 @@ fi
 
 main()
 {
-    local_dirs
-    dir=0
-    actual_path=`pwd`
-    rm -rf src/extras/inf/*
-	
+	local_dirs
+	dir=0
+	actual_path=`pwd`	
 
 	if [ "$prefix" != "$actual_path" ]; then
 		dir=1
@@ -286,8 +283,8 @@ DESTDIR	= ../bin/monkey
 LIBS	= -ldl -lpthread $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
 	header.o config.o logfile.o signals.o \\
-	user.o utils.o chars.o epoll.o scheduler.o \\ 
-	str.o memory.o connection.o iov.o http.o \\ 
+	user.o utils.o chars.o epoll.o scheduler.o \\
+	str.o memory.o connection.o iov.o http.o \\
 	file.o socket.o clock.o cache.o worker.o \\
 	server.o plugin.o \\
         $add_obj_mod
@@ -311,8 +308,7 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/monkey.deny ../conf/sites/* include/info.h ../logs/*\\
-	extras/inf/*
+	../conf/sites/* include/info.h ../logs/*\\
 	@(cd extras && ./cleanmods.sh && cd ..)
 
 .c.o:
@@ -481,9 +477,6 @@ sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
 
-rm -rf src/extras/*.info
-touch $INCDIR/modules.h
-
 for arg in $*; do
 	case "$arg" in
 		-*=*) 
@@ -528,10 +521,10 @@ for arg in $*; do
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
-			echo "Copyright 2001-2009"
-			echo "Developed by Eduardo Silva"
-			echo "Monkey Home   : http://monkeyd.sf.net"
-			echo "Contact Email : edsiper@users.sf.net"
+			echo "Copyright 2001-2010"
+			echo "Developed by Eduardo Silva Pereira"
+			echo "Monkey Home   : http://www.monkey-project.com"
+			echo "Contact Email : edsiper@gmail.com"
 			echo
 			exit 1
 			;;
@@ -550,15 +543,8 @@ for arg in $*; do
 			echo "  --sysconfdir=SYSCONFDIR	Install Monkey conf files under SYSCONFDIR dir"
 			echo "  --datadir=DATADIR	Install Monkey data dir files under DATADIR directory"
 			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
-			echo "  --lang=[en|es]	Language to configuration files (default English)"
+			echo "  --lang=[en]	Language to configuration files (default English)"
 			echo 
-			echo "Extra features :"
-			echo "  All modules are optional features, neither of them are loaded by default,"
-			echo "  the available modules are:"
-			echo
-			echo "  --load-mod_mysql	Load MySQL Support (read MODULES file for details)." 
-			echo "  --with-cheetah-shell	Include Cheetah Shell!!!"
-			echo
 			exit 1
 			;;
 	esac
@@ -566,13 +552,13 @@ done
 
 echo "********************************************"
 echo "        Monkey HTTP Daemon v$VERSION        "
-echo "*         (http://monkeyd.sf.net)          *"
+echo "*       http://www.monkey-project.com      *"
 echo "* ---------------------------------------- *"
 echo "*  We need beta testers, developers and    *"
 echo "*  translators!, if u want help to this    *"
 echo "*  project, email me :                     *"
 echo "*                                          *"
-echo "*      edsiper@users.sourceforge.net       *"
+echo "*            edsiper@gmail.com             *"
 echo "*                                          *"
 echo "*         Thanks for use Monkey!!!         *"
 echo "*                                          *"

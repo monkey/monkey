@@ -36,18 +36,6 @@ AccessLog $logdir/access.log
 
 ErrorLog $logdir/error.log
 
-# ScriptAlias :
-# -------------
-# If you which to have CGI support (Common Gateway Interface), you should
-# define the directory where the executive scripts will be found,for that,
-# you should define an alias directory towards the original of the
-# following form:
-# 
-#       ScriptAlias /name_of_alias/ original_path
-#
-
-ScriptAlias /cgi-bin/ $cgibin
-
 # GetDir :
 # --------
 # In case a starting file cannot be found for the required route through
