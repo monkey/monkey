@@ -213,6 +213,21 @@ v0.4.0 (2002/06/15) :
 		- Nuevo soporte para conexiones persistentes.
 		- Nueva variable de configuracion "MaxClients".
 		- Actualizaciones en script configure.
-		- Pequeña correccion en mimetype.c .
+		- Pequena correccion en mimetype.c .
 		- Implementado soporte basico de multithreading.
 		- Reestructuracion de variables.
+
+v0.1.1 (2001/06/05) :
+		- Nueva variable Indexfile en monkey.conf
+		- Optimizacion de codigo (redundancias)
+
+v0.1   (2001/05/30) :
+		- Nuevo archivo de configuracion monkey.conf
+		- Implementado Content-Lenght
+		- Reconocimiento e implementacion de MimeTypes
+		- Correccion de Get Method
+		- Negacion a Methods no implementados
+		- Resstructuracion de directorios raiz			
+
+v0.0.5 (2001/05/17) :
+		- Primera version
