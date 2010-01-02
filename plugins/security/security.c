@@ -29,6 +29,7 @@
 #include "security.h"
 
 /* Plugin data for register */
+mk_plugin_data_t _shortname = "security";
 mk_plugin_data_t _name = "Security";
 mk_plugin_data_t _version = "0.1";
 mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_20 | MK_PLUGIN_STAGE_30;
@@ -37,7 +38,7 @@ struct plugin_api *mk_api;
 struct mk_config *conf;
 
 /* Read database configuration parameters */
-int mk_security_conf()
+int mk_security_conf(char *confdir)
 {
         int ret = 0;
         unsigned long len;
@@ -48,7 +49,7 @@ int mk_security_conf()
         mk_api->str_build(&conf_path, 
                           &len, 
                           "%s/security.conf",
-                          mk_api->config->serverconf);
+                          confdir);
 
         p = conf = mk_api->config_create(conf_path);
 
@@ -137,13 +138,13 @@ int mk_security_check_url(mk_pointer url)
         return 0;
 }
 
-int _mk_plugin_init(void **api)
+int _mk_plugin_init(void **api, char *confdir)
 {
         mk_api = *api;
         rules = 0;
 
         /* Read configuration */
-        mk_security_conf();
+        mk_security_conf(confdir);
         return 0;
 }
 
