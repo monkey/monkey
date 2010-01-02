@@ -64,6 +64,7 @@
 #define MK_CHEETAH_ONEMINUTE  60
 
 /* Plugin data for register */
+mk_plugin_data_t _shortname = "cheetah";
 mk_plugin_data_t _name = "Cheetah";
 mk_plugin_data_t _version = "1.0";
 mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_10;
@@ -177,10 +178,14 @@ void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
 
         p = list;
         printf("* %s", stage);
-        printf("\n     Loaded plugins on this stage");
-        printf("\n     ----------------------------");
+        printf("\n  Loaded plugins on this stage");
+        printf("\n  ----------------------------");
         while(p){
-                printf("\n     %s v%s on \"%s\"", p->name, p->version, p->path);
+                printf("\n  [%s] %s v%s on \"%s\"", 
+                       p->shortname, 
+                       p->name, 
+                       p->version, 
+                       p->path);
                 p = p->next;
         }
 
