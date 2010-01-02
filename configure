@@ -230,6 +230,8 @@ install:
 	install -d \$(BINDIR)
 	install -d \$(CGIBIN)
 	install -d \$(SYSCONFDIR) 
+	install -d \${SYSCONFDIR}/sites
+	install -d \${SYSCONFDIR}/plugins
 	install -d \$(DATADIR)
 	install -d \${DATADIR}/imgs
 	install -d \${DATADIR}/php
@@ -239,6 +241,8 @@ install:
 	install -m 755 bin/banana \$(BINDIR)
 	install -m 755 ./cgi-bin/* \$(CGIBIN)
 	install -m 600 ./conf/*.* \$(SYSCONFDIR)
+	install -m 600 ./conf/sites/* \${SYSCONFDIR}/sites
+	install -m 600 ./conf/plugins/* \${SYSCONFDIR}/plugins
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
 	install -m 644 ./htdocs/php/*.* \${DATADIR}/php
