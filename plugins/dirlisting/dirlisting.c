@@ -57,6 +57,7 @@
 #include "dirlisting.h"
 
 /* Plugin data for register */
+mk_plugin_data_t _shortname = "dirlisting";
 mk_plugin_data_t _name = "Directory Listing";
 mk_plugin_data_t _version = "1.0";
 mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_40;;
@@ -221,17 +222,17 @@ struct mk_f_list *mk_dirhtml_create_list(DIR *dir, char *path,
 }
 
 /* Read dirhtml config and themes */
-int mk_dirhtml_conf()
+int mk_dirhtml_conf(char *confdir)
 {
         int ret = 0;
         unsigned long len;
-        char *themes_path;
+        char *conf_file;
         
-        mk_api->str_build(&themes_path, 
+        mk_api->str_build(&conf_file, 
                           &len, 
-                          "%s/dir_themes/", 
-                          mk_api->config->serverconf);
-        ret = mk_dirhtml_read_config(themes_path);
+                          "%s", 
+                          confdir);
+        ret = mk_dirhtml_read_config(conf_file);
         
         /* This function will load the default theme 
          * setted in dirhtml_conf struct 
@@ -250,48 +251,23 @@ int mk_dirhtml_read_config(char *path)
 {
         unsigned long len;
         char *default_file;
-        char buffer[255];
-        FILE *fileconf;
-        char *variable, *value, *last;
+        struct mk_config *p;
 
         mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
-
-        if(!(fileconf = fopen(default_file, "r")))
-        {
-                puts("Error: Cannot open dirhtml conf file");
-                mk_api->mem_free(default_file);
-                return -1;
-        }
+        p = conf = mk_api->config_create(default_file);
 
         /* alloc dirhtml config struct */
         dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
 
-        while(fgets(buffer, 255, fileconf))
-        {
-                 len = strlen(buffer);
-                 if(buffer[len-1] == '\n') {
-                   buffer[--len] = 0;
-                   if(len && buffer[len-1] == '\r')
-                     buffer[--len] = 0;
-                 }
-        
-                 if(!buffer[0] || buffer[0] == '#')
-                          continue;
-            
-                 variable   = strtok_r(buffer, "\"\t ", &last);
-                 value     = strtok_r(NULL, "\"\t ", &last);
-
-                 if (!variable || !value) continue;
-
-                 /* Server Name */
-                 if(strcasecmp(variable,"Theme")==0)
-                 {
-                         dirhtml_conf->theme = mk_api->str_dup(value);
+        while(p){
+                if(strcasecmp(p->key, "Theme") == 0){
+                         dirhtml_conf->theme = mk_api->str_dup(p->val);
                          mk_api->str_build(&dirhtml_conf->theme_path, &len, 
-                                           "%s%s/", path, dirhtml_conf->theme);
-                 }
+                                           "%sthemes/%s/", path, dirhtml_conf->theme);
+                }
+                p = p->next;
         }
-        fclose(fileconf);
+
         mk_api->mem_free(default_file);
         return 0;
 }
@@ -903,10 +879,10 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         return 0;
 }
 
-int _mk_plugin_init(void **api)
+int _mk_plugin_init(void **api, char *confdir)
 {
         mk_api = *api;
-        mk_dirhtml_conf();
+        mk_dirhtml_conf(confdir);
         return 0;
 }
 

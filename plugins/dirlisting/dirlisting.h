@@ -98,6 +98,9 @@ struct dirhtml_value
 
 struct dirhtml_value *mk_dirhtml_value_global;
 
+/* Configuration struct */
+struct mk_config *conf;
+
 char   *check_string(char *str);
 char   *read_header_footer_file(char *file_path);
 

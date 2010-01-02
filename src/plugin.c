@@ -139,6 +139,7 @@ void *mk_plugin_register(void *handler, char *path)
         struct plugin *p;
 
         p = mk_mem_malloc_z(sizeof(struct plugin));
+        p->shortname = mk_plugin_load_symbol(handler, "_shortname");
         p->name = mk_plugin_load_symbol(handler, "_name");
         p->version = mk_plugin_load_symbol(handler, "_version");
         p->path = mk_string_dup(path);
@@ -239,12 +240,20 @@ void mk_plugin_init()
                                 dlclose(handle);
                         }
                         else{
-                                p->call_init(&api);
+                                char *plugin_confdir = 0;
+                                unsigned long len;
+
+                                m_build_buffer(&plugin_confdir, 
+                                               &len, 
+                                               "%s/plugins/%s/",
+                                               config->serverconf,
+                                               p->shortname);
+
+                                p->call_init(&api, plugin_confdir);
                         }
                 }
                 cnf = cnf->next;
         }
-
 
         api->plugins = plg_list;
         plist = plg_list;

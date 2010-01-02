@@ -63,6 +63,7 @@ struct plugin_list {
 struct plugin_list *plg_list;
 
 struct plugin {
+        char *shortname;
         char *name;
         char *version;
         char *path;
@@ -70,7 +71,7 @@ struct plugin {
         __uint32_t *stages;
 
         /* Plugin external functions */
-        int (*call_init)(void *api);
+        int (*call_init)(void *api, char *confdir);
         int (*call_worker_init)();
         int (*call_stage_10)();
         int (*call_stage_20)(unsigned int, 
