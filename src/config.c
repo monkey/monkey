@@ -142,6 +142,8 @@ void *mk_config_getval(struct mk_config *cnf, char *key, int mode)
                                 else{
                                         return (void *) VAR_OFF;
                                 }
+                        case MK_CONFIG_VAL_LIST:
+                                return mk_string_split_line(p->val);
                         }
                 }
                 else{
@@ -156,9 +158,9 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 {
 	unsigned long len;
 	char *path=0;
-	char *last=0;
 	struct stat checkdir;
         struct mk_config *cnf;
+        struct mk_string_line *line, *line_val;
 
 	config->serverconf = mk_string_dup(path_conf);
         config->workers = MK_WORKERS_DEFAULT;
@@ -229,11 +231,10 @@ void mk_config_read_files(char *path_conf, char *file_conf)
         config->user_dir = mk_config_getval(cnf, "UserDir", MK_CONFIG_VAL_STR);
 		
         /* Index files */
-        char *index, *aux;
-        aux = index = mk_config_getval(cnf, "Indexfile", MK_CONFIG_VAL_STR);
-        while(aux!=NULL) {
-                mk_config_add_index(aux);
-                aux=strtok_r(NULL,"\"\t ", &last);
+        line_val = line = mk_config_getval(cnf, "Indexfile", MK_CONFIG_VAL_LIST);
+        while(line_val!=NULL) {
+                mk_config_add_index(line_val->val);
+                line_val = line_val->next;
         }
 
         /* HideVersion Variable */

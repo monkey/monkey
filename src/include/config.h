@@ -39,6 +39,7 @@
 #define MK_CONFIG_VAL_STR 0
 #define MK_CONFIG_VAL_NUM 1
 #define MK_CONFIG_VAL_BOOL 2
+#define MK_CONFIG_VAL_LIST 3
 
 struct mk_config {
         char *key;
