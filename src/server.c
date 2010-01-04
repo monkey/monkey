@@ -55,7 +55,7 @@ int mk_server_worker_capacity(int nworkers)
          */
 
         avl = max - (3 + 1 + nworkers + 1 + 2); 
-        return (avl/nworkers);
+        return ((avl/2)/nworkers);
 }
 
 /* Here we launch the worker threads to attend clients */
