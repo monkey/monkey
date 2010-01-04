@@ -156,7 +156,7 @@ main()
 	fi
 	echo
 
-        create_makefile_plugins
+        create_makefile_plugins $plugdir
 }
 
 # Check pthreads lib
@@ -208,6 +208,27 @@ EOF
 
 create_makefile1_install()
 {
+
+# Look for plugins and create list
+for entry in plugins/*
+do
+        if [ -d $entry ]; then
+		echo "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
+        fi
+done;
+plglist=`cat plugins.list`
+rm -rf plugins.list
+
+# Look for plugins configuration
+for entry in conf/plugins/*
+do
+	if [ -d $entry ]; then
+		echo "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
+	fi
+done;
+plgconf=`cat plugins.conf`
+rm -rf plugins.conf
+
 cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
@@ -217,6 +238,7 @@ CGIBIN=${cgibin}
 SYSCONFDIR=${sysconfdir}
 DATADIR=${datadir}
 LOGDIR=${logdir}
+PLUGINDIR=${plugdir}
 
 default:
 	@(cd src; make all)
@@ -237,12 +259,14 @@ install:
 	install -d \${DATADIR}/php
 	install -d \${DATADIR}/docs
 	install -d \${LOGDIR}
+	install -d \${PLUGINDIR}
 	install -s -m 755 bin/monkey \$(BINDIR)
 	install -m 755 bin/banana \$(BINDIR)
 	install -m 755 ./cgi-bin/* \$(CGIBIN)
 	install -m 600 ./conf/*.* \$(SYSCONFDIR)
+$plgconf
 	install -m 600 ./conf/sites/* \${SYSCONFDIR}/sites
-	install -m 600 ./conf/plugins/* \${SYSCONFDIR}/plugins
+$plglist
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
 	install -m 644 ./htdocs/php/*.* \${DATADIR}/php
@@ -323,7 +347,6 @@ EOF
 create_makefile_plugins()
 {
     cd plugins
-    list=`echo */ "" | sed "s/\/ /\n/g"`
     cat > Makefile <<EOF
 all:
 EOF
@@ -335,11 +358,29 @@ EOF
     echo "# one, just remove the comment character for each line" >> $plugins_load
     echo "" >> $plugins_load
 
+    list=`echo */ "" | sed "s/\/ /\n/g"`
     for i in $list;
 	do 
 	      echo "	@(cd $i && make && cd ..)" >> Makefile;
-	      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load;
+
+	      if [ "$plugdir" != "" ]; then
+		      echo "#LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
+		else
+		      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
+	      fi
 	done	
+
+# Add 'install' option to make file if plugdir was specified
+if [ "$plugdir" != "" ]; then
+    echo "\ninstall:" >> Makefile
+    echo "\tinstall -d $plugdir" >> Makefile
+
+    list=`echo */ "" | sed "s/\/ /\n/g"`
+    for i in $list;
+	do 
+	      echo "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
+	done
+fi
 }
 
 # Creando include/info.h
@@ -515,12 +556,8 @@ for arg in $*; do
 		--lang*)
 			lang=$optarg
 			;;
-		--load-mod_mysql*)
-			modules="on"
-			mod_mysql="on"
-			;;
-                --with-cheetah-shell*)
-                        cheetah="on"
+                --plugdir*)
+                        plugdir=$optarg
                         ;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
@@ -535,19 +572,19 @@ for arg in $*; do
 		*)
 			echo "Usage: configure [--prefix=PREFIXDIR] [--lang=LANGUAGE] [ --bindir=BINDIR]"
 			echo "                 [--cgibin=CGIBINDIR] [--sysconfdir=SYSCONFDIR]"
-			echo "                 [--datadir=DATADIR] [--logdir=LOGDIR]"
+			echo "                 [--datadir=DATADIR] [--logdir=LOGDIR] [--plugdir=PLUGDIR]"
 			echo 
-			echo "Options : "
-			echo "  --help		Display this help and exit"
-			echo "  --version		Display version information and exit"
+			echo "Options: "
+			echo "  --help		  Display this help and exit"
+			echo "  --version		  Display version information and exit"
 			echo 
-			echo "  --prefix=PREFIX	Install Monkey under PREFIX directory"
-			echo "  --bindir=BINDIR	Install Monkey binaries	under BINDIR directory"
-			echo "  --cgibin=CGIBINDIR	Install Monkey cgi-bin	under CGIBIN directory"
-			echo "  --sysconfdir=SYSCONFDIR	Install Monkey conf files under SYSCONFDIR dir"
-			echo "  --datadir=DATADIR	Install Monkey data dir files under DATADIR directory"
-			echo "  --logdir=LOGDIR	Install Monkey log files under LOGDIR directory"
-			echo "  --lang=[en]	Language to configuration files (default English)"
+			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
+			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"
+			echo "  --cgibin=CGIBINDIR	  Install Monkey cgi-bin under CGIBIN directory"
+			echo "  --sysconfdir=SYSCONFDIR Install Monkey conf files under SYSCONFDIR dir"
+			echo "  --datadir=DATADIR	  Install Monkey data dir files under DATADIR directory"
+			echo "  --logdir=LOGDIR	  Install Monkey log files under LOGDIR directory"
+			echo "  --plugdir=PLUGDIR	  Target directory for Monkey plugins"
 			echo 
 			exit 1
 			;;
@@ -572,5 +609,5 @@ echo "System   : $SYSINFO"
 lang="en"
 
 # starting main function 
-main prefix lang bindir cgibin sysconfdir datadir logdir modules SYSNAME VERSION
+main prefix lang bindir cgibin sysconfdir datadir logdir plugdir modules SYSNAME VERSION
 exit 0
