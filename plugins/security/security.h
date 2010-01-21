@@ -26,10 +26,11 @@
 #define MK_SECURITY_TYPE_IP 0
 #define MK_SECURITY_TYPE_URL 1
 
-struct mk_security {
-        int type;
-        char *value;
-        struct mk_security *next;
+struct mk_security
+{
+    int type;
+    char *value;
+    struct mk_security *next;
 };
 
 struct mk_security *rules;

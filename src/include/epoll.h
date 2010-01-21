@@ -27,26 +27,26 @@
 
 #define MK_EPOLL_WAIT_TIMEOUT 3000
 
-#define MK_EPOLL_BEHAVIOR_DEFAULT 2 
+#define MK_EPOLL_BEHAVIOR_DEFAULT 2
 #define MK_EPOLL_BEHAVIOR_TRIGGERED 3
 
-typedef struct {
-        int (*read)(int);
-        int (*write)(int);
-        int (*error)(int);
-        int (*close)(int);
-        int (*timeout)(int);
+typedef struct
+{
+    int (*read) (int);
+    int (*write) (int);
+    int (*error) (int);
+    int (*close) (int);
+    int (*timeout) (int);
 } mk_epoll_handlers;
 
 int mk_epoll_create(int max_events);
-void *mk_epoll_init(int efd, mk_epoll_handlers *handler, int max_events);
+void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events);
 
-mk_epoll_handlers *mk_epoll_set_handlers(void (*read)(int),
-                                         void (*write)(int),
-                                         void (*error)(int),
-                                         void (*close)(int),
-                                         void (*timeout)(int));
+mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
+                                         void (*write) (int),
+                                         void (*error) (int),
+                                         void (*close) (int),
+                                         void (*timeout) (int));
 
 int mk_epoll_add_client(int efd, int socket, int mode);
 int mk_epoll_socket_change_mode(int efd, int socket, int mode);
-

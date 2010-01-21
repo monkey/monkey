@@ -33,8 +33,7 @@ int mk_socket_set_nonblocking(int sockfd);
 
 int mk_socket_get_ip(int socket, char *ipv4);
 int mk_socket_close(int socket);
-int mk_socket_timeout(int s, char *buf, int len, 
-		int timeout, int recv_send);
+int mk_socket_timeout(int s, char *buf, int len, int timeout, int recv_send);
 
 int mk_socket_create();
 int mk_socket_connect(int sockfd, char *server, int port);
@@ -42,4 +41,3 @@ void mk_socket_reset(int socket);
 int mk_socket_server(int port);
 
 #endif
-

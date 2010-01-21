@@ -51,128 +51,125 @@
 #include "plugin.h"
 
 #if defined(__DATE__) && defined(__TIME__)
-	static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
+static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 #else
-	static const char MONKEY_BUILT[] = "Unknown";
+static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
 void mk_details()
 {
-        printf("* Process ID is %i", getpid());
-        printf("\n* Server socket listening on Port %i", config->serverport);
-        printf("\n* %i threads, %i client connections per thread, total %i\n", 
-               config->workers, config->worker_capacity,
-               config->workers*config->worker_capacity);
-        fflush(stdout);
+    printf("* Process ID is %i", getpid());
+    printf("\n* Server socket listening on Port %i", config->serverport);
+    printf("\n* %i threads, %i client connections per thread, total %i\n",
+           config->workers, config->worker_capacity,
+           config->workers * config->worker_capacity);
+    fflush(stdout);
 }
 
 void mk_version()
-{ 
-	printf("Monkey HTTP Daemon %s\n",VERSION);
-	printf("Built : %s\n", MONKEY_BUILT);
-	printf("Home  : http://www.monkey-project.com\n");
-	fflush(stdout);
+{
+    printf("Monkey HTTP Daemon %s\n", VERSION);
+    printf("Built : %s\n", MONKEY_BUILT);
+    printf("Home  : http://www.monkey-project.com\n");
+    fflush(stdout);
 }
 
 void mk_help()
 {
-	printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
-	printf("Available options:\n");
-	printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
-	printf("  -c directory\tspecify directory from configuration files\n");
-	printf("  -D\t\trun Monkey as daemon\n");
-	printf("  -v\t\tshow version number\n");
-	printf("  -h\t\tthis help\n\n");
-	exit(0);
+    printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
+    printf("Available options:\n");
+    printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
+    printf("  -c directory\tspecify directory from configuration files\n");
+    printf("  -D\t\trun Monkey as daemon\n");
+    printf("  -v\t\tshow version number\n");
+    printf("  -h\t\tthis help\n\n");
+    exit(0);
 }
 
 /* MAIN */
 int main(int argc, char **argv)
 {
-	int opt;
-        int daemon = 0;
-	
-	config = mk_mem_malloc(sizeof(struct server_config));
-	config->file_config=0;
-			
-	opterr = 0;
-	while ((opt = getopt(argc, argv, "DSvhc:")) != -1)
-	{
-		switch (opt) {
-			case 'v': 
-				mk_version() ; 
-				exit(0); 
-				break;
-			case 'h':
-				mk_help();
-				break;
-			case 'D':
-				daemon = 1;
-				break;
-			case 'c':
-				if (strlen(optarg) != 0) {
-					config->file_config=optarg;
-					break;
-				}
-			case '?':
-				printf("Monkey: Invalid option or option needs an argument.\n");
-				mk_help();
-				break;
-		}
-	}   
+    int opt;
+    int daemon = 0;
 
-	if(!config->file_config){
-		config->file_config=MONKEY_PATH_CONF;
+    config = mk_mem_malloc(sizeof(struct server_config));
+    config->file_config = 0;
+
+    opterr = 0;
+    while ((opt = getopt(argc, argv, "DSvhc:")) != -1) {
+        switch (opt) {
+        case 'v':
+            mk_version();
+            exit(0);
+            break;
+        case 'h':
+            mk_help();
+            break;
+        case 'D':
+            daemon = 1;
+            break;
+        case 'c':
+            if (strlen(optarg) != 0) {
+                config->file_config = optarg;
+                break;
+            }
+        case '?':
+            printf("Monkey: Invalid option or option needs an argument.\n");
+            mk_help();
+            break;
         }
+    }
 
-	mk_version();
-	mk_signal_init();
-	mk_config_start_configure();
-        mk_plugin_init();
+    if (!config->file_config) {
+        config->file_config = MONKEY_PATH_CONF;
+    }
 
-        server_fd = mk_socket_server(config->serverport);
+    mk_version();
+    mk_signal_init();
+    mk_config_start_configure();
+    mk_plugin_init();
 
-	/* Workers: logger and clock */ 
-        mk_worker_spawn((void *)mk_logger_worker_init);
-        mk_worker_spawn((void *)mk_clock_worker_init);
+    server_fd = mk_socket_server(config->serverport);
 
-	/* Running Monkey as daemon */
-	if(daemon)
-	{
-		mk_utils_set_daemon();
-	}
+    /* Workers: logger and clock */
+    mk_worker_spawn((void *) mk_logger_worker_init);
+    mk_worker_spawn((void *) mk_clock_worker_init);
 
-        /* Register PID of Monkey */
-	mk_logger_register_pid();
+    /* Running Monkey as daemon */
+    if (daemon) {
+        mk_utils_set_daemon();
+    }
 
-        
-	mk_mem_pointers_init();
+    /* Register PID of Monkey */
+    mk_logger_register_pid();
 
-        /* Create thread keys */
-	pthread_key_create(&request_index, NULL);
-	pthread_key_create(&epoll_fd, NULL);
-	pthread_key_create(&timer, NULL);
-        pthread_key_create(&mk_cache_iov_log, NULL);
-        pthread_key_create(&mk_cache_iov_header, NULL);
-        pthread_key_create(&mk_cache_header_toc, NULL);
 
-        /* Change process owner */
-	mk_user_set_uidgid();
+    mk_mem_pointers_init();
 
-        mk_config_sanity_check();
+    /* Create thread keys */
+    pthread_key_create(&request_index, NULL);
+    pthread_key_create(&epoll_fd, NULL);
+    pthread_key_create(&timer, NULL);
+    pthread_key_create(&mk_cache_iov_log, NULL);
+    pthread_key_create(&mk_cache_iov_header, NULL);
+    pthread_key_create(&mk_cache_header_toc, NULL);
 
-        /* Launch monkey http workers */
-        mk_server_launch_workers();
+    /* Change process owner */
+    mk_user_set_uidgid();
 
-        /* Print server details */
-        mk_details();
+    mk_config_sanity_check();
 
-        /* Plugins Stage 10 */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
+    /* Launch monkey http workers */
+    mk_server_launch_workers();
 
-        /* Server loop, let's listen for incomming clients */
-        mk_server_loop(server_fd);
+    /* Print server details */
+    mk_details();
 
-	return 0;
+    /* Plugins Stage 10 */
+    mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
+
+    /* Server loop, let's listen for incomming clients */
+    mk_server_loop(server_fd);
+
+    return 0;
 }
-

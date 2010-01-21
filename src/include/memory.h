@@ -24,15 +24,15 @@
 
 typedef struct
 {
-        char *data;
-	unsigned long len;
+    char *data;
+    unsigned long len;
 } mk_pointer;
 
 struct list_sint
 {
-        unsigned short int index;
-        mk_pointer value;
-        struct list_sint *next;
+    unsigned short int index;
+    mk_pointer value;
+    struct list_sint *next;
 };
 
 typedef struct list_sint mk_list_sint_t;
@@ -40,17 +40,16 @@ typedef struct list_sint mk_list_sint_t;
 void *mk_mem_malloc(size_t size);
 extern void *mk_mem_malloc_z(size_t size);
 
-void *mk_mem_realloc(void* ptr, size_t size);
+void *mk_mem_realloc(void *ptr, size_t size);
 void mk_mem_free(void *ptr);
 void mk_mem_pointers_init();
 
 /* mk_pointer_* */
 mk_pointer mk_pointer_create(char *buf, long init, long end);
-void mk_pointer_free(mk_pointer *p);
-void mk_pointer_reset(mk_pointer *p);
+void mk_pointer_free(mk_pointer * p);
+void mk_pointer_reset(mk_pointer * p);
 void mk_pointer_print(mk_pointer p);
 char *mk_pointer_to_buf(mk_pointer p);
-void mk_pointer_set(mk_pointer *p, char *data);
+void mk_pointer_set(mk_pointer * p, char *data);
 
 #endif
-

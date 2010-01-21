@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,112 +40,110 @@
 
 int mk_user_init(struct client_request *cr, struct request *sr)
 {
-        int limit;
-        int offset = mk_user_home.len;
-        char *user=0, *user_server_root=0;
-	struct passwd *s_user;
-	unsigned long len;
+    int limit;
+    int offset = mk_user_home.len;
+    char *user = 0, *user_server_root = 0;
+    struct passwd *s_user;
+    unsigned long len;
 
-	sr->user_home=VAR_ON;
+    sr->user_home = VAR_ON;
 
-	user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
-	limit=mk_string_search(sr->uri_processed+offset, "/");
+    user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
+    limit = mk_string_search(sr->uri_processed + offset, "/");
 
-	if(limit==-1)
-		limit=strlen(sr->uri_processed) - offset ;
+    if (limit == -1)
+        limit = strlen(sr->uri_processed) - offset;
 
-	strncpy(user, sr->uri_processed+offset, limit);	
-	user[limit]='\0';
-	
-	if(sr->uri.data[offset+limit]=='/')
-	{
-                m_build_buffer(&sr->uri.data, &sr->uri.len,
-                               "%s", sr->uri_processed+offset+limit);
+    strncpy(user, sr->uri_processed + offset, limit);
+    user[limit] = '\0';
 
-                /* Extract URI portion after /~user */
-                sr->user_uri = (char*)mk_mem_malloc_z(sr->uri.len + 1);
-                char* src = sr->uri.data;
-                char* dst = sr->user_uri;
+    if (sr->uri.data[offset + limit] == '/') {
+        m_build_buffer(&sr->uri.data, &sr->uri.len,
+                       "%s", sr->uri_processed + offset + limit);
 
-                while (*src != ' ' && src < (sr->uri.data + sr->uri.len)){
-                        *dst++ = *src++;
-                }
-	}
+        /* Extract URI portion after /~user */
+        sr->user_uri = (char *) mk_mem_malloc_z(sr->uri.len + 1);
+        char *src = sr->uri.data;
+        char *dst = sr->user_uri;
 
-	if((s_user=getpwnam(user))==NULL){
-		mk_mem_free(user);
-		mk_request_error(M_CLIENT_NOT_FOUND, cr, sr,1,sr->log);
-		return -1;
-	}
-	mk_mem_free(user);
-	
-	m_build_buffer(&user_server_root, &len, "%s/%s",s_user->pw_dir, config->user_dir);
+        while (*src != ' ' && src < (sr->uri.data + sr->uri.len)) {
+            *dst++ = *src++;
+        }
+    }
 
-	if(sr->user_uri!=NULL)
-	{
-		m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s",
-                               user_server_root, sr->user_uri);
-	}
-	else
-	{
-		m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s",
-                               user_server_root);
-	}
-	mk_mem_free(user_server_root);
-	return 0;
+    if ((s_user = getpwnam(user)) == NULL) {
+        mk_mem_free(user);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
+        return -1;
+    }
+    mk_mem_free(user);
+
+    m_build_buffer(&user_server_root, &len, "%s/%s", s_user->pw_dir,
+                   config->user_dir);
+
+    if (sr->user_uri != NULL) {
+        m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s",
+                       user_server_root, sr->user_uri);
+    }
+    else {
+        m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s",
+                       user_server_root);
+    }
+    mk_mem_free(user_server_root);
+    return 0;
 }
 
 /* Cambia el usuario del proceso */
 int mk_user_set_uidgid()
 {
-   struct passwd   *usr;
+    struct passwd *usr;
 
-   EGID=(gid_t) getegid();
-   EUID=(gid_t) geteuid();
-   
-   if(geteuid()==0 && config->user) {            /* Lanzado por root ?? */
-		struct rlimit rl;
-		
-		/* Just if i'm superuser */
-		rl.rlim_max= (256 * config->maxclients);
-		rl.rlim_cur = rl.rlim_max;
-	    setrlimit( RLIMIT_NOFILE, &rl );
-    
-      /* Chequear si existe el usuario USER ... */
-      if ((usr = getpwnam( config->user )) == NULL) {
-         printf("Error: Invalid user '%s'\n", config->user);
-         exit(1);
-      }
+    EGID = (gid_t) getegid();
+    EUID = (gid_t) geteuid();
 
+    if (geteuid() == 0 && config->user) {       /* Lanzado por root ?? */
+        struct rlimit rl;
 
-      if (initgroups(config->user, usr->pw_gid) != 0) {
-              exit(1);
-      }
+        /* Just if i'm superuser */
+        rl.rlim_max = (256 * config->maxclients);
+        rl.rlim_cur = rl.rlim_max;
+        setrlimit(RLIMIT_NOFILE, &rl);
 
-      /* Cambiar el UID y el GID del proceso */
-      if(setgid(usr->pw_gid)==-1) {
-         printf("I can't change the GID to %u\n", usr->pw_gid);
-         exit(1);
-         }
+        /* Chequear si existe el usuario USER ... */
+        if ((usr = getpwnam(config->user)) == NULL) {
+            printf("Error: Invalid user '%s'\n", config->user);
+            exit(1);
+        }
 
 
-      if(setuid(usr->pw_uid)==-1) {
-         printf("I can't change the UID to %u\n", usr->pw_uid);
-         exit(1);
-      }
+        if (initgroups(config->user, usr->pw_gid) != 0) {
+            exit(1);
+        }
 
-      egid = geteuid();
-      euid = getegid();
-   }
-   return 0;
+        /* Cambiar el UID y el GID del proceso */
+        if (setgid(usr->pw_gid) == -1) {
+            printf("I can't change the GID to %u\n", usr->pw_gid);
+            exit(1);
+        }
+
+
+        if (setuid(usr->pw_uid) == -1) {
+            printf("I can't change the UID to %u\n", usr->pw_uid);
+            exit(1);
+        }
+
+        egid = geteuid();
+        euid = getegid();
+    }
+    return 0;
 }
 
 /* Vuelve el proceso a su usuario original */
 int mk_user_undo_uidgid()
 {
-	if(EUID==0){
-		setegid(EGID);
-		seteuid(EUID);
-	}
-	return 0;
+    if (EUID == 0) {
+        setegid(EGID);
+        seteuid(EUID);
+    }
+    return 0;
 }

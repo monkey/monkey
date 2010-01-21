@@ -22,10 +22,11 @@
 #ifndef MK_STR_H
 #define MK_STR_H
 
-struct mk_string_line {
-        char *val;
-        int len;
-        struct mk_string_line *next;
+struct mk_string_line
+{
+    char *val;
+    int len;
+    struct mk_string_line *next;
 };
 
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);

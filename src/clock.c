@@ -32,47 +32,43 @@
 
 void mk_clock_log_set_time()
 {
-        time_t utime;
+    time_t utime;
 
-        if(!log_current_time.data)
-        {
-                log_current_time.data = mk_mem_malloc_z(30);
-                log_current_time.len = 28;
-        }
+    if (!log_current_time.data) {
+        log_current_time.data = mk_mem_malloc_z(30);
+        log_current_time.len = 28;
+    }
 
-        if ((utime = time(NULL)) == -1)
-        {
-                return;
-        }
+    if ((utime = time(NULL)) == -1) {
+        return;
+    }
 
-        log_current_utime = utime;
-        strftime(log_current_time.data, 30, "[%d/%b/%G %T %z]",
-                 (struct tm *)localtime((time_t *) &utime));
+    log_current_utime = utime;
+    strftime(log_current_time.data, 30, "[%d/%b/%G %T %z]",
+             (struct tm *) localtime((time_t *) & utime));
 }
 
 void mk_clock_header_set_time()
 {
-        int n, len = 30;
-	time_t date;
-        struct tm *gmt_tm;
+    int n, len = 30;
+    time_t date;
+    struct tm *gmt_tm;
 
-        if(!header_current_time.data)
-        {
-                header_current_time.data = mk_mem_malloc_z(len);
-                header_current_time.len = len - 1;
-        }
+    if (!header_current_time.data) {
+        header_current_time.data = mk_mem_malloc_z(len);
+        header_current_time.len = len - 1;
+    }
 
-        date = time(NULL);
-	gmt_tm	= (struct tm *) gmtime(&date);
-	n = strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
+    date = time(NULL);
+    gmt_tm = (struct tm *) gmtime(&date);
+    n = strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
 }
 
 void *mk_clock_worker_init(void *args)
 {
-        while(1)
-        {
-                mk_clock_log_set_time();
-                mk_clock_header_set_time();
-                sleep(1);
-        }
+    while (1) {
+        mk_clock_log_set_time();
+        mk_clock_header_set_time();
+        sleep(1);
+    }
 }

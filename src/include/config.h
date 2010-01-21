@@ -41,74 +41,77 @@
 #define MK_CONFIG_VAL_BOOL 2
 #define MK_CONFIG_VAL_LIST 3
 
-struct mk_config {
-        char *key;
-        char *val;
-        struct mk_config *next;
+struct mk_config
+{
+    char *key;
+    char *val;
+    struct mk_config *next;
 };
 
 
 /* Base struct of server */
-struct server_config {
-        mk_pointer port;
+struct server_config
+{
+    mk_pointer port;
 
-	char *serverconf;	/* path to configuration files */
+    char *serverconf;           /* path to configuration files */
 
-	mk_pointer server_addr;
-	mk_pointer server_software;
+    mk_pointer server_addr;
+    mk_pointer server_software;
 
-	char *user;
-	char *user_dir;
-	char *pid_file_path; /* pid of server */
-	char *file_config;
-	char **request_headers_allowed;
+    char *user;
+    char *user_dir;
+    char *pid_file_path;        /* pid of server */
+    char *file_config;
+    char **request_headers_allowed;
 
-        int  workers; /* number of worker threads */
-        int  worker_capacity; /* how many clients per thread... */
+    int workers;                /* number of worker threads */
+    int worker_capacity;        /* how many clients per thread... */
 
-	int  symlink; /* symbolic links */
-	int  serverport; /* port */
-	int  timeout;  /* max time to wait for a new connection */
-	int  maxclients; /* max clients (max threads) */
-	int  hideversion; /* hide version of server to clients ? */
-	int  standard_port; /* common port used in web servers (80) */
-	int  pid_status;
-	int  resume; /* Resume (on/off) */
-	
-	/* keep alive */
-	int  keep_alive; /* it's a persisten connection ? */
-	int  max_keep_alive_request;  /* max persistent connections to allow */
-	int  keep_alive_timeout; /* persistent connection timeout */
+    int symlink;                /* symbolic links */
+    int serverport;             /* port */
+    int timeout;                /* max time to wait for a new connection */
+    int maxclients;             /* max clients (max threads) */
+    int hideversion;            /* hide version of server to clients ? */
+    int standard_port;          /* common port used in web servers (80) */
+    int pid_status;
+    int resume;                 /* Resume (on/off) */
 
-	/* counter of threads working */
-	int thread_counter;
-	/* real user */
-	uid_t egid;
-	gid_t euid;
+    /* keep alive */
+    int keep_alive;             /* it's a persisten connection ? */
+    int max_keep_alive_request; /* max persistent connections to allow */
+    int keep_alive_timeout;     /* persistent connection timeout */
 
-	/* max ip */
-	int max_ip;
+    /* counter of threads working */
+    int thread_counter;
+    /* real user */
+    uid_t egid;
+    gid_t euid;
 
-        struct dir_html_theme *dir_theme;
+    /* max ip */
+    int max_ip;
 
-	 /* configured host quantity */
-	int nhosts;	
-	struct host *hosts;
+    struct dir_html_theme *dir_theme;
 
-        mode_t open_flags;
-        struct plugin_stages *plugins;
+    /* configured host quantity */
+    int nhosts;
+    struct host *hosts;
+
+    mode_t open_flags;
+    struct plugin_stages *plugins;
 };
 
 struct server_config *config;
 
-struct host {
-    char *file; /* configuration file */
-    char *servername; /* host name */
+struct host
+{
+    char *file;                 /* configuration file */
+    char *servername;           /* host name */
     mk_pointer documentroot;
 
-    char *access_log_path; /* access log file */
-    char *error_log_path;  /* error log file */
-    int  getdir; /* allow show directory info ? */
+    char *access_log_path;      /* access log file */
+    char *error_log_path;       /* error log file */
+    int getdir;                 /* allow show directory info ? */
 
     char *cgi_alias;
     char *cgi_path;

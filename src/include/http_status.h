@@ -48,7 +48,7 @@
 
 #define M_CLIENT_BAD_REQUEST			400
 #define M_CLIENT_UNAUTH				401
-#define M_CLIENT_PAYMENT_NEEDED			402	/* Wtf?! :-) */
+#define M_CLIENT_PAYMENT_NEEDED			402     /* Wtf?! :-) */
 #define M_CLIENT_FORBIDDEN			403
 #define M_CLIENT_NOT_FOUND			404
 #define M_CLIENT_METHOD_NOT_ALLOWED		405

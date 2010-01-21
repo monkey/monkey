@@ -23,13 +23,14 @@
 #define P_BROKEN_PIPE	1
 
 /* Struct to register info about the thread childs (clients) */
-struct process {
-	pthread_t	thread_pid;
-	int 	socket;
-	char *ip_client;
-	struct client_request *cr;
-	struct process *next;
-} *first_process;
+struct process
+{
+    pthread_t thread_pid;
+    int socket;
+    char *ip_client;
+    struct client_request *cr;
+    struct process *next;
+}      *first_process;
 
 struct process *RegProc(pthread_t thread, int socket);
-int	FreeThread(pthread_t thread);
+int FreeThread(pthread_t thread);

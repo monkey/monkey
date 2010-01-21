@@ -45,19 +45,19 @@
 
 struct mk_f_list
 {
-        char *name;
-        char *size;
-        char *ft_modif;
-        unsigned char type;
-        struct file_info *info;
-        struct mk_f_list *next;
+    char *name;
+    char *size;
+    char *ft_modif;
+    unsigned char type;
+    struct file_info *info;
+    struct mk_f_list *next;
 };
 
 /* Main configuration of dirhtml module */
 struct dirhtml_config
 {
-        char *theme;
-        char *theme_path;
+    char *theme;
+    char *theme_path;
 };
 
 
@@ -69,11 +69,11 @@ struct dirhtml_config *dirhtml_conf;
 /* Used to keep splitted content of every template */
 struct dirhtml_template
 {
-        char *buf;
-        int tag_id;
-        int len;
-        struct dirhtml_template *next;
-        char **tags; /* array of theme tags: [%_xaa__%, %_xyz_%] */
+    char *buf;
+    int tag_id;
+    int len;
+    struct dirhtml_template *next;
+    char **tags;                /* array of theme tags: [%_xaa__%, %_xyz_%] */
 };
 
 /* Templates for header, entries and footer */
@@ -83,17 +83,17 @@ struct dirhtml_template *mk_dirhtml_tpl_footer;
 
 struct dirhtml_value
 {
-        int tag_id;
-        mk_pointer sep; /* separator code after value */
+    int tag_id;
+    mk_pointer sep;             /* separator code after value */
 
-        /* string data */
-        int len;
-        char *value;
+    /* string data */
+    int len;
+    char *value;
 
-        /* next node */
-        struct dirhtml_value *next;
+    /* next node */
+    struct dirhtml_value *next;
 
-        char **tags; /* array of tags which values correspond */
+    char **tags;                /* array of tags which values correspond */
 };
 
 struct dirhtml_value *mk_dirhtml_value_global;
@@ -101,19 +101,17 @@ struct dirhtml_value *mk_dirhtml_value_global;
 /* Configuration struct */
 struct mk_config *conf;
 
-char   *check_string(char *str);
-char   *read_header_footer_file(char *file_path);
+char *check_string(char *str);
+char *read_header_footer_file(char *file_path);
 
 int mk_dirhtml_conf();
 char *mk_dirhtml_load_file(char *filename);
 
-struct dirhtml_template 
-*mk_dirhtml_template_create(char *content);
+struct dirhtml_template *mk_dirhtml_template_create(char *content);
 
-struct dirhtml_template 
-*mk_dirhtml_template_list_add(struct dirhtml_template **header, 
-                                                      char *buf, int len, 
-                                                      char **tpl, int tag);
+struct dirhtml_template
+    *mk_dirhtml_template_list_add(struct dirhtml_template **header,
+                                  char *buf, int len, char **tpl, int tag);
 
 int mk_dirhtml_init(struct client_request *cr, struct request *sr);
 int mk_dirhtml_read_config(char *path);
@@ -121,7 +119,7 @@ int mk_dirhtml_theme_load();
 int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl);
 
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
-                                             int tag_id, mk_pointer sep, 
+                                            int tag_id, mk_pointer sep,
                                             char *value, char **tags);
 
 struct f_list *get_dir_content(struct request *sr, char *path);

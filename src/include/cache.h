@@ -22,18 +22,19 @@
 #ifndef MK_CACHE_H
 #define MK_CACHE_H
 
-#define MK_KNOWN_HEADERS 11  /* Number of different headers that
-                              * Monkey knows about 
-                              */
+#define MK_KNOWN_HEADERS 11     /* Number of different headers that
+                                 * Monkey knows about 
+                                 */
 pthread_key_t mk_cache_iov_log;
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;
 
-struct mk_cache_date_t {
-        time_t unix_time;
-        time_t expire;
-        time_t last_access;
-        mk_pointer date;
+struct mk_cache_date_t
+{
+    time_t unix_time;
+    time_t expire;
+    time_t last_access;
+    mk_pointer date;
 };
 
 struct mk_cache_date_t *mk_cache_file_date;

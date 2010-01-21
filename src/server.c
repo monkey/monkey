@@ -38,62 +38,61 @@
  */
 int mk_server_worker_capacity(int nworkers)
 {
-        int max, avl;
-        struct rlimit lim;
+    int max, avl;
+    struct rlimit lim;
 
-        /* Limit by system */
-        getrlimit(RLIMIT_NOFILE, &lim);
-        max = lim.rlim_cur;
+    /* Limit by system */
+    getrlimit(RLIMIT_NOFILE, &lim);
+    max = lim.rlim_cur;
 
-        /* Minimum of fds needed by Monkey:
-         * --------------------------------
-         * 3 fds: stdin, stdout, stderr
-         * 1 fd for main socket server
-         * 1 fd for epoll array (per thread)
-         * 1 fd for worker logger when writing to FS
-         * 2 fd for worker logger pipe
-         */
+    /* Minimum of fds needed by Monkey:
+     * --------------------------------
+     * 3 fds: stdin, stdout, stderr
+     * 1 fd for main socket server
+     * 1 fd for epoll array (per thread)
+     * 1 fd for worker logger when writing to FS
+     * 2 fd for worker logger pipe
+     */
 
-        avl = max - (3 + 1 + nworkers + 1 + 2); 
-        return ((avl/2)/nworkers);
+    avl = max - (3 + 1 + nworkers + 1 + 2);
+    return ((avl / 2) / nworkers);
 }
 
 /* Here we launch the worker threads to attend clients */
 void mk_server_launch_workers()
 {
-        int i;
+    int i;
 
-        config->worker_capacity = mk_server_worker_capacity(config->workers);
-        
-        for(i=0; i<config->workers; i++)
-        {
-                mk_sched_launch_thread(config->worker_capacity);
-        }
+    config->worker_capacity = mk_server_worker_capacity(config->workers);
+
+    for (i = 0; i < config->workers; i++) {
+        mk_sched_launch_thread(config->worker_capacity);
+    }
 }
 
 void mk_server_loop(int server_fd)
 {
-        int remote_fd;
-        struct sockaddr_in sockaddr;
-	struct sched_list_node *sched = sched_list;
-	socklen_t socket_size = sizeof(struct sockaddr_in);
+    int remote_fd;
+    struct sockaddr_in sockaddr;
+    struct sched_list_node *sched = sched_list;
+    socklen_t socket_size = sizeof(struct sockaddr_in);
 
-        while(1){
-                remote_fd = accept(server_fd, (struct sockaddr *)&sockaddr,
-                                   &socket_size);
+    while (1) {
+        remote_fd = accept(server_fd, (struct sockaddr *) &sockaddr,
+                           &socket_size);
 
-                if(remote_fd == -1){
-                        continue;
-                }
-                
-                /* Assign socket to worker thread */
-                mk_sched_add_client(sched, remote_fd);
+        if (remote_fd == -1) {
+            continue;
+        }
 
-                if(sched->next){
-                        sched = sched->next;
-                }
-                else{
-                        sched = sched_list;
-                }
-       }
+        /* Assign socket to worker thread */
+        mk_sched_add_client(sched, remote_fd);
+
+        if (sched->next) {
+            sched = sched->next;
+        }
+        else {
+            sched = sched_list;
+        }
+    }
 }

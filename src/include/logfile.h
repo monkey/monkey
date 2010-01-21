@@ -33,30 +33,33 @@ mk_pointer mk_logfile_iov_dash;
 /* logfile.c */
 pthread_key_t timer;
 
-struct log_target {
-	int fd;
-	char *target;
-	struct log_target *next;
+struct log_target
+{
+    int fd;
+    char *target;
+    struct log_target *next;
 };
 struct log_target *lt;
 
-struct log_info {
-	int method;
-	int protocol;
+struct log_info
+{
+    int method;
+    int protocol;
 
-	mk_pointer uri;
-	mk_pointer ip;
+    mk_pointer uri;
+    mk_pointer ip;
 
-	int final_response; /* Ok: 200, Not Found 400, etc... */
-	int size;
-        mk_pointer size_p;
-	int status; /* on/off : 301. */
-	mk_pointer error_msg;
-	
-	struct host *host_conf;
+    int final_response;         /* Ok: 200, Not Found 400, etc... */
+    int size;
+    mk_pointer size_p;
+    int status;                 /* on/off : 301. */
+    mk_pointer error_msg;
+
+    struct host *host_conf;
 };
 
-int mk_logger_write_log(struct client_request *cr, struct log_info *log, struct host *h);
+int mk_logger_write_log(struct client_request *cr, struct log_info *log,
+                        struct host *h);
 int mk_logger_register_pid();
 int mk_logger_remove_pid();
 
@@ -68,4 +71,3 @@ void mk_logger_target_add(int fd, char *target);
 struct log_target *mk_logger_match(int fd);
 
 #endif
-

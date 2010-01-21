@@ -36,4 +36,3 @@ void *mk_clock_worker_init(void *args);
 void mk_clock_set_time();
 
 #endif
-

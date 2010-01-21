@@ -40,128 +40,125 @@ struct mk_config *conf;
 /* Read database configuration parameters */
 int mk_security_conf(char *confdir)
 {
-        int ret = 0;
-        unsigned long len;
-        char *conf_path;
-        struct mk_config *p;
-        struct mk_security *new, *r;
+    int ret = 0;
+    unsigned long len;
+    char *conf_path;
+    struct mk_config *p;
+    struct mk_security *new, *r;
 
-        mk_api->str_build(&conf_path, 
-                          &len, 
-                          "%s/security.conf",
-                          confdir);
+    mk_api->str_build(&conf_path, &len, "%s/security.conf", confdir);
 
-        p = conf = mk_api->config_create(conf_path);
+    p = conf = mk_api->config_create(conf_path);
 
-        r = rules;
-        while(p){
-                /* Passing to internal struct */
-                new = mk_api->mem_alloc(sizeof(struct mk_security));
-                if(strcasecmp(p->key, "IP") == 0){
-                        new->type = MK_SECURITY_TYPE_IP;
-                }
-                else if(strcasecmp(p->key, "URL") == 0){
-                        new->type = MK_SECURITY_TYPE_URL;
-                }
-
-                new->value = p->val;
-                new->next = NULL;
-
-                /* Linking node */
-                if(!rules){
-                        rules = new;
-                }
-                else{
-                        r = rules;
-                        while(r->next){
-                                r = r->next;
-                        }
-                        r->next = new;
-                }
-                p = p->next;
+    r = rules;
+    while (p) {
+        /* Passing to internal struct */
+        new = mk_api->mem_alloc(sizeof(struct mk_security));
+        if (strcasecmp(p->key, "IP") == 0) {
+            new->type = MK_SECURITY_TYPE_IP;
+        }
+        else if (strcasecmp(p->key, "URL") == 0) {
+            new->type = MK_SECURITY_TYPE_URL;
         }
 
-        mk_api->mem_free(conf_path);
-        return ret;
+        new->value = p->val;
+        new->next = NULL;
+
+        /* Linking node */
+        if (!rules) {
+            rules = new;
+        }
+        else {
+            r = rules;
+            while (r->next) {
+                r = r->next;
+            }
+            r->next = new;
+        }
+        p = p->next;
+    }
+
+    mk_api->mem_free(conf_path);
+    return ret;
 }
 
 int mk_security_check_ip(char *ipv4)
 {
-        unsigned int i=0;
-        struct mk_security *p;
+    unsigned int i = 0;
+    struct mk_security *p;
 
-        p = rules;
-        while(p){
-                if(p->type == MK_SECURITY_TYPE_IP){
-                        for(i=0; p->value[i]; i ++) {
-                                if (p->value[i]=='?') {
-                                        if (ipv4[i]=='.' || ipv4[i]=='\0')	
-                                                return -1;
-                                        else
-                                                continue;
-                                }
-				
-                                if (p->value[i]=='*')
-                                        return -1;
-                                
-                                if (p->value[i]!=ipv4[i])
-                                        return 0;
-                        }
+    p = rules;
+    while (p) {
+        if (p->type == MK_SECURITY_TYPE_IP) {
+            for (i = 0; p->value[i]; i++) {
+                if (p->value[i] == '?') {
+                    if (ipv4[i] == '.' || ipv4[i] == '\0')
+                        return -1;
+                    else
+                        continue;
                 }
-                p = p->next;
-        }
 
-        if(ipv4[i] == '\0'){
-                return -1;
+                if (p->value[i] == '*')
+                    return -1;
+
+                if (p->value[i] != ipv4[i])
+                    return 0;
+            }
         }
-        else{
-                return 0;
-        }
+        p = p->next;
+    }
+
+    if (ipv4[i] == '\0') {
+        return -1;
+    }
+    else {
+        return 0;
+    }
 }
 
 int mk_security_check_url(mk_pointer url)
 {
-        int n;
-        struct mk_security *p;
+    int n;
+    struct mk_security *p;
 
-        p = rules;
-        while(p){
-                if(p->type == MK_SECURITY_TYPE_URL){
-                        n = (int) mk_api->str_search_n(url.data,p->value,url.len);
-                        if(n>=0){
-                                return -1;
-                        }
-                }
-                p = p->next;
+    p = rules;
+    while (p) {
+        if (p->type == MK_SECURITY_TYPE_URL) {
+            n = (int) mk_api->str_search_n(url.data, p->value, url.len);
+            if (n >= 0) {
+                return -1;
+            }
         }
+        p = p->next;
+    }
 
-        return 0;
+    return 0;
 }
 
 int _mk_plugin_init(void **api, char *confdir)
 {
-        mk_api = *api;
-        rules = 0;
+    mk_api = *api;
+    rules = 0;
 
-        /* Read configuration */
-        mk_security_conf(confdir);
-        return 0;
+    /* Read configuration */
+    mk_security_conf(confdir);
+    return 0;
 }
 
 int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
 {
-        if(mk_security_check_ip(conx->ipv4)!=0){
-                return MK_PLUGIN_RET_CLOSE_CONX;
-        }
+    if (mk_security_check_ip(conx->ipv4) != 0) {
+        return MK_PLUGIN_RET_CLOSE_CONX;
+    }
 
-        return MK_PLUGIN_RET_CONTINUE;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int _mk_plugin_stage_30(struct client_request *cr, struct request *sr)
 {
-        if(mk_security_check_url(sr->uri) < 0){
-                return MK_PLUGIN_RET_CLOSE_CONX;
-        }
-        
-        return MK_PLUGIN_RET_CONTINUE;
+    if (mk_security_check_url(sr->uri) < 0) {
+        return MK_PLUGIN_RET_CLOSE_CONX;
+    }
+
+    return MK_PLUGIN_RET_CONTINUE;
 }

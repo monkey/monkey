@@ -17,6 +17,4 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define MONKEY_HTTP_PROTOCOL HTTP_PROTOCOL_11 /* Protocolo oficial */
-
-
+#define MONKEY_HTTP_PROTOCOL HTTP_PROTOCOL_11   /* Protocolo oficial */

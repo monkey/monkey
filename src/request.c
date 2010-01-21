@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 
@@ -60,738 +60,704 @@
 
 struct request *mk_request_parse(struct client_request *cr)
 {
-	int i, n, init_block=0, n_blocks=0;
-	int pipelined=FALSE;
-	struct request *cr_buf=0, *cr_search=0;
+    int i, n, init_block = 0, n_blocks = 0;
+    int pipelined = FALSE;
+    struct request *cr_buf = 0, *cr_search = 0;
 
-	init_block = 0;
+    init_block = 0;
 
-	for(i=cr->first_block_end; i<=cr->body_length-mk_endblock.len; i++)
-	{
-                /* Allocating request block */
-		cr_buf = mk_request_alloc();
-	
-		/* mk_pointer */
-		cr_buf->body.data = cr->body+init_block;
-		cr_buf->body.len = i-init_block;
+    for (i = cr->first_block_end; i <= cr->body_length - mk_endblock.len; i++) {
+        /* Allocating request block */
+        cr_buf = mk_request_alloc();
 
-                if(i==cr->first_block_end){
-                        cr_buf->method = cr->first_method;
+        /* mk_pointer */
+        cr_buf->body.data = cr->body + init_block;
+        cr_buf->body.len = i - init_block;
+
+        if (i == cr->first_block_end) {
+            cr_buf->method = cr->first_method;
+        }
+        else {
+            cr_buf->method = mk_http_method_get(cr_buf->body.data);
+        }
+
+        cr_buf->next = NULL;
+
+        i = init_block = i + mk_endblock.len;
+
+        /* Looking for POST data */
+        if (cr_buf->method == HTTP_METHOD_POST) {
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body, i);
+
+            if (cr_buf->post_variables.len >= 0) {
+                i = init_block = i + cr_buf->post_variables.len;
+            }
+        }
+
+        if (!cr->request) {
+            cr->request = cr_buf;
+        }
+        else {
+            cr_search = cr->request;
+            while (cr_search) {
+                if (cr_search->next == NULL) {
+                    cr_search->next = cr_buf;
+                    break;
                 }
-                else{
-                        cr_buf->method = mk_http_method_get(cr_buf->body.data);
+                else {
+                    cr_search = cr_search->next;
                 }
+            }
+        }
+        n_blocks++;
+        n = mk_string_search(cr->body + i, mk_endblock.data);
+        if (n <= 0) {
+            break;
+        }
+        else {
+            i = i + n;
+        }
+    }
 
-		cr_buf->next = NULL;
+    /* Checking pipelining connection */
+    cr_search = cr->request;
+    if (n_blocks > 1) {
+        pipelined = TRUE;
 
-		i = init_block = i + mk_endblock.len;
-	
-		/* Looking for POST data */
-		if(cr_buf->method == HTTP_METHOD_POST)
-		{
-			cr_buf->post_variables =
-                                mk_method_post_get_vars(cr->body, i);
+        while (cr_search) {
+            if (cr_search->method != HTTP_METHOD_GET &&
+                cr_search->method != HTTP_METHOD_HEAD) {
+                pipelined = FALSE;
+                break;
+            }
+            cr_search = cr_search->next;
+        }
 
-			if(cr_buf->post_variables.len >= 0)
-			{
-				i = init_block = i+cr_buf->post_variables.len;
-			}
-		}
+        if (pipelined == FALSE) {
+            /* All pipelined requests must use GET method */
+            return NULL;
+        }
+        else {
+            cr->pipelined = TRUE;
+        }
+    }
 
-		if(!cr->request)
-		{	
-			cr->request = cr_buf;
-		}
-		else{
-			cr_search = cr->request;
-			while(cr_search)
-			{
-				if(cr_search->next==NULL)
-				{
-					cr_search->next = cr_buf;
-                       			break;
-				}
-				else
-				{
-					cr_search = cr_search->next;
-				}
-			}
-		}
-		n_blocks++;
-                n = mk_string_search(cr->body+i, mk_endblock.data);
-                if(n<=0)
-                {
-                        break;
-                }
-                else{
-                        i = i + n;
-                }
-	}
+    /* DEBUG BLOCKS 
+       printf("*****************************************");
+       fflush(stdout);      
+       cr_search = cr->request;
+       while(cr_search){
+       printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
+       fflush(stdout);
+       cr_search = cr_search->next;
+       }
+     */
 
-	/* Checking pipelining connection */
-	cr_search = cr->request;
-	if(n_blocks>1)
-	{
-		pipelined = TRUE;
-
-		while(cr_search){
-			if(cr_search->method!=HTTP_METHOD_GET && 
-					cr_search->method!=HTTP_METHOD_HEAD)
-			{
-				pipelined = FALSE;
-				break;
-			}
-			cr_search = cr_search->next;
-		}
-
-		if(pipelined == FALSE){
-			/* All pipelined requests must use GET method */
-			return NULL;
-		}
-		else{
-			cr->pipelined = TRUE;
-		}
-	}
-
-	/* DEBUG BLOCKS 
-        printf("*****************************************");
-	fflush(stdout);	
-	cr_search = cr->request;
-	while(cr_search){
-		printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
-		fflush(stdout);
-		cr_search = cr_search->next;
-	}
-	*/
-
-	return cr->request;
+    return cr->request;
 }
 
 int mk_handler_read(int socket, struct client_request *cr)
 {
-	int bytes;
+    int bytes;
 
-        bytes = read(socket, cr->body+cr->body_length,
-                     MAX_REQUEST_BODY-cr->body_length);
+    bytes = read(socket, cr->body + cr->body_length,
+                 MAX_REQUEST_BODY - cr->body_length);
 
-	if (bytes < 0) {
-		if (errno == EAGAIN) {
-			return 1;
-		} 
-		else{
-                        mk_request_client_remove(socket);
-                        return -1;
-                }
-	}
-	if (bytes == 0){
-                mk_request_client_remove(socket);
-                return -1;
-	}
+    if (bytes < 0) {
+        if (errno == EAGAIN) {
+            return 1;
+        }
+        else {
+            mk_request_client_remove(socket);
+            return -1;
+        }
+    }
+    if (bytes == 0) {
+        mk_request_client_remove(socket);
+        return -1;
+    }
 
-	if(bytes > 0)
-	{
-		cr->body_length+=bytes;
-                cr->body[cr->body_length] = '\0';
-	}
+    if (bytes > 0) {
+        cr->body_length += bytes;
+        cr->body[cr->body_length] = '\0';
+    }
 
-	return bytes;
+    return bytes;
 }
 
 int mk_handler_write(int socket, struct client_request *cr)
 {
-	int bytes, final_status=0;
-	struct request *p_request;
+    int bytes, final_status = 0;
+    struct request *p_request;
 
-	/* 
-	 * Get node from schedule list node which contains
-	 * the information regarding to the current thread
-	 */
-	if(!cr)
-	{
-		return -1;
-	}
-	
-	if(!cr->request)
-	{
-		if(!mk_request_parse(cr))
-		{
-			return -1;	
-		}
-	}
+    /* 
+     * Get node from schedule list node which contains
+     * the information regarding to the current thread
+     */
+    if (!cr) {
+        return -1;
+    }
 
-	p_request = cr->request;
+    if (!cr->request) {
+        if (!mk_request_parse(cr)) {
+            return -1;
+        }
+    }
 
-	while(p_request)
-	{
-		/* Request not processed */
-		if(p_request->bytes_to_send < 0)
-		{
-                        final_status = mk_request_process(cr, p_request);
-		}
-		/* Request with data to send */
-		else if(p_request->bytes_to_send>0)
-		{
-                        bytes = SendFile(socket, cr, p_request);
-			final_status = bytes;
-		}
-		/*
-		 * If we got an error, we don't want to parse
-		 * and send information for another pipelined request
-		 */
-		if(final_status > 0)
-		{
-                        return final_status;
-		}
-		else if(final_status <= 0)
-		{
-                        mk_logger_write_log(cr, p_request->log, p_request->host_conf);
-		}
-		p_request = p_request->next;
-	}
+    p_request = cr->request;
 
-	/* If we are here, is because all pipelined request were
-	 * processed successfully, let's return 0;
-	 */
-	return 0;
+    while (p_request) {
+        /* Request not processed */
+        if (p_request->bytes_to_send < 0) {
+            final_status = mk_request_process(cr, p_request);
+        }
+        /* Request with data to send */
+        else if (p_request->bytes_to_send > 0) {
+            bytes = SendFile(socket, cr, p_request);
+            final_status = bytes;
+        }
+        /*
+         * If we got an error, we don't want to parse
+         * and send information for another pipelined request
+         */
+        if (final_status > 0) {
+            return final_status;
+        }
+        else if (final_status <= 0) {
+            mk_logger_write_log(cr, p_request->log, p_request->host_conf);
+        }
+        p_request = p_request->next;
+    }
+
+    /* If we are here, is because all pipelined request were
+     * processed successfully, let's return 0;
+     */
+    return 0;
 }
 
 int mk_request_process(struct client_request *cr, struct request *s_request)
 {
-	int status=0;
-	struct host *host;
+    int status = 0;
+    struct host *host;
 
-	status = mk_request_header_process(s_request);
+    status = mk_request_header_process(s_request);
 
-	if(status<0)
-	{
-		return EXIT_NORMAL;
-	}
+    if (status < 0) {
+        return EXIT_NORMAL;
+    }
 
-        switch(s_request->method)
-        {
-                case METHOD_NOT_ALLOWED:
-                        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, 
-                                         s_request, 1, s_request->log);
-                        return EXIT_NORMAL;
-                case METHOD_NOT_FOUND:
-                        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr,
-                                         s_request, 1, s_request->log);
-                        return EXIT_NORMAL;
+    switch (s_request->method) {
+    case METHOD_NOT_ALLOWED:
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr,
+                         s_request, 1, s_request->log);
+        return EXIT_NORMAL;
+    case METHOD_NOT_FOUND:
+        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr,
+                         s_request, 1, s_request->log);
+        return EXIT_NORMAL;
+    }
+
+    s_request->user_home = VAR_OFF;
+    s_request->log->method = s_request->method;
+
+    /* Valid request URI? */
+    if (s_request->uri_processed == NULL) {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
+                         s_request->log);
+        return EXIT_NORMAL;
+    }
+
+    /* HTTP/1.1 needs Host header */
+    if (!s_request->host.data && s_request->protocol == HTTP_PROTOCOL_11) {
+        s_request->log->final_response = M_CLIENT_BAD_REQUEST;
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
+                         s_request->log);
+        return EXIT_NORMAL;
+    }
+
+    /* Method not allowed ? */
+    if (s_request->method == METHOD_NOT_ALLOWED) {
+        s_request->log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1,
+                         s_request->log);
+        return EXIT_NORMAL;
+    }
+
+    /* Validating protocol version */
+    if (s_request->protocol == HTTP_PROTOCOL_UNKNOWN) {
+
+        s_request->log->final_response = M_SERVER_HTTP_VERSION_UNSUP;
+        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
+                         s_request->log);
+        return EXIT_NORMAL;
+    }
+
+    if (s_request->host.data) {
+        host = mk_config_host_find(s_request->host);
+        if (host) {
+            s_request->host_conf = host;
         }
-
-	s_request->user_home=VAR_OFF;
-        s_request->log->method = s_request->method;
-
-	/* Valid request URI? */
-	if(s_request->uri_processed==NULL){
-		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1, 
-                                 s_request->log);
-		return EXIT_NORMAL;
-	}	
-	
-	/* HTTP/1.1 needs Host header */
-	if(!s_request->host.data && s_request->protocol==HTTP_PROTOCOL_11){
-		s_request->log->final_response=M_CLIENT_BAD_REQUEST;
-		mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request,1,
-                                 s_request->log);
-		return EXIT_NORMAL;
-	}
-
-	/* Method not allowed ? */
-	if(s_request->method==METHOD_NOT_ALLOWED){
-		s_request->log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-		mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1,
-                                 s_request->log);
-		return EXIT_NORMAL;
-	}
-
-	/* Validating protocol version */
-	if(s_request->protocol == HTTP_PROTOCOL_UNKNOWN)
-	{
-
-		s_request->log->final_response=M_SERVER_HTTP_VERSION_UNSUP;
-		mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
-                                 s_request->log);
-		return EXIT_NORMAL;
-	}
-	
-	if(s_request->host.data)
-	{
-		host=mk_config_host_find(s_request->host);
-		if(host)
-		{
-			s_request->host_conf = host;
-		}
-		else{
-			s_request->host_conf = config->hosts;
-		}
-    	}
-	else{
-		s_request->host_conf = config->hosts;
-	}
-	s_request->log->host_conf = s_request->host_conf;
-
-	/* is requesting an user home directory ? */
-        if(config->user_dir){
-                if(strncmp(s_request->uri_processed, 
-                           mk_user_home.data,
-                           mk_user_home.len)==0){
-                        if(mk_user_init(cr, s_request)!=0){
-                                return EXIT_NORMAL;
-                        }
-                }
+        else {
+            s_request->host_conf = config->hosts;
         }
- 
-	/* Handling method requested */
-	if(s_request->method==HTTP_METHOD_POST)
-	{
-		if((status=mk_method_post(cr, s_request))==-1){
-			return status;
-		}
-	}
+    }
+    else {
+        s_request->host_conf = config->hosts;
+    }
+    s_request->log->host_conf = s_request->host_conf;
 
-	status = mk_http_init(cr, s_request);
+    /* is requesting an user home directory ? */
+    if (config->user_dir) {
+        if (strncmp(s_request->uri_processed,
+                    mk_user_home.data, mk_user_home.len) == 0) {
+            if (mk_user_init(cr, s_request) != 0) {
+                return EXIT_NORMAL;
+            }
+        }
+    }
 
-	return status;
+    /* Handling method requested */
+    if (s_request->method == HTTP_METHOD_POST) {
+        if ((status = mk_method_post(cr, s_request)) == -1) {
+            return status;
+        }
+    }
+
+    status = mk_http_init(cr, s_request);
+
+    return status;
 }
 
 /* Return a struct with method, URI , protocol version 
 and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
 {
-	int uri_init=0, uri_end=0;
-        char *query_init=0;
-	int prot_init=0, prot_end=0, pos_sep=0;
-        int fh_limit;
-	char *port=0;
-	char *headers;
-	mk_pointer host;
+    int uri_init = 0, uri_end = 0;
+    char *query_init = 0;
+    int prot_init = 0, prot_end = 0, pos_sep = 0;
+    int fh_limit;
+    char *port = 0;
+    char *headers;
+    mk_pointer host;
 
-        /* If verification fails it will return always
-         * a bad request status
-         */
-        sr->log->final_response = M_CLIENT_BAD_REQUEST;
+    /* If verification fails it will return always
+     * a bad request status
+     */
+    sr->log->final_response = M_CLIENT_BAD_REQUEST;
 
-	/* Method */
-	sr->method_p = mk_http_method_check_str(sr->method);
+    /* Method */
+    sr->method_p = mk_http_method_check_str(sr->method);
 
-	/* Request URI */
-        uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
-        fh_limit = (index(sr->body.data, '\n') - sr->body.data);
+    /* Request URI */
+    uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
+    fh_limit = (index(sr->body.data, '\n') - sr->body.data);
 
-        uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
+    uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
 
-        if(uri_end <= 0)
-        {
-                return -1;
+    if (uri_end <= 0) {
+        return -1;
+    }
+
+    prot_init = uri_end + 2;
+
+    if (uri_end < uri_init) {
+        return -1;
+    }
+
+    /* Query String */
+    query_init = index(sr->body.data + uri_init, '?');
+    if (query_init) {
+        int init, end;
+
+        init = (int) (query_init - (sr->body.data + uri_init)) + uri_init;
+        if (init <= uri_end) {
+            end = uri_end;
+            uri_end = init - 1;
+
+            sr->query_string = mk_pointer_create(sr->body.data,
+                                                 init + 1, end + 1);
         }
+    }
 
-        prot_init = uri_end + 2;
+    /* Request URI Part 2 */
+    sr->uri = sr->log->uri = mk_pointer_create(sr->body.data,
+                                               uri_init, uri_end + 1);
 
-	if(uri_end < uri_init)
-	{
-		return -1;
-	}
-	
-	/* Query String */
-	query_init = index(sr->body.data+uri_init, '?');
-        if(query_init)
-	{
-                int init, end;
-
-                init = (int) (query_init-(sr->body.data+uri_init)) + uri_init;
-                if(init <= uri_end)
-                {
-                        end = uri_end;
-                        uri_end = init - 1;
-                 
-                        sr->query_string = mk_pointer_create(sr->body.data, 
-                                                             init+1, end+1);
-                }
-	}
-        
-	/* Request URI Part 2 */
-	sr->uri = sr->log->uri = mk_pointer_create(sr->body.data, 
-                                                   uri_init, uri_end+1);
-
-	if(sr->uri.len<1)
-	{
-		return -1;
-	}
+    if (sr->uri.len < 1) {
+        return -1;
+    }
 
 
-	/* HTTP Version */
-        prot_end = fh_limit-1;
-	if(prot_end!=prot_init && prot_end>0){
-		sr->protocol = sr->log->protocol = 
-                        mk_http_protocol_check(sr->body.data+prot_init, prot_end-prot_init);
-	}
+    /* HTTP Version */
+    prot_end = fh_limit - 1;
+    if (prot_end != prot_init && prot_end > 0) {
+        sr->protocol = sr->log->protocol =
+            mk_http_protocol_check(sr->body.data + prot_init,
+                                   prot_end - prot_init);
+    }
 
-	headers = sr->body.data+prot_end+mk_crlf.len;
+    headers = sr->body.data + prot_end + mk_crlf.len;
 
-	/* URI processed */
-	sr->uri_processed = get_real_string(sr->uri);
+    /* URI processed */
+    sr->uri_processed = get_real_string(sr->uri);
 
-        if(!sr->uri_processed)
-	{
-		sr->uri_processed = mk_pointer_to_buf(sr->uri);
-		sr->uri_twin = VAR_ON;
-	}
+    if (!sr->uri_processed) {
+        sr->uri_processed = mk_pointer_to_buf(sr->uri);
+        sr->uri_twin = VAR_ON;
+    }
 
-        /* Creating table of content (index) for request headers */
-        int toc_len = MK_KNOWN_HEADERS;
-        struct header_toc *toc = mk_request_header_toc_create(toc_len);
-        mk_request_header_toc_parse(toc, headers, toc_len);
+    /* Creating table of content (index) for request headers */
+    int toc_len = MK_KNOWN_HEADERS;
+    struct header_toc *toc = mk_request_header_toc_create(toc_len);
+    mk_request_header_toc_parse(toc, headers, toc_len);
 
-        /* Host */
-	host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
+    /* Host */
+    host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
 
-	if(host.data)
-	{
-		if((pos_sep = mk_string_char_search(host.data, ':', host.len))>=0)
-		{
-			sr->host.data = host.data;
-			sr->host.len = pos_sep;
+    if (host.data) {
+        if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
+            sr->host.data = host.data;
+            sr->host.len = pos_sep;
 
-			port = mk_string_copy_substr(host.data, pos_sep+1, host.len);
-			sr->port = atoi(port);
-			mk_mem_free(port);
-		}
-		else{
-			sr->host=host;  /* maybe null */ 
-			sr->port=config->standard_port;
-		}
-	}
-	else{
-		sr->host.data=NULL;
-	}
-	
-        /* Looking for headers */
-	sr->accept = mk_request_header_find(toc, toc_len, headers, mk_rh_accept);
-	sr->accept_charset = mk_request_header_find(toc, toc_len, headers, 
-                                                    mk_rh_accept_charset);
-	sr->accept_encoding = mk_request_header_find(toc, toc_len, headers, 
-                                                           mk_rh_accept_encoding);
-
-
-	sr->accept_language = mk_request_header_find(toc, toc_len, headers, 
-                                                     mk_rh_accept_language);
-	sr->cookies = mk_request_header_find(toc, toc_len, headers, mk_rh_cookie);
-	sr->connection = mk_request_header_find(toc, toc_len, headers, 
-                                                mk_rh_connection);
-	sr->referer = mk_request_header_find(toc, toc_len, headers, 
-                                             mk_rh_referer);
-	sr->user_agent = mk_request_header_find(toc, toc_len, headers, 
-                                                mk_rh_user_agent);
-	sr->range = mk_request_header_find(toc, toc_len, headers, mk_rh_range);
-	sr->if_modified_since = mk_request_header_find(toc, toc_len, headers, 
-                                                     mk_rh_if_modified_since);
-
-	/* Default Keepalive is off */
-	sr->keep_alive = VAR_OFF;
-        if(sr->connection.data){
-                if(mk_string_casestr(sr->connection.data, "Keep-Alive")){
-                        sr->keep_alive = VAR_ON;
-                }
+            port = mk_string_copy_substr(host.data, pos_sep + 1, host.len);
+            sr->port = atoi(port);
+            mk_mem_free(port);
         }
-        else{
-                /* Default value for HTTP/1.1 */
-                if(sr->protocol==HTTP_PROTOCOL_11){
-                        /* Assume keep-alive connection */
-                        sr->keep_alive = VAR_ON;
-                }
+        else {
+            sr->host = host;    /* maybe null */
+            sr->port = config->standard_port;
         }
-        sr->log->final_response = M_HTTP_OK;
+    }
+    else {
+        sr->host.data = NULL;
+    }
 
-	return 0;
+    /* Looking for headers */
+    sr->accept = mk_request_header_find(toc, toc_len, headers, mk_rh_accept);
+    sr->accept_charset = mk_request_header_find(toc, toc_len, headers,
+                                                mk_rh_accept_charset);
+    sr->accept_encoding = mk_request_header_find(toc, toc_len, headers,
+                                                 mk_rh_accept_encoding);
+
+
+    sr->accept_language = mk_request_header_find(toc, toc_len, headers,
+                                                 mk_rh_accept_language);
+    sr->cookies = mk_request_header_find(toc, toc_len, headers, mk_rh_cookie);
+    sr->connection = mk_request_header_find(toc, toc_len, headers,
+                                            mk_rh_connection);
+    sr->referer = mk_request_header_find(toc, toc_len, headers,
+                                         mk_rh_referer);
+    sr->user_agent = mk_request_header_find(toc, toc_len, headers,
+                                            mk_rh_user_agent);
+    sr->range = mk_request_header_find(toc, toc_len, headers, mk_rh_range);
+    sr->if_modified_since = mk_request_header_find(toc, toc_len, headers,
+                                                   mk_rh_if_modified_since);
+
+    /* Default Keepalive is off */
+    sr->keep_alive = VAR_OFF;
+    if (sr->connection.data) {
+        if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
+            sr->keep_alive = VAR_ON;
+        }
+    }
+    else {
+        /* Default value for HTTP/1.1 */
+        if (sr->protocol == HTTP_PROTOCOL_11) {
+            /* Assume keep-alive connection */
+            sr->keep_alive = VAR_ON;
+        }
+    }
+    sr->log->final_response = M_HTTP_OK;
+
+    return 0;
 }
 
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len, 
-                                  char *request_body,  mk_pointer header)
+mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
+                                  char *request_body, mk_pointer header)
 {
-        int i;
-	mk_pointer var;
+    int i;
+    mk_pointer var;
 
-	var.data = NULL;
-	var.len = 0;
+    var.data = NULL;
+    var.len = 0;
 
-        /* new code */
-        if(toc)
-        {
-                for(i=0; i<toc_len; i++)
-                {
-                        /* status = 1 means that the toc entry was already
-                         * checked by monkey 
-                         */
-                        if(toc[i].status == 1)
-                        {
-                                continue;
-                        }
+    /* new code */
+    if (toc) {
+        for (i = 0; i < toc_len; i++) {
+            /* status = 1 means that the toc entry was already
+             * checked by monkey 
+             */
+            if (toc[i].status == 1) {
+                continue;
+            }
 
-                        if(!toc[i].init)
-                                break;
+            if (!toc[i].init)
+                break;
 
-                        if(strncasecmp(toc[i].init, header.data, header.len)==0)
-                        {
-                                var.data = toc[i].init + header.len + 1;
-                                var.len = toc[i].end - var.data;
-                                toc[i].status = 1;
-                                return var;
-                        }
-                }
+            if (strncasecmp(toc[i].init, header.data, header.len) == 0) {
+                var.data = toc[i].init + header.len + 1;
+                var.len = toc[i].end - var.data;
+                toc[i].status = 1;
+                return var;
+            }
         }
+    }
 
-        return var;
+    return var;
 }
 
 /* FIXME: IMPROVE access */
 /* Look for some  index.xxx in pathfile */
 mk_pointer mk_request_index(char *pathfile)
 {
-	unsigned long len;
-	char *file_aux=0;
-        mk_pointer f;
-	struct indexfile *aux_index;
+    unsigned long len;
+    char *file_aux = 0;
+    mk_pointer f;
+    struct indexfile *aux_index;
 
-        mk_pointer_reset(&f);
+    mk_pointer_reset(&f);
 
-	aux_index=first_index;
+    aux_index = first_index;
 
-	while(aux_index) {
-		m_build_buffer(&file_aux, &len, "%s%s", 
-                               pathfile, aux_index->indexname);
-	
-		if(access(file_aux,F_OK)==0)
-		{
-                        f.data = file_aux;
-                        f.len = len;
-			return f;
-		}
-		mk_mem_free(file_aux);
-		aux_index=aux_index->next;
-	}
+    while (aux_index) {
+        m_build_buffer(&file_aux, &len, "%s%s",
+                       pathfile, aux_index->indexname);
 
-	return f;
+        if (access(file_aux, F_OK) == 0) {
+            f.data = file_aux;
+            f.len = len;
+            return f;
+        }
+        mk_mem_free(file_aux);
+        aux_index = aux_index->next;
+    }
+
+    return f;
 }
 
 /* Send error responses */
-void mk_request_error(int num_error, struct client_request *cr, 
-                   struct request *s_request, int debug, struct log_info *s_log)
+void mk_request_error(int num_error, struct client_request *cr,
+                      struct request *s_request, int debug,
+                      struct log_info *s_log)
 {
-	char *aux_message=0;
-	mk_pointer message, *page=0;
-        long n;
+    char *aux_message = 0;
+    mk_pointer message, *page = 0;
+    long n;
 
-	switch(num_error) {
-		case M_CLIENT_BAD_REQUEST:
-			page = mk_request_set_default_page("Bad Request", 
-                                                           s_request->uri, 
-                                                           s_request->host_conf->host_signature);
-			s_log->error_msg = request_error_msg_400; 
-			break;
+    switch (num_error) {
+    case M_CLIENT_BAD_REQUEST:
+        page = mk_request_set_default_page("Bad Request",
+                                           s_request->uri,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->error_msg = request_error_msg_400;
+        break;
 
-		case M_CLIENT_FORBIDDEN:
-			page = mk_request_set_default_page("Forbidden", 
-					s_request->uri, 
-					s_request->host_conf->host_signature);
-			s_log->error_msg = request_error_msg_403;
-			// req s_request->uri;
-			break;
+    case M_CLIENT_FORBIDDEN:
+        page = mk_request_set_default_page("Forbidden",
+                                           s_request->uri,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->error_msg = request_error_msg_403;
+        // req s_request->uri;
+        break;
 
-		case M_CLIENT_NOT_FOUND:
-			m_build_buffer(&message.data, &message.len,
-					"The requested URL was not found on this server.");
-			page = mk_request_set_default_page("Not Found", 
-                                                           message, 
-                                                           s_request->host_conf->host_signature);
-			s_log->error_msg = request_error_msg_404;
-			// req uri;
-			mk_pointer_free(&message);
-			break;
+    case M_CLIENT_NOT_FOUND:
+        m_build_buffer(&message.data, &message.len,
+                       "The requested URL was not found on this server.");
+        page = mk_request_set_default_page("Not Found",
+                                           message,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->error_msg = request_error_msg_404;
+        // req uri;
+        mk_pointer_free(&message);
+        break;
 
-		case M_CLIENT_METHOD_NOT_ALLOWED:
-			page = mk_request_set_default_page("Method Not Allowed",
-                                                           s_request->uri, 
-                                                           s_request->host_conf->host_signature);
+    case M_CLIENT_METHOD_NOT_ALLOWED:
+        page = mk_request_set_default_page("Method Not Allowed",
+                                           s_request->uri,
+                                           s_request->host_conf->
+                                           host_signature);
 
-			s_log->final_response=M_CLIENT_METHOD_NOT_ALLOWED;
-			s_log->error_msg = request_error_msg_405;
-			break;
+        s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
+        s_log->error_msg = request_error_msg_405;
+        break;
 
-		case M_CLIENT_REQUEST_TIMEOUT:
-			s_log->status=S_LOG_OFF;
-			s_log->error_msg = request_error_msg_408;
-			break;
+    case M_CLIENT_REQUEST_TIMEOUT:
+        s_log->status = S_LOG_OFF;
+        s_log->error_msg = request_error_msg_408;
+        break;
 
-		case M_CLIENT_LENGTH_REQUIRED:
-			s_log->error_msg = request_error_msg_411;
-			break;
-			
-                case M_SERVER_NOT_IMPLEMENTED:
-                        page = mk_request_set_default_page("Method Not Implemented",
-                                                           s_request->uri,
-                                                           s_request->host_conf->host_signature);
-                        s_log->final_response=M_SERVER_NOT_IMPLEMENTED;
-                        s_log->error_msg = request_error_msg_501;
-                        break;
+    case M_CLIENT_LENGTH_REQUIRED:
+        s_log->error_msg = request_error_msg_411;
+        break;
 
-		case M_SERVER_INTERNAL_ERROR:
-			m_build_buffer(&message.data, &message.len, 
-					"Problems found running %s ",
-					s_request->uri);
-			page = mk_request_set_default_page("Internal Server Error",
-					message, s_request->host_conf->host_signature);
-			s_log->error_msg = request_error_msg_500;
+    case M_SERVER_NOT_IMPLEMENTED:
+        page = mk_request_set_default_page("Method Not Implemented",
+                                           s_request->uri,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
+        s_log->error_msg = request_error_msg_501;
+        break;
 
-			mk_pointer_free(&message);
-			break;
-			
-		case M_SERVER_HTTP_VERSION_UNSUP:
-			mk_pointer_reset(&message);
-			page = mk_request_set_default_page("HTTP Version Not Supported",
-                                                           message,
-                                                           s_request->host_conf->host_signature);
-			s_log->error_msg = request_error_msg_505;
-			break;
-	}
+    case M_SERVER_INTERNAL_ERROR:
+        m_build_buffer(&message.data, &message.len,
+                       "Problems found running %s ", s_request->uri);
+        page = mk_request_set_default_page("Internal Server Error",
+                                           message,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->error_msg = request_error_msg_500;
 
-	s_log->final_response=num_error;
+        mk_pointer_free(&message);
+        break;
 
-	s_request->headers->status = num_error;
-        if(page){
-                s_request->headers->content_length = page->len;
-                s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
-        }
-   
-	s_request->headers->location = NULL;
-	s_request->headers->cgi = SH_NOCGI;
-	s_request->headers->pconnections_left = 0;
-	mk_pointer_reset(&s_request->headers->last_modified);
-	
-	if(aux_message) mk_mem_free(aux_message);
-	
-	if(!page)
-	{
-          mk_pointer_reset(&s_request->headers->content_type);
-	}
-	else
-	{
-          mk_pointer_set(&s_request->headers->content_type, "text/html");
-	}
+    case M_SERVER_HTTP_VERSION_UNSUP:
+        mk_pointer_reset(&message);
+        page = mk_request_set_default_page("HTTP Version Not Supported",
+                                           message,
+                                           s_request->host_conf->
+                                           host_signature);
+        s_log->error_msg = request_error_msg_505;
+        break;
+    }
 
-	mk_header_send(cr->socket, cr, s_request, s_log);
-        
-	if(debug==1){
-                n = write(cr->socket, page->data, page->len);
-		mk_pointer_free(page);
-                mk_mem_free(page);
-	}
+    s_log->final_response = num_error;
+
+    s_request->headers->status = num_error;
+    if (page) {
+        s_request->headers->content_length = page->len;
+        s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
+    }
+
+    s_request->headers->location = NULL;
+    s_request->headers->cgi = SH_NOCGI;
+    s_request->headers->pconnections_left = 0;
+    mk_pointer_reset(&s_request->headers->last_modified);
+
+    if (aux_message)
+        mk_mem_free(aux_message);
+
+    if (!page) {
+        mk_pointer_reset(&s_request->headers->content_type);
+    }
+    else {
+        mk_pointer_set(&s_request->headers->content_type, "text/html");
+    }
+
+    mk_header_send(cr->socket, cr, s_request, s_log);
+
+    if (debug == 1) {
+        n = write(cr->socket, page->data, page->len);
+        mk_pointer_free(page);
+        mk_mem_free(page);
+    }
 }
 
 /* Build error page */
-mk_pointer *mk_request_set_default_page(char *title, mk_pointer message, char *signature)
+mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
+                                        char *signature)
 {
-	char *temp;
-        mk_pointer *p;
+    char *temp;
+    mk_pointer *p;
 
-        p = mk_mem_malloc(sizeof(mk_pointer));
+    p = mk_mem_malloc(sizeof(mk_pointer));
 
-	temp = mk_pointer_to_buf(message);
-	m_build_buffer(&p->data, &p->len, 
-                       MK_REQUEST_DEFAULT_PAGE,
-                       title, temp, signature);
-	mk_mem_free(temp);
+    temp = mk_pointer_to_buf(message);
+    m_build_buffer(&p->data, &p->len,
+                   MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+    mk_mem_free(temp);
 
-        return p;
+    return p;
 }
 
 /* Create a memory allocation in order to handle the request data */
 struct request *mk_request_alloc()
 {
-	struct request *request=0;
+    struct request *request = 0;
 
-	request = mk_mem_malloc(sizeof(struct request));
-	request->log = mk_mem_malloc(sizeof(struct log_info));
+    request = mk_mem_malloc(sizeof(struct request));
+    request->log = mk_mem_malloc(sizeof(struct log_info));
 
-	request->status=VAR_OFF; /* Request not processed yet */
-	request->make_log=VAR_ON; /* build log file of this request ? */
+    request->status = VAR_OFF;  /* Request not processed yet */
+    request->make_log = VAR_ON; /* build log file of this request ? */
 
-        mk_pointer_reset(&request->body);
+    mk_pointer_reset(&request->body);
 
-	request->log->final_response=M_HTTP_OK;
-	request->log->status=S_LOG_ON;
-        mk_pointer_reset(&request->log->size_p);
-	mk_pointer_reset(&request->log->error_msg);
+    request->log->final_response = M_HTTP_OK;
+    request->log->status = S_LOG_ON;
+    mk_pointer_reset(&request->log->size_p);
+    mk_pointer_reset(&request->log->error_msg);
 
-	request->status=VAR_ON;
-	request->method=METHOD_NOT_FOUND;
+    request->status = VAR_ON;
+    request->method = METHOD_NOT_FOUND;
 
-	mk_pointer_reset(&request->uri);
-	request->uri_processed = NULL;
-	request->uri_twin = VAR_OFF;
+    mk_pointer_reset(&request->uri);
+    request->uri_processed = NULL;
+    request->uri_twin = VAR_OFF;
 
- 	request->accept.data = NULL;
-	request->accept_language.data = NULL;
-	request->accept_encoding.data = NULL;
-	request->accept_charset.data = NULL;
-        request->content_length = 0;
-	request->content_type.data = NULL;
-	request->connection.data = NULL;	
-	request->cookies.data = NULL; 
-	request->host.data = NULL;
-	request->if_modified_since.data = NULL;
-	request->last_modified_since.data = NULL;
-	request->range.data = NULL;
-	request->referer.data = NULL;
-	request->resume.data = NULL;
-	request->user_agent.data = NULL;
+    request->accept.data = NULL;
+    request->accept_language.data = NULL;
+    request->accept_encoding.data = NULL;
+    request->accept_charset.data = NULL;
+    request->content_length = 0;
+    request->content_type.data = NULL;
+    request->connection.data = NULL;
+    request->cookies.data = NULL;
+    request->host.data = NULL;
+    request->if_modified_since.data = NULL;
+    request->last_modified_since.data = NULL;
+    request->range.data = NULL;
+    request->referer.data = NULL;
+    request->resume.data = NULL;
+    request->user_agent.data = NULL;
 
-	request->post_variables.data = NULL;
+    request->post_variables.data = NULL;
 
-	request->user_uri = NULL;
-	mk_pointer_reset(&request->query_string);
+    request->user_uri = NULL;
+    mk_pointer_reset(&request->query_string);
 
-        request->file_info = NULL;
-	request->virtual_user = NULL;
-	request->script_filename = NULL;
-	mk_pointer_reset(&request->real_path);
-	request->host_conf = config->hosts; 
+    request->file_info = NULL;
+    request->virtual_user = NULL;
+    request->script_filename = NULL;
+    mk_pointer_reset(&request->real_path);
+    request->host_conf = config->hosts;
 
-        request->loop = 0;
-	request->bytes_to_send = -1;
-	request->bytes_offset = 0;
-	request->fd_file = -1;
+    request->loop = 0;
+    request->bytes_to_send = -1;
+    request->bytes_offset = 0;
+    request->fd_file = -1;
 
-	/* Response Headers */
-	request->headers = mk_header_create();
+    /* Response Headers */
+    request->headers = mk_header_create();
 
-        request->handled_by = NULL;
-	return request;
+    request->handled_by = NULL;
+    return request;
 }
 
 void mk_request_free_list(struct client_request *cr)
 {
-    struct request *sr=0, *before=0;
-    
+    struct request *sr = 0, *before = 0;
+
     /* sr = last node */
 
-    while(cr->request)
-    {
+    while (cr->request) {
         sr = before = cr->request;
 
-	while(sr->next)
-        {
+        while (sr->next) {
             sr = sr->next;
         }
 
-        if(sr!=cr->request){
-            while(before->next!=sr){
+        if (sr != cr->request) {
+            while (before->next != sr) {
                 before = before->next;
             }
             before->next = NULL;
         }
-        else{
+        else {
             cr->request = NULL;
         }
         mk_request_free(sr);
@@ -801,64 +767,62 @@ void mk_request_free_list(struct client_request *cr)
 
 void mk_request_free(struct request *sr)
 {
-        /* I hate it, but I don't know another light way :( */
-	if(sr->fd_file>0)
-	{
-		close(sr->fd_file);
-	}
-	if(sr->headers){
-            mk_mem_free(sr->headers->location);
-            mk_pointer_free(&sr->headers->content_length_p);
-            mk_pointer_free(&sr->headers->last_modified);
-            /*
-                mk_mem_free(sr->headers->content_type);
-                 headers->content_type never it's allocated 
-		 with malloc or something, so we don't need 
-		 to free it, the value has been freed before 
-		 in M_METHOD_Get_and_Head(struct request *sr)
-                
-		 this BUG was reported by gentoo team.. thanks guys XD
-            */
+    /* I hate it, but I don't know another light way :( */
+    if (sr->fd_file > 0) {
+        close(sr->fd_file);
+    }
+    if (sr->headers) {
+        mk_mem_free(sr->headers->location);
+        mk_pointer_free(&sr->headers->content_length_p);
+        mk_pointer_free(&sr->headers->last_modified);
+        /*
+           mk_mem_free(sr->headers->content_type);
+           headers->content_type never it's allocated 
+           with malloc or something, so we don't need 
+           to free it, the value has been freed before 
+           in M_METHOD_Get_and_Head(struct request *sr)
 
-            mk_mem_free(sr->headers);
-        }
+           this BUG was reported by gentoo team.. thanks guys XD
+         */
 
-        
-        if(sr->log){
-                /*
-                 * We do not free log->size_p, as if it was
-                 * used due to an error, it points to the 
-                 * same memory block than header->content_length_p
-                 * points to, we just reset it.
-                 */
-                mk_pointer_reset(&sr->log->size_p);
+        mk_mem_free(sr->headers);
+    }
 
-                /*
-                 * sr->log->error_msg just point to
-                 * local data on request.c, no 
-                 * dynamic allocation is made
-                 */
 
-		mk_mem_free(sr->log);
-        }
+    if (sr->log) {
+        /*
+         * We do not free log->size_p, as if it was
+         * used due to an error, it points to the 
+         * same memory block than header->content_length_p
+         * points to, we just reset it.
+         */
+        mk_pointer_reset(&sr->log->size_p);
 
-        mk_pointer_reset(&sr->body);
-        mk_pointer_reset(&sr->uri);
+        /*
+         * sr->log->error_msg just point to
+         * local data on request.c, no 
+         * dynamic allocation is made
+         */
 
-	if(sr->uri_twin==VAR_ON)
-	{
-		mk_mem_free(sr->uri_processed);
-        }
+        mk_mem_free(sr->log);
+    }
 
-        mk_pointer_free(&sr->post_variables);
-        mk_mem_free(sr->user_uri);
- 	mk_pointer_reset(&sr->query_string);
+    mk_pointer_reset(&sr->body);
+    mk_pointer_reset(&sr->uri);
 
-        mk_mem_free(sr->file_info);
-        mk_mem_free(sr->virtual_user);
-        mk_mem_free(sr->script_filename);
-        mk_pointer_free(&sr->real_path);
-	mk_mem_free(sr);
+    if (sr->uri_twin == VAR_ON) {
+        mk_mem_free(sr->uri_processed);
+    }
+
+    mk_pointer_free(&sr->post_variables);
+    mk_mem_free(sr->user_uri);
+    mk_pointer_reset(&sr->query_string);
+
+    mk_mem_free(sr->file_info);
+    mk_mem_free(sr->virtual_user);
+    mk_mem_free(sr->script_filename);
+    mk_pointer_free(&sr->real_path);
+    mk_mem_free(sr);
 }
 
 /* Create a client request struct and put it on the
@@ -866,67 +830,64 @@ void mk_request_free(struct request *sr)
  */
 struct client_request *mk_request_client_create(int socket)
 {
-        struct request_idx *request_index;
-	struct client_request *cr;
-        struct sched_connection *sc;
-        
-        sc = mk_sched_get_connection(NULL, socket);
-	cr = mk_mem_malloc(sizeof(struct client_request));
+    struct request_idx *request_index;
+    struct client_request *cr;
+    struct sched_connection *sc;
 
-        /* IPv4 Address */
-        cr->ipv4 = (char *) sc->ipv4;
+    sc = mk_sched_get_connection(NULL, socket);
+    cr = mk_mem_malloc(sizeof(struct client_request));
 
-	cr->pipelined = FALSE;
-	cr->counter_connections = 0;
-	cr->socket = socket;
-	cr->status = MK_REQUEST_STATUS_INCOMPLETE;
-        cr->request = NULL;
-        
-        /* creation time in unix time */
-        cr->init_time = sc->arrive_time;
+    /* IPv4 Address */
+    cr->ipv4 = (char *) sc->ipv4;
 
-	cr->next = NULL;
-	cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
-	cr->body_length = 0;
-        cr->first_block_end = -1;
-        cr->first_method = HTTP_METHOD_UNKNOWN;
+    cr->pipelined = FALSE;
+    cr->counter_connections = 0;
+    cr->socket = socket;
+    cr->status = MK_REQUEST_STATUS_INCOMPLETE;
+    cr->request = NULL;
 
-        request_index = mk_sched_get_request_index();
-	if(!request_index->first)
-	{
-		request_index->first = request_index->last = cr;
-	}
-	else{
-                request_index->last->next = cr;
-                request_index->last = cr;
-	}
-        mk_sched_set_request_index(request_index);
+    /* creation time in unix time */
+    cr->init_time = sc->arrive_time;
+
+    cr->next = NULL;
+    cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
+    cr->body_length = 0;
+    cr->first_block_end = -1;
+    cr->first_method = HTTP_METHOD_UNKNOWN;
+
+    request_index = mk_sched_get_request_index();
+    if (!request_index->first) {
+        request_index->first = request_index->last = cr;
+    }
+    else {
+        request_index->last->next = cr;
+        request_index->last = cr;
+    }
+    mk_sched_set_request_index(request_index);
 
 
-        mk_sched_update_thread_status(NULL,
-                                      MK_SCHEDULER_ACTIVE_UP,
-                                      MK_SCHEDULER_CLOSED_NONE);
-        
-        return cr;
+    mk_sched_update_thread_status(NULL,
+                                  MK_SCHEDULER_ACTIVE_UP,
+                                  MK_SCHEDULER_CLOSED_NONE);
+
+    return cr;
 }
 
 struct client_request *mk_request_client_get(int socket)
 {
-	struct request_idx *request_index;
-        struct client_request *cr=NULL;
+    struct request_idx *request_index;
+    struct client_request *cr = NULL;
 
-	request_index = mk_sched_get_request_index();
-	cr = request_index->first;
-	while(cr!=NULL)
-	{
-		if(cr->socket == socket)
-		{
-                        break;
-		}
-		cr = cr->next;
-	}
+    request_index = mk_sched_get_request_index();
+    cr = request_index->first;
+    while (cr != NULL) {
+        if (cr->socket == socket) {
+            break;
+        }
+        cr = cr->next;
+    }
 
-	return cr;
+    return cr;
 }
 
 /*
@@ -935,141 +896,131 @@ struct client_request *mk_request_client_get(int socket)
  */
 struct client_request *mk_request_client_remove(int socket)
 {
-	struct request_idx *request_index;
-        struct client_request *cr, *aux;
+    struct request_idx *request_index;
+    struct client_request *cr, *aux;
 
-	request_index = mk_sched_get_request_index();
-	cr = request_index->first;
+    request_index = mk_sched_get_request_index();
+    cr = request_index->first;
 
-	while(cr)
-	{
-		if(cr->socket == socket)
-		{
-			if(cr==request_index->first)
-			{
-				request_index->first = cr->next;
-			}
-			else
-			{
-				aux = request_index->first;
-				while(aux->next!=cr)
-				{
-					aux = aux->next;
-				}
-				aux->next = cr->next;
-                                if(!aux->next)
-                                {
-                                        request_index->last = aux;
-                                }
-			}
-			break;
-		}
-		cr = cr->next;
-	}
-        
-        /* No keep alive connection */
-        if(cr->counter_connections == 0){
-                mk_sched_update_thread_status(NULL,
-                                              MK_SCHEDULER_ACTIVE_DOWN,
-                                              MK_SCHEDULER_CLOSED_UP);
-                                              }
-        //mk_pointer_free(&cr->ip);
-	mk_mem_free(cr->body);
-	mk_mem_free(cr);
+    while (cr) {
+        if (cr->socket == socket) {
+            if (cr == request_index->first) {
+                request_index->first = cr->next;
+            }
+            else {
+                aux = request_index->first;
+                while (aux->next != cr) {
+                    aux = aux->next;
+                }
+                aux->next = cr->next;
+                if (!aux->next) {
+                    request_index->last = aux;
+                }
+            }
+            break;
+        }
+        cr = cr->next;
+    }
 
-	return NULL;
+    /* No keep alive connection */
+    if (cr->counter_connections == 0) {
+        mk_sched_update_thread_status(NULL,
+                                      MK_SCHEDULER_ACTIVE_DOWN,
+                                      MK_SCHEDULER_CLOSED_UP);
+    }
+    //mk_pointer_free(&cr->ip);
+    mk_mem_free(cr->body);
+    mk_mem_free(cr);
+
+    return NULL;
 }
 
 struct header_toc *mk_request_header_toc_create(int len)
 {
-        int i;
-        struct header_toc *p;
+    int i;
+    struct header_toc *p;
 
-        p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
+    p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
 
-        for(i=0; i<len; i++)
-        {
-                p[i].init = NULL;
-                p[i].end = NULL;
-                p[i].status = 0;
-        }
-        return p;
+    for (i = 0; i < len; i++) {
+        p[i].init = NULL;
+        p[i].end = NULL;
+        p[i].status = 0;
+    }
+    return p;
 }
 
 void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
 {
-        char *p, *l;
-        int i;
+    char *p, *l;
+    int i;
 
-        p = data;
-        for(i=0; i<len && p; i++)
-        {
-                l = strstr(p, MK_CRLF);
-                if(l)
-                {
-                        toc[i].init = p;
-                        toc[i].end = l;
-                        p = l + mk_crlf.len;
-                }
-                else
-                {
-                        break;
-                }
+    p = data;
+    for (i = 0; i < len && p; i++) {
+        l = strstr(p, MK_CRLF);
+        if (l) {
+            toc[i].init = p;
+            toc[i].end = l;
+            p = l + mk_crlf.len;
         }
+        else {
+            break;
+        }
+    }
 }
 
 void mk_request_ka_next(struct client_request *cr)
 {
-        bzero(cr->body, sizeof(cr->body));
-        cr->first_method = -1;
-        cr->first_block_end = -1;
-        cr->body_length = 0;
-        cr->counter_connections++;
+    bzero(cr->body, sizeof(cr->body));
+    cr->first_method = -1;
+    cr->first_block_end = -1;
+    cr->body_length = 0;
+    cr->counter_connections++;
 }
 
 void mk_request_handler_register(struct request *sr, struct plugin *p)
 {
-        struct handler *new, *aux;
+    struct handler *new, *aux;
 
-        new = mk_mem_malloc(sizeof(struct handler));
-        new->p = p;
-        new->next = NULL;
+    new = mk_mem_malloc(sizeof(struct handler));
+    new->p = p;
+    new->next = NULL;
 
-        if(!sr->handled_by){
-                sr->handled_by = new;
-                return;
+    if (!sr->handled_by) {
+        sr->handled_by = new;
+        return;
+    }
+
+    aux = sr->handled_by;
+    while (aux) {
+        if (!aux->next) {
+            aux->next = new;
+            return;
         }
+        aux = aux->next;
+    }
 
-        aux = sr->handled_by;
-        while(aux){
-                if(!aux->next){
-                        aux->next = new;
-                        return;
-                }
-                aux = aux->next;
-        }
-        
-        printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
-        fflush(stdout);
+    printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
+    fflush(stdout);
 }
 
 void mk_request_handler_clear(struct request *sr)
 {
-        struct handler *prev=0, *aux;
+    struct handler *prev = 0, *aux;
 
-        if(!sr->handled_by){
-                return;
-        }
-
-        while(sr->handled_by){
-                aux = sr->handled_by;
-                while(aux->next){
-                        prev = aux;
-                        aux = aux->next;
-                }
-                mk_mem_free(aux);
-                prev->next = NULL;
-        }
-
+    if (!sr->handled_by) {
         return;
+    }
+
+    while (sr->handled_by) {
+        aux = sr->handled_by;
+        while (aux->next) {
+            prev = aux;
+            aux = aux->next;
+        }
+        mk_mem_free(aux);
+        prev->next = NULL;
+    }
+
+    return;
 }

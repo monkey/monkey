@@ -31,10 +31,11 @@
 
 /* Handle index file names: index.* */
 #define MAX_INDEX_NOMBRE 50
-struct indexfile {
-	char indexname[MAX_INDEX_NOMBRE];		
-	struct indexfile *next;	
-} *first_index;
+struct indexfile
+{
+    char indexname[MAX_INDEX_NOMBRE];
+    struct indexfile *next;
+}        *first_index;
 
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
@@ -91,7 +92,7 @@ parametros de una peticion */
 #define EXIT_PCONNECTION 24
 
 /* Request error messages for log file */
-#define ERROR_MSG_400 "[error 400] Bad Request" 
+#define ERROR_MSG_400 "[error 400] Bad Request"
 #define ERROR_MSG_403 "[error 403] Forbidden"
 #define ERROR_MSG_404 "[error 404] Not Found"
 #define ERROR_MSG_405 "[error 405] Method Not Allowed"
@@ -114,132 +115,136 @@ mk_pointer request_error_msg_505;
 
 struct request_idx
 {
-        struct client_request *first;
-        struct client_request *last;
+    struct client_request *first;
+    struct client_request *last;
 };
 
 struct client_request
 {
-        int pipelined; /* Pipelined request */
-        int socket;
-        int counter_connections; /* Count persistent connections */
-        int status; /* Request status */
-        char *body; /* Original request sent */
+    int pipelined;              /* Pipelined request */
+    int socket;
+    int counter_connections;    /* Count persistent connections */
+    int status;                 /* Request status */
+    char *body;                 /* Original request sent */
 
-        char *ipv4;
+    char *ipv4;
 
-        int body_length;
-        
-        int first_block_end;
-        int first_method;
+    int body_length;
 
-        time_t init_time;
-        struct request *request; /* Parsed request */
-        struct client_request *next;
+    int first_block_end;
+    int first_method;
+
+    time_t init_time;
+    struct request *request;    /* Parsed request */
+    struct client_request *next;
 };
 
 pthread_key_t request_index;
 
-struct header_toc {
-        char *init;
-        char *end;
-        int status; /* 0: not found, 1: found = skip! */
-        struct header_toc *next;
+struct header_toc
+{
+    char *init;
+    char *end;
+    int status;                 /* 0: not found, 1: found = skip! */
+    struct header_toc *next;
 };
 
 /* Request plugin Handler, each request can be handled by 
  * several plugins, we handle list in a simple list */
-struct handler {
-        struct plugin *p;
-        struct handler *next;
+struct handler
+{
+    struct plugin *p;
+    struct handler *next;
 };
 
-struct request {
-	int status;
-	int pipelined; /* Pipelined request */
-	mk_pointer body;
+struct request
+{
+    int status;
+    int pipelined;              /* Pipelined request */
+    mk_pointer body;
 
-	/*----First header of client request--*/
-	int method;
-	mk_pointer method_p;
-	mk_pointer uri;  /* original request */
-	char *uri_processed; /* processed request */
-	int uri_twin;
+        /*----First header of client request--*/
+    int method;
+    mk_pointer method_p;
+    mk_pointer uri;             /* original request */
+    char *uri_processed;        /* processed request */
+    int uri_twin;
 
-	int protocol;
+    int protocol;
         /*------------------*/
 
-	/*---Request headers--*/
-	int  content_length;
-	mk_pointer accept;
-	mk_pointer accept_language;
-	mk_pointer accept_encoding;
-	mk_pointer accept_charset;
-	mk_pointer content_type;
-	mk_pointer connection;	
-	mk_pointer cookies; 
-	mk_pointer host;
-	mk_pointer if_modified_since;
-	mk_pointer last_modified_since;
-	mk_pointer range;
-	mk_pointer referer;
-	mk_pointer resume;
-	mk_pointer user_agent;	
-	/*---------------------*/
-	
-	/* POST */
-	mk_pointer post_variables;
-	/*-----------------*/
+        /*---Request headers--*/
+    int content_length;
+    mk_pointer accept;
+    mk_pointer accept_language;
+    mk_pointer accept_encoding;
+    mk_pointer accept_charset;
+    mk_pointer content_type;
+    mk_pointer connection;
+    mk_pointer cookies;
+    mk_pointer host;
+    mk_pointer if_modified_since;
+    mk_pointer last_modified_since;
+    mk_pointer range;
+    mk_pointer referer;
+    mk_pointer resume;
+    mk_pointer user_agent;
+        /*---------------------*/
 
-	/*-Internal-*/
-	mk_pointer real_path; /* Absolute real path */
-	char *user_uri; /* ~user/...path */
-	mk_pointer query_string; /* ?... */
+    /* POST */
+    mk_pointer post_variables;
+        /*-----------------*/
 
-	char *virtual_user; /* Virtualhost user */
-	char *script_filename;
-	int  keep_alive;	
-	int  user_home; /* user_home request(VAR_ON/VAR_OFF) */
+        /*-Internal-*/
+    mk_pointer real_path;       /* Absolute real path */
+    char *user_uri;             /* ~user/...path */
+    mk_pointer query_string;    /* ?... */
 
-	/*-Connection-*/
-	int  port;
-	/*------------*/
-	
-	int make_log;
-	int cgi_pipe[2];
+    char *virtual_user;         /* Virtualhost user */
+    char *script_filename;
+    int keep_alive;
+    int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
 
-	/* file descriptors */
-	int fd_file;
+        /*-Connection-*/
+    int port;
+        /*------------*/
 
-        struct file_info *file_info;
-	struct host *host_conf;
-	struct log_info *log; /* Request Log */
-	struct header_values *headers; /* headers response */
-	struct request *next;
+    int make_log;
+    int cgi_pipe[2];
 
-        long loop;
-	long bytes_to_send;
-        off_t bytes_offset;
+    /* file descriptors */
+    int fd_file;
 
-        /* Plugin handlers */
-        struct handler *handled_by;
+    struct file_info *file_info;
+    struct host *host_conf;
+    struct log_info *log;       /* Request Log */
+    struct header_values *headers;      /* headers response */
+    struct request *next;
+
+    long loop;
+    long bytes_to_send;
+    off_t bytes_offset;
+
+    /* Plugin handlers */
+    struct handler *handled_by;
 };
 
-struct header_values {
-	int status;
+struct header_values
+{
+    int status;
 
-	int content_length;	
-        mk_pointer content_length_p;
+    int content_length;
+    mk_pointer content_length_p;
 
-	int cgi;
-	int pconnections_left;
-	int ranges[2];
-	int transfer_encoding;
-        int breakline;
+    int cgi;
+    int pconnections_left;
+    int ranges[2];
+    int transfer_encoding;
+    int breakline;
 
-	mk_pointer content_type;
-	mk_pointer last_modified;
-	char *location;
+    mk_pointer content_type;
+    mk_pointer last_modified;
+    char *location;
 };
 
 
@@ -249,15 +254,16 @@ mk_pointer mk_request_index(char *pathfile);
 
 
 /* Custom HTML Page for errors */
-mk_pointer *mk_request_set_default_page(char *title, mk_pointer message, char *signature);
+mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
+                                        char *signature);
 
 int mk_request_header_process(struct request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
-void mk_request_error(int num_error, struct client_request *cr, 
-                   struct request *s_request, int debug, 
-		   struct log_info *s_log);
+void mk_request_error(int num_error, struct client_request *cr,
+                      struct request *s_request, int debug,
+                      struct log_info *s_log);
 
 struct request *mk_request_alloc();
 void mk_request_free_list(struct client_request *cr);

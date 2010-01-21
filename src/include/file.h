@@ -22,14 +22,13 @@
 
 struct file_info
 {
-	off_t size;
-	short int is_link;
-	short int is_directory;
-	short int exec_access;
-	short int read_access;
-	time_t last_modification;
+    off_t size;
+    short int is_link;
+    short int is_directory;
+    short int exec_access;
+    short int read_access;
+    time_t last_modification;
 };
 
 struct file_info *mk_file_get_info(char *path);
 char *mk_file_to_buffer(char *path);
-

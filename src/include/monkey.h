@@ -27,9 +27,9 @@
 int server_fd;
 
 /* Max buf length sent by client */
-#define MAX_REQUEST_BODY 1024 
+#define MAX_REQUEST_BODY 1024
 /* Max Path lenth */
-#define MAX_PATH 1024 
+#define MAX_PATH 1024
 
 /* Send_Header(...,int cgi) */
 #define SH_NOCGI 0
@@ -45,11 +45,11 @@ int server_fd;
 int thread_counter;
 
 /* Thread mutexes */
-pthread_mutex_t  mutex_thread_list;
-pthread_mutex_t  mutex_thread_counter;
-pthread_mutex_t  mutex_cgi_child;
-pthread_mutex_t  mutex_logfile;
-pthread_mutex_t  mutex_wait_register;
+pthread_mutex_t mutex_thread_list;
+pthread_mutex_t mutex_thread_counter;
+pthread_mutex_t mutex_cgi_child;
+pthread_mutex_t mutex_logfile;
+pthread_mutex_t mutex_wait_register;
 
 mk_pointer mk_monkey_protocol;
 mk_pointer mk_monkey_port;

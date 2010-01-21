@@ -40,76 +40,71 @@
 void mk_signal_handler(int signo)
 {
 
-switch( signo ) {
-	case SIGUSR2:
-		printf("%s => Monkey reconfiguration \n", 
-                       log_current_time.data); /* Not ready */
-                break;
+    switch (signo) {
+    case SIGUSR2:
+        printf("%s => Monkey reconfiguration \n", log_current_time.data);       /* Not ready */
+        break;
 
-	case SIGINT: 
-		mk_logger_remove_pid();
-		printf("\n\n%s => Interrupt from keyboard\n\n",
-                       log_current_time.data);
-                exit(0);
-	case SIGHUP:
-		printf("%s => Hangup\n", 
-                       log_current_time.data);
-		mk_signal_term();
-                break;
+    case SIGINT:
+        mk_logger_remove_pid();
+        printf("\n\n%s => Interrupt from keyboard\n\n",
+               log_current_time.data);
+        exit(0);
+    case SIGHUP:
+        printf("%s => Hangup\n", log_current_time.data);
+        mk_signal_term();
+        break;
 
-	case SIGBUS: 
-		printf("%s => Invalid memory reference\n", 
-                       log_current_time.data);
-		abort();
-		break;
- 
-	case SIGPIPE:
-                printf("\n sigpipe");
-                fflush(stdout);
-		break;
-   
-	case SIGSEGV: 
-		printf("%s => Invalid memory reference\n", 
-                       log_current_time.data);
-		break;
- 
-	case SIGTERM:
-		printf("%s => Termination signal\n",
-                       log_current_time.data);
-		mk_signal_term();
-                break;
-	}
+    case SIGBUS:
+        printf("%s => Invalid memory reference\n", log_current_time.data);
+        abort();
+        break;
 
-        pthread_exit(NULL);
+    case SIGPIPE:
+        printf("\n sigpipe");
+        fflush(stdout);
+        break;
+
+    case SIGSEGV:
+        printf("%s => Invalid memory reference\n", log_current_time.data);
+        break;
+
+    case SIGTERM:
+        printf("%s => Termination signal\n", log_current_time.data);
+        mk_signal_term();
+        break;
+    }
+
+    pthread_exit(NULL);
 }
 
 void mk_signal_init()
 {
-	signal(SIGHUP , (void *) mk_signal_handler);
-	signal(SIGINT , (void *) mk_signal_handler);
-        signal(SIGPIPE, (void *) mk_signal_handler);
-	signal(SIGBUS,  (void *) mk_signal_handler);
-	signal(SIGSEGV, (void *) mk_signal_handler);
-	signal(SIGTERM, (void *) mk_signal_handler);
-	signal(SIGUSR2, (void *) mk_signal_handler);
+    signal(SIGHUP, (void *) mk_signal_handler);
+    signal(SIGINT, (void *) mk_signal_handler);
+    signal(SIGPIPE, (void *) mk_signal_handler);
+    signal(SIGBUS, (void *) mk_signal_handler);
+    signal(SIGSEGV, (void *) mk_signal_handler);
+    signal(SIGTERM, (void *) mk_signal_handler);
+    signal(SIGUSR2, (void *) mk_signal_handler);
 }
 
 void mk_signal_term()
 {
-	signal(SIGHUP , (void *) SIG_DFL);
-	signal(SIGINT , (void *) SIG_DFL);
-	signal(SIGPIPE, (void *) SIG_DFL);
-	signal(SIGBUS,  (void *) SIG_DFL);
-	signal(SIGSEGV, (void *) SIG_DFL);
-	signal(SIGTERM, (void *) SIG_DFL);
-	signal(SIGUSR2, (void *) SIG_DFL);
+    signal(SIGHUP, (void *) SIG_DFL);
+    signal(SIGINT, (void *) SIG_DFL);
+    signal(SIGPIPE, (void *) SIG_DFL);
+    signal(SIGBUS, (void *) SIG_DFL);
+    signal(SIGSEGV, (void *) SIG_DFL);
+    signal(SIGTERM, (void *) SIG_DFL);
+    signal(SIGUSR2, (void *) SIG_DFL);
 }
 
 void mk_signal_thread_sigpipe_safe()
 {
-        sigset_t set, old;
+    sigset_t set, old;
 
-        sigemptyset(&set);
-        sigaddset(&set, SIGPIPE);
-        pthread_sigmask(SIG_BLOCK, &set, &old);
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    pthread_sigmask(SIG_BLOCK, &set, &old);
 }

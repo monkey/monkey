@@ -32,156 +32,148 @@
 
 int mk_conn_read(int socket)
 {
-	int ret;
-        struct client_request *cr;
-        struct sched_list_node *sched;
+    int ret;
+    struct client_request *cr;
+    struct sched_list_node *sched;
 
-        sched = mk_sched_get_thread_conf();
+    sched = mk_sched_get_thread_conf();
 
-	cr = mk_request_client_get(socket);
-	if(!cr)
-	{
-                /* Note: Linux don't set TCP_NODELAY socket flag by default, 
-                 * also we set the client socket on non-blocking mode
-                 */
-                mk_socket_set_tcp_nodelay(socket);
-                mk_socket_set_nonblocking(socket);
+    cr = mk_request_client_get(socket);
+    if (!cr) {
+        /* Note: Linux don't set TCP_NODELAY socket flag by default, 
+         * also we set the client socket on non-blocking mode
+         */
+        mk_socket_set_tcp_nodelay(socket);
+        mk_socket_set_nonblocking(socket);
 
-		cr = mk_request_client_create(socket);
+        cr = mk_request_client_create(socket);
 
-                /* Update requests counter */
-                mk_sched_update_thread_status(NULL,
-                                              MK_SCHEDULER_ACTIVE_UP,
-                                              MK_SCHEDULER_CLOSED_DOWN);
+        /* Update requests counter */
+        mk_sched_update_thread_status(NULL,
+                                      MK_SCHEDULER_ACTIVE_UP,
+                                      MK_SCHEDULER_CLOSED_DOWN);
+    }
+    else {
+        /* If cr struct already exists, that could means that we 
+         * are facing a keepalive connection, need to verify, if it 
+         * applies we increase the thread status for active connections
+         */
+        if (cr->counter_connections > 1 && cr->body_length == 0) {
+            mk_sched_update_thread_status(NULL,
+                                          MK_SCHEDULER_ACTIVE_UP,
+                                          MK_SCHEDULER_CLOSED_NONE);
         }
-        else{
-                /* If cr struct already exists, that could means that we 
-                 * are facing a keepalive connection, need to verify, if it 
-                 * applies we increase the thread status for active connections
-                 */
-                if(cr->counter_connections > 1 && cr->body_length == 0){
-                        mk_sched_update_thread_status(NULL,
-                                                      MK_SCHEDULER_ACTIVE_UP,
-                                                      MK_SCHEDULER_CLOSED_NONE);
-                }
-        }
+    }
 
-        /* Read incomming data */
-	ret = mk_handler_read(socket, cr);
+    /* Read incomming data */
+    ret = mk_handler_read(socket, cr);
 
-        if(ret > 0){
-                if(mk_http_pending_request(cr)==0){
-                        mk_epoll_socket_change_mode(sched->epoll_fd, 
-                                                    socket, 
-                                                    MK_EPOLL_WRITE);
-                }
-                else if(cr->body_length+1 >= MAX_REQUEST_BODY)
-                {
-                        /* Request is incomplete and our buffer is full, 
-                         * close connection 
-                         */
-                        mk_request_client_remove(socket);
-                        return -1;
-                }
+    if (ret > 0) {
+        if (mk_http_pending_request(cr) == 0) {
+            mk_epoll_socket_change_mode(sched->epoll_fd,
+                                        socket, MK_EPOLL_WRITE);
         }
-	return ret;
+        else if (cr->body_length + 1 >= MAX_REQUEST_BODY) {
+            /* Request is incomplete and our buffer is full, 
+             * close connection 
+             */
+            mk_request_client_remove(socket);
+            return -1;
+        }
+    }
+    return ret;
 }
 
 int mk_conn_write(int socket)
 {
-	int ret=-1, ka;
-	struct client_request *cr;
-        struct sched_list_node *sched;
-        
-        sched = mk_sched_get_thread_conf();
-        mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
+    int ret = -1, ka;
+    struct client_request *cr;
+    struct sched_list_node *sched;
 
-	/* Get node from schedule list node which contains
-	 * the information regarding to the current client/socket
-	 */
-	cr = mk_request_client_get(socket);
-	
-	if(!cr)
-	{
-		return -1;
-	}
+    sched = mk_sched_get_thread_conf();
+    mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
 
-	ret = mk_handler_write(socket, cr);
-	ka = mk_http_keepalive_check(socket, cr);
+    /* Get node from schedule list node which contains
+     * the information regarding to the current client/socket
+     */
+    cr = mk_request_client_get(socket);
 
-	/* if ret < 0, means that some error
-	 * happened in the writer call, in the
-	 * other hand, 0 means a successful request
-	 * processed, if ret > 0 means that some data
-	 * still need to be send.
-	 */
+    if (!cr) {
+        return -1;
+    }
 
-	if(ret <= 0)
-	{
-		mk_request_free_list(cr);
-	
-		/* We need to ask to http_keepalive if this 
-		 * connection can continue working or we must 
-		 * close it.
-		 */
+    ret = mk_handler_write(socket, cr);
+    ka = mk_http_keepalive_check(socket, cr);
 
-                mk_sched_update_thread_status(sched,
-                                              MK_SCHEDULER_ACTIVE_DOWN,
-                                              MK_SCHEDULER_CLOSED_UP);
+    /* if ret < 0, means that some error
+     * happened in the writer call, in the
+     * other hand, 0 means a successful request
+     * processed, if ret > 0 means that some data
+     * still need to be send.
+     */
 
-		if(ka<0 || ret<0)
-		{
-                        mk_request_client_remove(socket);
-                        return -1;
-		}
-		else{
-                        mk_request_ka_next(cr);
-			mk_epoll_socket_change_mode(sched->epoll_fd, 
-                                                    socket, 
-                                                    MK_EPOLL_READ);
-			return 0;
-		}
-	}
-	else if(ret > 0)
-	{
-		return 0;
-	}
+    if (ret <= 0) {
+        mk_request_free_list(cr);
 
-	/* avoid to make gcc cry :_( */
-	return -1;
+        /* We need to ask to http_keepalive if this 
+         * connection can continue working or we must 
+         * close it.
+         */
+
+        mk_sched_update_thread_status(sched,
+                                      MK_SCHEDULER_ACTIVE_DOWN,
+                                      MK_SCHEDULER_CLOSED_UP);
+
+        if (ka < 0 || ret < 0) {
+            mk_request_client_remove(socket);
+            return -1;
+        }
+        else {
+            mk_request_ka_next(cr);
+            mk_epoll_socket_change_mode(sched->epoll_fd,
+                                        socket, MK_EPOLL_READ);
+            return 0;
+        }
+    }
+    else if (ret > 0) {
+        return 0;
+    }
+
+    /* avoid to make gcc cry :_( */
+    return -1;
 }
 
 int mk_conn_error(int socket)
 {
-        struct client_request *cr;
-        struct sched_list_node *sched;
+    struct client_request *cr;
+    struct sched_list_node *sched;
 
-        sched = mk_sched_get_thread_conf();
-        mk_sched_remove_client(NULL, socket);
-        cr = mk_request_client_get(socket);
-        if(cr){
-                mk_request_client_remove(socket);
-        }
+    sched = mk_sched_get_thread_conf();
+    mk_sched_remove_client(NULL, socket);
+    cr = mk_request_client_get(socket);
+    if (cr) {
+        mk_request_client_remove(socket);
+    }
 
-        return 0;
+    return 0;
 }
 
 int mk_conn_close(int socket)
 {
-        struct sched_list_node *sched;
+    struct sched_list_node *sched;
 
-        sched = mk_sched_get_thread_conf();
-        mk_sched_remove_client(sched, socket);
+    sched = mk_sched_get_thread_conf();
+    mk_sched_remove_client(sched, socket);
 
-        return 0;
+    return 0;
 }
 
 int mk_conn_timeout(int socket)
 {
-        struct sched_list_node *sched;
+    struct sched_list_node *sched;
 
-        sched = mk_sched_get_thread_conf();
-        mk_sched_check_timeouts(sched);
+    sched = mk_sched_get_thread_conf();
+    mk_sched_check_timeouts(sched);
 
-        return 0;
+    return 0;
 }

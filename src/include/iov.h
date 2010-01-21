@@ -49,18 +49,18 @@ mk_pointer mk_iov_slash;
 mk_pointer mk_iov_none;
 mk_pointer mk_iov_equal;
 
-struct mk_iov 
+struct mk_iov
 {
-	struct iovec *io;
-	char **buf_to_free;
-	int iov_idx;
-	int buf_idx;
-        int size;
-        unsigned long total_len;
+    struct iovec *io;
+    char **buf_to_free;
+    int iov_idx;
+    int buf_idx;
+    int size;
+    unsigned long total_len;
 };
 
 struct mk_iov *mk_iov_create(int n, int offset);
-int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, 
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf,
                      int len, mk_pointer sep, int free);
 
 int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
@@ -69,12 +69,12 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to);
 
 void mk_iov_free(struct mk_iov *mk_io);
 
-int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len, 
+int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
                 mk_pointer sep, int free, int idx);
 
 void _mk_iov_set_free(struct mk_iov *mk_io, char *buf);
 
-int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len, 
+int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
                      int free, int idx);
 
 void mk_iov_separators_init();
@@ -82,4 +82,3 @@ void mk_iov_free_marked(struct mk_iov *mk_io);
 void mk_iov_print(struct mk_iov *mk_io);
 
 #endif
-

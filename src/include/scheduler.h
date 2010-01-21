@@ -35,33 +35,36 @@
 #define MK_SCHEDULER_CONN_PROCESS 1
 
 
-struct sched_connection {
-        int socket;
-        int status;
-        char ipv4[16];
-        time_t arrive_time;
+struct sched_connection
+{
+    int socket;
+    int status;
+    char ipv4[16];
+    time_t arrive_time;
 };
 
 /* Global struct */
-struct sched_list_node{
-	short int idx;
-	pthread_t tid;
-        pid_t pid;
-	int epoll_fd;
-        int active_requests;
-        int closed_requests;
-        struct sched_connection *queue;
-	struct client_request *request_handler;
-        struct sched_list_node *next;
+struct sched_list_node
+{
+    short int idx;
+    pthread_t tid;
+    pid_t pid;
+    int epoll_fd;
+    int active_requests;
+    int closed_requests;
+    struct sched_connection *queue;
+    struct client_request *request_handler;
+    struct sched_list_node *next;
 
 };
 
 struct sched_list_node *sched_list;
 
 /* Struct under thread context */
-typedef struct {
-	int epoll_fd;
-	int max_events;
+typedef struct
+{
+    int epoll_fd;
+    int max_events;
 } sched_thread_conf;
 
 pthread_key_t epoll_fd;
@@ -84,9 +87,9 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 int mk_sched_check_timeouts(struct sched_list_node *sched);
 int mk_sched_add_client(struct sched_list_node *sched, int remote_fd);
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
-struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched, 
-                                                 int remote_fd);
-int mk_sched_update_conn_status(struct sched_list_node *sched, 
-                                int remote_fd, int status);
+struct sched_connection *mk_sched_get_connection(struct sched_list_node
+                                                 *sched, int remote_fd);
+int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
+                                int status);
 
 #endif

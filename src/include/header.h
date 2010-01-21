@@ -91,8 +91,7 @@ mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_request *cr,
-		struct request *sr, struct log_info *s_log);
+                   struct request *sr, struct log_info *s_log);
 struct header_values *mk_header_create();
 
 #endif
-

@@ -37,8 +37,8 @@
 /* utils.c */
 int SendFile(int socket, struct client_request *cr, struct request *request);
 int AccessFile(struct stat file);
-int	ExecFile(char *pathfile);
-int	hex2int(char *pChars);
+int ExecFile(char *pathfile);
+int hex2int(char *pChars);
 char *strstr2(char *s, char *t);
 
 mk_pointer PutDate_string(time_t date);
@@ -47,11 +47,12 @@ time_t PutDate_unix(char *date);
 
 char *get_real_string(mk_pointer req_uri);
 
-char  *get_name_protocol(int remote_protocol);
+char *get_name_protocol(int remote_protocol);
 
-char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...);
+char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
+                     ...);
 
-int mk_buffer_cat(mk_pointer *p, char *buf1, char *buf2);
+int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2);
 
 #define SYML_NOT -1
 #define SYML_OK 0
@@ -66,4 +67,3 @@ int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
 
 #endif
-

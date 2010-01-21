@@ -55,226 +55,226 @@
 
 int SendFile(int socket, struct client_request *cr, struct request *sr)
 {
-	long int nbytes=0;
+    long int nbytes = 0;
 
-	nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
-			sr->bytes_to_send);
+    nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
+                      sr->bytes_to_send);
 
-        if(nbytes > 0 && sr->loop == 0){
-                mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
-        }
+    if (nbytes > 0 && sr->loop == 0) {
+        mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
+    }
 
-	if (nbytes == -1) {
-		fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
-		return -1;
-	}
-	else
-	{
-		sr->bytes_to_send-=nbytes;
-	}
+    if (nbytes == -1) {
+        fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
+        return -1;
+    }
+    else {
+        sr->bytes_to_send -= nbytes;
+    }
 
-        sr->loop++;
-	return sr->bytes_to_send;
+    sr->loop++;
+    return sr->bytes_to_send;
 }
 
 /* Devuelve la fecha para enviarla 
  en el header */
 mk_pointer PutDate_string(time_t date)
 {
-	int n, size=50;
-        mk_pointer date_gmt;
-	struct tm *gmt_tm;
-	
-        mk_pointer_reset(&date_gmt);
+    int n, size = 50;
+    mk_pointer date_gmt;
+    struct tm *gmt_tm;
 
-	if(date==0){
-		if ( (date = time(NULL)) == -1 ){
-                        return date_gmt;
-		}
-	}
+    mk_pointer_reset(&date_gmt);
 
-        date_gmt.data = mk_mem_malloc(size);
-	gmt_tm	= (struct tm *) gmtime(&date);
-	n = strftime(date_gmt.data, size-1,  GMT_DATEFORMAT, gmt_tm);
-	date_gmt.data[n] = '\0';
-	date_gmt.len = n;
+    if (date == 0) {
+        if ((date = time(NULL)) == -1) {
+            return date_gmt;
+        }
+    }
 
-        return date_gmt;
+    date_gmt.data = mk_mem_malloc(size);
+    gmt_tm = (struct tm *) gmtime(&date);
+    n = strftime(date_gmt.data, size - 1, GMT_DATEFORMAT, gmt_tm);
+    date_gmt.data[n] = '\0';
+    date_gmt.len = n;
+
+    return date_gmt;
 }
 
 time_t PutDate_unix(char *date)
 {
-	time_t new_unix_time;
-	struct tm t_data;
-	
-	if(!strptime(date, GMT_DATEFORMAT, (struct tm *) &t_data)){
-		return -1;
-	}
+    time_t new_unix_time;
+    struct tm t_data;
 
-	new_unix_time = mktime((struct tm *) &t_data);
+    if (!strptime(date, GMT_DATEFORMAT, (struct tm *) &t_data)) {
+        return -1;
+    }
 
-	return (new_unix_time);
+    new_unix_time = mktime((struct tm *) &t_data);
+
+    return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer *p, char *buf1, char *buf2){
-
-        int len1, len2;
-
-        len1 = strlen(buf1);
-        len2 = strlen(buf2);
-
-        /* alloc space */
-        p->data = (char *) mk_mem_malloc(len1+len2+1);
-
-        /* copy data */
-        memcpy(p->data, buf1, len1);
-        memcpy(p->data+len1, buf2, len2);
-        p->data[len1+len2]='\0';
-
-        /* assign len */
-        p->len = len1+len2;
-
-        return 0;
-}
-
-char *m_build_buffer(char **buffer, unsigned long *len, const char *format, ...)
+int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2)
 {
-	va_list	ap;
-	int length;
-	char *ptr;
-	static size_t _mem_alloc = 64;
-	size_t alloc = 0;
-	
-	/* *buffer *must* be an empty/NULL buffer */
 
-	*buffer = (char *) mk_mem_malloc(_mem_alloc);
-	if(!*buffer)
-	{
-		return NULL;
-	}
-	alloc = _mem_alloc;
-	
-	va_start(ap, format);
-	length = vsnprintf(*buffer, alloc, format, ap);
-	
-	if(length >= alloc) {
-		ptr = realloc(*buffer, length + 1);
-		if(!ptr) {
-			va_end(ap);
-			return NULL;
-		}
-		*buffer = ptr;
-		alloc = length + 1;
-		length = vsnprintf(*buffer, alloc, format, ap);
-	}
-	va_end(ap);
+    int len1, len2;
 
-	if(length<0){
-		return NULL;
-	}
+    len1 = strlen(buf1);
+    len2 = strlen(buf2);
 
-	ptr = *buffer;
-	ptr[length] = '\0';
-	*len = length;
-	
-	return *buffer;
+    /* alloc space */
+    p->data = (char *) mk_mem_malloc(len1 + len2 + 1);
+
+    /* copy data */
+    memcpy(p->data, buf1, len1);
+    memcpy(p->data + len1, buf2, len2);
+    p->data[len1 + len2] = '\0';
+
+    /* assign len */
+    p->len = len1 + len2;
+
+    return 0;
+}
+
+char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
+                     ...)
+{
+    va_list ap;
+    int length;
+    char *ptr;
+    static size_t _mem_alloc = 64;
+    size_t alloc = 0;
+
+    /* *buffer *must* be an empty/NULL buffer */
+
+    *buffer = (char *) mk_mem_malloc(_mem_alloc);
+    if (!*buffer) {
+        return NULL;
+    }
+    alloc = _mem_alloc;
+
+    va_start(ap, format);
+    length = vsnprintf(*buffer, alloc, format, ap);
+
+    if (length >= alloc) {
+        ptr = realloc(*buffer, length + 1);
+        if (!ptr) {
+            va_end(ap);
+            return NULL;
+        }
+        *buffer = ptr;
+        alloc = length + 1;
+        length = vsnprintf(*buffer, alloc, format, ap);
+    }
+    va_end(ap);
+
+    if (length < 0) {
+        return NULL;
+    }
+
+    ptr = *buffer;
+    ptr[length] = '\0';
+    *len = length;
+
+    return *buffer;
 }
 
 /* Run current process in background mode (daemon, evil Monkey >:) */
 int mk_utils_set_daemon()
 {
-	 switch (fork())
-  	  {
-		case 0 : break;
-		case -1: exit(1); break; /* Error */
-		default: exit(0); /* Success */
-	  };
+    switch (fork()) {
+    case 0:
+        break;
+    case -1:
+        exit(1);
+        break;                  /* Error */
+    default:
+        exit(0);                /* Success */
+    };
 
-	  setsid(); /* Create new session */
-	  fclose(stdin); /* close screen outputs */
-	  fclose(stderr);
-	  fclose(stdout);
+    setsid();                   /* Create new session */
+    fclose(stdin);              /* close screen outputs */
+    fclose(stderr);
+    fclose(stdout);
 
-	return 0;
+    return 0;
 }
 
 
-char *get_real_string(mk_pointer uri){
+char *get_real_string(mk_pointer uri)
+{
 
-        int i, hex_result, aux_char;
-        int buf_idx=0;
-        char *buf;
-        char hex[3];
+    int i, hex_result, aux_char;
+    int buf_idx = 0;
+    char *buf;
+    char hex[3];
 
-	if((i = mk_string_char_search(uri.data, '%', uri.len))<0)
-	{
-		return NULL;
-	}
+    if ((i = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
+        return NULL;
+    }
 
-        buf = mk_mem_malloc_z(uri.len);
+    buf = mk_mem_malloc_z(uri.len);
 
 
-        if(i>0){
-                strncpy(buf, uri.data, i);
-                buf_idx = i;
+    if (i > 0) {
+        strncpy(buf, uri.data, i);
+        buf_idx = i;
+    }
+
+    while (i < uri.len) {
+        if (uri.data[i] == '%' && i + 2 < uri.len) {
+            memset(hex, '\0', sizeof(hex));
+            strncpy(hex, uri.data + i + 1, 2);
+            hex[2] = '\0';
+
+            if ((hex_result = hex2int(hex)) <= 127) {
+                buf[buf_idx] = toascii(hex_result);
+            }
+            else {
+                if ((aux_char = get_char(hex_result)) != -1) {
+                    buf[buf_idx] = aux_char;
+                }
+                else {
+                    mk_mem_free(buf);
+                    return NULL;
+                }
+            }
+            i += 2;
         }
+        else {
+            buf[buf_idx] = uri.data[i];
+        }
+        i++;
+        buf_idx++;
+    }
+    buf[buf_idx] = '\0';
 
-        while(i<uri.len)
-        {
-                if(uri.data[i]=='%' && i+2<uri.len){
-                        memset(hex, '\0', sizeof(hex));
-                        strncpy(hex, uri.data+i+1,2);
-                        hex[2]='\0';
-
-			if((hex_result=hex2int(hex))<=127){
-				buf[buf_idx]=toascii(hex_result);
-			}
-			else {
-				if((aux_char=get_char(hex_result))!=-1){
-					buf[buf_idx]=aux_char;
-				}
-				else{
-					mk_mem_free(buf);
-					return NULL;
-				}
-			}
-                        i+=2;
-                }
-                else{
-                        buf[buf_idx] = uri.data[i];
-                }
-                i++;
-                buf_idx++;
-        }        
-        buf[buf_idx]='\0';
-
-        return buf;
+    return buf;
 }
 
 void mk_utils_toupper(char *string)
 {
-        int i, len;
-        
-        len = strlen(string);
-        for(i=0; i<len; i++)
-        {
-                string[i] = toupper(string[i]);
-        }
+    int i, len;
+
+    len = strlen(string);
+    for (i = 0; i < len; i++) {
+        string[i] = toupper(string[i]);
+    }
 }
 
 mk_pointer mk_utils_int2mkp(int n)
 {
-        mk_pointer p;
-        char *buf;
-        unsigned long len;
-        int size = 32;
+    mk_pointer p;
+    char *buf;
+    unsigned long len;
+    int size = 32;
 
-        buf = mk_mem_malloc(size);
-        len = snprintf(buf, 32, "%i", n);
+    buf = mk_mem_malloc(size);
+    len = snprintf(buf, 32, "%i", n);
 
-        p.data = buf;
-        p.len = len;
+    p.data = buf;
+    p.len = len;
 
-        return p;
+    return p;
 }
-

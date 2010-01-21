@@ -24,6 +24,6 @@
 
 #include <pthread.h>
 
-pthread_t mk_worker_spawn(void (*func)(void *));
+pthread_t mk_worker_spawn(void (*func) (void *));
 
 #endif
