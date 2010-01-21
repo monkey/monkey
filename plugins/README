@@ -12,5 +12,17 @@ MK_PLUGIN_STAGE_10: Server has not yet entered in the server loop, no
 MK_PLUGIN_STAGE_20: Accepted connection has not been assigned to worker thread
 MK_PLUGIN_STAGE_30: HTTP Request received
 MK_PLUGIN_STAGE_40: Object Handler
+
+                    Return Values:
+                    --------------
+                    * MK_PLUGIN_RET_NOT_ME: Plugin will not handle this request.
+
+                    * MK_PLUGIN_RET_END: Plugin has taken some action and 
+                    has finished the work, the handler will no take the request
+                    again.
+
+                    * MK_PLUGIN_RET_CONTINUE:: Plugin has taken some action and 
+                    will continue in the next loop.
+
 MK_PLUGIN_STAGE_50: Request ended
 MK_PLUGIN_STAGE_60: Connection closed

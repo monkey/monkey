@@ -306,8 +306,15 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 p = config->plugins->stage_40;
                 while(p){
                         ret = p->call_stage_40(cr, sr);
-                        if(ret == 0){
-                                return 0;
+                        switch(ret){
+                        case MK_PLUGIN_RET_NOT_ME:
+                                break;
+                        case MK_PLUGIN_RET_END:
+                                break;
+                        case MK_PLUGIN_RET_CONTINUE:
+                                /* Register plugin for next loops */
+                                mk_request_handler_register(sr, p);
+                                break;
                         }
                         p = p->next;
                 }

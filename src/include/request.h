@@ -147,6 +147,13 @@ struct header_toc {
         struct header_toc *next;
 };
 
+/* Request plugin Handler, each request can be handled by 
+ * several plugins, we handle list in a simple list */
+struct handler {
+        struct plugin *p;
+        struct handler *next;
+};
+
 struct request {
 	int status;
 	int pipelined; /* Pipelined request */
@@ -213,6 +220,9 @@ struct request {
         long loop;
 	long bytes_to_send;
         off_t bytes_offset;
+
+        /* Plugin handlers */
+        struct handler *handled_by;
 };
 
 struct header_values {

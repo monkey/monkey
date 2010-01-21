@@ -41,8 +41,9 @@
 #define MK_PLUGIN_STAGE_50 ((__uint32_t) 16) /* Request ended */
 #define MK_PLUGIN_STAGE_60 ((__uint32_t) 32) /* Connection closed */
 
-#define MK_PLUGIN_RET_CLOSE_CONX 100
-#define MK_PLUGIN_RET_OWNER 200
+#define MK_PLUGIN_RET_NOT_ME -1
+#define MK_PLUGIN_RET_OWNER 100
+#define MK_PLUGIN_RET_CLOSE_CONX 200
 #define MK_PLUGIN_RET_CONTINUE 300
 
 struct plugin_stages {

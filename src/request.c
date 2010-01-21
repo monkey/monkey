@@ -766,6 +766,7 @@ struct request *mk_request_alloc()
 	/* Response Headers */
 	request->headers = mk_header_create();
 
+        request->handled_by = NULL;
 	return request;
 }
 
@@ -1024,4 +1025,51 @@ void mk_request_ka_next(struct client_request *cr)
         cr->first_block_end = -1;
         cr->body_length = 0;
         cr->counter_connections++;
+}
+
+void mk_request_handler_register(struct request *sr, struct plugin *p)
+{
+        struct handler *new, *aux;
+
+        new = mk_mem_malloc(sizeof(struct handler));
+        new->p = p;
+        new->next = NULL;
+
+        if(!sr->handled_by){
+                sr->handled_by = new;
+                return;
+        }
+
+        aux = sr->handled_by;
+        while(aux){
+                if(!aux->next){
+                        aux->next = new;
+                        return;
+                }
+                aux = aux->next;
+        }
+        
+        printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
+        fflush(stdout);
+}
+
+void mk_request_handler_clear(struct request *sr)
+{
+        struct handler *prev=0, *aux;
+
+        if(!sr->handled_by){
+                return;
+        }
+
+        while(sr->handled_by){
+                aux = sr->handled_by;
+                while(aux->next){
+                        prev = aux;
+                        aux = aux->next;
+                }
+                mk_mem_free(aux);
+                prev->next = NULL;
+        }
+
+        return;
 }
