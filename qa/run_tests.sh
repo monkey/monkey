@@ -23,6 +23,9 @@ WITH_COLOR=yes
 HTTEST_CMD='httest'
 
 NTEST=1
+TESTS_FAILED=0
+TESTS_OK=0
+
 for test_file in $TEST_FILES; do
 #	echo -ne "[TEST $NTEST/$TOTAL_TESTS]\t""case: $test_file\t\t"
 	printf "[%3d/%d]  %-32s  " $NTEST $TOTAL_TESTS "$test_file"
@@ -32,6 +35,7 @@ for test_file in $TEST_FILES; do
 
 	case $ERRCODE in
 		0) 
+			TESTS_OK=$((TESTS_OK+1))
 			[ $WITH_COLOR = yes ] && echo -n "[1;32m"
 			echo "=> [OK]"
 			[ $WITH_COLOR = yes ] && echo -n "[m"
@@ -44,6 +48,7 @@ for test_file in $TEST_FILES; do
 			;;
 
 		*)
+			TESTS_FAILED=$((TESTS_FAILED+1))
 			[ $WITH_COLOR = yes ] && echo -n "[1;31m"
 			echo "=> [FAILED]"
 			[ $WITH_COLOR = yes ] && echo -n "[m"
@@ -57,3 +62,5 @@ for test_file in $TEST_FILES; do
 
 	NTEST=$((NTEST+1))
 done
+
+echo -e "\n$TESTS_OK test(s) succeeded, $TESTS_FAILED test(s) failed."
