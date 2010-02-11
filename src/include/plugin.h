@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
  *  ------------------
@@ -42,9 +42,9 @@
 #define MK_PLUGIN_STAGE_60 ((__uint32_t) 32)    /* Connection closed */
 
 #define MK_PLUGIN_RET_NOT_ME -1
-#define MK_PLUGIN_RET_OWNER 100
-#define MK_PLUGIN_RET_CLOSE_CONX 200
-#define MK_PLUGIN_RET_CONTINUE 300
+#define MK_PLUGIN_RET_CONTINUE 100
+#define MK_PLUGIN_RET_END 200
+#define MK_PLUGIN_RET_CLOSE_CONX 300
 
 struct plugin_stages
 {
@@ -82,7 +82,9 @@ struct plugin
                           struct sched_connection *, struct client_request *);
     int (*call_stage_30) (struct client_request *, struct request *);
     int (*call_stage_40) (struct client_request *, struct request *);
+    int (*call_stage_40_loop) (struct client_request *, struct request *);
 
+    pthread_key_t thread_key;
     struct plugin *next;
 };
 
@@ -135,5 +137,8 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr);
 void mk_plugin_worker_startup();
+
+void mk_plugin_request_handler_add(struct request *sr, struct plugin *p);
+void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);
 
 #endif
