@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2008, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -169,6 +169,11 @@ void *mk_plugin_register(void *handler, char *path)
     p->call_stage_40 = (int (*)())
         mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
 
+    p->call_stage_40_loop = (int (*)())
+        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_loop");
+
+    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mk_plugin_data");
+
     p->next = NULL;
 
     if (!p->name || !p->version || !p->stages) {
@@ -266,7 +271,9 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                         struct client_request *cr, struct request *sr)
 {
     int ret;
+    short int assigned = FALSE;
     struct plugin *p;
+    struct handler *h;
 
     if (stage & MK_PLUGIN_STAGE_10) {
         p = config->plugins->stage_10;
@@ -301,25 +308,107 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
         }
     }
 
+    /* Object handler */
     if (stage & MK_PLUGIN_STAGE_40) {
-        p = config->plugins->stage_40;
-        while (p) {
-            ret = p->call_stage_40(cr, sr);
-            switch (ret) {
-            case MK_PLUGIN_RET_NOT_ME:
-                break;
-            case MK_PLUGIN_RET_END:
-                break;
-            case MK_PLUGIN_RET_CONTINUE:
-                /* Register plugin for next loops */
-                mk_request_handler_register(sr, p);
-                break;
+        /* Request has been assigned to a Plugin Loop */
+        if(sr->handled_by){
+            h = sr->handled_by;
+            while(h){
+                p = h->p;
+                h = h->next;
+                ret = p->call_stage_40_loop(cr, sr);
+
+                if (ret == MK_PLUGIN_RET_END) {
+                    mk_plugin_request_handler_del(sr, p);
+                }
             }
-            p = p->next;
+
+            return ret;
+        }
+
+        /* The request just arrived and is required to check who can
+         * handle it */
+        if (!sr->handled_by){
+            p = config->plugins->stage_40;
+            while (p) {
+                /* Call stage */
+                ret = p->call_stage_40(cr, sr);
+
+                switch (ret) {
+                case MK_PLUGIN_RET_NOT_ME:
+                    break;
+                case MK_PLUGIN_RET_END:
+                    break;
+                case MK_PLUGIN_RET_CONTINUE:
+                    /* Register plugin for next loops */
+                    mk_plugin_request_handler_add(sr, p);
+                    p->call_stage_40_loop(cr, sr);
+                    assigned = TRUE;
+                    break;
+                }
+                p = p->next;
+            }
+            if (assigned){
+                return 0;
+            }
         }
     }
 
     return -1;
+}
+
+void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
+{
+    struct handler *new, *aux;
+
+    new = mk_mem_malloc(sizeof(struct handler));
+    new->p = p;
+    new->next = NULL;
+
+    if (!sr->handled_by) {
+        sr->handled_by = new;
+        return;
+    }
+
+    aux = sr->handled_by;
+    while (aux) {
+        if (!aux->next) {
+            aux->next = new;
+            return;
+        }
+        aux = aux->next;
+    }
+
+    printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
+    fflush(stdout);
+}
+
+void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
+{
+    struct handler *prev = 0, *aux;
+
+    if (!sr->handled_by) {
+        return;
+    }
+
+    while (sr->handled_by) {
+        aux = sr->handled_by;
+        while (aux->next) {
+            prev = aux;
+            aux = aux->next;
+        }
+        
+        if (aux->p == p){
+            mk_mem_free(aux);
+            prev->next = NULL;
+            return;
+        }
+
+        mk_mem_free(aux);
+        prev->next = NULL;
+    }
+
+    return;
 }
 
 /* This function is called by every created worker

@@ -231,7 +231,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         return -1;
     }
 
-
     /* Matching MimeType  */
     mime = mk_mimetype_find(&sr->real_path);
     if (!mime) {

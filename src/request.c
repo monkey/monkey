@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
  *  ------------------
@@ -188,7 +188,7 @@ int mk_handler_read(int socket, struct client_request *cr)
 int mk_handler_write(int socket, struct client_request *cr)
 {
     int bytes, final_status = 0;
-    struct request *p_request;
+    struct request *sr;
 
     /* 
      * Get node from schedule list node which contains
@@ -204,18 +204,30 @@ int mk_handler_write(int socket, struct client_request *cr)
         }
     }
 
-    p_request = cr->request;
+    sr = cr->request;
 
-    while (p_request) {
-        /* Request not processed */
-        if (p_request->bytes_to_send < 0) {
-            final_status = mk_request_process(cr, p_request);
+    while (sr) {
+        /* Request not processed also no plugin has take some action */
+        if (sr->bytes_to_send < 0 && !sr->handled_by) {
+            final_status = mk_request_process(cr, sr);
         }
-        /* Request with data to send */
-        else if (p_request->bytes_to_send > 0) {
-            bytes = SendFile(socket, cr, p_request);
+        /* Request with data to send by static file sender */
+        else if (sr->bytes_to_send > 0 && !sr->handled_by) {
+            bytes = SendFile(socket, cr, sr);
             final_status = bytes;
         }
+        else if (sr->handled_by){
+            struct handler *handler = sr->handled_by;
+
+            printf("\nhandled by");
+            fflush(stdout);
+
+            while(handler){
+                
+                handler = handler->next;
+            }
+        }
+
         /*
          * If we got an error, we don't want to parse
          * and send information for another pipelined request
@@ -224,9 +236,10 @@ int mk_handler_write(int socket, struct client_request *cr)
             return final_status;
         }
         else if (final_status <= 0) {
-            mk_logger_write_log(cr, p_request->log, p_request->host_conf);
+            mk_logger_write_log(cr, sr->log, sr->host_conf);
         }
-        p_request = p_request->next;
+
+        sr = sr->next;
     }
 
     /* If we are here, is because all pipelined request were
@@ -978,49 +991,3 @@ void mk_request_ka_next(struct client_request *cr)
     cr->counter_connections++;
 }
 
-void mk_request_handler_register(struct request *sr, struct plugin *p)
-{
-    struct handler *new, *aux;
-
-    new = mk_mem_malloc(sizeof(struct handler));
-    new->p = p;
-    new->next = NULL;
-
-    if (!sr->handled_by) {
-        sr->handled_by = new;
-        return;
-    }
-
-    aux = sr->handled_by;
-    while (aux) {
-        if (!aux->next) {
-            aux->next = new;
-            return;
-        }
-        aux = aux->next;
-    }
-
-    printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
-    fflush(stdout);
-}
-
-void mk_request_handler_clear(struct request *sr)
-{
-    struct handler *prev = 0, *aux;
-
-    if (!sr->handled_by) {
-        return;
-    }
-
-    while (sr->handled_by) {
-        aux = sr->handled_by;
-        while (aux->next) {
-            prev = aux;
-            aux = aux->next;
-        }
-        mk_mem_free(aux);
-        prev->next = NULL;
-    }
-
-    return;
-}
