@@ -573,7 +573,7 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->host_conf->
                                            host_signature);
         s_log->error_msg = request_error_msg_403;
-        // req s_request->uri;
+        s_log->error_details = s_request->uri;
         break;
 
     case M_CLIENT_NOT_FOUND:
@@ -584,7 +584,8 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->host_conf->
                                            host_signature);
         s_log->error_msg = request_error_msg_404;
-        // req uri;
+        s_log->error_details = s_request->uri;
+
         mk_pointer_free(&message);
         break;
 
@@ -596,6 +597,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
         s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
         s_log->error_msg = request_error_msg_405;
+        s_log->error_details = s_request->method_p;
         break;
 
     case M_CLIENT_REQUEST_TIMEOUT:
@@ -614,6 +616,8 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            host_signature);
         s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
         s_log->error_msg = request_error_msg_501;
+        mk_pointer_print(s_request->method_p);
+        s_log->error_details = s_request->method_p;
         break;
 
     case M_SERVER_INTERNAL_ERROR:

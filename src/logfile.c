@@ -266,12 +266,25 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
         /* Send info to pipe */
         mk_iov_send(h->log_access[1], iov, MK_IOV_SEND_TO_PIPE);
     }
-    else {                      /* Register some error */
+    else { /* Register some error */
         mk_iov_add_entry(iov,
                          log->error_msg.data,
-                         log->error_msg.len, mk_iov_lf, MK_IOV_NOT_FREE_BUF);
-        mk_iov_send(h->log_error[1], iov, MK_IOV_SEND_TO_PIPE);
+                         log->error_msg.len, mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
+        /* Check for error extra details */
+        if (log->error_details.data) {
+            mk_iov_add_entry(iov, 
+                             log->error_details.data,
+                             log->error_details.len,
+                             mk_iov_lf,
+                             MK_IOV_NOT_FREE_BUF);
+        }
+        else{
+            mk_iov_add_entry(iov, mk_iov_lf.data, 
+                             mk_iov_lf.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+
+        mk_iov_send(h->log_error[1], iov, MK_IOV_SEND_TO_PIPE);
     }
     mk_logger_iov_free(iov);
     return 0;

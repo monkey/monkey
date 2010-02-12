@@ -54,6 +54,7 @@ struct log_info
     mk_pointer size_p;
     int status;                 /* on/off : 301. */
     mk_pointer error_msg;
+    mk_pointer error_details;
 
     struct host *host_conf;
 };
