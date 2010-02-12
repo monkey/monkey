@@ -344,9 +344,8 @@ void mk_cheetah_loop()
         len = strlen(line);
         
         if (len == 0){
-            printf("\n\n");
-            exit(1);
-            continue;
+            printf("\n");
+            mk_cheetah_cmd_quit();
         }
 
         strncpy(cmd, line, len - 1);
