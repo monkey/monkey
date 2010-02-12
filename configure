@@ -22,7 +22,6 @@ VERSION="0.10.0-git"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 
-INFOMODS="extras/inf/"
 INCDIR="src/include/"
 
 messages_en()
@@ -292,8 +291,11 @@ create_makefile2()
 if test -z $CC ; then
 	CC="gcc"
 fi
-if test -z $STRIP ; then
-    STRIP="strip "
+
+if test -z $debug ; then
+	CFLAGS="-O2 -Wall"
+else
+	CFLAGS="-g -Wall"
 fi
 
 ##### Internal options ####
@@ -306,7 +308,7 @@ fi
 cat > src/Makefile<<EOF
 CC	= $CC
 DEFS	= $mod_defs $internal_options
-CFLAGS	= $CFLAGS \$(DEFS) -g -O2 -Wall
+CFLAGS	= $CFLAGS \$(DEFS)
 INCDIR  = ./include
 LDFLAGS	= 
 DESTDIR	= ../bin/monkey
@@ -325,7 +327,6 @@ all: ../bin/monkey
 	@echo "Compiling Monkey"
 	@echo "================"
 	\$(CC) \$(CFLAGS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
-	$STRIP ../bin/monkey
 	@echo
 	@echo "Compiling Plugins"
 	@echo "================="
@@ -339,7 +340,6 @@ distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
 	../conf/sites/* include/info.h ../logs/*\\
-	@(cd extras && ./cleanmods.sh && cd ..)
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
@@ -562,6 +562,9 @@ for arg in $*; do
                 --plugdir*)
                         plugdir=$optarg
                         ;;
+		--debug*)
+			debug=1
+			;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
