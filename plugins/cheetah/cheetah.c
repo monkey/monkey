@@ -342,6 +342,13 @@ void mk_cheetah_loop()
         rcmd = fgets(line, sizeof(line), stdin);
 
         len = strlen(line);
+        
+        if (len == 0){
+            printf("\n\n");
+            exit(1);
+            continue;
+        }
+
         strncpy(cmd, line, len - 1);
         cmd[len - 1] = '\0';
 
