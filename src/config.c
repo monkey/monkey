@@ -395,16 +395,21 @@ struct host *mk_config_get_host(char *path)
                    &host->header_host_signature.len,
                    "Server: %s", host->host_signature);
 
-    if (pipe(host->log_access) < 0) {
-        perror("pipe");
+    if( host->access_log_path != NULL ) {
+        if (pipe(host->log_access) < 0) {
+            perror("pipe");
+        } else {
+            fcntl(host->log_access[1], F_SETFL, O_NONBLOCK);
+        }
     }
 
-    if (pipe(host->log_error) < 0) {
-        perror("pipe");
+    if( host->error_log_path != NULL ) {
+        if (pipe(host->log_error) < 0) {
+            perror("pipe");
+        } else {
+            fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
+        }
     }
-
-    fcntl(host->log_access[1], F_SETFL, O_NONBLOCK);
-    fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
 
     host->next = NULL;
     mk_config_free(cnf);

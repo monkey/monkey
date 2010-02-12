@@ -130,13 +130,15 @@ void *mk_logger_worker_init(void *args)
     h = config->hosts;
     while (h) {
         /* Add access log file */
-        mk_epoll_add_client(efd, h->log_access[0], MK_EPOLL_BEHAVIOR_DEFAULT);
-        mk_logger_target_add(h->log_access[0], h->access_log_path);
-
+        if( h->log_access[0] > 0 ) {
+            mk_epoll_add_client(efd, h->log_access[0], MK_EPOLL_BEHAVIOR_DEFAULT);
+            mk_logger_target_add(h->log_access[0], h->access_log_path);
+        }
         /* Add error log file */
-        mk_epoll_add_client(efd, h->log_error[0], MK_EPOLL_BEHAVIOR_DEFAULT);
-        mk_logger_target_add(h->log_error[0], h->error_log_path);
-
+        if( h->log_error[0] > 0 ) {
+            mk_epoll_add_client(efd, h->log_error[0], MK_EPOLL_BEHAVIOR_DEFAULT);
+            mk_logger_target_add(h->log_error[0], h->error_log_path);
+        }
         h = h->next;
     }
 
@@ -224,7 +226,7 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
     conx = mk_sched_get_connection(sched, cr->socket);
 
     /* client IP address */
-    mk_iov_add_entry(iov, conx->ipv4, 16,
+    mk_iov_add_entry(iov, conx->ipv4.data, conx->ipv4.len,
                      mk_logfile_iov_dash, MK_IOV_NOT_FREE_BUF);
 
     /* Date/time when object was requested */
