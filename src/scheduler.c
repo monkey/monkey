@@ -226,10 +226,9 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             /* Set IP */
-            sched->queue[i].ipv4.data = mk_mem_malloc(16);
-            bzero(sched->queue[i].ipv4.data, 16);
+            sched->queue[i].ipv4.data = mk_mem_malloc_z(16);
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
-            sched->queue[i].ipv4.len = strlen( sched->queue[i].ipv4.data );
+            mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
             /* Before to continue, we need run plugin stage 20 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20,
