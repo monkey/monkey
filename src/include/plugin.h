@@ -141,4 +141,6 @@ void mk_plugin_worker_startup();
 void mk_plugin_request_handler_add(struct request *sr, struct plugin *p);
 void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);
 
+void mk_plugin_preworker_calls();
+
 #endif

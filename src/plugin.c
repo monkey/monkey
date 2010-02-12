@@ -422,8 +422,36 @@ void mk_plugin_worker_startup()
     plg = plg_list;
 
     while (plg) {
+        /* Init plugin */
         if (plg->p->call_worker_init) {
             plg->p->call_worker_init();
+        }
+
+        plg = plg->next;
+    }
+}
+
+/* This function is called by Monkey *outside* of the
+ * thread context for plugins, so here's the right
+ * place to set pthread keys or similar
+ */
+void mk_plugin_preworker_calls()
+{
+    int ret;
+    struct plugin_list *plg;
+
+    plg = plg_list;
+
+    while (plg) {
+        /* Init pthread keys */
+        if (plg->p->thread_key) {
+            ret = pthread_key_create(&plg->p->thread_key, NULL);
+            if (ret != 0) {
+                printf("\nPlugin Error: could not create key for %s", 
+                       plg->p->shortname);
+                fflush(stdout);
+                exit(1);
+            }
         }
         plg = plg->next;
     }

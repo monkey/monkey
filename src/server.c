@@ -55,6 +55,11 @@ int mk_server_worker_capacity(int nworkers)
      */
 
     avl = max - (3 + 1 + nworkers + 1 + 2);
+
+    /* The avl is divided by two as we need to consider
+     * a possible additional FD for each plugin working
+     * on the same request.
+     */
     return ((avl / 2) / nworkers);
 }
 
@@ -63,8 +68,13 @@ void mk_server_launch_workers()
 {
     int i;
 
+    /* Look for plugins thread key data */
+    mk_plugin_preworker_calls();
+
+    /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
 
+    /* Launch workers */
     for (i = 0; i < config->workers; i++) {
         mk_sched_launch_thread(config->worker_capacity);
     }
