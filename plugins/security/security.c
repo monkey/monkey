@@ -147,7 +147,7 @@ int _mk_plugin_init(void **api, char *confdir)
 
 int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
 {
-    if (mk_security_check_ip(conx->ipv4) != 0) {
+    if (mk_security_check_ip(conx->ipv4.data) != 0) {
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 

@@ -851,7 +851,7 @@ struct client_request *mk_request_client_create(int socket)
     cr = mk_mem_malloc(sizeof(struct client_request));
 
     /* IPv4 Address */
-    cr->ipv4 = (char *) sc->ipv4;
+    cr->ipv4 = &sc->ipv4;
 
     cr->pipelined = FALSE;
     cr->counter_connections = 0;

@@ -39,7 +39,7 @@ struct sched_connection
 {
     int socket;
     int status;
-    char ipv4[16];
+    mk_pointer ipv4;
     time_t arrive_time;
 };
 
