@@ -157,6 +157,8 @@ main()
 	echo
 
         create_makefile_plugins $plugdir
+
+	echo "#define CC \"${CC}\"" > src/include/env.h
 }
 
 # Check pthreads lib
@@ -330,7 +332,7 @@ all: ../bin/monkey
 	@(cd ../plugins && make all && cd ..)
 	
 clean:
-	rm -rf *.o
+	rm -rf *.o 
 	rm -rf ../bin/monkey
 
 distclean:
@@ -381,6 +383,7 @@ if [ "$plugdir" != "" ]; then
 	      echo "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
 	done
 fi
+    cd ..
 }
 
 # Creando include/info.h

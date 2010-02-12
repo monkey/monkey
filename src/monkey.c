@@ -49,6 +49,7 @@
 #include "worker.h"
 #include "server.h"
 #include "plugin.h"
+#include "env.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -69,7 +70,8 @@ void mk_details()
 void mk_version()
 {
     printf("Monkey HTTP Daemon %s\n", VERSION);
-    printf("Built : %s\n", MONKEY_BUILT);
+    printf("Built : %s (%s %i.%i.%i)\n", 
+           MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     printf("Home  : http://www.monkey-project.com\n");
     fflush(stdout);
 }
