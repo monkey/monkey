@@ -583,6 +583,7 @@ for arg in $*; do
 			echo "Options: "
 			echo "  --help		  Display this help and exit"
 			echo "  --version		  Display version information and exit"
+			echo "  --debug		  Compile Monkey with debugging symbols"
 			echo 
 			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
 			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"
