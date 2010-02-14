@@ -179,7 +179,7 @@ void mk_socket_reset(int socket)
 }
 
 /* Just IPv4 for now... */
-int mk_socket_server(int port)
+int mk_socket_server(int port, char *listen_addr)
 {
     int fd;
     struct sockaddr_in local_sockaddr_in;
@@ -190,7 +190,7 @@ int mk_socket_server(int port)
 
     local_sockaddr_in.sin_family = AF_INET;
     local_sockaddr_in.sin_port = htons(port);
-    local_sockaddr_in.sin_addr.s_addr = INADDR_ANY;
+    inet_pton(AF_INET, listen_addr, &local_sockaddr_in.sin_addr.s_addr);
     memset(&(local_sockaddr_in.sin_zero), '\0', 8);
 
     /* Avoid bind issues, reset socket */

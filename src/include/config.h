@@ -31,6 +31,7 @@
 #define O_NOATIME       01000000
 
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
+#define MK_DEFAULT_LISTEN_ADDR "0.0.0.0"
 #define MK_WORKERS_DEFAULT 1
 
 #define VALUE_ON "on"
@@ -56,6 +57,7 @@ struct server_config
 
     char *serverconf;           /* path to configuration files */
 
+    char *listen_addr;
     mk_pointer server_addr;
     mk_pointer server_software;
 

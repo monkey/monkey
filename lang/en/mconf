@@ -15,6 +15,14 @@ cat > conf/monkey.conf <<EOF
 
 Port 2001
 
+# Listen:
+# -------
+# Listen directive restrict Monkey to listen for incoming connections to just
+# the network interface associated to the given value. In order to allow just
+# loopback connection you could use:
+#
+# Listen 127.0.0.1
+
 # Workers:
 # --------
 # Monkey launches threads to attend clients; each worker thread is capable of

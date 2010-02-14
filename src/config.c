@@ -174,6 +174,12 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 
     cnf = mk_config_create(path);
 
+    /* Listen */
+    config->listen_addr = mk_config_getval(cnf, "Listen", MK_CONFIG_VAL_STR);
+    if (!config->listen_addr) {
+        config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
+    }
+
     /* Connection port */
     config->serverport = (int) mk_config_getval(cnf,
                                                 "Port", MK_CONFIG_VAL_NUM);
@@ -458,6 +464,7 @@ void mk_config_set_init_values(void)
     config->max_ip = 15;
     config->resume = VAR_ON;
     config->standard_port = 80;
+    config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
     config->serverport = 2001;
     config->symlink = VAR_OFF;
     config->nhosts = 0;

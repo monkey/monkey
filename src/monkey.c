@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     mk_config_start_configure();
     mk_plugin_init();
 
-    server_fd = mk_socket_server(config->serverport);
+    server_fd = mk_socket_server(config->serverport, config->listen_addr);
 
     /* Workers: logger and clock */
     mk_worker_spawn((void *) mk_logger_worker_init);
