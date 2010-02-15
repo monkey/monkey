@@ -26,6 +26,9 @@
 #define S_LOG_ON 0
 #define S_LOG_OFF 1
 
+#define MK_LOGFILE_PIPE_LIMIT 0.75
+#define MK_LOGFILE_TIMEOUT 3
+
 #define MK_LOGFILE_IOV_DASH " - "
 
 mk_pointer mk_logfile_iov_dash;

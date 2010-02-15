@@ -122,7 +122,7 @@ void *mk_logger_worker_init(void *args)
 
     /* Monkey allow just 75% of a pipe capacity */
     pipe_size = sysconf(_SC_PAGESIZE) * 16;
-    buffer_limit = (pipe_size * 0.75);
+    buffer_limit = (pipe_size * MK_LOGFILE_PIPE_LIMIT);
 
     /* Creating poll */
     efd = mk_epoll_create(max_events);
@@ -142,7 +142,7 @@ void *mk_logger_worker_init(void *args)
         h = h->next;
     }
 
-    timeout = time(NULL) + 3;
+    timeout = time(NULL) + MK_LOGFILE_TIMEOUT;
 
     /* Reading pipe buffer */
     while (1) {
@@ -175,7 +175,7 @@ void *mk_logger_worker_init(void *args)
                 break;
             }
             else {
-                timeout = clk + 3;
+                timeout = clk + MK_LOGFILE_TIMEOUT;
                 flog = open(target->target, O_WRONLY | O_CREAT, 0644);
 
                 if (flog == -1) {
