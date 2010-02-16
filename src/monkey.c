@@ -42,7 +42,6 @@
 #include "logfile.h"
 #include "signals.h"
 #include "config.h"
-#include "modules.h"
 #include "memory.h"
 #include "clock.h"
 #include "cache.h"
