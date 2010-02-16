@@ -217,15 +217,8 @@ int mk_handler_write(int socket, struct client_request *cr)
             final_status = bytes;
         }
         else if (sr->handled_by){
-            struct handler *handler = sr->handled_by;
-
-            printf("\nhandled by");
-            fflush(stdout);
-
-            while(handler){
-                
-                handler = handler->next;
-            }
+            /* FIXME: Look for loops 
+             * sr->handled_by; */
         }
 
         /*

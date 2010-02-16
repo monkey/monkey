@@ -155,6 +155,7 @@ int main(int argc, char **argv)
     pthread_key_create(&mk_cache_iov_log, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);
+    pthread_key_create(&mk_plugin_event_k, NULL);
 
     /* Change process owner */
     mk_user_set_uidgid();

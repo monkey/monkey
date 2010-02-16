@@ -119,7 +119,7 @@ class Child:
             remote, info = self._s.accept()
             # print "Got connection! I won! ->", os.getpid()
             buf = self.read(remote)
-            # print "reading, ", buf
+            print "reading, ", buf
 
             request = self.parse_request(buf)
 

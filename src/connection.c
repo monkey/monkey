@@ -26,6 +26,7 @@
 #include "epoll.h"
 #include "request.h"
 #include "socket.h"
+#include "plugin.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -35,6 +36,12 @@ int mk_conn_read(int socket)
     int ret;
     struct client_request *cr;
     struct sched_list_node *sched;
+
+    /* Plugin hook */
+    ret = mk_plugin_event_read(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    }        
 
     sched = mk_sched_get_thread_conf();
 
@@ -89,6 +96,12 @@ int mk_conn_write(int socket)
     int ret = -1, ka;
     struct client_request *cr;
     struct sched_list_node *sched;
+
+    /* Plugin hook */
+    ret = mk_plugin_event_write(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    }  
 
     sched = mk_sched_get_thread_conf();
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);

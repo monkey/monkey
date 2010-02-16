@@ -48,5 +48,5 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*close) (int),
                                          void (*timeout) (int));
 
-int mk_epoll_add_client(int efd, int socket, int mode);
+int mk_epoll_add_client(int efd, int socket, int mode, int behavior);
 int mk_epoll_socket_change_mode(int efd, int socket, int mode);

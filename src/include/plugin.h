@@ -46,6 +46,9 @@
 #define MK_PLUGIN_RET_END 200
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 
+/* Event return values */
+#define MK_PLUGIN_RET_EVENT_NOT_ME -300
+
 struct plugin_stages
 {
     struct plugin *stage_00;
@@ -81,8 +84,9 @@ struct plugin
     int (*call_stage_20) (unsigned int,
                           struct sched_connection *, struct client_request *);
     int (*call_stage_30) (struct client_request *, struct request *);
-    int (*call_stage_40) (struct client_request *, struct request *);
-    int (*call_stage_40_loop) (struct client_request *, struct request *);
+    int (*call_stage_40) (struct plugin *, struct client_request *, struct request *);
+    int (*call_stage_40_event_read) (struct client_request *, struct request *);
+    int (*call_stage_40_event_write)(struct client_request *, struct request *);
 
     pthread_key_t thread_key;
     struct plugin *next;
@@ -126,10 +130,24 @@ struct plugin_api
     void *(*config_free) (struct mk_config *);
     void *(*config_getval) (struct mk_config *, char *, int);
     void *(*sched_get_connection) (struct sched_list_node *, int);
+    void *(*event_add) (int, struct plugin *, struct client_request *, 
+                        struct request *);
+    void *(*event_socket_change_mode) (int, int);
 };
 
 typedef char mk_plugin_data_t[];
 typedef __uint32_t mk_plugin_stage_t;
+
+/* Plugin events thread key */
+pthread_key_t mk_plugin_event_k;
+
+struct plugin_event {
+    int socket;
+    struct plugin *handler;
+    struct client_request *cr;
+    struct request *sr;
+    struct plugin_event *next;
+};
 
 void mk_plugin_init();
 int mk_plugin_stage_run(mk_plugin_stage_t stage,
@@ -142,5 +160,20 @@ void mk_plugin_request_handler_add(struct request *sr, struct plugin *p);
 void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);
 
 void mk_plugin_preworker_calls();
+
+/* Plugins events interface */
+int mk_plugin_event_add(int socket, struct plugin *handler,
+                        struct client_request *cr, 
+                        struct request *sr);
+int mk_plugin_event_set_list(struct plugin_event *event);
+struct plugin_event *mk_plugin_event_get_list();
+int mk_plugin_event_socket_change_mode(int socket, int mode);
+
+/* Plugins event handlers */
+int mk_plugin_event_read(int socket);
+int mk_plugin_event_write(int socket);
+int mk_plugin_event_error(int socket);
+int mk_plugin_event_close(int socket);
+int mk_plugin_event_timeout(int socket);
 
 #endif

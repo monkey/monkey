@@ -39,6 +39,7 @@
 #include "header.h"
 #include "memory.h"
 #include "iov.h"
+#include "epoll.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -147,7 +148,7 @@ void *mk_plugin_register(void *handler, char *path)
     p->stages =
         (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
 
-    /* Plugin external function */
+    /* Plugin external functions */
     p->call_init = (int (*)()) mk_plugin_load_symbol(handler,
                                                      "_mk_plugin_init");
 
@@ -169,8 +170,11 @@ void *mk_plugin_register(void *handler, char *path)
     p->call_stage_40 = (int (*)())
         mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
 
-    p->call_stage_40_loop = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_loop");
+    p->call_stage_40_event_read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_read");
+
+    p->call_stage_40_event_write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_write");
 
     p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mk_plugin_data");
 
@@ -230,6 +234,8 @@ void mk_plugin_init()
     api->config_free = (void *) mk_config_free;
     api->config_getval = (void *) mk_config_getval;
     api->sched_get_connection = (void *) mk_sched_get_connection;
+    api->event_add = (void *) mk_plugin_event_add;
+    api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
 
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
@@ -271,9 +277,8 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                         struct client_request *cr, struct request *sr)
 {
     int ret;
-    short int assigned = FALSE;
+    int ret_loop = -1;
     struct plugin *p;
-    struct handler *h;
 
     if (stage & MK_PLUGIN_STAGE_10) {
         p = config->plugins->stage_10;
@@ -310,46 +315,22 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
 
     /* Object handler */
     if (stage & MK_PLUGIN_STAGE_40) {
-        /* Request has been assigned to a Plugin Loop */
-        if(sr->handled_by){
-            h = sr->handled_by;
-            while(h){
-                p = h->p;
-                h = h->next;
-                ret = p->call_stage_40_loop(cr, sr);
-
-                if (ret == MK_PLUGIN_RET_END) {
-                    mk_plugin_request_handler_del(sr, p);
-                }
-            }
-
-            return ret;
-        }
-
         /* The request just arrived and is required to check who can
          * handle it */
         if (!sr->handled_by){
             p = config->plugins->stage_40;
             while (p) {
                 /* Call stage */
-                ret = p->call_stage_40(cr, sr);
+                ret = p->call_stage_40(p, cr, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
-                case MK_PLUGIN_RET_END:
-                    break;
                 case MK_PLUGIN_RET_CONTINUE:
                     /* Register plugin for next loops */
-                    mk_plugin_request_handler_add(sr, p);
-                    p->call_stage_40_loop(cr, sr);
-                    assigned = TRUE;
-                    break;
+                                        return ret_loop;
                 }
                 p = p->next;
-            }
-            if (assigned){
-                return 0;
             }
         }
     }
@@ -359,56 +340,19 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
 
 void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
 {
-    struct handler *new, *aux;
-
-    new = mk_mem_malloc(sizeof(struct handler));
-    new->p = p;
-    new->next = NULL;
-
     if (!sr->handled_by) {
-        sr->handled_by = new;
+        sr->handled_by = p;
         return;
     }
-
-    aux = sr->handled_by;
-    while (aux) {
-        if (!aux->next) {
-            aux->next = new;
-            return;
-        }
-        aux = aux->next;
-    }
-
-    printf("\nMK_REQUEST_REGISTER_HANDLER: NEVER ASSIGNED");
-    fflush(stdout);
 }
 
 void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
 {
-    struct handler *prev = 0, *aux;
-
     if (!sr->handled_by) {
         return;
     }
 
-    while (sr->handled_by) {
-        aux = sr->handled_by;
-        while (aux->next) {
-            prev = aux;
-            aux = aux->next;
-        }
-        
-        if (aux->p == p){
-            mk_mem_free(aux);
-            prev->next = NULL;
-            return;
-        }
-
-        mk_mem_free(aux);
-        prev->next = NULL;
-    }
-
-    return;
+    mk_mem_free(sr->handled_by);
 }
 
 /* This function is called by every created worker
@@ -455,4 +399,149 @@ void mk_plugin_preworker_calls()
         }
         plg = plg->next;
     }
+}
+
+int mk_plugin_event_add(int socket, struct plugin *handler,
+                        struct client_request *cr, 
+                        struct request *sr)
+{
+    struct sched_list_node *sched;
+    struct plugin_event *list;
+    struct plugin_event *aux;
+    struct plugin_event *event;
+
+    sched = mk_sched_get_thread_conf();
+    
+    if (!sched || !handler || !cr || !sr) {
+        return -1;
+    }
+    
+    /* Event node (this list exist at thread level */
+    event = mk_mem_malloc(sizeof(struct plugin_event));
+    event->socket = socket;
+    event->handler = handler;
+    event->cr = cr;
+    event->sr = sr;
+    event->next = NULL;
+
+    /* Get thread event list */
+    list = mk_plugin_event_get_list();
+    if (!list) {
+        mk_plugin_event_set_list(event);
+    }
+    else {
+        aux = list;
+        while (aux->next) {
+            aux = aux->next;
+        }
+        
+        aux->next = event;
+        mk_plugin_event_set_list(aux);
+    }
+
+    /* The thread event info has been registered, now we need
+       to register the socket involved to the thread epoll array */
+    mk_epoll_add_client(sched->epoll_fd, event->socket, 
+                        MK_EPOLL_WRITE, MK_EPOLL_BEHAVIOR_TRIGGERED);
+    return 0;
+}
+
+int mk_plugin_event_socket_change_mode(int socket, int mode)
+{
+    struct sched_list_node *sched;
+
+    sched = mk_sched_get_thread_conf();
+    
+    if (!sched) {
+        return -1;
+    }
+
+    return mk_epoll_socket_change_mode(sched->epoll_fd, socket, mode);
+}
+
+struct plugin_event *mk_plugin_event_get(int socket)
+{
+    struct plugin_event *event;
+
+    event = mk_plugin_event_get_list();
+
+    while (event){
+        if (event->socket == socket) {
+            return event;
+        }
+
+        event = event->next;
+    }
+    
+    return NULL;
+}
+
+int mk_plugin_event_set_list(struct plugin_event *event)
+{
+    return pthread_setspecific(mk_plugin_event_k, (void *) event);
+}
+
+struct plugin_event *mk_plugin_event_get_list()
+{
+    return (struct plugin_event *) pthread_getspecific(mk_plugin_event_k);
+
+}
+
+/* Plugin epoll event handlers
+ * ---------------------------
+ * this functions are called by connection.c functions as mk_conn_read(), 
+ * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout 
+ * 
+ * Return Values:
+ * -------------
+ *    MK_PLUGIN_RET_EVENT_NOT_ME: There's no plugin hook associated
+ */
+
+int mk_plugin_event_read(int socket)
+{
+    struct plugin_event *event;
+
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    return MK_PLUGIN_RET_CONTINUE;
+}
+
+int mk_plugin_event_write(int socket)
+{
+    struct plugin_event *event;
+
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->call_stage_40_event_write) {
+        event->handler->call_stage_40_event_write(event->cr, event->sr);
+    }
+
+    return MK_PLUGIN_RET_CONTINUE;
+}
+
+int mk_plugin_event_error(int socket)
+{
+    printf("\nplugin event error: %i", socket);
+    fflush(stdout);
+    return 0;
+}
+
+int mk_plugin_event_close(int socket)
+{
+    printf("\nplugin event close: %i", socket);
+    fflush(stdout);
+    return 0;
+}
+
+int mk_plugin_event_timeout(int socket)
+{
+    printf("\nplugin event timeout: %i", socket);
+    fflush(stdout);
+    return 0;
 }

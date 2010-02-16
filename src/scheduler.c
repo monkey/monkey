@@ -121,6 +121,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 {
     sched_thread_conf *thconf;
     struct sched_list_node *thinfo;
+    mk_epoll_handlers *handler;
 
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
@@ -131,7 +132,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
     mk_cache_thread_init();
     mk_plugin_worker_startup();
 
-    mk_epoll_handlers *handler;
+    /* Epoll event handlers */
     handler = mk_epoll_set_handlers((void *) mk_conn_read,
                                     (void *) mk_conn_write,
                                     (void *) mk_conn_error,
@@ -191,7 +192,6 @@ struct sched_list_node *mk_sched_get_thread_conf()
     return NULL;
 }
 
-
 void mk_sched_update_thread_status(struct sched_list_node *sched,
                                    int active, int closed)
 {
@@ -230,7 +230,7 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
             mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
-            /* Before to continue, we need run plugin stage 20 */
+            /* Before to continue, we need to run plugin stage 20 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20,
                                       remote_fd,
                                       &sched->queue[i], NULL, NULL);
@@ -246,7 +246,7 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
 
-            mk_epoll_add_client(sched->epoll_fd, remote_fd,
+            mk_epoll_add_client(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
                                 MK_EPOLL_BEHAVIOR_TRIGGERED);
             return 0;
         }

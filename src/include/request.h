@@ -226,7 +226,7 @@ struct request
     off_t bytes_offset;
 
     /* Plugin handlers */
-    struct handler *handled_by;
+    struct plugin *handled_by;
 };
 
 struct header_values

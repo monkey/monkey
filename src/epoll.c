@@ -91,6 +91,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
         for (i = 0; i < num_fds; i++) {
             fd = events[i].data.fd;
+
             // Case 1: Error condition
             if (events[i].events & (EPOLLHUP | EPOLLERR)) {
                 (*handler->error) (fd);
@@ -117,19 +118,32 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     }
 }
 
-int mk_epoll_add_client(int efd, int socket, int mode)
+int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
 {
     int ret;
     struct epoll_event event;
 
 
-    event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+    event.events = EPOLLERR | EPOLLHUP;
     event.data.fd = socket;
 
-    if (mode == MK_EPOLL_BEHAVIOR_TRIGGERED) {
+    if (behavior == MK_EPOLL_BEHAVIOR_TRIGGERED) {
         event.events |= EPOLLET;
     }
 
+    switch (init_mode) {
+    case MK_EPOLL_READ:
+        event.events |= EPOLLIN;
+        break;
+    case MK_EPOLL_WRITE:
+        event.events |= EPOLLOUT;
+        break;
+    case MK_EPOLL_RW:
+        event.events |= EPOLLIN | EPOLLOUT;
+        break;
+    }
+
+    fflush(stdout);
 
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
     if (ret < 0) {
@@ -157,6 +171,8 @@ int mk_epoll_socket_change_mode(int efd, int socket, int mode)
         event.events |= EPOLLIN | EPOLLOUT;
         break;
     }
+
+    fflush(stdout);
 
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
     if (ret < 0) {
