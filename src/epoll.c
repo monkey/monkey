@@ -143,8 +143,6 @@ int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
         break;
     }
 
-    fflush(stdout);
-
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
     if (ret < 0) {
         perror("epoll_ctl");
@@ -171,8 +169,6 @@ int mk_epoll_socket_change_mode(int efd, int socket, int mode)
         event.events |= EPOLLIN | EPOLLOUT;
         break;
     }
-
-    fflush(stdout);
 
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
     if (ret < 0) {
