@@ -167,6 +167,11 @@ int main(int argc, char **argv)
     /* Print server details */
     mk_details();
 
+#ifdef TRACE
+    fprintf(stderr, "\n");
+    MK_TRACE("Monkey TRACE is enabled");
+#endif
+
     /* Plugins Stage 10 */
     mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
 
