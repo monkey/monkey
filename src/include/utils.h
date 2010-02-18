@@ -34,6 +34,8 @@
 #include "request.h"
 #include "memory.h"
 
+#define MK_TRACE(...) mk_utils_trace(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+
 /* utils.c */
 int SendFile(int socket, struct client_request *cr, struct request *request);
 int AccessFile(struct stat file);
@@ -65,5 +67,9 @@ char *get_end_position(char *buf);
 
 int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
+
+#ifdef TRACE
+void mk_utils_trace(const char *function, char *file, int line, const char* format, ...);
+#endif
 
 #endif

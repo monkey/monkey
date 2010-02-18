@@ -278,3 +278,17 @@ mk_pointer mk_utils_int2mkp(int n)
 
     return p;
 }
+
+#ifdef TRACE
+void mk_utils_trace(const char *function, char *file, int line, const char* format, ...) {
+    va_list args;
+
+    va_start( args, format );
+    fprintf(stderr, "\033[1m[%s:%i]\033[0m \033[31m%s():\033[0m\033[33m ", 
+            file, line, function);
+    vfprintf( stderr, format, args );
+    va_end( args );
+    fprintf( stderr, "\033[0m\n" );
+}
+#endif
+

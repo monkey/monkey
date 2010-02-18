@@ -138,7 +138,7 @@ main()
 	fi
 
 	messages_$lang "3"
-	create_makefile2 mod_libs mod_defs mod_obj make_script add_obj_mod cheetah_obj
+	create_makefile2 mod_libs mod_obj make_script add_obj_mod cheetah_obj
 
 	messages_$lang "4"
 	create_info sysconfdir SYSNAME VERSION
@@ -298,6 +298,10 @@ else
 	CFLAGS="-g -Wall"
 fi
 
+if [ $trace ] ; then
+	DEFS="-DTRACE"
+fi
+
 ##### Internal options ####
 # just for remember that one time we support this :_(
 # ---------------------------------------------------
@@ -307,8 +311,7 @@ fi
 
 cat > src/Makefile<<EOF
 CC	= $CC
-DEFS	= $mod_defs $internal_options
-CFLAGS	= $CFLAGS \$(DEFS)
+CFLAGS	= $CFLAGS $DEFS
 INCDIR  = ./include
 LDFLAGS	= 
 DESTDIR	= ../bin/monkey
@@ -565,6 +568,9 @@ for arg in $*; do
 		--debug*)
 			debug=1
 			;;
+		--trace*)
+			trace=1
+			;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
@@ -584,6 +590,7 @@ for arg in $*; do
 			echo "  --help		  Display this help and exit"
 			echo "  --version		  Display version information and exit"
 			echo "  --debug		  Compile Monkey with debugging symbols"
+			echo "  --trace		  Compile Monkey with trace messages (don't use in production)"
 			echo 
 			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
 			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"

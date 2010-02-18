@@ -39,6 +39,7 @@
 #include "clock.h"
 #include "signals.h"
 #include "plugin.h"
+#include "utils.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
@@ -301,6 +302,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
         if (sched->queue[i].status == MK_SCHEDULER_CONN_PENDING) {
             if (sched->queue[i].arrive_time + config->timeout <=
                 log_current_utime) {
+#ifdef TRACE
+                MK_TRACE("Scheduler, closing fd %i due TIMEOUT", 
+                         sched->queue[i].socket);
+#endif
                 mk_sched_remove_client(sched, sched->queue[i].socket);
             }
         }
@@ -313,6 +318,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     while (req_cl) {
         if (req_cl->status == MK_REQUEST_STATUS_INCOMPLETE) {
             if ((req_cl->init_time + config->timeout) >= log_current_utime) {
+#ifdef TRACE
+                MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
+                         req_cl->socket);
+#endif
                 close(req_cl->socket);
             }
         }

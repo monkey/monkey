@@ -37,6 +37,7 @@
 #include "config.h"
 #include "scheduler.h"
 #include "epoll.h"
+#include "utils.h"
 
 #define MAX_EVENTS 5000
 
@@ -95,17 +96,27 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             // Case 1: Error condition
             if (events[i].events & (EPOLLHUP | EPOLLERR)) {
                 (*handler->error) (fd);
+#ifdef TRACE
+                MK_TRACE("EPoll, fd %i in EPOLLHUP or EPOLLER", fd);
+#endif
                 continue;
             }
 
             if (events[i].events & EPOLLIN) {
+                MK_TRACE("EPoll, fd %i in READ event", fd);
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
+#ifdef TRACE
+                MK_TRACE("EPoll, fd %i in WRITE event", fd);
+#endif
                 ret = (*handler->write) (fd);
             }
 
             if (ret < 0) {
+#ifdef TRACE
+                MK_TRACE("Epoll, fd %i in force close status", fd);
+#endif
                 (*handler->close) (fd);
             }
         }
