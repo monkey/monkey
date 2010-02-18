@@ -57,6 +57,7 @@
 #include "socket.h"
 #include "cache.h"
 #include "clock.h"
+#include "utils.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -195,13 +196,11 @@ int mk_handler_write(int socket, struct client_request *cr)
      * the information regarding to the current thread
      */
     if (!cr) {
-        MK_TRACE("NUll");
         return -1;
     }
 
     if (!cr->request) {
         if (!mk_request_parse(cr)) {
-            MK_TRACE("Fail parsing");
             return -1;
         }
     }

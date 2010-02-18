@@ -103,7 +103,9 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             }
 
             if (events[i].events & EPOLLIN) {
+#ifdef TRACE
                 MK_TRACE("EPoll, fd %i in READ event", fd);
+#endif
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
