@@ -115,7 +115,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
             if (ret < 0) {
 #ifdef TRACE
-                MK_TRACE("Epoll, fd %i in force close status", fd);
+                MK_TRACE("Epoll, fd %i in force close status | ret = %i", fd, ret);
 #endif
                 (*handler->close) (fd);
             }

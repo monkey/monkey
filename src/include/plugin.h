@@ -133,6 +133,11 @@ struct plugin_api
     void *(*event_add) (int, struct plugin *, struct client_request *, 
                         struct request *);
     void *(*event_socket_change_mode) (int, int);
+
+#ifdef TRACE
+    void *(*trace)();
+#endif
+
 };
 
 typedef char mk_plugin_data_t[];

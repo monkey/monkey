@@ -237,6 +237,10 @@ void mk_plugin_init()
     api->event_add = (void *) mk_plugin_event_add;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
 
+#ifdef TRACE
+    api->trace = (void *) mk_utils_trace;
+#endif
+
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
 

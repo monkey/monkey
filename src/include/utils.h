@@ -34,7 +34,10 @@
 #include "request.h"
 #include "memory.h"
 
+#ifdef TRACE
 #define MK_TRACE(...) mk_utils_trace(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define PLUGIN_TRACE(...) mk_api->trace(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#endif
 
 /* utils.c */
 int SendFile(int socket, struct client_request *cr, struct request *request);
