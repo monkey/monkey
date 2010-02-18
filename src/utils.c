@@ -280,15 +280,33 @@ mk_pointer mk_utils_int2mkp(int n)
 }
 
 #ifdef TRACE
-void mk_utils_trace(const char *function, char *file, int line, const char* format, ...) {
+void mk_utils_trace(const char *component, int color, const char *function, 
+                    char *file, int line, const char* format, ...)
+{
     va_list args;
+    char *color_function;
+    char *color_fileline;
+
+    /* Switch message color */
+    switch(color) {
+    case MK_TRACE_CORE:
+        color_function = ANSI_YELLOW;
+        color_fileline = ANSI_WHITE;
+        break;
+    case MK_TRACE_PLUGIN:
+        color_function = ANSI_BLUE;
+        color_fileline = ANSI_WHITE;
+        break;
+    }
 
     va_start( args, format );
-    fprintf(stderr, "\033[1m[%s:%i]\033[0m \033[31m%s():\033[0m\033[33m ", 
-            file, line, function);
+
+    fprintf(stderr, "%s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
+            ANSI_MAGENTA, ANSI_BOLD, 
+            ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file, line, ANSI_MAGENTA, 
+            color_function, function, ANSI_RED);
     vfprintf( stderr, format, args );
     va_end( args );
-    fprintf( stderr, "\033[0m\n" );
+    fprintf( stderr, "%s\n", ANSI_RESET);
 }
 #endif
-

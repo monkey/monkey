@@ -35,8 +35,23 @@
 #include "memory.h"
 
 #ifdef TRACE
-#define MK_TRACE(...) mk_utils_trace(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define PLUGIN_TRACE(...) mk_api->trace(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+
+#define MK_TRACE_CORE 0
+#define MK_TRACE_PLUGIN 1
+#define MK_TRACE_COMP_CORE "core"
+
+#define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define PLUGIN_TRACE(...) mk_api->trace(_shortname, MK_TRACE_PLUGIN, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ANSI_BOLD "\033[1m"
+#define ANSI_MAGENTA "\033[35m"
+#define ANSI_RED "\033[31m"
+#define ANSI_YELLOW "\033[33m"
+#define ANSI_BLUE "\033[34m"
+#define ANSI_GREEN "\033[32m"
+#define ANSI_WHITE "\033[37m"
+#define ANSI_RESET "\033[0m"
+
 #endif
 
 /* utils.c */
@@ -72,7 +87,8 @@ int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
 
 #ifdef TRACE
-void mk_utils_trace(const char *function, char *file, int line, const char* format, ...);
+void mk_utils_trace(const char *component, int color, const char *function, 
+                    char *file, int line, const char* format, ...);
 #endif
 
 #endif

@@ -27,6 +27,7 @@
 #include "request.h"
 #include "socket.h"
 #include "plugin.h"
+#include "utils.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -99,9 +100,16 @@ int mk_conn_write(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);
+#ifdef TRACE
+    MK_TRACE("Check plugin hook | ret = %i", ret);
+#endif
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
     }  
+
+#ifdef TRACE
+    MK_TRACE("Normal connection write handling...");
+#endif
 
     sched = mk_sched_get_thread_conf();
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);

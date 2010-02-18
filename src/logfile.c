@@ -218,6 +218,10 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
     struct sched_list_node *sched;
     struct sched_connection *conx;
 
+#ifdef TRACE
+    MK_TRACE("Logger, Writting to log file");
+#endif
+
     if (log->status != S_LOG_ON) {
         return 0;
     }
