@@ -287,6 +287,9 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
     if (stage & MK_PLUGIN_STAGE_10) {
         p = config->plugins->stage_10;
         while (p) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 10", p->shortname);
+#endif
             p->call_stage_10();
             p = p->next;
         }
@@ -294,9 +297,15 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
     if (stage & MK_PLUGIN_STAGE_20) {
         p = config->plugins->stage_20;
         while (p) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 20", p->shortname);
+#endif
             ret = p->call_stage_20(socket, conx, cr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
+#ifdef TRACE
+                MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
+#endif
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
@@ -307,6 +316,9 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
     if (stage & MK_PLUGIN_STAGE_30) {
         p = config->plugins->stage_30;
         while (p) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 30", p->shortname);
+#endif              
             ret = p->call_stage_30(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
@@ -325,6 +337,9 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
             p = config->plugins->stage_40;
             while (p) {
                 /* Call stage */
+#ifdef TRACE
+                MK_TRACE("[%s] STAGE 40", p->shortname);
+#endif
                 ret = p->call_stage_40(p, cr, sr);
 
                 switch (ret) {

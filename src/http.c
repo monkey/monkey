@@ -130,6 +130,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     struct mimetype *mime;
     mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
 
+#ifdef TRACE
+    MK_TRACE("HTTP Protocol Init");
+#endif
+
     /* Normal request default site */
     if ((strcmp(sr->uri_processed, "/")) == 0) {
         sr->real_path.data = mk_string_dup(sr->host_conf->documentroot.data);
