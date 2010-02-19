@@ -134,10 +134,8 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
 {
     int ret;
-    struct epoll_event event;
+    struct epoll_event event = { EPOLLERR | EPOLLHUP };
 
-
-    event.events = EPOLLERR | EPOLLHUP;
     event.data.fd = socket;
 
     if (behavior == MK_EPOLL_BEHAVIOR_TRIGGERED) {
