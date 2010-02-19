@@ -284,8 +284,8 @@ void mk_utils_trace(const char *component, int color, const char *function,
                     char *file, int line, const char* format, ...)
 {
     va_list args;
-    char *color_function;
-    char *color_fileline;
+    char *color_function = NULL;
+    char *color_fileline = NULL;
 
     /* Switch message color */
     switch(color) {
