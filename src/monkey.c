@@ -79,7 +79,6 @@ void mk_help()
 {
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
     printf("Available options:\n");
-    printf("  -b\t\trun Monkey in benchmark mode, limits are disabled\n");
     printf("  -c directory\tspecify directory from configuration files\n");
     printf("  -D\t\trun Monkey as daemon\n");
     printf("  -v\t\tshow version number\n");
