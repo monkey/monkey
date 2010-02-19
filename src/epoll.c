@@ -171,14 +171,27 @@ int mk_epoll_socket_change_mode(int efd, int socket, int mode)
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
     event.data.fd = socket;
 
+#ifdef TRACE
+    MK_TRACE("EPoll, changing FD %i mode", socket);
+#endif
+
     switch (mode) {
     case MK_EPOLL_READ:
+#ifdef TRACE
+        MK_TRACE("EPoll, changing mode to READ");
+#endif
         event.events |= EPOLLIN;
         break;
     case MK_EPOLL_WRITE:
+#ifdef TRACE
+        MK_TRACE("EPoll, changing mode to WRITE");
+#endif
         event.events |= EPOLLOUT;
         break;
     case MK_EPOLL_RW:
+#ifdef TRACE
+        MK_TRACE("Epoll, changing mode to READ/WRITE");
+#endif
         event.events |= EPOLLIN | EPOLLOUT;
         break;
     }

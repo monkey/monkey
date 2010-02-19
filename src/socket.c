@@ -32,6 +32,7 @@
 
 #include "socket.h"
 #include "memory.h"
+#include "utils.h"
 
 /* 
  * Example from:
@@ -39,11 +40,21 @@
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
+
+#ifdef TRACE
+    MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "FALSE"));
+#endif
+
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
 }
 
 int mk_socket_set_nonblocking(int sockfd)
 {
+
+#ifdef TRACE
+    MK_TRACE("Socket, set FD %i to non-blocking", sockfd);
+#endif
+
     if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK) == -1) {
         perror("fcntl");
         return -1;
@@ -73,53 +84,6 @@ int mk_socket_get_ip(int socket, char *ipv4)
 int mk_socket_close(int socket)
 {
     return close(socket);
-}
-
-int mk_socket_timeout(int s, char *buf, int len, int timeout, int recv_send)
-{
-    fd_set fds;
-    time_t init_time, max_time;
-    int n = 0, status;
-    struct timeval tv;
-
-    init_time = time(NULL);
-    max_time = init_time + timeout;
-
-    FD_ZERO(&fds);
-    FD_SET(s, &fds);
-
-    tv.tv_sec = timeout;
-    tv.tv_usec = 0;
-
-    if (recv_send == ST_RECV)
-        n = select(s + 1, &fds, NULL, NULL, &tv);       // recv 
-    else {
-        n = select(s + 1, NULL, &fds, NULL, &tv);       // send 
-    }
-
-    switch (n) {
-    case 0:
-        return -2;
-        break;
-    case -1:
-        //pthread_kill(pthread_self(), SIGPIPE);
-        return -1;
-    }
-
-    if (recv_send == ST_RECV) {
-        status = recv(s, buf, len, 0);
-    }
-    else {
-        status = send(s, buf, len, 0);
-    }
-
-    if (status < 0) {
-        if (time(NULL) >= max_time) {
-            //pthread_kill(pthread_self(), SIGPIPE);
-        }
-    }
-
-    return status;
 }
 
 int mk_socket_create()

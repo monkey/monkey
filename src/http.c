@@ -126,6 +126,7 @@ mk_pointer mk_http_protocol_check_str(int protocol)
 
 int mk_http_init(struct client_request *cr, struct request *sr)
 {
+    int ret;
     int debug_error = 0, bytes = 0;
     struct mimetype *mime;
     mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
@@ -229,12 +230,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         return -1;
     }
 
-    /* Plugin Stage 40: look for handlers for this request */
-    if (mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr) ==
-        0) {
-        return -1;
-    }
-
     /* Matching MimeType  */
     mime = mk_mimetype_find(&sr->real_path);
     if (!mime) {
@@ -244,6 +239,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
         return -1;
+    }
+
+    /* Plugin Stage 40: look for handlers for this request */
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr);
+    MK_TRACE("STAGE 40 RETURNED: %i", ret);
+    if (ret == MK_PLUGIN_RET_CONTINUE) {
+        return ret;
     }
 
     /* get file size */

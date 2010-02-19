@@ -332,6 +332,10 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
     status = mk_http_init(cr, s_request);
 
+#ifdef TRACE
+    MK_TRACE("HTTP Init returning %i", status);
+#endif
+
     return status;
 }
 

@@ -229,6 +229,7 @@ void mk_plugin_init()
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
     api->socket_connect = (void *) mk_socket_connect;
     api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
+    api->socket_set_nonblocking = (void *) mk_socket_set_nonblocking;
     api->socket_create = (void *) mk_socket_create;
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;
@@ -281,7 +282,6 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                         struct client_request *cr, struct request *sr)
 {
     int ret;
-    int ret_loop = -1;
     struct plugin *p;
 
     if (stage & MK_PLUGIN_STAGE_10) {
@@ -346,8 +346,7 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_CONTINUE:
-                    /* Register plugin for next loops */
-                                        return ret_loop;
+                    return MK_PLUGIN_RET_CONTINUE;
                 }
                 p = p->next;
             }
@@ -520,9 +519,17 @@ int mk_plugin_event_read(int socket)
 {
     struct plugin_event *event;
 
+#ifdef TRACE
+    MK_TRACE("Plugin, event read");
+#endif
+
     event = mk_plugin_event_get(socket);
     if (!event) {
         return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->call_stage_40_event_read) {
+        event->handler->call_stage_40_event_read(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -531,6 +538,10 @@ int mk_plugin_event_read(int socket)
 int mk_plugin_event_write(int socket)
 {
     struct plugin_event *event;
+
+#ifdef TRACE
+    MK_TRACE("Plugin, event write fd %i", socket);
+#endif
 
     event = mk_plugin_event_get(socket);
     if (!event) {
@@ -546,21 +557,29 @@ int mk_plugin_event_write(int socket)
 
 int mk_plugin_event_error(int socket)
 {
-    printf("\nplugin event error: %i", socket);
-    fflush(stdout);
+#ifdef TRACE
+    MK_TRACE("Plugin, event error fd %i", socket);
+#endif
+
     return 0;
 }
 
 int mk_plugin_event_close(int socket)
 {
-    printf("\nplugin event close: %i", socket);
-    fflush(stdout);
+
+#ifdef TRACE
+    MK_TRACE("Plugin, event close fd %i", socket);
+#endif
+
     return 0;
 }
 
 int mk_plugin_event_timeout(int socket)
 {
-    printf("\nplugin event timeout: %i", socket);
-    fflush(stdout);
+
+#ifdef TRACE
+    MK_TRACE("Plugin, event timeout fd %i", socket);
+#endif
+
     return 0;
 }

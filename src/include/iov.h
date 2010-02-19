@@ -29,6 +29,7 @@
 
 /* iov separators */
 #define MK_IOV_CRLF "\r\n"
+#define MK_IOV_CRLFCRLF "\r\n\r\n"
 #define MK_IOV_LF "\n"
 #define MK_IOV_SPACE " "
 #define MK_IOV_HEADER_VALUE ": "
@@ -42,6 +43,7 @@
 #include "memory.h"
 
 mk_pointer mk_iov_crlf;
+mk_pointer mk_iov_crlfcrlf;
 mk_pointer mk_iov_lf;
 mk_pointer mk_iov_space;
 mk_pointer mk_iov_header_value;
