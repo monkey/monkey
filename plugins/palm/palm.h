@@ -46,8 +46,10 @@ struct mk_palm_request
     char data_pending[MK_PALM_BUFFER_SIZE];
     char data_read[MK_PALM_BUFFER_SIZE];
 
-    int n_pending;
-    int n_read;
+  
+    int len_pending;
+    int len_read;
+    int offset_pending;
 
     /* Traffic bytes between plugin and Palm server */
     unsigned long bytes_sent;

@@ -491,6 +491,32 @@ void _mk_plugin_stage_40_event_write(struct client_request *cr, struct request *
     mk_api->event_socket_change_mode(pr->palm_fd, MK_EPOLL_READ);
 }
 
+int mk_plugin_send_chunk(int socket, void *buffer, unsigned int len)
+{
+    int n;
+    char *chunk_size=0;
+    unsigned long chunk_len=0;
+
+    mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
+    
+    n = write(socket, chunk_size, len);
+
+    if (n < 0) {
+        PLUGIN_TRACE("Error sending chunked header, write() returned %i", n);
+        perror("write");
+        return -1;
+    }
+    
+    n = write(socket, buffer, len);
+    
+    if (n < 0) {
+        PLUGIN_TRACE("Error sending chunked body, write() returned %i", n);
+        perror("write");
+        return -1;
+    }
+
+    return n;
+}
 
 int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr)
 {
@@ -498,8 +524,6 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
     int n_header;
     int ret;
     int headers_end=-1;
-    char *chunk_size=0;
-    unsigned long len;
     struct mk_palm_request *pr;
 
     pr = mk_palm_request_get(cr->socket);
@@ -513,18 +537,17 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
 
     /* Reset read buffer */
     bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
-    pr->n_read = 0;
 
     /* Read data */
-    pr->n_read = read(pr->palm_fd, pr->data_read, (MK_PALM_BUFFER_SIZE - 1));
+    pr->len_read = read(pr->palm_fd, pr->data_read, (MK_PALM_BUFFER_SIZE - 1));
     
-    if (pr->n_read < 0) {
+    if (pr->len_read < 0) {
         perror("read");
     }
 
-    PLUGIN_TRACE("Bytes read %i", pr->n_read);
+    PLUGIN_TRACE("Bytes read %i", pr->len_read);
 
-    if (pr->n_read >=0) {
+    if (pr->len_read >=0) {
         if (pr->headers_sent == VAR_OFF) {
             PLUGIN_TRACE("Sending headers");
 
@@ -537,7 +560,7 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
             }
             
             /* Look for headers end */
-            headers_end = (int) mk_api->str_search(pr->buffer, MK_IOV_CRLFCRLF);
+            headers_end = (int) mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF);
             
             PLUGIN_TRACE("Headers end %i", headers_end);
             
@@ -547,55 +570,29 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
             
             /* Send just headers from buffer */
             n_header = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
-            write(cr->socket, pr->buffer, headers_end);
-            
-            /* Send first chunk data */
-            mk_api->str_build(&chunk_size, &len, "%x%s", n, MK_CRLF);
-            int a;
-            a = write(cr->socket, chunk_size, len);
+            write(cr->socket, pr->data_read, headers_end);
+
+            /* Enable headers flag */
+            pr->headers_sent = VAR_ON;
+        }            
+
+        if (pr->len_pending > 0) {
+            n = mk_plugin_send_chunk(cr->socket, 
+                                     pr->data_pending + pr->offset_pending, 
+                                     pr->len_pending - pr->offset_pending);
+
+            if (n >= 0) {
                 
-            PLUGIN_TRACE("first write: %i bytes", a);
-            
-            n = write(cr->socket, pr->buffer + headers_end, n - headers_end);
-            
-            PLUGIN_TRACE("second write: %i bytes", n);
-            
-            /* Turn off TCP_CORK_OFF */
-            mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
-            pr->bytes_sent_to_client = 1;
+            }
         }
-        else {
-            pr->bytes_read += n;
-            
-            PLUGIN_TRACE("Just N: %i", n);
-            PLUGIN_TRACE("Total read from palm server: %i", pr->bytes_read);
-            
-            //n = send(0, pr->buffer, n, 0);
-            
-            int l;
-            l = (int)  mk_api->str_build(&chunk_size, &len,"%x%s", n, MK_CRLF);
-            PLUGIN_TRACE("chunk: %s (len: %i)", chunk_size, len);
-            
-            write(cr->socket, chunk_size, l);
-            n = write(pr->client_fd, pr->buffer, n);
-            if (n < 0) {
-                perror("write");
-            } 
-            
-            PLUGIN_TRACE("Bytes sent to client %i: %i", pr->client_fd, n);
-            
-            ret = MK_PLUGIN_RET_CONTINUE;
-        }
+
+        /* Turn off TCP_CORK_OFF */
+        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+        ret = MK_PLUGIN_RET_CONTINUE;
     }
-    
     else {
         PLUGIN_TRACE("BIG ERROR!");
     }
-    
-    write(cr->socket, MK_CRLF, 2);
-    
-    mk_api->mem_free(chunk_size);
-    chunk_size = '\0';
     
     /* Update thread node info */
     mk_palm_request_update(cr->socket, pr);
