@@ -366,6 +366,10 @@ EOF
     list=`echo */ "" | sed "s/\/ /\n/g"`
     for i in $list;
 	do 
+	      if test -e $i/DISABLED ; then
+        	continue
+	      fi
+
 	      echo "	@(cd $i && make && cd ..)" >> Makefile;
 
 	      if [ "$plugdir" != "" ]; then
