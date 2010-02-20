@@ -32,6 +32,7 @@
 #include "epoll.h"
 #include "socket.h"
 #include "plugin.h"
+#include "utils.h"
 
 /* Return the number of clients that can be attended 
  * at the same time per worker thread
@@ -95,6 +96,10 @@ void mk_server_loop(int server_fd)
             continue;
         }
 
+#ifdef TRACE
+        MK_TRACE("New connection arrived: FD %i", remote_fd);
+#endif
+        
         /* Assign socket to worker thread */
         mk_sched_add_client(sched, remote_fd);
 
