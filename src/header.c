@@ -154,7 +154,7 @@ int mk_header_send(int fd, struct client_request *cr,
         return -1;
     }
 
-    /* Informacion del server */
+    /* Server details */
     mk_iov_add_entry(iov, sr->host_conf->header_host_signature.data,
                      sr->host_conf->header_host_signature.len,
                      mk_iov_crlf, MK_IOV_NOT_FREE_BUF);

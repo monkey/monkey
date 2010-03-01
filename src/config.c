@@ -389,13 +389,10 @@ struct host *mk_config_get_host(char *path)
     /* Server Signature */
     if (config->hideversion == VAR_OFF) {
         m_build_buffer(&host->host_signature, &len,
-                       "Monkey/%s Server (Host: %s, Port: %i)",
-                       VERSION, host->servername, config->serverport);
+                       "Monkey/%s", VERSION);
     }
     else {
-        m_build_buffer(&host->host_signature, &len,
-                       "Monkey Server (Host: %s, Port: %i)",
-                       host->servername, config->serverport);
+        m_build_buffer(&host->host_signature, &len, "Monkey");
     }
     m_build_buffer(&host->header_host_signature.data,
                    &host->header_host_signature.len,
