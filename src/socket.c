@@ -42,7 +42,7 @@ int mk_socket_set_cork_flag(int fd, int state)
 {
 
 #ifdef TRACE
-    MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "FALSE"));
+    MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
 #endif
 
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));

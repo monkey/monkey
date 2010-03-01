@@ -38,11 +38,12 @@ int mk_conn_read(int socket)
     struct client_request *cr;
     struct sched_list_node *sched;
 
+#ifdef TRACE
+    MK_TRACE("Connection Handler, read on FD %i", socket);
+#endif
+
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
-#ifdef TRACE
-    MK_TRACE("Check plugin hook | ret = %i", ret);
-#endif
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
     }        
@@ -100,6 +101,10 @@ int mk_conn_write(int socket)
     int ret = -1, ka;
     struct client_request *cr;
     struct sched_list_node *sched;
+
+#ifdef TRACE
+    MK_TRACE("Connection Handler, write on FD %i", socket);
+#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);

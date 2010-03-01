@@ -280,6 +280,7 @@ mk_pointer mk_utils_int2mkp(int n)
 }
 
 #ifdef TRACE
+#include <sys/time.h>
 void mk_utils_trace(const char *component, int color, const char *function, 
                     char *file, int line, const char* format, ...)
 {
@@ -287,6 +288,11 @@ void mk_utils_trace(const char *component, int color, const char *function,
     char *color_function = NULL;
     char *color_fileline = NULL;
 
+    struct timeval tv;
+    struct timezone tz;
+
+    gettimeofday(&tv, &tz);
+ 
     /* Switch message color */
     switch(color) {
     case MK_TRACE_CORE:
@@ -301,9 +307,11 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
     va_start( args, format );
 
-    fprintf(stderr, "%s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
+    fprintf(stderr, "~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
+            ANSI_CYAN, (tv.tv_sec - monkey_init_time), tv.tv_usec, ANSI_RESET,
             ANSI_MAGENTA, ANSI_BOLD, 
-            ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file, line, ANSI_MAGENTA, 
+            ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file,
+            line, ANSI_MAGENTA, 
             color_function, function, ANSI_RED);
     vfprintf( stderr, format, args );
     va_end( args );

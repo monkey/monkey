@@ -23,7 +23,7 @@
 #ifndef MK_PALM_H
 #define MK_PALM_H
 
-#define MK_PALM_BUFFER_SIZE 2048
+#define MK_PALM_BUFFER_SIZE 8192
 
 #include "request.h"
 
@@ -43,7 +43,7 @@ struct mk_palm_request
     int client_fd;
     int palm_fd;
 
-    char data_pending[MK_PALM_BUFFER_SIZE];
+    char data_pending[MK_PALM_BUFFER_SIZE*2];
     char data_read[MK_PALM_BUFFER_SIZE];
 
   

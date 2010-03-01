@@ -277,6 +277,30 @@ int mk_palm_send_response(struct client_request *cr, struct request *sr,
 }
 */
 
+int mk_palm_send_headers(struct client_request *cr, struct request *sr)
+{
+    int n;
+
+    sr->headers->status = M_HTTP_OK;
+    sr->headers->cgi = SH_CGI;
+    
+    /* Chunked transfer encoding */
+    if (sr->protocol >= HTTP_PROTOCOL_11) {
+        sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+    }
+                        
+    /* Send just headers from buffer */
+    PLUGIN_TRACE("Sending headers to FD %i", cr->socket);
+    
+    n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
+
+    PLUGIN_TRACE("Send headers returned %i", n);
+    return n;
+
+    //mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+}
+
+
 int _mk_plugin_init(void **api, char *confdir)
 {
     mk_api = *api;
@@ -303,30 +327,31 @@ int _mk_plugin_stage_40(struct plugin *plugin, struct client_request *cr, struct
     struct mk_palm *palm;
     struct mk_palm_request *pr;
 
-    PLUGIN_TRACE("PALM STAGE 40");
-    PLUGIN_TRACE("real_path:'%s'", sr->real_path.data);
+    PLUGIN_TRACE("PALM STAGE 40, requesting '%s'", sr->real_path.data);
     
     palm = mk_palm_get_handler(&sr->uri);
     if (!palm) {
+        PLUGIN_TRACE("PALM NOT ME");
         return MK_PLUGIN_RET_NOT_ME;
     }
-    else {
-        /* Connect to server */
-        pr = mk_palm_do_instance(palm, cr, sr);
+
+    /* Connect to server */
+    pr = mk_palm_do_instance(palm, cr, sr);
         
-        if (!pr) {
-            PLUGIN_TRACE("return %i (MK_PLUGIN_RET_END)", MK_PLUGIN_RET_END);
-            return MK_PLUGIN_RET_END;
-        }
-
-        /* Register Palm instance */
-        mk_palm_request_add(pr);
-
-        /* Register socket with thread Epoll interface */
-        mk_api->event_add(pr->palm_fd, plugin, cr, sr);
-        PLUGIN_TRACE("Palm: Event registered / client=%i / palm_socket=%i",
-                     pr->client_fd, pr->palm_fd);
+    if (!pr) {
+        PLUGIN_TRACE("return %i (MK_PLUGIN_RET_END)", MK_PLUGIN_RET_END);
+        return MK_PLUGIN_RET_END;
     }
+
+    mk_palm_send_headers(cr, sr);
+    
+    /* Register Palm instance */
+    mk_palm_request_add(pr);
+
+    /* Register socket with thread Epoll interface */
+    mk_api->event_add(pr->palm_fd, plugin, cr, sr);
+    PLUGIN_TRACE("Palm: Event registered / client=%i / palm_socket=%i",
+                 pr->client_fd, pr->palm_fd);
 
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
     return MK_PLUGIN_RET_CONTINUE;
@@ -487,19 +512,23 @@ void _mk_plugin_stage_40_event_write(struct client_request *cr, struct request *
         }
     }
 
-    PLUGIN_TRACE("Read: %i Write: %i", pr->bytes_read, pr->bytes_sent);
+    PLUGIN_TRACE("Bytes sent to PALM SERVER: %i", pr->bytes_sent);
     mk_api->event_socket_change_mode(pr->palm_fd, MK_EPOLL_READ);
 }
 
-int mk_plugin_send_chunk(int socket, void *buffer, unsigned int len)
+int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
 {
     int n;
     char *chunk_size=0;
     unsigned long chunk_len=0;
 
+
+    mk_api->socket_cork_flag(socket, TCP_CORK_ON);
+
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
     
-    n = write(socket, chunk_size, len);
+    n = write(socket, chunk_size, chunk_len);
+    mk_api->mem_free(chunk_size);
 
     if (n < 0) {
         PLUGIN_TRACE("Error sending chunked header, write() returned %i", n);
@@ -508,13 +537,16 @@ int mk_plugin_send_chunk(int socket, void *buffer, unsigned int len)
     }
     
     n = write(socket, buffer, len);
-    
+    PLUGIN_TRACE("SEND CHUNK: requested %i, sent %i", len, n);
+
     if (n < 0) {
         PLUGIN_TRACE("Error sending chunked body, write() returned %i", n);
         perror("write");
         return -1;
     }
 
+    write(socket, MK_CRLF, 2);
+    mk_api->socket_cork_flag(socket, TCP_CORK_OFF);
     return n;
 }
 
@@ -522,8 +554,9 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
 {
     int n;
     int n_header;
-    int ret;
-    int headers_end=-1;
+    int ret = -1;
+    int headers_end = -1;
+    int read_offset = 0;
     struct mk_palm_request *pr;
 
     pr = mk_palm_request_get(cr->socket);
@@ -532,8 +565,6 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
         PLUGIN_TRACE("Invalid palm request, not found");
         return -1;
     }
-
-    PLUGIN_TRACE("Reading data from FD %i", pr->palm_fd);
 
     /* Reset read buffer */
     bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
@@ -545,46 +576,70 @@ int _mk_plugin_stage_40_event_read(struct client_request *cr, struct request *sr
         perror("read");
     }
 
-    PLUGIN_TRACE("Bytes read %i", pr->len_read);
+    PLUGIN_TRACE("Bytes read from FD %i: %i", pr->palm_fd, pr->len_read);
 
     if (pr->len_read >=0) {
         if (pr->headers_sent == VAR_OFF) {
-            PLUGIN_TRACE("Sending headers");
-
-            sr->headers->status = M_HTTP_OK;
-            sr->headers->cgi = SH_CGI;
-            
-            /* Chunked transfer encoding */
-            if (sr->protocol >= HTTP_PROTOCOL_11) {
-                sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
-            }
-            
-            /* Look for headers end */
             headers_end = (int) mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF);
-            
-            PLUGIN_TRACE("Headers end %i", headers_end);
+
+            /* Look for headers end */
+            while (headers_end == -1) {
+                PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
+
+                n = read(pr->palm_fd, 
+                         pr->data_read + pr->len_read, 
+                         (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
+
+                if (n >=0) {
+                    pr->len_read += n;
+                }
+                else{
+                    PLUGIN_TRACE("***********");
+                }
+
+                headers_end = (int) mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF);
+            }
             
             if (headers_end > 0) {
                 headers_end += 4;
             }
-            
-            /* Send just headers from buffer */
-            n_header = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
-            write(cr->socket, pr->data_read, headers_end);
+            else {
+                PLUGIN_TRACE("SOMETHING BAD HAPPENS");
+            }
+
+            /* FIXME: What about if this write() wrote partial headers ? ugh! */
+            n = write(cr->socket, pr->data_read, headers_end);
+
+            PLUGIN_TRACE("Headers written: %i", n);
 
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
+            read_offset = headers_end;
+       
+            mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         }            
 
-        if (pr->len_pending > 0) {
-            n = mk_plugin_send_chunk(cr->socket, 
-                                     pr->data_pending + pr->offset_pending, 
-                                     pr->len_pending - pr->offset_pending);
+        int sent = 0;
+        while (sent != (pr->len_read - read_offset)) {
+            PLUGIN_TRACE("LOOP");
+            n = mk_palm_send_chunk(cr->socket,
+                                   pr->data_read + read_offset + sent,
+                                   pr->len_read - read_offset - sent);
 
-            if (n >= 0) {
-                
+            if (n < 0) {
+                PLUGIN_TRACE("WRITE ERROR");
+                perror("write");
+                return MK_PLUGIN_RET_END;
+            }
+            else {
+                PLUGIN_TRACE("BYTES SENT: %i", n);
+
+                sent += n;
             }
         }
+
+        mk_palm_request_update(cr->socket, pr);
+        return MK_PLUGIN_RET_CONTINUE;
 
         /* Turn off TCP_CORK_OFF */
         mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);

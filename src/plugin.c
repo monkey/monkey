@@ -181,6 +181,9 @@ void *mk_plugin_register(void *handler, char *path)
     p->next = NULL;
 
     if (!p->name || !p->version || !p->stages) {
+#ifdef TRACE
+        MK_TRACE("Bad plugin definition: %s", path);
+#endif
         mk_mem_free(p);
         return NULL;
     }
@@ -294,6 +297,7 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
             p = p->next;
         }
     }
+
     if (stage & MK_PLUGIN_STAGE_20) {
         p = config->plugins->stage_20;
         while (p) {
@@ -520,7 +524,7 @@ int mk_plugin_event_read(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event read");
+    MK_TRACE("Plugin, event read FD %i", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -540,7 +544,7 @@ int mk_plugin_event_write(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event write fd %i", socket);
+    MK_TRACE("Plugin, event write FD %i", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -558,7 +562,7 @@ int mk_plugin_event_write(int socket)
 int mk_plugin_event_error(int socket)
 {
 #ifdef TRACE
-    MK_TRACE("Plugin, event error fd %i", socket);
+    MK_TRACE("Plugin, event error FD %i", socket);
 #endif
 
     return 0;
@@ -568,7 +572,7 @@ int mk_plugin_event_close(int socket)
 {
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event close fd %i", socket);
+    MK_TRACE("Plugin, event close FD %i", socket);
 #endif
 
     return 0;
@@ -578,7 +582,7 @@ int mk_plugin_event_timeout(int socket)
 {
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event timeout fd %i", socket);
+    MK_TRACE("Plugin, event timeout FD %i", socket);
 #endif
 
     return 0;

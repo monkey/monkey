@@ -78,7 +78,6 @@ class BigPalm:
             p.start_monitor()
             self._palms.append(p)
 
-        import time
         while 1:
             time.sleep(1)
 

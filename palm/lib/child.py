@@ -49,6 +49,7 @@ class Child:
         pid = os.fork()
         if pid:
             self._pid = pid
+            print "My PID " + str(pid)
             # Close unused pipe ends
             os.close(self.int_w)
             os.close(self.int_r)

@@ -97,27 +97,27 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             if (events[i].events & (EPOLLHUP | EPOLLERR)) {
                 (*handler->error) (fd);
 #ifdef TRACE
-                MK_TRACE("EPoll, fd %i in EPOLLHUP or EPOLLER", fd);
+                MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
 #endif
                 continue;
             }
 
             if (events[i].events & EPOLLIN) {
 #ifdef TRACE
-                MK_TRACE("EPoll, fd %i in READ event", fd);
+                MK_TRACE("EPoll Event, FD %i READ", fd);
 #endif
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
 #ifdef TRACE
-                MK_TRACE("EPoll, fd %i in WRITE event", fd);
+                MK_TRACE("EPoll Event, FD %i WRITE", fd);
 #endif
                 ret = (*handler->write) (fd);
             }
 
             if (ret < 0) {
 #ifdef TRACE
-                MK_TRACE("Epoll, fd %i in force close status | ret = %i", fd, ret);
+                MK_TRACE("Epoll Event, FD %i FORCE CLOSE | ret = %i", fd, ret);
 #endif
                 (*handler->close) (fd);
             }
@@ -168,10 +168,6 @@ int mk_epoll_socket_change_mode(int efd, int socket, int mode)
 
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
     event.data.fd = socket;
-
-#ifdef TRACE
-    MK_TRACE("EPoll, changing FD %i mode", socket);
-#endif
 
     switch (mode) {
     case MK_EPOLL_READ:

@@ -243,7 +243,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* Plugin Stage 40: look for handlers for this request */
     ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr);
-    MK_TRACE("STAGE 40 RETURNED: %i", ret);
     if (ret == MK_PLUGIN_RET_CONTINUE) {
         return ret;
     }

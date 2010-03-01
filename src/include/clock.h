@@ -27,6 +27,8 @@
 #include <time.h>
 
 time_t log_current_utime;
+time_t monkey_init_time;
+
 mk_pointer log_current_time;
 mk_pointer header_current_time;
 

@@ -845,7 +845,7 @@ int _mk_plugin_init(void **api, char *confdir)
     return 0;
 }
 
-int _mk_plugin_stage_40(struct client_request *cr, struct request *sr)
+int _mk_plugin_stage_40(struct plugin *plugin, struct client_request *cr, struct request *sr)
 {
     /* Validate file/directory */
     if (!sr->file_info) {
