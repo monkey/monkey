@@ -308,7 +308,7 @@ void mk_utils_trace(const char *component, int color, const char *function,
     va_start( args, format );
 
     fprintf(stderr, "~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
-            ANSI_CYAN, (tv.tv_sec - monkey_init_time), tv.tv_usec, ANSI_RESET,
+            ANSI_CYAN, (int) (tv.tv_sec - monkey_init_time), (int) tv.tv_usec, ANSI_RESET,
             ANSI_MAGENTA, ANSI_BOLD, 
             ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file,
             line, ANSI_MAGENTA, 
