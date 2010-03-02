@@ -28,7 +28,6 @@ TESTS_OK=0
 
 for test_file in $TEST_FILES; do
 #	echo -ne "[TEST $NTEST/$TOTAL_TESTS]\t""case: $test_file\t\t"
-	sleep 0.5
 	printf "[%3d/%d]  %-32s  " $NTEST $TOTAL_TESTS "$test_file"
 
 	OUTPUT=`$HTTEST_CMD "$test_file" 2>&1`

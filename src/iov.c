@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2008, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 
 #include "header.h"
 #include "memory.h"
+#include "utils.h"
 #include "iov.h"
 
 struct mk_iov *mk_iov_create(int n, int offset)
@@ -61,7 +62,7 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
 
 #ifdef DEBUG_IOV
     if (mk_io->iov_idx > mk_io->size) {
-        printf("\nDEBUG IOV :: ERROR, Broke array size in:");
+        printf("\nDEBUG IOV :: ERROR, Broken array size in:");
         printf("\n          '''%s'''", buf);
         fflush(stdout);
     }
@@ -163,6 +164,9 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
         n = writev(fd, mk_io->io, mk_io->iov_idx);
 
         if (n < 0) {
+#ifdef TRACE
+            MK_TRACE("writev() error on FD %i", fd);
+#endif
             perror("writev");
         }
     }
