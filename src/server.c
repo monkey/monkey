@@ -19,9 +19,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -89,8 +90,8 @@ void mk_server_loop(int server_fd)
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
     while (1) {
-        remote_fd = accept(server_fd, (struct sockaddr *) &sockaddr,
-                           &socket_size);
+        remote_fd = accept4(server_fd, (struct sockaddr *) &sockaddr,
+                            &socket_size, SOCK_NONBLOCK);
 
         if (remote_fd == -1) {
             continue;

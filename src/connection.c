@@ -53,11 +53,10 @@ int mk_conn_read(int socket)
     cr = mk_request_client_get(socket);
     if (!cr) {
         /* Note: Linux don't set TCP_NODELAY socket flag by default, 
-         * also we set the client socket on non-blocking mode
          */
         mk_socket_set_tcp_nodelay(socket);
-        mk_socket_set_nonblocking(socket);
 
+        /* Create client */
         cr = mk_request_client_create(socket);
     }
     else {
