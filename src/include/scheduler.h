@@ -22,18 +22,9 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
-#define MK_SCHEDULER_ACTIVE_NONE 0
-#define MK_SCHEDULER_ACTIVE_UP 1
-#define MK_SCHEDULER_ACTIVE_DOWN -1
-
-#define MK_SCHEDULER_CLOSED_NONE 0
-#define MK_SCHEDULER_CLOSED_UP 1
-#define MK_SCHEDULER_CLOSED_DOWN -1
-
 #define MK_SCHEDULER_CONN_AVAILABLE -1
 #define MK_SCHEDULER_CONN_PENDING 0
 #define MK_SCHEDULER_CONN_PROCESS 1
-
 
 struct sched_connection
 {
@@ -50,8 +41,7 @@ struct sched_list_node
     pthread_t tid;
     pid_t pid;
     int epoll_fd;
-    int active_requests;
-    int closed_requests;
+
     struct sched_connection *queue;
     struct client_request *request_handler;
     struct sched_list_node *next;
