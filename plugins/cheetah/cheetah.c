@@ -233,12 +233,15 @@ void mk_cheetah_cmd_workers()
         printf("* Worker %i\n", sl->idx);
         printf("      - Task ID           : %i\n", sl->pid);
 
-        /* Memory Usage */
+        /* Memory Usage 
         printf("      - Memory usage      : ");
         mk_cheetah_print_worker_memory_usage(sl->pid);
 
+        
         printf("      - Active Requests   : %i\n", sl->active_requests);
         printf("      - Closed Requests   : %i\n", sl->closed_requests);
+        */
+        
         sl = sl->next;
     }
 }

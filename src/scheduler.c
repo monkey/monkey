@@ -193,32 +193,6 @@ struct sched_list_node *mk_sched_get_thread_conf()
     return NULL;
 }
 
-void mk_sched_update_thread_status(struct sched_list_node *sched,
-                                   int active, int closed)
-{
-    if (!sched) {
-        sched = mk_sched_get_thread_conf();
-    }
-
-    switch (active) {
-    case MK_SCHEDULER_ACTIVE_UP:
-        sched->active_requests++;
-        break;
-    case MK_SCHEDULER_ACTIVE_DOWN:
-        sched->active_requests--;
-        break;
-    }
-
-    switch (closed) {
-    case MK_SCHEDULER_CLOSED_UP:
-        sched->closed_requests++;
-        break;
-    case MK_SCHEDULER_CLOSED_DOWN:
-        sched->closed_requests--;
-        break;
-    }
-}
-
 int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
 {
     unsigned int i, ret;
@@ -335,11 +309,11 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
                                 int remote_fd, int status)
 {
     int i;
-
+    
     if (!sched) {
         return -1;
     }
-
+    
     for (i = 0; i < config->workers; i++) {
         if (sched->queue[i].socket == remote_fd) {
             sched->queue[i].status = status;

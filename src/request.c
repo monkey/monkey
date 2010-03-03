@@ -879,11 +879,6 @@ struct client_request *mk_request_client_create(int socket)
     }
     mk_sched_set_request_index(request_index);
 
-
-    mk_sched_update_thread_status(NULL,
-                                  MK_SCHEDULER_ACTIVE_UP,
-                                  MK_SCHEDULER_CLOSED_NONE);
-
     return cr;
 }
 
@@ -936,12 +931,6 @@ struct client_request *mk_request_client_remove(int socket)
         cr = cr->next;
     }
 
-    /* No keep alive connection */
-    if (cr->counter_connections == 0) {
-        mk_sched_update_thread_status(NULL,
-                                      MK_SCHEDULER_ACTIVE_DOWN,
-                                      MK_SCHEDULER_CLOSED_UP);
-    }
     //mk_pointer_free(&cr->ip);
     mk_mem_free(cr->body);
     mk_mem_free(cr);

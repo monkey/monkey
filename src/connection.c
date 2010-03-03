@@ -59,11 +59,6 @@ int mk_conn_read(int socket)
         mk_socket_set_nonblocking(socket);
 
         cr = mk_request_client_create(socket);
-
-        /* Update requests counter */
-        mk_sched_update_thread_status(NULL,
-                                      MK_SCHEDULER_ACTIVE_UP,
-                                      MK_SCHEDULER_CLOSED_DOWN);
     }
     else {
         /* If cr struct already exists, that could means that we 
@@ -71,9 +66,7 @@ int mk_conn_read(int socket)
          * applies we increase the thread status for active connections
          */
         if (cr->counter_connections > 1 && cr->body_length == 0) {
-            mk_sched_update_thread_status(NULL,
-                                          MK_SCHEDULER_ACTIVE_UP,
-                                          MK_SCHEDULER_CLOSED_NONE);
+            /* FIXME: KA Connection */
         }
     }
 
@@ -148,11 +141,6 @@ int mk_conn_write(int socket)
          * connection can continue working or we must 
          * close it.
          */
-
-        mk_sched_update_thread_status(sched,
-                                      MK_SCHEDULER_ACTIVE_DOWN,
-                                      MK_SCHEDULER_CLOSED_UP);
-
         if (ka < 0 || ret < 0) {
             mk_request_client_remove(socket);
             return -1;
