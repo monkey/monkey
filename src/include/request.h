@@ -89,6 +89,7 @@ parametros de una peticion */
 #define MK_REQUEST_STATUS_COMPLETED 0
 
 #define EXIT_NORMAL -1
+#define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
 /* Request error messages for log file */

@@ -230,7 +230,14 @@ int mk_handler_write(int socket, struct client_request *cr)
             return final_status;
         }
         else if (final_status <= 0) {
-            mk_logger_write_log(cr, sr->log, sr->host_conf);
+            switch (final_status) {
+            case EXIT_NORMAL:
+                mk_logger_write_log(cr, sr->log, sr->host_conf);
+                break;
+            case EXIT_ABORT:
+                return -1;
+                break;
+            }
         }
 
         sr = sr->next;
@@ -250,7 +257,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     status = mk_request_header_process(s_request);
 
     if (status < 0) {
-        return EXIT_NORMAL;
+        return EXIT_ABORT;
     }
 
     switch (s_request->method) {
