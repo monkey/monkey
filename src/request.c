@@ -410,7 +410,7 @@ int mk_request_header_process(struct request *sr)
     headers = sr->body.data + prot_end + mk_crlf.len;
 
     /* URI processed */
-    sr->uri_processed = get_real_string(sr->uri);
+    sr->uri_processed = mk_utils_hexuri_to_ascii(sr->uri);
 
     if (!sr->uri_processed) {
         sr->uri_processed = mk_pointer_to_buf(sr->uri);

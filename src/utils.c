@@ -201,15 +201,17 @@ int mk_utils_set_daemon()
     return 0;
 }
 
-
-char *get_real_string(mk_pointer uri)
+/* If the URI contains hexa format characters it will return 
+ * convert the Hexa values to ASCII character 
+ */
+char *mk_utils_hexuri_to_ascii(mk_pointer uri)
 {
 
     int i, hex_result, aux_char;
     int buf_idx = 0;
     char *buf;
     char hex[3];
-
+    
     if ((i = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
         return NULL;
     }

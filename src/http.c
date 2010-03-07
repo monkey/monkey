@@ -129,6 +129,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     int ret;
     int debug_error = 0, bytes = 0;
     struct mimetype *mime;
+    char *uri_data = NULL;
+    char uri_len = 0;
     mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
 
 #ifdef TRACE
@@ -150,8 +152,18 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         debug_error = 1;
     }
 
-    if (mk_string_search_n(sr->uri.data, HTTP_DIRECTORY_BACKWARD,
-                           sr->uri.len) >= 0) {
+    /* Check backward directory request */
+    if (sr->uri_processed) {
+        uri_data = sr->uri_processed;
+        uri_len = strlen(sr->uri_processed);
+    }
+    else{
+        uri_data = sr->uri.data;
+        uri_len = sr->uri.len;
+    }
+    if (mk_string_search_n(uri_data, 
+                           HTTP_DIRECTORY_BACKWARD,
+                           uri_len) >= 0) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
         return -1;

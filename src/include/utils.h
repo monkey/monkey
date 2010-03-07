@@ -66,8 +66,6 @@ mk_pointer PutDate_string(time_t date);
 
 time_t PutDate_unix(char *date);
 
-char *get_real_string(mk_pointer req_uri);
-
 char *get_name_protocol(int remote_protocol);
 
 char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
@@ -86,6 +84,7 @@ char *get_end_position(char *buf);
 
 int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
+char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
 
 #ifdef TRACE
 void mk_utils_trace(const char *component, int color, const char *function, 
