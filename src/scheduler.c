@@ -57,6 +57,8 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     sr->next = NULL;
 
     for (i = 0; i < config->worker_capacity; i++) {
+        /* Pre alloc IPv4 memory buffer */
+        sr->queue[i].ipv4.data = mk_mem_malloc_z(16);
         sr->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
     }
 
@@ -201,7 +203,6 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             /* Set IP */
-            sched->queue[i].ipv4.data = mk_mem_malloc_z(16);
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
             mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
@@ -236,9 +237,6 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
-        /* Free ipv4 mk_pointer allocated in mk_sched_add_client() */
-        mk_pointer_free(&sc->ipv4);
-
         /* Close socket and change status */
         close(remote_fd);
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
