@@ -236,6 +236,10 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
+        /* Free ipv4 mk_pointer allocated in mk_sched_add_client() */
+        mk_pointer_free(&sc->ipv4);
+
+        /* Close socket and change status */
         close(remote_fd);
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         return 0;
