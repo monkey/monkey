@@ -32,7 +32,6 @@
 #define MK_IOV_CRLFCRLF "\r\n\r\n"
 #define MK_IOV_LF "\n"
 #define MK_IOV_SPACE " "
-#define MK_IOV_HEADER_VALUE ": "
 #define MK_IOV_SLASH "/"
 #define MK_IOV_NONE ""
 #define MK_IOV_EQUAL "="
@@ -46,7 +45,6 @@ mk_pointer mk_iov_crlf;
 mk_pointer mk_iov_crlfcrlf;
 mk_pointer mk_iov_lf;
 mk_pointer mk_iov_space;
-mk_pointer mk_iov_header_value;
 mk_pointer mk_iov_slash;
 mk_pointer mk_iov_none;
 mk_pointer mk_iov_equal;

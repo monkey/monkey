@@ -163,7 +163,7 @@ int mk_header_send(int fd, struct client_request *cr,
     mk_iov_add_entry(iov,
                      mk_header_short_date.data,
                      mk_header_short_date.len,
-                     mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
     mk_iov_add_entry(iov,
                      header_current_time.data,
                      header_current_time.len,
@@ -200,7 +200,7 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_short_location.data,
                          mk_header_short_location.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov,
                          sh->location,
@@ -211,7 +211,7 @@ int mk_header_send(int fd, struct client_request *cr,
     if (sh->last_modified.len > 0) {
         mk_iov_add_entry(iov, mk_header_last_modified.data,
                          mk_header_last_modified.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
         mk_iov_add_entry(iov, sh->last_modified.data,
                          sh->last_modified.len,
                          mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
@@ -222,7 +222,7 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_short_ct.data,
                          mk_header_short_ct.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov,
                          sh->content_type.data,
@@ -236,7 +236,7 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_te_chunked.data,
                          mk_header_te_chunked.len,
-                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
     }
 

@@ -218,7 +218,6 @@ void mk_iov_separators_init()
     mk_pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
     mk_pointer_set(&mk_iov_lf, MK_IOV_LF);
     mk_pointer_set(&mk_iov_space, MK_IOV_SPACE);
-    mk_pointer_set(&mk_iov_header_value, MK_IOV_HEADER_VALUE);
     mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);
     mk_pointer_set(&mk_iov_none, MK_IOV_NONE);
     mk_pointer_set(&mk_iov_equal, MK_IOV_EQUAL);
