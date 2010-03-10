@@ -44,15 +44,15 @@
 
 int mk_http_method_check(mk_pointer method)
 {
-    if (strncasecmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {
         return HTTP_METHOD_GET;
     }
 
-    if (strncasecmp(method.data, HTTP_METHOD_POST_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_POST_STR, method.len) == 0) {
         return HTTP_METHOD_POST;
     }
 
-    if (strncasecmp(method.data, HTTP_METHOD_HEAD_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_HEAD_STR, method.len) == 0) {
         return HTTP_METHOD_HEAD;
     }
 
@@ -96,13 +96,13 @@ int mk_http_method_get(char *body)
 
 int mk_http_protocol_check(char *protocol, int len)
 {
-    if (strncasecmp(protocol, HTTP_PROTOCOL_11_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_11_STR, len) == 0) {
         return HTTP_PROTOCOL_11;
     }
-    if (strncasecmp(protocol, HTTP_PROTOCOL_10_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_10_STR, len) == 0) {
         return HTTP_PROTOCOL_10;
     }
-    if (strncasecmp(protocol, HTTP_PROTOCOL_09_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_09_STR, len) == 0) {
         return HTTP_PROTOCOL_09;
     }
 
