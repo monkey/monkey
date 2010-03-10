@@ -32,7 +32,7 @@ time_t monkey_init_time;
 mk_pointer log_current_time;
 mk_pointer header_current_time;
 
-#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
+#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
 
 void *mk_clock_worker_init(void *args);
 void mk_clock_set_time();

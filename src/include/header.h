@@ -71,10 +71,11 @@ mk_pointer mk_header_short_location;
 mk_pointer mk_header_short_ct;
 
 /* Accept ranges */
-#define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes"
+#define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes" MK_CRLF
 
 #define MK_HEADER_CONN_KA "Connection: Keep-Alive" MK_CRLF
 #define MK_HEADER_CONN_CLOSE "Connection: Close" MK_CRLF
+#define MK_HEADER_CONTENT_LENGTH "Content-Length: "
 
 /* Transfer Encoding */
 #define MK_HEADER_TE_TYPE_CHUNKED 0
@@ -85,6 +86,7 @@ mk_pointer mk_header_short_ct;
 /* mk pointers with response server headers */
 mk_pointer mk_header_conn_ka;
 mk_pointer mk_header_conn_close;
+mk_pointer mk_header_content_length;
 mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;

@@ -273,7 +273,7 @@ mk_pointer mk_utils_int2mkp(int n)
     int size = 32;
 
     buf = mk_mem_malloc(size);
-    len = snprintf(buf, 32, "%i", n);
+    len = snprintf(buf, 32, "%i\r\n", n);
 
     p.data = buf;
     p.len = len;
