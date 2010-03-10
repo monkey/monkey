@@ -80,7 +80,7 @@ int SendFile(int socket, struct client_request *cr, struct request *sr)
  en el header */
 mk_pointer PutDate_string(time_t date)
 {
-    int n, size = 50;
+    int n, size = 32;
     mk_pointer date_gmt;
     struct tm *gmt_tm;
 
@@ -273,7 +273,7 @@ mk_pointer mk_utils_int2mkp(int n)
     int size = 32;
 
     buf = mk_mem_malloc(size);
-    len = snprintf(buf, 32, "%i\r\n", n);
+    len = snprintf(buf, size, "%i\r\n", n);
 
     p.data = buf;
     p.len = len;

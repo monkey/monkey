@@ -89,12 +89,13 @@ int mk_mimetype_add(char *name, char *type, char *bin_path)
 
     new_mime->name = mk_string_dup(name);
 
-    len = strlen(type) + 2;
+    len = strlen(type) + 3;
     new_mime->type.data = mk_mem_malloc(len);
-    new_mime->type.len = len;
+    new_mime->type.len = len - 1;
 
     strcpy(new_mime->type.data, type);
     strcat(new_mime->type.data, MK_CRLF);
+    new_mime->type.data[len-1] = '\0';
 
     //mk_pointer_set(&new_mime->type, mk_string_dup(type));
     new_mime->script_bin_path = mk_string_dup(bin_path);
