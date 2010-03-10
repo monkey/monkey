@@ -70,16 +70,21 @@ int mk_mimetype_add(char *name, char *type, char *bin_path)
 
     new_mime->name = name;
 
+    /* Alloc space */
     len = strlen(type) + 3;
     new_mime->type.data = mk_mem_malloc(len);
     new_mime->type.len = len - 1;
 
+    /* Copy mime type and add CRLF */
     strcpy(new_mime->type.data, type);
     strcat(new_mime->type.data, MK_CRLF);
     new_mime->type.data[len-1] = '\0';
     new_mime->next = NULL;
 
-    //mk_mem_free(type);
+    /* Free incoming type, 'name' is not freed as it's used in 
+     * the main mimetype list
+     */
+    mk_mem_free(type);
 
     if (first_mime == NULL) {
         first_mime = new_mime;
