@@ -66,7 +66,7 @@ struct mk_config *mk_config_create(char *path)
             continue;
 
         key = strtok_r(buf, "\"\t ", &last);
-        val = strtok_r(NULL, "\n", &last);
+        val = strtok_r(NULL, "\"\t ", &last);
 
         if (!key || !val) {
             continue;
@@ -75,6 +75,7 @@ struct mk_config *mk_config_create(char *path)
         /* Allow new entry found */
         new = mk_mem_malloc(sizeof(struct mk_config));
         new->key = mk_string_dup(key);
+
         new->val = mk_string_dup(val);
         new->next = NULL;
 
