@@ -32,29 +32,45 @@
 #include "memory.h"
 #include "str.h"
 #include "config.h"
-#include "monkey.h"
 #include "request.h"
+#include "monkey.h"
 
 /* Carga en estructura los mimetypes */
 void mk_mimetype_read_config()
 {
-    char path[MAX_PATH];
-    struct mk_config *c;
+    char buffer[255], path[MAX_PATH];
+    char *name = 0, *type = 0, *last = 0;
+    FILE *mime_file;
 
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
 
-    /* Read configuration file */
-    c = mk_config_create(path);
-
-    while (c) {
-        if (mk_mimetype_add(c->key, c->val, NULL) != 0) {
-            puts("Error loading Mime Types");
-        }
-        c = c->next;
+    if ((mime_file = fopen(path, "r")) == NULL) {
+        puts("Error: I can't open monkey.mime file");
+        exit(1);
     }
 
-    /* Free configuration */
-    mk_config_free(c);
+    /* Rutina que carga en memoria los mime types */
+    while (fgets(buffer, 255, mime_file)) {
+        int len;
+        len = strlen(buffer);
+        if (buffer[len - 1] == '\n') {
+            buffer[--len] = 0;
+            if (len && buffer[len - 1] == '\r')
+                buffer[--len] = 0;
+        }
+
+        name = strtok_r(buffer, "\"\t ", &last);
+        type = strtok_r(NULL, "\"\t ", &last);
+
+        if (!name || !type)
+            continue;
+        if (buffer[0] == '#')
+            continue;
+
+        if (mk_mimetype_add(name, type, NULL) != 0)
+            puts("Error loading Mime Types");
+    }
+    fclose(mime_file);
 
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
@@ -71,13 +87,16 @@ int mk_mimetype_add(char *name, char *type, char *bin_path)
 
     new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
 
-    new_mime->name = name;
+    new_mime->name = mk_string_dup(name);
 
-    len = strlen(name) + 2;
+    len = strlen(type) + 2;
     new_mime->type.data = mk_mem_malloc(len);
-    strcat(new_mime->type.data, MK_CRLF);
     new_mime->type.len = len;
 
+    strcpy(new_mime->type.data, type);
+    strcat(new_mime->type.data, MK_CRLF);
+
+    //mk_pointer_set(&new_mime->type, mk_string_dup(type));
     new_mime->script_bin_path = mk_string_dup(bin_path);
 
     new_mime->next = NULL;

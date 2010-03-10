@@ -46,7 +46,7 @@ void mk_cache_thread_init()
     pthread_setspecific(mk_cache_iov_log, (void *) cache_iov_log);
 
     /* Cache iov header struct */
-    cache_iov_header = mk_iov_create(45, 0);
+    cache_iov_header = mk_iov_create(32, 0);
     pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
 
     /* Cache header toc, monkey just search for MK_KNOWN_HEADERS

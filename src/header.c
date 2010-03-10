@@ -256,7 +256,7 @@ int mk_header_send(int fd, struct client_request *cr,
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             length = (unsigned int)
                 (sh->content_length - sh->ranges[0]);
-            m_build_buffer(&buffer, &len, "%s%i", RH_CONTENT_LENGTH, length);
+            m_build_buffer(&buffer, &len, "%s %i", RH_CONTENT_LENGTH, length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
 
             m_build_buffer(&buffer,
@@ -306,8 +306,8 @@ int mk_header_send(int fd, struct client_request *cr,
         }
     }
     else if (sh->content_length >= 0) {
-        mk_iov_add_entry(iov, mk_rh_content_length.data,
-                         mk_rh_content_length.len,
+        mk_iov_add_entry(iov, mk_header_content_length.data,
+                         mk_header_content_length.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov, sh->content_length_p.data,
@@ -322,7 +322,7 @@ int mk_header_send(int fd, struct client_request *cr,
 
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
     mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
-    
+
 #ifdef DEBUG_HEADERS_OUT
     mk_iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
 #endif
