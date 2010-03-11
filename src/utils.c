@@ -255,16 +255,6 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
     return buf;
 }
 
-void mk_utils_toupper(char *string)
-{
-    int i, len;
-
-    len = strlen(string);
-    for (i = 0; i < len; i++) {
-        string[i] = toupper(string[i]);
-    }
-}
-
 mk_pointer mk_utils_int2mkp(int n)
 {
     mk_pointer p;
