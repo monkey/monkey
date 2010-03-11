@@ -260,10 +260,9 @@ mk_pointer mk_utils_int2mkp(int n)
     mk_pointer p;
     char *buf;
     unsigned long len;
-    int size = 32;
 
-    buf = mk_mem_malloc(size);
-    len = snprintf(buf, size, "%i\r\n", n);
+    buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
+    len = snprintf(buf, MK_UTILS_INT2MKP_BUFFER_LEN, "%i\r\n", n);
 
     p.data = buf;
     p.len = len;

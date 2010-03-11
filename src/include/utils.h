@@ -27,6 +27,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when converting an int to mk_pointer */
+
 /* Tipo de envio de datos en fdprintf(...) */
 #define CHUNKED 0
 #define NO_CHUNKED 1
