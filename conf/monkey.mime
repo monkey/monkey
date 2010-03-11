@@ -1,5 +1,25 @@
 html            text/html
-jpg             image/jpeg
+
+bmp		image/bmp
+gif		image/gif
+ief		image/ief
+jpeg	   	image/jpeg
+jpg		image/jpeg
+jpe		image/jpeg
+png		image/png
+tiff	   	image/tiff
+tif		image/tiff
+wbmp	   	image/vnd.wap.wbmp
+ras		image/x-cmu-raster
+ico             image/x-icon
+pnm		image/x-portable-anymap
+pbm		image/x-portable-bitmap
+pgm		image/x-portable-graymap
+ppm		image/x-portable-pixmap
+rgb		image/x-rgb
+xbm		image/x-xbitmap
+xpm		image/x-xpixmap
+xwd		image/x-xwindowdump
 
 ez		application/andrew-inset
 hqx		application/mac-binhex40
@@ -84,27 +104,6 @@ wav		audio/x-wav
 
 pdb		chemical/x-pdb
 xyz		chemical/x-pdb
-
-bmp		image/bmp
-gif		image/gif
-ief		image/ief
-jpeg	   	image/jpeg
-jpg		image/jpeg
-jpe		image/jpeg
-png		image/png
-tiff	   	image/tiff
-tif		image/tiff
-wbmp	   	image/vnd.wap.wbmp
-ras		image/x-cmu-raster
-ico             image/x-icon
-pnm		image/x-portable-anymap
-pbm		image/x-portable-bitmap
-pgm		image/x-portable-graymap
-ppm		image/x-portable-pixmap
-rgb		image/x-rgb
-xbm		image/x-xbitmap
-xpm		image/x-xpixmap
-xwd		image/x-xwindowdump
 
 igs		model/iges
 iges	   	model/iges
