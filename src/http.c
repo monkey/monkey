@@ -518,41 +518,41 @@ int mk_http_range_parse(struct request *sr)
  */
 int mk_http_pending_request(struct client_request *cr)
 {
-    int n, len;
-    char *str;
+    int n;
+    char *end;
 
-    len = cr->body_length;
-
-    /* try to match CRLF end */
-    if (strcmp(cr->body + len - mk_endblock.len, mk_endblock.data) == 0) {
-        n = len - mk_endblock.len;
+    if (cr->body_length >= mk_endblock.len) {
+        end = (cr->body + cr->body_length) - mk_endblock.len;
     }
     else {
-        n = mk_string_search(cr->body, mk_endblock.data);
-    }
-
-    if (n <= 0) {
         return -1;
     }
 
-    if (cr->first_block_end < 0) {
-        cr->first_block_end = n;
+    /* try to match CRLF at the end of the request */
+    if (cr->body_pos_end < 0) { 
+        if (strncmp(end, mk_endblock.data, mk_endblock.len) == 0) {
+            cr->body_pos_end = cr->body_length - mk_endblock.len;
+        }
+        else if ((n = mk_string_search(cr->body, mk_endblock.data)) >= 0 ){
+            cr->body_pos_end = n;
+        }
+        else {
+            return -1;
+        }
     }
-
-    str = cr->body + n + mk_endblock.len;
 
     if (cr->first_method == HTTP_METHOD_UNKNOWN) {
         cr->first_method = mk_http_method_get(cr->body);
     }
 
     if (cr->first_method == HTTP_METHOD_POST) {
-        if (cr->first_block_end > 0) {
+        if (cr->body_pos_end > 0) {
             /* if first block has ended, we need to verify if exists 
              * a previous block end, that will means that the POST 
              * method has sent the whole information. 
              * just for ref: pipelining is not allowed with POST
              */
-            if (cr->first_block_end == cr->body_length - mk_endblock.len) {
+            if (cr->body_pos_end == cr->body_length - mk_endblock.len) {
                 /* Content-length is required, if is it not found, 
                  * we pass as successfull in order to raise the error
                  * later

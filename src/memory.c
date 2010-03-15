@@ -119,7 +119,7 @@ void mk_pointer_print(mk_pointer p)
     int i;
 
     printf("\nDEBUG MK_POINTER: '");
-    for (i = 0; i < p.len; i++) {
+    for (i = 0; i < p.len && p.data != NULL; i++) {
         printf("%c", p.data[i]);
     }
     printf("'");

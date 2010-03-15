@@ -61,40 +61,56 @@
 
 struct request *mk_request_parse(struct client_request *cr)
 {
-    int i, n, init_block = 0, n_blocks = 0;
+    int i, end;
+    int blocks = 0;
     int pipelined = FALSE;
     struct request *cr_buf = 0, *cr_search = 0;
 
-    init_block = 0;
+    for (i = 0; i <= cr->body_pos_end; i++) {
+        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining 
+         * request can be involved. 
+         * Previous catch in mk_http_pending_request 
+         */
+        if (i == 0) {
+            end = cr->body_pos_end;
+        }
+        else {
+            end = mk_string_search(cr->body + i, mk_endblock.data) + i;
+        }
 
-    for (i = cr->first_block_end; i <= cr->body_length - mk_endblock.len; i++) {
+        if (end <  0) {
+            return NULL;
+        }
+
         /* Allocating request block */
         cr_buf = mk_request_alloc();
 
         /* mk_pointer */
-        cr_buf->body.data = cr->body + init_block;
-        cr_buf->body.len = i - init_block;
+        cr_buf->body.data = cr->body + i;
+        cr_buf->body.len = end - i;
 
-        if (i == cr->first_block_end) {
+        /* Method, previous catch in mk_http_pending_request */
+        if (i == 0) {
             cr_buf->method = cr->first_method;
         }
         else {
             cr_buf->method = mk_http_method_get(cr_buf->body.data);
         }
-
         cr_buf->next = NULL;
-
-        i = init_block = i + mk_endblock.len;
 
         /* Looking for POST data */
         if (cr_buf->method == HTTP_METHOD_POST) {
-            cr_buf->post_variables = mk_method_post_get_vars(cr->body, i);
-
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body, 
+                                                             end + mk_endblock.len);
             if (cr_buf->post_variables.len >= 0) {
-                i = init_block = i + cr_buf->post_variables.len;
+                i += cr_buf->post_variables.len;
             }
         }
 
+        /* Increase index to the end of the current block */
+        i = (end + mk_endblock.len) - 1;
+
+        /* Link block */
         if (!cr->request) {
             cr->request = cr_buf;
         }
@@ -110,19 +126,27 @@ struct request *mk_request_parse(struct client_request *cr)
                 }
             }
         }
-        n_blocks++;
-        n = mk_string_search(cr->body + i, mk_endblock.data);
-        if (n <= 0) {
-            break;
-        }
-        else {
-            i = i + n;
-        }
+
+        /* Update counter */
+        blocks++;
     }
+
+     
+    /* DEBUG BLOCKS 
+    cr_search = cr->request;
+    while(cr_search){
+        printf("\n");
+        MK_TRACE("BLOCK INIT");
+        mk_pointer_print(cr_search->body);
+        MK_TRACE("BLOCK_END");
+
+        cr_search = cr_search->next;
+    }
+    */
 
     /* Checking pipelining connection */
     cr_search = cr->request;
-    if (n_blocks > 1) {
+    if (blocks > 1) {
         pipelined = TRUE;
 
         while (cr_search) {
@@ -142,17 +166,6 @@ struct request *mk_request_parse(struct client_request *cr)
             cr->pipelined = TRUE;
         }
     }
-
-    /* DEBUG BLOCKS 
-       printf("*****************************************");
-       fflush(stdout);      
-       cr_search = cr->request;
-       while(cr_search){
-       printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
-       fflush(stdout);
-       cr_search = cr_search->next;
-       }
-     */
 
     return cr->request;
 }
@@ -873,7 +886,7 @@ struct client_request *mk_request_client_create(int socket)
     cr->next = NULL;
     cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
     cr->body_length = 0;
-    cr->first_block_end = -1;
+    cr->body_pos_end = -1;
     cr->first_method = HTTP_METHOD_UNKNOWN;
 
     request_index = mk_sched_get_request_index();
@@ -983,7 +996,7 @@ void mk_request_ka_next(struct client_request *cr)
 {
     bzero(cr->body, sizeof(cr->body));
     cr->first_method = -1;
-    cr->first_block_end = -1;
+    cr->body_pos_end = -1;
     cr->body_length = 0;
     cr->counter_connections++;
 }

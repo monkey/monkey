@@ -132,7 +132,7 @@ struct client_request
 
     int body_length;
 
-    int first_block_end;
+    int body_pos_end;
     int first_method;
 
     time_t init_time;
