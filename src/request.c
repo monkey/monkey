@@ -63,7 +63,6 @@ struct request *mk_request_parse(struct client_request *cr)
 {
     int i, end;
     int blocks = 0;
-    int pipelined = FALSE;
     struct request *cr_buf = 0, *cr_search = 0;
 
     for (i = 0; i <= cr->body_pos_end; i++) {
@@ -147,24 +146,16 @@ struct request *mk_request_parse(struct client_request *cr)
     /* Checking pipelining connection */
     cr_search = cr->request;
     if (blocks > 1) {
-        pipelined = TRUE;
-
         while (cr_search) {
+            /* Pipelining request must use GET or HEAD methods */
             if (cr_search->method != HTTP_METHOD_GET &&
                 cr_search->method != HTTP_METHOD_HEAD) {
-                pipelined = FALSE;
-                break;
+                return NULL;
             }
             cr_search = cr_search->next;
         }
-
-        if (pipelined == FALSE) {
-            /* All pipelined requests must use GET method */
-            return NULL;
-        }
-        else {
-            cr->pipelined = TRUE;
-        }
+        
+        cr->pipelined = TRUE;
     }
 
     return cr->request;
