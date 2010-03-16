@@ -22,7 +22,7 @@
 /* MIME Structs variables*/
 #include "memory.h"
 
-#define MIMETYPE_DEFAULT_TYPE "text/plain"
+#define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
 #define MIMETYPE_DEFAULT_NAME "default"
 
 #define MAX_MIMETYPES_NOMBRE 15
