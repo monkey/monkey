@@ -670,7 +670,7 @@ void mk_request_error(int num_error, struct client_request *cr,
         mk_pointer_reset(&s_request->headers->content_type);
     }
     else {
-        mk_pointer_set(&s_request->headers->content_type, "text/html");
+        mk_pointer_set(&s_request->headers->content_type, "text/html\r\n");
     }
 
     mk_header_send(cr->socket, cr, s_request, s_log);
