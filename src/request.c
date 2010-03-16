@@ -70,12 +70,7 @@ struct request *mk_request_parse(struct client_request *cr)
          * request can be involved. 
          * Previous catch in mk_http_pending_request 
          */
-        if (i == 0) {
-            end = cr->body_pos_end;
-        }
-        else {
-            end = mk_string_search(cr->body + i, mk_endblock.data) + i;
-        }
+        end = mk_string_search(cr->body + i, mk_endblock.data) + i;
 
         if (end <  0) {
             return NULL;
