@@ -143,16 +143,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->real_path.len = sr->host_conf->documentroot.len;
     }
 
-    if (sr->user_home == VAR_OFF) {
-        mk_buffer_cat(&sr->real_path, sr->host_conf->documentroot.data,
-                      sr->uri_processed);
-    }
-
-    if (sr->method != HTTP_METHOD_HEAD) {
-        debug_error = 1;
-    }
-
-    /* Check backward directory request */
+    /* Map URI */
     if (sr->uri_processed) {
         uri_data = sr->uri_processed;
         uri_len = strlen(sr->uri_processed);
@@ -161,6 +152,21 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         uri_data = sr->uri.data;
         uri_len = sr->uri.len;
     }
+
+    /* Compose real path */
+    if (sr->user_home == VAR_OFF) {
+        mk_buffer_cat(&sr->real_path, 
+                      sr->host_conf->documentroot.data,
+                      sr->host_conf->documentroot.len,
+                      uri_data,
+                      uri_len);
+    }
+
+    if (sr->method != HTTP_METHOD_HEAD) {
+        debug_error = 1;
+    }
+
+    /* Check backward directory request */
     if (mk_string_search_n(uri_data, 
                            HTTP_DIRECTORY_BACKWARD,
                            uri_len) >= 0) {

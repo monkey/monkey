@@ -115,14 +115,8 @@ time_t PutDate_unix(char *date)
     return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2)
+int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
 {
-
-    int len1, len2;
-
-    len1 = strlen(buf1);
-    len2 = strlen(buf2);
-
     /* alloc space */
     p->data = (char *) mk_mem_malloc(len1 + len2 + 1);
 

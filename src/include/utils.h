@@ -74,7 +74,7 @@ char *get_name_protocol(int remote_protocol);
 char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
                      ...);
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2);
+int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
 #define SYML_NOT -1
 #define SYML_OK 0
