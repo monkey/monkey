@@ -992,5 +992,8 @@ void mk_request_ka_next(struct client_request *cr)
     cr->body_pos_end = -1;
     cr->body_length = 0;
     cr->counter_connections++;
-}
 
+    /* Update data for scheduler */
+    cr->init_time = log_current_utime;
+    cr->status = MK_REQUEST_STATUS_INCOMPLETE;
+}

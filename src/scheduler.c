@@ -293,7 +293,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
     while (req_cl) {
         if (req_cl->status == MK_REQUEST_STATUS_INCOMPLETE) {
-            if ((req_cl->init_time + config->timeout) >= log_current_utime) {
+            if ((req_cl->init_time + config->timeout) <= log_current_utime) {
 #ifdef TRACE
                 MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
                          req_cl->socket);
