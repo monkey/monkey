@@ -232,6 +232,9 @@ int mk_handler_write(int socket, struct client_request *cr)
             switch (final_status) {
             case EXIT_NORMAL:
                 mk_logger_write_log(cr, sr->log, sr->host_conf);
+                if (sr->close_now == VAR_ON) {
+                    return -1;
+                }
                 break;
             case EXIT_ABORT:
                 return -1;
@@ -476,6 +479,9 @@ int mk_request_header_process(struct request *sr)
         if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
             sr->keep_alive = VAR_ON;
         }
+        else if(mk_string_casestr(sr->connection.data, "Close")) {
+            sr->close_now = VAR_ON;
+        }
     }
     else {
         /* Default value for HTTP/1.1 */
@@ -706,6 +712,7 @@ struct request *mk_request_alloc()
 
     request->status = VAR_OFF;  /* Request not processed yet */
     request->make_log = VAR_ON; /* build log file of this request ? */
+    request->close_now = VAR_OFF;
 
     mk_pointer_reset(&request->body);
 

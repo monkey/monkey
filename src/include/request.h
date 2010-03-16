@@ -164,7 +164,7 @@ struct request
     int pipelined;              /* Pipelined request */
     mk_pointer body;
 
-        /*----First header of client request--*/
+    /*----First header of client request--*/
     int method;
     mk_pointer method_p;
     mk_pointer uri;             /* original request */
@@ -172,7 +172,12 @@ struct request
     int uri_twin;
 
     int protocol;
-        /*------------------*/
+
+    /* If request specify Connection: close, Monkey will
+     * close the connection after send the response, by
+     * default this var is set as VAR_OFF;
+     */
+    int close_now;
 
         /*---Request headers--*/
     int content_length;
