@@ -567,6 +567,8 @@ void mk_request_error(int num_error, struct client_request *cr,
     mk_pointer message, *page = 0;
     long n;
 
+    s_log->error_details.data = NULL;
+
     switch (num_error) {
     case M_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",
