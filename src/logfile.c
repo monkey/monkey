@@ -267,7 +267,7 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
         /* object size */
         mk_iov_add_entry(iov,
                          log->size_p.data,
-                         log->size_p.len, mk_iov_lf, MK_IOV_NOT_FREE_BUF);
+                         log->size_p.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         /* Send info to pipe */
         mk_iov_send(h->log_access[1], iov, MK_IOV_SEND_TO_PIPE);
