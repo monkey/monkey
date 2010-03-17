@@ -1,15 +1,15 @@
 ###############################################################################
 # DESCRIPTION
-#	HTTP/1.0 Request with 'Connection: Keep-Alive'.
+#	Server must not send connection header
 #
 # AUTHOR
 #	Eduardo Silva	<edsiper@gmail.com>
 #
 # DATE
-#	March 16 2010
+#	March 17 2010
 #
 # COMMENTS
-#	Expect header response with keep-alive header	
+#	Do not Expect 'Connection:' from server
 ###############################################################################
 
 
@@ -18,11 +18,11 @@ INCLUDE __MACROS
 
 CLIENT
 _REQ $HOST $PORT
-__GET / $HTTPVER10
-__Connection: Keep-Alive
+__GET / $HTTPVER
+__Host: $HOST
+__Connection: close
 __
 _EXPECT . "HTTP/1.1 200 OK"
-_EXPECT . "Keep-Alive: timeout=15, max=20"
-_EXPECT . "Connection: Keep-Alive"
+_EXPECT . "Connection: Close"
 _WAIT
 END
