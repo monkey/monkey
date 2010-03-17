@@ -68,7 +68,6 @@ struct request *mk_request_parse(struct client_request *cr)
     for (i = 0; i <= cr->body_pos_end; i++) {
         /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining 
          * request can be involved. 
-         * Previous catch in mk_http_pending_request 
          */
         end = mk_string_search(cr->body + i, mk_endblock.data) + i;
 
