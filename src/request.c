@@ -126,7 +126,7 @@ struct request *mk_request_parse(struct client_request *cr)
     }
 
      
-    /* DEBUG BLOCKS */
+    /* DEBUG BLOCKS 
     cr_search = cr->request;
     while(cr_search){
         printf("\n");
@@ -136,7 +136,7 @@ struct request *mk_request_parse(struct client_request *cr)
 
         cr_search = cr_search->next;
     }
-
+    */
 
     /* Checking pipelining connection */
     cr_search = cr->request;
