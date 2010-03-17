@@ -174,7 +174,8 @@ int mk_header_send(int fd, struct client_request *cr,
         sr->keep_alive == VAR_ON &&
         cr->counter_connections < config->max_keep_alive_request) {
 
-        if (sr->connection.data != NULL) {
+        /* A valid connection header */
+        if (sr->connection.len > 0) {
             m_build_buffer(&buffer,
                            &len,
                            "Keep-Alive: timeout=%i, max=%i"
@@ -190,7 +191,7 @@ int mk_header_send(int fd, struct client_request *cr,
                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
     }
-    else {
+    else if(sr->close_now == VAR_ON) {
         mk_iov_add_entry(iov,
                          mk_header_conn_close.data,
                          mk_header_conn_close.len,

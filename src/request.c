@@ -476,20 +476,27 @@ int mk_request_header_process(struct request *sr)
                                                    mk_rh_if_modified_since);
 
     /* Default Keepalive is off */
-    sr->keep_alive = VAR_OFF;
+    if (sr->protocol == HTTP_PROTOCOL_10) {
+        sr->keep_alive = VAR_OFF;
+        sr->close_now = VAR_ON;
+    }
+    else if(sr->protocol == HTTP_PROTOCOL_11) {
+        sr->keep_alive = VAR_ON;
+        sr->close_now = VAR_OFF;
+    }
+
     if (sr->connection.data) {
         if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
             sr->keep_alive = VAR_ON;
+            sr->close_now = VAR_OFF;
         }
         else if(mk_string_casestr(sr->connection.data, "Close")) {
+            sr->keep_alive = VAR_OFF;
             sr->close_now = VAR_ON;
         }
-    }
-    else {
-        /* Default value for HTTP/1.1 */
-        if (sr->protocol == HTTP_PROTOCOL_11) {
-            /* Assume keep-alive connection */
-            sr->keep_alive = VAR_ON;
+        else {
+            /* Set as a non-valid connection header value */
+            sr->connection.len = 0;
         }
     }
     sr->log->final_response = M_HTTP_OK;

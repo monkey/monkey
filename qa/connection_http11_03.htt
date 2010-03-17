@@ -19,11 +19,12 @@ INCLUDE __MACROS
 
 CLIENT
 _REQ $HOST $PORT
-__GET / $HTTPVER10
+__GET / $HTTPVER
 __Host: $HOST
 __Connection: an invalid value
 __
 _EXPECT . "HTTP/1.1 200 OK"
 _EXPECT . "!Connection:"
+_EXPECT . "!Keep-Alive:"
 _WAIT
 END
