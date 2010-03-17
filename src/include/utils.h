@@ -56,6 +56,8 @@
 #define ANSI_WHITE "\033[37m"
 #define ANSI_RESET "\033[0m"
 
+char *envtrace;
+
 #endif
 
 /* utils.c */

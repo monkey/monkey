@@ -169,6 +169,7 @@ int main(int argc, char **argv)
 #ifdef TRACE
     fprintf(stderr, "\n");
     MK_TRACE("Monkey TRACE is enabled");
+    envtrace = getenv("MONKEY_TRACE");
 #endif
 
     /* Plugins Stage 10 */
