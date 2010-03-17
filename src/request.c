@@ -126,7 +126,7 @@ struct request *mk_request_parse(struct client_request *cr)
     }
 
      
-    /* DEBUG BLOCKS 
+    /* DEBUG BLOCKS */
     cr_search = cr->request;
     while(cr_search){
         printf("\n");
@@ -136,7 +136,7 @@ struct request *mk_request_parse(struct client_request *cr)
 
         cr_search = cr_search->next;
     }
-    */
+
 
     /* Checking pipelining connection */
     cr_search = cr->request;
@@ -428,8 +428,10 @@ int mk_request_header_process(struct request *sr)
 
     /* Creating table of content (index) for request headers */
     int toc_len = MK_KNOWN_HEADERS;
+    int headers_len = sr->body.len - (prot_end + mk_crlf.len);
+
     struct header_toc *toc = mk_request_header_toc_create(toc_len);
-    mk_request_header_toc_parse(toc, headers, toc_len);
+    mk_request_header_toc_parse(toc, toc_len, headers, headers_len);
 
     /* Host */
     host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
@@ -968,13 +970,13 @@ struct header_toc *mk_request_header_toc_create(int len)
     return p;
 }
 
-void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
+void mk_request_header_toc_parse(struct header_toc *toc, int toc_len, char *data, int len)
 {
-    char *p, *l;
+    char *p, *l = 0;
     int i;
 
     p = data;
-    for (i = 0; i < len && p; i++) {
+    for (i = 0; i < toc_len && p && l < data + len; i++) {
         l = strstr(p, MK_CRLF);
         if (l) {
             toc[i].init = p;
