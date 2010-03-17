@@ -272,9 +272,18 @@ void mk_utils_trace(const char *component, int color, const char *function,
     va_list args;
     char *color_function = NULL;
     char *color_fileline = NULL;
+    char *envtrace = NULL;
 
     struct timeval tv;
     struct timezone tz;
+
+    envtrace = getenv("MONKEY_TRACE");
+
+    if (envtrace) {
+        if (!strstr(envtrace, file)) {
+            return;
+        }
+    }
 
     gettimeofday(&tv, &tz);
  
