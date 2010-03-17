@@ -78,7 +78,7 @@ struct request *mk_request_parse(struct client_request *cr)
         /* Allocating request block */
         cr_buf = mk_request_alloc();
 
-        /* mk_pointer */
+        /* We point the block with a mk_pointer */
         cr_buf->body.data = cr->body + i;
         cr_buf->body.len = end - i;
 
