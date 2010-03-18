@@ -209,12 +209,11 @@ EOF
 
 create_makefile1_install()
 {
-
 # Look for plugins and create list
 for entry in plugins/*
 do
         if [ -d $entry ]; then
-		echo "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
+	    echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
         fi
 done;
 plglist=`cat plugins.list`
@@ -224,7 +223,7 @@ rm -rf plugins.list
 for entry in conf/plugins/*
 do
 	if [ -d $entry ]; then
-		echo "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
+	    echo -e "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
 	fi
 done;
 plgconf=`cat plugins.conf`
@@ -263,15 +262,12 @@ install:
 	install -d \${PLUGINDIR}
 	install -s -m 755 bin/monkey \$(BINDIR)
 	install -m 755 bin/banana \$(BINDIR)
-	install -m 755 ./cgi-bin/* \$(CGIBIN)
 	install -m 600 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
 	install -m 600 ./conf/sites/* \${SYSCONFDIR}/sites
 $plglist
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
-	install -m 644 ./htdocs/php/*.* \${DATADIR}/php
-	install -m 644 ./htdocs/docs/*.* \${DATADIR}/docs
 	@echo 
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
@@ -381,13 +377,13 @@ EOF
 
 # Add 'install' option to make file if plugdir was specified
 if [ "$plugdir" != "" ]; then
-    echo "\ninstall:" >> Makefile
-    echo "\tinstall -d $plugdir" >> Makefile
+    echo -e "\ninstall:" >> Makefile
+    echo -e "\tinstall -d $plugdir" >> Makefile
 
     list=`echo */ "" | sed "s/\/ /\n/g"`
     for i in $list;
 	do 
-	      echo "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
+	      echo -e "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
 	done
 fi
     cd ..
@@ -531,6 +527,7 @@ cgibin="$aux/cgi-bin"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
+plugdir="$aux/plugins"
 
 for arg in $*; do
 	case "$arg" in
@@ -547,6 +544,7 @@ for arg in $*; do
 			sysconfdir="$optarg/conf"
 			datadir="$optarg/htdocs"
 			logdir="$optarg/logs"
+                        plugdir="$optarg/plugins"
 			;;
 		--bindir*)
 			bindir=$optarg
