@@ -172,7 +172,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                            uri_len) >= 0) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Plugin Stage 30: look for handlers for this request */
@@ -180,7 +180,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         MK_PLUGIN_RET_CLOSE_CONX) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     sr->file_info = mk_file_get_info(sr->real_path.data);
@@ -204,7 +204,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             sr->log->final_response = M_CLIENT_FORBIDDEN;
             mk_request_error(M_CLIENT_FORBIDDEN, cr, sr,
                              debug_error, sr->log);
-            return -1;
+            return EXIT_ERROR;
         }
         else {
             int n;
@@ -237,7 +237,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Matching MimeType  */
@@ -248,7 +248,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Plugin Stage 40: look for handlers for this request */
@@ -260,7 +260,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* get file size */
     if (sr->file_info->size < 0) {
         mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* counter connections */
@@ -302,7 +302,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             if (mk_http_range_parse(sr) < 0) {
                 mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
                 mk_pointer_free(&gmt_file_unix_time);
-                return -1;
+                return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0)
                 sr->headers->status = M_HTTP_PARTIAL;
@@ -326,13 +326,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
         if (sr->fd_file == -1) {
             perror("open");
-            return -1;
+            return EXIT_ERROR;
         }
 
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
             mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
-            return -1;
+            return EXIT_ERROR;
         }
         bytes = SendFile(cr->socket, cr, sr);
     }
@@ -533,6 +533,7 @@ int mk_http_pending_request(struct client_request *cr)
             cr->body_pos_end = cr->body_length - mk_endblock.len;
         }
         else if ((n = mk_string_search(cr->body, mk_endblock.data)) >= 0 ){
+
             cr->body_pos_end = n;
         }
         else {

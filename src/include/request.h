@@ -89,6 +89,7 @@ parametros de una peticion */
 #define MK_REQUEST_STATUS_COMPLETED 0
 
 #define EXIT_NORMAL 0
+#define EXIT_ERROR -1
 #define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 

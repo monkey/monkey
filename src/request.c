@@ -226,6 +226,7 @@ int mk_handler_write(int socket, struct client_request *cr)
         else if (final_status <= 0) {
             switch (final_status) {
             case EXIT_NORMAL:
+            case EXIT_ERROR:
                 mk_logger_write_log(cr, sr->log, sr->host_conf);
                 if (sr->close_now == VAR_ON) {
                     return -1;
