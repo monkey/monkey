@@ -59,8 +59,6 @@ chmod 755 makeconf.sh
 ./makeconf.sh
 rm makeconf.sh
 rm $INCDIR/config.path
-cp lang/"$*"/INSTALL ./
-cp lang/"$*"/README ./
 }
 
 local_dirs()

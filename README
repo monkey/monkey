@@ -7,7 +7,8 @@
  to the specification of the protocol HTTP/1.1.
 
  Features
- ========
+ ======== 
+
  - HTTP/1.1 Compliant
  - Hybrid Networking Model: Asynchrounous mode + fixed Threads
  - Easy unix style configuration
