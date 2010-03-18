@@ -210,14 +210,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             int n;
             char linked_file[MAX_PATH];
             n = readlink(sr->real_path.data, linked_file, MAX_PATH);
-            /*              
-               if(Deny_Check(linked_file)==-1) {
-               sr->log->final_response=M_CLIENT_FORBIDDEN;
-               mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-               return -1;
-               }
-             */
-
         }
     }
 
@@ -316,7 +308,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 sr->headers->status = M_HTTP_PARTIAL;
         }
     }
-    else {                      /* without content-type */
+    else {                      
+        /* without content-type */
         mk_pointer_reset(&sr->headers->content_type);
     }
 

@@ -319,25 +319,6 @@ void mk_config_read_hosts(char *path)
         }
     }
     closedir(dir);
-    /*
-       h = config->hosts;
-       while(h)
-       {
-       printf("*** HOST ***\n");
-       printf(" [servername]\t\t%s\n", h->servername);
-       printf(" [documentroot]\t\t%s\n", h->documentroot);
-       printf(" [conf file]\t\t%s\n", h->file);
-       printf(" [access log]\t\t%s\n", h->access_log_path);
-       printf(" [error log]\t\t%s\n", h->error_log_path);
-       printf(" [script alias]\t\t%s %s\n", h->scriptalias[0], h->scriptalias[1]);
-       printf(" [get dir]\t\t%i\n", h->getdir);
-       printf(" [header file]\t\t%s\n", h->header_file);
-       printf(" [footer file]\t\t%s\n\n", h->footer_file);
-
-       h = h->next;
-       }
-       fflush(stdout);
-     */
 }
 
 struct host *mk_config_get_host(char *path)

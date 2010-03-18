@@ -80,7 +80,6 @@ int mk_string_char_search(char *string, int c, int n)
  * Original version taken from google, modified in order
  * to send the position instead the substring.
  */
-
 int _mk_string_search(char *string, char *search, int n)
 {
     char *np;

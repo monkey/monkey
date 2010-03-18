@@ -243,13 +243,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
     }
 
-    /* Accept ranges  
-       mk_iov_add_entry(iov, 
-       mk_header_accept_ranges.data,
-       mk_header_accept_ranges.len,
-       mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
-     */
-    /* Tamaño total de la informacion a enviar */
+    /* Content-Length */
     if ((sh->content_length != 0 &&
          (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
         config->resume == VAR_ON) {

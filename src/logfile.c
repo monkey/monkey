@@ -208,8 +208,7 @@ void mk_logger_iov_free(struct mk_iov *iov)
     mk_iov_free_marked(iov);
 }
 
-/* Registra en archivos de logs: accesos
- y errores */
+/* Log access and error messages */
 int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                         struct host *h)
 {
@@ -314,7 +313,7 @@ int mk_logger_register_pid()
     return 0;
 }
 
-/* Elimina log del PID */
+/* Remove PID file */
 int mk_logger_remove_pid()
 {
     mk_user_undo_uidgid();

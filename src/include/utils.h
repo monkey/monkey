@@ -20,19 +20,15 @@
 #ifndef MK_UTILS_H
 #define MK_UTILS_H
 
-/* Defining TRUE and FALSE */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #define TRUE 1
 #define FALSE 0
 
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
-
-/* Tipo de envio de datos en fdprintf(...) */
-#define CHUNKED 0
-#define NO_CHUNKED 1
 
 #include "request.h"
 #include "memory.h"

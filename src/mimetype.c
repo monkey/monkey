@@ -35,7 +35,7 @@
 #include "request.h"
 #include "monkey.h"
 
-/* Carga en estructura los mimetypes */
+/* Load mimetypes */
 void mk_mimetype_read_config()
 {
     char path[MAX_PATH];
@@ -116,7 +116,7 @@ struct mimetype *mk_mimetype_find(mk_pointer * filename)
     return mk_mimetype_cmp(filename->data + j + 1);
 }
 
-/* Busca mime type segun Request */
+/* Match mime type for requested resource */
 struct mimetype *mk_mimetype_cmp(char *name)
 {
     struct mimetype *aux_mime;

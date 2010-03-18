@@ -215,10 +215,6 @@ int mk_handler_write(int socket, struct client_request *cr)
             bytes = SendFile(socket, cr, sr);
             final_status = bytes;
         }
-        else if (sr->handled_by){
-            /* FIXME: Look for loops 
-             * sr->handled_by; */
-        }
 
         /*
          * If we got an error, we don't want to parse
@@ -513,7 +509,6 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     var.data = NULL;
     var.len = 0;
 
-    /* new code */
     if (toc) {
         for (i = 0; i < toc_len; i++) {
             /* status = 1 means that the toc entry was already
@@ -812,16 +807,6 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->headers->location);
         mk_pointer_free(&sr->headers->content_length_p);
         mk_pointer_free(&sr->headers->last_modified);
-        /*
-           mk_mem_free(sr->headers->content_type);
-           headers->content_type never it's allocated 
-           with malloc or something, so we don't need 
-           to free it, the value has been freed before 
-           in M_METHOD_Get_and_Head(struct request *sr)
-
-           this BUG was reported by gentoo team.. thanks guys XD
-         */
-
         mk_mem_free(sr->headers);
     }
 
@@ -954,7 +939,6 @@ struct client_request *mk_request_client_remove(int socket)
         cr = cr->next;
     }
 
-    //mk_pointer_free(&cr->ip);
     mk_mem_free(cr->body);
     mk_mem_free(cr);
 

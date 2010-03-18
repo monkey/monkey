@@ -76,8 +76,9 @@ int SendFile(int socket, struct client_request *cr, struct request *sr)
     return sr->bytes_to_send;
 }
 
-/* Devuelve la fecha para enviarla 
- en el header */
+/* Return data as mk_pointer to be sent
+ * in response header 
+ */
 mk_pointer PutDate_string(time_t date)
 {
     int n, size = 32;
