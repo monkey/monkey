@@ -561,9 +561,6 @@ for arg in $*; do
 		--logdir*)
 			logdir=$optarg
 			;;
-		--lang*)
-			lang=$optarg
-			;;
                 --plugdir*)
                         plugdir=$optarg
                         ;;
@@ -584,9 +581,9 @@ for arg in $*; do
 			exit 1
 			;;
 		*)
-			echo "Usage: configure [--prefix=PREFIXDIR] [--lang=LANGUAGE] [ --bindir=BINDIR]"
-			echo "                 [--cgibin=CGIBINDIR] [--sysconfdir=SYSCONFDIR]"
-			echo "                 [--datadir=DATADIR] [--logdir=LOGDIR] [--plugdir=PLUGDIR]"
+			echo "Usage: configure [--prefix=PREFIXDIR] [ --bindir=BINDIR]"
+			echo "                 [--sysconfdir=SYSCONFDIR] [--datadir=DATADIR]"
+                        echo "                 [--logdir=LOGDIR] [--plugdir=PLUGDIR]"
 			echo 
 			echo "Options: "
 			echo "  --help		  Display this help and exit"
@@ -596,7 +593,6 @@ for arg in $*; do
 			echo 
 			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
 			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"
-			echo "  --cgibin=CGIBINDIR	  Install Monkey cgi-bin under CGIBIN directory"
 			echo "  --sysconfdir=SYSCONFDIR Install Monkey conf files under SYSCONFDIR dir"
 			echo "  --datadir=DATADIR	  Install Monkey data dir files under DATADIR directory"
 			echo "  --logdir=LOGDIR	  Install Monkey log files under LOGDIR directory"
