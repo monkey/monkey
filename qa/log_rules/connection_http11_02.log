@@ -1,0 +1,7 @@
+[access]
+ip = 127.0.0.1
+method = GET
+uri = /
+protocol = HTTP/1.1
+status = 200
+size = FILESIZE ../htdocs/index.html
