@@ -22,7 +22,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/sysctl.h>
 #include <unistd.h>
 
 #define TRUE 1
@@ -30,8 +29,6 @@
 
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
-
-#define MK_UTILS_SOMAXCONN_DEFAULT 1024   /* Default for SOMAXCONN value */
 
 #include "request.h"
 #include "memory.h"
@@ -94,7 +91,5 @@ char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
 void mk_utils_trace(const char *component, int color, const char *function, 
                     char *file, int line, const char* format, ...);
 #endif
-
-int mk_utils_get_somaxconn();
 
 #endif
