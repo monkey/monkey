@@ -171,7 +171,7 @@ int mk_socket_server(int port, char *listen_addr)
      * The queue limit is given by /proc/sys/net/core/somaxconn
      * we need to add a dynamic function to get that value on fly
      */
-    if ((listen(fd, 1024)) != 0) {
+    if ((listen(fd, mk_utils_get_somaxconn())) != 0) {
         perror("listen");
         exit(1);
     }
