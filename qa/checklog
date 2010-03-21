@@ -121,7 +121,10 @@ class Logfile:
         rules = config.get_rules(self.target_logfile)
 
         if len(rules) == 0:
-            return None
+            if self.silent_mode is False:
+                print "Error, no rules found on target file"
+
+            exit(2)
 
         self.check_rules(rules)
 
@@ -151,7 +154,10 @@ class Logfile:
     def get_last_file_line(self, file):
         f = open(file, 'r')
         lines = f.readlines()
+        f.close()
+
         if len(lines) < 1:
+
             return None
 
         # get last file line
@@ -201,6 +207,10 @@ class Logfile:
                 
                 # We always expect at least 4 fields
                 if len(fields) < 4:
+                    if self.silent_mode is False:
+                        print "Error: we did not find the expected fields"
+                        print "Logfile line"
+                        print " %s " % line
                     exit(2)
 
                 data = {'ip': fields[1],
@@ -217,7 +227,7 @@ class Logfile:
 
         if self.silent_mode is False:
             print "Check passed :)"
-
+            
 if __name__ == '__main__':
     Logfile()
 
