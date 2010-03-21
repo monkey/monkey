@@ -1,0 +1,10 @@
+# Monkey logfile example:
+# 127.0.0.1 - [21/Mar/2010 10:04:13 -0400] GET /%69%6E%64%65%78.%68%74%6D%6C HTTP/1.1 200 1370
+
+[access]
+ip = 127.0.0.1
+method = GET
+uri = /%69%6E%64%65%78.%68%74%6D%6C
+protocol = HTTP/1.1
+status = 200
+size = FILESIZE ../htdocs/index.html
