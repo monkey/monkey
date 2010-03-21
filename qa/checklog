@@ -42,14 +42,17 @@ class AccessRule:
         self.protocol = protocol
         self.status = status
 
-        if size.isdigit():
-            self.size = size
-        else:
-            if size[:8] == 'FILESIZE':                
-                target = size[8:].strip()
-                self.size = os.path.getsize(target)
-            else:
+        if size is not None:
+            if size.isdigit():
                 self.size = size
+            else:
+                if size[:8] == 'FILESIZE':                
+                    target = size[8:].strip()
+                    self.size = os.path.getsize(target)
+                else:
+                    self.size = size
+        else:
+            self.size = size
 
 class ErrorRule:
     def __init__(self,
@@ -114,6 +117,8 @@ class Logfile:
         # Check if file exists
         if os.path.isfile(self.target_logfile) is False:
             # No rules exists for this test
+            if self.silent_mode is False:
+                print "No rules for target"
             exit(2)
 
         # Read rules
@@ -123,9 +128,9 @@ class Logfile:
         if len(rules) == 0:
             if self.silent_mode is False:
                 print "Error, no rules found on target file"
-
             exit(2)
 
+        # Check rules
         self.check_rules(rules)
 
     def check_arguments(self):
@@ -167,7 +172,8 @@ class Logfile:
     def check_field(self, rule, log):
         if rule is not None:
             if str(rule) != str(log):
-                print "Rule does not match, expect '" + str(rule) + '\' got \'' + log + '\''
+                if self.silent_mode is False:
+                    print "Rule does not match, expect '" + str(rule) + '\' got \'' + log + '\''
                 exit(1)
             else:
                 return 0
@@ -211,7 +217,7 @@ class Logfile:
                         print "Error: we did not find the expected fields"
                         print "Logfile line"
                         print " %s " % line
-                    exit(2)
+                    exit(1)
 
                 data = {'ip': fields[1],
                         'time': fields[3],

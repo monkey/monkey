@@ -84,8 +84,8 @@ for test_file in $TEST_FILES; do
         else
             # We need to sleep for a while as Monkey needs to flush
             # the logs, that happens every 3 seconds
-            sleep 3
-	    CHECKLOG=`./checklog -s -l log_rules/$test_file`
+            sleep 4
+	    CHECKLOG=`./checklog -l log_rules/$test_file`
 	    ERRCODE=$?
 	fi
 
@@ -101,6 +101,7 @@ for test_file in $TEST_FILES; do
 		echo "=> [FAILED]"
 		[ $WITH_COLOR = yes ] && echo -n "[m"
                 TESTS_FAILED=$((TESTS_FAILED+1))
+		[ $STOP_AT_ERRORS = yes ] && exit 1
 		;;
 
 	    2)	[ $WITH_COLOR = yes ] && echo -n "[1;33m"
