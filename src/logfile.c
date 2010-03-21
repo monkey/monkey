@@ -239,8 +239,9 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                      mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
     /* Register a successfull request */
-    if (log->final_response == M_HTTP_OK
-        || log->final_response == M_REDIR_MOVED_T) {
+    if (log->final_response == M_HTTP_OK ||
+        log->final_response == M_REDIR_MOVED_T ||
+        log->final_response == M_NOT_MODIFIED) {
         /* HTTP method required */
         method = mk_http_method_check_str(log->method);
         mk_iov_add_entry(iov, method.data, method.len, mk_iov_space,
@@ -264,10 +265,15 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                          mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* object size */
-        mk_iov_add_entry(iov,
-                         log->size_p.data,
-                         log->size_p.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
+        if (log->size_p.data) {
+            mk_iov_add_entry(iov,
+                             log->size_p.data,
+                             log->size_p.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+        else {
+            mk_iov_add_entry(iov,
+                             "0\r\n", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
         /* Send info to pipe */
         mk_iov_send(h->log_access[1], iov, MK_IOV_SEND_TO_PIPE);
     }

@@ -272,9 +272,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         PutDate_string((time_t) sr->file_info->last_modification);
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
-        time_t date_client;     // Date send by client
-        time_t date_file_server;        // Date server file
-
+        time_t date_client;       /* Date sent by client */
+        time_t date_file_server;  /* Date server file */
+        
         date_client = PutDate_unix(sr->if_modified_since.data);
         date_file_server = sr->file_info->last_modification;
 
@@ -282,7 +282,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             sr->headers->status = M_NOT_MODIFIED;
             mk_header_send(cr->socket, cr, sr, sr->log);
             mk_pointer_free(&gmt_file_unix_time);
-            return 0;
+            return EXIT_NORMAL;
         }
     }
     sr->headers->status = M_HTTP_OK;
