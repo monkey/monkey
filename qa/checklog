@@ -189,8 +189,6 @@ class Logfile:
             if r.type == 'access':
                 line = self.get_last_file_line(ACCESS_FILE)
                 fields = access_re.split(line)
-                print line
-                print fields
 
                 data = {'ip': fields[1],
                         'time': fields[3],
