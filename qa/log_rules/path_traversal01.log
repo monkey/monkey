@@ -1,0 +1,7 @@
+# Monkey logfile example:
+# 127.0.0.1 - [22/Mar/2010 08:13:57 -0400] [error 403] Forbidden /../conf/monkey.conf
+
+[error]
+ip = 127.0.0.1
+status = 403
+message = Forbidden /../conf/monkey.conf
