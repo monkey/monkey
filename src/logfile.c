@@ -169,9 +169,8 @@ void *mk_logger_worker_init(void *args)
 
             err = ioctl(target->fd, FIONREAD, &bytes);
             if (err == -1) {
-                perror("err");
+                perror("ioctl");
             }
-
 
             if (bytes < buffer_limit && clk <= timeout) {
                 break;
@@ -240,9 +239,11 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
 
     /* Register a successfull request */
     if (log->final_response == M_HTTP_OK ||
+        log->final_response == M_REDIR_MOVED ||
         log->final_response == M_REDIR_MOVED_T ||
         log->final_response == M_NOT_MODIFIED ||
         log->final_response == M_HTTP_PARTIAL) {
+
         /* HTTP method required */
         method = mk_http_method_check_str(log->method);
         mk_iov_add_entry(iov, method.data, method.len, mk_iov_space,

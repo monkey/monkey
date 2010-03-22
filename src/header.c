@@ -80,7 +80,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_REDIR_MOVED:
-        s_log->status = S_LOG_OFF;
+        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
