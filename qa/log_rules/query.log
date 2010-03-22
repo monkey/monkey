@@ -1,0 +1,9 @@
+# 127.0.0.1 - [22/Mar/2010 10:25:58 -0400] GET / HTTP/1.1 200 1370
+
+[access]
+ip = 127.0.0.1
+method = GET
+uri = /
+protocol = HTTP/1.1
+status = 200
+size = FILESIZE ../htdocs/index.html
