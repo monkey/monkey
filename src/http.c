@@ -291,9 +291,17 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
-    sr->log->size = sr->headers->content_length = sr->file_info->size;
-    sr->log->size_p = sr->headers->content_length_p =
-        mk_utils_int2mkp(sr->file_info->size);
+    sr->headers->content_length = sr->file_info->size;
+    sr->headers->content_length_p = mk_utils_int2mkp(sr->file_info->size);
+
+    if (sr->method == HTTP_METHOD_HEAD) {
+        sr->log->size = 0;
+        sr->log->size_p = mk_utils_int2mkp(0);
+    }
+    else {
+        sr->log->size = sr->file_info->size;
+        sr->log->size_p = sr->headers->content_length_p;
+    }
 
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         sr->headers->content_type = mime->type;
