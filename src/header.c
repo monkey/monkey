@@ -247,7 +247,7 @@ int mk_header_send(int fd, struct client_request *cr,
     if ((sh->content_length != 0 &&
          (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
         config->resume == VAR_ON) {
-        long int length;
+        long int length = -1;
 
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
@@ -300,6 +300,15 @@ int mk_header_send(int fd, struct client_request *cr,
                            (sh->content_length - sh->ranges[1]),
                            (sh->content_length - 1), sh->content_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+
+        /* FIXME: logger routines and data should be handled by a plugin
+         * in Monkey 0.11.0
+         */
+        if (length >= 0) {
+            mk_pointer_free(&sr->log->size_p);
+            sr->log->size = length;
+            sr->log->size_p = mk_utils_int2mkp(length);
         }
     }
     else if (sh->content_length >= 0) {

@@ -484,6 +484,7 @@ int mk_http_range_parse(struct request *sr)
         if (sr->headers->ranges[1] <= 0) {
             return -1;
         }
+
         return 0;
     }
 
@@ -501,7 +502,6 @@ int mk_http_range_parse(struct request *sr)
             sr->headers->ranges[0] > sr->headers->ranges[1]) {
             return -1;
         }
-
         return 0;
     }
     /* =yyy- */
