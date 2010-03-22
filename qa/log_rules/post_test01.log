@@ -1,0 +1,10 @@
+# Monkey logfile example:
+# 127.0.0.1 - [22/Mar/2010 08:20:16 -0400] POST / HTTP/1.1 200 1370
+
+[access]
+ip = 127.0.0.1
+method = POST
+uri = /
+protocol = HTTP/1.1
+status = 200
+size = FILESIZE ../htdocs/index.html
