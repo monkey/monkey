@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Monkey HTTP Daemon
 #  ------------------
@@ -260,9 +260,9 @@ install:
 	install -d \${PLUGINDIR}
 	install -s -m 755 bin/monkey \$(BINDIR)
 	install -m 755 bin/banana \$(BINDIR)
-	install -m 600 ./conf/*.* \$(SYSCONFDIR)
+	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
-	install -m 600 ./conf/sites/* \${SYSCONFDIR}/sites
+	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 $plglist
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
@@ -367,9 +367,9 @@ EOF
 	      echo "	@(cd $i && make && cd ..)" >> Makefile;
 
 	      if [ "$plugdir" != "" ]; then
-		      echo "#LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
-		else
-		      echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
+		  echo "#LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
+	      else
+		  echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
 	      fi
 	done	
 
@@ -525,7 +525,7 @@ cgibin="$aux/cgi-bin"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
-plugdir="$aux/plugins"
+plugdir=""
 
 for arg in $*; do
 	case "$arg" in
