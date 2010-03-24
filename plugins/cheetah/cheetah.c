@@ -284,7 +284,8 @@ void mk_cheetah_cmd(char *cmd)
 
     if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
-        printf("\nMonkey Version     : %s\n", VERSION);
+        printf("Cheetah Plugin v%s\n\n", _version);
+        printf("Monkey Version     : %s\n", VERSION);
         printf("Configutarion path : %s\n", mk_api->config->serverconf);
         printf("Process ID         : %i\n", getpid());
 
