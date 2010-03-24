@@ -197,6 +197,8 @@ void mk_cheetah_cmd_plugins()
 {
     struct plugin_stages *p = mk_api->config->plugins;
 
+    printf("List of plugins loaded and stages associated\n\n");
+
     mk_cheetah_cmd_plugins_print(p->stage_00, "STAGE_00");
     mk_cheetah_cmd_plugins_print(p->stage_10, "STAGE_10");
     mk_cheetah_cmd_plugins_print(p->stage_20, "STAGE_20");
