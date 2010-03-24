@@ -357,12 +357,6 @@ struct host *mk_config_get_host(char *path)
     host->error_log_path = mk_config_getval(cnf,
                                             "ErrorLog", MK_CONFIG_VAL_STR);
 
-    /* Get directory */
-    host->getdir = (int) mk_config_getval(cnf, "GetDir", MK_CONFIG_VAL_BOOL);
-    if (host->getdir == VAR_ERR) {
-        mk_config_print_error_msg("GetDir", path);
-    }
-
     if (!host->servername) {
         mk_config_free(cnf);
         return NULL;

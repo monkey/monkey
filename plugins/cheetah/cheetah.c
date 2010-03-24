@@ -220,8 +220,6 @@ void mk_cheetah_cmd_vhosts()
         printf("      - Access Log             : %s\n",
                host->access_log_path);
         printf("      - Error Log              : %s\n", host->error_log_path);
-        printf("      - List Directory Content : %s",
-               (host->getdir == VAR_ON) ? "Yes" : "No");
         host = host->next;
     }
 }
@@ -262,17 +260,17 @@ void mk_cheetah_cmd_help()
     printf("\n----------------------------------------------------");
     printf("\nhelp       (\\h)    Print this help");
     printf("\nstatus     (\\s)    Display general web server information");
-    printf
-        ("\nuptime     (\\u)    Display how long the web server has been running");
+    printf("\nuptime     (\\u)    Display how long the web server has been running");
     printf("\nplugins    (\\g)    List loaded plugins and associated stages");
     printf("\nvhosts     (\\v)    List virtual hosts configured");
     printf("\nworkers    (\\w)    Show thread workers information");
     printf("\nquit       (\\q)    Exit Cheetah shell :_(\n");
 }
 
-void mk_cheetah_cmd(char *cmd)
+void mk_cheetah_cmd_status()
 {
     int nthreads = 0;
+
     struct sched_list_node *sl;
 
 
@@ -282,19 +280,24 @@ void mk_cheetah_cmd(char *cmd)
         sl = sl->next;
     }
 
+    printf("Cheetah Plugin v%s\n\n", _version);
+    printf("Monkey Version     : %s\n", VERSION);
+    printf("Configutarion path : %s\n", mk_api->config->serverconf);
+    printf("Process ID         : %i\n", getpid());
+    printf("Process User       : ");
+    mk_cheetah_print_running_user();
+
+    printf("Server Port        : %i\n", mk_api->config->serverport);
+    printf("Worker Threads     : %i (per configuration: %i)\n",
+           nthreads, mk_api->config->workers);
+
+}
+
+void mk_cheetah_cmd(char *cmd)
+{
     if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
-        printf("Cheetah Plugin v%s\n\n", _version);
-        printf("Monkey Version     : %s\n", VERSION);
-        printf("Configutarion path : %s\n", mk_api->config->serverconf);
-        printf("Process ID         : %i\n", getpid());
-
-        printf("Process User       : ");
-        mk_cheetah_print_running_user();
-
-        printf("Server Port        : %i\n", mk_api->config->serverport);
-        printf("Worker Threads     : %i (per configuration: %i)\n",
-               nthreads, mk_api->config->workers);
+        mk_cheetah_cmd_status();
     }
     else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
              strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
@@ -324,8 +327,7 @@ void mk_cheetah_cmd(char *cmd)
         return;
     }
     else {
-        printf
-            ("Invalid command, type 'help' for a list of available commands\n");
+        printf("Invalid command, type 'help' for a list of available commands\n");
     }
 
     printf("\n");
