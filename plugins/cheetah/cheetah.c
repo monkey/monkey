@@ -38,11 +38,17 @@
 
 #include "cheetah.h"
 
+#define MK_CHEETAH_CLEAR "clear"
+#define MK_CHEETAH_CLEAR_SC "\\c"
+
 #define MK_CHEETAH_STATUS "status"
 #define MK_CHEETAH_STATUS_SC "\\s"
 
 #define MK_CHEETAH_HELP "help"
 #define MK_CHEETAH_HELP_SC "\\h"
+
+#define MK_CHEETAH_SHELP "?"
+#define MK_CHEETAH_SHELP_SC "\\?"
 
 #define MK_CHEETAH_UPTIME "uptime"
 #define MK_CHEETAH_UPTIME_SC "\\u"
@@ -139,6 +145,11 @@ void mk_cheetah_print_running_user()
 
     printf("%s\n", pwd.pw_name);
     free(buf);
+}
+
+void mk_cheetah_cmd_clear()
+{
+    printf("\033[2J\033[0;1H");
 }
 
 void mk_cheetah_cmd_uptime()
@@ -257,16 +268,20 @@ void mk_cheetah_cmd_quit()
 
 void mk_cheetah_cmd_help()
 {
-    printf("\nList of available commands for Cheetah Shell\n");
+    printf("List of available commands for Cheetah Shell\n");
     printf("\ncommand  shortcut  description");
     printf("\n----------------------------------------------------");
-    printf("\nhelp       (\\h)    Print this help");
+    printf("\n?          (\\?)    Synonym for 'help'");
+    printf("\nplugins    (\\g)    List loaded plugins and associated stages");
     printf("\nstatus     (\\s)    Display general web server information");
     printf("\nuptime     (\\u)    Display how long the web server has been running");
-    printf("\nplugins    (\\g)    List loaded plugins and associated stages");
     printf("\nvhosts     (\\v)    List virtual hosts configured");
-    printf("\nworkers    (\\w)    Show thread workers information");
+    printf("\nworkers    (\\w)    Show thread workers information\n");
+    printf("\nclear      (\\c)    Clear screen");
+    printf("\nhelp       (\\h)    Print this help");
     printf("\nquit       (\\q)    Exit Cheetah shell :_(\n");
+
+
 }
 
 void mk_cheetah_cmd_status()
@@ -301,6 +316,10 @@ void mk_cheetah_cmd(char *cmd)
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
         mk_cheetah_cmd_status();
     }
+    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
+             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
+        mk_cheetah_cmd_clear();
+    }
     else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
              strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
         mk_cheetah_cmd_uptime();
@@ -318,7 +337,9 @@ void mk_cheetah_cmd(char *cmd)
         mk_cheetah_cmd_vhosts();
     }
     else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0) {
+             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
         mk_cheetah_cmd_help();
     }
     else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
