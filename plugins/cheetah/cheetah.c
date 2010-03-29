@@ -149,7 +149,7 @@ void mk_cheetah_print_running_user()
 
 void mk_cheetah_cmd_clear()
 {
-    printf("\033[2J\033[0;1H");
+    printf("\033[2J\033[1;1H");
 }
 
 void mk_cheetah_cmd_uptime()
@@ -178,7 +178,7 @@ void mk_cheetah_cmd_uptime()
     seconds = upminh - minutes * MK_CHEETAH_ONEMINUTE;
 
     printf
-        ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n",
+        ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n\n",
          days, (days > 1) ? "s" : "", hours, (hours > 1) ? "s" : "", minutes,
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
@@ -235,6 +235,8 @@ void mk_cheetah_cmd_vhosts()
         printf("      - Error Log              : %s\n", host->error_log_path);
         host = host->next;
     }
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_workers()
@@ -257,6 +259,8 @@ void mk_cheetah_cmd_workers()
         
         sl = sl->next;
     }
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_quit()
@@ -279,9 +283,7 @@ void mk_cheetah_cmd_help()
     printf("\nworkers    (\\w)    Show thread workers information\n");
     printf("\nclear      (\\c)    Clear screen");
     printf("\nhelp       (\\h)    Print this help");
-    printf("\nquit       (\\q)    Exit Cheetah shell :_(\n");
-
-
+    printf("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
 }
 
 void mk_cheetah_cmd_status()
@@ -305,7 +307,7 @@ void mk_cheetah_cmd_status()
     mk_cheetah_print_running_user();
 
     printf("Server Port        : %i\n", mk_api->config->serverport);
-    printf("Worker Threads     : %i (per configuration: %i)\n",
+    printf("Worker Threads     : %i (per configuration: %i)\n\n",
            nthreads, mk_api->config->workers);
 
 }
@@ -353,7 +355,6 @@ void mk_cheetah_cmd(char *cmd)
         printf("Invalid command, type 'help' for a list of available commands\n");
     }
 
-    printf("\n");
     fflush(stdout);
 }
 
