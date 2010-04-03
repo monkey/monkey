@@ -283,7 +283,7 @@ EOF
 create_makefile2()
 {
 
-if test -z $CC; then
+if test -z $CC ; then
     CC="gcc"
 fi
 
