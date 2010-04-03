@@ -79,10 +79,10 @@ void mk_help()
 {
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
     printf("Available options:\n");
-    printf("  -c directory\tspecify directory from configuration files\n");
+    printf("  -c directory\tspecify configuration files directory\n");
     printf("  -D\t\trun Monkey as daemon\n");
     printf("  -v\t\tshow version number\n");
-    printf("  -h\t\tthis help\n\n");
+    printf("  -h\t\tprint this help\n\n");
     exit(0);
 }
 

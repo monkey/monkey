@@ -313,6 +313,19 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
 /* Get SOMAXCONN value. Based on sysctl manpage */
 int mk_utils_get_somaxconn() {
+    
+#ifdef DEPRECATE_SYSCTL
+    /* sysctl() is deprecated in some systems, you can notice that with some system 
+     * messages as: 
+     * 
+     * '(warning: process `monkey' used the deprecated sysctl system call...'
+     *
+     * In order to avoid that problem, users can compile Monkey using the
+     * macro DEPRECATE_SYSCTL, so this function will return the default value
+     * defined for somaxconn for years...
+     */
+    return 128;
+#else
 	int size;
     int name[] = { CTL_NET, NET_CORE, NET_CORE_SOMAXCONN };
     int value;
@@ -327,4 +340,6 @@ int mk_utils_get_somaxconn() {
     }
  
     return value;
+#endif
+
 }

@@ -167,7 +167,8 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     config->workers = MK_WORKERS_DEFAULT;
 
     if (stat(config->serverconf, &checkdir) == -1) {
-        fprintf(stderr, "ERROR: Invalid path to configuration files.");
+        fprintf(stderr, "\nERROR: Invalid path to configuration files");
+        fprintf(stderr, "\nCannot find/open '%s'\n", config->serverconf);
         exit(1);
     }
 
