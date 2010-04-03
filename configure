@@ -258,7 +258,8 @@ install:
 	install -d \${DATADIR}/docs
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
-	install -s -m 755 bin/monkey \$(BINDIR)
+	install -m 755 bin/monkey \$(BINDIR)
+	$STRIP \$(BINDIR)/monkey
 	install -m 755 bin/banana \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
@@ -282,18 +283,22 @@ EOF
 create_makefile2()
 {
 
-if test -z $CC ; then
-	CC="gcc"
+if test -z $CC; then
+    CC="gcc"
+fi
+
+if test -z $STRIP ; then
+    STRIP="strip"
 fi
 
 if test -z $debug ; then
-	CFLAGS="-O2 -Wall"
+    CFLAGS="-O2 -Wall"
 else
-	CFLAGS="-g -Wall"
+    CFLAGS="-g -Wall"
 fi
 
 if [ $trace ] ; then
-	DEFS="-DTRACE"
+    DEFS="-DTRACE"
 fi
 
 ##### Internal options ####
