@@ -310,7 +310,8 @@ fi
 
 cat > src/Makefile<<EOF
 CC	= $CC
-CFLAGS	= $CFLAGS $DEFS
+CFLAGS	= $CFLAGS
+DEFS    = $DEFS
 INCDIR  = ./include
 LDFLAGS	= 
 DESTDIR	= ../bin/monkey
@@ -328,7 +329,7 @@ all: ../bin/monkey
 ../bin/monkey: \$(OBJ)
 	@echo "Compiling Monkey"
 	@echo "================"
-	\$(CC) \$(CFLAGS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
+	\$(CC) \$(CFLAGS) \$(DEFS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
 	@echo
 	@echo "Compiling Plugins"
 	@echo "================="
@@ -344,7 +345,7 @@ distclean:
 	../conf/sites/* include/info.h ../logs/*\\
 
 .c.o:
-	\$(CC) -c \$(CFLAGS) -I\$(INCDIR) \$<
+	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
 EOF
 }
 

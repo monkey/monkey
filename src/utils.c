@@ -326,6 +326,7 @@ int mk_utils_get_somaxconn() {
      */
     return 128;
 #else
+
 	int size;
     int name[] = { CTL_NET, NET_CORE, NET_CORE_SOMAXCONN };
     int value;
