@@ -283,15 +283,15 @@ EOF
 create_makefile2()
 {
 
-if test -z $CC ; then
+if test -z "$CC" ; then
     CC="gcc"
 fi
 
-if test -z $STRIP ; then
+if test -z "$STRIP" ; then
     STRIP="strip"
 fi
 
-if test -z $debug ; then
+if test -z "$debug" ; then
     CFLAGS="-O2 -Wall"
 else
     CFLAGS="-g -Wall"
