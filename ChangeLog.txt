@@ -1,3 +1,246 @@
+commit f8873bf50e6a5dc3333189c73cf9ad52ac105ffd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 5 02:31:25 2010 -0400
+
+    Monkey 0.10.0
+
+commit d5e41dab115fcda61e89d3de6998a1aa53e3832f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 4 00:13:34 2010 -0400
+
+    Configure: fix test validation
+
+commit aaae7cba11f4d87f339cc6b3f66561c2087b447a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 3 12:35:29 2010 -0400
+
+    Configure: fix test
+
+commit 566fff86e2b19bb4b78cd9603d86a0d8cad6cd3f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 3 11:41:31 2010 -0400
+
+    Do not read SOMAXCONN using deprecated sysctl()
+
+commit 7e11eb5d2000d574340a919c8c33a006384faa52
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 3 11:40:21 2010 -0400
+
+    Configure: get DEFS from environment
+
+commit 454a52b0ec8aa54edfe70db9a5fd1ef3b909dc1e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 3 11:31:16 2010 -0400
+
+    New Macro DEPRECATE_SYSCTL
+
+commit 96659604becde82325beb0e4ea6c64fd42e1edbf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 3 09:48:14 2010 -0400
+
+    Configure: read STRIP enviroment var for binary stripping
+
+commit 689982d72cc273c0dfcb47b1fe92148ef77f7baf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 2 21:05:43 2010 -0400
+
+    Cheetah. remove dummy .c file
+
+commit ca56f2d3b948de35a02dd94207d37a34bf583841
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 29 14:14:28 2010 -0400
+
+    Cheetah: change some breaklines
+
+commit 0e8323b723db0c605fcc400ffc1e4eff67f0fe44
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 29 12:34:43 2010 -0400
+
+    Cheetah: New 'clear' and '?' commands
+
+commit 4347b4d42c05a7914602b1c6c93965b21c83ffb6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 24 15:03:23 2010 -0400
+
+    More code cleanups
+
+commit bc12a003630e471dcefaa1c9abfd9b10f629f321
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 24 14:56:51 2010 -0400
+
+    Remove old getdir configuration variable and code cleanup
+
+commit f3c8491671eeef106c2272f4d504174080074499
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 24 14:43:00 2010 -0400
+
+    Cheetah: Add plugin version to status command
+
+commit 2f5a60f18b4b23a7c38b9cdaa6a7e444f63ccee1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 24 14:35:07 2010 -0400
+
+    Cheetah: colorize the shell
+
+commit 6e61c3783dd1c0383634d06bc5c0546adc1f92a4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 24 10:14:41 2010 -0400
+
+    Configure: default shell to bash / fix install permissions
+
+commit 3384597042e1488464bc277f75c6e1b5b32ebb4e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 14:06:24 2010 -0400
+
+    QA: Checklog, add rule for query.htt
+
+commit 13af8147a9a5f7fd849425502d7460f2547e2684
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 13:36:17 2010 -0400
+
+    Monkey 0.10.0-rc5
+
+commit 5ee340cc98cb2401c1cab07df50981a302509618
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 13:32:14 2010 -0400
+
+    QA: Checklog, add rule for simple.htt
+
+commit fc47daab1e7f37f4da448828eaf674d41cf4d11e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 13:32:03 2010 -0400
+
+    QA: Checklog, add rule for redit_301.htt
+
+commit 242dec902ccc52fc22e8d2c40c65c7a249b3365d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 13:31:20 2010 -0400
+
+    Logger: register 301 and 302 status in acccess log
+
+commit 58bc216d3845bcc20500a1e5db603ab821ac0cae
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 12:58:06 2010 -0400
+
+    QA: Checklog, add rules for ranges_*
+
+commit d0bedd1488ffd5731f934161ba3c20a617123b93
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 12:38:51 2010 -0400
+
+    Core: Register partial content status in access logfile
+    Logger: Register length of partial content instead of file size
+
+commit 68a93e9c89205f58b9ebaddf99f6b69f14958652
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 11:22:07 2010 -0400
+
+    Logger: write size 0 for HEAD method request
+
+commit 552f879cfc09abec99a30340a1daa80dbf57d056
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 10:25:46 2010 -0400
+
+    QA: Checklog, add rules for post_*
+
+commit 85d824e81432f9aec59686f503cda6fb50a59638
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 10:25:26 2010 -0400
+
+    QA: Checklog, add rules for path_transversal*
+
+commit 80b1c63c1345268332b69db3470113047dc6508b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 22 08:46:06 2010 -0400
+
+    QA: Why post_test02.htt sometimes fail?
+
+commit f591349d633dc387d7bfec32c1bc94ec86c0f90a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 21 20:02:12 2010 -0400
+
+    QA: Checklog, two new script for if_modified_since
+
+commit cc4f43007f79b252a2d9ddd77eb8cd10d68b2f17
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 21 19:55:49 2010 -0400
+
+    Enable log register for '304 Not Modified status'
+
+commit 90ffabde40a48010f4a079db060b6e1bb73bbe66
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 21 19:29:52 2010 -0400
+
+    QA: Add new rules scripts for checklog tool
+
+commit 78d47394c886595420c6e8b969860d5d87ac411d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 21 19:28:26 2010 -0400
+
+    Little fixes for checklog tool
+
+commit cf308dc26e03c32d8859ad245f43533c3955ee63
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 20 20:23:14 2010 -0400
+
+    Improve checklog messages
+
+commit 8af3091a19845652202b208fd05e1e547c09834f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 20 17:47:10 2010 -0400
+
+    QA: New checklog program, check access and error logs based on rules
+
+commit 0d9fed0966f49b9fb133f8bb01996a22e655eb3d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 20 17:46:27 2010 -0400
+
+    QA: Add new option to run_tests.sh: -l, check logfiles after each check
+
+commit 3ae5a2f1969140c2b5e8edea908708a581542398
+Author: Carlos Ghan <charlie.brown.uy@gmail.com>
+Date:   Sat Mar 20 16:28:30 2010 -0300
+
+    Add mk_utils_get_somaxconn() function
+
+commit 5272a1ca131d382b6b1dae9b9e7eee517b6e0b25
+Author: Carlos Ghan <charlie.brown.uy@gmail.com>
+Date:   Sat Mar 20 16:25:55 2010 -0300
+
+    Revert "Add mk_utils_get_somaxconn function"
+    
+    This reverts commit eca13bdb3e2e2896fe8cd586b6fd4799747983f9.
+
+commit eca13bdb3e2e2896fe8cd586b6fd4799747983f9
+Author: android <android@box.(none)>
+Date:   Sat Mar 20 16:02:00 2010 -0300
+
+    Add mk_utils_get_somaxconn function
+
+commit 378858f7f1c4ede46a24534799e40f7e0f310a91
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 18 18:39:43 2010 -0400
+
+    Fix error log, add EXIT_ERROR macro
+
+commit f6073febf9fbbe565accac24066f5da9f7480180
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 18 11:41:40 2010 -0400
+
+    Configure: Do not copy README and INSTALL from lang directory
+
+commit 4dcaeb433029b41851e173b54adb41281a2fa5f7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 18 07:39:36 2010 -0400
+
+    Monkey 0.10.0-rc4
+
+commit 19ab24c589910a991fd147e9d6a14111c0cc9467
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 18 07:36:46 2010 -0400
+
+    Update ChangeLogs
+
 commit 41c5814e1806507e68e795232495032e38ec9527
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Mar 18 07:31:12 2010 -0400
