@@ -202,6 +202,12 @@ struct mk_string_line *mk_string_split_line(char *line)
 
         if (end >= 0 && end + i < len) {
             end += i;
+
+            if (i == end) {
+                i++;
+                continue;
+            }
+
             val = mk_string_copy_substr(line, i, end);
             val_len = end - i;
         }
