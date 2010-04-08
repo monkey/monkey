@@ -283,24 +283,6 @@ EOF
 create_makefile2()
 {
 
-if test -z "$CC" ; then
-    CC="gcc"
-fi
-
-if test -z "$STRIP" ; then
-    STRIP="strip"
-fi
-
-if test -z "$debug" ; then
-    CFLAGS="-O2 -Wall"
-else
-    CFLAGS="-g -Wall"
-fi
-
-if [ $trace ] ; then
-    DEFS="-DTRACE"
-fi
-
 ##### Internal options ####
 # just for remember that one time we support this :_(
 # ---------------------------------------------------
@@ -624,6 +606,26 @@ echo "System   : $SYSINFO"
 
 lang="en"
 
-# starting main function 
+
+# Configure environment
+if test -z "$CC" ; then
+    CC="gcc"
+fi
+
+if test -z "$STRIP" ; then
+    STRIP="strip"
+fi
+
+if test -z "$debug" ; then
+    CFLAGS="-O2 -Wall"
+else
+    CFLAGS="-g -Wall"
+fi
+
+if [ $trace ] ; then
+    DEFS="-DTRACE"
+fi
+
+# Starting main function 
 main prefix lang bindir cgibin sysconfdir datadir logdir plugdir modules SYSNAME VERSION
 exit 0
