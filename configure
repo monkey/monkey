@@ -186,14 +186,6 @@ cat > Makefile << EOF
 # ============================
 default: 
 	@(cd src; make all)
-	@echo  
-	@echo  " Running Monkey :"
-	@echo  " ----------------"
-	@echo 
-	@echo  "  # $bindir/monkey"
-	@echo 
-	@echo  "  For more help use '-h' option."		
-	@echo 
 
 plugins:
 	@(cd plugins; make all)
@@ -309,6 +301,7 @@ OBJ	= monkey.o method.o mimetype.o request.o \\
 all: ../bin/monkey
 
 ../bin/monkey: \$(OBJ)
+	@echo
 	@echo "Compiling Monkey"
 	@echo "================"
 	\$(CC) \$(CFLAGS) \$(DEFS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
