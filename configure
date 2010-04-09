@@ -230,13 +230,13 @@ rm -rf plugins.conf
 cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
-PREFIX=${prefix}
-BINDIR=${bindir}
-CGIBIN=${cgibin}
-SYSCONFDIR=${sysconfdir}
-DATADIR=${datadir}
-LOGDIR=${logdir}
-PLUGINDIR=${plugdir}
+PREFIX=\$(DESTDIR)${prefix}
+BINDIR=\$(DESTDIR)${bindir}
+CGIBIN=\$(DESTDIR)${cgibin}
+SYSCONFDIR=\$(DESTDIR)${sysconfdir}
+DATADIR=\$(DESTDIR)${datadir}
+LOGDIR=\$(DESTDIR)${logdir}
+PLUGINDIR=\$(DESTDIR)${plugdir}
 
 default:
 	@(cd src; make all)
