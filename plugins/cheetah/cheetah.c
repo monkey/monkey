@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2009, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,11 +36,19 @@
 #include "plugin.h"
 #include "worker.h"
 
+#include "cheetah.h"
+
+#define MK_CHEETAH_CLEAR "clear"
+#define MK_CHEETAH_CLEAR_SC "\\c"
+
 #define MK_CHEETAH_STATUS "status"
 #define MK_CHEETAH_STATUS_SC "\\s"
 
 #define MK_CHEETAH_HELP "help"
 #define MK_CHEETAH_HELP_SC "\\h"
+
+#define MK_CHEETAH_SHELP "?"
+#define MK_CHEETAH_SHELP_SC "\\?"
 
 #define MK_CHEETAH_UPTIME "uptime"
 #define MK_CHEETAH_UPTIME_SC "\\u"
@@ -57,7 +65,7 @@
 #define MK_CHEETAH_QUIT "quit"
 #define MK_CHEETAH_QUIT_SC "\\q"
 
-#define MK_CHEETAH_PROMPT "cheetah> "
+#define MK_CHEETAH_PROMPT "%s%scheetah>%s "
 #define MK_CHEETAH_PROC_TASK "/proc/%i/task/%i/stat"
 #define MK_CHEETAH_ONEDAY  86400
 #define MK_CHEETAH_ONEHOUR  3600
@@ -139,6 +147,11 @@ void mk_cheetah_print_running_user()
     free(buf);
 }
 
+void mk_cheetah_cmd_clear()
+{
+    printf("\033[2J\033[1;1H");
+}
+
 void mk_cheetah_cmd_uptime()
 {
     int days;
@@ -165,7 +178,7 @@ void mk_cheetah_cmd_uptime()
     seconds = upminh - minutes * MK_CHEETAH_ONEMINUTE;
 
     printf
-        ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n",
+        ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n\n",
          days, (days > 1) ? "s" : "", hours, (hours > 1) ? "s" : "", minutes,
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
@@ -195,6 +208,8 @@ void mk_cheetah_cmd_plugins()
 {
     struct plugin_stages *p = mk_api->config->plugins;
 
+    printf("List of plugins loaded and stages associated\n\n");
+
     mk_cheetah_cmd_plugins_print(p->stage_00, "STAGE_00");
     mk_cheetah_cmd_plugins_print(p->stage_10, "STAGE_10");
     mk_cheetah_cmd_plugins_print(p->stage_20, "STAGE_20");
@@ -218,10 +233,10 @@ void mk_cheetah_cmd_vhosts()
         printf("      - Access Log             : %s\n",
                host->access_log_path);
         printf("      - Error Log              : %s\n", host->error_log_path);
-        printf("      - List Directory Content : %s",
-               (host->getdir == VAR_ON) ? "Yes" : "No");
         host = host->next;
     }
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_workers()
@@ -244,6 +259,8 @@ void mk_cheetah_cmd_workers()
         
         sl = sl->next;
     }
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_quit()
@@ -255,22 +272,24 @@ void mk_cheetah_cmd_quit()
 
 void mk_cheetah_cmd_help()
 {
-    printf("\nList of available commands for Cheetah Shell\n");
+    printf("List of available commands for Cheetah Shell\n");
     printf("\ncommand  shortcut  description");
     printf("\n----------------------------------------------------");
-    printf("\nhelp       (\\h)    Print this help");
-    printf("\nstatus     (\\s)    Display general web server information");
-    printf
-        ("\nuptime     (\\u)    Display how long the web server has been running");
+    printf("\n?          (\\?)    Synonym for 'help'");
     printf("\nplugins    (\\g)    List loaded plugins and associated stages");
+    printf("\nstatus     (\\s)    Display general web server information");
+    printf("\nuptime     (\\u)    Display how long the web server has been running");
     printf("\nvhosts     (\\v)    List virtual hosts configured");
-    printf("\nworkers    (\\w)    Show thread workers information");
-    printf("\nquit       (\\q)    Exit Cheetah shell :_(\n");
+    printf("\nworkers    (\\w)    Show thread workers information\n");
+    printf("\nclear      (\\c)    Clear screen");
+    printf("\nhelp       (\\h)    Print this help");
+    printf("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
 }
 
-void mk_cheetah_cmd(char *cmd)
+void mk_cheetah_cmd_status()
 {
     int nthreads = 0;
+
     struct sched_list_node *sl;
 
 
@@ -280,18 +299,28 @@ void mk_cheetah_cmd(char *cmd)
         sl = sl->next;
     }
 
+    printf("Cheetah Plugin v%s\n\n", _version);
+    printf("Monkey Version     : %s\n", VERSION);
+    printf("Configutarion path : %s\n", mk_api->config->serverconf);
+    printf("Process ID         : %i\n", getpid());
+    printf("Process User       : ");
+    mk_cheetah_print_running_user();
+
+    printf("Server Port        : %i\n", mk_api->config->serverport);
+    printf("Worker Threads     : %i (per configuration: %i)\n\n",
+           nthreads, mk_api->config->workers);
+
+}
+
+void mk_cheetah_cmd(char *cmd)
+{
     if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
-        printf("\nMonkey Version     : %s\n", VERSION);
-        printf("Configutarion path : %s\n", mk_api->config->serverconf);
-        printf("Process ID         : %i\n", getpid());
-
-        printf("Process User       : ");
-        mk_cheetah_print_running_user();
-
-        printf("Server Port        : %i\n", mk_api->config->serverport);
-        printf("Worker Threads     : %i (per configuration: %i)\n",
-               nthreads, mk_api->config->workers);
+        mk_cheetah_cmd_status();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
+             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
+        mk_cheetah_cmd_clear();
     }
     else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
              strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
@@ -310,7 +339,9 @@ void mk_cheetah_cmd(char *cmd)
         mk_cheetah_cmd_vhosts();
     }
     else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0) {
+             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
         mk_cheetah_cmd_help();
     }
     else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
@@ -321,11 +352,9 @@ void mk_cheetah_cmd(char *cmd)
         return;
     }
     else {
-        printf
-            ("Invalid command, type 'help' for a list of available commands\n");
+        printf("Invalid command, type 'help' for a list of available commands\n");
     }
 
-    printf("\n");
     fflush(stdout);
 }
 
@@ -336,12 +365,16 @@ void mk_cheetah_loop()
     char line[200];
     char *rcmd;
 
-    printf("\n*** Welcome to Cheetah!, the Monkey Shell :) ***\n");
-    printf("\nType 'help' for a list of available commands\n\n");
+    printf("\n%s%s***%s Welcome to %sCheetah!%s, the %sMonkey Shell %s:) %s***%s\n",
+           ANSI_BOLD, ANSI_YELLOW,
+           ANSI_WHITE, ANSI_GREEN, 
+           ANSI_WHITE, ANSI_RED, ANSI_WHITE, ANSI_YELLOW, ANSI_RESET);
+    printf("\n      << %sType 'help' or '\\h' for help%s >>\n\n",
+           ANSI_BLUE, ANSI_RESET);
     fflush(stdout);
 
     while (1) {
-        printf("%s", MK_CHEETAH_PROMPT);
+        printf(MK_CHEETAH_PROMPT, ANSI_BOLD, ANSI_GREEN, ANSI_RESET);
         rcmd = fgets(line, sizeof(line), stdin);
 
         len = strlen(line);

@@ -1,0 +1,8 @@
+# Monkey logfile example:
+# 127.0.0.1 - [21/Mar/2010 09:57:03 -0400] [error 501] Not Implemented
+
+[error]
+ip = 127.0.0.1
+status = 501
+message = Not Implemented
+

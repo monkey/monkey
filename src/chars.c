@@ -220,7 +220,7 @@ int get_char(int code)
     return -1;
 }
 
-/* Transorma numeracion Hexa a base decimal */
+/* Convert hexadecimal to int */
 int hex2int(char *pChars)
 {
     int Hi;

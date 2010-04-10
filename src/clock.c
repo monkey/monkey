@@ -50,7 +50,7 @@ void mk_clock_log_set_time()
 
 void mk_clock_header_set_time()
 {
-    int n, len = 30;
+    int n, len = 32;
     time_t date;
     struct tm *gmt_tm;
 

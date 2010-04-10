@@ -119,7 +119,7 @@ void mk_pointer_print(mk_pointer p)
     int i;
 
     printf("\nDEBUG MK_POINTER: '");
-    for (i = 0; i < p.len; i++) {
+    for (i = 0; i < p.len && p.data != NULL; i++) {
         printf("%c", p.data[i]);
     }
     printf("'");
@@ -196,18 +196,16 @@ void mk_mem_pointers_init()
     /* Server response normal headers */
     mk_pointer_set(&mk_header_conn_ka, MK_HEADER_CONN_KA);
     mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
+    mk_pointer_set(&mk_header_content_length, MK_HEADER_CONTENT_LENGTH);
     mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
     mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
     mk_pointer_set(&mk_header_last_modified, MK_HEADER_LAST_MODIFIED);
 
     mk_http_status_list_init();
     mk_iov_separators_init();
-//        mk_palm_set_env();
-
 
     /* Server */
     mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
-    //        mk_pointer_set(&mk_monkey_port, config->port);
 
     /* Logfile */
     mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);

@@ -88,7 +88,9 @@ parametros de una peticion */
 #define MK_REQUEST_STATUS_INCOMPLETE -1
 #define MK_REQUEST_STATUS_COMPLETED 0
 
-#define EXIT_NORMAL -1
+#define EXIT_NORMAL 0
+#define EXIT_ERROR -1
+#define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
 /* Request error messages for log file */
@@ -131,7 +133,7 @@ struct client_request
 
     int body_length;
 
-    int first_block_end;
+    int body_pos_end;
     int first_method;
 
     time_t init_time;
@@ -163,7 +165,7 @@ struct request
     int pipelined;              /* Pipelined request */
     mk_pointer body;
 
-        /*----First header of client request--*/
+    /*----First header of client request--*/
     int method;
     mk_pointer method_p;
     mk_pointer uri;             /* original request */
@@ -171,7 +173,12 @@ struct request
     int uri_twin;
 
     int protocol;
-        /*------------------*/
+
+    /* If request specify Connection: close, Monkey will
+     * close the connection after send the response, by
+     * default this var is set as VAR_OFF;
+     */
+    int close_now;
 
         /*---Request headers--*/
     int content_length;
@@ -280,7 +287,8 @@ int mk_handler_write(int socket, struct client_request *cr);
 
 
 struct header_toc *mk_request_header_toc_create(int len);
-void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len);
+void mk_request_header_toc_parse(struct header_toc *toc, int toc_len,
+                                 char *data, int len);
 
 void mk_request_ka_next(struct client_request *cr);
 #endif

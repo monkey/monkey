@@ -1,0 +1,7 @@
+# Monkey logfile example:
+# 127.0.0.1 - [20/Mar/2010 16:28:50 -0400] [error 400] Bad Request
+
+[error]
+ip = 127.0.0.1
+status = 400
+message = Bad Request

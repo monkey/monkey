@@ -113,11 +113,7 @@ struct host
 
     char *access_log_path;      /* access log file */
     char *error_log_path;       /* error log file */
-    int getdir;                 /* allow show directory info ? */
 
-    char *cgi_alias;
-    char *cgi_path;
-    char **scriptalias;
     char *host_signature;
     mk_pointer header_host_signature;
 

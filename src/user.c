@@ -93,7 +93,7 @@ int mk_user_init(struct client_request *cr, struct request *sr)
     return 0;
 }
 
-/* Cambia el usuario del proceso */
+/* Change process user */
 int mk_user_set_uidgid()
 {
     struct passwd *usr;
@@ -101,7 +101,8 @@ int mk_user_set_uidgid()
     EGID = (gid_t) getegid();
     EUID = (gid_t) geteuid();
 
-    if (geteuid() == 0 && config->user) {       /* Lanzado por root ?? */
+    /* Launched by root ? */
+    if (geteuid() == 0 && config->user) {
         struct rlimit rl;
 
         /* Just if i'm superuser */
@@ -109,7 +110,7 @@ int mk_user_set_uidgid()
         rl.rlim_cur = rl.rlim_max;
         setrlimit(RLIMIT_NOFILE, &rl);
 
-        /* Chequear si existe el usuario USER ... */
+        /* Check if user exists  */
         if ((usr = getpwnam(config->user)) == NULL) {
             printf("Error: Invalid user '%s'\n", config->user);
             exit(1);
@@ -120,7 +121,7 @@ int mk_user_set_uidgid()
             exit(1);
         }
 
-        /* Cambiar el UID y el GID del proceso */
+        /* Change process UID and GID */
         if (setgid(usr->pw_gid) == -1) {
             printf("I can't change the GID to %u\n", usr->pw_gid);
             exit(1);
@@ -138,7 +139,7 @@ int mk_user_set_uidgid()
     return 0;
 }
 
-/* Vuelve el proceso a su usuario original */
+/* Return process to the original user */
 int mk_user_undo_uidgid()
 {
     if (EUID == 0) {

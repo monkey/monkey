@@ -132,7 +132,6 @@ int mk_conn_write(int socket)
      * processed, if ret > 0 means that some data
      * still need to be send.
      */
-
     if (ret <= 0) {
         mk_request_free_list(cr);
 

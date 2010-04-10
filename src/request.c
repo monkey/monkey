@@ -61,40 +61,49 @@
 
 struct request *mk_request_parse(struct client_request *cr)
 {
-    int i, n, init_block = 0, n_blocks = 0;
-    int pipelined = FALSE;
+    int i, end;
+    int blocks = 0;
     struct request *cr_buf = 0, *cr_search = 0;
 
-    init_block = 0;
+    for (i = 0; i <= cr->body_pos_end; i++) {
+        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining 
+         * request can be involved. 
+         */
+        end = mk_string_search(cr->body + i, mk_endblock.data) + i;
 
-    for (i = cr->first_block_end; i <= cr->body_length - mk_endblock.len; i++) {
+        if (end <  0) {
+            return NULL;
+        }
+
         /* Allocating request block */
         cr_buf = mk_request_alloc();
 
-        /* mk_pointer */
-        cr_buf->body.data = cr->body + init_block;
-        cr_buf->body.len = i - init_block;
+        /* We point the block with a mk_pointer */
+        cr_buf->body.data = cr->body + i;
+        cr_buf->body.len = end - i;
 
-        if (i == cr->first_block_end) {
+        /* Method, previous catch in mk_http_pending_request */
+        if (i == 0) {
             cr_buf->method = cr->first_method;
         }
         else {
             cr_buf->method = mk_http_method_get(cr_buf->body.data);
         }
-
         cr_buf->next = NULL;
-
-        i = init_block = i + mk_endblock.len;
 
         /* Looking for POST data */
         if (cr_buf->method == HTTP_METHOD_POST) {
-            cr_buf->post_variables = mk_method_post_get_vars(cr->body, i);
-
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body, 
+                                                             end + mk_endblock.len);
             if (cr_buf->post_variables.len >= 0) {
-                i = init_block = i + cr_buf->post_variables.len;
+                i += cr_buf->post_variables.len;
             }
         }
 
+        /* Increase index to the end of the current block */
+        i = (end + mk_endblock.len) - 1;
+
+        /* Link block */
         if (!cr->request) {
             cr->request = cr_buf;
         }
@@ -110,49 +119,38 @@ struct request *mk_request_parse(struct client_request *cr)
                 }
             }
         }
-        n_blocks++;
-        n = mk_string_search(cr->body + i, mk_endblock.data);
-        if (n <= 0) {
-            break;
-        }
-        else {
-            i = i + n;
-        }
+
+        /* Update counter */
+        blocks++;
     }
+
+     
+    /* DEBUG BLOCKS 
+    cr_search = cr->request;
+    while(cr_search){
+        printf("\n");
+        MK_TRACE("BLOCK INIT");
+        mk_pointer_print(cr_search->body);
+        MK_TRACE("BLOCK_END");
+
+        cr_search = cr_search->next;
+    }
+    */
 
     /* Checking pipelining connection */
     cr_search = cr->request;
-    if (n_blocks > 1) {
-        pipelined = TRUE;
-
+    if (blocks > 1) {
         while (cr_search) {
+            /* Pipelining request must use GET or HEAD methods */
             if (cr_search->method != HTTP_METHOD_GET &&
                 cr_search->method != HTTP_METHOD_HEAD) {
-                pipelined = FALSE;
-                break;
+                return NULL;
             }
             cr_search = cr_search->next;
         }
-
-        if (pipelined == FALSE) {
-            /* All pipelined requests must use GET method */
-            return NULL;
-        }
-        else {
-            cr->pipelined = TRUE;
-        }
+        
+        cr->pipelined = TRUE;
     }
-
-    /* DEBUG BLOCKS 
-       printf("*****************************************");
-       fflush(stdout);      
-       cr_search = cr->request;
-       while(cr_search){
-       printf("\n---BLOCK---:\n%s---END BLOCK---\n\n", cr_search->body);
-       fflush(stdout);
-       cr_search = cr_search->next;
-       }
-     */
 
     return cr->request;
 }
@@ -217,10 +215,6 @@ int mk_handler_write(int socket, struct client_request *cr)
             bytes = SendFile(socket, cr, sr);
             final_status = bytes;
         }
-        else if (sr->handled_by){
-            /* FIXME: Look for loops 
-             * sr->handled_by; */
-        }
 
         /*
          * If we got an error, we don't want to parse
@@ -230,7 +224,18 @@ int mk_handler_write(int socket, struct client_request *cr)
             return final_status;
         }
         else if (final_status <= 0) {
-            mk_logger_write_log(cr, sr->log, sr->host_conf);
+            switch (final_status) {
+            case EXIT_NORMAL:
+            case EXIT_ERROR:
+                mk_logger_write_log(cr, sr->log, sr->host_conf);
+                if (sr->close_now == VAR_ON) {
+                    return -1;
+                }
+                break;
+            case EXIT_ABORT:
+                return -1;
+                break;
+            }
         }
 
         sr = sr->next;
@@ -250,7 +255,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     status = mk_request_header_process(s_request);
 
     if (status < 0) {
-        return EXIT_NORMAL;
+        return EXIT_ABORT;
     }
 
     switch (s_request->method) {
@@ -410,7 +415,7 @@ int mk_request_header_process(struct request *sr)
     headers = sr->body.data + prot_end + mk_crlf.len;
 
     /* URI processed */
-    sr->uri_processed = get_real_string(sr->uri);
+    sr->uri_processed = mk_utils_hexuri_to_ascii(sr->uri);
 
     if (!sr->uri_processed) {
         sr->uri_processed = mk_pointer_to_buf(sr->uri);
@@ -419,8 +424,10 @@ int mk_request_header_process(struct request *sr)
 
     /* Creating table of content (index) for request headers */
     int toc_len = MK_KNOWN_HEADERS;
+    int headers_len = sr->body.len - (prot_end + mk_crlf.len);
+
     struct header_toc *toc = mk_request_header_toc_create(toc_len);
-    mk_request_header_toc_parse(toc, headers, toc_len);
+    mk_request_header_toc_parse(toc, toc_len, headers, headers_len);
 
     /* Host */
     host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
@@ -465,17 +472,27 @@ int mk_request_header_process(struct request *sr)
                                                    mk_rh_if_modified_since);
 
     /* Default Keepalive is off */
-    sr->keep_alive = VAR_OFF;
+    if (sr->protocol == HTTP_PROTOCOL_10) {
+        sr->keep_alive = VAR_OFF;
+        sr->close_now = VAR_ON;
+    }
+    else if(sr->protocol == HTTP_PROTOCOL_11) {
+        sr->keep_alive = VAR_ON;
+        sr->close_now = VAR_OFF;
+    }
+
     if (sr->connection.data) {
         if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
             sr->keep_alive = VAR_ON;
+            sr->close_now = VAR_OFF;
         }
-    }
-    else {
-        /* Default value for HTTP/1.1 */
-        if (sr->protocol == HTTP_PROTOCOL_11) {
-            /* Assume keep-alive connection */
-            sr->keep_alive = VAR_ON;
+        else if(mk_string_casestr(sr->connection.data, "Close")) {
+            sr->keep_alive = VAR_OFF;
+            sr->close_now = VAR_ON;
+        }
+        else {
+            /* Set as a non-valid connection header value */
+            sr->connection.len = 0;
         }
     }
     sr->log->final_response = M_HTTP_OK;
@@ -493,7 +510,6 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     var.data = NULL;
     var.len = 0;
 
-    /* new code */
     if (toc) {
         for (i = 0; i < toc_len; i++) {
             /* status = 1 means that the toc entry was already
@@ -555,6 +571,8 @@ void mk_request_error(int num_error, struct client_request *cr,
     char *aux_message = 0;
     mk_pointer message, *page = 0;
     long n;
+
+    s_log->error_details.data = NULL;
 
     switch (num_error) {
     case M_CLIENT_BAD_REQUEST:
@@ -659,7 +677,7 @@ void mk_request_error(int num_error, struct client_request *cr,
         mk_pointer_reset(&s_request->headers->content_type);
     }
     else {
-        mk_pointer_set(&s_request->headers->content_type, "text/html");
+        mk_pointer_set(&s_request->headers->content_type, "text/html\r\n");
     }
 
     mk_header_send(cr->socket, cr, s_request, s_log);
@@ -698,6 +716,7 @@ struct request *mk_request_alloc()
 
     request->status = VAR_OFF;  /* Request not processed yet */
     request->make_log = VAR_ON; /* build log file of this request ? */
+    request->close_now = VAR_OFF;
 
     mk_pointer_reset(&request->body);
 
@@ -789,16 +808,6 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->headers->location);
         mk_pointer_free(&sr->headers->content_length_p);
         mk_pointer_free(&sr->headers->last_modified);
-        /*
-           mk_mem_free(sr->headers->content_type);
-           headers->content_type never it's allocated 
-           with malloc or something, so we don't need 
-           to free it, the value has been freed before 
-           in M_METHOD_Get_and_Head(struct request *sr)
-
-           this BUG was reported by gentoo team.. thanks guys XD
-         */
-
         mk_mem_free(sr->headers);
     }
 
@@ -866,7 +875,7 @@ struct client_request *mk_request_client_create(int socket)
     cr->next = NULL;
     cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
     cr->body_length = 0;
-    cr->first_block_end = -1;
+    cr->body_pos_end = -1;
     cr->first_method = HTTP_METHOD_UNKNOWN;
 
     request_index = mk_sched_get_request_index();
@@ -931,7 +940,6 @@ struct client_request *mk_request_client_remove(int socket)
         cr = cr->next;
     }
 
-    //mk_pointer_free(&cr->ip);
     mk_mem_free(cr->body);
     mk_mem_free(cr);
 
@@ -953,13 +961,13 @@ struct header_toc *mk_request_header_toc_create(int len)
     return p;
 }
 
-void mk_request_header_toc_parse(struct header_toc *toc, char *data, int len)
+void mk_request_header_toc_parse(struct header_toc *toc, int toc_len, char *data, int len)
 {
-    char *p, *l;
+    char *p, *l = 0;
     int i;
 
     p = data;
-    for (i = 0; i < len && p; i++) {
+    for (i = 0; i < toc_len && p && l < data + len; i++) {
         l = strstr(p, MK_CRLF);
         if (l) {
             toc[i].init = p;
@@ -976,8 +984,11 @@ void mk_request_ka_next(struct client_request *cr)
 {
     bzero(cr->body, sizeof(cr->body));
     cr->first_method = -1;
-    cr->first_block_end = -1;
+    cr->body_pos_end = -1;
     cr->body_length = 0;
     cr->counter_connections++;
-}
 
+    /* Update data for scheduler */
+    cr->init_time = log_current_utime;
+    cr->status = MK_REQUEST_STATUS_INCOMPLETE;
+}

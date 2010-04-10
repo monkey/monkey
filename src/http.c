@@ -44,15 +44,15 @@
 
 int mk_http_method_check(mk_pointer method)
 {
-    if (strncasecmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {
         return HTTP_METHOD_GET;
     }
 
-    if (strncasecmp(method.data, HTTP_METHOD_POST_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_POST_STR, method.len) == 0) {
         return HTTP_METHOD_POST;
     }
 
-    if (strncasecmp(method.data, HTTP_METHOD_HEAD_STR, method.len) == 0) {
+    if (strncmp(method.data, HTTP_METHOD_HEAD_STR, method.len) == 0) {
         return HTTP_METHOD_HEAD;
     }
 
@@ -96,13 +96,13 @@ int mk_http_method_get(char *body)
 
 int mk_http_protocol_check(char *protocol, int len)
 {
-    if (strncasecmp(protocol, HTTP_PROTOCOL_11_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_11_STR, len) == 0) {
         return HTTP_PROTOCOL_11;
     }
-    if (strncasecmp(protocol, HTTP_PROTOCOL_10_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_10_STR, len) == 0) {
         return HTTP_PROTOCOL_10;
     }
-    if (strncasecmp(protocol, HTTP_PROTOCOL_09_STR, len) == 0) {
+    if (strncmp(protocol, HTTP_PROTOCOL_09_STR, len) == 0) {
         return HTTP_PROTOCOL_09;
     }
 
@@ -129,6 +129,8 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     int ret;
     int debug_error = 0, bytes = 0;
     struct mimetype *mime;
+    char *uri_data = NULL;
+    char uri_len = 0;
     mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
 
 #ifdef TRACE
@@ -141,20 +143,36 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         sr->real_path.len = sr->host_conf->documentroot.len;
     }
 
+    /* Map URI */
+    if (sr->uri_processed) {
+        uri_data = sr->uri_processed;
+        uri_len = strlen(sr->uri_processed);
+    }
+    else{
+        uri_data = sr->uri.data;
+        uri_len = sr->uri.len;
+    }
+
+    /* Compose real path */
     if (sr->user_home == VAR_OFF) {
-        mk_buffer_cat(&sr->real_path, sr->host_conf->documentroot.data,
-                      sr->uri_processed);
+        mk_buffer_cat(&sr->real_path, 
+                      sr->host_conf->documentroot.data,
+                      sr->host_conf->documentroot.len,
+                      uri_data,
+                      uri_len);
     }
 
     if (sr->method != HTTP_METHOD_HEAD) {
         debug_error = 1;
     }
 
-    if (mk_string_search_n(sr->uri.data, HTTP_DIRECTORY_BACKWARD,
-                           sr->uri.len) >= 0) {
+    /* Check backward directory request */
+    if (mk_string_search_n(uri_data, 
+                           HTTP_DIRECTORY_BACKWARD,
+                           uri_len) >= 0) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Plugin Stage 30: look for handlers for this request */
@@ -162,7 +180,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         MK_PLUGIN_RET_CLOSE_CONX) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     sr->file_info = mk_file_get_info(sr->real_path.data);
@@ -186,20 +204,12 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             sr->log->final_response = M_CLIENT_FORBIDDEN;
             mk_request_error(M_CLIENT_FORBIDDEN, cr, sr,
                              debug_error, sr->log);
-            return -1;
+            return EXIT_ERROR;
         }
         else {
             int n;
             char linked_file[MAX_PATH];
             n = readlink(sr->real_path.data, linked_file, MAX_PATH);
-            /*              
-               if(Deny_Check(linked_file)==-1) {
-               sr->log->final_response=M_CLIENT_FORBIDDEN;
-               mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-               return -1;
-               }
-             */
-
         }
     }
 
@@ -227,7 +237,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Matching MimeType  */
@@ -238,7 +248,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* Plugin Stage 40: look for handlers for this request */
@@ -250,7 +260,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* get file size */
     if (sr->file_info->size < 0) {
         mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
-        return -1;
+        return EXIT_ERROR;
     }
 
     /* counter connections */
@@ -262,9 +272,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         PutDate_string((time_t) sr->file_info->last_modification);
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
-        time_t date_client;     // Date send by client
-        time_t date_file_server;        // Date server file
-
+        time_t date_client;       /* Date sent by client */
+        time_t date_file_server;  /* Date server file */
+        
         date_client = PutDate_unix(sr->if_modified_since.data);
         date_file_server = sr->file_info->last_modification;
 
@@ -272,7 +282,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             sr->headers->status = M_NOT_MODIFIED;
             mk_header_send(cr->socket, cr, sr, sr->log);
             mk_pointer_free(&gmt_file_unix_time);
-            return 0;
+            return EXIT_NORMAL;
         }
     }
     sr->headers->status = M_HTTP_OK;
@@ -281,9 +291,17 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
-    sr->log->size = sr->headers->content_length = sr->file_info->size;
-    sr->log->size_p = sr->headers->content_length_p =
-        mk_utils_int2mkp(sr->file_info->size);
+    sr->headers->content_length = sr->file_info->size;
+    sr->headers->content_length_p = mk_utils_int2mkp(sr->file_info->size);
+
+    if (sr->method == HTTP_METHOD_HEAD) {
+        sr->log->size = 0;
+        sr->log->size_p = mk_utils_int2mkp(0);
+    }
+    else {
+        sr->log->size = sr->file_info->size;
+        sr->log->size_p = sr->headers->content_length_p;
+    }
 
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         sr->headers->content_type = mime->type;
@@ -292,13 +310,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             if (mk_http_range_parse(sr) < 0) {
                 mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
                 mk_pointer_free(&gmt_file_unix_time);
-                return -1;
+                return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0)
                 sr->headers->status = M_HTTP_PARTIAL;
         }
     }
-    else {                      /* without content-type */
+    else {                      
+        /* without content-type */
         mk_pointer_reset(&sr->headers->content_type);
     }
 
@@ -315,13 +334,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
         if (sr->fd_file == -1) {
             perror("open");
-            return -1;
+            return EXIT_ERROR;
         }
 
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
             mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
-            return -1;
+            return EXIT_ERROR;
         }
         bytes = SendFile(cr->socket, cr, sr);
     }
@@ -465,6 +484,7 @@ int mk_http_range_parse(struct request *sr)
         if (sr->headers->ranges[1] <= 0) {
             return -1;
         }
+
         return 0;
     }
 
@@ -482,7 +502,6 @@ int mk_http_range_parse(struct request *sr)
             sr->headers->ranges[0] > sr->headers->ranges[1]) {
             return -1;
         }
-
         return 0;
     }
     /* =yyy- */
@@ -506,41 +525,42 @@ int mk_http_range_parse(struct request *sr)
  */
 int mk_http_pending_request(struct client_request *cr)
 {
-    int n, len;
-    char *str;
+    int n;
+    char *end;
 
-    len = cr->body_length;
-
-    /* try to match CRLF end */
-    if (strcmp(cr->body + len - mk_endblock.len, mk_endblock.data) == 0) {
-        n = len - mk_endblock.len;
+    if (cr->body_length >= mk_endblock.len) {
+        end = (cr->body + cr->body_length) - mk_endblock.len;
     }
     else {
-        n = mk_string_search(cr->body, mk_endblock.data);
-    }
-
-    if (n <= 0) {
         return -1;
     }
 
-    if (cr->first_block_end < 0) {
-        cr->first_block_end = n;
-    }
+    /* try to match CRLF at the end of the request */
+    if (cr->body_pos_end < 0) { 
+        if (strncmp(end, mk_endblock.data, mk_endblock.len) == 0) {
+            cr->body_pos_end = cr->body_length - mk_endblock.len;
+        }
+        else if ((n = mk_string_search(cr->body, mk_endblock.data)) >= 0 ){
 
-    str = cr->body + n + mk_endblock.len;
+            cr->body_pos_end = n;
+        }
+        else {
+            return -1;
+        }
+    }
 
     if (cr->first_method == HTTP_METHOD_UNKNOWN) {
         cr->first_method = mk_http_method_get(cr->body);
     }
 
     if (cr->first_method == HTTP_METHOD_POST) {
-        if (cr->first_block_end > 0) {
+        if (cr->body_pos_end > 0) {
             /* if first block has ended, we need to verify if exists 
              * a previous block end, that will means that the POST 
              * method has sent the whole information. 
              * just for ref: pipelining is not allowed with POST
              */
-            if (cr->first_block_end == cr->body_length - mk_endblock.len) {
+            if (cr->body_pos_end == cr->body_length - mk_endblock.len) {
                 /* Content-length is required, if is it not found, 
                  * we pass as successfull in order to raise the error
                  * later

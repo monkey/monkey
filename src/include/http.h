@@ -61,7 +61,6 @@ mk_pointer mk_http_protocol_null_p;
 #include "memory.h"
 
 int mk_http_method_check(mk_pointer method);
-//char *mk_http_method_check_str(int method);
 mk_pointer mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
 

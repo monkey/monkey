@@ -80,7 +80,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_REDIR_MOVED:
-        s_log->status = S_LOG_OFF;
+        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
@@ -92,7 +92,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_NOT_MODIFIED:
-        s_log->status = S_LOG_OFF;
+        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_not_modified,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
@@ -163,32 +163,35 @@ int mk_header_send(int fd, struct client_request *cr,
     mk_iov_add_entry(iov,
                      mk_header_short_date.data,
                      mk_header_short_date.len,
-                     mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
     mk_iov_add_entry(iov,
                      header_current_time.data,
                      header_current_time.len,
-                     mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     /* Connection */
     if (config->keep_alive == VAR_ON &&
-        cr->request->connection.data != NULL &&
-        cr->request->keep_alive == VAR_ON &&
-        (cr->counter_connections < config->max_keep_alive_request)) {
-        m_build_buffer(&buffer,
-                       &len,
-                       "Keep-Alive: timeout=%i, max=%i"
-                       MK_CRLF,
-                       config->keep_alive_timeout,
-                       (config->max_keep_alive_request -
-                        cr->counter_connections)
-            );
-        mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
-        mk_iov_add_entry(iov,
-                         mk_header_conn_ka.data,
-                         mk_header_conn_ka.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        sr->keep_alive == VAR_ON &&
+        cr->counter_connections < config->max_keep_alive_request) {
+
+        /* A valid connection header */
+        if (sr->connection.len > 0) {
+            m_build_buffer(&buffer,
+                           &len,
+                           "Keep-Alive: timeout=%i, max=%i"
+                           MK_CRLF,
+                           config->keep_alive_timeout,
+                           (config->max_keep_alive_request -
+                            cr->counter_connections)
+                           );
+            mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
+            mk_iov_add_entry(iov,
+                             mk_header_conn_ka.data,
+                             mk_header_conn_ka.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
     }
-    else if (sr->protocol >= HTTP_PROTOCOL_10 || sr->content_length == 0) {
+    else if(sr->close_now == VAR_ON) {
         mk_iov_add_entry(iov,
                          mk_header_conn_close.data,
                          mk_header_conn_close.len,
@@ -200,7 +203,7 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_short_location.data,
                          mk_header_short_location.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov,
                          sh->location,
@@ -211,10 +214,10 @@ int mk_header_send(int fd, struct client_request *cr,
     if (sh->last_modified.len > 0) {
         mk_iov_add_entry(iov, mk_header_last_modified.data,
                          mk_header_last_modified.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
         mk_iov_add_entry(iov, sh->last_modified.data,
                          sh->last_modified.len,
-                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
     /* Content type */
@@ -222,12 +225,12 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_short_ct.data,
                          mk_header_short_ct.len,
-                         mk_iov_header_value, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov,
                          sh->content_type.data,
                          sh->content_type.len,
-                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
     /* Transfer Encoding */
@@ -236,21 +239,15 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          mk_header_te_chunked.data,
                          mk_header_te_chunked.len,
-                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
     }
 
-    /* Accept ranges  
-       mk_iov_add_entry(iov, 
-       mk_header_accept_ranges.data,
-       mk_header_accept_ranges.len,
-       mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
-     */
-    /* Tamaño total de la informacion a enviar */
+    /* Content-Length */
     if ((sh->content_length != 0 &&
          (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
         config->resume == VAR_ON) {
-        long int length;
+        long int length = -1;
 
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
@@ -304,15 +301,24 @@ int mk_header_send(int fd, struct client_request *cr,
                            (sh->content_length - 1), sh->content_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
+
+        /* FIXME: logger routines and data should be handled by a plugin
+         * in Monkey 0.11.0
+         */
+        if (length >= 0) {
+            mk_pointer_free(&sr->log->size_p);
+            sr->log->size = length;
+            sr->log->size_p = mk_utils_int2mkp(length);
+        }
     }
     else if (sh->content_length >= 0) {
-        mk_iov_add_entry(iov, mk_rh_content_length.data,
-                         mk_rh_content_length.len,
-                         mk_iov_space, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, mk_header_content_length.data,
+                         mk_header_content_length.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         mk_iov_add_entry(iov, sh->content_length_p.data,
                          sh->content_length_p.len,
-                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
@@ -322,7 +328,7 @@ int mk_header_send(int fd, struct client_request *cr,
 
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
     mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
-    
+
 #ifdef DEBUG_HEADERS_OUT
     mk_iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
 #endif

@@ -20,16 +20,18 @@
 #ifndef MK_UTILS_H
 #define MK_UTILS_H
 
-/* Defining TRUE and FALSE */
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/sysctl.h>
 #include <unistd.h>
+
 #define TRUE 1
 #define FALSE 0
 
-/* Tipo de envio de datos en fdprintf(...) */
-#define CHUNKED 0
-#define NO_CHUNKED 1
+#define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
+                                           * converting an int to mk_pointer */
+
+#define MK_UTILS_SOMAXCONN_DEFAULT 1024   /* Default for SOMAXCONN value */
 
 #include "request.h"
 #include "memory.h"
@@ -53,6 +55,8 @@
 #define ANSI_WHITE "\033[37m"
 #define ANSI_RESET "\033[0m"
 
+char *envtrace;
+
 #endif
 
 /* utils.c */
@@ -66,14 +70,12 @@ mk_pointer PutDate_string(time_t date);
 
 time_t PutDate_unix(char *date);
 
-char *get_real_string(mk_pointer req_uri);
-
 char *get_name_protocol(int remote_protocol);
 
 char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
                      ...);
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2);
+int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
 #define SYML_NOT -1
 #define SYML_OK 0
@@ -86,10 +88,13 @@ char *get_end_position(char *buf);
 
 int mk_utils_set_daemon();
 mk_pointer mk_utils_int2mkp(int n);
+char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
 
 #ifdef TRACE
 void mk_utils_trace(const char *component, int color, const char *function, 
                     char *file, int line, const char* format, ...);
 #endif
+
+int mk_utils_get_somaxconn();
 
 #endif

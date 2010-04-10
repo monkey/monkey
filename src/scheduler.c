@@ -57,6 +57,8 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     sr->next = NULL;
 
     for (i = 0; i < config->worker_capacity; i++) {
+        /* Pre alloc IPv4 memory buffer */
+        sr->queue[i].ipv4.data = mk_mem_malloc_z(16);
         sr->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
     }
 
@@ -201,7 +203,6 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             /* Set IP */
-            sched->queue[i].ipv4.data = mk_mem_malloc_z(16);
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
             mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
@@ -236,6 +237,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
+        /* Close socket and change status */
         close(remote_fd);
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         return 0;
@@ -267,15 +269,17 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
 
 int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
-    int i;
+    int i, client_timeout;
     struct request_idx *req_idx;
     struct client_request *req_cl;
 
     /* PENDING CONN TIMEOUT */
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_PENDING) {
-            if (sched->queue[i].arrive_time + config->timeout <=
-                log_current_utime) {
+            client_timeout = sched->queue[i].arrive_time + config->timeout;
+
+            /* Check timeout */
+            if (client_timeout <= log_current_utime) {
 #ifdef TRACE
                 MK_TRACE("Scheduler, closing fd %i due TIMEOUT", 
                          sched->queue[i].socket);
@@ -291,7 +295,15 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
     while (req_cl) {
         if (req_cl->status == MK_REQUEST_STATUS_INCOMPLETE) {
-            if ((req_cl->init_time + config->timeout) >= log_current_utime) {
+            if (req_cl->counter_connections == 0) {
+                client_timeout = req_cl->init_time + config->timeout;
+            }
+            else {
+                client_timeout = req_cl->init_time + config->keep_alive_timeout;
+            }
+
+            /* Check timeout */
+            if (client_timeout <= log_current_utime) {
 #ifdef TRACE
                 MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
                          req_cl->socket);

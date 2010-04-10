@@ -76,11 +76,12 @@ int SendFile(int socket, struct client_request *cr, struct request *sr)
     return sr->bytes_to_send;
 }
 
-/* Devuelve la fecha para enviarla 
- en el header */
+/* Return data as mk_pointer to be sent
+ * in response header 
+ */
 mk_pointer PutDate_string(time_t date)
 {
-    int n, size = 50;
+    int n, size = 32;
     mk_pointer date_gmt;
     struct tm *gmt_tm;
 
@@ -115,14 +116,8 @@ time_t PutDate_unix(char *date)
     return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, char *buf2)
+int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
 {
-
-    int len1, len2;
-
-    len1 = strlen(buf1);
-    len2 = strlen(buf2);
-
     /* alloc space */
     p->data = (char *) mk_mem_malloc(len1 + len2 + 1);
 
@@ -201,15 +196,17 @@ int mk_utils_set_daemon()
     return 0;
 }
 
-
-char *get_real_string(mk_pointer uri)
+/* If the URI contains hexa format characters it will return 
+ * convert the Hexa values to ASCII character 
+ */
+char *mk_utils_hexuri_to_ascii(mk_pointer uri)
 {
 
     int i, hex_result, aux_char;
     int buf_idx = 0;
     char *buf;
     char hex[3];
-
+    
     if ((i = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
         return NULL;
     }
@@ -253,25 +250,14 @@ char *get_real_string(mk_pointer uri)
     return buf;
 }
 
-void mk_utils_toupper(char *string)
-{
-    int i, len;
-
-    len = strlen(string);
-    for (i = 0; i < len; i++) {
-        string[i] = toupper(string[i]);
-    }
-}
-
 mk_pointer mk_utils_int2mkp(int n)
 {
     mk_pointer p;
     char *buf;
     unsigned long len;
-    int size = 32;
 
-    buf = mk_mem_malloc(size);
-    len = snprintf(buf, 32, "%i", n);
+    buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
+    len = snprintf(buf, MK_UTILS_INT2MKP_BUFFER_LEN, "%i\r\n", n);
 
     p.data = buf;
     p.len = len;
@@ -290,6 +276,12 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
     struct timeval tv;
     struct timezone tz;
+
+    if (envtrace) {
+        if (!strstr(envtrace, file)) {
+            return;
+        }
+    }
 
     gettimeofday(&tv, &tz);
  
@@ -318,3 +310,17 @@ void mk_utils_trace(const char *component, int color, const char *function,
     fprintf( stderr, "%s\n", ANSI_RESET);
 }
 #endif
+
+/* Get SOMAXCONN value. Based on sysctl manpage */
+int mk_utils_get_somaxconn()
+{
+    /* sysctl() is deprecated in some systems, you can notice that with some system 
+     * messages as: 
+     * 
+     * '(warning: process `monkey' used the deprecated sysctl system call...'
+     *
+     * In order to avoid that problem, this function will return the default 
+     * value defined for somaxconn for years...
+     */
+    return 128;
+}

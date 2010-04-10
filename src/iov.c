@@ -111,40 +111,7 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
         n = writev(fd, mk_io->io, mk_io->iov_idx);
 
         if (n < 0) {
-            /*
-               perror("writev");
-               switch(errno){
-               case EBADF:
-               printf("\nEBADF");
-               break;
-               case EFAULT:
-               printf("\nEFAULT");
-               break;
-               case EFBIG:
-               printf("\nEFBIG");
-               break;
-               case EINTR:
-               printf("\nEINTR");
-               break;
-               case EINVAL:
-               printf("\nEINVAL");
-               break;
-               case EIO:
-               printf("\nEIO");
-               break;
-               case ENOMEM:
-               printf("\nENOMEM");
-               break;
-               case ENOSPC:
-               printf("\nENOSPC");
-               break;
-               case ENXIO:
-               printf("\nENXIO");
-               break;
-
-               }
-               fflush(stdout);
-             */
+            perror("writev");
             return n;
         }
     }
@@ -218,7 +185,6 @@ void mk_iov_separators_init()
     mk_pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
     mk_pointer_set(&mk_iov_lf, MK_IOV_LF);
     mk_pointer_set(&mk_iov_space, MK_IOV_SPACE);
-    mk_pointer_set(&mk_iov_header_value, MK_IOV_HEADER_VALUE);
     mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);
     mk_pointer_set(&mk_iov_none, MK_IOV_NONE);
     mk_pointer_set(&mk_iov_equal, MK_IOV_EQUAL);

@@ -1,0 +1,8 @@
+# Monkey logfile example:
+# 127.0.0.1 - [22/Mar/2010 09:44:49 -0400] [error 411] Length Required
+
+[error]
+ip = 127.0.0.1
+status = 411
+message = Length Required
+

@@ -36,12 +36,4 @@ AccessLog $logdir/access.log
 
 ErrorLog $logdir/error.log
 
-# GetDir :
-# --------
-# In case a starting file cannot be found for the required route through
-# the browser, it's possible to send the information from the directory 
-# with it's respective contents (values on/off).
-
-GetDir on
-
 EOF

@@ -1,0 +1,7 @@
+# Monkey logfile example:
+# 127.0.0.1 - [20/Mar/2010 17:41:33 -0400] [error 404] Not Found /a_file_that_doesnt_exists.html
+
+[error]
+ip = 127.0.0.1
+status = 404
+message = Not Found /a_file_that_doesnt_exists.html

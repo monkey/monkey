@@ -62,30 +62,31 @@ mk_pointer mk_hr_server_not_implemented;
 mk_pointer mk_hr_server_http_version_unsup;
 
 /* Short header values */
-#define MK_HEADER_SHORT_DATE "Date"
-#define MK_HEADER_SHORT_LOCATION "Location"
-#define MK_HEADER_SHORT_CT "Content-Type"
-#define MK_HEADER_SHORT_LOCATION "Location"
+#define MK_HEADER_SHORT_DATE "Date: "
+#define MK_HEADER_SHORT_LOCATION "Location: "
+#define MK_HEADER_SHORT_CT "Content-Type: "
 
 mk_pointer mk_header_short_date;
 mk_pointer mk_header_short_location;
 mk_pointer mk_header_short_ct;
 
 /* Accept ranges */
-#define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes"
+#define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes" MK_CRLF
 
 #define MK_HEADER_CONN_KA "Connection: Keep-Alive" MK_CRLF
 #define MK_HEADER_CONN_CLOSE "Connection: Close" MK_CRLF
+#define MK_HEADER_CONTENT_LENGTH "Content-Length: "
 
 /* Transfer Encoding */
 #define MK_HEADER_TE_TYPE_CHUNKED 0
-#define MK_HEADER_TE_CHUNKED "Transfer-Encoding: Chunked"
+#define MK_HEADER_TE_CHUNKED "Transfer-Encoding: Chunked" MK_CRLF
 
-#define MK_HEADER_LAST_MODIFIED "Last-Modified"
+#define MK_HEADER_LAST_MODIFIED "Last-Modified: "
 
 /* mk pointers with response server headers */
 mk_pointer mk_header_conn_ka;
 mk_pointer mk_header_conn_close;
+mk_pointer mk_header_content_length;
 mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;

@@ -66,7 +66,7 @@ struct mk_config *mk_config_create(char *path)
             continue;
 
         key = strtok_r(buf, "\"\t ", &last);
-        val = strtok_r(NULL, "\n", &last);
+        val = strtok_r(NULL, "\"\t", &last);
 
         if (!key || !val) {
             continue;
@@ -75,6 +75,7 @@ struct mk_config *mk_config_create(char *path)
         /* Allow new entry found */
         new = mk_mem_malloc(sizeof(struct mk_config));
         new->key = mk_string_dup(key);
+
         new->val = mk_string_dup(val);
         new->next = NULL;
 
@@ -166,7 +167,8 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     config->workers = MK_WORKERS_DEFAULT;
 
     if (stat(config->serverconf, &checkdir) == -1) {
-        fprintf(stderr, "ERROR: Invalid path to configuration files.");
+        fprintf(stderr, "\nERROR: Invalid path to configuration files");
+        fprintf(stderr, "\nCannot find/open '%s'\n", config->serverconf);
         exit(1);
     }
 
@@ -318,25 +320,6 @@ void mk_config_read_hosts(char *path)
         }
     }
     closedir(dir);
-    /*
-       h = config->hosts;
-       while(h)
-       {
-       printf("*** HOST ***\n");
-       printf(" [servername]\t\t%s\n", h->servername);
-       printf(" [documentroot]\t\t%s\n", h->documentroot);
-       printf(" [conf file]\t\t%s\n", h->file);
-       printf(" [access log]\t\t%s\n", h->access_log_path);
-       printf(" [error log]\t\t%s\n", h->error_log_path);
-       printf(" [script alias]\t\t%s %s\n", h->scriptalias[0], h->scriptalias[1]);
-       printf(" [get dir]\t\t%i\n", h->getdir);
-       printf(" [header file]\t\t%s\n", h->header_file);
-       printf(" [footer file]\t\t%s\n\n", h->footer_file);
-
-       h = h->next;
-       }
-       fflush(stdout);
-     */
 }
 
 struct host *mk_config_get_host(char *path)
@@ -374,12 +357,6 @@ struct host *mk_config_get_host(char *path)
     /* Error log */
     host->error_log_path = mk_config_getval(cnf,
                                             "ErrorLog", MK_CONFIG_VAL_STR);
-
-    /* Get directory */
-    host->getdir = (int) mk_config_getval(cnf, "GetDir", MK_CONFIG_VAL_BOOL);
-    if (host->getdir == VAR_ERR) {
-        mk_config_print_error_msg("GetDir", path);
-    }
 
     if (!host->servername) {
         mk_config_free(cnf);

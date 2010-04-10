@@ -35,14 +35,11 @@ int server_fd;
 #define SH_NOCGI 0
 #define SH_CGI 1
 
-/* Valores para distintas variables */
 #define VAR_ERR -2
 #define VAR_NOTSET -1
 #define VAR_ON 0
 #define VAR_OFF 1
 
-/* Contador de requests en proceso */
-int thread_counter;
 
 /* Thread mutexes */
 pthread_mutex_t mutex_thread_list;
@@ -54,8 +51,7 @@ pthread_mutex_t mutex_wait_register;
 mk_pointer mk_monkey_protocol;
 mk_pointer mk_monkey_port;
 
-/* Usuario real que que ejecuto
- el servidor */
+/* Process UID/GID */
 gid_t EGID;
 gid_t EUID;
 

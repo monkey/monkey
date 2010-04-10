@@ -25,6 +25,7 @@
 #define MK_EPOLL_WRITE 1
 #define MK_EPOLL_RW 2
 
+/* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000
 
 #define MK_EPOLL_BEHAVIOR_DEFAULT 2

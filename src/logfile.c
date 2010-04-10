@@ -169,9 +169,8 @@ void *mk_logger_worker_init(void *args)
 
             err = ioctl(target->fd, FIONREAD, &bytes);
             if (err == -1) {
-                perror("err");
+                perror("ioctl");
             }
-
 
             if (bytes < buffer_limit && clk <= timeout) {
                 break;
@@ -208,8 +207,7 @@ void mk_logger_iov_free(struct mk_iov *iov)
     mk_iov_free_marked(iov);
 }
 
-/* Registra en archivos de logs: accesos
- y errores */
+/* Log access and error messages */
 int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                         struct host *h)
 {
@@ -219,7 +217,7 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
     struct sched_connection *conx;
 
 #ifdef TRACE
-    MK_TRACE("Logger, Writting to log file");
+    MK_TRACE("Logger, Writting to log file [FD %i]", cr->socket);
 #endif
 
     if (log->status != S_LOG_ON) {
@@ -240,8 +238,12 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                      mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
     /* Register a successfull request */
-    if (log->final_response == M_HTTP_OK
-        || log->final_response == M_REDIR_MOVED_T) {
+    if (log->final_response == M_HTTP_OK ||
+        log->final_response == M_REDIR_MOVED ||
+        log->final_response == M_REDIR_MOVED_T ||
+        log->final_response == M_NOT_MODIFIED ||
+        log->final_response == M_HTTP_PARTIAL) {
+
         /* HTTP method required */
         method = mk_http_method_check_str(log->method);
         mk_iov_add_entry(iov, method.data, method.len, mk_iov_space,
@@ -265,10 +267,15 @@ int mk_logger_write_log(struct client_request *cr, struct log_info *log,
                          mk_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* object size */
-        mk_iov_add_entry(iov,
-                         log->size_p.data,
-                         log->size_p.len, mk_iov_lf, MK_IOV_NOT_FREE_BUF);
-
+        if (log->size_p.data) {
+            mk_iov_add_entry(iov,
+                             log->size_p.data,
+                             log->size_p.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+        else {
+            mk_iov_add_entry(iov,
+                             "0\r\n", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
         /* Send info to pipe */
         mk_iov_send(h->log_access[1], iov, MK_IOV_SEND_TO_PIPE);
     }
@@ -314,7 +321,7 @@ int mk_logger_register_pid()
     return 0;
 }
 
-/* Elimina log del PID */
+/* Remove PID file */
 int mk_logger_remove_pid()
 {
     mk_user_undo_uidgid();
