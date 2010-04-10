@@ -1,3 +1,39 @@
+commit 456fa7adae97f9a2a5e2b9358f1c7229662f5d29
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 9 20:22:37 2010 -0400
+
+    Monkey 0.10.1
+
+commit 9c0b03f7b2175df327ffe5f8734f827284be64f4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 9 16:43:12 2010 -0400
+
+    Makefile: remove 'Running Monkey' message
+
+commit 07ba1cc1d225c373f9ea2a930d6933b57be2e46a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 9 16:39:50 2010 -0400
+
+    Configure: add DESTDIR support to Makefile
+
+commit 31bf65ca0a0fe2ab070292f1f4f1f9821da432ab
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 8 10:53:21 2010 -0400
+
+    Config: fix reader for line with multiple values
+
+commit 9006e228ae771ea70483f29f14eb37fbccf895c7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 8 09:52:34 2010 -0400
+
+    Configure: move env vars to global context
+
+commit d4cbe4cebf3215a9137ff447cd539dd638d45e50
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 5 02:37:50 2010 -0400
+
+    Update changelog
+
 commit f8873bf50e6a5dc3333189c73cf9ad52ac105ffd
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Apr 5 02:31:25 2010 -0400
@@ -421,13 +457,6 @@ Date:   Thu Mar 11 19:12:52 2010 -0300
 
     Monkey 0.10.0-rc2
 
-commit d591a1f080e7c9bd39eb41f4297fe40d2482fb18
-Merge: 4a98db4 306b7d1
-Author: Eduardo Silva <edsiper@gmail.com>
-Date:   Thu Mar 11 18:35:14 2010 -0300
-
-    Merge branch 'master' of git+ssh://repo.or.cz/srv/git/MonkeyD
-
 commit 4a98db4b8fced0fd11bddebd938c06b7bbc58219
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Mar 11 18:33:22 2010 -0300
@@ -535,13 +564,6 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Mar 6 00:58:22 2010 -0300
 
     Remove htdocs/php directory
-
-commit fe006c18627474d7308352d36053f4a20d5ba2b0
-Merge: fed4b4c b509b0a
-Author: Eduardo Silva <edsiper@gmail.com>
-Date:   Fri Mar 5 22:09:15 2010 -0300
-
-    Merge branch 'master' of git+ssh://repo.or.cz/srv/git/MonkeyD
 
 commit fed4b4c670060907b4094bc91c3f9a5bd9060585
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -829,25 +851,11 @@ Date:   Thu Feb 11 14:33:26 2010 -0300
 
     QA: Remove range test 04 until httest fix their bug
 
-commit 6d567eaeea3330000546a9f36258c0340f1208c7
-Merge: 0e9bac7 09b403e
-Author: edsiper <edsiper@monotop.(none)>
-Date:   Thu Feb 11 13:54:38 2010 -0300
-
-    Merge branch 'master' of git://repo.or.cz/MonkeyD
-
 commit 0e9bac71af626a0e77bbd6801749361aad645aec
 Author: edsiper <edsiper@monotop.(none)>
 Date:   Thu Feb 11 13:54:22 2010 -0300
 
     QA: Add missed scripts
-
-commit 09b403ea9b6eb5d0fb61db7cf5a75b59222f01e2
-Merge: 2079cff bce7ace
-Author: Eduardo Silva <edsiper@gmail.com>
-Date:   Thu Feb 11 13:50:25 2010 -0300
-
-    Merge branch 'master' of git://repo.or.cz/MonkeyD
 
 commit 2079cffb07b93697e746392f4a94c8adb7963964
 Author: Eduardo Silva <edsiper@gmail.com>
