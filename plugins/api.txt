@@ -1,7 +1,8 @@
-** Revision 0.3 **
+** Revision 0.4 **
 
 Changelog:
 ----------
+0.4: Add hook function names
 0.3: Add 'TOC' and 'About' sections
 0.2: Add Plugin code definition example
 0.1: Initial draft
@@ -30,48 +31,54 @@ Each plugin is loaded per configuration instruction and it will work on a define
 
 --------
  Core  |
-------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
  The Core plugins allow other plugins to define some data in the process 
  context or thread context depending of it needs.
-------------------------------------------------------------------------------
- Context |  Identified by        | Description
-------------------------------------------------------------------------------   
- Process | MK_PLUGIN_CORE_PRCTX  | Process context, no server loop
-------------------------------------------------------------------------------
- Thread  | MK_PLUGIN_CORE_THCTX  | Thread context, no server loop
-------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+ Context |  Identified by        | Hook function     | Description
+----------------------------------------------------------------------------------------   
+ Process | MK_PLUGIN_CORE_PRCTX  | _mkp_core_prctx() | Process context, no server loop
+----------------------------------------------------------------------------------------
+ Thread  | MK_PLUGIN_CORE_THCTX  | _mkp_core_thctx() | Thread context, no server loop
+----------------------------------------------------------------------------------------
 
 --------
  Stage |
 ------------------------------------------------------------------------------
  Every stage represent a cycle of an arrived connection, from it's accepted
  until is closed.
-------------------------------------------------------------------------------
- Stage # |     Identified by    | Description
-------------------------------------------------------------------------------
-   10    |  MK_PLUGIN_STAGE_10  | Connection just accept()ed, not assigned
-------------------------------------------------------------------------------
-   20    |  MK_PLUGIN_STAGE_20  | HTTP Request stream just received
-------------------------------------------------------------------------------
-   30    |  MK_PLUGIN_STAGE_30  | Object handler, what to do with the request?
-------------------------------------------------------------------------------
-   40    |  MK_PLUGIN_STAGE_40  | Request ended, content served
-------------------------------------------------------------------------------
-   50    |  MK_PLUGIN_STAGE_50  | Remote connection has been closed
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+ Stage # |     Identified by    | Hook function    | Description
+-------------------------------------------------------------------------------------------------
+   10    |  MK_PLUGIN_STAGE_10  | _mkp_stage_10()  |Connection just accept()ed, not assigned
+-------------------------------------------------------------------------------------------------
+   20    |  MK_PLUGIN_STAGE_20  | _mkp_stage_20()  | HTTP Request stream just received
+-------------------------------------------------------------------------------------------------
+   30    |  MK_PLUGIN_STAGE_30  | _mkp_stage_30()  | Object handler, what to do with the request?
+-------------------------------------------------------------------------------------------------
+   40    |  MK_PLUGIN_STAGE_40  | _mkp_stage_40()  | Request ended, content served
+-------------------------------------------------------------------------------------------------
+   50    |  MK_PLUGIN_STAGE_50  | _mkp_stage_50()  | Remote connection has been closed
+-------------------------------------------------------------------------------------------------
 
 -------------
  Networking |
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
  Networking plugins act like hooks for specific calls from the core, so it 
  basically provides a mechanism to change I/O and IP functions related
-------------------------------------------------------------------------------
-  Type   |    Identified by      | Calls wrapped
-------------------------------------------------------------------------------
-   io    | MK_PLUGIN_NETWORK_IO  | accept, read, write, writev, close, connect
-------------------------------------------------------------------------------
-   ip    | MK_PLUGIN_NETWORK_IP  | get_max_ip_length, get_ip
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+  Type   |    Identified by      | Hook function               | Description
+--------------------------------------------------------------------------------------------
+   io    | MK_PLUGIN_NETWORK_IO  | _mkp_network_io_accept()    | Accept conx
+         |                       | _mkp_network_io_read()      | Read socket
+         |                       | _mkp_network_io_write()     | Write to socket
+         |                       | _mkp_network_io_writev()    | Write iov to socket
+         |                       | _mkp_network_io_close()     | Close socket
+         |                       | _mkp_network_io_connect()   | Connect to
+--------------------------------------------------------------------------------------------
+   ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_get_address | Get IP address from socket
+         |                       | _mkp_network_ip_get_maxlen  | Get Max IP address length
+--------------------------------------------------------------------------------------------
 
 
 ** Plugin definition **
