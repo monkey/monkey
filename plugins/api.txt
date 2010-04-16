@@ -106,8 +106,8 @@ plugin can work on multiple types just adding the right identifiers.
          |                       | _mkp_network_io_close()     | Close socket
          |                       | _mkp_network_io_connect()   | Connect to
 -------------------------------------------------------------------------------------------------
-   ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_get_address | Get IP address from socket
-         |                       | _mkp_network_ip_get_maxlen  | Get Max IP address length
+   ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_addr()      | Get IP address from socket
+         |                       | _mkp_network_ip_maxlen()    | Get Max IP address length
 -------------------------------------------------------------------------------------------------
 
 
@@ -117,11 +117,11 @@ A plugin *must* define it self with the following information:
 
   #include "plugin.h"
 
-  mk_plugin_data_t _shortname = "shortname";
-  mk_plugin_data_t _name = "My Super Plugin";
-  mk_plugin_data_t _version = "0.2";
-  mk_plugin_type_t _types = MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_STAGE_10 |
-			    MK_PLUGIN_STAGE_40;
+  mkp_data_t _shortname = "shortname";
+  mkp_data_t _name      = "My Super Plugin";
+  mkp_data_t _version   = "0.2";
+  mkp_type_t _types     = MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_NETWORK_IO |
+                          MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_40;
 
 Field description:
 
@@ -134,13 +134,14 @@ Field description:
 
 Monkey exported functions
 -------------------------
-When Monkey load a plugin and calls the _mkp_init() function, it passed
-a structure which contains mapped Monkey functions for different purposes.
+When Monkey load a plugin and calls the _mkp_init() function, it passed a 
+structure which contains mapped Monkey functions for different purposes.
+
 Considering 'api' as the API structure, we have the following available
-calls:
+function calls:
 
 ------------------------------------------------------------------------------------------
- API Function                   | Description
+ Function                       | Description
 ------------------------------------------------------------------------------------------
   api->mem_alloc()              | Alloc a memory space
 ------------------------------------------------------------------------------------------
@@ -207,4 +208,3 @@ calls:
   api->event_socket_change_mode() | Change the EPOLL event mode for an event added 
                                   | with api->event_add()
 ------------------------------------------------------------------------------------------
-
