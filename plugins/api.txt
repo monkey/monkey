@@ -1,7 +1,8 @@
-** Revision 0.4 **
+** Revision 0.5 **
 
 Changelog:
 ----------
+0.5: Add _mkp_init() and _mkp_exit() hook functions
 0.4: Add hook function names
 0.3: Add 'TOC' and 'About' sections
 0.2: Add Plugin code definition example
@@ -12,9 +13,11 @@ Changelog:
 ----------------------
 |-About
 |-Monkey API
-  |-Core
-  |-Stage
-  |-Networking
+  |-Mandatory calls
+  |-Plugin type
+    |-Core
+    |-Stage
+    |-Networking
 |-Plugin definition
 
 ** About **
@@ -27,28 +30,45 @@ This draft specified the Plugin API for Monkey HTTP Daemon v0.11.0.
 Plugins are extra features which modifies the Monkey behavior, all of them
 are shared libraries which are loaded on runtime. 
 
-Each plugin is loaded per configuration instruction and it will work on a defined type and event. 
+Mandatory calls
+---------------
+A plugin must contains the following hooks functions:
+
+----------------------------------------------------------------------------------
+ Hook function    | Description
+----------------------------------------------------------------------------------
+  _mkp_init()     | Function called when registering the plugin, it also allows 
+                  | to set basic configuration.
+----------------------------------------------------------------------------------
+  _mkp_exit()     | Function called before to unload the plugin, the plugin
+                  | must free the used memory resources
+----------------------------------------------------------------------------------
+
+Plugin types
+------------
+The following sections defines the type of plugin and each hook function associated. A
+plugin can work on multiple types just adding the right identifiers. 
 
 --------
  Core  |
-----------------------------------------------------------------------------------------
- The Core plugins allow other plugins to define some data in the process 
- context or thread context depending of it needs.
-----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+ The Core plugins allow other plugins to define some data in the process context or 
+ thread context depending of it needs.
+-----------------------------------------------------------------------------------------
  Context |  Identified by        | Hook function     | Description
-----------------------------------------------------------------------------------------   
+-----------------------------------------------------------------------------------------   
  Process | MK_PLUGIN_CORE_PRCTX  | _mkp_core_prctx() | Process context, no server loop
-----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
  Thread  | MK_PLUGIN_CORE_THCTX  | _mkp_core_thctx() | Thread context, no server loop
-----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
 
 --------
  Stage |
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
  Every stage represent a cycle of an arrived connection, from it's accepted
  until is closed.
 -------------------------------------------------------------------------------------------------
- Stage # |     Identified by    | Hook function    | Description
+ Stage # |    Identified by     | Hook function    | Description
 -------------------------------------------------------------------------------------------------
    10    |  MK_PLUGIN_STAGE_10  | _mkp_stage_10()  |Connection just accept()ed, not assigned
 -------------------------------------------------------------------------------------------------
@@ -63,22 +83,22 @@ Each plugin is loaded per configuration instruction and it will work on a define
 
 -------------
  Networking |
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
  Networking plugins act like hooks for specific calls from the core, so it 
  basically provides a mechanism to change I/O and IP functions related
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
   Type   |    Identified by      | Hook function               | Description
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
    io    | MK_PLUGIN_NETWORK_IO  | _mkp_network_io_accept()    | Accept conx
          |                       | _mkp_network_io_read()      | Read socket
          |                       | _mkp_network_io_write()     | Write to socket
          |                       | _mkp_network_io_writev()    | Write iov to socket
          |                       | _mkp_network_io_close()     | Close socket
          |                       | _mkp_network_io_connect()   | Connect to
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
    ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_get_address | Get IP address from socket
          |                       | _mkp_network_ip_get_maxlen  | Get Max IP address length
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
 
 
 ** Plugin definition **
