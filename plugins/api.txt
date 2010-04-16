@@ -1,0 +1,95 @@
+** Revision 0.3 **
+
+Changelog:
+----------
+0.3: Add 'TOC' and 'About' sections
+0.2: Add Plugin code definition example
+0.1: Initial draft
+
+
+** Table of Content **
+----------------------
+|-About
+|-Monkey API
+  |-Core
+  |-Stage
+  |-Networking
+|-Plugin definition
+
+** About **
+-----------
+This draft specified the Plugin API for Monkey HTTP Daemon v0.11.0.
+
+
+** Monkey API **
+----------------
+Plugins are extra features which modifies the Monkey behavior, all of them
+are shared libraries which are loaded on runtime. 
+
+Each plugin is loaded per configuration instruction and it will work on a defined type and event. 
+
+--------
+ Core  |
+------------------------------------------------------------------------------
+ The Core plugins allow other plugins to define some data in the process 
+ context or thread context depending of it needs.
+------------------------------------------------------------------------------
+ Context |  Identified by        | Description
+------------------------------------------------------------------------------   
+ Process | MK_PLUGIN_CORE_PRCTX  | Process context, no server loop
+------------------------------------------------------------------------------
+ Thread  | MK_PLUGIN_CORE_THCTX  | Thread context, no server loop
+------------------------------------------------------------------------------
+
+--------
+ Stage |
+------------------------------------------------------------------------------
+ Every stage represent a cycle of an arrived connection, from it's accepted
+ until is closed.
+------------------------------------------------------------------------------
+ Stage # |     Identified by    | Description
+------------------------------------------------------------------------------
+   10    |  MK_PLUGIN_STAGE_10  | Connection just accept()ed, not assigned
+------------------------------------------------------------------------------
+   20    |  MK_PLUGIN_STAGE_20  | HTTP Request stream just received
+------------------------------------------------------------------------------
+   30    |  MK_PLUGIN_STAGE_30  | Object handler, what to do with the request?
+------------------------------------------------------------------------------
+   40    |  MK_PLUGIN_STAGE_40  | Request ended, content served
+------------------------------------------------------------------------------
+   50    |  MK_PLUGIN_STAGE_50  | Remote connection has been closed
+------------------------------------------------------------------------------
+
+-------------
+ Networking |
+------------------------------------------------------------------------------
+ Networking plugins act like hooks for specific calls from the core, so it 
+ basically provides a mechanism to change I/O and IP functions related
+------------------------------------------------------------------------------
+  Type   |    Identified by      | Calls wrapped
+------------------------------------------------------------------------------
+   io    | MK_PLUGIN_NETWORK_IO  | accept, read, write, writev, close, connect
+------------------------------------------------------------------------------
+   ip    | MK_PLUGIN_NETWORK_IP  | get_max_ip_length, get_ip
+------------------------------------------------------------------------------
+
+
+** Plugin definition **
+-----------------------
+A plugin *must* define it self with the following information:
+
+  #include "plugin.h"
+
+  mk_plugin_data_t _shortname = "shortname";
+  mk_plugin_data_t _name = "My Super Plugin";
+  mk_plugin_data_t _version = "0.2";
+  mk_plugin_type_t _types = MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_STAGE_10 |
+			    MK_PLUGIN_STAGE_40;
+
+Field description:
+
+ _shortname : A simple word defining the Plugin 
+ _name      : Full plugin name
+ _version   : Plugin version
+ _types     : Type of plugin and events associated, it can be a mix of
+              types.
