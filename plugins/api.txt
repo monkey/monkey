@@ -1,7 +1,8 @@
-** Revision 0.5 **
+** Revision 0.6 **
 
 Changelog:
 ----------
+0.6: Add a list of Monkey functions exported to each plugin
 0.5: Add _mkp_init() and _mkp_exit() hook functions
 0.4: Add hook function names
 0.3: Add 'TOC' and 'About' sections
@@ -13,12 +14,15 @@ Changelog:
 ----------------------
 |-About
 |-Monkey API
-  |-Mandatory calls
-  |-Plugin type
-    |-Core
-    |-Stage
-    |-Networking
-|-Plugin definition
+  |-Monkey Plugins
+    |-Mandatory calls
+    |-Plugin type
+      |-Core
+      |-Stage
+      |-Networking
+    |-Plugin definition
+  |-Monkey exported functions
+  
 
 ** About **
 -----------
@@ -27,8 +31,14 @@ This draft specified the Plugin API for Monkey HTTP Daemon v0.11.0.
 
 ** Monkey API **
 ----------------
-Plugins are extra features which modifies the Monkey behavior, all of them
-are shared libraries which are loaded on runtime. 
+The Monkey API allows to extend the Monkey features and behavior through plugins, 
+which are shared libraries loaded on startup. It also provides a set of specific 
+functions to make easier the developer work.
+
+Monkey Plugins
+--------------
+A plugin is composed by a set of mandatory and optional function calls that act
+like hooks that are called from Monkey Core.
 
 Mandatory calls
 ---------------
@@ -101,8 +111,8 @@ plugin can work on multiple types just adding the right identifiers.
 -------------------------------------------------------------------------------------------------
 
 
-** Plugin definition **
------------------------
+Plugin definition
+-----------------
 A plugin *must* define it self with the following information:
 
   #include "plugin.h"
@@ -120,3 +130,81 @@ Field description:
  _version   : Plugin version
  _types     : Type of plugin and events associated, it can be a mix of
               types.
+
+
+Monkey exported functions
+-------------------------
+When Monkey load a plugin and calls the _mkp_init() function, it passed
+a structure which contains mapped Monkey functions for different purposes.
+Considering 'api' as the API structure, we have the following available
+calls:
+
+------------------------------------------------------------------------------------------
+ API Function                   | Description
+------------------------------------------------------------------------------------------
+  api->mem_alloc()              | Alloc a memory space
+------------------------------------------------------------------------------------------
+  api->mem_alloc_z()            | Alloc a memory space and set it to zero 
+------------------------------------------------------------------------------------------
+  api->mem_free()               | Free a memory space
+------------------------------------------------------------------------------------------
+  api->str_build()              | Builds a memory buffer formatting the string parameters
+------------------------------------------------------------------------------------------
+  api->str_dup()                | Duplicate a string buffer
+------------------------------------------------------------------------------------------
+  api->str_search()             | Search a pattern inside a string
+------------------------------------------------------------------------------------------
+  api->str_search_n()           | Search a pattern inside a string with limit in N
+------------------------------------------------------------------------------------------
+  api->str_copy_substr()        | Copy a substring to a new memory buffer
+------------------------------------------------------------------------------------------
+  api->str_split_line()         | Split a line using a separators the space character
+------------------------------------------------------------------------------------------
+  api->file_to_buffer()         | Reads an entire file into a string buffer
+------------------------------------------------------------------------------------------
+  api->file_get_info()          | Get file information
+------------------------------------------------------------------------------------------
+  api->header_send()            | Send header information to the client
+------------------------------------------------------------------------------------------
+  api->iov_create()             | Alloc an iov structure
+------------------------------------------------------------------------------------------
+  api->iov_free()               | Free iov structure
+------------------------------------------------------------------------------------------
+  api->iov_add_entry()          | Add an entry to the iov structure
+------------------------------------------------------------------------------------------
+  api->iov_set_entry()          | Add an entry to the iov structure in a specific position
+------------------------------------------------------------------------------------------
+  api->iov_send()               | Send iov structure to a socket or pipe
+------------------------------------------------------------------------------------------
+  api->iov_print()              | Print iov structure content
+------------------------------------------------------------------------------------------
+  api->pointer_set()            | Set values to a Monkey pointer
+------------------------------------------------------------------------------------------
+  api->pointer_print()          | Print to stdout the data contained in a Monkey pointer
+------------------------------------------------------------------------------------------
+  api->socket_cork_flag()       | Enable/Disable socket CORK_FLAG
+------------------------------------------------------------------------------------------
+  api->socket_connect()         | Connect to a specific host and port
+------------------------------------------------------------------------------------------
+  api->socket_set_tcp_nodelay() | Set TCP socket on TCP_NODELAY mode
+------------------------------------------------------------------------------------------
+  api->socket_set_nonblocking() | Set socket to non-blocking mode
+------------------------------------------------------------------------------------------
+  api->socket_create()          | Create a TCP socket
+------------------------------------------------------------------------------------------
+  api->config_create()          | Create a context for a configuration file
+------------------------------------------------------------------------------------------
+  api->config_free()            | Free context of a configuration file
+------------------------------------------------------------------------------------------
+  api->config_getval()          | Retrieve a specific configuration key value
+------------------------------------------------------------------------------------------
+  api->sched_get_connection()   | Get connection scheduler details
+------------------------------------------------------------------------------------------
+  api->event_add()              | Register an event handler for a specific file 
+                                | descriptor, this event is listened in the thread epoll 
+                                | loop
+------------------------------------------------------------------------------------------
+  api->event_socket_change_mode() | Change the EPOLL event mode for an event added 
+                                  | with api->event_add()
+------------------------------------------------------------------------------------------
+
