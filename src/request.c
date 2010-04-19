@@ -66,8 +66,8 @@ struct request *mk_request_parse(struct client_request *cr)
     struct request *cr_buf = 0, *cr_search = 0;
 
     for (i = 0; i <= cr->body_pos_end; i++) {
-        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining 
-         * request can be involved. 
+        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
+         * request can be involved.
          */
         end = mk_string_search(cr->body + i, mk_endblock.data) + i;
 
@@ -93,7 +93,7 @@ struct request *mk_request_parse(struct client_request *cr)
 
         /* Looking for POST data */
         if (cr_buf->method == HTTP_METHOD_POST) {
-            cr_buf->post_variables = mk_method_post_get_vars(cr->body, 
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body,
                                                              end + mk_endblock.len);
             if (cr_buf->post_variables.len >= 0) {
                 i += cr_buf->post_variables.len;
@@ -124,8 +124,8 @@ struct request *mk_request_parse(struct client_request *cr)
         blocks++;
     }
 
-     
-    /* DEBUG BLOCKS 
+
+    /* DEBUG BLOCKS
     cr_search = cr->request;
     while(cr_search){
         printf("\n");
@@ -148,7 +148,7 @@ struct request *mk_request_parse(struct client_request *cr)
             }
             cr_search = cr_search->next;
         }
-        
+
         cr->pipelined = TRUE;
     }
 
@@ -159,8 +159,7 @@ int mk_handler_read(int socket, struct client_request *cr)
 {
     int bytes;
 
-    bytes = read(socket, cr->body + cr->body_length,
-                 MAX_REQUEST_BODY - cr->body_length);
+    bytes = mk_socket_read(socket, (void *)cr->body + cr->body_length, MAX_REQUEST_BODY - cr->body_length);
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
@@ -189,7 +188,7 @@ int mk_handler_write(int socket, struct client_request *cr)
     int bytes, final_status = 0;
     struct request *sr;
 
-    /* 
+    /*
      * Get node from schedule list node which contains
      * the information regarding to the current thread
      */
@@ -344,7 +343,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     return status;
 }
 
-/* Return a struct with method, URI , protocol version 
+/* Return a struct with method, URI , protocol version
 and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
 {
@@ -513,7 +512,7 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     if (toc) {
         for (i = 0; i < toc_len; i++) {
             /* status = 1 means that the toc entry was already
-             * checked by monkey 
+             * checked by monkey
              */
             if (toc[i].status == 1) {
                 continue;
@@ -815,7 +814,7 @@ void mk_request_free(struct request *sr)
     if (sr->log) {
         /*
          * We do not free log->size_p, as if it was
-         * used due to an error, it points to the 
+         * used due to an error, it points to the
          * same memory block than header->content_length_p
          * points to, we just reset it.
          */
@@ -823,7 +822,7 @@ void mk_request_free(struct request *sr)
 
         /*
          * sr->log->error_msg just point to
-         * local data on request.c, no 
+         * local data on request.c, no
          * dynamic allocation is made
          */
 
@@ -910,7 +909,7 @@ struct client_request *mk_request_client_get(int socket)
 
 /*
  * From thread sched_list_node "list", remove the client_request
- * struct information 
+ * struct information
  */
 struct client_request *mk_request_client_remove(int socket)
 {

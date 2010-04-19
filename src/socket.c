@@ -7,7 +7,7 @@
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version. 
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,6 +26,7 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -33,8 +34,9 @@
 #include "socket.h"
 #include "memory.h"
 #include "utils.h"
+#include "monkey.h"
 
-/* 
+/*
  * Example from:
  * http://www.baus.net/on-tcp_cork
  */
@@ -177,4 +179,55 @@ int mk_socket_server(int port, char *listen_addr)
     }
 
     return fd;
+}
+
+int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
+{
+    int remote_fd;
+    socklen_t socket_size = sizeof(struct sockaddr_in);
+
+    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr, &socket_size);
+
+    return remote_fd;
+}
+
+int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
+{
+    ssize_t bytes_sent = -1;
+
+    bytes_sent = mk_iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET );
+
+    return bytes_sent;
+}
+
+int mk_socket_send(int socket_fd, const void *buf, size_t count )
+{
+    ssize_t bytes_sent = -1;
+
+    bytes_sent = write(socket_fd, buf, count);
+
+    return bytes_sent;
+}
+
+int mk_socket_read(int socket_fd, void *buf, int count)
+{
+    ssize_t bytes_read;
+
+    bytes_read = read(socket_fd, (void *)buf, count);
+
+    return bytes_read;
+}
+
+int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, size_t file_count)
+{
+    ssize_t bytes_written = -1;
+
+    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count );
+
+    if( bytes_written == -1 ) {
+        perror( "error from sendfile" );
+        return -1;
+    }
+
+    return bytes_written;
 }

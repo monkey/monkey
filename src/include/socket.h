@@ -20,6 +20,13 @@
 #ifndef MK_SOCKET_H
 #define MK_SOCKET_H
 
+#include <sys/uio.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+#include "iov.h"
+#include "request.h"
+
 /* Socket_Timeout() */
 #define ST_RECV 0
 #define ST_SEND 1
@@ -39,5 +46,10 @@ int mk_socket_create();
 int mk_socket_connect(int sockfd, char *server, int port);
 void mk_socket_reset(int socket);
 int mk_socket_server(int port, char *listen_addr);
+
+int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr);
+int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to);
+int mk_socket_send(int socket_fd, const void *buf, size_t count);
+int mk_socket_read(int socket_fd, void *buf, int count);
 
 #endif
