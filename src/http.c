@@ -342,10 +342,28 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
             return EXIT_ERROR;
         }
-        bytes = SendFile(cr->socket, cr, sr);
+        bytes = mk_http_send_file(cr, sr);
     }
 
     return bytes;
+}
+
+int mk_http_send_file(struct client_request *cr, struct request *sr)
+{
+    long int nbytes = 0;
+
+    nbytes = mk_socket_send_file(cr->socket, sr->fd_file,
+                                 &sr->bytes_offset, sr->bytes_to_send);
+
+    if (nbytes > 0) {
+        if (sr->loop == 0) {
+            mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
+        }
+        sr->bytes_to_send -= nbytes;
+    }
+
+    sr->loop++;
+    return sr->bytes_to_send;    
 }
 
 int mk_http_directory_redirect_check(struct client_request *cr,

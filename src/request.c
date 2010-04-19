@@ -211,8 +211,7 @@ int mk_handler_write(int socket, struct client_request *cr)
         }
         /* Request with data to send by static file sender */
         else if (sr->bytes_to_send > 0 && !sr->handled_by) {
-            bytes = SendFile(socket, cr, sr);
-            final_status = bytes;
+            final_status = bytes = mk_http_send_file(cr, sr);
         }
 
         /*

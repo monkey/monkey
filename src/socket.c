@@ -195,7 +195,7 @@ int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
 {
     ssize_t bytes_sent = -1;
 
-    bytes_sent = mk_iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET );
+    bytes_sent = mk_iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
 
     return bytes_sent;
 }
@@ -218,11 +218,12 @@ int mk_socket_read(int socket_fd, void *buf, int count)
     return bytes_read;
 }
 
-int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, size_t file_count)
+int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, 
+                        size_t file_count)
 {
     ssize_t bytes_written = -1;
 
-    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count );
+    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
     if( bytes_written == -1 ) {
         perror( "error from sendfile" );
