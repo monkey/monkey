@@ -31,8 +31,8 @@
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "security";
 mk_plugin_data_t _name = "Security";
-mk_plugin_data_t _version = "0.1";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_20 | MK_PLUGIN_STAGE_30;
+mk_plugin_data_t _version = "0.2";
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_20 | MK_PLUGIN_STAGE_30;
 
 struct plugin_api *mk_api;
 struct mk_config *conf;
@@ -135,7 +135,7 @@ int mk_security_check_url(mk_pointer url)
     return 0;
 }
 
-int _mk_plugin_init(void **api, char *confdir)
+int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     rules = 0;
@@ -145,7 +145,7 @@ int _mk_plugin_init(void **api, char *confdir)
     return 0;
 }
 
-int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
+int _mkp_stage_20(unsigned int socket, struct sched_connection *conx)
 {
     if (mk_security_check_ip(conx->ipv4.data) != 0) {
         return MK_PLUGIN_RET_CLOSE_CONX;
@@ -154,7 +154,7 @@ int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mk_plugin_stage_30(struct client_request *cr, struct request *sr)
+int _mkp_stage_30(struct client_request *cr, struct request *sr)
 {
     if (mk_security_check_url(sr->uri) < 0) {
         return MK_PLUGIN_RET_CLOSE_CONX;
