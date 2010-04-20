@@ -67,89 +67,64 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
-void mk_plugin_register_to(struct plugin **st, struct plugin *p)
+void mk_plugin_register_stagemap_add(struct plugin_stagem **stm, struct plugin *p)
 {
-    struct plugin *list;
+    struct plugin_stagem *list, *new;
 
-    if (!*st) {
-        *st = p;
+    new = mk_mem_malloc_z(sizeof(struct plugin_stagem));
+    new->p = p;
+    new->next = NULL;
+
+    if (!*stm) {
+        *stm = new;
         return;
     }
 
-    list = *st;
+    list = *stm;
 
     while (list->next) {
         list = list->next;
     }
 
-    list->next = p;
+    list->next = new;
 }
 
-void mk_plugin_register_stages(struct plugin *p)
+void mk_plugin_register_stagemap(struct plugin *p)
 {
-    struct plugin_list *new, *list;
-
-    /* Main plugin list */
-    new = mk_mem_malloc(sizeof(struct plugin_list));
-    new->p = p;
-    new->next = NULL;
-
-    if (!plg_list) {
-        plg_list = new;
-    }
-    else {
-        list = plg_list;
-        while (list->next) {
-            list = list->next;
-        }
-        list->next = new;
-    }
-
-    /* Plugin to core context */ 
-    if (*p->types & MK_PLUGIN_CORE_PRCTX) {
-        mk_plugin_register_to(&config->plugins->core_prctx, p);
-    }
-
-    if (*p->types & MK_PLUGIN_CORE_THCTX) {
-        mk_plugin_register_to(&config->plugins->core_thctx, p);
-    }
+    if (!plg_stagemap) {
+        plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
+    };
 
     /* Plugin to stages */
-    if (*p->types & MK_PLUGIN_STAGE_10) {
-        mk_plugin_register_to(&config->plugins->stage_10, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_10) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
     }
 
-    if (*p->types & MK_PLUGIN_STAGE_20) {
-        mk_plugin_register_to(&config->plugins->stage_20, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_20) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_20, p);
     }
 
-    if (*p->types & MK_PLUGIN_STAGE_30) {
-        mk_plugin_register_to(&config->plugins->stage_30, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_30) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_30, p);
     }
 
-    if (*p->types & MK_PLUGIN_STAGE_40) {
-        mk_plugin_register_to(&config->plugins->stage_40, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_40) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_40, p);
     }
 
-    if (*p->types & MK_PLUGIN_STAGE_50) {
-        mk_plugin_register_to(&config->plugins->stage_50, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_50) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_50, p);
     }
 
-    if (*p->types & MK_PLUGIN_STAGE_60) {
-        mk_plugin_register_to(&config->plugins->stage_60, p);
-    }
-
-    /* Plugin to networking */
-    if (*p->types & MK_PLUGIN_NETWORK_IO) {
-        mk_plugin_register_to(&config->plugins->network_io, p);
-    }
-
-    if (*p->types & MK_PLUGIN_NETWORK_IP) {
-        mk_plugin_register_to(&config->plugins->network_ip, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_60) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_60, p);
     }
 }
 
-void *mk_plugin_register(void *handler, char *path)
+/* Load the plugins and set the library symbols to the
+ * local struct plugin *p node
+ */
+struct plugin *mk_plugin_register(void *handler, char *path)
 {
     struct plugin *p;
 
@@ -159,42 +134,77 @@ void *mk_plugin_register(void *handler, char *path)
     p->version = mk_plugin_load_symbol(handler, "_version");
     p->path = mk_string_dup(path);
     p->handler = handler;
-    p->types =
-        (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
+    p->hooks =
+        (mk_plugin_hook_t *) mk_plugin_load_symbol(handler, "_hooks");
 
-    /* Plugin external functions */
-    p->call_init = (int (*)()) mk_plugin_load_symbol(handler,
-                                                     "_mk_plugin_init");
+    /* Mandatory functions */
+    p->init = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_init");
+    p->exit = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_exit");
 
-    p->call_worker_init = (int (*)()) mk_plugin_load_symbol(handler,
-                                                            "_mk_plugin_worker_init");
+    /* Core hooks */
+    p->core.prctx = (int (*)()) mk_plugin_load_symbol(handler,
+                                                      "_mkp_core_prctx()");
+    p->core.thctx = (int (*)()) mk_plugin_load_symbol(handler,
+                                                      "_mkp_core_thctx()");
 
-    p->call_stage_10 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_00");
+    /* Stage hooks */
+    p->stage.s10 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_10");
 
-    p->call_stage_10 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
+    p->stage.s20 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_20");
 
-    p->call_stage_20 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_20");
+    p->stage.s30 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_30");
 
-    p->call_stage_30 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_30");
+    p->stage.s40 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_40");
 
-    p->call_stage_40 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
+    p->stage.s40_event_read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_40_event_read");
 
-    p->call_stage_40_event_read = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_read");
+    p->stage.s40_event_write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_40_event_write");
 
-    p->call_stage_40_event_write = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_write");
+    p->stage.s50 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_50");
 
-    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mk_plugin_data");
+    p->stage.s60 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_60");
 
+    /* Network I/O hooks */
+    p->net_io.accept = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_accept");
+
+    p->net_io.read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_read");
+
+    p->net_io.write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_write");
+
+    p->net_io.writev = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_writev");
+
+    p->net_io.close = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_close");
+
+    p->net_io.connect = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_connect");
+    
+    /* Network IP hooks */
+    p->net_ip.addr = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_ip_addr");
+
+    p->net_ip.maxlen = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_ip_maxlen");
+
+    /* Thread key */
+    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler,
+                                                          "_mkp_data");
+    /* Next ! */
     p->next = NULL;
 
-    if (!p->name || !p->version || !p->types) {
+    if (!p->name || !p->version || !p->hooks) {
 #ifdef TRACE
         MK_TRACE("Bad plugin definition: %s", path);
 #endif
@@ -202,7 +212,14 @@ void *mk_plugin_register(void *handler, char *path)
         return NULL;
     }
 
-    mk_plugin_register_stages(p);
+    /* Add Plugin to the end of the list */
+    struct plugin *plg = config->plugins;
+    while(plg->next){
+        plg = plg->next;
+    }
+    plg->next = p;
+
+    mk_plugin_register_stagemap(p);
     return p;
 }
 
@@ -212,7 +229,6 @@ void mk_plugin_init()
     void *handle;
     struct plugin *p;
     struct plugin_api *api;
-    struct plugin_list *plist;
     struct mk_config *cnf;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
@@ -259,10 +275,9 @@ void mk_plugin_init()
     api->trace = (void *) mk_utils_trace;
 #endif
 
+    /* Read configuration file */
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
-
-    /* Read configuration file */
     cnf = mk_config_create(path);
 
     while (cnf) {
@@ -282,43 +297,42 @@ void mk_plugin_init()
                                "%s/plugins/%s/",
                                config->serverconf, p->shortname);
 
-                p->call_init(&api, plugin_confdir);
+                p->init(&api, plugin_confdir);
             }
         }
         cnf = cnf->next;
     }
 
-    api->plugins = plg_list;
-    plist = plg_list;
+    api->plugins = config->plugins;
     mk_mem_free(path);
 }
 
-int mk_plugin_stage_run(mk_plugin_stage_t stage,
+int mk_plugin_stage_run(mk_plugin_hook_t hook,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr)
 {
     int ret;
-    struct plugin *p;
+    struct plugin_stagem *stm;
 
-    if (stage & MK_PLUGIN_STAGE_10) {
-        p = config->plugins->stage_10;
-        while (p) {
+    if (hook & MK_PLUGIN_STAGE_10) {
+        stm = plg_stagemap->stage_10;
+        while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 10", p->shortname);
 #endif
-            p->call_stage_10();
-            p = p->next;
+            stm->p->stage.s10();
+            stm = stm->next;
         }
     }
 
-    if (stage & MK_PLUGIN_STAGE_20) {
-        p = config->plugins->stage_20;
-        while (p) {
+    if (hook & MK_PLUGIN_STAGE_20) {
+        stm = plg_stagemap->stage_20;
+        while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 20", p->shortname);
 #endif
-            ret = p->call_stage_20(socket, conx, cr);
+            ret = stm->p->stage.s20(socket, conx, cr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
 #ifdef TRACE
@@ -327,38 +341,38 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
-            p = p->next;
+            stm = stm->next;
         }
     }
 
-    if (stage & MK_PLUGIN_STAGE_30) {
-        p = config->plugins->stage_30;
-        while (p) {
+    if (hook & MK_PLUGIN_STAGE_30) {
+        stm = plg_stagemap->stage_30;
+        while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 30", p->shortname);
 #endif              
-            ret = p->call_stage_30(cr, sr);
+            ret = stm->p->stage.s30(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
-            p = p->next;
+            stm = stm->next;
         }
     }
 
     /* Object handler */
-    if (stage & MK_PLUGIN_STAGE_40) {
+    if (hook & MK_PLUGIN_STAGE_40) {
         /* The request just arrived and is required to check who can
          * handle it */
         if (!sr->handled_by){
-            p = config->plugins->stage_40;
-            while (p) {
+            stm = plg_stagemap->stage_40;
+            while (stm) {
                 /* Call stage */
 #ifdef TRACE
                 MK_TRACE("[%s] STAGE 40", p->shortname);
 #endif
-                ret = p->call_stage_40(p, cr, sr);
+                ret = stm->p->stage.s40(stm->p, cr, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
@@ -366,7 +380,7 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 case MK_PLUGIN_RET_CONTINUE:
                     return MK_PLUGIN_RET_CONTINUE;
                 }
-                p = p->next;
+                stm = stm->next;
             }
         }
     }
@@ -397,17 +411,17 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
  */
 void mk_plugin_worker_startup()
 {
-    struct plugin_list *plg;
+    struct plugin *p;
 
-    plg = plg_list;
+    p = config->plugins;
 
-    while (plg) {
+    while (p) {
         /* Init plugin */
-        if (plg->p->call_worker_init) {
-            plg->p->call_worker_init();
+        if (p->core.thctx) {
+            p->core.thctx();
         }
 
-        plg = plg->next;
+        p = p->next;
     }
 }
 
@@ -418,22 +432,22 @@ void mk_plugin_worker_startup()
 void mk_plugin_preworker_calls()
 {
     int ret;
-    struct plugin_list *plg;
+    struct plugin *p;
 
-    plg = plg_list;
+    p = config->plugins;
 
-    while (plg) {
+    while (p) {
         /* Init pthread keys */
-        if (plg->p->thread_key) {
-            ret = pthread_key_create(&plg->p->thread_key, NULL);
+        if (p->thread_key) {
+            ret = pthread_key_create(&p->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s", 
-                       plg->p->shortname);
+                       p->shortname);
                 fflush(stdout);
                 exit(1);
             }
         }
-        plg = plg->next;
+        p = p->next;
     }
 }
 
@@ -546,8 +560,8 @@ int mk_plugin_event_read(int socket)
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->call_stage_40_event_read) {
-        event->handler->call_stage_40_event_read(event->cr, event->sr);
+    if (event->handler->stage.s40_event_read) {
+        event->handler->stage.s40_event_read(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -566,8 +580,8 @@ int mk_plugin_event_write(int socket)
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->call_stage_40_event_write) {
-        event->handler->call_stage_40_event_write(event->cr, event->sr);
+    if (event->handler->stage.s40_event_write) {
+        event->handler->stage.s40_event_write(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;

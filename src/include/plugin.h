@@ -58,33 +58,41 @@
 /* Event return values */
 #define MK_PLUGIN_RET_EVENT_NOT_ME -300
 
-struct plugin_types
+/* NEW PROPOSAL */
+struct plugin_core
 {
-    /* core */
-    struct plugin *core_prctx;
-    struct plugin *core_thctx;
-
-    /* stages */
-    struct plugin *stage_00;
-    struct plugin *stage_10;
-    struct plugin *stage_20;
-    struct plugin *stage_30;
-    struct plugin *stage_40;
-    struct plugin *stage_50;
-    struct plugin *stage_60;
-
-    /* network */
-    struct plugin *network_io;
-    struct plugin *network_ip;
+    int (*prctx) ();
+    int (*thctx) ();
 };
 
-struct plugin_list
+struct plugin_stage
 {
-    struct plugin *p;
-    struct plugin_list *next;
+    int (*s10) ();
+    int (*s20) (unsigned int,
+                     struct sched_connection *, struct client_request *);
+    int (*s30) (struct client_request *, struct request *);
+    int (*s40) (struct plugin *, struct client_request *, struct request *);
+    int (*s40_event_read) (struct client_request *, struct request *);
+    int (*s40_event_write) (struct client_request *, struct request *);
+    int (*s50) (struct client_request *, struct request *);
+    int (*s60) (struct client_request *);
 };
 
-struct plugin_list *plg_list;
+struct plugin_network_io
+{
+    int (*accept) (int, struct sockaddr_in);
+    int (*read) (int, void *, int);
+    int (*write) (int, const void *, size_t);
+    int (*writev) (int, struct mk_iov, int);
+    int (*close) (int);
+    int (*connect) (char, int);
+};
+
+struct plugin_network_ip
+{
+    int (*addr) (int);
+    int (*maxlen) ();
+};
 
 struct plugin
 {
@@ -93,27 +101,54 @@ struct plugin
     char *version;
     char *path;
     void *handler;
-    int *types;
+    int *hooks;
 
-    /* Plugin external functions */
-    int (*call_init) (void *api, char *confdir);
-    int (*call_worker_init) ();
-    int (*call_stage_10) ();
-    int (*call_stage_20) (unsigned int,
-                          struct sched_connection *, struct client_request *);
-    int (*call_stage_30) (struct client_request *, struct request *);
-    int (*call_stage_40) (struct plugin *, struct client_request *, struct request *);
-    int (*call_stage_40_event_read) (struct client_request *, struct request *);
-    int (*call_stage_40_event_write)(struct client_request *, struct request *);
+    /* Mandatory calls */
+    int (*init) (void *, char *);
+    int (*exit) ();
 
+    /* Hook functions by type */
+    struct plugin_core core;
+    struct plugin_stage stage;
+    struct plugin_network_io net_io;
+    struct plugin_network_ip net_ip;
+
+    /* Each plugin has a thread key for it's global data */
     pthread_key_t thread_key;
+
+    /* Next! */
     struct plugin *next;
 };
 
+
+/* Multiple plugins can work on multiple stages, we don't want
+ * Monkey be comparing each plugin looking for a specific stage, 
+ * so we create a Map of direct stage calls
+ */
+struct plugin_stagem
+{
+    struct plugin *p;
+    struct plugin_stagem *next;
+};
+
+struct plugin_stagemap
+{
+    struct plugin_stagem *stage_10;
+    struct plugin_stagem *stage_20;
+    struct plugin_stagem *stage_30;
+    struct plugin_stagem *stage_40;
+    struct plugin_stagem *stage_50;
+    struct plugin_stagem *stage_60;
+};
+
+struct plugin_stagemap *plg_stagemap;
+
+
+/* API functions exported to plugins */
 struct plugin_api
 {
     struct server_config *config;
-    struct plugin_list *plugins;
+    struct plugin *plugins;
     struct sched_list_node **sched_list;
 
     /* Exporting Functions */
@@ -160,21 +195,23 @@ struct plugin_api
 };
 
 typedef char mk_plugin_data_t[];
-typedef int mk_plugin_stage_t;
+typedef int mk_plugin_hook_t;
 
 /* Plugin events thread key */
 pthread_key_t mk_plugin_event_k;
 
 struct plugin_event {
     int socket;
+
     struct plugin *handler;
     struct client_request *cr;
     struct request *sr;
+
     struct plugin_event *next;
 };
 
 void mk_plugin_init();
-int mk_plugin_stage_run(mk_plugin_stage_t stage,
+int mk_plugin_stage_run(mk_plugin_hook_t stage,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr);
