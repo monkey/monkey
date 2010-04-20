@@ -33,14 +33,23 @@
 #define MK_PLUGIN_ERROR -1      /* plugin execution error */
 #define MK_PLUGIN_
 
-#define MK_PLUGIN_STAGE_00 ((__uint32_t) 0)     /* Dummy plugin */
-#define MK_PLUGIN_STAGE_10 ((__uint32_t) 1)     /* Before server's loop */
-#define MK_PLUGIN_STAGE_20 ((__uint32_t) 2)     /* Accepted connection */
-#define MK_PLUGIN_STAGE_30 ((__uint32_t) 4)     /* Connection assigned */
-#define MK_PLUGIN_STAGE_40 ((__uint32_t) 8)     /* Object Handler */
-#define MK_PLUGIN_STAGE_50 ((__uint32_t) 16)    /* Request ended */
-#define MK_PLUGIN_STAGE_60 ((__uint32_t) 32)    /* Connection closed */
+/* Plugin: Core types */
+#define MK_PLUGIN_CORE_PRCTX ((__uint32_t) 0)
+#define MK_PLUGIN_CORE_THCTX ((__uint32_t) 1)
 
+/* Plugin: Stages */
+#define MK_PLUGIN_STAGE_10 ((__uint32_t) 2)     /* Before server's loop */
+#define MK_PLUGIN_STAGE_20 ((__uint32_t) 4)     /* Accepted connection */
+#define MK_PLUGIN_STAGE_30 ((__uint32_t) 8)     /* Connection assigned */
+#define MK_PLUGIN_STAGE_40 ((__uint32_t) 16)     /* Object Handler */
+#define MK_PLUGIN_STAGE_50 ((__uint32_t) 32)    /* Request ended */
+#define MK_PLUGIN_STAGE_60 ((__uint32_t) 64)    /* Connection closed */
+
+/* Plugin: Network type */
+#define MK_PLUGIN_NETWORK_IO ((__uint32_t) 128)
+#define MK_PLUGIN_NETWORK_IP ((__uint32_t) 256)
+
+/* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
 #define MK_PLUGIN_RET_CONTINUE 100
 #define MK_PLUGIN_RET_END 200
@@ -49,8 +58,13 @@
 /* Event return values */
 #define MK_PLUGIN_RET_EVENT_NOT_ME -300
 
-struct plugin_stages
+struct plugin_types
 {
+    /* core */
+    struct plugin *core_prctx;
+    struct plugin *core_thctx;
+
+    /* stages */
     struct plugin *stage_00;
     struct plugin *stage_10;
     struct plugin *stage_20;
@@ -58,6 +72,10 @@ struct plugin_stages
     struct plugin *stage_40;
     struct plugin *stage_50;
     struct plugin *stage_60;
+
+    /* network */
+    struct plugin *network_io;
+    struct plugin *network_ip;
 };
 
 struct plugin_list
@@ -75,7 +93,7 @@ struct plugin
     char *version;
     char *path;
     void *handler;
-    __uint32_t *stages;
+    __uint32_t *types;
 
     /* Plugin external functions */
     int (*call_init) (void *api, char *confdir);
@@ -182,4 +200,5 @@ int mk_plugin_event_error(int socket);
 int mk_plugin_event_close(int socket);
 int mk_plugin_event_timeout(int socket);
 
+void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 #endif

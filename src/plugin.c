@@ -67,7 +67,7 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
-void mk_plugin_register_add_to_stage(struct plugin **st, struct plugin *p)
+void mk_plugin_register_to(struct plugin **st, struct plugin *p)
 {
     struct plugin *list;
 
@@ -105,33 +105,47 @@ void mk_plugin_register_stages(struct plugin *p)
         list->next = new;
     }
 
-    /* Assign plugin to stages */
-    if (*p->stages & MK_PLUGIN_STAGE_00) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_00, p);
+    /* Plugin to core context */ 
+    if (*p->types & MK_PLUGIN_CORE_PRCTX) {
+        mk_plugin_register_to(&config->plugins->core_prctx, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_10) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_10, p);
+    if (*p->types & MK_PLUGIN_CORE_THCTX) {
+        mk_plugin_register_to(&config->plugins->core_thctx, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_20) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_20, p);
+    /* Plugin to stages */
+    if (*p->types & MK_PLUGIN_STAGE_10) {
+        mk_plugin_register_to(&config->plugins->stage_10, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_30) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_30, p);
+    if (*p->types & MK_PLUGIN_STAGE_20) {
+        mk_plugin_register_to(&config->plugins->stage_20, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_40) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_40, p);
+    if (*p->types & MK_PLUGIN_STAGE_30) {
+        mk_plugin_register_to(&config->plugins->stage_30, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_50) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_50, p);
+    if (*p->types & MK_PLUGIN_STAGE_40) {
+        mk_plugin_register_to(&config->plugins->stage_40, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_60) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_60, p);
+    if (*p->types & MK_PLUGIN_STAGE_50) {
+        mk_plugin_register_to(&config->plugins->stage_50, p);
+    }
+
+    if (*p->types & MK_PLUGIN_STAGE_60) {
+        mk_plugin_register_to(&config->plugins->stage_60, p);
+    }
+
+    /* Plugin to networking */
+    if (*p->types & MK_PLUGIN_NETWORK_IO) {
+        mk_plugin_register_to(&config->plugins->network_io, p);
+    }
+
+    if (*p->types & MK_PLUGIN_NETWORK_IP) {
+        mk_plugin_register_to(&config->plugins->network_ip, p);
     }
 }
 
@@ -145,7 +159,7 @@ void *mk_plugin_register(void *handler, char *path)
     p->version = mk_plugin_load_symbol(handler, "_version");
     p->path = mk_string_dup(path);
     p->handler = handler;
-    p->stages =
+    p->types =
         (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
 
     /* Plugin external functions */
@@ -180,7 +194,7 @@ void *mk_plugin_register(void *handler, char *path)
 
     p->next = NULL;
 
-    if (!p->name || !p->version || !p->stages) {
+    if (!p->name || !p->version || !p->types) {
 #ifdef TRACE
         MK_TRACE("Bad plugin definition: %s", path);
 #endif
