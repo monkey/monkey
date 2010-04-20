@@ -85,7 +85,7 @@ struct plugin_network_io
     int (*write) (int, const void *, size_t);
     int (*writev) (int, struct mk_iov, int);
     int (*close) (int);
-    int (*connect) (char, int);
+    int (*connect) (char *, int);
 };
 
 struct plugin_network_ip
