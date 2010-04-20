@@ -91,10 +91,6 @@ void mk_plugin_register_stagemap_add(struct plugin_stagem **stm, struct plugin *
 
 void mk_plugin_register_stagemap(struct plugin *p)
 {
-    if (!plg_stagemap) {
-        plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
-    };
-
     /* Plugin to stages */
     if (*p->hooks & MK_PLUGIN_STAGE_10) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
@@ -232,6 +228,7 @@ void mk_plugin_init()
     struct mk_config *cnf;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
+    plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
 
     /* Setup and connections list */
     api->config = config;
