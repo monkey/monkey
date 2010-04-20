@@ -37,12 +37,12 @@ functions to make easier the developer work.
 
 Monkey Plugins
 --------------
-A plugin is composed by a set of mandatory and optional function calls that act
+A plugin is composed by a set of mandatory plus optional function calls that act
 like hooks that are called from Monkey Core.
 
 Mandatory calls
 ---------------
-A plugin must contains the following hooks functions:
+A plugin must contains at least the following hooks functions:
 
 ------------------+---------------------------------------------------------------
  Hook function    | Description
@@ -54,10 +54,11 @@ A plugin must contains the following hooks functions:
                   | must free the used memory resources
 ------------------+---------------------------------------------------------------
 
-Plugin types
-------------
+
+Plugin and Function Hooks
+-------------------------
 The following sections defines the type of plugin and each hook function associated. A
-plugin can work on multiple types just adding the right identifiers. 
+plugin can be registered to use multiple hooks just adding the right identifiers. 
 
 -------+
  Core  |
@@ -75,12 +76,12 @@ plugin can work on multiple types just adding the right identifiers.
 -------+
  Stage |
 -------+-----------------------------------------------------------------------------------------
- Every stage represent a cycle of an arrived connection, from it's accepted
- until is closed.
+ Every single http request is placed in a cycle of stages. The request pass around five stages
+ and each one provides a hook function which is invoked by Monkey. 
 ---------+----------------------+------------------+---------------------------------------------
  Stage # |    Identified by     | Hook function    | Description
 ---------+----------------------+------------------+---------------------------------------------
-   10    |  MK_PLUGIN_STAGE_10  | _mkp_stage_10()  |Connection just accept()ed, not assigned
+   10    |  MK_PLUGIN_STAGE_10  | _mkp_stage_10()  | Connection just accept()ed, not assigned
 ---------+----------------------+------------------+---------------------------------------------
    20    |  MK_PLUGIN_STAGE_20  | _mkp_stage_20()  | HTTP Request stream just received
 ---------+----------------------+------------------+---------------------------------------------
@@ -94,19 +95,26 @@ plugin can work on multiple types just adding the right identifiers.
 ------------+
  Networking |
 ------------+------------------------------------------------------------------------------------
- Networking plugins act like hooks for specific calls from the core, so it 
- basically provides a mechanism to change I/O and IP functions related
+ Networking plugins act like hooks for specific calls from the core, so it basically provides a 
+ mechanism to replace the I/O and IP related functions. Just one running plugin can exists for
+ each type.
 ---------+-----------------------+-----------------------------+---------------------------------
   Type   |    Identified by      | Hook function               | Description
 ---------+-----------------------+-----------------------------+---------------------------------
    io    | MK_PLUGIN_NETWORK_IO  | _mkp_network_io_accept()    | Accept conx
+         |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_read()      | Read socket
+         |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_write()     | Write to socket
+         |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_writev()    | Write iov to socket
+         |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_close()     | Close socket
+         |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_connect()   | Connect to
 ---------+-----------------------+-----------------------------+---------------------------------
    ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_addr()      | Get IP address from socket
+         |                       +---------------------------------------------------------------
          |                       | _mkp_network_ip_maxlen()    | Get Max IP address length
 ---------+-----------------------+-----------------------------+---------------------------------
 
