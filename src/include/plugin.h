@@ -34,20 +34,20 @@
 #define MK_PLUGIN_
 
 /* Plugin: Core types */
-#define MK_PLUGIN_CORE_PRCTX ((__uint32_t) 0)
-#define MK_PLUGIN_CORE_THCTX ((__uint32_t) 1)
+#define MK_PLUGIN_CORE_PRCTX (0)
+#define MK_PLUGIN_CORE_THCTX (1)
 
 /* Plugin: Stages */
-#define MK_PLUGIN_STAGE_10 ((__uint32_t) 2)     /* Before server's loop */
-#define MK_PLUGIN_STAGE_20 ((__uint32_t) 4)     /* Accepted connection */
-#define MK_PLUGIN_STAGE_30 ((__uint32_t) 8)     /* Connection assigned */
-#define MK_PLUGIN_STAGE_40 ((__uint32_t) 16)     /* Object Handler */
-#define MK_PLUGIN_STAGE_50 ((__uint32_t) 32)    /* Request ended */
-#define MK_PLUGIN_STAGE_60 ((__uint32_t) 64)    /* Connection closed */
+#define MK_PLUGIN_STAGE_10 (2)     /* Before server's loop */
+#define MK_PLUGIN_STAGE_20 (4)     /* Accepted connection */
+#define MK_PLUGIN_STAGE_30 (8)     /* Connection assigned */
+#define MK_PLUGIN_STAGE_40 (16)     /* Object Handler */
+#define MK_PLUGIN_STAGE_50 (32)    /* Request ended */
+#define MK_PLUGIN_STAGE_60 (64)    /* Connection closed */
 
 /* Plugin: Network type */
-#define MK_PLUGIN_NETWORK_IO ((__uint32_t) 128)
-#define MK_PLUGIN_NETWORK_IP ((__uint32_t) 256)
+#define MK_PLUGIN_NETWORK_IO (128)
+#define MK_PLUGIN_NETWORK_IP (256)
 
 /* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
@@ -93,7 +93,7 @@ struct plugin
     char *version;
     char *path;
     void *handler;
-    __uint32_t *types;
+    int *types;
 
     /* Plugin external functions */
     int (*call_init) (void *api, char *confdir);
@@ -160,7 +160,7 @@ struct plugin_api
 };
 
 typedef char mk_plugin_data_t[];
-typedef __uint32_t mk_plugin_stage_t;
+typedef int mk_plugin_stage_t;
 
 /* Plugin events thread key */
 pthread_key_t mk_plugin_event_k;
