@@ -382,6 +382,40 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         }
     }
 
+    if (hook & MK_PLUGIN_STAGE_50) {
+        stm = plg_stagemap->stage_50;
+        while (stm) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 50", p->shortname);
+#endif            
+            ret = stm->p->stage.s50(cr, sr);
+            switch (ret) {
+            case MK_PLUGIN_RET_NOT_ME:
+                break;
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            }
+            stm = stm->next;
+        }
+    }
+
+    if (hook & MK_PLUGIN_STAGE_60) {
+        stm = plg_stagemap->stage_60;
+        while (stm) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 60", p->shortname);
+#endif            
+            ret = stm->p->stage.s60(cr);
+            switch (ret) {
+            case MK_PLUGIN_RET_NOT_ME:
+                break;
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            }
+            stm = stm->next;
+        }
+    }
+
     return -1;
 }
 
