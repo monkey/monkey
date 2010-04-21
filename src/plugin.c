@@ -220,6 +220,15 @@ struct plugin *mk_plugin_register(void *handler, char *path)
             !p->net_io.send_file) {
 #ifdef TRACE
                 MK_TRACE("Networking IO plugin incomplete: %s", path);
+                MK_TRACE("Mapped Functions\naccept  :%p\nread    :%p\n\
+write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
+                         p->net_io.accept,
+                         p->net_io.read,
+                         p->net_io.write,
+                         p->net_io.writev,
+                         p->net_io.close,
+                         p->net_io.connect,
+                         p->net_io.send_file);
 #endif              
                 mk_mem_free(p->path);
                 mk_mem_free(p);
@@ -244,6 +253,9 @@ struct plugin *mk_plugin_register(void *handler, char *path)
         if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
             MK_TRACE("Networking IP plugin incomplete: %s", path);
+            MK_TRACE("Mapped Functions\naddr   :%p\nmaxlen :%p",
+                     p->net_ip.addr,
+                     p->net_ip.maxlen);
 #endif
             mk_mem_free(p->path);
             mk_mem_free(p);
