@@ -28,7 +28,6 @@
 
 #include "config.h"
 #include "plugin.h"
-#include "liana.h"
 
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "liana";
