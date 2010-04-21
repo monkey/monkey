@@ -213,8 +213,9 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
 
     p = list;
 
+    printf("\n[CORE PROCESS CONTEXT]");
+
     while (p) {
-        printf("\n[CORE PROCESS CONTEXT]");
         if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
             printf("\n  [%s] %s v%s on \"%s\"",
                    p->shortname, p->name, p->version, p->path);
@@ -224,9 +225,9 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
 
     printf("\n");
     p = list;
+    printf("\n[CORE THREAD CONTEXT]");
 
     while (p) {
-        printf("\n[CORE THREAD CONTEXT]");
         if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
             printf("\n  [%s] %s v%s on \"%s\"",
                    p->shortname, p->name, p->version, p->path);
@@ -237,11 +238,41 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
     printf("\n\n");
 }
 
+void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
+{
+    struct plugin *p;
+
+    p = list;
+
+    printf("[NETWORK I/O]");
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    p = list;
+    printf("\n\n[NETWORK IP]");
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    printf("\n");
+}
+
 void mk_cheetah_cmd_plugins()
 {
     struct plugin *list = mk_api->plugins;
 
-    printf("List of plugins loaded and stages associated\n\n");
+    printf("List of plugins and hooks associated\n");
 
     if (!list) {
         return;
@@ -254,6 +285,9 @@ void mk_cheetah_cmd_plugins()
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_40", MK_PLUGIN_STAGE_40);
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_60", MK_PLUGIN_STAGE_60);
+    mk_cheetah_cmd_plugins_print_network(list);
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_vhosts()
