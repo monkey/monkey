@@ -204,6 +204,7 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 #ifdef TRACE
         MK_TRACE("Bad plugin definition: %s", path);
 #endif
+        mk_mem_free(p->path);
         mk_mem_free(p);
         return NULL;
     }
@@ -215,8 +216,10 @@ struct plugin *mk_plugin_register(void *handler, char *path)
             !p->net_io.close || !p->net_io.connect) {
 #ifdef TRACE
                 MK_TRACE("Networking IO plugin incomplete: %s", path);
+#endif              
+                mk_mem_free(p->path);
+                mk_mem_free(p);
                 return NULL;
-#endif                
             }
     }
 
@@ -225,8 +228,10 @@ struct plugin *mk_plugin_register(void *handler, char *path)
         if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
             MK_TRACE("Networking IP plugin incomplete: %s", path);
-            return NULL;
 #endif
+            mk_mem_free(p->path);
+            mk_mem_free(p);
+            return NULL;
         }
     }
 
