@@ -348,7 +348,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         stm = plg_stagemap->stage_10;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 10", p->shortname);
+            MK_TRACE("[%s] STAGE 10", stm->p->shortname);
 #endif
             stm->p->stage.s10();
             stm = stm->next;
@@ -359,7 +359,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         stm = plg_stagemap->stage_20;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 20", p->shortname);
+            MK_TRACE("[%s] STAGE 20", stm->p->shortname);
 #endif
             ret = stm->p->stage.s20(socket, conx, cr);
             switch (ret) {
@@ -378,7 +378,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         stm = plg_stagemap->stage_30;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 30", p->shortname);
+            MK_TRACE("[%s] STAGE 30", stm->p->shortname);
 #endif              
             ret = stm->p->stage.s30(cr, sr);
             switch (ret) {
@@ -399,7 +399,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
             while (stm) {
                 /* Call stage */
 #ifdef TRACE
-                MK_TRACE("[%s] STAGE 40", p->shortname);
+                MK_TRACE("[%s] STAGE 40", stm->p->shortname);
 #endif
                 ret = stm->p->stage.s40(stm->p, cr, sr);
 
@@ -418,7 +418,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         stm = plg_stagemap->stage_50;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 50", p->shortname);
+            MK_TRACE("[%s] STAGE 50", stm->p->shortname);
 #endif            
             ret = stm->p->stage.s50(cr, sr);
             switch (ret) {
@@ -435,7 +435,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         stm = plg_stagemap->stage_60;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 60", p->shortname);
+            MK_TRACE("[%s] STAGE 60", stm->p->shortname);
 #endif            
             ret = stm->p->stage.s60(cr);
             switch (ret) {
