@@ -446,7 +446,7 @@ void mk_config_set_init_values(void)
     config->open_flags = O_RDONLY | O_NONBLOCK;
 
     /* Plugins */
-    config->plugins = mk_mem_malloc_z(sizeof(struct plugin));
+    config->plugins = NULL;
 }
 
 /* read main configuration from monkey.conf */

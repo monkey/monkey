@@ -209,11 +209,18 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     }
 
     /* Add Plugin to the end of the list */
-    struct plugin *plg = config->plugins;
-    while(plg->next){
-        plg = plg->next;
+    if (!config->plugins) {
+        printf("\nfirst null");
+        fflush(stdout);
+        config->plugins = p;
     }
-    plg->next = p;
+    else {
+        struct plugin *plg = config->plugins;        
+        while(plg->next){
+            plg = plg->next;
+        }
+        plg->next = p;
+    }
 
     mk_plugin_register_stagemap(p);
     return p;

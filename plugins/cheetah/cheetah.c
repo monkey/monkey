@@ -74,8 +74,8 @@
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "cheetah";
 mk_plugin_data_t _name = "Cheetah";
-mk_plugin_data_t _version = "1.0";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_10;
+mk_plugin_data_t _version = "1.1";
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10;
 
 time_t init_time;
 struct plugin_api *mk_api;
@@ -183,7 +183,8 @@ void mk_cheetah_cmd_uptime()
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
+void mk_cheetah_cmd_plugins_print_stage(struct plugin *list, const char *stage, 
+                                        int stage_bw)
 {
     struct plugin *p;
 
@@ -192,12 +193,32 @@ void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
     }
 
     p = list;
-    printf("* %s", stage);
-    printf("\n  Loaded plugins on this stage");
-    printf("\n  ----------------------------");
+
+    printf("[%s]", stage);
+  
     while (p) {
-        printf("\n  [%s] %s v%s on \"%s\"",
-               p->shortname, p->name, p->version, p->path);
+        if (*p->hooks & stage_bw) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    printf("\n\n");
+}
+
+void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
+{
+    struct plugin *p;
+
+    p = list;
+
+    while (p) {
+        printf("\n[CORE PROCESS CONTEXT]");
+        if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
         p = p->next;
     }
 
@@ -206,17 +227,21 @@ void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
 
 void mk_cheetah_cmd_plugins()
 {
-    struct plugin_stages *p = mk_api->config->plugins;
+    struct plugin *list = mk_api->plugins;
 
     printf("List of plugins loaded and stages associated\n\n");
 
-    mk_cheetah_cmd_plugins_print(p->stage_00, "STAGE_00");
-    mk_cheetah_cmd_plugins_print(p->stage_10, "STAGE_10");
-    mk_cheetah_cmd_plugins_print(p->stage_20, "STAGE_20");
-    mk_cheetah_cmd_plugins_print(p->stage_30, "STAGE_30");
-    mk_cheetah_cmd_plugins_print(p->stage_40, "STAGE_40");
-    mk_cheetah_cmd_plugins_print(p->stage_50, "STAGE_50");
-    mk_cheetah_cmd_plugins_print(p->stage_60, "STAGE_60");
+    if (!list) {
+        return;
+    }
+
+    mk_cheetah_cmd_plugins_print_core(list);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_10", MK_PLUGIN_STAGE_10);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_20", MK_PLUGIN_STAGE_20);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_30", MK_PLUGIN_STAGE_30);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_40", MK_PLUGIN_STAGE_40);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_60", MK_PLUGIN_STAGE_60);
 }
 
 void mk_cheetah_cmd_vhosts()
@@ -402,13 +427,13 @@ void *mk_cheetah_init(void *args)
 /* This function is called when the plugin is loaded, it must
  * return 
  */
-int _mk_plugin_init(void **api)
+int _mkp_init(void **api)
 {
     mk_api = *api;
     return 0;
 }
 
-int _mk_plugin_stage_10(struct server_config *config)
+int _mkp_stage_10(struct server_config *config)
 {
     pthread_t tid;
     pthread_attr_t thread_attr;
