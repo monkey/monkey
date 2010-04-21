@@ -144,6 +144,9 @@ struct plugin_stagemap
 
 struct plugin_stagemap *plg_stagemap;
 
+/* Network map calls */
+struct plugin *plg_netiomap;
+struct plugin *plg_netipmap;
 
 /* API functions exported to plugins */
 struct plugin_api

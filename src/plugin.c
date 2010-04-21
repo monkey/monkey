@@ -212,8 +212,9 @@ struct plugin *mk_plugin_register(void *handler, char *path)
         return NULL;
     }
 
-    /* Validate mandatory NETWORK_IO calls */
+    /* NETWORK_IO Plugin */
     if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
+        /* Validate mandatory calls */
         if (!p->net_io.accept || !p->net_io.read || !p->net_io.write || 
             !p->net_io.writev || !p->net_io.close || !p->net_io.connect || 
             !p->net_io.send_file) {
@@ -224,10 +225,22 @@ struct plugin *mk_plugin_register(void *handler, char *path)
                 mk_mem_free(p);
                 return NULL;
             }
+
+        /* Restrict to one NETWORK_IO plugin */
+        if (!plg_netiomap) {
+            plg_netiomap = p;
+        }
+        else {
+            fprintf(stderr, 
+                    "\nError: Loading more than one Network IO Plugin: %s",
+                    path);
+            exit(1);
+        }
     }
 
-    /* Validate mandatory NETWORK_IP calls */
+    /* NETWORK_IP Plugin */
     if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
+        /* Validate mandatory calls */
         if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
             MK_TRACE("Networking IP plugin incomplete: %s", path);
@@ -235,6 +248,17 @@ struct plugin *mk_plugin_register(void *handler, char *path)
             mk_mem_free(p->path);
             mk_mem_free(p);
             return NULL;
+        }
+
+        /* Restrict to one NETWORK_IP plugin */
+        if (!plg_netipmap) {
+            plg_netipmap = p;
+        }
+        else {
+            fprintf(stderr, 
+                    "\nError: Loading more than one Network IP Plugin: %s",
+                    path);
+            exit(1);
         }
     }
 
@@ -264,6 +288,8 @@ void mk_plugin_init()
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
+    plg_netiomap = NULL;
+    plg_netipmap = NULL;
 
     /* Setup and connections list */
     api->config = config;
