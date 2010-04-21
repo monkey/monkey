@@ -345,12 +345,17 @@ EOF
         	continue
 	      fi
 
+              comment="#"
+              if test -e $i/ENABLED ; then
+		comment=""
+              fi
+
 	      echo "	@(cd $i && make && cd ..)" >> Makefile;
 
 	      if [ "$plugdir" != "" ]; then
-		  echo "#LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
+		  echo "${comment}LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
 	      else
-		  echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
+		  echo "${comment}LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
 	      fi
 	done	
 
