@@ -83,7 +83,7 @@ struct plugin_network_io
     int (*accept) (int, struct sockaddr_in);
     int (*read) (int, void *, int);
     int (*write) (int, const void *, size_t);
-    int (*writev) (int, struct mk_iov, int);
+    int (*writev) (int, struct mk_iov *);
     int (*close) (int);
     int (*connect) (char *, int);
     int (*send_file) (int, int, off_t *, size_t);
