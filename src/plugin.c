@@ -210,9 +210,9 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 
     /* Validate mandatory NETWORK_IO calls */
     if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
-        if (!p->net_io.accept || p->net_io.read ||
-            !p->net_io.write || p->net_io.writev ||
-            !p->net_io.close || p->net_io.connect) {
+        if (!p->net_io.accept || !p->net_io.read ||
+            !p->net_io.write || !p->net_io.writev ||
+            !p->net_io.close || !p->net_io.connect) {
 #ifdef TRACE
                 MK_TRACE("Networking IO plugin incomplete: %s", path);
                 return NULL;
@@ -222,7 +222,7 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 
     /* Validate mandatory NETWORK_IP calls */
     if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
-        if (!p->net_ip.addr || p->net_ip.maxlen) {
+        if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
             MK_TRACE("Networking IP plugin incomplete: %s", path);
             return NULL;
