@@ -210,8 +210,6 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 
     /* Add Plugin to the end of the list */
     if (!config->plugins) {
-        printf("\nfirst null");
-        fflush(stdout);
         config->plugins = p;
     }
     else {

@@ -222,6 +222,18 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
         p = p->next;
     }
 
+    printf("\n");
+    p = list;
+
+    while (p) {
+        printf("\n[CORE THREAD CONTEXT]");
+        if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
     printf("\n\n");
 }
 
