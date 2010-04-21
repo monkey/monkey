@@ -373,6 +373,11 @@ void mk_plugin_init()
         cnf = cnf->next;
     }
 
+    if (!plg_netiomap) {
+        fprintf(stderr, "\nError: no Network plugin loaded >:|\n\n");
+        exit(1);
+    }
+
     api->plugins = config->plugins;
     mk_mem_free(path);
 }
