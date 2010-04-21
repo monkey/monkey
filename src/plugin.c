@@ -314,7 +314,7 @@ void mk_plugin_init()
             handle = mk_plugin_load(cnf->val);
             p = mk_plugin_register(handle, cnf->val);
             if (!p) {
-                fprintf(stderr, "Plugin error: %s", cnf->val);
+                fprintf(stderr, "Plugin error: %s\n", cnf->val);
                 dlclose(handle);
             }
             else {

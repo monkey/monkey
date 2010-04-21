@@ -225,7 +225,7 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
     bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
-    if( bytes_written == -1 ) {
+    if (bytes_written == -1) {
         perror( "error from sendfile" );
         return -1;
     }

@@ -112,6 +112,8 @@ plugin can be registered to use multiple hooks just adding the right identifiers
          |                       | _mkp_network_io_close()     | Close socket
          |                       +-----------------------------+---------------------------------
          |                       | _mkp_network_io_connect()   | Connect to
+         |                       +-----------------------------+---------------------------------
+         |                       | _mkp_network_io_send_file() | Send file
 ---------+-----------------------+-----------------------------+---------------------------------
    ip    | MK_PLUGIN_NETWORK_IP  | _mkp_network_ip_addr()      | Get IP address from socket
          |                       +---------------------------------------------------------------
