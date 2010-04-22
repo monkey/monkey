@@ -237,7 +237,7 @@ write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
 
         /* Restrict to one NETWORK_IO plugin */
         if (!plg_netiomap) {
-            plg_netiomap = p;
+            plg_netiomap = &p->net_io;
         }
         else {
             fprintf(stderr, 
@@ -264,7 +264,7 @@ write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
 
         /* Restrict to one NETWORK_IP plugin */
         if (!plg_netipmap) {
-            plg_netipmap = p;
+            plg_netipmap = &p->net_ip;
         }
         else {
             fprintf(stderr, 

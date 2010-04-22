@@ -184,27 +184,27 @@ int mk_socket_server(int port, char *listen_addr)
 
 int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
 {
-    return plg_netiomap->net_io.accept(server_fd, sock_addr);
+    return plg_netiomap->accept(server_fd, sock_addr);
 }
 
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
 {
-    return plg_netiomap->net_io.writev(socket_fd, mk_io);
+    return plg_netiomap->writev(socket_fd, mk_io);
 }
 
 int mk_socket_send(int socket_fd, const void *buf, size_t count )
 {
-    return plg_netiomap->net_io.write(socket_fd, buf, count);
+    return plg_netiomap->write(socket_fd, buf, count);
 }
 
 int mk_socket_read(int socket_fd, void *buf, int count)
 {
-    return plg_netiomap->net_io.read(socket_fd, (void *)buf, count);
+    return plg_netiomap->read(socket_fd, (void *)buf, count);
 }
 
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, 
                         size_t file_count)
 {
-    return plg_netiomap->net_io.send_file(socket_fd, file_fd, 
-                                          file_offset, file_count);
+    return plg_netiomap->send_file(socket_fd, file_fd, 
+                                   file_offset, file_count);
 }
