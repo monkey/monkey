@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2009, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@
 mk_plugin_data_t _shortname = "dirlisting";
 mk_plugin_data_t _name = "Directory Listing";
 mk_plugin_data_t _version = "1.0";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_40;;
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_40;;
 
 struct plugin_api *mk_api;
 
@@ -838,31 +838,34 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     return 0;
 }
 
-int _mk_plugin_init(void **api, char *confdir)
+int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     mk_dirhtml_conf(confdir);
     return 0;
 }
 
-int _mk_plugin_stage_40(struct plugin *plugin, struct client_request *cr, struct request *sr)
+int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct request *sr)
 {
     /* Validate file/directory */
     if (!sr->file_info) {
-        return -1;
+        return MK_PLUGIN_RET_NOT_ME;
     }
 
     /* This plugin just handle directories */
     if (sr->file_info->is_directory == MK_FILE_FALSE) {
-        return -1;
+        return MK_PLUGIN_RET_NOT_ME;
     }
 
-    /* check setup */
+
+    /* check setup 
     if (sr->host_conf->getdir == VAR_OFF) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
         return -1;
     }
+    */
 
     mk_dirhtml_init(cr, sr);
-    return 0;
+
+    return MK_PLUGIN_RET_END;
 }

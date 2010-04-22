@@ -246,15 +246,15 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         mime = mimetype_default;
     }
 
-    if (sr->file_info->is_directory == MK_FILE_TRUE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return EXIT_ERROR;
-    }
-
     /* Plugin Stage 40: look for handlers for this request */
     ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr);
     if (ret == MK_PLUGIN_RET_CONTINUE) {
         return ret;
+    }
+
+    if (sr->file_info->is_directory == MK_FILE_TRUE) {
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+        return EXIT_ERROR;
     }
 
     /* get file size */

@@ -24,7 +24,7 @@
 #define MK_DIRHTML_H
 
 #define MK_DIRHTML_URL "/_mktheme"
-#define MK_DIRHTML_DEFAULT_MIME "text/html"
+#define MK_DIRHTML_DEFAULT_MIME "text/html\r\n"
 
 /* For every directory requested, don't send more than
  * this limit of entries.
