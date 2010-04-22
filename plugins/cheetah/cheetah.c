@@ -194,7 +194,7 @@ void mk_cheetah_cmd_plugins_print_stage(struct plugin *list, const char *stage,
 
     p = list;
 
-    printf("[%s]", stage);
+    printf("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
   
     while (p) {
         if (*p->hooks & stage_bw) {
@@ -213,7 +213,7 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
 
     p = list;
 
-    printf("\n[CORE PROCESS CONTEXT]");
+    printf("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
     while (p) {
         if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
@@ -225,7 +225,7 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
 
     printf("\n");
     p = list;
-    printf("\n[CORE THREAD CONTEXT]");
+    printf("\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
     while (p) {
         if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
@@ -244,7 +244,7 @@ void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
 
     p = list;
 
-    printf("[NETWORK I/O]");
+    printf("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
 
     while (p) {
         if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
@@ -255,7 +255,7 @@ void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
     }
 
     p = list;
-    printf("\n\n[NETWORK IP]");
+    printf("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
 
     while (p) {
         if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
