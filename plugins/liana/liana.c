@@ -19,6 +19,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 
@@ -54,7 +56,8 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     int remote_fd;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
-    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr, &socket_size);
+    remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr, 
+                        &socket_size, SOCK_NONBLOCK);
     return remote_fd;
 }
 
