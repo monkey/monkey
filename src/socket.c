@@ -68,6 +68,7 @@ int mk_socket_set_nonblocking(int sockfd)
 int mk_socket_set_tcp_nodelay(int sockfd)
 {
     int on = 1;
+
     return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
@@ -182,6 +183,7 @@ int mk_socket_server(int port, char *listen_addr)
     return fd;
 }
 
+/* NETWORK_IO plugin functions */
 int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
 {
     return plg_netiomap->accept(server_fd, sock_addr);
