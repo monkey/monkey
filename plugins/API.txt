@@ -1,7 +1,8 @@
-** Revision 0.6 **
+** Revision 0.7 **
 
 Changelog:
 ----------
+0.7: Add functions definition
 0.6: Add a list of Monkey functions exported to each plugin
 0.5: Add _mkp_init() and _mkp_exit() hook functions
 0.4: Add hook function names
@@ -54,6 +55,10 @@ A plugin must contains at least the following hooks functions:
                   | must free the used memory resources
 ------------------+---------------------------------------------------------------
 
+Definitions
+-----------
+void _mkp_init(struct plugin_api **api, char *confdir)
+void _mkp_exit()
 
 Plugin and Function Hooks
 -------------------------
@@ -73,6 +78,11 @@ plugin can be registered to use multiple hooks just adding the right identifiers
  Thread  | MK_PLUGIN_CORE_THCTX  | _mkp_core_thctx() | Thread context, no server loop
 ---------+-----------------------+-------------------+-----------------------------------
 
+Definitions
+-----------
+void _mkp_core_prctx()
+void _mkp_core_thctx()
+
 -------+
  Stage |
 -------+-----------------------------------------------------------------------------------------
@@ -82,7 +92,7 @@ plugin can be registered to use multiple hooks just adding the right identifiers
  Stage # |    Identified by     | Hook function    | Description
 ---------+----------------------+------------------+---------------------------------------------
    10    |  MK_PLUGIN_STAGE_10  | _mkp_stage_10()  | Connection just accept()ed, not assigned
----------+----------------------+------------------+---------------------------------------------
+1---------+----------------------+------------------+---------------------------------------------
    20    |  MK_PLUGIN_STAGE_20  | _mkp_stage_20()  | HTTP Request stream just received
 ---------+----------------------+------------------+---------------------------------------------
    30    |  MK_PLUGIN_STAGE_30  | _mkp_stage_30()  | Object handler, what to do with the request?
@@ -91,6 +101,14 @@ plugin can be registered to use multiple hooks just adding the right identifiers
 ---------+----------------------+------------------+---------------------------------------------
    50    |  MK_PLUGIN_STAGE_50  | _mkp_stage_50()  | Remote connection has been closed
 ---------+----------------------+------------------+---------------------------------------------
+
+Definitions
+-----------
+int _mkp_stage_10(int sockfd)
+int _mkp_stage_20(struct client_request *cr, struct request *sr)
+int _mkp_stage_30(struct client_request *cr, struct request *sr)
+int _mkp_stage_40(struct client_request *cr, struct request *sr)
+int _mkp_stage_50(int sockfd)
 
 ------------+
  Networking |
@@ -120,6 +138,18 @@ plugin can be registered to use multiple hooks just adding the right identifiers
          |                       | _mkp_network_ip_maxlen()    | Get Max IP address length
 ---------+-----------------------+-----------------------------+---------------------------------
 
+Definitions
+-----------
+int _mkp_network_io_accept(int server_fd, struct sockaddr_in sockaddr)
+int _mkp_network_io_read(int sockfd, void *buf, int count)
+int _mkp_network_io_write(int sockfd, const void *buf, size_t count)
+int _mkp_network_io_writev(int sockfd, struct mk_iov *mk_io)
+int _mkp_network_io_close(int sockfd)
+int _mkp_network_io_connect(const char *host, int port)
+int _mkp_network_io_send_file(int sockfd, int filefd, off_t *file_offset, size_t file_count)
+
+char *_mkp_network_ip_addr(int sockfd)
+int _mkp_network_ip_maxlen()
 
 Plugin definition
 -----------------
