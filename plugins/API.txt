@@ -42,8 +42,8 @@ Monkey Plugins
 A plugin is composed by a set of mandatory plus optional function calls that act
 like hooks that are called from Monkey Core.
 
-Mandatory calls
----------------
+Mandatory hook calls
+--------------------
 A plugin must contains at least the following hooks functions:
 
 ------------------+---------------------------------------------------------------
@@ -60,6 +60,34 @@ Definitions
 -----------
 void _mkp_init(struct plugin_api **api, char *confdir)
 void _mkp_exit()
+
+
+Optional hook calls
+-------------------
+These hook functions are invoked when a epoll event has been set through 
+event_add() by the plugin
+---------------------+------------------------------------------------------------
+ Hook function       | Description
+---------------------+------------------------------------------------------------
+  _mkp_event_read    | FD set is ready to read
+---------------------+------------------------------------------------------------
+  _mkp_event_write   | FD set is ready to write
+---------------------+------------------------------------------------------------
+  _mkp_event_close   | FD has been closed
+---------------------+------------------------------------------------------------
+  _mkp_event_error   | An error has been detected in the file descriptor
+---------------------+------------------------------------------------------------
+  _mkp_event_timeout | Timeout detected in the file descriptor
+---------------------+------------------------------------------------------------
+
+Definitions
+-----------
+int _mkp_event_read(struct client_request *cr, struct request *sr)
+int _mkp_event_write(struct client_request *cr, struct request *sr)
+int _mkp_event_close(struct client_request *cr, struct request *sr)
+int _mkp_event_error(struct client_request *cr, struct request *sr)
+int _mkp_event_timeout(struct client_request *cr, struct request *sr)
+
 
 Plugin and Function Hooks
 -------------------------
