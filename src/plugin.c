@@ -588,8 +588,8 @@ int mk_plugin_event_add(int socket, int mode,
 
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
-    mk_epoll_add_client(sched->epoll_fd, event->socket, 
-                        mode, MK_EPOLL_BEHAVIOR_TRIGGERED);
+    mk_epoll_add(sched->epoll_fd, event->socket, 
+                 mode, MK_EPOLL_BEHAVIOR_TRIGGERED);
     return 0;
 }
 
@@ -603,7 +603,7 @@ int mk_plugin_event_socket_change_mode(int socket, int mode)
         return -1;
     }
 
-    return mk_epoll_socket_change_mode(sched->epoll_fd, socket, mode);
+    return mk_epoll_change_mode(sched->epoll_fd, socket, mode);
 }
 
 struct plugin_event *mk_plugin_event_get(int socket)

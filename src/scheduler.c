@@ -222,8 +222,8 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
 
-            mk_epoll_add_client(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                                MK_EPOLL_BEHAVIOR_TRIGGERED);
+            mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
+                         MK_EPOLL_BEHAVIOR_TRIGGERED);
             return 0;
         }
     }
@@ -308,6 +308,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
                 MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
                          req_cl->socket);
 #endif
+                
                 close(req_cl->socket);
             }
         }

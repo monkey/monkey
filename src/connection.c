@@ -74,8 +74,8 @@ int mk_conn_read(int socket)
 
     if (ret > 0) {
         if (mk_http_pending_request(cr) == 0) {
-            mk_epoll_socket_change_mode(sched->epoll_fd,
-                                        socket, MK_EPOLL_WRITE);
+            mk_epoll_change_mode(sched->epoll_fd,
+                                 socket, MK_EPOLL_WRITE);
         }
         else if (cr->body_length + 1 >= MAX_REQUEST_BODY) {
             /* Request is incomplete and our buffer is full, 
@@ -145,8 +145,8 @@ int mk_conn_write(int socket)
         }
         else {
             mk_request_ka_next(cr);
-            mk_epoll_socket_change_mode(sched->epoll_fd,
-                                        socket, MK_EPOLL_READ);
+            mk_epoll_change_mode(sched->epoll_fd,
+                                 socket, MK_EPOLL_READ);
             return 0;
         }
     }

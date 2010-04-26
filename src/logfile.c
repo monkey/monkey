@@ -131,14 +131,14 @@ void *mk_logger_worker_init(void *args)
     while (h) {
         /* Add access log file */
         if( h->log_access[0] > 0 ) {
-            mk_epoll_add_client(efd, h->log_access[0], 
-                                MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
+            mk_epoll_add(efd, h->log_access[0], 
+                         MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
             mk_logger_target_add(h->log_access[0], h->access_log_path);
         }
         /* Add error log file */
         if( h->log_error[0] > 0 ) {
-            mk_epoll_add_client(efd, h->log_error[0], 
-                                MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
+            mk_epoll_add(efd, h->log_error[0], 
+                         MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
             mk_logger_target_add(h->log_error[0], h->error_log_path);
         }
         h = h->next;

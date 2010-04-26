@@ -131,12 +131,12 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     }
 }
 
-int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
+int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 {
     int ret;
     struct epoll_event event = { EPOLLERR | EPOLLHUP };
 
-    event.data.fd = socket;
+    event.data.fd = fd;
 
     if (behavior == MK_EPOLL_BEHAVIOR_TRIGGERED) {
         event.events |= EPOLLET;
@@ -154,20 +154,31 @@ int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
         break;
     }
 
-    ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
+    ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0) {
         perror("epoll_ctl");
     }
     return ret;
 }
 
-int mk_epoll_socket_change_mode(int efd, int socket, int mode)
+int mk_epoll_del(int efd, int fd)
+{
+    int ret;
+
+    ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
+    if (ret < 0) {
+        perror("\nepoll_ctl");
+    }
+    return ret;
+}
+
+int mk_epoll_change_mode(int efd, int fd, int mode)
 {
     int ret;
     struct epoll_event event;
 
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
-    event.data.fd = socket;
+    event.data.fd = fd;
 
     switch (mode) {
     case MK_EPOLL_READ:
@@ -190,7 +201,7 @@ int mk_epoll_socket_change_mode(int efd, int socket, int mode)
         break;
     }
 
-    ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
+    ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
     if (ret < 0) {
         perror("\nepoll_ctl");
     }
