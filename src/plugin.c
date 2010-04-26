@@ -547,7 +547,8 @@ void mk_plugin_preworker_calls()
     }
 }
 
-int mk_plugin_event_add(int socket, struct plugin *handler,
+int mk_plugin_event_add(int socket, int mode,
+                        struct plugin *handler,
                         struct client_request *cr, 
                         struct request *sr)
 {
@@ -588,7 +589,7 @@ int mk_plugin_event_add(int socket, struct plugin *handler,
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
     mk_epoll_add_client(sched->epoll_fd, event->socket, 
-                        MK_EPOLL_WRITE, MK_EPOLL_BEHAVIOR_TRIGGERED);
+                        mode, MK_EPOLL_BEHAVIOR_TRIGGERED);
     return 0;
 }
 

@@ -656,3 +656,13 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
 
     return ret;
 }
+
+void _mkp_event_close(struct client_request *cr, struct request *sr)
+{
+    PLUGIN_TRACE( "CLOSE CLOSE " );
+}
+
+void _mkp_event_error(struct client_request *cr, struct request *sr)
+{
+    PLUGIN_TRACE( " ERROR ERROR " );
+}

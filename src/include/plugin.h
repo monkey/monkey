@@ -195,8 +195,8 @@ struct plugin_api
     void *(*config_getval) (struct mk_config *, char *, int);
     struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
                                                       int);
-    int (*event_add) (int, struct plugin *, struct client_request *, 
-                        struct request *);
+    int (*event_add) (int, int, struct plugin *, struct client_request *, 
+                      struct request *);
     int (*event_socket_change_mode) (int, int);
 
 #ifdef TRACE
@@ -234,7 +234,8 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);
 void mk_plugin_preworker_calls();
 
 /* Plugins events interface */
-int mk_plugin_event_add(int socket, struct plugin *handler,
+int mk_plugin_event_add(int socket, int mode,
+                        struct plugin *handler,
                         struct client_request *cr, 
                         struct request *sr);
 int mk_plugin_event_set_list(struct plugin_event *event);
