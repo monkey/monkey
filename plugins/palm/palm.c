@@ -349,7 +349,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     mk_palm_request_add(pr);
 
     /* Register socket with thread Epoll interface */
-    mk_api->event_add(pr->palm_fd, plugin, cr, sr);
+    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cr, sr);
     PLUGIN_TRACE("Palm: Event registered / client=%i / palm_socket=%i",
                  pr->client_fd, pr->palm_fd);
 

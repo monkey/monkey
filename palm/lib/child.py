@@ -64,6 +64,7 @@ class Child:
 
     def _child_exit(self,a, b):
         print "Exiting ", os.getpid()
+        os.wait()
 
         os.close(self.ext_r)
         os.close(self.ext_w)
@@ -130,7 +131,6 @@ class Child:
                 flags |= 1
 
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
-
 
             print "Got connection! I won! ->", os.getpid()
             buf = self.read(remote)
