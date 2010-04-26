@@ -166,6 +166,11 @@ int mk_epoll_del(int efd, int fd)
     int ret;
 
     ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
+
+#ifdef TRACE
+    MK_TRACE("Epoll, removing fd %i from efd %i", fd, efd);
+#endif
+
     if (ret < 0) {
         perror("\nepoll_ctl");
     }

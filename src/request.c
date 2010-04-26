@@ -876,6 +876,7 @@ struct client_request *mk_request_client_create(int socket)
     cr->body_pos_end = -1;
     cr->first_method = HTTP_METHOD_UNKNOWN;
 
+    /* Add this request to the thread request list */
     request_index = mk_sched_get_request_index();
     if (!request_index->first) {
         request_index->first = request_index->last = cr;
@@ -884,6 +885,8 @@ struct client_request *mk_request_client_create(int socket)
         request_index->last->next = cr;
         request_index->last = cr;
     }
+
+    /* Set again the global list */
     mk_sched_set_request_index(request_index);
 
     return cr;
