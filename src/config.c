@@ -172,7 +172,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
         exit(1);
     }
 
-    m_build_buffer(&path, &len, "%s/%s", path_conf, file_conf);
+    mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
 
     cnf = mk_config_create(path);
 
@@ -280,7 +280,7 @@ void mk_config_read_hosts(char *path)
     struct host *p_host, *new_host;     /* debug */
     struct dirent *ent;
 
-    m_build_buffer(&buf, &len, "%s/sites/default", path);
+    mk_string_build(&buf, &len, "%s/sites/default", path);
     config->hosts = mk_config_get_host(buf);
     config->nhosts++;
     mk_mem_free(buf);
@@ -290,7 +290,7 @@ void mk_config_read_hosts(char *path)
         exit(1);
     }
 
-    m_build_buffer(&buf, &len, "%s/sites/", path);
+    mk_string_build(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf)))
         exit(1);
 
@@ -306,7 +306,7 @@ void mk_config_read_hosts(char *path)
         if (strcasecmp((char *) ent->d_name, "default") == 0)
             continue;
 
-        m_build_buffer(&file, &len, "%s/sites/%s", path, ent->d_name);
+        mk_string_build(&file, &len, "%s/sites/%s", path, ent->d_name);
 
         new_host = (struct host *) mk_config_get_host(file);
         mk_mem_free(file);
@@ -365,15 +365,15 @@ struct host *mk_config_get_host(char *path)
 
     /* Server Signature */
     if (config->hideversion == VAR_OFF) {
-        m_build_buffer(&host->host_signature, &len,
-                       "Monkey/%s", VERSION);
+        mk_string_build(&host->host_signature, &len,
+                        "Monkey/%s", VERSION);
     }
     else {
-        m_build_buffer(&host->host_signature, &len, "Monkey");
+        mk_string_build(&host->host_signature, &len, "Monkey");
     }
-    m_build_buffer(&host->header_host_signature.data,
-                   &host->header_host_signature.len,
-                   "Server: %s", host->host_signature);
+    mk_string_build(&host->header_host_signature.data,
+                    &host->header_host_signature.len,
+                    "Server: %s", host->host_signature);
 
     if( host->access_log_path != NULL ) {
         if (pipe(host->log_access) < 0) {
@@ -467,12 +467,12 @@ void mk_config_start_configure(void)
 
     /* Basic server information */
     if (config->hideversion == VAR_OFF) {
-        m_build_buffer(&config->server_software.data,
-                       &len, "Monkey/%s (%s)", VERSION, OS);
+        mk_string_build(&config->server_software.data,
+                        &len, "Monkey/%s (%s)", VERSION, OS);
         config->server_software.len = len;
     }
     else {
-        m_build_buffer(&config->server_software.data, &len, "Monkey Server");
+        mk_string_build(&config->server_software.data, &len, "Monkey Server");
         config->server_software.len = len;
     }
 }

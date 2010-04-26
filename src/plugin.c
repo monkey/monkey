@@ -311,7 +311,7 @@ void mk_plugin_init()
     api->mem_alloc = (void *) mk_mem_malloc;
     api->mem_alloc_z = (void *) mk_mem_malloc_z;
     api->mem_free = (void *) mk_mem_free;
-    api->str_build = (void *) m_build_buffer;
+    api->str_build = (void *) mk_string_build;
     api->str_dup = (void *) mk_string_dup;
     api->str_search = (void *) mk_string_search;
     api->str_search_n = (void *) mk_string_search_n;
@@ -362,10 +362,10 @@ void mk_plugin_init()
                 char *plugin_confdir = 0;
                 unsigned long len;
 
-                m_build_buffer(&plugin_confdir,
-                               &len,
-                               "%s/plugins/%s/",
-                               config->serverconf, p->shortname);
+                mk_string_build(&plugin_confdir,
+                                &len,
+                                "%s/plugins/%s/",
+                                config->serverconf, p->shortname);
 
                 p->init(&api, plugin_confdir);
             }

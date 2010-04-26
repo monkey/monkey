@@ -42,5 +42,6 @@ char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
 int mk_string_array_count(char *arr[]);
 struct mk_string_line *mk_string_split_line(char *line);
-
+char *mk_string_build(char **buffer, unsigned long *len, 
+                      const char *format, ...);
 #endif

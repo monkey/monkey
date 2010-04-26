@@ -24,6 +24,7 @@
 
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "request.h"
 #include "utils.h"
@@ -240,4 +241,47 @@ struct mk_string_line *mk_string_split_line(char *line)
     }
 
     return sl;
+}
+
+char *mk_string_build(char **buffer, unsigned long *len, 
+                      const char *format, ...)
+{
+    va_list ap;
+    int length;
+    char *ptr;
+    static size_t _mem_alloc = 64;
+    size_t alloc = 0;
+
+    /* *buffer *must* be an empty/NULL buffer */
+
+    *buffer = (char *) mk_mem_malloc(_mem_alloc);
+    if (!*buffer) {
+        return NULL;
+    }
+    alloc = _mem_alloc;
+
+    va_start(ap, format);
+    length = vsnprintf(*buffer, alloc, format, ap);
+
+    if (length >= alloc) {
+        ptr = realloc(*buffer, length + 1);
+        if (!ptr) {
+            va_end(ap);
+            return NULL;
+        }
+        *buffer = ptr;
+        alloc = length + 1;
+        length = vsnprintf(*buffer, alloc, format, ap);
+    }
+    va_end(ap);
+
+    if (length < 0) {
+        return NULL;
+    }
+
+    ptr = *buffer;
+    ptr[length] = '\0';
+    *len = length;
+
+    return *buffer;
 }

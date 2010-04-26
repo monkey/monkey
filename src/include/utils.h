@@ -65,9 +65,6 @@ int hex2int(char *pChars);
 mk_pointer PutDate_string(time_t date);
 time_t PutDate_unix(char *date);
 
-char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
-                     ...);
-
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
 int mk_utils_set_daemon();

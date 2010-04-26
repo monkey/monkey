@@ -384,13 +384,13 @@ int mk_http_directory_redirect_check(struct client_request *cr,
 
     host = mk_pointer_to_buf(sr->host);
 
-    m_build_buffer(&location, &len, "%s/", sr->uri_processed);
+    mk_string_build(&location, &len, "%s/", sr->uri_processed);
     if (config->serverport == config->standard_port) {
-        m_build_buffer(&real_location, &len, "http://%s%s", host, location);
+        mk_string_build(&real_location, &len, "http://%s%s", host, location);
     }
     else {
-        m_build_buffer(&real_location, &len, "http://%s:%i%s",
-                       host, config->serverport, location);
+        mk_string_build(&real_location, &len, "http://%s:%i%s",
+                        host, config->serverport, location);
     }
 
     mk_mem_free(host);

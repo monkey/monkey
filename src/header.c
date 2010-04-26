@@ -36,6 +36,7 @@
 #include "clock.h"
 #include "cache.h"
 #include "http.h"
+#include "str.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
@@ -176,14 +177,14 @@ int mk_header_send(int fd, struct client_request *cr,
 
         /* A valid connection header */
         if (sr->connection.len > 0) {
-            m_build_buffer(&buffer,
-                           &len,
-                           "Keep-Alive: timeout=%i, max=%i"
-                           MK_CRLF,
-                           config->keep_alive_timeout,
-                           (config->max_keep_alive_request -
-                            cr->counter_connections)
-                           );
+            mk_string_build(&buffer,
+                            &len,
+                            "Keep-Alive: timeout=%i, max=%i"
+                            MK_CRLF,
+                            config->keep_alive_timeout,
+                            (config->max_keep_alive_request -
+                             cr->counter_connections)
+                            );
             mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
             mk_iov_add_entry(iov,
                              mk_header_conn_ka.data,
@@ -253,15 +254,15 @@ int mk_header_send(int fd, struct client_request *cr,
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             length = (unsigned int)
                 (sh->content_length - sh->ranges[0]);
-            m_build_buffer(&buffer, &len, "%s %i", RH_CONTENT_LENGTH, length);
+            mk_string_build(&buffer, &len, "%s %i", RH_CONTENT_LENGTH, length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
 
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           sh->ranges[0],
-                           (sh->content_length - 1), sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0],
+                            (sh->content_length - 1), sh->content_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
 
@@ -269,14 +270,14 @@ int mk_header_send(int fd, struct client_request *cr,
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
             length = (unsigned int)
                 abs(sh->ranges[1] - sh->ranges[0]) + 1;
-            m_build_buffer(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
+            mk_string_build(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
 
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           sh->ranges[0], sh->ranges[1], sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0], sh->ranges[1], sh->content_length);
 
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
@@ -290,15 +291,15 @@ int mk_header_send(int fd, struct client_request *cr,
                 sh->ranges[1] = sh->content_length;
             }
 
-            m_build_buffer(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
+            mk_string_build(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
 
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           (sh->content_length - sh->ranges[1]),
-                           (sh->content_length - 1), sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            (sh->content_length - sh->ranges[1]),
+                            (sh->content_length - 1), sh->content_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
 

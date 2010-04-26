@@ -109,49 +109,6 @@ int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
     return 0;
 }
 
-char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
-                     ...)
-{
-    va_list ap;
-    int length;
-    char *ptr;
-    static size_t _mem_alloc = 64;
-    size_t alloc = 0;
-
-    /* *buffer *must* be an empty/NULL buffer */
-
-    *buffer = (char *) mk_mem_malloc(_mem_alloc);
-    if (!*buffer) {
-        return NULL;
-    }
-    alloc = _mem_alloc;
-
-    va_start(ap, format);
-    length = vsnprintf(*buffer, alloc, format, ap);
-
-    if (length >= alloc) {
-        ptr = realloc(*buffer, length + 1);
-        if (!ptr) {
-            va_end(ap);
-            return NULL;
-        }
-        *buffer = ptr;
-        alloc = length + 1;
-        length = vsnprintf(*buffer, alloc, format, ap);
-    }
-    va_end(ap);
-
-    if (length < 0) {
-        return NULL;
-    }
-
-    ptr = *buffer;
-    ptr[length] = '\0';
-    *len = length;
-
-    return *buffer;
-}
-
 /* Run current process in background mode (daemon, evil Monkey >:) */
 int mk_utils_set_daemon()
 {

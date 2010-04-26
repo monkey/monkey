@@ -546,8 +546,8 @@ mk_pointer mk_request_index(char *pathfile)
     aux_index = first_index;
 
     while (aux_index) {
-        m_build_buffer(&file_aux, &len, "%s%s",
-                       pathfile, aux_index->indexname);
+        mk_string_build(&file_aux, &len, "%s%s",
+                        pathfile, aux_index->indexname);
 
         if (access(file_aux, F_OK) == 0) {
             f.data = file_aux;
@@ -591,8 +591,8 @@ void mk_request_error(int num_error, struct client_request *cr,
         break;
 
     case M_CLIENT_NOT_FOUND:
-        m_build_buffer(&message.data, &message.len,
-                       "The requested URL was not found on this server.");
+        mk_string_build(&message.data, &message.len,
+                        "The requested URL was not found on this server.");
         page = mk_request_set_default_page("Not Found",
                                            message,
                                            s_request->host_conf->
@@ -634,8 +634,8 @@ void mk_request_error(int num_error, struct client_request *cr,
         break;
 
     case M_SERVER_INTERNAL_ERROR:
-        m_build_buffer(&message.data, &message.len,
-                       "Problems found running %s ", s_request->uri);
+        mk_string_build(&message.data, &message.len,
+                        "Problems found running %s ", s_request->uri);
         page = mk_request_set_default_page("Internal Server Error",
                                            message,
                                            s_request->host_conf->
@@ -697,8 +697,8 @@ mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
     p = mk_mem_malloc(sizeof(mk_pointer));
 
     temp = mk_pointer_to_buf(message);
-    m_build_buffer(&p->data, &p->len,
-                   MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+    mk_string_build(&p->data, &p->len,
+                    MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
     mk_mem_free(temp);
 
     return p;
