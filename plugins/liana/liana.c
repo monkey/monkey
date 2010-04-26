@@ -83,7 +83,7 @@ int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
     ssize_t bytes_sent = -1;
 
-    bytes_sent = (ssize_t) mk_api->iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
+    bytes_sent = mk_api->iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
 
     return bytes_sent;
 }
