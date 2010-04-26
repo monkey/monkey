@@ -146,7 +146,6 @@ struct plugin_stagemap
     struct plugin_stagem *stage_30;
     struct plugin_stagem *stage_40;
     struct plugin_stagem *stage_50;
-    struct plugin_stagem *stage_60;
 };
 
 struct plugin_stagemap *plg_stagemap;
