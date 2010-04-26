@@ -158,42 +158,43 @@ struct plugin_api
     /* Exporting Functions */
     void *(*mem_alloc) (int);
     void *(*mem_alloc_z) (int);
-    void *(*mem_free) (void *);
-    void *(*str_build) (char **, unsigned long *, const char *, ...);
-    void *(*str_dup) (const char *);
-    void *(*str_search) (char *, char *);
-    void *(*str_search_n) (char *, char *, int);
-    void *(*str_copy_substr) (const char *, int, int);
-    void *(*str_split_line) (const char *);
-    void *(*file_to_buffer) (char *);
-    void *(*file_get_info) (char *);
+    void (*mem_free) (void *);
+    char *(*str_build) (char **, unsigned long *, const char *, ...);
+    char *(*str_dup) (const char *);
+    int (*str_search) (char *, char *);
+    int (*str_search_n) (char *, char *, int);
+    char *(*str_copy_substr) (const char *, int, int);
+    struct mk_string_line *(*str_split_line) (const char *);
+    char *(*file_to_buffer) (char *);
+    struct file_info *(*file_get_info) (char *);
     void *(*header_send) (int,
                           struct client_request *,
                           struct request *, struct log_info *);
-    void *(*iov_create) (int, int);
-    void *(*iov_free) (struct mk_iov *);
-    void *(*iov_add_entry) (struct mk_iov *, char *, int, mk_pointer, int);
-    void *(*iov_set_entry) (struct mk_iov *, char *, int, int, int);
-    void *(*iov_send) (int, struct mk_iov *, int);
-    void *(*iov_print) (struct mk_iov *);
-    void *(*pointer_set) (mk_pointer *, char *);
-    void *(*pointer_print) (mk_pointer);
+    struct mk_iov *(*iov_create) (int, int);
+    void (*iov_free) (struct mk_iov *);
+    int (*iov_add_entry) (struct mk_iov *, char *, int, mk_pointer, int);
+    int (*iov_set_entry) (struct mk_iov *, char *, int, int, int);
+    ssize_t (*iov_send) (int, struct mk_iov *, int);
+    void (*iov_print) (struct mk_iov *);
+    void (*pointer_set) (mk_pointer *, char *);
+    void (*pointer_print) (mk_pointer);
     void *(*plugin_load_symbol) (void *, char *);
-    void *(*socket_cork_flag) (int, int);
-    void *(*socket_set_tcp_nodelay) (int);
-    void *(*socket_connect) (int, char *, int);
-    void *(*socket_set_nonblocking) (int);
-    void *(*socket_create) ();
-    void *(*config_create) (char *);
-    void *(*config_free) (struct mk_config *);
+    int (*socket_cork_flag) (int, int);
+    int (*socket_set_tcp_nodelay) (int);
+    int (*socket_connect) (int, char *, int);
+    int (*socket_set_nonblocking) (int);
+    int (*socket_create) ();
+    struct mk_config *(*config_create) (char *);
+    void (*config_free) (struct mk_config *);
     void *(*config_getval) (struct mk_config *, char *, int);
-    void *(*sched_get_connection) (struct sched_list_node *, int);
-    void *(*event_add) (int, struct plugin *, struct client_request *, 
+    struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
+                                                      int);
+    int (*event_add) (int, struct plugin *, struct client_request *, 
                         struct request *);
-    void *(*event_socket_change_mode) (int, int);
+    int (*event_socket_change_mode) (int, int);
 
 #ifdef TRACE
-    void *(*trace)();
+    void (*trace)();
 #endif
 
 };
@@ -242,4 +243,6 @@ int mk_plugin_event_close(int socket);
 int mk_plugin_event_timeout(int socket);
 
 void mk_plugin_register_to(struct plugin **st, struct plugin *p);
+void *mk_plugin_load_symbol(void *handler, const char *symbol);
+
 #endif

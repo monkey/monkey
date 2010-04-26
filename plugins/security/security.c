@@ -124,7 +124,7 @@ int mk_security_check_url(mk_pointer url)
     p = rules;
     while (p) {
         if (p->type == MK_SECURITY_TYPE_URL) {
-            n = (int) mk_api->str_search_n(url.data, p->value, url.len);
+            n = mk_api->str_search_n(url.data, p->value, url.len);
             if (n >= 0) {
                 return -1;
             }
