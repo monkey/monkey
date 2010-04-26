@@ -44,6 +44,7 @@ class BigPalm:
             p.kill_childs()
         
         exit(0)
+
     def print_info(self):
         print "Monkey Palm Server", VERSION
         print "Visit us: http://www.monkey-project.com"

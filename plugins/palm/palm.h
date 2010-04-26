@@ -83,5 +83,6 @@ struct mk_palm_request *mk_palm_request_get(int socket);
 void mk_palm_request_add(struct mk_palm_request *pr);
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                             struct client_request *cr, struct request *sr);
+void mk_palm_send_request(struct client_request *cr, struct request *sr);
 
 #endif

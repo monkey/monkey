@@ -26,13 +26,13 @@ class Child:
         self._s = s
         self.conf = conf
         self.split_conf()
-        
+
         # On child end, re-create it
 	signal.signal(signal.SIGCHLD, self._child_exit)
-        
+
         # Start our child
         self._create()
-    
+
     def split_conf(self):
         try:
             opts = self.conf.opts.split()
@@ -82,7 +82,7 @@ class Child:
                 buf += data
                 if buf[-4:] == '\r\n\r\n':
                     break;
-   
+
         try:
             if os.environ['PALM_DEBUG'] is not None:
                 print buf
@@ -125,10 +125,10 @@ class Child:
 
 	    flags = fcntl.fcntl(remote_fd, fcntl.F_GETFD)
             try:
-                flags |= fcntl.FD_CLOEXEC	
+                flags |= fcntl.FD_CLOEXEC
             except AttributeError, e:
                 flags |= 1
-            
+
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
 
 
@@ -150,12 +150,13 @@ class Child:
                 opts.append(request.resource)
 
             os.dup2(remote.fileno(), sys.stdout.fileno())
+
             try:
                 os.execve(bin, opts, request.headers)
             except:
                 exit(1)
 
-    
+
     def write_to_parent(self, message):
         time.sleep(1)
         n = os.write(self.int_w, message)
@@ -176,6 +177,10 @@ class Request:
     def __init__(self, resource):
         self.resource = resource
         self.headers = {}
+
+    def __str__(self):
+        ret = str(self.resource) + ' ' + str(self.headers);
+        return ret
 
     def add_header(self, key, val):
         self.headers[key] = val
