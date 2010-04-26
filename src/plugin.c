@@ -156,12 +156,6 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     p->stage.s40 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_40");
 
-    p->stage.s40_event_read = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_stage_40_event_read");
-
-    p->stage.s40_event_write = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_stage_40_event_write");
-
     p->stage.s50 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_50");
 
@@ -200,6 +194,23 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     /* Thread key */
     p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler,
                                                           "_mkp_data");
+
+    /* Event handlers hooks */
+    p->event_read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_read");
+
+    p->event_write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_write");
+
+    p->event_error = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_error");
+
+    p->event_close = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_close");
+
+    p->event_timeout = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_timeout");
+
     /* Next ! */
     p->next = NULL;
 
@@ -669,8 +680,8 @@ int mk_plugin_event_read(int socket)
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->stage.s40_event_read) {
-        event->handler->stage.s40_event_read(event->cr, event->sr);
+    if (event->handler->event_read) {
+        event->handler->event_read(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -689,8 +700,8 @@ int mk_plugin_event_write(int socket)
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->stage.s40_event_write) {
-        event->handler->stage.s40_event_write(event->cr, event->sr);
+    if (event->handler->event_write) {
+        event->handler->event_write(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -698,29 +709,60 @@ int mk_plugin_event_write(int socket)
 
 int mk_plugin_event_error(int socket)
 {
+    struct plugin_event *event;
+
 #ifdef TRACE
     MK_TRACE("Plugin, event error FD %i", socket);
 #endif
 
-    return 0;
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_error) {
+        event->handler->event_error(event->cr, event->sr);
+    }
+
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_close(int socket)
 {
+    struct plugin_event *event;
 
 #ifdef TRACE
     MK_TRACE("Plugin, event close FD %i", socket);
 #endif
+
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_close) {
+        event->handler->event_close(event->cr, event->sr);
+    }
 
     return 0;
 }
 
 int mk_plugin_event_timeout(int socket)
 {
+    struct plugin_event *event;
 
 #ifdef TRACE
     MK_TRACE("Plugin, event timeout FD %i", socket);
 #endif
+
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_timeout) {
+        event->handler->event_timeout(event->cr, event->sr);
+    }
 
     return 0;
 }

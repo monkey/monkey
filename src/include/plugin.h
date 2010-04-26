@@ -106,13 +106,20 @@ struct plugin
 
     /* Mandatory calls */
     int (*init) (void *, char *);
-    int (*exit) ();
+    int  (*exit) ();
 
     /* Hook functions by type */
     struct plugin_core core;
     struct plugin_stage stage;
     struct plugin_network_io net_io;
     struct plugin_network_ip net_ip;
+
+    /* Epoll Events */
+    int (*event_read) (struct client_request *, struct request *sr);
+    int (*event_write) (struct client_request *, struct request *sr);
+    int (*event_error) (struct client_request *, struct request *sr);
+    int (*event_close) (struct client_request *, struct request *sr);
+    int (*event_timeout) (struct client_request *, struct request *sr);
 
     /* Each plugin has a thread key for it's global data */
     pthread_key_t thread_key;
