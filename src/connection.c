@@ -160,12 +160,19 @@ int mk_conn_write(int socket)
 
 int mk_conn_error(int socket)
 {
+    int ret = -1;
     struct client_request *cr;
     struct sched_list_node *sched;
 
 #ifdef TRACE
     MK_TRACE("Connection Handler, error on FD %i", socket);
 #endif 
+
+    /* Plugin hook */
+    ret = mk_plugin_event_error(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    } 
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(NULL, socket);
@@ -179,11 +186,18 @@ int mk_conn_error(int socket)
 
 int mk_conn_close(int socket)
 {
+    int ret = -1;
     struct sched_list_node *sched;
 
 #ifdef TRACE
     MK_TRACE("Connection Handler, closed on FD %i", socket);
 #endif
+
+    /* Plugin hook */
+    ret = mk_plugin_event_close(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    } 
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
@@ -193,11 +207,18 @@ int mk_conn_close(int socket)
 
 int mk_conn_timeout(int socket)
 {
+    int ret = -1;
     struct sched_list_node *sched;
 
 #ifdef TRACE
     MK_TRACE("Connection Handler, timeout on FD %i", socket);
 #endif
+
+    /* Plugin hook */
+    ret = mk_plugin_event_timeout(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    } 
 
     sched = mk_sched_get_thread_conf();
     mk_sched_check_timeouts(sched);

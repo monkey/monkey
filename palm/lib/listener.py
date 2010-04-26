@@ -21,7 +21,13 @@ class Listener:
     def __init__(self, port):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._reset_socket()
-        self.s.bind(("", port))
+
+        try:
+            self.s.bind(("", port))
+        except:
+            print "\nError: I cannot bind port", port
+            exit(1)
+
         self.s.listen(20)
         self.sfd = self.s.fileno()
 

@@ -392,8 +392,8 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
     //   palm = mk_palm_get_handler(&sr->uri);
 
     /* Connecting to Palm Server */
-    palm_socket = (int) mk_api->socket_create();
-    ret = (int) mk_api->socket_connect(palm_socket,
+    palm_socket = mk_api->socket_create();
+    ret = mk_api->socket_connect(palm_socket,
                                        palm->server_addr,
                                        palm->server_port);
 
