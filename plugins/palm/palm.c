@@ -383,7 +383,8 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
 }
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
-                                            struct client_request *cr, struct request *sr)
+                                            struct client_request *cr, 
+                                            struct request *sr)
 {
     int ret;
     int palm_socket;
@@ -527,7 +528,6 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
 
 
     mk_api->socket_cork_flag(socket, TCP_CORK_ON);
-
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
 
     n = write(socket, chunk_size, chunk_len);
@@ -599,7 +599,8 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
                     PLUGIN_TRACE("***********");
                 }
 
-                headers_end = (int) mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF);
+                headers_end = (int) mk_api->str_search(pr->data_read, 
+                                                       MK_IOV_CRLFCRLF);
             }
 
             if (headers_end > 0) {

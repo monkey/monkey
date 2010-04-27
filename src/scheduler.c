@@ -102,6 +102,7 @@ int mk_sched_launch_thread(int max_events)
 
     thconf = mk_mem_malloc(sizeof(sched_thread_conf));
     thconf->epoll_fd = efd;
+    thconf->epoll_max_events = max_events*2;
     thconf->max_events = max_events;
 
     pthread_attr_init(&attr);
@@ -153,7 +154,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
     thinfo->pid = syscall(__NR_gettid);
 
     mk_sched_set_thread_poll(thconf->epoll_fd);
-    mk_epoll_init(thconf->epoll_fd, handler, thconf->max_events);
+    mk_epoll_init(thconf->epoll_fd, handler, thconf->epoll_max_events);
 
     return 0;
 }

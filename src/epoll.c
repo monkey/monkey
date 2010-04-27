@@ -39,8 +39,6 @@
 #include "epoll.h"
 #include "utils.h"
 
-#define MAX_EVENTS 5000
-
 mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*write) (int),
                                          void (*error) (int),
@@ -76,7 +74,8 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     int i, fd, ret = -1;
     int num_fds;
     int fds_timeout;
-    struct epoll_event events[max_events];
+
+    struct epoll_event *events;
     struct sched_list_node *sched;
 
     /* Get thread conf */
@@ -86,6 +85,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     pthread_mutex_unlock(&mutex_wait_register);
 
     fds_timeout = log_current_utime + config->timeout;
+    events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
 
     while (1) {
         num_fds = epoll_wait(efd, events, max_events, MK_EPOLL_WAIT_TIMEOUT);
@@ -94,7 +94,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             fd = events[i].data.fd;
 
             // Case 1: Error condition
-            if (events[i].events & (EPOLLHUP | EPOLLERR)) {
+            if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
                 (*handler->error) (fd);
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
@@ -134,9 +134,10 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 {
     int ret;
-    struct epoll_event event = { EPOLLERR | EPOLLHUP };
+    struct epoll_event event;
 
     event.data.fd = fd;
+    event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
 
     if (behavior == MK_EPOLL_BEHAVIOR_TRIGGERED) {
         event.events |= EPOLLET;
