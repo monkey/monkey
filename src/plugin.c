@@ -312,35 +312,48 @@ void mk_plugin_init()
     api->sched_list = &sched_list;
 
     /* API plugins funcions */
+    /* Memory callbacks */
+    api->pointer_set = (void *) mk_pointer_set;
+    api->pointer_print = (void *) mk_pointer_print;
+    api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
     api->mem_alloc = (void *) mk_mem_malloc;
     api->mem_alloc_z = (void *) mk_mem_malloc_z;
     api->mem_free = (void *) mk_mem_free;
+    /* String Callbacks */
     api->str_build = (void *) mk_string_build;
     api->str_dup = (void *) mk_string_dup;
     api->str_search = (void *) mk_string_search;
     api->str_search_n = (void *) mk_string_search_n;
     api->str_copy_substr = (void *) mk_string_copy_substr;
     api->str_split_line = (void *) mk_string_split_line;
+    /* File Callbacks */
     api->file_to_buffer = (void *) mk_file_to_buffer;
     api->file_get_info = (void *) mk_file_get_info;
+    /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
+    /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;
     api->iov_free = (void *) mk_iov_free;
     api->iov_add_entry = (void *) mk_iov_add_entry;
     api->iov_set_entry = (void *) mk_iov_set_entry;
     api->iov_send = (void *) mk_iov_send;
     api->iov_print = (void *) mk_iov_print;
-    api->pointer_set = (void *) mk_pointer_set;
-    api->pointer_print = (void *) mk_pointer_print;
-    api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
+    /* Socket callbacks */
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
     api->socket_connect = (void *) mk_socket_connect;
     api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
     api->socket_set_nonblocking = (void *) mk_socket_set_nonblocking;
     api->socket_create = (void *) mk_socket_create;
+    api->socket_close = (void *) mk_socket_close;
+    api->socket_sendv = (void *) mk_socket_sendv;
+    api->socket_send = (void *) mk_socket_send;
+    api->socket_read = (void *) mk_socket_read;
+    api->socket_send_file = (void *) mk_socket_send_file;
+    /* Config Callbacks */
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;
     api->config_getval = (void *) mk_config_getval;
+    /* Scheduler and Event callbacks */
     api->sched_get_connection = (void *) mk_sched_get_connection;
     api->event_add = (void *) mk_plugin_event_add;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;

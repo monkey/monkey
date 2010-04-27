@@ -1,3 +1,7 @@
 *.[ao]
 *~
 *.so
+*.pyc
+bin/*
+conf/*
+Makefile
