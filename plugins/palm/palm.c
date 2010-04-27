@@ -28,7 +28,6 @@
 #include "config.h"
 #include "plugin.h"
 #include "str.h"
-#include "palm.h"
 #include "http.h"
 #include "http_status.h"
 #include "monkey.h"
@@ -38,11 +37,12 @@
 
 #include "cgi.h"
 #include "palm.h"
+#include "request.h"
 
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "palm";
 mk_plugin_data_t _name = "Palm";
-mk_plugin_data_t _version = "0.1";
+mk_plugin_data_t _version = "0.2";
 mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_40;
 
 /* Read database configuration parameters */
@@ -360,27 +360,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-struct mk_palm_request *mk_palm_request_create(int client_fd,
-                                               int palm_fd,
-                                               struct client_request *cr,
-                                               struct request *sr,
-                                               struct mk_palm *palm)
-{
-    struct mk_palm_request *new;
 
-    new = mk_api->mem_alloc(sizeof(struct mk_palm_request));
-    new->client_fd = client_fd;
-    new->palm_fd = palm_fd;
-    new->palm = palm;
-    new->bytes_sent = 0;
-    new->bytes_read = 0;
-    new->headers_sent = VAR_OFF;
-    new->cr = cr;
-    new->sr = sr;
-    new->next = NULL;
-
-    return new;
-}
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                             struct client_request *cr, 
@@ -408,82 +388,6 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
 
     /* Return instance */
     return mk_palm_request_create(cr->socket, palm_socket, cr, sr, palm);
-}
-
-void mk_palm_request_add(struct mk_palm_request *pr)
-{
-    struct mk_palm_request *pr_list, *aux;
-
-    /* Get thread data */
-    pr_list = pthread_getspecific(_mk_plugin_data);
-
-    /* No connection previously was found */
-    if(!pr_list) {
-        pthread_setspecific(_mk_plugin_data, pr);
-        return;
-    }
-
-    /* Add Node */
-    aux = pr_list;
-    while(aux->next){
-        aux = aux->next;
-    }
-
-    aux->next = pr;
-    pthread_setspecific(_mk_plugin_data, pr_list);
-}
-
-/* It register the request and connection data, if it doesn't
- * exists it will be create it, otherwise will return the pointer
- * to the mk_palm_request struct node
- */
-struct mk_palm_request *mk_palm_request_get(int socket)
-{
-    struct mk_palm_request *pr, *aux;
-
-    /* Get thread data */
-    pr = pthread_getspecific(_mk_plugin_data);
-
-    /* No connection previously was found */
-    if(!pr) {
-        return NULL;
-    }
-
-    /* Look for node */
-    aux = pr;
-    while(aux){
-        if(aux->client_fd == socket){
-            return aux;
-        }
-        aux = aux->next;
-    }
-
-    return NULL;
-}
-
-void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
-{
-    struct mk_palm_request *aux, *list;
-
-    list = pthread_getspecific(_mk_plugin_data);
-
-    if (!list) {
-        return;
-    }
-
-    aux = list;
-    while (aux) {
-        if (aux->client_fd == socket) {
-            aux->bytes_sent = pr->bytes_sent;
-            aux->bytes_read = pr->bytes_read;
-            aux->headers_sent = pr->headers_sent;
-
-            /* Update data */
-            pthread_setspecific(_mk_plugin_data, list);
-            return;
-        }
-        aux = aux->next;
-    }
 }
 
 void mk_palm_send_request(struct client_request *cr, struct request *sr)
@@ -577,51 +481,51 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     if (pr->len_read < 0) {
         perror("read");
     }
+    else if(pr->len_read == 0) {
 
-    PLUGIN_TRACE("Bytes read from FD %i: %i", pr->palm_fd, pr->len_read);
-
-    if (pr->len_read >=0) {
+    }
+    else if (pr->len_read > 0) {
         if (pr->headers_sent == VAR_OFF) {
-            headers_end = (int) mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF);
-
+            headers_end = (int) mk_api->str_search(pr->data_read,
+                                                   MK_IOV_CRLFCRLF);
             /* Look for headers end */
             while (headers_end == -1) {
                 PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
-
+                
                 n = read(pr->palm_fd,
                          pr->data_read + pr->len_read,
                          (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
-
+                
                 if (n >=0) {
                     pr->len_read += n;
                 }
                 else{
                     PLUGIN_TRACE("***********");
                 }
-
+                
                 headers_end = (int) mk_api->str_search(pr->data_read, 
                                                        MK_IOV_CRLFCRLF);
             }
-
+            
             if (headers_end > 0) {
                 headers_end += 4;
             }
             else {
                 PLUGIN_TRACE("SOMETHING BAD HAPPENS");
             }
-
+            
             /* FIXME: What about if this write() wrote partial headers ? ugh! */
             n = write(cr->socket, pr->data_read, headers_end);
-
+            
             PLUGIN_TRACE("Headers written: %i", n);
-
+            
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
             read_offset = headers_end;
-
+            
             mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         }
-
+        
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
             PLUGIN_TRACE("LOOP");

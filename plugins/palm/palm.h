@@ -38,34 +38,6 @@ struct mk_palm
     struct mk_palm *next;
 };
 
-struct mk_palm_request
-{
-    int client_fd;
-    int palm_fd;
-
-    char data_pending[MK_PALM_BUFFER_SIZE*2];
-    char data_read[MK_PALM_BUFFER_SIZE];
-
-  
-    int len_pending;
-    int len_read;
-    int offset_pending;
-
-    /* Traffic bytes between plugin and Palm server */
-    unsigned long bytes_sent;
-    unsigned long bytes_read;
-    int headers_sent;
-
-    struct mk_palm *palm;
-
-    /* Client request data */
-    struct client_request *cr;
-    struct request *sr;
-
-    /* Next node */
-    struct mk_palm_request *next;
-};
-
 pthread_key_t _mk_plugin_data;
 
 struct plugin_api *mk_api;
@@ -79,8 +51,6 @@ mk_pointer mk_iov_equal;
 
 struct mk_palm *palms;
 
-struct mk_palm_request *mk_palm_request_get(int socket);
-void mk_palm_request_add(struct mk_palm_request *pr);
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                             struct client_request *cr, struct request *sr);
 void mk_palm_send_request(struct client_request *cr, struct request *sr);
