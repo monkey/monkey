@@ -88,6 +88,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
 
     while (1) {
+        ret = -1;
         num_fds = epoll_wait(efd, events, max_events, MK_EPOLL_WAIT_TIMEOUT);
 
         for (i = 0; i < num_fds; i++) {
@@ -95,10 +96,10 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
             // Case 1: Error condition
             if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-                (*handler->error) (fd);
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
 #endif
+                (*handler->error) (fd);
                 continue;
             }
 
