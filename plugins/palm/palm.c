@@ -363,7 +363,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
 
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
-                                            struct client_request *cr, 
+                                            struct client_request *cr,
                                             struct request *sr)
 {
     int ret;
@@ -433,7 +433,7 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
 
     mk_api->socket_cork_flag(socket, TCP_CORK_ON);
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
-
+    printf("Aqui va %s\n", chunk_size);
     n = write(socket, chunk_size, chunk_len);
     mk_api->mem_free(chunk_size);
 
@@ -491,41 +491,41 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             /* Look for headers end */
             while (headers_end == -1) {
                 PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
-                
+
                 n = read(pr->palm_fd,
                          pr->data_read + pr->len_read,
                          (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
-                
+
                 if (n >=0) {
                     pr->len_read += n;
                 }
                 else{
                     PLUGIN_TRACE("***********");
                 }
-                
-                headers_end = (int) mk_api->str_search(pr->data_read, 
+
+                headers_end = (int) mk_api->str_search(pr->data_read,
                                                        MK_IOV_CRLFCRLF);
             }
-            
+
             if (headers_end > 0) {
                 headers_end += 4;
             }
             else {
                 PLUGIN_TRACE("SOMETHING BAD HAPPENS");
             }
-            
+
             /* FIXME: What about if this write() wrote partial headers ? ugh! */
             n = write(cr->socket, pr->data_read, headers_end);
-            
+
             PLUGIN_TRACE("Headers written: %i", n);
-            
+
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
             read_offset = headers_end;
-            
+
             mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         }
-        
+
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
             PLUGIN_TRACE("LOOP");
@@ -564,7 +564,8 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
 
 void _mkp_event_close(struct client_request *cr, struct request *sr)
 {
-    PLUGIN_TRACE( "CLOSE CLOSE " );
+    PLUGIN_TRACE("Closing socket to Palm server");
+    mk_api->socket_close(cr->socket);
 }
 
 void _mkp_event_error(struct client_request *cr, struct request *sr)

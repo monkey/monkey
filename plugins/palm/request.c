@@ -22,6 +22,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
+#include "config.h"
+#include "plugin.h"
 #include "monkey.h"
 #include "palm.h"
 
