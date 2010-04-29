@@ -245,38 +245,6 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     return iov;
 }
 
-/*
-int mk_palm_send_response(struct client_request *cr, struct request *sr,
-                          char *buf)
-{
-    int len;
-    int i;
-    long n;
-    char *s;
-    char *status_msg = "Status: ";
-
-    len = 8;
-    if (strncasecmp(buf, status_msg, len) == 0) {
-        i = (int) mk_api->str_search(buf + len, " ");
-        s = mk_api->str_copy_substr(buf, len, len + i);
-        sr->headers->status = atoi(s);
-        i = (int) mk_api->str_search(buf, mk_crlf.data) + mk_crlf.len;
-    }
-    else {
-        i = 0;
-        sr->headers->status = M_HTTP_OK;
-    }
-
-    sr->headers->cgi = SH_CGI;
-    sr->headers->content_length = 0;
-
-    mk_api->socket_cork_flag(cr->socket, TCP_CORK_ON);
-    mk_api->header_send(cr->socket, cr, sr, sr->log);
-    n = mk_api->socket_send(cr->socket, buf + i, strlen(buf + i));
-    return 0;
-}
-*/
-
 int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 {
     int n;
