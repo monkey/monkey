@@ -479,11 +479,9 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
                                        pr->data_read,
                                        (MK_PALM_BUFFER_SIZE - 1));
 
-    if (pr->len_read < 0) {
-        perror("socket_read");
-    }
-    else if(pr->len_read == 0) {
-
+    if (pr->len_read <= 0) {
+        PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
+        return MK_PLUGIN_RET_END;
     }
     else if (pr->len_read > 0) {
         if (pr->headers_sent == VAR_OFF) {
