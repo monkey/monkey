@@ -149,10 +149,23 @@ void mk_palm_request_delete(int socket)
                 }
                 prev->next = aux->next;
             }
-            mk_mem_free(aux);
+            mk_api->mem_free(aux);
             return;
         }
         aux = aux->next;
     }
 }
 
+void mk_palm_free_request(int sockfd)
+{
+    struct mk_palm_request *pr;
+
+    /* get palm request node */
+    pr = mk_palm_request_get(sockfd);
+
+    /* close palm socket */
+    mk_api->socket_close(pr->palm_fd);
+
+    /* delete palm request node */
+    mk_palm_request_delete(sockfd);
+}

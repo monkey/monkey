@@ -526,14 +526,19 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     return ret;
 }
 
-void _mkp_event_close(struct client_request *cr, struct request *sr)
+int _mkp_event_close(struct client_request *cr, struct request *sr)
 {
-    PLUGIN_TRACE("Closing socket to Palm server");
-    mk_api->socket_close(cr->socket);
+    PLUGIN_TRACE("event close");
+    mk_palm_free_request(cr->socket);
+
+    return MK_PLUGIN_RET_END;
 }
 
-void _mkp_event_error(struct client_request *cr, struct request *sr)
+int _mkp_event_error(struct client_request *cr, struct request *sr)
 {
-    PLUGIN_TRACE( " ERROR ERROR " );
-    mk_api->socket_close(cr->socket);
+    PLUGIN_TRACE("event error");
+    mk_palm_free_request(cr->socket);
+
+    return MK_PLUGIN_RET_END;
 }
+

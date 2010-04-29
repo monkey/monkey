@@ -61,5 +61,5 @@ void mk_palm_request_add(struct mk_palm_request *pr);
 struct mk_palm_request *mk_palm_request_get(int socket);
 void mk_palm_request_update(int socket, struct mk_palm_request  *pr);
 void mk_palm_request_delete(int socket);
-
+void mk_palm_free_request(int sockfd);
 #endif

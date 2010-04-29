@@ -711,7 +711,7 @@ int mk_plugin_event_error(int socket)
     }
 
     if (event->handler->event_error) {
-        event->handler->event_error(event->cr, event->sr);
+        return event->handler->event_error(event->cr, event->sr);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
