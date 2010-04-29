@@ -433,7 +433,6 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
 
     mk_api->socket_cork_flag(socket, TCP_CORK_ON);
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
-    printf("Aqui va %s\n", chunk_size);
     n = mk_api->socket_send(socket, chunk_size, chunk_len);
     mk_api->mem_free(chunk_size);
 
