@@ -272,7 +272,7 @@ int mk_palm_send_response(struct client_request *cr, struct request *sr,
 
     mk_api->socket_cork_flag(cr->socket, TCP_CORK_ON);
     mk_api->header_send(cr->socket, cr, sr, sr->log);
-    n = write(cr->socket, buf + i, strlen(buf + i));
+    n = mk_api->socket_send(cr->socket, buf + i, strlen(buf + i));
     return 0;
 }
 */
@@ -434,25 +434,25 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     mk_api->socket_cork_flag(socket, TCP_CORK_ON);
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
     printf("Aqui va %s\n", chunk_size);
-    n = write(socket, chunk_size, chunk_len);
+    n = mk_api->socket_send(socket, chunk_size, chunk_len);
     mk_api->mem_free(chunk_size);
 
     if (n < 0) {
-        PLUGIN_TRACE("Error sending chunked header, write() returned %i", n);
-        perror("write");
+        PLUGIN_TRACE("Error sending chunked header, socket_send() returned %i", n);
+        perror("socket_send");
         return -1;
     }
 
-    n = write(socket, buffer, len);
+    n = mk_api->socket_send(socket, buffer, len);
     PLUGIN_TRACE("SEND CHUNK: requested %i, sent %i", len, n);
 
     if (n < 0) {
-        PLUGIN_TRACE("Error sending chunked body, write() returned %i", n);
-        perror("write");
+        PLUGIN_TRACE("Error sending chunked body, socket_send() returned %i", n);
+        perror("socket_send");
         return -1;
     }
 
-    write(socket, MK_CRLF, 2);
+    mk_api->socket_send(socket, MK_CRLF, 2);
     mk_api->socket_cork_flag(socket, TCP_CORK_OFF);
     return n;
 }
@@ -476,10 +476,12 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
 
     /* Read data */
-    pr->len_read = read(pr->palm_fd, pr->data_read, (MK_PALM_BUFFER_SIZE - 1));
+    pr->len_read = mk_api->socket_read(pr->palm_fd,
+                                       pr->data_read,
+                                       (MK_PALM_BUFFER_SIZE - 1));
 
     if (pr->len_read < 0) {
-        perror("read");
+        perror("socket_read");
     }
     else if(pr->len_read == 0) {
 
@@ -492,9 +494,9 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             while (headers_end == -1) {
                 PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
 
-                n = read(pr->palm_fd,
-                         pr->data_read + pr->len_read,
-                         (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
+                n = mk_api->socket_read(pr->palm_fd,
+                                        pr->data_read + pr->len_read,
+                                        (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
 
                 if (n >=0) {
                     pr->len_read += n;
@@ -514,8 +516,8 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
                 PLUGIN_TRACE("SOMETHING BAD HAPPENS");
             }
 
-            /* FIXME: What about if this write() wrote partial headers ? ugh! */
-            n = write(cr->socket, pr->data_read, headers_end);
+            /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
+            n = mk_api->socket_send(cr->socket, pr->data_read, headers_end);
 
             PLUGIN_TRACE("Headers written: %i", n);
 
@@ -535,7 +537,7 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
 
             if (n < 0) {
                 PLUGIN_TRACE("WRITE ERROR");
-                perror("write");
+                perror("socket_send");
                 return MK_PLUGIN_RET_END;
             }
             else {
