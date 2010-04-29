@@ -125,38 +125,11 @@ void mk_socket_reset(int socket)
 /* Just IPv4 for now... */
 int mk_socket_server(int port, char *listen_addr)
 {
-    int fd;
-    struct sockaddr_in local_sockaddr_in;
+    int socket_fd;
 
-    /* Create server socket */
-    fd = socket(PF_INET, SOCK_STREAM, 0);
-    mk_socket_set_tcp_nodelay(fd);
+    socket_fd = plg_netiomap->server(port, listen_addr);
 
-    local_sockaddr_in.sin_family = AF_INET;
-    local_sockaddr_in.sin_port = htons(port);
-    inet_pton(AF_INET, listen_addr, &local_sockaddr_in.sin_addr.s_addr);
-    memset(&(local_sockaddr_in.sin_zero), '\0', 8);
-
-    /* Avoid bind issues, reset socket */
-    mk_socket_reset(fd);
-
-    if (bind(fd, (struct sockaddr *) &local_sockaddr_in,
-             sizeof(struct sockaddr)) != 0) {
-        perror("bind");
-        printf("Error: Port %i cannot be used\n", port);
-        exit(1);
-    }
-
-    /* Listen queue:
-     * The queue limit is given by /proc/sys/net/core/somaxconn
-     * we need to add a dynamic function to get that value on fly
-     */
-    if ((listen(fd, mk_utils_get_somaxconn())) != 0) {
-        perror("listen");
-        exit(1);
-    }
-
-    return fd;
+    return socket_fd;
 }
 
 /* NETWORK_IO plugin functions */

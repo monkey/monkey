@@ -177,6 +177,16 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     p->net_io.send_file = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_send_file");
 
+    p->net_io.create_socket = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_create_socket");
+
+    p->net_io.bind = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_bind");
+
+    p->net_io.server = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_server");
+
+
     /* Network IP hooks */
     p->net_ip.addr = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_ip_addr");
@@ -219,21 +229,26 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     /* NETWORK_IO Plugin */
     if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
         /* Validate mandatory calls */
-        if (!p->net_io.accept || !p->net_io.read || !p->net_io.write || 
-            !p->net_io.writev || !p->net_io.close || !p->net_io.connect || 
-            !p->net_io.send_file) {
+        if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
+            !p->net_io.writev || !p->net_io.close || !p->net_io.connect ||
+            !p->net_io.send_file || !p->net_io.create_socket || !p->net_io.bind ||
+            !p->net_io.server ) {
 #ifdef TRACE
                 MK_TRACE("Networking IO plugin incomplete: %s", path);
-                MK_TRACE("Mapped Functions\naccept  :%p\nread    :%p\n\
-write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
+                MK_TRACE("Mapped Functions\naccept : %p\nread : %p\n\
+write : %p\nwritev: %p\nclose : %p\nconnect : %p\nsendfile : %p\n\
+create socket : %p\nbind : %p\nserver : %p",
                          p->net_io.accept,
                          p->net_io.read,
                          p->net_io.write,
                          p->net_io.writev,
                          p->net_io.close,
                          p->net_io.connect,
-                         p->net_io.send_file);
-#endif              
+                         p->net_io.send_file,
+                         p->net_io.create_socket,
+                         p->net_io.bind,
+                         p->net_io.server);
+#endif
                 mk_mem_free(p->path);
                 mk_mem_free(p);
                 return NULL;
@@ -244,7 +259,7 @@ write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
             plg_netiomap = &p->net_io;
         }
         else {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "\nError: Loading more than one Network IO Plugin: %s",
                     path);
             exit(1);
@@ -271,7 +286,7 @@ write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
             plg_netipmap = &p->net_ip;
         }
         else {
-            fprintf(stderr, 
+            fprintf(stderr,
                     "\nError: Loading more than one Network IP Plugin: %s",
                     path);
             exit(1);
@@ -283,7 +298,7 @@ write   :%p\nwritev  :%p\nclose   :%p\nconnect :%p\nsendfile:%p",
         config->plugins = p;
     }
     else {
-        struct plugin *plg = config->plugins;        
+        struct plugin *plg = config->plugins;
         while(plg->next){
             plg = plg->next;
         }
@@ -341,6 +356,7 @@ void mk_plugin_init()
     /* Socket callbacks */
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
     api->socket_connect = (void *) mk_socket_connect;
+    api->socket_reset = (void *) mk_socket_reset;
     api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
     api->socket_set_nonblocking = (void *) mk_socket_set_nonblocking;
     api->socket_create = (void *) mk_socket_create;
@@ -358,6 +374,8 @@ void mk_plugin_init()
     api->event_add = (void *) mk_plugin_event_add;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
 
+    /* Some useful functions =) */
+    api->get_somaxconn = (void *) mk_utils_get_somaxconn;
 #ifdef TRACE
     api->trace = (void *) mk_utils_trace;
 #endif
@@ -442,7 +460,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 30", stm->p->shortname);
-#endif              
+#endif
             ret = stm->p->stage.s30(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
@@ -482,7 +500,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 50", stm->p->shortname);
-#endif            
+#endif
             ret = stm->p->stage.s50(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_NOT_ME:
@@ -516,7 +534,7 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
 
 /* This function is called by every created worker
  * for plugins which need to set some data under a thread
- * context 
+ * context
  */
 void mk_plugin_worker_startup()
 {
@@ -550,7 +568,7 @@ void mk_plugin_preworker_calls()
         if (p->thread_key) {
             ret = pthread_key_create(&p->thread_key, NULL);
             if (ret != 0) {
-                printf("\nPlugin Error: could not create key for %s", 
+                printf("\nPlugin Error: could not create key for %s",
                        p->shortname);
                 fflush(stdout);
                 exit(1);
@@ -562,7 +580,7 @@ void mk_plugin_preworker_calls()
 
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_request *cr, 
+                        struct client_request *cr,
                         struct request *sr)
 {
     struct sched_list_node *sched;
@@ -571,11 +589,11 @@ int mk_plugin_event_add(int socket, int mode,
     struct plugin_event *event;
 
     sched = mk_sched_get_thread_conf();
-    
+
     if (!sched || !handler || !cr || !sr) {
         return -1;
     }
-    
+
     /* Event node (this list exist at thread level */
     event = mk_mem_malloc(sizeof(struct plugin_event));
     event->socket = socket;
@@ -594,14 +612,14 @@ int mk_plugin_event_add(int socket, int mode,
         while (aux->next) {
             aux = aux->next;
         }
-        
+
         aux->next = event;
         mk_plugin_event_set_list(aux);
     }
 
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
-    mk_epoll_add(sched->epoll_fd, event->socket, 
+    mk_epoll_add(sched->epoll_fd, event->socket,
                  mode, MK_EPOLL_BEHAVIOR_DEFAULT);
     return 0;
 }
@@ -611,7 +629,7 @@ int mk_plugin_event_socket_change_mode(int socket, int mode)
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
-    
+
     if (!sched) {
         return -1;
     }
@@ -632,7 +650,7 @@ struct plugin_event *mk_plugin_event_get(int socket)
 
         event = event->next;
     }
-    
+
     return NULL;
 }
 
@@ -649,9 +667,9 @@ struct plugin_event *mk_plugin_event_get_list()
 
 /* Plugin epoll event handlers
  * ---------------------------
- * this functions are called by connection.c functions as mk_conn_read(), 
- * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout 
- * 
+ * this functions are called by connection.c functions as mk_conn_read(),
+ * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout
+ *
  * Return Values:
  * -------------
  *    MK_PLUGIN_RET_EVENT_NOT_ME: There's no plugin hook associated

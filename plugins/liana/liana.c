@@ -145,3 +145,64 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
     return bytes_written;
 }
 
+int _mkp_network_io_create_socket(int domain, int type, int protocol)
+{
+    int socket_fd;
+
+    socket_fd = socket(domain, type, protocol);
+
+    return socket_fd;
+}
+
+int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t addrlen, int backlog)
+{
+    int ret;
+
+    ret = bind(socket_fd, addr, addrlen);
+
+    if( ret == -1 ) {
+        perror("Error binding socket");
+        return ret;
+    }
+
+    ret = listen(socket_fd, backlog);
+
+    if(ret == -1 ) {
+        perror("Error setting up the listener");
+        return -1;
+    }
+
+    return ret;
+}
+
+int _mkp_network_io_server(int port, char *listen_addr)
+{
+    int socket_fd;
+    int ret;
+    struct sockaddr_in local_sockaddr_in;
+
+    socket_fd = _mkp_network_io_create_socket(PF_INET, SOCK_STREAM, 0);
+    if( socket_fd == -1) {
+        perror("Error creating server socket");
+        return -1;
+    }
+    mk_api->socket_set_tcp_nodelay(socket_fd);
+
+    local_sockaddr_in.sin_family = AF_INET;
+    local_sockaddr_in.sin_port = htons(port);
+    inet_pton(AF_INET, listen_addr, &local_sockaddr_in.sin_addr.s_addr);
+    memset(&(local_sockaddr_in.sin_zero), '\0', 8);
+
+    mk_api->socket_reset(socket_fd);
+
+    ret = _mkp_network_io_bind(socket_fd, (struct sockaddr *) &local_sockaddr_in,
+                               sizeof(struct sockaddr), mk_api->get_somaxconn());
+
+    if(ret == -1) {
+        printf("Error: Port %i cannot be used\n", port);
+        return -1;
+    }
+
+
+    return socket_fd;
+}

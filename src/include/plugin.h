@@ -87,6 +87,9 @@ struct plugin_network_io
     int (*close) (int);
     int (*connect) (int, char *, int);
     int (*send_file) (int, int, off_t *, size_t);
+    int (*create_socket) (int, int, int);
+    int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
+    int (*server) (int, char *);
 };
 
 struct plugin_network_ip
@@ -186,6 +189,7 @@ struct plugin_api
     void (*pointer_print) (mk_pointer);
     void *(*plugin_load_symbol) (void *, char *);
     int (*socket_cork_flag) (int, int);
+    int (*socket_reset) (int);
     int (*socket_set_tcp_nodelay) (int);
     int (*socket_connect) (int, char *, int);
     int (*socket_set_nonblocking) (int);
@@ -203,6 +207,8 @@ struct plugin_api
     int (*event_add) (int, int, struct plugin *, struct client_request *, 
                       struct request *);
     int (*event_socket_change_mode) (int, int);
+
+    int (*get_somaxconn) ();
 
 #ifdef TRACE
     void (*trace)();
