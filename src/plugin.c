@@ -375,7 +375,7 @@ void mk_plugin_init()
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
 
     /* Some useful functions =) */
-    api->get_somaxconn = (void *) mk_utils_get_somaxconn;
+    api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
 #ifdef TRACE
     api->trace = (void *) mk_utils_trace;
 #endif

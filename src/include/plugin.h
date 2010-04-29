@@ -208,7 +208,7 @@ struct plugin_api
                       struct request *);
     int (*event_socket_change_mode) (int, int);
 
-    int (*get_somaxconn) ();
+    int (*sys_get_somaxconn) ();
 
 #ifdef TRACE
     void (*trace)();

@@ -196,7 +196,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
     mk_api->socket_reset(socket_fd);
 
     ret = _mkp_network_io_bind(socket_fd, (struct sockaddr *) &local_sockaddr_in,
-                               sizeof(struct sockaddr), mk_api->get_somaxconn());
+                               sizeof(struct sockaddr), mk_api->sys_get_somaxconn());
 
     if(ret == -1) {
         printf("Error: Port %i cannot be used\n", port);
