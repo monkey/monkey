@@ -165,7 +165,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     struct mk_iov *iov;
 
     iov = mk_api->iov_create(100, 0);
-    PLUGIN_TRACE( "Create env");
+    PLUGIN_TRACE( "Create environment for palm server");
     mk_api->iov_add_entry(iov, sr->real_path.data,
                           sr->real_path.len, mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 
@@ -177,7 +177,6 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                           sr->host_conf->documentroot.len, mk_iov_crlf,
                           MK_IOV_NOT_FREE_BUF);
 
-    PLUGIN_TRACE( "%s\n", sr->real_path.data );
     if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
         /* FIX Content length:
            mk_palm_iov_add_header(iov, mk_cgi_content_length,
@@ -322,9 +321,9 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
 
     /* Register socket with thread Epoll interface */
     mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cr, sr);
-    PLUGIN_TRACE("Palm: Event registered / client=%i / palm_socket=%i",
-                 pr->client_fd, pr->palm_fd);
+    PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
 
+    /* Send request */
     mk_palm_send_request(cr, sr);
 
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
@@ -367,7 +366,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
     struct mk_iov *iov;
     struct mk_palm_request *pr;
 
-    PLUGIN_TRACE("Handling write event");
+    PLUGIN_TRACE("Sending request to Palm Server");
 
     pr = mk_palm_request_get(cr->socket);
     if (pr) {
@@ -388,7 +387,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             }
 
             /* Socket stuff */
-            mk_api->socket_set_tcp_nodelay(pr->palm_fd);
+            //mk_api->socket_set_tcp_nodelay(pr->palm_fd);
             mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
@@ -446,10 +445,13 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     /* Reset read buffer */
     bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
 
-    /* Read data */
+    /* Read data 
     pr->len_read = mk_api->socket_read(pr->palm_fd,
                                        pr->data_read,
                                        (MK_PALM_BUFFER_SIZE - 1));
+    */
+
+    pr->len_read = recv(pr->palm_fd, pr->data_read, (MK_PALM_BUFFER_SIZE-1), MSG_WAITALL);
 
     if (pr->len_read <= 0) {
         PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
@@ -488,13 +490,13 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
             n = mk_api->socket_send(cr->socket, pr->data_read, headers_end);
 
-            PLUGIN_TRACE("Headers written: %i", n);
+            PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
 
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
             read_offset = headers_end;
 
-            mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+            //mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         }
 
         int sent = 0;
