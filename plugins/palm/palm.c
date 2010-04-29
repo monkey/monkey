@@ -314,8 +314,6 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
         return MK_PLUGIN_RET_END;
     }
 
-    mk_palm_send_headers(cr, sr);
-
     /* Register Palm instance */
     mk_palm_request_add(pr);
 
@@ -324,6 +322,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
 
     /* Send request */
+    mk_palm_send_headers(cr, sr);
     mk_palm_send_request(cr, sr);
 
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
@@ -378,7 +377,6 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             iov = mk_palm_create_env(cr, sr);
 
             /* Write request to palm server */
-            mk_api->event_socket_change_mode(pr->palm_fd, MK_EPOLL_READ);
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
 
             if (bytes_iov >= 0){
@@ -387,7 +385,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             }
 
             /* Socket stuff */
-            //mk_api->socket_set_tcp_nodelay(pr->palm_fd);
+            mk_api->socket_set_tcp_nodelay(pr->palm_fd);
             mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
@@ -445,13 +443,10 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     /* Reset read buffer */
     bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
 
-    /* Read data 
+    /* Read data */
     pr->len_read = mk_api->socket_read(pr->palm_fd,
                                        pr->data_read,
                                        (MK_PALM_BUFFER_SIZE - 1));
-    */
-
-    pr->len_read = recv(pr->palm_fd, pr->data_read, (MK_PALM_BUFFER_SIZE-1), MSG_WAITALL);
 
     if (pr->len_read <= 0) {
         PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
@@ -469,11 +464,11 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
                                         pr->data_read + pr->len_read,
                                         (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
 
-                if (n >=0) {
+                if (n > 0) {
                     pr->len_read += n;
                 }
                 else{
-                    PLUGIN_TRACE("***********");
+                    PLUGIN_TRACE("********* FIXME ***********");
                 }
 
                 headers_end = (int) mk_api->str_search(pr->data_read,
@@ -495,8 +490,6 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
             read_offset = headers_end;
-
-            //mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         }
 
         int sent = 0;
@@ -518,12 +511,10 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             }
         }
 
-        mk_palm_request_update(cr->socket, pr);
-        return MK_PLUGIN_RET_CONTINUE;
-
-        /* Turn off TCP_CORK_OFF */
         mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
         ret = MK_PLUGIN_RET_CONTINUE;
+
+        mk_palm_request_update(cr->socket, pr);
     }
     else {
         PLUGIN_TRACE("BIG ERROR!");
@@ -544,4 +535,5 @@ void _mkp_event_close(struct client_request *cr, struct request *sr)
 void _mkp_event_error(struct client_request *cr, struct request *sr)
 {
     PLUGIN_TRACE( " ERROR ERROR " );
+    mk_api->socket_close(cr->socket);
 }

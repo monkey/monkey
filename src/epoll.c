@@ -187,6 +187,10 @@ int mk_epoll_change_mode(int efd, int fd, int mode)
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
     event.data.fd = fd;
 
+#ifdef TRACE
+    MK_TRACE("EPoll change mode FD %i", fd);
+#endif
+
     switch (mode) {
     case MK_EPOLL_READ:
 #ifdef TRACE
