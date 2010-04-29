@@ -45,6 +45,9 @@ int mk_conn_read(int socket)
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
+            return -1;
+        }
         return ret;
     }        
 
