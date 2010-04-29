@@ -245,6 +245,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     return iov;
 }
 
+
 int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 {
     int n;
@@ -261,11 +262,14 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
     PLUGIN_TRACE("Sending headers to FD %i", cr->socket);
 
     n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
-
+    
+    /* Monkey core send_headers set TCP_CORK_ON, we need to get
+     * back the status to OFF
+     */
+    mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
     PLUGIN_TRACE("Send headers returned %i", n);
-    return n;
 
-    //mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+    return n;
 }
 
 
