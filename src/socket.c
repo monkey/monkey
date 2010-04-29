@@ -102,37 +102,13 @@ int mk_socket_create()
     return sockfd;
 }
 
-int mk_socket_connect(int sockfd, char *server, int port)
+int mk_socket_connect(int socket_fd, char *host, int port)
 {
-    int res;
-    struct sockaddr_in *remote;
+    int ret;
 
-    remote = (struct sockaddr_in *)
-        mk_mem_malloc_z(sizeof(struct sockaddr_in));
-    remote->sin_family = AF_INET;
+    ret = plg_netiomap->connect(socket_fd, host, port);
 
-    res = inet_pton(AF_INET, server, (void *) (&(remote->sin_addr.s_addr)));
-
-    if (res < 0) {
-        perror("Can't set remote->sin_addr.s_addr");
-        mk_mem_free(remote);
-        return -1;
-    }
-    else if (res == 0) {
-        perror("Invalid IP address\n");
-        mk_mem_free(remote);
-        return -1;
-    }
-
-    remote->sin_port = htons(port);
-    if (connect(sockfd,
-                (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
-        close(sockfd);
-        perror("connect");
-        return -1;
-    }
-    mk_mem_free(remote);
-    return 0;
+    return ret;
 }
 
 void mk_socket_reset(int socket)
@@ -204,9 +180,9 @@ int mk_socket_read(int socket_fd, void *buf, int count)
     return plg_netiomap->read(socket_fd, (void *)buf, count);
 }
 
-int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, 
+int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
                         size_t file_count)
 {
-    return plg_netiomap->send_file(socket_fd, file_fd, 
+    return plg_netiomap->send_file(socket_fd, file_fd,
                                    file_offset, file_count);
 }

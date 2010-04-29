@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/sendfile.h>
@@ -56,7 +57,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     int remote_fd;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
-    remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr, 
+    remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
                         &socket_size, SOCK_NONBLOCK);
     return remote_fd;
 }
@@ -94,12 +95,42 @@ int _mkp_network_io_close(int socket_fd)
     return 0;
 }
 
-int _mkp_network_io_connect(char *host, int port)
+int _mkp_network_io_connect(int socket_fd, char *host, int port)
 {
+    int res;
+    struct sockaddr_in *remote;
+
+    remote = (struct sockaddr_in *)
+        mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
+    remote->sin_family = AF_INET;
+
+    res = inet_pton(AF_INET, host, (void *) (&(remote->sin_addr.s_addr)));
+
+    if (res < 0) {
+        perror("Can't set remote->sin_addr.s_addr");
+        mk_api->mem_free(remote);
+        return -1;
+    }
+    else if (res == 0) {
+        perror("Invalid IP address\n");
+        mk_api->mem_free(remote);
+        return -1;
+    }
+
+    remote->sin_port = htons(port);
+    if (connect(socket_fd,
+                (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
+        close(socket_fd);
+        perror("connect");
+        return -1;
+    }
+
+    mk_api->mem_free(remote);
+
     return 0;
 }
 
-int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset, 
+int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
                               size_t file_count)
 {
     ssize_t bytes_written = -1;
