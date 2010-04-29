@@ -383,8 +383,6 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                 palm->server_addr, palm->server_port);
         return NULL;
     }
-    /* Set palm socket to non-blocking */
-    mk_api->socket_set_nonblocking(palm_socket);
 
     /* Return instance */
     return mk_palm_request_create(cr->socket, palm_socket, cr, sr, palm);
@@ -408,20 +406,22 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             /* Palm environment vars */
             iov = mk_palm_create_env(cr, sr);
 
-            /* Setup Palm socket */
-            mk_api->socket_set_tcp_nodelay(pr->palm_fd);
             /* Write request to palm server */
+            mk_api->event_socket_change_mode(pr->palm_fd, MK_EPOLL_READ);
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
 
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
                 n = (long) bytes_iov;
             }
+
+            /* Socket stuff */
+            mk_api->socket_set_tcp_nodelay(pr->palm_fd);
+            mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
 
     PLUGIN_TRACE("Bytes sent to PALM SERVER: %i", pr->bytes_sent);
-    mk_api->event_socket_change_mode(pr->palm_fd, MK_EPOLL_READ);
 }
 
 int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
