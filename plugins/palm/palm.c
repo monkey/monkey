@@ -322,8 +322,8 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
 
     /* Send request */
-    mk_palm_send_headers(cr, sr);
     mk_palm_send_request(cr, sr);
+    mk_palm_send_headers(cr, sr);
 
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
 
@@ -367,7 +367,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
 
     PLUGIN_TRACE("Sending request to Palm Server");
 
-    pr = mk_palm_request_get(cr->socket);
+    pr = mk_palm_request_get_by_http(cr->socket);
     if (pr) {
         if (pr->bytes_sent == 0) {
 
@@ -425,7 +425,7 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     return n;
 }
 
-int _mkp_event_read(struct client_request *cr, struct request *sr)
+int _mkp_event_read(int sockfd)
 {
     int n;
     int ret = -1;
@@ -433,7 +433,7 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
     int read_offset = 0;
     struct mk_palm_request *pr;
 
-    pr = mk_palm_request_get(cr->socket);
+    pr = mk_palm_request_get(sockfd);
 
     if (!pr){
         PLUGIN_TRACE("Invalid palm request, not found");
@@ -483,7 +483,7 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             }
 
             /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
-            n = mk_api->socket_send(cr->socket, pr->data_read, headers_end);
+            n = mk_api->socket_send(sockfd, pr->data_read, headers_end);
 
             PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
 
@@ -495,7 +495,7 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
             PLUGIN_TRACE("LOOP");
-            n = mk_palm_send_chunk(cr->socket,
+            n = mk_palm_send_chunk(sockfd,
                                    pr->data_read + read_offset + sent,
                                    pr->len_read - read_offset - sent);
 
@@ -511,33 +511,33 @@ int _mkp_event_read(struct client_request *cr, struct request *sr)
             }
         }
 
-        mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+        mk_api->socket_cork_flag(sockfd, TCP_CORK_OFF);
         ret = MK_PLUGIN_RET_CONTINUE;
 
-        mk_palm_request_update(cr->socket, pr);
+        mk_palm_request_update(sockfd, pr);
     }
     else {
         PLUGIN_TRACE("BIG ERROR!");
     }
 
     /* Update thread node info */
-    mk_palm_request_update(cr->socket, pr);
+    mk_palm_request_update(sockfd, pr);
 
     return ret;
 }
 
-int _mkp_event_close(struct client_request *cr, struct request *sr)
+int _mkp_event_close(int sockfd)
 {
     PLUGIN_TRACE("event close");
-    mk_palm_free_request(cr->socket);
+    mk_palm_free_request(sockfd);
 
     return MK_PLUGIN_RET_END;
 }
 
-int _mkp_event_error(struct client_request *cr, struct request *sr)
+int _mkp_event_error(int sockfd)
 {
     PLUGIN_TRACE("event error");
-    mk_palm_free_request(cr->socket);
+    mk_palm_free_request(sockfd);
 
     return MK_PLUGIN_RET_END;
 }

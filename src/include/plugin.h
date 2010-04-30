@@ -118,11 +118,11 @@ struct plugin
     struct plugin_network_ip net_ip;
 
     /* Epoll Events */
-    int (*event_read) (struct client_request *, struct request *sr);
-    int (*event_write) (struct client_request *, struct request *sr);
-    int (*event_error) (struct client_request *, struct request *sr);
-    int (*event_close) (struct client_request *, struct request *sr);
-    int (*event_timeout) (struct client_request *, struct request *sr);
+    int (*event_read) (int);
+    int (*event_write) (int);
+    int (*event_error) (int);
+    int (*event_close) (int);
+    int (*event_timeout) (int);
 
     /* Each plugin has a thread key for it's global data */
     pthread_key_t thread_key;

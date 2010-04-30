@@ -174,6 +174,10 @@ int mk_conn_error(int socket)
     /* Plugin hook */
     ret = mk_plugin_event_error(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
+            MK_TRACE("CLOSING REQUEST");
+            return -1;
+        }
         return ret;
     } 
 

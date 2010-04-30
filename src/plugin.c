@@ -689,7 +689,7 @@ int mk_plugin_event_read(int socket)
     }
 
     if (event->handler->event_read) {
-        return event->handler->event_read(event->cr, event->sr);
+        return event->handler->event_read(socket);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -709,7 +709,7 @@ int mk_plugin_event_write(int socket)
     }
 
     if (event->handler->event_write) {
-        return event->handler->event_write(event->cr, event->sr);
+        return event->handler->event_write(socket);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -729,7 +729,7 @@ int mk_plugin_event_error(int socket)
     }
 
     if (event->handler->event_error) {
-        return event->handler->event_error(event->cr, event->sr);
+        return event->handler->event_error(socket);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -749,7 +749,7 @@ int mk_plugin_event_close(int socket)
     }
 
     if (event->handler->event_close) {
-        return event->handler->event_close(event->cr, event->sr);
+        return event->handler->event_close(socket);
     }
 
     return 0;
@@ -769,7 +769,7 @@ int mk_plugin_event_timeout(int socket)
     }
 
     if (event->handler->event_timeout) {
-        return event->handler->event_timeout(event->cr, event->sr);
+        return event->handler->event_timeout(socket);
     }
 
     return 0;

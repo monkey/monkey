@@ -99,11 +99,9 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
 #endif
-                (*handler->error) (fd);
-                continue;
+                ret = (*handler->error) (fd);
             }
-
-            if (events[i].events & EPOLLIN) {
+            else if (events[i].events & EPOLLIN) {
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i READ", fd);
 #endif

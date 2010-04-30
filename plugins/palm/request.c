@@ -91,6 +91,30 @@ struct mk_palm_request *mk_palm_request_get(int socket)
     /* Look for node */
     aux = pr;
     while(aux){
+        if(aux->palm_fd == socket){
+            return aux;
+        }
+        aux = aux->next;
+    }
+
+    return NULL;
+}
+
+struct mk_palm_request *mk_palm_request_get_by_http(int socket)
+{
+    struct mk_palm_request *pr, *aux;
+
+    /* Get thread data */
+    pr = pthread_getspecific(_mk_plugin_data);
+
+    /* No connection previously was found */
+    if(!pr) {
+        return NULL;
+    }
+
+    /* Look for node */
+    aux = pr;
+    while(aux){
         if(aux->client_fd == socket){
             return aux;
         }
@@ -112,7 +136,7 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
 
     aux = list;
     while (aux) {
-        if (aux->client_fd == socket) {
+        if (aux->palm_fd == socket) {
             aux->bytes_sent = pr->bytes_sent;
             aux->bytes_read = pr->bytes_read;
             aux->headers_sent = pr->headers_sent;
@@ -137,7 +161,7 @@ void mk_palm_request_delete(int socket)
 
     aux = list;
     while(aux) {
-        if (aux->client_fd == socket) {
+        if (aux->palm_fd == socket) {
             /* first node */
             if (aux == list) {
                 list = aux->next;
@@ -161,11 +185,8 @@ void mk_palm_free_request(int sockfd)
     struct mk_palm_request *pr;
 
     /* get palm request node */
-    pr = mk_palm_request_get(sockfd);
-
-    /* close palm socket */
-    mk_api->socket_close(pr->palm_fd);
-
+    mk_palm_request_get(sockfd); 
     /* delete palm request node */
     mk_palm_request_delete(sockfd);
+    mk_api->socket_close(sockfd);
 }
