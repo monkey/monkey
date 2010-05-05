@@ -129,6 +129,10 @@ int mk_socket_server(int port, char *listen_addr)
 
     socket_fd = plg_netiomap->server(port, listen_addr);
 
+    if (socket_fd < 0) {
+        exit(EXIT_FAILURE);
+    }
+
     return socket_fd;
 }
 
