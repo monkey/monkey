@@ -94,14 +94,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
         for (i = 0; i < num_fds; i++) {
             fd = events[i].data.fd;
 
-            // Case 1: Error condition
-            if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-#ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
-#endif
-                ret = (*handler->error) (fd);
-            }
-            else if (events[i].events & EPOLLIN) {
+            if (events[i].events & EPOLLIN) {
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i READ", fd);
 #endif
@@ -112,6 +105,13 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
                 MK_TRACE("EPoll Event, FD %i WRITE", fd);
 #endif
                 ret = (*handler->write) (fd);
+            }
+
+            if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+#ifdef TRACE
+                MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
+#endif
+                ret = (*handler->error) (fd);
             }
 
             if (ret < 0) {

@@ -109,6 +109,8 @@ class Child:
 
             request.add_header(key, val)
 
+	request.add_header("REDIRECT_STATUS", 200)
+
         try:
             if os.environ['PALM_DEBUG'] is not None:
                 for h in request.headers:
