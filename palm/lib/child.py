@@ -63,7 +63,6 @@ class Child:
             self.start_child()
 
     def _child_exit(self,a, b):
-        print "Exiting ", os.getpid()
         os.wait()
 
         os.close(self.ext_r)
@@ -109,8 +108,6 @@ class Child:
 
             request.add_header(key, val)
 
-	request.add_header("REDIRECT_STATUS", 200)
-
         try:
             if os.environ['PALM_DEBUG'] is not None:
                 for h in request.headers:
@@ -135,9 +132,8 @@ class Child:
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
 
             print "Got connection! I won! ->", os.getpid()
-            buf = self.read(remote)
-            #print "reading, ", buf
 
+            buf = self.read(remote)
             request = self.parse_request(buf)
 
             if self.c['bin'] is None:
@@ -156,8 +152,8 @@ class Child:
             try:
                 os.execve(bin, opts, request.headers)
             except:
+                print "Could not execute: ", bin, opts, request.headers
                 exit(1)
-
 
     def write_to_parent(self, message):
         time.sleep(1)
