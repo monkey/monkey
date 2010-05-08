@@ -178,10 +178,9 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                           MK_IOV_NOT_FREE_BUF);
 
     if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
-        /* FIX Content length:
-           mk_palm_iov_add_header(iov, mk_cgi_content_length,
-           sr->content_length);
-         */
+        /* FIX Content length 
+        mk_palm_iov_add_header(iov, mk_cgi_content_length, sr->headers->content_length_p);
+        */
         mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
     }
 
@@ -232,7 +231,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
     //mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
     mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
-    //mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+    mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
     /* CRLF */
     mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
@@ -509,9 +508,16 @@ int _mkp_event_read(int sockfd)
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
             PLUGIN_TRACE("LOOP");
-            n = mk_palm_send_chunk(pr->client_fd,
-                                   pr->data_read + read_offset + sent,
-                                   pr->len_read - read_offset - sent);
+            if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
+                n = mk_palm_send_chunk(pr->client_fd,
+                                       pr->data_read + read_offset + sent,
+                                       pr->len_read - read_offset - sent);
+            }
+            else {
+                n = mk_api->socket_send(pr->client_fd, 
+                                        pr->data_read + read_offset + sent,
+                                        pr->len_read - read_offset - sent);
+            }
 
             if (n < 0) {
                 PLUGIN_TRACE("WRITE ERROR");
