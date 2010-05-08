@@ -300,7 +300,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
 
     PLUGIN_TRACE("PALM STAGE 40, requesting '%s'", sr->real_path.data);
 
-    palm = mk_palm_get_handler(&sr->uri);
+    palm = mk_palm_get_handler(&sr->real_path);
     if (!palm) {
         PLUGIN_TRACE("PALM NOT ME");
         return MK_PLUGIN_RET_NOT_ME;
@@ -460,7 +460,9 @@ int _mkp_event_read(int sockfd)
     
     if (pr->len_read <= 0) {
         PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
-        n = mk_palm_send_end_chunk(pr->client_fd);
+        if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
+            n = mk_palm_send_end_chunk(pr->client_fd);
+        }
 
         return MK_PLUGIN_RET_END;
     }
