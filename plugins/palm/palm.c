@@ -178,9 +178,15 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                           MK_IOV_NOT_FREE_BUF);
 
     if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
-        /* FIX Content length 
-        mk_palm_iov_add_header(iov, mk_cgi_content_length, sr->headers->content_length_p);
-        */
+        /* Content length */
+        mk_pointer p;
+        unsigned long len;
+        char *length = 0;
+        mk_api->str_build(&length, &len, "%i", sr->content_length);
+        p.data = length;
+        p.len = len;
+
+        mk_palm_iov_add_header(iov, mk_cgi_content_length, p);
         mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
     }
 
