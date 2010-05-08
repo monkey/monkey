@@ -385,7 +385,6 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             }
 
             /* Socket stuff */
-            //mk_api->socket_set_tcp_nodelay(pr->palm_fd);
             mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
@@ -425,6 +424,14 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     return n;
 }
 
+int mk_palm_send_end_chunk(int socket)
+{
+    int n;
+
+    n = mk_api->socket_send(socket, "0\r\n\r\n", 5);
+    return n;
+}
+
 int _mkp_event_read(int sockfd)
 {
     int n;
@@ -448,8 +455,13 @@ int _mkp_event_read(int sockfd)
                                        pr->data_read,
                                        (MK_PALM_BUFFER_SIZE - 1));
 
+    PLUGIN_TRACE("socket read  : %i", pr->len_read);
+    PLUGIN_TRACE("headers sent : %i", pr->headers_sent);
+    
     if (pr->len_read <= 0) {
         PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
+        n = mk_palm_send_end_chunk(pr->client_fd);
+
         return MK_PLUGIN_RET_END;
     }
     else if (pr->len_read > 0) {
@@ -483,7 +495,7 @@ int _mkp_event_read(int sockfd)
             }
 
             /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
-            n = mk_api->socket_send(sockfd, pr->data_read, headers_end);
+            n = mk_api->socket_send(pr->client_fd, pr->data_read, headers_end);
 
             PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
 
@@ -495,7 +507,7 @@ int _mkp_event_read(int sockfd)
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
             PLUGIN_TRACE("LOOP");
-            n = mk_palm_send_chunk(sockfd,
+            n = mk_palm_send_chunk(pr->client_fd,
                                    pr->data_read + read_offset + sent,
                                    pr->len_read - read_offset - sent);
 
@@ -511,7 +523,7 @@ int _mkp_event_read(int sockfd)
             }
         }
 
-        mk_api->socket_cork_flag(sockfd, TCP_CORK_OFF);
+        mk_api->socket_cork_flag(pr->client_fd, TCP_CORK_OFF);
         ret = MK_PLUGIN_RET_CONTINUE;
 
         mk_palm_request_update(sockfd, pr);

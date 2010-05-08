@@ -182,8 +182,6 @@ void mk_palm_request_delete(int socket)
 
 void mk_palm_free_request(int sockfd)
 {
-    struct mk_palm_request *pr;
-
     /* get palm request node */
     mk_palm_request_get(sockfd); 
     /* delete palm request node */

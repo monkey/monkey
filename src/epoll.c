@@ -107,7 +107,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
                 ret = (*handler->write) (fd);
             }
 
-            if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+            else if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
 #ifdef TRACE
                 MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
 #endif
