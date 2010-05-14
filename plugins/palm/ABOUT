@@ -1,1 +1,5 @@
-Plugin to give cgi support to Monkey
+Palm Client Plugin
+==================
+Palm is a Monkey protocol designed to provide a simple and 
+flexible server applications. This plugin provides the client
+side.

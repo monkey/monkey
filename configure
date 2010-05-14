@@ -326,9 +326,13 @@ EOF
     dir=`pwd`
     plugins_load="../conf/plugins.load"
     echo -n > $plugins_load
-    echo "# Monkey plugins are loaded on run, by default all " >> $plugins_load
-    echo "# plugins are disabled, if you want to enable" >> $plugins_load
-    echo "# one, just remove the comment character for each line" >> $plugins_load
+    echo "# Monkey Plugins Loader" >> $plugins_load
+    echo "# =====================" >> $plugins_load
+    echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
+    echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
+    echo "# the absolute path for the desired plugin." >> $plugins_load
+    echo "#" >> $plugins_load
+    echo "# Please check the following list of available plugins:" >> $plugins_load
     echo "" >> $plugins_load
 
     for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
@@ -343,21 +347,26 @@ EOF
         fi
 
         if test -e $plugin_dir/OPTIONAL ; then
-            comment="#"
-        fi
+            comment="# "
+	fi
 
         echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
         sed -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         if test -e $plugin_dir/ABOUT ; then
-            cat $plugin_dir/ABOUT | sed -e 's/^/#/' >> ../conf/plugins.load
-        fi
+            cat $plugin_dir/ABOUT | sed -e 's/^/# /' >> ../conf/plugins.load
+	    echo "#" >> ../conf/plugins.load
+	else
+	    echo "#" >> ../conf/plugins.load
+	fi
 
 	if [ "$plugdir" != "" ]; then
 	    echo "${comment}LoadPlugin $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	else
 	    echo "${comment}LoadPlugin $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	fi
+
+	echo "" >> ../conf/plugins.load
     done
 
 # Add 'install' option to make file if plugdir was specified
