@@ -331,32 +331,29 @@ EOF
     echo "# one, just remove the comment character for each line" >> $plugins_load
     echo "" >> $plugins_load
 
-    list=`echo */ "" | sed "s/\/ /\n/g"`
-    for i in $list;
+    for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
     do
+        comment=""
 	if test -e $i/DISABLED ; then
             continue
 	fi
 
-        comment="#"
-        if test -e $i/ENABLED ; then
+        if test -e $i/MANDATORY ; then
 	    comment=""
         fi
 
-	echo "	@(cd $i && make && cd ..)" >> Makefile;
+        if test -e $i/OPTIONAL ; then
+            comment="#"
+        fi
+
+        echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
+        sed -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
 	if [ "$plugdir" != "" ]; then
-	    echo "${comment}LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
+	    echo "${comment}LoadPlugin $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	else
-	    echo "${comment}LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
+	    echo "${comment}LoadPlugin $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	fi
-    done
-
-    for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
-    do
-        cp $plugin_dir/Makefile.in $plugin_dir/Makefile
-        sed -i -e "s/\$CFLAGS/$CFLAGS/" $plugin_dir/Makefile
-        sed -i -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile
     done
 
 # Add 'install' option to make file if plugdir was specified
