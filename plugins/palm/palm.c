@@ -165,7 +165,9 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     struct mk_iov *iov;
 
     iov = mk_api->iov_create(100, 0);
+#ifdef TRACE
     PLUGIN_TRACE( "Create environment for palm server");
+#endif
     mk_api->iov_add_entry(iov, sr->real_path.data,
                           sr->real_path.len, mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 
@@ -263,15 +265,18 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
     }
 
     /* Send just headers from buffer */
+#ifdef TRACE
     PLUGIN_TRACE("Sending headers to FD %i", cr->socket);
-
+#endif
     n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
-    
+
     /* Monkey core send_headers set TCP_CORK_ON, we need to get
      * back the status to OFF
      */
     mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+#ifdef TRACE
     PLUGIN_TRACE("Send headers returned %i", n);
+#endif
 
     return n;
 }
@@ -303,11 +308,16 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     struct mk_palm *palm;
     struct mk_palm_request *pr;
 
+#ifdef TRACE
     PLUGIN_TRACE("PALM STAGE 40, requesting '%s'", sr->real_path.data);
+#endif
 
     palm = mk_palm_get_handler(&sr->real_path);
     if (!palm) {
+#ifdef TRACE
         PLUGIN_TRACE("PALM NOT ME");
+#endif
+
         return MK_PLUGIN_RET_NOT_ME;
     }
 
@@ -315,7 +325,10 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
     pr = mk_palm_do_instance(palm, cr, sr);
 
     if (!pr) {
+#ifdef TRACE
         PLUGIN_TRACE("return %i (MK_PLUGIN_RET_END)", MK_PLUGIN_RET_END);
+#endif
+
         return MK_PLUGIN_RET_END;
     }
 
@@ -324,13 +337,17 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
 
     /* Register socket with thread Epoll interface */
     mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cr, sr);
+#ifdef TRACE
     PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
+#endif
 
     /* Send request */
     mk_palm_send_request(cr, sr);
     mk_palm_send_headers(cr, sr);
 
+#ifdef TRACE
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
+#endif
 
     return MK_PLUGIN_RET_CONTINUE;
 }
@@ -370,14 +387,17 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
     struct mk_iov *iov;
     struct mk_palm_request *pr;
 
+#ifdef TRACE
     PLUGIN_TRACE("Sending request to Palm Server");
+#endif
 
     pr = mk_palm_request_get_by_http(cr->socket);
     if (pr) {
         if (pr->bytes_sent == 0) {
 
+#ifdef TRACE
             PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
-
+#endif
             /* Palm environment vars */
             iov = mk_palm_create_env(cr, sr);
 
@@ -394,7 +414,9 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
         }
     }
 
+#ifdef TRACE
     PLUGIN_TRACE("Bytes sent to PALM SERVER: %i", pr->bytes_sent);
+#endif
 }
 
 int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
@@ -410,16 +432,22 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     mk_api->mem_free(chunk_size);
 
     if (n < 0) {
+#ifdef TRACE
         PLUGIN_TRACE("Error sending chunked header, socket_send() returned %i", n);
+#endif
         perror("socket_send");
         return -1;
     }
 
     n = mk_api->socket_send(socket, buffer, len);
+#ifdef TRACE
     PLUGIN_TRACE("SEND CHUNK: requested %i, sent %i", len, n);
+#endif
 
     if (n < 0) {
+#ifdef TRACE
         PLUGIN_TRACE("Error sending chunked body, socket_send() returned %i", n);
+#endif
         perror("socket_send");
         return -1;
     }
@@ -448,7 +476,9 @@ int _mkp_event_read(int sockfd)
     pr = mk_palm_request_get(sockfd);
 
     if (!pr){
+#ifdef TRACE
         PLUGIN_TRACE("Invalid palm request, not found");
+#endif
         return -1;
     }
 
@@ -460,11 +490,15 @@ int _mkp_event_read(int sockfd)
                                        pr->data_read,
                                        (MK_PALM_BUFFER_SIZE - 1));
 
+#ifdef TRACE
     PLUGIN_TRACE("socket read  : %i", pr->len_read);
     PLUGIN_TRACE("headers sent : %i", pr->headers_sent);
-    
+#endif
+
     if (pr->len_read <= 0) {
+#ifdef TRACE
         PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
+#endif
         if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
             n = mk_palm_send_end_chunk(pr->client_fd);
         }
@@ -477,8 +511,9 @@ int _mkp_event_read(int sockfd)
                                                    MK_IOV_CRLFCRLF);
             /* Look for headers end */
             while (headers_end == -1) {
+#ifdef TRACE
                 PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
-
+#endif
                 n = mk_api->socket_read(pr->palm_fd,
                                         pr->data_read + pr->len_read,
                                         (MK_PALM_BUFFER_SIZE -1) - pr->len_read);
@@ -487,7 +522,9 @@ int _mkp_event_read(int sockfd)
                     pr->len_read += n;
                 }
                 else{
+#ifdef TRACE
                     PLUGIN_TRACE("********* FIXME ***********");
+#endif
                 }
 
                 headers_end = (int) mk_api->str_search(pr->data_read,
@@ -498,13 +535,17 @@ int _mkp_event_read(int sockfd)
                 headers_end += 4;
             }
             else {
+#ifdef TRACE
                 PLUGIN_TRACE("SOMETHING BAD HAPPENS");
+#endif
             }
 
             /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
             n = mk_api->socket_send(pr->client_fd, pr->data_read, headers_end);
 
+#ifdef TRACE
             PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
+#endif
 
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
@@ -513,26 +554,31 @@ int _mkp_event_read(int sockfd)
 
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
+#ifdef TRACE
             PLUGIN_TRACE("LOOP");
+#endif
             if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
                 n = mk_palm_send_chunk(pr->client_fd,
                                        pr->data_read + read_offset + sent,
                                        pr->len_read - read_offset - sent);
             }
             else {
-                n = mk_api->socket_send(pr->client_fd, 
+                n = mk_api->socket_send(pr->client_fd,
                                         pr->data_read + read_offset + sent,
                                         pr->len_read - read_offset - sent);
             }
 
             if (n < 0) {
+#ifdef TRACE
                 PLUGIN_TRACE("WRITE ERROR");
+#endif
                 perror("socket_send");
                 return MK_PLUGIN_RET_END;
             }
             else {
+#ifdef TRACE
                 PLUGIN_TRACE("BYTES SENT: %i", n);
-
+#endif
                 sent += n;
             }
         }
@@ -543,7 +589,9 @@ int _mkp_event_read(int sockfd)
         mk_palm_request_update(sockfd, pr);
     }
     else {
+#ifdef TRACE
         PLUGIN_TRACE("BIG ERROR!");
+#endif
     }
 
     /* Update thread node info */
@@ -555,9 +603,9 @@ int _mkp_event_read(int sockfd)
 int _mkp_event_close(int sockfd)
 {
     struct mk_palm_request *pr;
-
+#ifdef TRACE
     PLUGIN_TRACE("event close");
-
+#endif
     pr = mk_palm_request_get(sockfd);
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
@@ -569,8 +617,9 @@ int _mkp_event_error(int sockfd)
 {
     struct mk_palm_request *pr;
 
+#ifdef TRACE
     PLUGIN_TRACE("event error");
-
+#endif
     pr = mk_palm_request_get(sockfd);
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
