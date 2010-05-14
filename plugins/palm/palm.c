@@ -554,7 +554,12 @@ int _mkp_event_read(int sockfd)
 
 int _mkp_event_close(int sockfd)
 {
+    struct mk_palm_request *pr;
+
     PLUGIN_TRACE("event close");
+
+    pr = mk_palm_request_get(sockfd);
+    mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
 
     return MK_PLUGIN_RET_END;
@@ -562,7 +567,12 @@ int _mkp_event_close(int sockfd)
 
 int _mkp_event_error(int sockfd)
 {
+    struct mk_palm_request *pr;
+
     PLUGIN_TRACE("event error");
+
+    pr = mk_palm_request_get(sockfd);
+    mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
 
     return MK_PLUGIN_RET_END;

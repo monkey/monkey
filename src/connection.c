@@ -93,7 +93,7 @@ int mk_conn_read(int socket)
 
 int mk_conn_write(int socket)
 {
-    int ret = -1, ka;
+    int ret = -1;
     struct client_request *cr;
     struct sched_list_node *sched;
 
@@ -127,7 +127,6 @@ int mk_conn_write(int socket)
     }
 
     ret = mk_handler_write(socket, cr);
-    ka = mk_http_keepalive_check(socket, cr);
 
     /* if ret < 0, means that some error
      * happened in the writer call, in the
@@ -136,22 +135,7 @@ int mk_conn_write(int socket)
      * still need to be send.
      */
     if (ret <= 0) {
-        mk_request_free_list(cr);
-
-        /* We need to ask to http_keepalive if this 
-         * connection can continue working or we must 
-         * close it.
-         */
-        if (ka < 0 || ret < 0) {
-            mk_request_client_remove(socket);
-            return -1;
-        }
-        else {
-            mk_request_ka_next(cr);
-            mk_epoll_change_mode(sched->epoll_fd,
-                                 socket, MK_EPOLL_READ);
-            return 0;
-        }
+        return mk_http_request_end(socket);
     }
     else if (ret > 0) {
         return 0;
@@ -175,7 +159,9 @@ int mk_conn_error(int socket)
     ret = mk_plugin_event_error(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
+#ifdef TRACE
             MK_TRACE("CLOSING REQUEST");
+#endif
             return -1;
         }
         return ret;

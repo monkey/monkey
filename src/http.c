@@ -40,6 +40,7 @@
 #include "mimetype.h"
 #include "logfile.h"
 #include "header.h"
+#include "epoll.h"
 #include "plugin.h"
 
 int mk_http_method_check(mk_pointer method)
@@ -663,4 +664,44 @@ void mk_http_status_list_init()
     mk_http_status_add(redirections);
     mk_http_status_add(client_errors);
     mk_http_status_add(server_errors);
+}
+
+int mk_http_request_end(int socket)
+{
+    int ka;
+    struct client_request *cr;
+    struct sched_list_node *sched;
+
+    sched = mk_sched_get_thread_conf();
+    cr = mk_request_client_get(socket);
+    
+    if (!cr) {
+        return -1;
+    }
+
+    if (!sched) {
+#ifdef TRACE
+        MK_TRACE("Could not find sched list node :/");
+#endif
+        return -1;
+    }
+
+    mk_request_free_list(cr);
+
+    /* We need to ask to http_keepalive if this 
+     * connection can continue working or we must 
+     * close it.
+     */
+    ka = mk_http_keepalive_check(socket, cr);
+    if (ka < 0) {
+        mk_request_client_remove(socket);
+    }
+    else {
+        mk_request_ka_next(cr);
+        mk_epoll_change_mode(sched->epoll_fd,
+                             socket, MK_EPOLL_READ);
+        return 0;
+    }
+
+    return -1;
 }

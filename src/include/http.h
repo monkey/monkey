@@ -78,5 +78,6 @@ mk_pointer *mk_http_status_get(short int code);
 void mk_http_status_list_init();
 int mk_http_pending_request(struct client_request *cr);
 int mk_http_send_file(struct client_request *cr, struct request *sr);
+int mk_http_request_end(int socket);
 
 #endif

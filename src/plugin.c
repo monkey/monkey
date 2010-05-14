@@ -29,6 +29,7 @@
 #include <err.h>
 
 #include "config.h"
+#include "connection.h"
 #include "plugin.h"
 #include "monkey.h"
 #include "request.h"
@@ -37,6 +38,7 @@
 #include "str.h"
 #include "file.h"
 #include "header.h"
+#include "http.h"
 #include "memory.h"
 #include "iov.h"
 #include "epoll.h"
@@ -327,6 +329,10 @@ void mk_plugin_init()
     api->sched_list = &sched_list;
 
     /* API plugins funcions */
+
+    /* HTTP callbacks */
+    api->http_request_end = (void *) mk_plugin_http_request_end;
+
     /* Memory callbacks */
     api->pointer_set = (void *) mk_pointer_set;
     api->pointer_print = (void *) mk_pointer_print;
@@ -621,6 +627,18 @@ int mk_plugin_event_add(int socket, int mode,
        to register the socket involved to the thread epoll array */
     mk_epoll_add(sched->epoll_fd, event->socket,
                  mode, MK_EPOLL_BEHAVIOR_DEFAULT);
+    return 0;
+}
+
+int mk_plugin_http_request_end(int socket)
+{
+    int ret;
+
+    ret = mk_http_request_end(socket);
+    if (ret < 0) {
+        return mk_conn_close(socket);
+    }
+
     return 0;
 }
 

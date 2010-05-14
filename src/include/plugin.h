@@ -165,6 +165,7 @@ struct plugin_api
     struct sched_list_node **sched_list;
 
     /* Exporting Functions */
+    int *(*http_request_end) (int);
     void *(*mem_alloc) (int);
     void *(*mem_alloc_z) (int);
     void (*mem_free) (void *);
@@ -262,5 +263,6 @@ int mk_plugin_event_timeout(int socket);
 
 void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
+int mk_plugin_http_request_end(int socket);
 
 #endif
