@@ -334,20 +334,24 @@ EOF
     for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
     do
         comment=""
-	if test -e $i/DISABLED ; then
+	if test -e $plugin_dir/DISABLED ; then
             continue
 	fi
 
-        if test -e $i/MANDATORY ; then
+        if test -e $plugin_dir/MANDATORY ; then
 	    comment=""
         fi
 
-        if test -e $i/OPTIONAL ; then
+        if test -e $plugin_dir/OPTIONAL ; then
             comment="#"
         fi
 
         echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
         sed -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+
+        if test -e $plugin_dir/ABOUT ; then
+            cat $plugin_dir/ABOUT | sed -e 's/^/#/' >> ../conf/plugins.load
+        fi
 
 	if [ "$plugdir" != "" ]; then
 	    echo "${comment}LoadPlugin $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
