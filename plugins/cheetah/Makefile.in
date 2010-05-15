@@ -1,4 +1,4 @@
-CC 	= gcc
+CC 	= $CC
 CFLAGS	= $CFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include

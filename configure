@@ -351,7 +351,7 @@ EOF
 	fi
 
         echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
-        sed -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+        sed -e "s/\$CC/$CC/" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         if test -e $plugin_dir/ABOUT ; then
             cat $plugin_dir/ABOUT | sed -e 's/^/# /' >> ../conf/plugins.load
