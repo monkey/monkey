@@ -617,7 +617,13 @@ lang="en"
 
 # Configure environment
 if test -z "$CC" ; then
-    CC="gcc"
+    gcc_path=`which gcc`
+    if test -x "$gcc_path" ; then
+        CC="gcc"
+    else
+        echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler"
+        exit 1
+    fi
 fi
 
 if test -z "$STRIP" ; then
