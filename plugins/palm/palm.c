@@ -600,30 +600,36 @@ int _mkp_event_read(int sockfd)
     return ret;
 }
 
-int _mkp_event_close(int sockfd)
+int hangup(int sockfd)
 {
     struct mk_palm_request *pr;
-#ifdef TRACE
-    PLUGIN_TRACE("event close");
-#endif
+
     pr = mk_palm_request_get(sockfd);
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
+
+#ifdef TRACE
+    PLUGIN_TRACE("Hung up socket %i", sockfd);
+#endif
 
     return MK_PLUGIN_RET_END;
 }
 
+int _mkp_event_close(int sockfd)
+{
+#ifdef TRACE
+    PLUGIN_TRACE("event close");
+#endif
+
+    return hangup(sockfd);
+}
+
 int _mkp_event_error(int sockfd)
 {
-    struct mk_palm_request *pr;
-
 #ifdef TRACE
     PLUGIN_TRACE("event error");
 #endif
-    pr = mk_palm_request_get(sockfd);
-    mk_api->http_request_end(pr->client_fd);
-    mk_palm_free_request(sockfd);
 
-    return MK_PLUGIN_RET_END;
+    return hangup(sockfd);
 }
 
