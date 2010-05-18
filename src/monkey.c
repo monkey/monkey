@@ -125,6 +125,7 @@ int main(int argc, char **argv)
     }
 
 #ifdef TRACE
+    monkey_init_time = time(NULL);
     MK_TRACE("Monkey TRACE is enabled");
     envtrace = getenv("MONKEY_TRACE");
 #endif
