@@ -179,20 +179,6 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                           sr->host_conf->documentroot.len, mk_iov_crlf,
                           MK_IOV_NOT_FREE_BUF);
 
-    if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
-        /* Content length */
-        mk_pointer p;
-        unsigned long len;
-        char *length = 0;
-        mk_api->str_build(&length, &len, "%i", sr->content_length);
-        p.data = length;
-        p.len = len;
-
-        mk_palm_iov_add_header(iov, mk_cgi_content_length, p);
-        mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
-    }
-
-
     //        mk_palm_iov_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
     mk_palm_iov_add_header(iov, mk_cgi_server_name, sr->host);
     mk_palm_iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
@@ -240,6 +226,19 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     //mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
     mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
     mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+
+    if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
+        /* Content length */
+        mk_pointer p;
+        unsigned long len;
+        char *length = 0;
+        mk_api->str_build(&length, &len, "%i", sr->content_length);
+        p.data = length;
+        p.len = len;
+
+        mk_palm_iov_add_header(iov, mk_cgi_content_length, p);
+        mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
+    }
 
     /* CRLF */
     mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
@@ -403,14 +402,14 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
 
             /* Write request to palm server */
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
-
+            mk_api->iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
                 n = (long) bytes_iov;
             }
 
             /* Socket stuff */
-            mk_api->socket_set_nonblocking(pr->palm_fd);
+            //mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
 
@@ -507,8 +506,13 @@ int _mkp_event_read(int sockfd)
     }
     else if (pr->len_read > 0) {
         if (pr->headers_sent == VAR_OFF) {
-            headers_end = (int) mk_api->str_search(pr->data_read,
-                                                   MK_IOV_CRLFCRLF);
+            headers_end = mk_api->str_search(pr->data_read,
+                                             MK_IOV_CRLFCRLF);
+            if (headers_end == -1) {
+                PLUGIN_TRACE("TRYING OLD LFLF");
+                headers_end = mk_api->str_search(pr->data_read,
+                                                 MK_IOV_LFLFLFLF);
+            }
             /* Look for headers end */
             while (headers_end == -1) {
 #ifdef TRACE

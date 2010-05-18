@@ -31,6 +31,8 @@
 #define MK_IOV_CRLF "\r\n"
 #define MK_IOV_CRLFCRLF "\r\n\r\n"
 #define MK_IOV_LF "\n"
+#define MK_IOV_LFLF "\n\n"
+#define MK_IOV_LFLFLFLF "\n\n\n\n"
 #define MK_IOV_SPACE " "
 #define MK_IOV_SLASH "/"
 #define MK_IOV_NONE ""

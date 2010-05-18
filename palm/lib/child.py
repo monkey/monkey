@@ -147,6 +147,7 @@ class Child:
                 opts = self.c['opts']
                 opts.append(request.resource)
 
+            print "command:", bin, opts
             os.dup2(remote.fileno(), sys.stdout.fileno())
 
             try:
