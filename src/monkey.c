@@ -124,6 +124,11 @@ int main(int argc, char **argv)
         config->file_config = MONKEY_PATH_CONF;
     }
 
+#ifdef TRACE
+    MK_TRACE("Monkey TRACE is enabled");
+    envtrace = getenv("MONKEY_TRACE");
+#endif
+
     mk_version();
     mk_signal_init();
     mk_config_start_configure();
@@ -165,12 +170,6 @@ int main(int argc, char **argv)
 
     /* Print server details */
     mk_details();
-
-#ifdef TRACE
-    fprintf(stderr, "\n");
-    MK_TRACE("Monkey TRACE is enabled");
-    envtrace = getenv("MONKEY_TRACE");
-#endif
 
     /* Plugins Stage 10 */
     mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
