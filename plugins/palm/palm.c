@@ -102,6 +102,11 @@ int mk_palm_conf(char *confdir)
         new->server_port = atoi(lp->val);
         lp = lp->next;
 
+#ifdef TRACE
+        PLUGIN_TRACE("RegPalm '%s|%s|%s|%i'", new->extension, new->mimetype,
+                     new->server_addr, new->server_port);
+#endif
+
         new->next = NULL;
 
         /* Linking node */
