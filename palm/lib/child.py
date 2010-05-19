@@ -153,7 +153,21 @@ class Child:
             try:
                 os.execve(bin, opts, request.headers)
             except:
-                print "Could not execute: ", bin, opts, request.headers
+                print "Content-Type: text/plain\r\n\r\n"
+
+                print "*** INTERNAL ERROR ***"
+                print 
+
+                print "Child Executing"
+                print "---------------"
+                print bin, opts
+
+                print
+                print "Palm Enviroment variables"
+                print "-------------------------"
+                for h in request.headers:
+                    print h, "=", request.headers[h]
+
                 exit(1)
 
     def write_to_parent(self, message):
