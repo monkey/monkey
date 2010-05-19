@@ -317,7 +317,7 @@ int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct reque
 #endif
 
     palm = mk_palm_get_handler(&sr->real_path);
-    if (!palm) {
+    if (!palm || !sr->file_info) {
 #ifdef TRACE
         PLUGIN_TRACE("PALM NOT ME");
 #endif
