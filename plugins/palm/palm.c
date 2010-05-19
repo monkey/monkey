@@ -407,14 +407,14 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
 
             /* Write request to palm server */
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
-            mk_api->iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
+
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
                 n = (long) bytes_iov;
             }
 
             /* Socket stuff */
-            //mk_api->socket_set_nonblocking(pr->palm_fd);
+            mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
 
@@ -518,6 +518,7 @@ int _mkp_event_read(int sockfd)
                 headers_end = mk_api->str_search(pr->data_read,
                                                  MK_IOV_LFLFLFLF);
             }
+
             /* Look for headers end */
             while (headers_end == -1) {
 #ifdef TRACE
