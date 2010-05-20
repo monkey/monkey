@@ -19,7 +19,7 @@ import sys
 import time
 import signal
 import fcntl
-from epoll import *
+from debug import *
 
 class Child:
     def __init__(self, s, conf):
@@ -50,7 +50,9 @@ class Child:
         pid = os.fork()
         if pid:
             self._pid = pid
-            print "My PID " + str(pid)
+
+            debug("    Creating child PID " + str(pid))
+
             # Close unused pipe ends
             os.close(self.int_w)
             os.close(self.int_r)
@@ -83,12 +85,6 @@ class Child:
                 if buf[-4:] == '\r\n\r\n':
                     break;
 
-        try:
-            if os.environ['PALM_DEBUG'] is not None:
-                print buf
-        except:
-            pass
-
         return buf
 
     def parse_request(self, data):
@@ -108,12 +104,13 @@ class Child:
 
             request.add_header(key, val)
 
-        try:
-            if os.environ['PALM_DEBUG'] is not None:
-                for h in request.headers:
-                    print h + ' = \'' + request.headers[h] + '\''
-        except:
-            pass
+
+        # Debug message
+        msg = "[+] Request Headers\n"
+        for h in request.headers:
+            msg += '    ' + h + ' = \'' + request.headers[h] + '\'\n'
+        msg += "[-] Request End"   
+        debug(msg)
 
         return request
 
@@ -122,7 +119,8 @@ class Child:
         while 1:
             remote, info = self._s.accept()
             remote_fd = remote.fileno()
-
+            
+            # Close on exec
 	    flags = fcntl.fcntl(remote_fd, fcntl.F_GETFD)
             try:
                 flags |= fcntl.FD_CLOEXEC
@@ -131,7 +129,8 @@ class Child:
 
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
 
-            print "Got connection! I won! ->", os.getpid()
+            if os.environ['PALM_DEBUG'] is not None:            
+                print "[+] Request arrived [PID=%i]" % os.getpid()
 
             buf = self.read(remote)
             request = self.parse_request(buf)
@@ -170,16 +169,6 @@ class Child:
 
                 exit(1)
 
-    def write_to_parent(self, message):
-        time.sleep(1)
-        n = os.write(self.int_w, message)
-        print "Child wrote: ", n
-
-    def read_data(self, fd):
-        buf = os.read(fd, 1024)
-        os.write(self.int_w, buf)
-        print "Child got: ", buf
-
     def get_pid(self):
         return self._pid
 
@@ -197,5 +186,4 @@ class Request:
 
     def add_header(self, key, val):
         self.headers[key] = val
-        # print self.headers
 

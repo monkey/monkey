@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2009, Eduardo Silva <edsiper@gmail.com>
+# Copyright (C) 2008-2010, Eduardo Silva <edsiper@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,12 +18,13 @@ import os
 import sys
 import signal
 import time
-from epoll import *
+
 from child import Child
 from listener import Listener
 from config import PalmConfig
+from debug import *
 
-VERSION = 0.1
+VERSION = 0.2
 
 class BigPalm:
     def __init__(self):
@@ -50,8 +51,6 @@ class BigPalm:
         print "Visit us: http://www.monkey-project.com"
 
     def create_palms(self):
-        print self.conf.get_handlers()
-
         for h in self.conf.get_handlers():
             # Handler configuration
             try:
@@ -74,9 +73,12 @@ class BigPalm:
             except:
                 opts = None
 
+            # Debug Message
+            debug("[+] Handler [%s] running on port %i, %i childs" % (h, port, childs))
+
+            # Creating Palm
             p = Palm(h, port, bin, opts)
             p.create_n_childs(childs)
-            p.start_monitor()
             self._palms.append(p)
 
         while 1:
@@ -115,52 +117,6 @@ class Palm:
     def get_childs_len(self):
         return len(self._childs)
     
-    def ping_childs(self):
-        for c in self._childs:
-            c.write_to_child('ping...')
-
-        for c in self._childs:
-            os.waitpid(c.get_pid(), 0)
-
-
-    def _print_setup(self):
-        print "** Handler '%s' running on port %s, %s childs" % \
-                (self.name, self.port, self.get_childs_len())
-
-    def start_monitor(self):
-        self._print_setup()
-        clen = self.get_childs_len()
-        """
-        ep = EPoll()
-        efd = ep.epoll_create(clen)
-       
-        # Add child read channels to epoll queue
-        for child in self._childs:
-            event = epoll_event()
-            event.events = EPOLLIN | EPOLLERR | EPOLLHUP
-            event.data.fd = child.ext_r
-            ep.epoll_ctl(efd, EPOLL_CTL_ADD, child.ext_r, event)
-
-        _ev = epoll_event * clen
-        
-        # Start monitor loop, waiting for incomming 
-        # data comming from childs
-        # childs
-        while(1):
-            events = _ev()
-
-            n_fds = ep.epoll_wait(efd, events, clen, -1)
-            
-            for p in range(n_fds):
-                if events[p].events & EPOLLIN:
-                    fd = events[p].data.fd
-                    self._read_data(events[p].data.fd)
-        """
-
-    def _read_data(self, fd):
-        buf = os.read(fd, 1024)
-        print "Parent read: ", buf
-
     def kill_childs(self):
         for c in self._childs:
             c.kill()
