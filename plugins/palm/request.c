@@ -174,6 +174,7 @@ void mk_palm_request_delete(int socket)
                 prev->next = aux->next;
             }
             mk_api->mem_free(aux);
+            pthread_setspecific(_mk_plugin_data, list);
             return;
         }
         aux = aux->next;
