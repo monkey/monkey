@@ -147,6 +147,10 @@ int _mkp_init(void **api, char *confdir)
     return 0;
 }
 
+void _mkp_exit()
+{
+}
+
 int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
     if (mk_security_check_ip(conx->ipv4.data) != 0) {

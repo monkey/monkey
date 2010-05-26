@@ -47,9 +47,8 @@ int _mkp_init(void **api, char *confdir)
     return 0;
 }
 
-int _mkp_exit()
+void _mkp_exit()
 {
-    return 0;
 }
 
 int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)

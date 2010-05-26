@@ -478,6 +478,10 @@ int _mkp_init(void **api)
     return 0;
 }
 
+void _mkp_exit()
+{
+}
+
 int _mkp_core_prctx(struct server_config *config)
 {
     pthread_t tid;

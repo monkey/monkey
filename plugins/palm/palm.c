@@ -301,7 +301,12 @@ int _mkp_init(void **api, char *confdir)
 
     /* Init CGI memory buffers */
     mk_cgi_env();
+ 
     return 0;
+}
+
+void _mkp_exit()
+{
 }
 
 int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct request *sr)

@@ -838,11 +838,14 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     return 0;
 }
 
-int _mkp_init(void **api, char *confdir)
+void _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     mk_dirhtml_conf(confdir);
-    return 0;
+}
+
+void _mkp_exit()
+{
 }
 
 int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct request *sr)
