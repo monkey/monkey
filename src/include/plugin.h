@@ -19,14 +19,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_PLUGIN_H
-#define MK_PLUGIN_H
-
+#include "config.h"
 #include "request.h"
 #include "memory.h"
 #include "iov.h"
 #include "socket.h"
-#include "config.h"
+
+#ifndef MK_PLUGIN_H
+#define MK_PLUGIN_H
 
 #define MK_PLUGIN_LOAD "plugins.load"
 
@@ -38,12 +38,11 @@
 #define MK_PLUGIN_CORE_THCTX (1)
 
 /* Plugin: Stages */
-#define MK_PLUGIN_STAGE_10 (2)     /* Before server's loop */
-#define MK_PLUGIN_STAGE_20 (4)     /* Accepted connection */
-#define MK_PLUGIN_STAGE_30 (8)     /* Connection assigned */
-#define MK_PLUGIN_STAGE_40 (16)     /* Object Handler */
-#define MK_PLUGIN_STAGE_50 (32)    /* Request ended */
-#define MK_PLUGIN_STAGE_60 (64)    /* Connection closed */
+#define MK_PLUGIN_STAGE_10 (2)     /* Connection just accept()ed */
+#define MK_PLUGIN_STAGE_20 (4)     /* HTTP Request arrived */
+#define MK_PLUGIN_STAGE_30 (8)     /* Object handler  */
+#define MK_PLUGIN_STAGE_40 (16)    /* Content served */
+#define MK_PLUGIN_STAGE_50 (32)    /* Conection ended */
 
 /* Plugin: Network type */
 #define MK_PLUGIN_NETWORK_IO (128)
@@ -262,5 +261,12 @@ int mk_plugin_event_timeout(int socket);
 void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
 int mk_plugin_http_request_end(int socket);
+
+/* Register functions */
+struct plugin *mk_plugin_register(struct plugin *p);
+void mk_plugin_unregister(struct plugin *p);
+
+struct plugin *mk_plugin_alloc(void *handler, char *path);
+void mk_plugin_free(struct plugin *p);
 
 #endif

@@ -115,10 +115,7 @@ void mk_plugin_register_stagemap(struct plugin *p)
     }
 }
 
-/* Load the plugins and set the library symbols to the
- * local struct plugin *p node
- */
-struct plugin *mk_plugin_register(void *handler, char *path)
+struct plugin *mk_plugin_alloc(void *handler, char *path)
 {
     struct plugin *p;
 
@@ -128,8 +125,7 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     p->version = mk_plugin_load_symbol(handler, "_version");
     p->path = mk_string_dup(path);
     p->handler = handler;
-    p->hooks =
-        (mk_plugin_hook_t *) mk_plugin_load_symbol(handler, "_hooks");
+    p->hooks = (mk_plugin_hook_t *) mk_plugin_load_symbol(handler, "_hooks");
 
     /* Mandatory functions */
     p->init = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_init");
@@ -219,12 +215,19 @@ struct plugin *mk_plugin_register(void *handler, char *path)
     /* Next ! */
     p->next = NULL;
 
+    return p;
+}
+
+/* Load the plugins and set the library symbols to the
+ * local struct plugin *p node
+ */
+struct plugin *mk_plugin_register(struct plugin *p)
+{
     if (!p->name || !p->version || !p->hooks) {
 #ifdef TRACE
-        MK_TRACE("Plugin must define name, version and hooks. Check: %s", path);
+        MK_TRACE("Plugin must define name, version and hooks. Check: %s", p->path);
 #endif
-        mk_mem_free(p->path);
-        mk_mem_free(p);
+        mk_plugin_free(p);
         return NULL;
     }
 
@@ -232,9 +235,7 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 #ifdef TRACE
         MK_TRACE("Plugin must define hooks 'init' and 'exit'");
 #endif        
-
-        mk_mem_free(p->path);
-        mk_mem_free(p);
+        mk_plugin_free(p);
         return NULL;
     }
 
@@ -246,7 +247,7 @@ struct plugin *mk_plugin_register(void *handler, char *path)
             !p->net_io.send_file || !p->net_io.create_socket || !p->net_io.bind ||
             !p->net_io.server ) {
 #ifdef TRACE
-                MK_TRACE("Networking IO plugin incomplete: %s", path);
+                MK_TRACE("Networking IO plugin incomplete: %s", p->path);
                 MK_TRACE("Mapped Functions\naccept : %p\nread : %p\n\
 write : %p\nwritev: %p\nclose : %p\nconnect : %p\nsendfile : %p\n\
 create socket : %p\nbind : %p\nserver : %p",
@@ -261,8 +262,7 @@ create socket : %p\nbind : %p\nserver : %p",
                          p->net_io.bind,
                          p->net_io.server);
 #endif
-                mk_mem_free(p->path);
-                mk_mem_free(p);
+                mk_plugin_free(p);
                 return NULL;
             }
 
@@ -273,7 +273,7 @@ create socket : %p\nbind : %p\nserver : %p",
         else {
             fprintf(stderr,
                     "\nError: Loading more than one Network IO Plugin: %s",
-                    path);
+                    p->path);
             exit(1);
         }
     }
@@ -283,13 +283,12 @@ create socket : %p\nbind : %p\nserver : %p",
         /* Validate mandatory calls */
         if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
-            MK_TRACE("Networking IP plugin incomplete: %s", path);
+            MK_TRACE("Networking IP plugin incomplete: %s", p->path);
             MK_TRACE("Mapped Functions\naddr   :%p\nmaxlen :%p",
                      p->net_ip.addr,
                      p->net_ip.maxlen);
 #endif
-            mk_mem_free(p->path);
-            mk_mem_free(p);
+            mk_plugin_free(p);
             return NULL;
         }
 
@@ -300,7 +299,7 @@ create socket : %p\nbind : %p\nserver : %p",
         else {
             fprintf(stderr,
                     "\nError: Loading more than one Network IP Plugin: %s",
-                    path);
+                    p->path);
             exit(1);
         }
     }
@@ -321,10 +320,49 @@ create socket : %p\nbind : %p\nserver : %p",
     return p;
 }
 
+void mk_plugin_unregister(struct plugin *p)
+{
+    struct plugin *node, *prev;
+
+    node = config->plugins;
+    
+    if (!node) {
+        return;
+    }
+
+    if (node == p) {
+        config->plugins = p->next;
+        mk_plugin_free(p);
+        return;
+    }
+
+    prev = node;
+    while (node->next != p) {
+        prev = node;
+        node = node->next;
+    }
+    
+    if (node) {
+        prev->next = p->next;
+        mk_plugin_free(p);
+        return;
+    }
+}
+
+void mk_plugin_free(struct plugin *p)
+{
+    mk_mem_free(p->path);
+    mk_mem_free(p);
+    p = NULL;
+}
+
 void mk_plugin_init()
 {
+    int ret;
     char *path;
+    char *plugin_confdir = 0;
     void *handle;
+    unsigned long len;
     struct plugin *p;
     struct plugin_api *api;
     struct mk_config *cnf;
@@ -411,25 +449,36 @@ void mk_plugin_init()
     while (cnf) {
         if (strcasecmp(cnf->key, "LoadPlugin") == 0) {
             handle = mk_plugin_load(cnf->val);
-            p = mk_plugin_register(handle, cnf->val);
+
+            p = mk_plugin_alloc(handle, cnf->val);
             if (!p) {
                 fprintf(stderr, "Plugin error: %s\n", cnf->val);
                 dlclose(handle);
             }
-            else {
+
+            /* Build plugin configuration path */
+            mk_string_build(&plugin_confdir,
+                            &len,
+                            "%s/plugins/%s/",
+                            config->serverconf, p->shortname);
+
+            /* Init plugin */
+            ret = p->init(&api, plugin_confdir);
+            if (ret < 0) {
+                /* Free plugin, do not register */
 #ifdef TRACE
-                MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
+                MK_TRACE("Unregister plugin '%s'", p->shortname);
 #endif
-                char *plugin_confdir = 0;
-                unsigned long len;
-
-                mk_string_build(&plugin_confdir,
-                                &len,
-                                "%s/plugins/%s/",
-                                config->serverconf, p->shortname);
-
-                p->init(&api, plugin_confdir);
+                mk_plugin_free(p);
+                cnf = cnf->next;
+                continue;
             }
+
+            /* If everything worked, register plugin */
+            mk_plugin_register(p);
+#ifdef TRACE
+            MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
+#endif
         }
         cnf = cnf->next;
     }

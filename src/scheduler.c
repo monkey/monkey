@@ -214,7 +214,6 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
 
             /* Close connection, otherwise continue */
             if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-                MK_TRACE("CONX_CLOSE");
                 mk_conn_close(remote_fd);
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
