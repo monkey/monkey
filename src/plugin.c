@@ -221,8 +221,18 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 
     if (!p->name || !p->version || !p->hooks) {
 #ifdef TRACE
-        MK_TRACE("Bad plugin definition: %s", path);
+        MK_TRACE("Plugin must define name, version and hooks. Check: %s", path);
 #endif
+        mk_mem_free(p->path);
+        mk_mem_free(p);
+        return NULL;
+    }
+
+    if (!p->init || !p->exit) {
+#ifdef TRACE
+        MK_TRACE("Plugin must define hooks 'init' and 'exit'");
+#endif        
+
         mk_mem_free(p->path);
         mk_mem_free(p);
         return NULL;
