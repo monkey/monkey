@@ -128,6 +128,7 @@ int main(int argc, char **argv)
     monkey_init_time = time(NULL);
     MK_TRACE("Monkey TRACE is enabled");
     envtrace = getenv("MONKEY_TRACE");
+    pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
 #endif
 
     mk_version();
@@ -149,7 +150,7 @@ int main(int argc, char **argv)
     /* Register PID of Monkey */
     mk_logger_register_pid();
 
-
+    /* Init mk pointers */
     mk_mem_pointers_init();
 
     /* Create thread keys */
@@ -164,16 +165,17 @@ int main(int argc, char **argv)
     /* Change process owner */
     mk_user_set_uidgid();
 
+    /* Configuration sanity check */
     mk_config_sanity_check();
+
+    /* Invoke Plugin PRCTX hooks */
+    mk_plugin_core_process();
 
     /* Launch monkey http workers */
     mk_server_launch_workers();
 
     /* Print server details */
     mk_details();
-
-    /* Plugins Stage 10 */
-    mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
 
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(server_fd);

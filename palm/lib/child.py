@@ -148,7 +148,7 @@ class Child:
 
             #print "command:", bin, opts
             os.dup2(remote.fileno(), sys.stdout.fileno())
-
+            
             try:
                 os.execve(bin, opts, request.headers)
             except:

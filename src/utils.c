@@ -217,6 +217,9 @@ void mk_utils_trace(const char *component, int color, const char *function,
         }
     }
 
+    /* Mutex lock */
+    pthread_mutex_lock(&mutex_trace);
+
     gettimeofday(&tv, &tz);
  
     /* Switch message color */
@@ -242,6 +245,10 @@ void mk_utils_trace(const char *component, int color, const char *function,
     vfprintf( stderr, format, args );
     va_end( args );
     fprintf( stderr, "%s\n", ANSI_RESET);
+
+    /* Mutex unlock */
+    pthread_mutex_unlock(&mutex_trace);
+
 }
 #endif
 

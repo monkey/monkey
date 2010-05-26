@@ -35,7 +35,7 @@
 #include "str.h"
 #include "plugin.h"
 #include "worker.h"
-
+#include "utils.h"
 #include "cheetah.h"
 
 #define MK_CHEETAH_CLEAR "clear"
@@ -75,7 +75,7 @@
 mk_plugin_data_t _shortname = "cheetah";
 mk_plugin_data_t _name = "Cheetah";
 mk_plugin_data_t _version = "1.1";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10;
+mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX;
 
 time_t init_time;
 struct plugin_api *mk_api;
@@ -284,7 +284,6 @@ void mk_cheetah_cmd_plugins()
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_30", MK_PLUGIN_STAGE_30);
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_40", MK_PLUGIN_STAGE_40);
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_60", MK_PLUGIN_STAGE_60);
     mk_cheetah_cmd_plugins_print_network(list);
 
     printf("\n");
@@ -479,7 +478,7 @@ int _mkp_init(void **api)
     return 0;
 }
 
-int _mkp_stage_10(struct server_config *config)
+int _mkp_core_prctx(struct server_config *config)
 {
     pthread_t tid;
     pthread_attr_t thread_attr;

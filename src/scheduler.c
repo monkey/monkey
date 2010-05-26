@@ -134,7 +134,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 
     /* Init specific thread cache */
     mk_cache_thread_init();
-    mk_plugin_worker_startup();
+    mk_plugin_core_thread();
 
     /* Epoll event handlers */
     handler = mk_epoll_set_handlers((void *) mk_conn_read,
@@ -208,12 +208,13 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
             /* Before to continue, we need to run plugin stage 20 */
-            ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20,
+            ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
                                       remote_fd,
                                       &sched->queue[i], NULL, NULL);
 
             /* Close connection, otherwise continue */
             if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+                MK_TRACE("CONX_CLOSE");
                 mk_conn_close(remote_fd);
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }

@@ -43,7 +43,7 @@
 mk_plugin_data_t _shortname = "palm";
 mk_plugin_data_t _name = "Palm";
 mk_plugin_data_t _version = "0.2";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_40;
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
 
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
@@ -298,22 +298,19 @@ int _mkp_init(void **api, char *confdir)
 
     /* Read configuration */
     mk_palm_conf(confdir);
-    return 0;
-}
 
-int _mkp_stage_10(struct server_config *config)
-{
+    /* Init CGI memory buffers */
     mk_cgi_env();
     return 0;
 }
 
-int _mkp_stage_40(struct plugin *plugin, struct client_request *cr, struct request *sr)
+int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct request *sr)
 {
     struct mk_palm *palm;
     struct mk_palm_request *pr;
 
 #ifdef TRACE
-    PLUGIN_TRACE("PALM STAGE 40, requesting '%s'", sr->real_path.data);
+    PLUGIN_TRACE("PALM STAGE 30, requesting '%s'", sr->real_path.data);
 #endif
 
     palm = mk_palm_get_handler(&sr->real_path);
@@ -533,7 +530,8 @@ int _mkp_event_read(int sockfd)
                 }
                 else{
 #ifdef TRACE
-                    PLUGIN_TRACE("********* FIXME ***********");
+                    PLUGIN_TRACE("********* FIXME ***********\n%s", pr->data_read);
+                    //                    exit(1);
 #endif
                 }
 

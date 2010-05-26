@@ -58,6 +58,7 @@
 #include "cache.h"
 #include "clock.h"
 #include "utils.h"
+#include "plugin.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -333,6 +334,19 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
         }
     }
 
+    /* Plugins Stage 20 */
+    int ret;
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cr->socket, NULL, 
+                              cr, s_request);
+    
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+#ifdef TRACE
+        MK_TRACE("STAGE 20 requested close conexion");
+#endif
+        return -1;
+    }
+
+    /* Normal HTTP process */
     status = mk_http_init(cr, s_request);
 
 #ifdef TRACE

@@ -56,6 +56,7 @@
 #define ANSI_RESET "\033[0m"
 
 char *envtrace;
+pthread_mutex_t mutex_trace;
 
 #endif
 

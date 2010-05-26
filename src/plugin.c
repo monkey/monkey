@@ -137,9 +137,9 @@ struct plugin *mk_plugin_register(void *handler, char *path)
 
     /* Core hooks */
     p->core.prctx = (int (*)()) mk_plugin_load_symbol(handler,
-                                                      "_mkp_core_prctx()");
+                                                      "_mkp_core_prctx");
     p->core.thctx = (int (*)()) mk_plugin_load_symbol(handler,
-                                                      "_mkp_core_thctx()");
+                                                      "_mkp_core_thctx");
 
     /* Stage hooks */
     p->stage.s10 = (int (*)())
@@ -441,24 +441,14 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
     int ret;
     struct plugin_stagem *stm;
 
+    /* Connection just accept(ed) not assigned to worker thread */
     if (hook & MK_PLUGIN_STAGE_10) {
         stm = plg_stagemap->stage_10;
         while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 10", stm->p->shortname);
 #endif
-            stm->p->stage.s10();
-            stm = stm->next;
-        }
-    }
-
-    if (hook & MK_PLUGIN_STAGE_20) {
-        stm = plg_stagemap->stage_20;
-        while (stm) {
-#ifdef TRACE
-            MK_TRACE("[%s] STAGE 20", stm->p->shortname);
-#endif
-            ret = stm->p->stage.s20(socket, conx, cr);
+            ret = stm->p->stage.s10(socket, conx);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
 #ifdef TRACE
@@ -471,15 +461,19 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         }
     }
 
-    if (hook & MK_PLUGIN_STAGE_30) {
-        stm = plg_stagemap->stage_30;
+    /* The HTTP Request stream has been just received */
+    if (hook & MK_PLUGIN_STAGE_20) {
+        stm = plg_stagemap->stage_20;
         while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 30", stm->p->shortname);
+            MK_TRACE("[%s] STAGE 20", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s30(cr, sr);
+            ret = stm->p->stage.s20(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
+#ifdef TRACE
+                MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
+#endif
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
@@ -487,18 +481,20 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         }
     }
 
-    /* Object handler */
-    if (hook & MK_PLUGIN_STAGE_40) {
+    /* The plugin acts like an Object handler, it will take care of the 
+     * request, it decides what to do with the request 
+     */
+    if (hook & MK_PLUGIN_STAGE_30) {
         /* The request just arrived and is required to check who can
          * handle it */
         if (!sr->handled_by){
-            stm = plg_stagemap->stage_40;
+            stm = plg_stagemap->stage_30;
             while (stm) {
                 /* Call stage */
 #ifdef TRACE
-                MK_TRACE("[%s] STAGE 40", stm->p->shortname);
+                MK_TRACE("[%s] STAGE 30", stm->p->shortname);
 #endif
-                ret = stm->p->stage.s40(stm->p, cr, sr);
+                ret = stm->p->stage.s30(stm->p, cr, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
@@ -511,13 +507,32 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         }
     }
 
+    /* The request has ended, the content has been served */
+    if (hook & MK_PLUGIN_STAGE_40) {
+        stm = plg_stagemap->stage_40;
+        while (stm) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 40", stm->p->shortname);
+#endif
+            ret = stm->p->stage.s40(cr, sr);
+            switch (ret) {
+            case MK_PLUGIN_RET_NOT_ME:
+                break;
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            }
+            stm = stm->next;
+        }
+    }
+
+    /* The request has ended, the content has been served */
     if (hook & MK_PLUGIN_STAGE_50) {
         stm = plg_stagemap->stage_50;
         while (stm) {
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 50", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s50(cr, sr);
+            ret = stm->p->stage.s50(cr->socket);
             switch (ret) {
             case MK_PLUGIN_RET_NOT_ME:
                 break;
@@ -552,7 +567,27 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
  * for plugins which need to set some data under a thread
  * context
  */
-void mk_plugin_worker_startup()
+void mk_plugin_core_process()
+{
+    struct plugin *p;
+
+    p = config->plugins;
+
+    while (p) {
+        /* Init plugin */
+        if (p->core.prctx) {
+            p->core.prctx(config);
+        }
+
+        p = p->next;
+    }
+}
+
+/* This function is called by every created worker
+ * for plugins which need to set some data under a thread
+ * context
+ */
+void mk_plugin_core_thread()
 {
     struct plugin *p;
 

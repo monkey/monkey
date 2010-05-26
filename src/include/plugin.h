@@ -67,15 +67,11 @@ struct plugin_core
 
 struct plugin_stage
 {
-    int (*s10) ();
-    int (*s20) (unsigned int,
-                     struct sched_connection *, struct client_request *);
-    int (*s30) (struct client_request *, struct request *);
-    int (*s40) (struct plugin *, struct client_request *, struct request *);
-    int (*s40_event_read) (struct client_request *, struct request *);
-    int (*s40_event_write) (struct client_request *, struct request *);
-    int (*s50) (struct client_request *, struct request *);
-    int (*s60) (struct client_request *);
+    int (*s10) (int, struct sched_connection *);
+    int (*s20) (struct client_request *, struct request *);
+    int (*s30) (struct plugin *, struct client_request *, struct request *);
+    int (*s40) (struct client_request *, struct request *);
+    int (*s50) (int);
 };
 
 struct plugin_network_io
@@ -238,7 +234,9 @@ int mk_plugin_stage_run(mk_plugin_hook_t stage,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr);
-void mk_plugin_worker_startup();
+
+void mk_plugin_core_process();
+void mk_plugin_core_thread();
 
 void mk_plugin_request_handler_add(struct request *sr, struct plugin *p);
 void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);

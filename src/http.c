@@ -176,21 +176,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         return EXIT_ERROR;
     }
 
-    /* Plugin Stage 30: look for handlers for this request */
-    if (mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cr, sr) ==
-        MK_PLUGIN_RET_CLOSE_CONX) {
-        sr->log->final_response = M_CLIENT_FORBIDDEN;
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
-        return EXIT_ERROR;
-    }
-
     sr->file_info = mk_file_get_info(sr->real_path.data);
 
     if (!sr->file_info) {
         /* if the resource requested doesn't exists, let's 
          * check if some plugin would like to handle it
          */
-        if (mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr)
+        if (mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr)
             == 0) {
             return -1;
         }
@@ -199,20 +191,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         return -1;
     }
 
-    /* Check symbolic link file */
-    if (sr->file_info->is_link == MK_FILE_TRUE) {
-        if (config->symlink == VAR_OFF) {
-            sr->log->final_response = M_CLIENT_FORBIDDEN;
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr,
-                             debug_error, sr->log);
-            return EXIT_ERROR;
-        }
-        else {
-            int n;
-            char linked_file[MAX_PATH];
-            n = readlink(sr->real_path.data, linked_file, MAX_PATH);
-        }
-    }
 
     /* is it a valid directory ? */
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
@@ -234,6 +212,32 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             sr->file_info = mk_file_get_info(sr->real_path.data);
         }
     }
+
+    /* Check symbolic link file */
+    if (sr->file_info->is_link == MK_FILE_TRUE) {
+        if (config->symlink == VAR_OFF) {
+            sr->log->final_response = M_CLIENT_FORBIDDEN;
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr,
+                             debug_error, sr->log);
+            return EXIT_ERROR;
+        }
+        else {
+            int n;
+            char linked_file[MAX_PATH];
+            n = readlink(sr->real_path.data, linked_file, MAX_PATH);
+        }
+    }
+
+    /* Plugin Stage 30: look for handlers for this request */
+    ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cr, sr);
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+        sr->log->final_response = M_CLIENT_FORBIDDEN;
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+        return EXIT_ERROR;
+    }
+    else if (ret == MK_PLUGIN_RET_CONTINUE) {
+        return MK_PLUGIN_RET_CONTINUE;
+    } 
 
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
