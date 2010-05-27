@@ -129,8 +129,7 @@ class Child:
 
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
 
-            if os.environ['PALM_DEBUG'] is not None:            
-                print "[+] Request arrived [PID=%i]" % os.getpid()
+            debug("[+] Request arrived [PID=%i]" % os.getpid())
 
             buf = self.read(remote)
             request = self.parse_request(buf)
