@@ -516,7 +516,6 @@ int _mkp_event_read(int sockfd)
             headers_end = mk_api->str_search(pr->data_read,
                                              MK_IOV_CRLFCRLF);
             if (headers_end == -1) {
-                PLUGIN_TRACE("TRYING OLD LFLF");
                 headers_end = mk_api->str_search(pr->data_read,
                                                  MK_IOV_LFLFLFLF);
             }
