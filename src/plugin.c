@@ -591,7 +591,7 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 50", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s50(cr->socket);
+            ret = stm->p->stage.s50(socket);
             switch (ret) {
             case MK_PLUGIN_RET_NOT_ME:
                 break;

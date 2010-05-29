@@ -240,6 +240,11 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     if (sc) {
         /* Close socket and change status */
         close(remote_fd);
+
+        /* Invoke plugins in stage 50 */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
+
+        /* Change node status */
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         return 0;
     }
