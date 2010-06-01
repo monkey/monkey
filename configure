@@ -631,9 +631,9 @@ if test -z "$STRIP" ; then
 fi
 
 if test -z "$debug" ; then
-    CFLAGS="-O2 -Wall"
+    CFLAGS="$CFLAGS -O2 -Wall"
 else
-    CFLAGS="-g -Wall"
+    CFLAGS="$CFLAGS -g -Wall"
 fi
 
 if [ $trace ] ; then

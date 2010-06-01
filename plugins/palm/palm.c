@@ -53,7 +53,7 @@ int mk_palm_conf(char *confdir)
     char *conf_path;
     struct mk_config *p;
     struct mk_palm *new, *r;
-    struct mk_string_line *line, *lp;
+    struct mk_string_line *line=0, *lp;
 
     mk_api->str_build(&conf_path, &len, "%s/palm.conf", confdir);
 

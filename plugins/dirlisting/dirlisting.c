@@ -604,7 +604,7 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
 
 void mk_dirhtml_tag_free_list(struct dirhtml_value **list)
 {
-    struct dirhtml_value *prev, *target;
+    struct dirhtml_value *prev=0, *target;
 
     target = *list;
     while (target) {
