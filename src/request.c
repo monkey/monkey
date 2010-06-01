@@ -233,7 +233,6 @@ int mk_handler_write(int socket, struct client_request *cr)
                 break;
             case EXIT_ABORT:
                 return -1;
-                break;
             }
         }
 
@@ -927,7 +926,7 @@ struct client_request *mk_request_client_get(int socket)
  * From thread sched_list_node "list", remove the client_request
  * struct information
  */
-struct client_request *mk_request_client_remove(int socket)
+void mk_request_client_remove(int socket)
 {
     struct request_idx *request_index;
     struct client_request *cr, *aux;
@@ -958,7 +957,8 @@ struct client_request *mk_request_client_remove(int socket)
     mk_mem_free(cr->body);
     mk_mem_free(cr);
 
-    return NULL;
+    /* Update thread index */
+    mk_sched_set_request_index(request_index);
 }
 
 struct header_toc *mk_request_header_toc_create(int len)

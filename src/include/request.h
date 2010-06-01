@@ -278,7 +278,7 @@ void mk_request_free(struct request *sr);
 
 struct client_request *mk_request_client_create(int socket);
 struct client_request *mk_request_client_get(int socket);
-struct client_request *mk_request_client_remove(int socket);
+void mk_request_client_remove(int socket);
 
 void mk_request_init_error_msgs();
 

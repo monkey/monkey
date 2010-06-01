@@ -690,13 +690,13 @@ int mk_http_request_end(int socket)
         return -1;
     }
 
-    mk_request_free_list(cr);
-
     /* We need to ask to http_keepalive if this 
      * connection can continue working or we must 
      * close it.
      */
     ka = mk_http_keepalive_check(socket, cr);
+    mk_request_free_list(cr);
+
     if (ka < 0) {
         mk_request_client_remove(socket);
     }
