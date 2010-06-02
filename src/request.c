@@ -672,8 +672,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
     s_request->headers->status = num_error;
     if (page) {
-        s_request->headers->content_length = page->len;
-        s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
+        mk_header_set_content_length(s_request, page->len);
     }
 
     s_request->headers->location = NULL;
@@ -777,7 +776,6 @@ struct request *mk_request_alloc()
 
     /* Response Headers */
     request->headers = mk_header_create();
-    request->headers->content_length_p.data = NULL;
 
     /* Plugin handler */
     request->handled_by = NULL;

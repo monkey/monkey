@@ -307,7 +307,6 @@ int mk_header_send(int fd, struct client_request *cr,
          * in Monkey 0.11.0
          */
         if (length >= 0) {
-            mk_pointer_free(&sr->log->size_p);
             sr->log->size = length;
             sr->log->size_p = mk_utils_int2mkp(length);
         }
@@ -337,6 +336,14 @@ int mk_header_send(int fd, struct client_request *cr,
     mk_header_iov_free(iov);
 
     return 0;
+}
+
+void mk_header_set_content_length(struct request *sr, long len)
+{
+    sr->headers->content_length = len;
+    if (len >= 0) {
+        sr->headers->content_length_p = mk_utils_int2mkp(len);
+    }
 }
 
 char *mk_header_chunked_line(int len)

@@ -240,7 +240,7 @@ struct header_values
 {
     int status;
 
-    int content_length;
+    long content_length;
     mk_pointer content_length_p;
 
     int cgi;
