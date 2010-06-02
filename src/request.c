@@ -777,8 +777,11 @@ struct request *mk_request_alloc()
 
     /* Response Headers */
     request->headers = mk_header_create();
+    request->headers->content_length_p.data = NULL;
 
+    /* Plugin handler */
     request->handled_by = NULL;
+
     return request;
 }
 

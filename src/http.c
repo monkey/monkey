@@ -330,28 +330,35 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* without content-type */
         mk_pointer_reset(&sr->headers->content_type);
     }
+ 
+    /* Open file */
+    if (sr->file_info->size > 0) {
+        sr->fd_file = open(sr->real_path.data, config->open_flags);
+        if (sr->fd_file == -1) {
+#ifdef TRACE
+            MK_TRACE("open() failed");
+#endif
+            sr->log->final_response = M_CLIENT_FORBIDDEN;
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+            return EXIT_ERROR;
+        }
+    }
 
+    /* Send headers */
     mk_header_send(cr->socket, cr, sr, sr->log);
 
     if (sr->headers->content_length == 0) {
         return 0;
     }
 
-    /* Sending file */
-    if ((sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST)
-        && sr->file_info->size > 0) {
-        sr->fd_file = open(sr->real_path.data, config->open_flags);
-
-        if (sr->fd_file == -1) {
-            perror("open");
-            return EXIT_ERROR;
-        }
-
+    /* Send file content*/
+    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
             mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
             return EXIT_ERROR;
         }
+
         bytes = mk_http_send_file(cr, sr);
     }
 
