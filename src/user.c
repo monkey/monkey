@@ -133,8 +133,8 @@ int mk_user_set_uidgid()
             exit(1);
         }
 
-        egid = geteuid();
-        euid = getegid();
+        EUID = geteuid();
+        EGID = getegid();
     }
     return 0;
 }

@@ -29,6 +29,7 @@
 #include "file.h"
 #include "user.h"
 #include "memory.h"
+#include "utils.h"
 
 struct file_info *mk_file_get_info(char *path)
 {
@@ -64,19 +65,30 @@ struct file_info *mk_file_get_info(char *path)
     }
 
     /* Checking read access */
-    if ((target.st_mode & S_IRUSR && target.st_uid == euid) ||
-        (target.st_mode & S_IRGRP && target.st_gid == egid) ||
+    if (((target.st_mode & S_IRUSR) && target.st_uid == EUID) ||
+        ((target.st_mode & S_IRGRP) && target.st_gid == EGID) ||
         (target.st_mode & S_IROTH)) {
         f_info->read_access = MK_FILE_TRUE;
     }
+#ifdef TRACE
+    else {
+        MK_TRACE("Target has not read acess");
+    }
+#endif
 
     /* Checking execution access */
-    if ((target.st_mode & S_IXUSR && target.st_uid == euid) ||
-        (target.st_mode & S_IXGRP && target.st_gid == egid) ||
+    if ((target.st_mode & S_IXUSR && target.st_uid == EUID) ||
+        (target.st_mode & S_IXGRP && target.st_gid == EGID) ||
         (target.st_mode & S_IXOTH)) {
         f_info->exec_access = MK_FILE_TRUE;
 
     }
+#ifdef TRACE
+    else {
+        MK_TRACE("Target has not execution permission");
+    }
+#endif
+
     return f_info;
 }
 
