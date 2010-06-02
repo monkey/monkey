@@ -191,11 +191,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         return -1;
     }
 
-
     /* is it a valid directory ? */
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         /* Send redirect header if end slash is not found */
         if (mk_http_directory_redirect_check(cr, sr) == -1) {
+#ifdef TRACE
+            MK_TRACE("Directory Redirect");
+#endif
             /* Redirect has been sent */
             return -1;
         }
@@ -238,6 +240,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     else if (ret == MK_PLUGIN_RET_CONTINUE) {
         return MK_PLUGIN_RET_CONTINUE;
     } 
+    else if (ret == MK_PLUGIN_RET_END) {
+        return EXIT_NORMAL;
+    }
 
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
@@ -251,12 +256,14 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         mime = mimetype_default;
     }
 
-    /* Plugin Stage 40: look for handlers for this request */
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket, NULL, cr, sr);
+    /* Plugin Stage 30: look for handlers for this request */
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr);
     if (ret == MK_PLUGIN_RET_CONTINUE) {
         return ret;
     }
-
+    else {
+        MK_TRACE("returned: %i", ret);
+    }
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
         return EXIT_ERROR;
@@ -398,10 +405,16 @@ int mk_http_directory_redirect_check(struct client_request *cr,
                         host, config->serverport, location);
     }
 
+#ifdef TRACE
+    MK_TRACE("Redirecting to '%s'", real_location);
+#endif
+
     mk_mem_free(host);
 
     sr->headers->status = M_REDIR_MOVED;
-    sr->headers->content_length = -1;
+    sr->headers->content_length = 0;
+    sr->headers->content_length_p = mk_utils_int2mkp(0);
+
     mk_pointer_reset(&sr->headers->content_type);
     sr->headers->location = real_location;
     sr->headers->cgi = SH_NOCGI;

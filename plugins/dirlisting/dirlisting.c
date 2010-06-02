@@ -721,6 +721,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     sr->headers->cgi = SH_CGI;
     sr->headers->breakline = MK_HEADER_BREAKLINE;
     sr->headers->content_type = mk_dirhtml_default_mime;
+    sr->headers->content_length = -1;
 
     if (sr->protocol >= HTTP_PROTOCOL_11) {
         sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
@@ -860,7 +861,6 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
         return MK_PLUGIN_RET_NOT_ME;
     }
 
-
     /* check setup 
     if (sr->host_conf->getdir == VAR_OFF) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
@@ -868,7 +868,10 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     }
     */
 
-    mk_dirhtml_init(cr, sr);
+#ifdef TRACE
+    PLUGIN_TRACE("Dirlisting attending socket %i", cr->socket);
+#endif
 
+    mk_dirhtml_init(cr, sr);
     return MK_PLUGIN_RET_END;
 }

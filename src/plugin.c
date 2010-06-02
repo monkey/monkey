@@ -560,7 +560,10 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
                     break;
                 case MK_PLUGIN_RET_CONTINUE:
                     return MK_PLUGIN_RET_CONTINUE;
+                case MK_PLUGIN_RET_END:
+                    return MK_PLUGIN_RET_END;
                 }
+                
                 stm = stm->next;
             }
         }
