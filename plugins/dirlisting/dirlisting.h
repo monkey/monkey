@@ -43,6 +43,21 @@
 #define MK_DIRHTML_TAG_END "_%"
 #define MK_DIRHTML_SIZE_DIR "-"
 
+char *_tags_global[] = { "%_html_title_%",
+    "%_theme_path_%",
+    NULL
+};
+
+char *_tags_entry[] = { "%_target_title_%",
+    "%_target_url_%",
+    "%_target_name_%",
+    "%_target_time_%",
+    "%_target_size_%",
+    NULL
+};
+
+struct plugin_api *mk_api;
+
 struct mk_f_list
 {
     char *name;

@@ -261,9 +261,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     if (ret == MK_PLUGIN_RET_CONTINUE) {
         return ret;
     }
-    else {
-        MK_TRACE("returned: %i", ret);
-    }
+
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
         return EXIT_ERROR;

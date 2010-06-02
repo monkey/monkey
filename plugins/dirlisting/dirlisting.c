@@ -60,22 +60,7 @@
 mk_plugin_data_t _shortname = "dirlisting";
 mk_plugin_data_t _name = "Directory Listing";
 mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;;
-
-struct plugin_api *mk_api;
-
-char *_tags_global[] = { "%_html_title_%",
-    "%_theme_path_%",
-    NULL
-};
-
-char *_tags_entry[] = { "%_target_title_%",
-    "%_target_url_%",
-    "%_target_name_%",
-    "%_target_time_%",
-    "%_target_size_%",
-    NULL
-};
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
 
 /* DIR_HTML logic:
  * ---------------
