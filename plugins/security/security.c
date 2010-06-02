@@ -32,7 +32,7 @@
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "security";
 mk_plugin_data_t _name = "Security";
-mk_plugin_data_t _version = "0.2";
+mk_plugin_data_t _version = "0.11.0";
 mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20;
 
 struct plugin_api *mk_api;

@@ -35,7 +35,7 @@
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "liana";
 mk_plugin_data_t _name = "Liana Network";
-mk_plugin_data_t _version = "0.1";
+mk_plugin_data_t _version = "0.11.0";
 mk_plugin_hook_t _hooks = MK_PLUGIN_NETWORK_IO;
 
 struct plugin_api *mk_api;
