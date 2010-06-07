@@ -182,9 +182,20 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* if the resource requested doesn't exists, let's 
          * check if some plugin would like to handle it
          */
-        if (mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr)
-            == 0) {
-            return -1;
+#ifdef TRACE
+        MK_TRACE("No file, look for handler plugin");
+#endif
+        ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr);
+        if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+            sr->log->final_response = M_CLIENT_FORBIDDEN;
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+            return EXIT_ERROR;
+        }
+        else if (ret == MK_PLUGIN_RET_CONTINUE) {
+            return MK_PLUGIN_RET_CONTINUE;
+        } 
+        else if (ret == MK_PLUGIN_RET_END) {
+            return EXIT_NORMAL;
         }
 
         mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, debug_error, sr->log);
