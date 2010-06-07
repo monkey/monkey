@@ -172,7 +172,7 @@ struct plugin_api
     struct mk_string_line *(*str_split_line) (const char *);
     char *(*file_to_buffer) (char *);
     struct file_info *(*file_get_info) (char *);
-    void *(*header_send) (int,
+    int (*header_send) (int,
                           struct client_request *,
                           struct request *, struct log_info *);
     struct mk_iov *(*iov_create) (int, int);
