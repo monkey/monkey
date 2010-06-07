@@ -313,7 +313,7 @@ int mk_header_send(int fd, struct client_request *cr,
     }
     else if (sh->content_length >= 0) {
         /* Map content length to MK_POINTER */
-        sh->content_length_p = mk_utils_int2mkp(len);
+        sh->content_length_p = mk_utils_int2mkp(sh->content_length);
 
         /* Set headers */
         mk_iov_add_entry(iov, mk_header_content_length.data,
@@ -337,7 +337,6 @@ int mk_header_send(int fd, struct client_request *cr,
 #endif
 
     mk_header_iov_free(iov);
-
     return 0;
 }
 
