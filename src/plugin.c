@@ -549,7 +549,6 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
         if (!sr->handled_by){
             stm = plg_stagemap->stage_30;
             while (stm) {
-                MK_TRACE("STM: %p", stm);
                 /* Call stage */
 #ifdef TRACE
                 MK_TRACE("[%s] STAGE 30", stm->p->shortname);
