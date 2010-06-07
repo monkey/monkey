@@ -309,7 +309,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
-    mk_header_set_content_length(sr, sr->file_info->size);
+    sr->headers->content_length = sr->file_info->size;
 
     if (sr->method == HTTP_METHOD_HEAD) {
         sr->log->size = 0;
@@ -424,7 +424,7 @@ int mk_http_directory_redirect_check(struct client_request *cr,
     mk_mem_free(host);
 
     sr->headers->status = M_REDIR_MOVED;
-    mk_header_set_content_length(sr, 0);
+    sr->headers->content_length = 0;
     
     mk_pointer_reset(&sr->headers->content_type);
     sr->headers->location = real_location;

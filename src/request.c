@@ -672,7 +672,7 @@ void mk_request_error(int num_error, struct client_request *cr,
 
     s_request->headers->status = num_error;
     if (page) {
-        mk_header_set_content_length(s_request, page->len);
+        s_request->headers->content_length = page->len;
     }
 
     s_request->headers->location = NULL;
@@ -818,7 +818,6 @@ void mk_request_free(struct request *sr)
     }
     if (sr->headers) {
         mk_mem_free(sr->headers->location);
-        mk_pointer_free(&sr->headers->content_length_p);
         mk_pointer_free(&sr->headers->last_modified);
         mk_mem_free(sr->headers);
     }
