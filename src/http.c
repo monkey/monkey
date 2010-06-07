@@ -232,6 +232,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* Plugin Stage 30: look for handlers for this request */
     ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cr, sr);
+#ifdef TRACE
+    MK_TRACE("STAGE_30 returned %i", ret);
+#endif
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         sr->log->final_response = M_CLIENT_FORBIDDEN;
         mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
@@ -254,12 +257,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     mime = mk_mimetype_find(&sr->real_path);
     if (!mime) {
         mime = mimetype_default;
-    }
-
-    /* Plugin Stage 30: look for handlers for this request */
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr);
-    if (ret == MK_PLUGIN_RET_CONTINUE) {
-        return ret;
     }
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
