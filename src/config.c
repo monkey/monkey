@@ -71,8 +71,14 @@ struct mk_config *mk_config_create(char *path)
         if (!key || !val) {
             continue;
         }
+        
+        /* Skip empty left spaces */
+        while(val && *val == ' ') val++;
+        if (!val) {
+            continue;
+        }
 
-        /* Allow new entry found */
+        /* Alloc new entry found */
         new = mk_mem_malloc(sizeof(struct mk_config));
         new->key = mk_string_dup(key);
 
