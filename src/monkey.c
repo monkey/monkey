@@ -131,14 +131,14 @@ int main(int argc, char **argv)
 
     server_fd = mk_socket_server(config->serverport, config->listen_addr);
 
-    /* Workers: logger and clock */
-    mk_worker_spawn((void *) mk_logger_worker_init);
-    mk_worker_spawn((void *) mk_clock_worker_init);
-
     /* Running Monkey as daemon */
     if (daemon) {
         mk_utils_set_daemon();
     }
+
+    /* Workers: logger and clock */
+    mk_worker_spawn((void *) mk_logger_worker_init);
+    mk_worker_spawn((void *) mk_clock_worker_init);
 
     /* Register PID of Monkey */
     mk_logger_register_pid();
