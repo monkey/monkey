@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
@@ -41,6 +40,22 @@
 #define MK_CONFIG_VAL_NUM 1
 #define MK_CONFIG_VAL_BOOL 2
 #define MK_CONFIG_VAL_LIST 3
+
+/* Indented configuration */
+struct mk_iconf 
+{
+    char *header;
+    struct mk_iconf_entry *entry;
+    struct mk_iconf *next;
+};
+
+struct mk_iconf_entry
+{
+    char *key;
+    char *val;
+    struct mk_iconf_entry *next;
+};
+
 
 struct mk_config
 {

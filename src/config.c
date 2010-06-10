@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "monkey.h"
 #include "config.h"
@@ -40,6 +41,180 @@
 #include "memory.h"
 #include "plugin.h"
 
+void mk_config_error(const char *path, int line, const char *msg)
+{
+    printf("\nReading %s", path);
+    printf("\nError in line %i: %s\n\n", line, msg);
+    fflush(stdout);
+    exit(1);
+}
+
+struct mk_iconf *mk_config_add_tag(struct mk_iconf *iconf, const char *tag)
+{
+    struct mk_iconf *aux, *new;
+
+    new = mk_mem_malloc(sizeof(struct mk_iconf));
+    new->header = mk_string_dup(tag);
+    new->next = NULL;
+    
+    if (!iconf) { 
+        return new;
+    }
+
+    aux = iconf;
+    while (aux->next) {
+        aux = aux->next;
+    }
+
+    aux->next = new;
+    return new;
+}
+
+void mk_config_add_entry(struct mk_iconf *iconf, const char *key, 
+                         const char *val)
+{
+    struct mk_iconf *aux_iconf;
+    struct mk_iconf_entry *aux_entry, *new_entry;
+
+    /* Alloc new entry */
+    new_entry = mk_mem_malloc(sizeof(struct mk_iconf_entry));
+    new_entry->key = mk_string_dup(key);
+    new_entry->val = mk_string_dup(val);
+    new_entry->next = NULL;
+
+    /* Look for last header tag created */
+    aux_iconf = iconf;
+    while (aux_iconf->next) {
+        aux_iconf = aux_iconf->next;
+    }
+
+    aux_entry = aux_iconf->entry;
+    if (!aux_entry) {
+        aux_iconf->entry = new_entry;
+        return;
+    }
+    else {
+        while (aux_entry->next) {
+            aux_entry = aux_entry->next;
+        }
+
+        aux_entry->next = new_entry;
+    }
+}
+
+struct mk_iconf *mk_config_validate(const char *path)
+{
+    FILE *f;
+    int len;
+    int line = 0;
+    int indent_len;
+    char buf[255];
+    char *tag = 0;
+    char *indent = 0;
+    char *key, *val, *last;
+
+    struct mk_iconf *iconf = 0;
+
+    if ((f = fopen(path, "r")) == NULL) {
+        fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
+        exit(1);
+    }
+
+    /* looking for configuration directives */
+    while (fgets(buf, 255, f)) {
+        len = strlen(buf);
+        if (buf[len - 1] == '\n') {
+            buf[--len] = 0;
+            if (len && buf[len - 1] == '\r')
+                buf[--len] = 0;
+        }
+        
+        line++;
+
+        if (!buf[0]) {
+            continue;
+        }
+
+        if (buf[0] == '#') {
+            if (tag) {
+                mk_mem_free(tag);
+                tag = 0;
+            }
+            continue;
+        }
+
+        if (buf[0] == '[') {
+            int end = -1;
+            end = mk_string_char_search(buf, ']', len);
+            if (end > 0) {
+                tag = mk_string_copy_substr(buf, 1, end);
+
+                if (!iconf) {
+                    iconf = mk_config_add_tag(NULL, tag);
+                }
+                else {
+                    mk_config_add_tag(iconf, tag);
+                }
+                continue;
+            }
+            else {
+                mk_config_error(path, line, "Bad header definition");
+            }
+        }
+        else {
+            /* No separator defined */
+            if (!indent) {
+                int i = 0;
+
+                do { i++; } while (i < len && isblank(buf[i]));
+
+                indent = mk_string_copy_substr(buf, 0, i);
+                indent_len = strlen(indent);
+
+                /* Blank indented line */
+                if (i == len) {
+                    continue;
+                }
+            }
+            
+            if (strncmp(buf, indent, indent_len) != 0 || !tag || 
+                isblank(buf[indent_len]) != 0) {
+                mk_config_error(path, line, "Invalid indentation level");
+            }
+
+            if (buf[indent_len] == '#' || indent_len == len) {
+                continue;
+            }
+
+            key = strtok_r(buf + indent_len, "\"\t ", &last);
+            val = strtok_r(NULL, "\"\t", &last); 
+
+            if (!key || !val) {
+                mk_config_error(path, line, "Each key must have a value");
+                continue;
+            }
+
+            mk_config_add_entry(iconf, key, val);
+        }
+    }
+
+    struct mk_iconf *t;
+    struct mk_iconf_entry *e;
+
+    t = iconf;
+    while(t) {
+        printf("\n[%s]", t->header);
+        e = t->entry;
+        while(e) {
+            printf("\n   %s = %s", e->key, e->val);
+            e = e->next;
+        }
+        t = t->next;
+    }
+    fflush(stdout);
+    return iconf;
+}
+
 struct mk_config *mk_config_create(char *path)
 {
     FILE *f;
@@ -47,6 +222,17 @@ struct mk_config *mk_config_create(char *path)
     char buf[255];
     char *key = 0, *val = 0, *last = 0;
     struct mk_config *cnf = 0, *new, *p;
+
+    printf("\npath: '%s'", path + strlen(path) - 11);
+    fflush(stdout);
+    
+    if (strcmp(path + strlen(path) - 11, "monkey.conf") == 0) {
+        printf("\ngoing to validate\n\n");
+        fflush(stdout);
+
+        mk_config_validate(path);
+        exit(0);
+    }
 
     if ((f = fopen(path, "r")) == NULL) {
         fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
