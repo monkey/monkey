@@ -5,113 +5,112 @@ cat > conf/monkey.conf <<EOF
 # Here the variable principals of the program are defined in respect
 # to the configuration of the different types of directives.
 
-# Port : 
-# ------
-# Port is the number of the door in which Monkey will be listened through
-# connections and petitions. This number can have any value between 1 and
-# 65535. Whatever specified number less than or equal to 1024, only will
-# be able to be established as a connection door if the user posesses 
-# privledges of Root.
+[SERVER]
+    # Port : 
+    # ------
+    # Port is the number of the door in which Monkey will be listened through
+    # connections and petitions. This number can have any value between 1 and
+    # 65535. Whatever specified number less than or equal to 1024, only will
+    # be able to be established as a connection door if the user posesses 
+    # privledges of Root.
 
-Port 2001
+    Port 2001
 
-# Listen:
-# -------
-# Listen directive restrict Monkey to listen for incoming connections to just
-# the network interface associated to the given value. In order to allow just
-# loopback connection you could use:
-#
-# Listen 127.0.0.1
+    # Listen:
+    # -------
+    # Listen directive restrict Monkey to listen for incoming connections to just
+    # the network interface associated to the given value. In order to allow just
+    # loopback connection you could use:
+    #
+    # Listen 127.0.0.1
 
-# Workers:
-# --------
-# Monkey launches threads to attend clients; each worker thread is capable of
-# attend more than one client request at the same time. The amount of 
-# clients that can be handled by each thread is calculated using the number of
-# file descriptors allowed by the system. This variable cannot be less than 1.
+    # Workers:
+    # --------
+    # Monkey launches threads to attend clients; each worker thread is capable of
+    # attend more than one client request at the same time. The amount of 
+    # clients that can be handled by each thread is calculated using the number of
+    # file descriptors allowed by the system. This variable cannot be less than 1.
 
-Workers 5
+    Workers 5
 
-# Timeout :
-# ---------
-# The lasgest span of time expressed in seconds during which you should
-# wait to recive the information or waiting time for the remote host to
-# accept an answer. (Timeout > 0)
+    # Timeout :
+    # ---------
+    # The lasgest span of time expressed in seconds during which you should
+    # wait to recive the information or waiting time for the remote host to
+    # accept an answer. (Timeout > 0)
 
-Timeout 15
+    Timeout 15
 
-# PidFile:
-# --------
-# File where the server guards the process number when starting.
+    # PidFile:
+    # --------
+    # File where the server guards the process number when starting.
 
-PidFile $logdir/monkey.pid
+    PidFile $logdir/monkey.pid
 
-# UserDir:
-# --------
-# Directory name for users home (/~user).
+    # UserDir:
+    # --------
+    # Directory name for users home (/~user).
 
-UserDir public_html
+    UserDir public_html
 
-# Indexfile :
-# -----------
-# Number of the inicial file of aperture when calling a directory.
- 
-Indexfile index.html index.htm
+    # Indexfile :
+    # -----------
+    # Number of the inicial file of aperture when calling a directory.
+
+    Indexfile index.html index.htm
+    
+    
+    # HideVersion :
+    # ------------- 
+    # For security reasons, sometimes people want to hide the version of his 
+    # own webserver to clients (values on/off).
+
+    HideVersion off
 
 
-# HideVersion :
-# ------------- 
-# For security reasons, sometimes people want to hide the version of his 
-# own webserver to clients (values on/off).
+    # Resume:
+    # -------
+    # Allow to retrieve chunks of file (values on/off).
 
-HideVersion off
+    Resume on
 
+    # User :
+    # ------
+    # If you want the webserver to run as a process of a defined user, you can
+    # define it in this variable, so that the change of the user can done,
+    # it's necessary to execute Monkey with root priviledges. In case it's
+    # started by a user that doesn't have root priviledges, this variable will
+    # be omitted.
 
-# Resume:
-# -------
-# Allow to retrieve chunks of file (values on/off).
+    User nobody
 
-Resume on
+    # -----------------
+    #  ADVANCED CONFIG
+    # -----------------
+    # Just change the next variables if you know what are you doing.
 
-# User :
-# ------
-# If you want the webserver to run as a process of a defined user, you can
-# define it in this variable, so that the change of the user can done,
-# it's necessary to execute Monkey with root priviledges. In case it's
-# started by a user that doesn't have root priviledges, this variable will
-# be omitted.
+    # KeepAlive :
+    # -----------
+    # Allow persistent connections. (on/off)
 
-User nobody
+    KeepAlive on
 
-# -----------------
-#  ADVANCED CONFIG
-# -----------------
-# Just change the next variables if you know what are you doing.
+    # MaxKeepAliveRequest
+    # -------------------
+    # Maximun number of request per connection. (value > 0)
 
-# KeepAlive :
-# -----------
-# Allow persistent connections. (on/off)
+    MaxKeepAliveRequest 20
 
-KeepAlive on
+    # KeepAliveTimeout
+    # ----------------
+    # Number of seconds to wait for the next request in a persistent
+    # connection (value > 0).
 
-# MaxKeepAliveRequest
-# -------------------
-# Maximun number of request per connection. (value > 0)
+    KeepAliveTimeout 15 
 
-MaxKeepAliveRequest 20
+    # SymLink
+    # -------
+    # Allow request to symbolic link files.
 
-# KeepAliveTimeout
-# ----------------
-# Number of seconds to wait for the next request in a persistent
-# connection (value > 0).
-
-KeepAliveTimeout 15 
-
-# SymLink
-# -------
-# Allow request to symbolic link files.
-#
-
-SymLink Off
-
+    SymLink Off
 EOF
