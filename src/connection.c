@@ -134,7 +134,10 @@ int mk_conn_write(int socket)
      * processed, if ret > 0 means that some data
      * still need to be send.
      */
-    if (ret <= 0) {
+    if (ret < 0) {
+        return -1;
+    }
+    else if (ret == 0) {
         return mk_http_request_end(socket);
     }
     else if (ret > 0) {

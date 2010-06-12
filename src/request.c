@@ -232,7 +232,7 @@ int mk_handler_write(int socket, struct client_request *cr)
                 }
                 break;
             case EXIT_ABORT:
-                return -1;
+                  return -1;
             }
         }
 
@@ -342,7 +342,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 #ifdef TRACE
         MK_TRACE("STAGE 20 requested close conexion");
 #endif
-        return -1;
+        return EXIT_ABORT;
     }
 
     /* Normal HTTP process */
