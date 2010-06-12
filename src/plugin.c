@@ -476,6 +476,9 @@ void mk_plugin_init()
                             config->serverconf, p->shortname);
 
             /* Init plugin */
+#ifdef TRACE
+            MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
+#endif
             ret = p->init(&api, plugin_confdir);
             if (ret < 0) {
                 /* Free plugin, do not register */
@@ -489,9 +492,6 @@ void mk_plugin_init()
 
             /* If everything worked, register plugin */
             mk_plugin_register(p);
-#ifdef TRACE
-            MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
-#endif
         }
         entry = entry->next;
     }
