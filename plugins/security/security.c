@@ -82,6 +82,25 @@ int mk_security_conf(char *confdir)
         entry = entry->next;
     }
 
+#ifdef TRACE
+    PLUGIN_TRACE("Security rules");
+    r = rules;
+    printf("%s", ANSI_YELLOW);
+    while (r) {
+        if (r->type == MK_SECURITY_TYPE_IP) {
+            printf("IP  :'");
+        }
+        else if (r->type == MK_SECURITY_TYPE_URL) {
+            printf("URL :'");
+        }
+        printf("%s'\n", r->value);
+        fflush(stdout);
+        r = r->next;
+    }
+    printf("%s", ANSI_RESET);
+    fflush(stdout);
+#endif
+
     mk_api->mem_free(conf_path);
     return ret;
 }
