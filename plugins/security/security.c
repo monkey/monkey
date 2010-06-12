@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2009, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,25 +44,28 @@ int mk_security_conf(char *confdir)
     int ret = 0;
     unsigned long len;
     char *conf_path;
-    struct mk_config *p;
     struct mk_security *new, *r;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
+    /* Read configuration */
     mk_api->str_build(&conf_path, &len, "%s/security.conf", confdir);
-
-    p = conf = mk_api->config_create(conf_path);
+    conf = mk_api->config_create(conf_path);
+    section = mk_api->config_section_get(conf, "RULES");
+    entry = section->entry;
 
     r = rules;
-    while (p) {
+    while (entry) {
         /* Passing to internal struct */
         new = mk_api->mem_alloc(sizeof(struct mk_security));
-        if (strcasecmp(p->key, "IP") == 0) {
+        if (strcasecmp(entry->key, "IP") == 0) {
             new->type = MK_SECURITY_TYPE_IP;
         }
-        else if (strcasecmp(p->key, "URL") == 0) {
+        else if (strcasecmp(entry->key, "URL") == 0) {
             new->type = MK_SECURITY_TYPE_URL;
         }
 
-        new->value = p->val;
+        new->value = entry->val;
         new->next = NULL;
 
         /* Linking node */
@@ -76,7 +79,7 @@ int mk_security_conf(char *confdir)
             }
             r->next = new;
         }
-        p = p->next;
+        entry = entry->next;
     }
 
     mk_api->mem_free(conf_path);

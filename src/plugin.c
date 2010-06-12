@@ -430,6 +430,7 @@ void mk_plugin_init()
     /* Config Callbacks */
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;
+    api->config_section_get = (void *) mk_config_section_get;
     api->config_section_getval = (void *) mk_config_section_getval;
 
     /* Scheduler and Event callbacks */
