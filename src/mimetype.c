@@ -39,7 +39,8 @@
 void mk_mimetype_read_config()
 {
     char path[MAX_PATH];
-    struct mk_config *cnf, *mime;
+    struct mk_config *cnf;
+    struct mk_config_section *section;
     struct mk_config_entry *entry;
 
     /* Read mime types configuration file */
@@ -47,13 +48,13 @@ void mk_mimetype_read_config()
     cnf = mk_config_create(path);
 
     /* Get MimeTypes tag */
-    mime = mk_config_tag_get(cnf, "MIMETYPES");
-    if (!mime) {
+    section = mk_config_section_get(cnf, "MIMETYPES");
+    if (!section) {
         puts("Error: Invalid mime type file");
         exit(1);
     }
 
-    entry = mime->entry;
+    entry = section->entry;
 
     while (entry) {
         if (mk_mimetype_add(entry->key, entry->val, NULL) != 0) {
