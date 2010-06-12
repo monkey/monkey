@@ -366,6 +366,7 @@ void mk_plugin_init()
     struct plugin *p;
     struct plugin_api *api;
     struct mk_config *cnf;
+    struct mk_config_section *section;
     struct mk_config_entry *entry;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
@@ -429,7 +430,7 @@ void mk_plugin_init()
     /* Config Callbacks */
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;
-    api->config_getval = (void *) mk_config_getval;
+    api->config_section_getval = (void *) mk_config_section_getval;
 
     /* Scheduler and Event callbacks */
     api->sched_get_connection = (void *) mk_sched_get_connection;
@@ -452,8 +453,11 @@ void mk_plugin_init()
         exit(1);
     }
 
+    /* Read section 'PLUGINS' */
+    section = mk_config_section_get(cnf, "PLUGINS");
+
     /* Read key entries */
-    entry = cnf->entry;
+    entry = section->entry;
     while (entry) {
         if (strcasecmp(entry->key, "Load") == 0) {
             handle = mk_plugin_load(entry->val);
@@ -478,7 +482,7 @@ void mk_plugin_init()
                 MK_TRACE("Unregister plugin '%s'", p->shortname);
 #endif
                 mk_plugin_free(p);
-                cnf = cnf->next;
+                entry = entry->next;
                 continue;
             }
 

@@ -257,7 +257,7 @@ struct mk_config *mk_config_create(const char *path)
 
 void mk_config_free(struct mk_config *conf)
 {
-    struct mk_config_section *prev, *section;
+    struct mk_config_section *prev=0, *section;
 
     /* Free sections */
     section = conf->section;
@@ -307,7 +307,7 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
-void *mk_config_getval(struct mk_config_section *section, char *key, int mode)
+void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
 {
     int on, off;
     struct mk_config_entry *entry;
@@ -351,6 +351,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     char *path = 0;
     struct stat checkdir;
     struct mk_config *cnf;
+    struct mk_config_section *section;
     struct mk_string_line *line, *line_val;
 
     config->serverconf = mk_string_dup(path_conf);
@@ -365,100 +366,108 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
 
     cnf = mk_config_create(path);
+    section = mk_config_section_get(cnf, "SERVER");
 
     /* Map source configuration */
     config->_config = cnf;
 
     /* Listen */
-    config->listen_addr = mk_config_getval(cnf, "Listen", MK_CONFIG_VAL_STR);
+    config->listen_addr = mk_config_section_getval(section, "Listen", 
+                                                   MK_CONFIG_VAL_STR);
     if (!config->listen_addr) {
         config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
     }
 
     /* Connection port */
-    config->serverport = (int) mk_config_getval(cnf,
-                                                "Port", MK_CONFIG_VAL_NUM);
+    config->serverport = (int) mk_config_section_getval(section,
+                                                        "Port", 
+                                                        MK_CONFIG_VAL_NUM);
     if (!config->serverport >= 1 && !config->serverport <= 65535) {
         mk_config_print_error_msg("Port", path);
     }
 
     /* Number of thread workers */
-    config->workers = (int) mk_config_getval(cnf,
-                                             "Workers", MK_CONFIG_VAL_NUM);
+    config->workers = (int) mk_config_section_getval(section,
+                                                     "Workers", 
+                                                     MK_CONFIG_VAL_NUM);
     if (config->maxclients < 1) {
         mk_config_print_error_msg("Workers", path);
     }
 
     /* Timeout */
-    config->timeout = (int) mk_config_getval(cnf,
-                                             "Timeout", MK_CONFIG_VAL_NUM);
+    config->timeout = (int) mk_config_section_getval(section,
+                                                     "Timeout", MK_CONFIG_VAL_NUM);
     if (config->timeout < 1) {
         mk_config_print_error_msg("Timeout", path);
     }
-
+    
     /* KeepAlive */
-    config->keep_alive = (int) mk_config_getval(cnf,
-                                                "KeepAlive",
-                                                MK_CONFIG_VAL_BOOL);
+    config->keep_alive = (int) mk_config_section_getval(section,
+                                                        "KeepAlive",
+                                                        MK_CONFIG_VAL_BOOL);
     if (config->keep_alive == VAR_ERR) {
         mk_config_print_error_msg("KeepAlive", path);
     }
 
     /* MaxKeepAliveRequest */
-    config->max_keep_alive_request = (int) mk_config_getval(cnf,
-                                                            "MaxKeepAliveRequest",
-                                                            MK_CONFIG_VAL_NUM);
+    config->max_keep_alive_request = (int)
+        mk_config_section_getval(section,
+                                 "MaxKeepAliveRequest",
+                                 MK_CONFIG_VAL_NUM);
+    
     if (config->max_keep_alive_request == 0) {
         mk_config_print_error_msg("MaxKeepAliveRequest", path);
     }
 
     /* KeepAliveTimeout */
-    config->keep_alive_timeout = (int) mk_config_getval(cnf,
-                                                        "KeepAliveTimeout",
-                                                        MK_CONFIG_VAL_NUM);
+    config->keep_alive_timeout = (int) mk_config_section_getval(section,
+                                                                "KeepAliveTimeout",
+                                                                MK_CONFIG_VAL_NUM);
     if (config->keep_alive_timeout == 0) {
         mk_config_print_error_msg("KeepAliveTimeout", path);
     }
 
     /* Pid File */
-    config->pid_file_path = mk_config_getval(cnf,
-                                             "PidFile", MK_CONFIG_VAL_STR);
-
+    config->pid_file_path = mk_config_section_getval(section,
+                                                     "PidFile", MK_CONFIG_VAL_STR);
+    
     /* Home user's directory /~ */
-    config->user_dir = mk_config_getval(cnf, "UserDir", MK_CONFIG_VAL_STR);
+    config->user_dir = mk_config_section_getval(section, 
+                                                "UserDir", MK_CONFIG_VAL_STR);
 
     /* Index files */
-    line_val = line = mk_config_getval(cnf, "Indexfile", MK_CONFIG_VAL_LIST);
+    line_val = line = mk_config_section_getval(section,
+                                               "Indexfile", MK_CONFIG_VAL_LIST);
     while (line_val != NULL) {
         mk_config_add_index(line_val->val);
         line_val = line_val->next;
     }
 
     /* HideVersion Variable */
-    config->hideversion = (int) mk_config_getval(cnf,
-                                                 "HideVersion",
-                                                 MK_CONFIG_VAL_BOOL);
+    config->hideversion = (int) mk_config_section_getval(section,
+                                                         "HideVersion",
+                                                         MK_CONFIG_VAL_BOOL);
     if (config->hideversion == VAR_ERR) {
         mk_config_print_error_msg("HideVersion", path);
     }
 
     /* User Variable */
-    config->user = mk_config_getval(cnf, "User", MK_CONFIG_VAL_STR);
+    config->user = mk_config_section_getval(section, "User", MK_CONFIG_VAL_STR);
 
     /* Resume */
-    config->resume = (int) mk_config_getval(cnf,
-                                            "Resume", MK_CONFIG_VAL_BOOL);
+    config->resume = (int) mk_config_section_getval(section,
+                                                    "Resume", MK_CONFIG_VAL_BOOL);
     if (config->resume == VAR_ERR) {
         mk_config_print_error_msg("Resume", path);
     }
 
     /* Symbolic Links */
-    config->symlink = (int) mk_config_getval(cnf,
-                                             "SymLink", MK_CONFIG_VAL_BOOL);
+    config->symlink = (int) mk_config_section_getval(section,
+                                                     "SymLink", MK_CONFIG_VAL_BOOL);
     if (config->symlink == VAR_ERR) {
         mk_config_print_error_msg("SymLink", path);
     }
-
+    
     mk_mem_free(path);
     mk_config_read_hosts(path_conf);
 }
@@ -519,29 +528,26 @@ struct host *mk_config_get_host(char *path)
     unsigned long len = 0;
     struct stat checkdir;
     struct host *host;
-    struct mk_config *cnf, *host_conf;
+    struct mk_config *cnf;
+    struct mk_config_section *section;
 
     /* Read configuration file */
     cnf = mk_config_create(path);
-    /* Read tag 'HOST' */
-    host_conf = mk_config_tag_get(cnf, "HOST");
 
-    if (!host_conf) {
-        puts("Error: HOST section has not been defined");
-        exit(1);
-    }
+    /* Read tag 'HOST' */
+    section = mk_config_section_get(cnf, "HOST");
 
     /* Alloc configuration node */
     host = mk_mem_malloc_z(sizeof(struct host));
     host->_config = cnf;
     host->file = mk_string_dup(path);
-    host->servername = mk_config_getval(host_conf, "Servername", 
-                                        MK_CONFIG_VAL_STR);
+    host->servername = mk_config_section_getval(section, "Servername", 
+                                                MK_CONFIG_VAL_STR);
 
     /* document root handled by a mk_pointer */
-    host->documentroot.data = mk_config_getval(host_conf,
-                                               "DocumentRoot",
-                                               MK_CONFIG_VAL_STR);
+    host->documentroot.data = mk_config_section_getval(section,
+                                                       "DocumentRoot",
+                                                       MK_CONFIG_VAL_STR);
     host->documentroot.len = strlen(host->documentroot.data);
 
     /* validate document root configured */
@@ -575,11 +581,13 @@ struct host *mk_config_get_host(char *path)
 
 
     /* Access log */
-    host->access_log_path = mk_config_getval(host_conf,
-                                             "AccessLog", MK_CONFIG_VAL_STR);
+    host->access_log_path = mk_config_section_getval(section,
+                                                     "AccessLog", 
+                                                     MK_CONFIG_VAL_STR);
     /* Error log */
-    host->error_log_path = mk_config_getval(host_conf,
-                                            "ErrorLog", MK_CONFIG_VAL_STR);
+    host->error_log_path = mk_config_section_getval(section,
+                                                    "ErrorLog", 
+                                                    MK_CONFIG_VAL_STR);
 
     if (host->access_log_path != NULL) {
         if (pipe(host->log_access) < 0) {

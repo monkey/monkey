@@ -195,9 +195,11 @@ struct plugin_api
     int (*socket_send) (int, const void *, size_t);
     int (*socket_read) (int, void *, int);
     int (*socket_send_file) (int, int, off_t, size_t);
+
     struct mk_config *(*config_create) (char *);
     void (*config_free) (struct mk_config *);
-    void *(*config_getval) (struct mk_config *, char *, int);
+    void *(*config_section_getval) (struct mk_config_section *, char *, int);
+
     struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
                                                       int);
     int (*event_add) (int, int, struct plugin *, struct client_request *, 
