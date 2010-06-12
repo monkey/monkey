@@ -1,3 +1,27 @@
+commit 07abe05218db6f412aea151019921f5cc9739afb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 14:35:13 2010 -0400
+
+    Monkey 0.10.2
+
+commit a103adf31f9bfb3341a59518f47b098693c56bcd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 8 14:40:55 2010 -0400
+
+    Config: skip 'value' empty left spaces
+
+commit 61ad3e7cd2d71fdcb1455369b33b08b9c8fb0178
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 8 14:39:08 2010 -0400
+
+    Fix #6: Monkey as daemon, logger do not write log files
+
+commit 88db3540cd7fcd22eaba8f2f4a225996960acf39
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 9 20:24:30 2010 -0400
+
+    Update ChangeLog
+
 commit 456fa7adae97f9a2a5e2b9358f1c7229662f5d29
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Apr 9 20:22:37 2010 -0400
