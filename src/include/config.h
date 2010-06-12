@@ -42,28 +42,19 @@
 #define MK_CONFIG_VAL_LIST 3
 
 /* Indented configuration */
-struct mk_iconf 
-{
-    char *header;
-    struct mk_iconf_entry *entry;
-    struct mk_iconf *next;
-};
-
-struct mk_iconf_entry
-{
-    char *key;
-    char *val;
-    struct mk_iconf_entry *next;
-};
-
-
 struct mk_config
 {
-    char *key;
-    char *val;
+    char *header;
+    struct mk_config_entry *entry;
     struct mk_config *next;
 };
 
+struct mk_config_entry
+{
+    char *key;
+    char *val;
+    struct mk_config_entry *next;
+};
 
 /* Base struct of server */
 struct server_config
@@ -146,7 +137,9 @@ void mk_config_print_error_msg(char *variable, char *path);
 void mk_config_set_init_values(void);
 
 /* config helpers */
-struct mk_config *mk_config_create(char *path);
+struct mk_config *mk_config_create(const char *path);
+struct mk_config *mk_config_tag_get(struct mk_config *iconf, const char *tag);
+
 void mk_config_free(struct mk_config *cnf);
 void *mk_config_getval(struct mk_config *cnf, char *key, int mode);
 

@@ -366,6 +366,7 @@ void mk_plugin_init()
     struct plugin *p;
     struct plugin_api *api;
     struct mk_config *cnf;
+    struct mk_config_entry *entry;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
@@ -445,14 +446,21 @@ void mk_plugin_init()
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
     cnf = mk_config_create(path);
+    
+    if (!cnf) {
+        puts("Error: Plugins configuration file could not be readed");
+        exit(1);
+    }
 
-    while (cnf) {
-        if (strcasecmp(cnf->key, "LoadPlugin") == 0) {
-            handle = mk_plugin_load(cnf->val);
+    /* Read key entries */
+    entry = cnf->entry;
+    while (entry) {
+        if (strcasecmp(entry->key, "Load") == 0) {
+            handle = mk_plugin_load(entry->val);
 
-            p = mk_plugin_alloc(handle, cnf->val);
+            p = mk_plugin_alloc(handle, entry->val);
             if (!p) {
-                fprintf(stderr, "Plugin error: %s\n", cnf->val);
+                fprintf(stderr, "Plugin error: %s\n", entry->val);
                 dlclose(handle);
             }
 
@@ -480,7 +488,7 @@ void mk_plugin_init()
             MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
 #endif
         }
-        cnf = cnf->next;
+        entry = entry->next;
     }
 
     if (!plg_netiomap) {

@@ -334,36 +334,38 @@ EOF
     echo "#" >> $plugins_load
     echo "# Please check the following list of available plugins:" >> $plugins_load
     echo "" >> $plugins_load
+    echo "[PLUGINS]" >> $plugins_load
+    echo "" >> $plugins_load
 
     for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
     do
-        comment=""
+        comment="    "
 	if test -e $plugin_dir/DISABLED ; then
             continue
 	fi
 
         if test -e $plugin_dir/MANDATORY ; then
-	    comment=""
+	    comment="    "
         fi
 
         if test -e $plugin_dir/OPTIONAL ; then
-            comment="# "
+            comment="    # "
 	fi
 
         echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
         sed -e "s/\$CC/$CC/" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         if test -e $plugin_dir/ABOUT ; then
-            cat $plugin_dir/ABOUT | sed -e 's/^/# /' >> ../conf/plugins.load
-	    echo "#" >> ../conf/plugins.load
+            cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
+	    echo "    #" >> ../conf/plugins.load
 	else
-	    echo "#" >> ../conf/plugins.load
+	    echo "    #" >> ../conf/plugins.load
 	fi
 
 	if [ "$plugdir" != "" ]; then
-	    echo "${comment}LoadPlugin $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+	    echo "${comment}Load $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	else
-	    echo "${comment}LoadPlugin $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+	    echo "${comment}Load $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
 	fi
 
 	echo "" >> ../conf/plugins.load

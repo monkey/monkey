@@ -49,12 +49,28 @@ void mk_config_error(const char *path, int line, const char *msg)
     exit(1);
 }
 
-struct mk_iconf *mk_config_add_tag(struct mk_iconf *iconf, const char *tag)
+struct mk_config *mk_config_tag_get(struct mk_config *iconf, const char *tag)
 {
-    struct mk_iconf *aux, *new;
+    struct mk_config *cnf = 0;
 
-    new = mk_mem_malloc(sizeof(struct mk_iconf));
+    cnf = iconf;
+    while (cnf) {
+        if (strcasecmp(cnf->header, tag) == 0) {
+            return cnf;
+        }
+        cnf = cnf->next;
+    }
+
+    return NULL;
+}
+
+struct mk_config *mk_config_tag_add(struct mk_config *iconf, const char *tag)
+{
+    struct mk_config *aux, *new;
+
+    new = mk_mem_malloc(sizeof(struct mk_config));
     new->header = mk_string_dup(tag);
+    new->entry = NULL;
     new->next = NULL;
     
     if (!iconf) { 
@@ -70,14 +86,14 @@ struct mk_iconf *mk_config_add_tag(struct mk_iconf *iconf, const char *tag)
     return new;
 }
 
-void mk_config_add_entry(struct mk_iconf *iconf, const char *key, 
+void mk_config_entry_add(struct mk_config *iconf, const char *key, 
                          const char *val)
 {
-    struct mk_iconf *aux_iconf;
-    struct mk_iconf_entry *aux_entry, *new_entry;
+    struct mk_config *aux_iconf;
+    struct mk_config_entry *aux_entry, *new_entry;
 
     /* Alloc new entry */
-    new_entry = mk_mem_malloc(sizeof(struct mk_iconf_entry));
+    new_entry = mk_mem_malloc(sizeof(struct mk_config_entry));
     new_entry->key = mk_string_dup(key);
     new_entry->val = mk_string_dup(val);
     new_entry->next = NULL;
@@ -85,6 +101,7 @@ void mk_config_add_entry(struct mk_iconf *iconf, const char *key,
     /* Look for last header tag created */
     aux_iconf = iconf;
     while (aux_iconf->next) {
+        MK_TRACE("LOOP1");
         aux_iconf = aux_iconf->next;
     }
 
@@ -102,18 +119,18 @@ void mk_config_add_entry(struct mk_iconf *iconf, const char *key,
     }
 }
 
-struct mk_iconf *mk_config_validate(const char *path)
+struct mk_config *mk_config_create(const char *path)
 {
     FILE *f;
     int len;
     int line = 0;
-    int indent_len;
+    int indent_len = -1;
     char buf[255];
     char *tag = 0;
     char *indent = 0;
     char *key, *val, *last;
 
-    struct mk_iconf *iconf = 0;
+    struct mk_config *iconf = 0;
 
     if ((f = fopen(path, "r")) == NULL) {
         fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
@@ -125,8 +142,9 @@ struct mk_iconf *mk_config_validate(const char *path)
         len = strlen(buf);
         if (buf[len - 1] == '\n') {
             buf[--len] = 0;
-            if (len && buf[len - 1] == '\r')
+            if (len && buf[len - 1] == '\r') {
                 buf[--len] = 0;
+            }
         }
         
         line++;
@@ -138,7 +156,7 @@ struct mk_iconf *mk_config_validate(const char *path)
         if (buf[0] == '#') {
             if (tag) {
                 mk_mem_free(tag);
-                tag = 0;
+                tag = NULL;
             }
             continue;
         }
@@ -148,12 +166,11 @@ struct mk_iconf *mk_config_validate(const char *path)
             end = mk_string_char_search(buf, ']', len);
             if (end > 0) {
                 tag = mk_string_copy_substr(buf, 1, end);
-
                 if (!iconf) {
-                    iconf = mk_config_add_tag(NULL, tag);
+                    iconf = mk_config_tag_add(NULL, tag);
                 }
                 else {
-                    mk_config_add_tag(iconf, tag);
+                    mk_config_tag_add(iconf, tag);
                 }
                 continue;
             }
@@ -194,12 +211,12 @@ struct mk_iconf *mk_config_validate(const char *path)
                 continue;
             }
 
-            mk_config_add_entry(iconf, key, val);
+            mk_config_entry_add(iconf, key, val);
         }
     }
 
-    struct mk_iconf *t;
-    struct mk_iconf_entry *e;
+    struct mk_config *t;
+    struct mk_config_entry *e;
 
     t = iconf;
     while(t) {
@@ -212,80 +229,9 @@ struct mk_iconf *mk_config_validate(const char *path)
         t = t->next;
     }
     fflush(stdout);
-    return iconf;
-}
-
-struct mk_config *mk_config_create(char *path)
-{
-    FILE *f;
-    int len;
-    char buf[255];
-    char *key = 0, *val = 0, *last = 0;
-    struct mk_config *cnf = 0, *new, *p;
-
-    printf("\npath: '%s'", path + strlen(path) - 11);
-    fflush(stdout);
-    
-    if (strcmp(path + strlen(path) - 11, "monkey.conf") == 0) {
-        printf("\ngoing to validate\n\n");
-        fflush(stdout);
-
-        mk_config_validate(path);
-        exit(0);
-    }
-
-    if ((f = fopen(path, "r")) == NULL) {
-        fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
-        exit(1);
-    }
-
-    /* looking for configuration directives */
-    while (fgets(buf, 255, f)) {
-        len = strlen(buf);
-        if (buf[len - 1] == '\n') {
-            buf[--len] = 0;
-            if (len && buf[len - 1] == '\r')
-                buf[--len] = 0;
-        }
-
-        if (!buf[0] || buf[0] == '#')
-            continue;
-
-        key = strtok_r(buf, "\"\t ", &last);
-        val = strtok_r(NULL, "\"\t", &last);
-
-        if (!key || !val) {
-            continue;
-        }
-
-        /* Skip empty left spaces */
-        while(val && *val == ' ') val++;
-        if (!val) {
-            continue;
-        }
-
-        /* Alloc new entry found */
-        new = mk_mem_malloc(sizeof(struct mk_config));
-        new->key = mk_string_dup(key);
-
-        new->val = mk_string_dup(val);
-        new->next = NULL;
-
-        /* Link to main list */
-        if (!cnf) {
-            cnf = new;
-        }
-        else {
-            p = cnf;
-            while (p->next) {
-                p = p->next;
-            }
-            p->next = new;
-        }
-    }
 
     fclose(f);
-    return cnf;
+    return iconf;
 }
 
 void mk_config_free(struct mk_config *cnf)
@@ -312,19 +258,19 @@ void mk_config_free(struct mk_config *cnf)
 void *mk_config_getval(struct mk_config *cnf, char *key, int mode)
 {
     int on, off;
-    struct mk_config *p;
+    struct mk_config_entry *entry;
 
-    p = cnf;
-    while (p) {
-        if (strcasecmp(p->key, key) == 0) {
+    entry = cnf->entry;
+    while (entry) {
+        if (strcasecmp(entry->key, key) == 0) {
             switch (mode) {
             case MK_CONFIG_VAL_STR:
-                return (void *) p->val;
+                return (void *) entry->val;
             case MK_CONFIG_VAL_NUM:
-                return (void *) atoi(p->val);
+                return (void *) atoi(entry->val);
             case MK_CONFIG_VAL_BOOL:
-                on = strcasecmp(p->val, VALUE_ON);
-                off = strcasecmp(p->val, VALUE_OFF);
+                on = strcasecmp(entry->val, VALUE_ON);
+                off = strcasecmp(entry->val, VALUE_OFF);
 
                 if (on != 0 && off != 0) {
                     return (void *) -1;
@@ -336,11 +282,11 @@ void *mk_config_getval(struct mk_config *cnf, char *key, int mode)
                     return (void *) VAR_OFF;
                 }
             case MK_CONFIG_VAL_LIST:
-                return mk_string_split_line(p->val);
+                return mk_string_split_line(entry->val);
             }
         }
         else {
-            p = p->next;
+            entry = entry->next;
         }
     }
     return NULL;
