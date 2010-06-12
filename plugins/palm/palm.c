@@ -48,59 +48,40 @@ mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
 {
-    int i, ret = 0;
+    int ret = 0;
     unsigned long len;
     char *conf_path;
-    struct mk_config *p;
     struct mk_palm *new, *r;
-    struct mk_string_line *line=0, *lp;
+    struct mk_config_section *section;
 
+    /* Read palm configuration file */
     mk_api->str_build(&conf_path, &len, "%s/palm.conf", confdir);
-
-    p = conf = mk_api->config_create(conf_path);
+    conf = mk_api->config_create(conf_path);
+    section = conf->section;
 
     r = palms;
-    while (p) {
-        /* Validate palm configuration line */
-        i = 0;
-        if (strcasecmp(p->key, "Palm") == 0) {
-            line = mk_api->str_split_line(p->val);
-            lp = line;
-
-            while (lp) {
-                i++;
-                if (lp->len <= 0) {
-                    fprintf(stderr, MK_PALM_ERROR_LINE, p->val);
-                    _exit(1);
-                }
-                lp = lp->next;
-            }
-
-            if (i != 4) {
-                fprintf(stderr, MK_PALM_ERROR_LINE, p->val);
-                _exit(1);
-            }
+    while (section) {
+        /* Just read PALM sections */
+        if (strcasecmp(section->name, "PALM") != 0) {
+            section = section->next;
+            continue;
         }
-        lp = line;
 
         /* Alloc node */
         new = mk_api->mem_alloc(sizeof(struct mk_palm));
 
         /* Palm file extensions */
-        new->extension = lp->val;
-        lp = lp->next;
-
+        new->extension = mk_api->config_section_getval(section, "Extension",
+                                                       MK_CONFIG_VAL_STR);
         /* Palm mime type */
-        new->mimetype = lp->val;
-        lp = lp->next;
-
+        new->mimetype = mk_api->config_section_getval(section, "Mimetype",
+                                                      MK_CONFIG_VAL_STR);
         /* Palm server address */
-        new->server_addr = lp->val;
-        lp = lp->next;
-
+        new->server_addr = mk_api->config_section_getval(section, "ServerAddr",
+                                                         MK_CONFIG_VAL_STR);
         /* Palm server TCP port */
-        new->server_port = atoi(lp->val);
-        lp = lp->next;
+        new->server_port = (int) mk_api->config_section_getval(section, "ServerPort",
+                                                               MK_CONFIG_VAL_NUM);
 
 #ifdef TRACE
         PLUGIN_TRACE("RegPalm '%s|%s|%s|%i'", new->extension, new->mimetype,
@@ -120,7 +101,7 @@ int mk_palm_conf(char *confdir)
             }
             r->next = new;
         }
-        p = p->next;
+        section = section->next;
     }
 
     mk_api->mem_free(conf_path);
