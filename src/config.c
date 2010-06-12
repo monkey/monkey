@@ -41,6 +41,7 @@
 #include "memory.h"
 #include "plugin.h"
 
+/* Raise a configuration error */
 void mk_config_error(const char *path, int line, const char *msg)
 {
     printf("\nReading %s", path);
@@ -49,48 +50,66 @@ void mk_config_error(const char *path, int line, const char *msg)
     exit(1);
 }
 
-struct mk_config *mk_config_tag_get(struct mk_config *iconf, const char *tag)
+/* Returns a configuration section by [section name] */
+struct mk_config_section *mk_config_section_get(struct mk_config *conf, 
+                                                const char *section_name)
 {
-    struct mk_config *cnf = 0;
+    struct mk_config_section *section;
 
-    cnf = iconf;
-    while (cnf) {
-        if (strcasecmp(cnf->header, tag) == 0) {
-            return cnf;
+    section = conf->section;
+    while (section) {
+        if (strcasecmp(section->name, section_name) == 0) {
+            return section;
         }
-        cnf = cnf->next;
+        section = section->next;
     }
 
     return NULL;
 }
 
-struct mk_config *mk_config_tag_add(struct mk_config *iconf, const char *tag)
+/* Register a new section into the configuration struct */
+void mk_config_section_add(struct mk_config *conf, char *section_name)
 {
-    struct mk_config *aux, *new;
+    struct mk_config_section *new, *aux;
 
-    new = mk_mem_malloc(sizeof(struct mk_config));
-    new->header = mk_string_dup(tag);
+    /* Alloc section node */
+    new = mk_mem_malloc(sizeof(struct mk_config_section));
+    new->name = section_name;
     new->entry = NULL;
     new->next = NULL;
     
-    if (!iconf) { 
-        return new;
+    if (!conf->section) { 
+        conf->section = new;
+        return;
     }
 
-    aux = iconf;
+    /* go to last section available */
+    aux = conf->section;
     while (aux->next) {
         aux = aux->next;
     }
 
     aux->next = new;
-    return new;
+    return;
 }
 
-void mk_config_entry_add(struct mk_config *iconf, const char *key, 
-                         const char *val)
+/* Register a key/value entry in the last section available of the struct */
+void mk_config_entry_add(struct mk_config *conf, 
+                         const char *key, const char *val)
 {
-    struct mk_config *aux_iconf;
+    struct mk_config_section *section;
     struct mk_config_entry *aux_entry, *new_entry;
+
+    if (!conf->section) {
+        puts("Error: there are not sections available!");
+        exit(1);
+    }
+
+    /* Go to last section */
+    section = conf->section;
+    while (section->next) {
+        section = section->next;
+    }
 
     /* Alloc new entry */
     new_entry = mk_mem_malloc(sizeof(struct mk_config_entry));
@@ -98,44 +117,44 @@ void mk_config_entry_add(struct mk_config *iconf, const char *key,
     new_entry->val = mk_string_dup(val);
     new_entry->next = NULL;
 
-    /* Look for last header tag created */
-    aux_iconf = iconf;
-    while (aux_iconf->next) {
-        MK_TRACE("LOOP1");
-        aux_iconf = aux_iconf->next;
-    }
-
-    aux_entry = aux_iconf->entry;
-    if (!aux_entry) {
-        aux_iconf->entry = new_entry;
+    /* Add first entry */
+    if (!section->entry) {
+        section->entry = new_entry;
         return;
     }
-    else {
-        while (aux_entry->next) {
-            aux_entry = aux_entry->next;
-        }
 
-        aux_entry->next = new_entry;
+    /* Go to last entry */
+    aux_entry = section->entry;
+    while (aux_entry->next) {
+        aux_entry = aux_entry->next;
     }
+
+    aux_entry->next = new_entry;
 }
 
 struct mk_config *mk_config_create(const char *path)
 {
-    FILE *f;
     int len;
     int line = 0;
     int indent_len = -1;
     char buf[255];
-    char *tag = 0;
+    char *section = 0;
     char *indent = 0;
     char *key, *val, *last;
+    struct mk_config *conf = 0;
+    FILE *f;
 
-    struct mk_config *iconf = 0;
-
+    /* Open configuration file */
     if ((f = fopen(path, "r")) == NULL) {
         fprintf(stderr, "\nConfig Error: I can't open %s file\n\n", path);
         exit(1);
     }
+
+    /* Alloc configuration node */
+    conf = mk_mem_malloc(sizeof(struct mk_config));
+    conf->created = time(NULL);
+    conf->file = mk_string_dup(path);
+    conf->section = NULL;
 
     /* looking for configuration directives */
     while (fgets(buf, 255, f)) {
@@ -147,31 +166,29 @@ struct mk_config *mk_config_create(const char *path)
             }
         }
         
+        /* Line number */
         line++;
 
         if (!buf[0]) {
             continue;
         }
 
+        /* Skip commented lines */
         if (buf[0] == '#') {
-            if (tag) {
-                mk_mem_free(tag);
-                tag = NULL;
+            if (section) {
+                mk_mem_free(section);
+                section = NULL;
             }
             continue;
         }
 
+        /* Section definition */
         if (buf[0] == '[') {
             int end = -1;
             end = mk_string_char_search(buf, ']', len);
             if (end > 0) {
-                tag = mk_string_copy_substr(buf, 1, end);
-                if (!iconf) {
-                    iconf = mk_config_tag_add(NULL, tag);
-                }
-                else {
-                    mk_config_tag_add(iconf, tag);
-                }
+                section = mk_string_copy_substr(buf, 1, end);
+                mk_config_section_add(conf, section);
                 continue;
             }
             else {
@@ -193,8 +210,9 @@ struct mk_config *mk_config_create(const char *path)
                     continue;
                 }
             }
-            
-            if (strncmp(buf, indent, indent_len) != 0 || !tag || 
+
+            /* Validate indentation level */
+            if (strncmp(buf, indent, indent_len) != 0 || !section || 
                 isblank(buf[indent_len]) != 0) {
                 mk_config_error(path, line, "Invalid indentation level");
             }
@@ -203,6 +221,7 @@ struct mk_config *mk_config_create(const char *path)
                 continue;
             }
 
+            /* get line key and value */
             key = strtok_r(buf + indent_len, "\"\t ", &last);
             val = strtok_r(NULL, "\"\t", &last); 
 
@@ -211,14 +230,16 @@ struct mk_config *mk_config_create(const char *path)
                 continue;
             }
 
-            mk_config_entry_add(iconf, key, val);
+            /* Register entry */
+            mk_config_entry_add(conf, key, val);
         }
     }
 
+    /*
     struct mk_config *t;
     struct mk_config_entry *e;
 
-    t = iconf;
+    t = conf;
     while(t) {
         printf("\n[%s]", t->header);
         e = t->entry;
@@ -229,38 +250,69 @@ struct mk_config *mk_config_create(const char *path)
         t = t->next;
     }
     fflush(stdout);
-
+    */
     fclose(f);
-    return iconf;
+    return conf;
 }
 
-void mk_config_free(struct mk_config *cnf)
+void mk_config_free(struct mk_config *conf)
 {
-    struct mk_config *prev = 0, *target;
+    struct mk_config_section *prev, *section;
 
-    target = cnf;
+    /* Free sections */
+    section = conf->section;
+    while (section) {
+        while (section->next) {
+            prev = section;
+            section = section->next;
+        }
+
+        /* Free section entries */
+        mk_config_free_entries(section);
+
+        /* Free section node */
+        mk_mem_free(section->name);
+        mk_mem_free(section);
+
+        if (section == conf->section) {
+            return;
+        }
+        prev->next = NULL;
+        section = conf->section;
+    }
+}
+
+void mk_config_free_entries(struct mk_config_section *section)
+{
+    struct mk_config_entry *prev = 0, *target;
+
+    target = section->entry;
     while (target) {
         while (target->next) {
             prev = target;
             target = target->next;
         }
 
-        mk_mem_free(target);
+        /* Free memory assigned */
+        mk_mem_free(target->key);
+        mk_mem_free(target->val);
 
-        if (target == cnf) {
+        if (target == section->entry) {
+            section->entry = NULL;
             return;
         }
+
         prev->next = NULL;
-        target = cnf;
+        target = section->entry;
     }
 }
 
-void *mk_config_getval(struct mk_config *cnf, char *key, int mode)
+void *mk_config_getval(struct mk_config_section *section, char *key, int mode)
 {
     int on, off;
     struct mk_config_entry *entry;
 
-    entry = cnf->entry;
+    entry = section->entry;
     while (entry) {
         if (strcasecmp(entry->key, key) == 0) {
             switch (mode) {
@@ -313,6 +365,9 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
 
     cnf = mk_config_create(path);
+
+    /* Map source configuration */
+    config->_config = cnf;
 
     /* Listen */
     config->listen_addr = mk_config_getval(cnf, "Listen", MK_CONFIG_VAL_STR);
@@ -405,7 +460,6 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     mk_mem_free(path);
-    mk_config_free(cnf);
     mk_config_read_hosts(path_conf);
 }
 
@@ -465,21 +519,34 @@ struct host *mk_config_get_host(char *path)
     unsigned long len = 0;
     struct stat checkdir;
     struct host *host;
-    struct mk_config *cnf;
+    struct mk_config *cnf, *host_conf;
 
+    /* Read configuration file */
     cnf = mk_config_create(path);
+    /* Read tag 'HOST' */
+    host_conf = mk_config_tag_get(cnf, "HOST");
 
+    if (!host_conf) {
+        puts("Error: HOST section has not been defined");
+        exit(1);
+    }
+
+    /* Alloc configuration node */
     host = mk_mem_malloc_z(sizeof(struct host));
-    host->servername = 0;
+    host->_config = cnf;
     host->file = mk_string_dup(path);
+    host->servername = mk_config_getval(host_conf, "Servername", 
+                                        MK_CONFIG_VAL_STR);
 
-    host->servername = mk_config_getval(cnf, "Servername", MK_CONFIG_VAL_STR);
-    host->documentroot.data = mk_config_getval(cnf,
+    /* document root handled by a mk_pointer */
+    host->documentroot.data = mk_config_getval(host_conf,
                                                "DocumentRoot",
                                                MK_CONFIG_VAL_STR);
     host->documentroot.len = strlen(host->documentroot.data);
+
+    /* validate document root configured */
     if (stat(host->documentroot.data, &checkdir) == -1) {
-        fprintf(stderr, "ERROR: Invalid path to Server_root in %s\n\n", path);
+        fprintf(stderr, "ERROR: Invalid path to DocumentRoot in %s\n\n", path);
         exit(1);
     }
     else if (!(checkdir.st_mode & S_IFDIR)) {
@@ -488,13 +555,6 @@ struct host *mk_config_get_host(char *path)
                 path);
         exit(1);
     }
-
-    /* Access log */
-    host->access_log_path = mk_config_getval(cnf,
-                                             "AccessLog", MK_CONFIG_VAL_STR);
-    /* Error log */
-    host->error_log_path = mk_config_getval(cnf,
-                                            "ErrorLog", MK_CONFIG_VAL_STR);
 
     if (!host->servername) {
         mk_config_free(cnf);
@@ -513,24 +573,31 @@ struct host *mk_config_get_host(char *path)
                     &host->header_host_signature.len,
                     "Server: %s", host->host_signature);
 
-    if( host->access_log_path != NULL ) {
+
+    /* Access log */
+    host->access_log_path = mk_config_getval(host_conf,
+                                             "AccessLog", MK_CONFIG_VAL_STR);
+    /* Error log */
+    host->error_log_path = mk_config_getval(host_conf,
+                                            "ErrorLog", MK_CONFIG_VAL_STR);
+
+    if (host->access_log_path != NULL) {
         if (pipe(host->log_access) < 0) {
             perror("pipe");
         } else {
             fcntl(host->log_access[1], F_SETFL, O_NONBLOCK);
         }
     }
-
-    if( host->error_log_path != NULL ) {
+    
+    if (host->error_log_path != NULL) {
         if (pipe(host->log_error) < 0) {
             perror("pipe");
         } else {
             fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
         }
     }
-
+    
     host->next = NULL;
-    mk_config_free(cnf);
     return host;
 }
 
@@ -622,13 +689,13 @@ struct host *mk_config_host_find(mk_pointer host)
     aux_host = config->hosts;
 
     while (aux_host) {
-        if (strncasecmp(aux_host->servername, host.data, host.len) == 0)
-            break;
-        else
-            aux_host = aux_host->next;
+        if (strncasecmp(aux_host->servername, host.data, host.len) == 0) {
+            return aux_host;
+        }
+        aux_host = aux_host->next;
     }
 
-    return aux_host;
+    return NULL;
 }
 
 void mk_config_sanity_check()

@@ -44,9 +44,19 @@
 /* Indented configuration */
 struct mk_config
 {
-    char *header;
+    int created;
+    char *file;
+
+    /* list of sections */
+    struct mk_config_section *section;
+};
+
+struct mk_config_section
+{
+    char *name;
+
     struct mk_config_entry *entry;
-    struct mk_config *next;
+    struct mk_config_section *next;
 };
 
 struct mk_config_entry
@@ -107,6 +117,9 @@ struct server_config
 
     mode_t open_flags;
     struct plugin *plugins;
+
+    /* source configuration */
+    struct mk_config *_config;
 };
 
 struct server_config *config;
@@ -126,6 +139,10 @@ struct host
     int log_access[2];
     int log_error[2];
 
+    /* source configuration */
+    struct mk_config *_config;
+
+    /* next node */
     struct host *next;
 };
 
@@ -137,11 +154,16 @@ void mk_config_print_error_msg(char *variable, char *path);
 void mk_config_set_init_values(void);
 
 /* config helpers */
+void mk_config_error(const char *path, int line, const char *msg);
+
 struct mk_config *mk_config_create(const char *path);
-struct mk_config *mk_config_tag_get(struct mk_config *iconf, const char *tag);
+struct mk_config_section *mk_config_section_get(struct mk_config *conf, 
+                                                const char *section_name);
+void mk_config_section_add(struct mk_config *conf, char *section_name);
+void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
 void mk_config_free(struct mk_config *cnf);
-void *mk_config_getval(struct mk_config *cnf, char *key, int mode);
+void mk_config_free_entries(struct mk_config_section *section);
 
 
 int mk_config_get_bool(char *value);
