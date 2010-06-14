@@ -812,7 +812,6 @@ void mk_request_free_list(struct client_request *cr)
 
 void mk_request_free(struct request *sr)
 {
-    /* I hate it, but I don't know another light way :( */
     if (sr->fd_file > 0) {
         close(sr->fd_file);
     }

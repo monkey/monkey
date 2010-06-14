@@ -135,9 +135,12 @@ int mk_conn_write(int socket)
      * still need to be send.
      */
     if (ret < 0) {
+        mk_request_free_list(cr);
+        mk_request_client_remove(socket);
         return -1;
     }
     else if (ret == 0) {
+        mk_request_free_list(cr);
         return mk_http_request_end(socket);
     }
     else if (ret > 0) {
