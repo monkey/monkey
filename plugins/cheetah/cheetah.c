@@ -228,7 +228,7 @@ void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
     printf("\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
     while (p) {
-        if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
+        if (*p->hooks & MK_PLUGIN_CORE_THCTX) {
             printf("\n  [%s] %s v%s on \"%s\"",
                    p->shortname, p->name, p->version, p->path);
         }
