@@ -159,31 +159,43 @@ struct plugin_api
     struct plugin *plugins;
     struct sched_list_node **sched_list;
 
-    /* Exporting Functions */
+    /* HTTP request function */
     int *(*http_request_end) (int);
+
+    /* memory functions */
     void *(*mem_alloc) (int);
     void *(*mem_alloc_z) (int);
     void (*mem_free) (void *);
+    void (*pointer_set) (mk_pointer *, char *);
+    void (*pointer_print) (mk_pointer);
+
+    /* string functions */
     char *(*str_build) (char **, unsigned long *, const char *, ...);
     char *(*str_dup) (const char *);
     int (*str_search) (char *, char *);
     int (*str_search_n) (char *, char *, int);
     char *(*str_copy_substr) (const char *, int, int);
     struct mk_string_line *(*str_split_line) (const char *);
+
+    /* file functions */
     char *(*file_to_buffer) (char *);
     struct file_info *(*file_get_info) (char *);
     int (*header_send) (int,
                           struct client_request *,
                           struct request *, struct log_info *);
+
+    /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
     void (*iov_free) (struct mk_iov *);
     int (*iov_add_entry) (struct mk_iov *, char *, int, mk_pointer, int);
     int (*iov_set_entry) (struct mk_iov *, char *, int, int, int);
     ssize_t (*iov_send) (int, struct mk_iov *, int);
     void (*iov_print) (struct mk_iov *);
-    void (*pointer_set) (mk_pointer *, char *);
-    void (*pointer_print) (mk_pointer);
+
+    /* plugin functions */
     void *(*plugin_load_symbol) (void *, char *);
+
+    /* socket functions */
     int (*socket_cork_flag) (int, int);
     int (*socket_reset) (int);
     int (*socket_set_tcp_nodelay) (int);
@@ -196,18 +208,24 @@ struct plugin_api
     int (*socket_read) (int, void *, int);
     int (*socket_send_file) (int, int, off_t, size_t);
 
+    /* configuration reader functions */
     struct mk_config *(*config_create) (char *);
     void (*config_free) (struct mk_config *);
     struct mk_config_section *(*config_section_get) (struct mk_config *,
                                                      char *);
     void *(*config_section_getval) (struct mk_config_section *, char *, int);
-
     struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
                                                       int);
+
+    /* worker's functions */
+    int (*worker_spawn) (void (*func) (void *));
+
+    /* event's functions */
     int (*event_add) (int, int, struct plugin *, struct client_request *, 
                       struct request *);
     int (*event_socket_change_mode) (int, int);
 
+    /* system specific functions */
     int (*sys_get_somaxconn) ();
 
 #ifdef TRACE

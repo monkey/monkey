@@ -42,6 +42,7 @@
 #include "memory.h"
 #include "iov.h"
 #include "epoll.h"
+#include "worker.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -437,6 +438,9 @@ void mk_plugin_init()
     api->sched_get_connection = (void *) mk_sched_get_connection;
     api->event_add = (void *) mk_plugin_event_add;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
+    
+    /* Worker functions */
+    api->worker_spawn = (void *) mk_worker_spawn;
 
     /* Some useful functions =) */
     api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
