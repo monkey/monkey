@@ -21,6 +21,9 @@
 
 #include <sys/epoll.h>
 
+#ifndef MK_EPOLL_H
+#define MK_EPOLL_H
+
 #define MK_EPOLL_READ 0
 #define MK_EPOLL_WRITE 1
 #define MK_EPOLL_RW 2
@@ -53,3 +56,5 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
 int mk_epoll_add(int efd, int fd, int mode, int behavior);
 int mk_epoll_del(int efd, int fd); 
 int mk_epoll_change_mode(int efd, int fd, int mode);
+
+#endif

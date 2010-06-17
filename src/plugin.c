@@ -415,6 +415,10 @@ void mk_plugin_init()
     api->iov_send = (void *) mk_iov_send;
     api->iov_print = (void *) mk_iov_print;
 
+    /* EPoll callbacks */
+    api->epoll_create = (void *) mk_epoll_create;
+    api->epoll_init = (void *) mk_epoll_init;
+
     /* Socket callbacks */
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
     api->socket_connect = (void *) mk_socket_connect;
@@ -427,7 +431,7 @@ void mk_plugin_init()
     api->socket_send = (void *) mk_socket_send;
     api->socket_read = (void *) mk_socket_read;
     api->socket_send_file = (void *) mk_socket_send_file;
-
+    
     /* Config Callbacks */
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;

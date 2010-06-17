@@ -24,6 +24,7 @@
 #include "memory.h"
 #include "iov.h"
 #include "socket.h"
+#include "epoll.h"
 
 #ifndef MK_PLUGIN_H
 #define MK_PLUGIN_H
@@ -194,6 +195,13 @@ struct plugin_api
 
     /* plugin functions */
     void *(*plugin_load_symbol) (void *, char *);
+
+    /* epoll functions */
+    int (*epoll_create) (int);
+    void *(*epoll_init) (int, mk_epoll_handlers *, int);
+    int (*epoll_add) (int, int, int, int);
+    int (*epoll_del) (int, int);
+    int (*epoll_change_mode) (int, int, int);
 
     /* socket functions */
     int (*socket_cork_flag) (int, int);
