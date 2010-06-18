@@ -182,8 +182,7 @@ struct plugin_api
     char *(*file_to_buffer) (char *);
     struct file_info *(*file_get_info) (char *);
     int (*header_send) (int,
-                          struct client_request *,
-                          struct request *, struct log_info *);
+                          struct client_request *, struct request *);
 
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);

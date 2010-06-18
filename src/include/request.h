@@ -224,7 +224,6 @@ struct request
 
     struct file_info *file_info;
     struct host *host_conf;
-    struct log_info *log;       /* Request Log */
     struct header_values *headers;      /* headers response */
     struct request *next;
 
@@ -269,8 +268,7 @@ mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
 void mk_request_error(int num_error, struct client_request *cr,
-                      struct request *s_request, int debug,
-                      struct log_info *s_log);
+                      struct request *s_request, int debug);
 
 struct request *mk_request_alloc();
 void mk_request_free_list(struct client_request *cr);

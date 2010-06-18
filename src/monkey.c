@@ -39,7 +39,6 @@
 #include "user.h"
 #include "info.h"
 #include "utils.h"
-#include "logfile.h"
 #include "signals.h"
 #include "config.h"
 #include "memory.h"
@@ -147,7 +146,7 @@ int main(int argc, char **argv)
     mk_worker_spawn((void *) mk_clock_worker_init);
 
     /* Register PID of Monkey */
-    //mk_logger_register_pid();
+    mk_utils_register_pid();
 
     /* Init mk pointers */
     mk_mem_pointers_init();
@@ -155,7 +154,6 @@ int main(int argc, char **argv)
     /* Create thread keys */
     pthread_key_create(&request_index, NULL);
     pthread_key_create(&epoll_fd, NULL);
-    pthread_key_create(&timer, NULL);
     pthread_key_create(&mk_cache_iov_log, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);

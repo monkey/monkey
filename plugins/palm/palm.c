@@ -253,7 +253,7 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 #ifdef TRACE
     PLUGIN_TRACE("Sending headers to FD %i", cr->socket);
 #endif
-    n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
+    n = (int) mk_api->header_send(cr->socket, cr, sr);
 
     /* Monkey core send_headers set TCP_CORK_ON, we need to get
      * back the status to OFF

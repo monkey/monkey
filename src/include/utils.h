@@ -78,5 +78,7 @@ void mk_utils_trace(const char *component, int color, const char *function,
 #endif
 
 int mk_utils_get_somaxconn();
+int mk_utils_register_pid();
+int mk_utils_remove_pid();
 
 #endif

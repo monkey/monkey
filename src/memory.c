@@ -207,9 +207,6 @@ void mk_mem_pointers_init()
     /* Server */
     mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
 
-    /* Logfile */
-    mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);
-
     /* HTTP */
     mk_pointer_set(&mk_http_method_get_p, HTTP_METHOD_GET_STR);
     mk_pointer_set(&mk_http_method_post_p, HTTP_METHOD_POST_STR);

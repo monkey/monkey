@@ -32,7 +32,6 @@
 #include "monkey.h"
 #include "signals.h"
 #include "utils.h"
-#include "logfile.h"
 #include "chars.h"
 #include "clock.h"
 
@@ -42,11 +41,12 @@ void mk_signal_handler(int signo)
 
     switch (signo) {
     case SIGUSR2:
-        printf("%s => Monkey reconfiguration \n", log_current_time.data);       /* Not ready */
+        /* Fixme: not yet implemented */
+        printf("%s => Monkey reconfiguration \n", log_current_time.data);
         break;
 
     case SIGINT:
-        //mk_logger_remove_pid();
+        mk_utils_remove_pid();
         printf("\n\n%s => Interrupt from keyboard\n\n",
                log_current_time.data);
         exit(0);

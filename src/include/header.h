@@ -18,7 +18,6 @@
  */
 
 #include "request.h"
-#include "logfile.h"
 
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
@@ -91,8 +90,7 @@ mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
-int mk_header_send(int fd, struct client_request *cr,
-                   struct request *sr, struct log_info *s_log);
+int mk_header_send(int fd, struct client_request *cr, struct request *sr);
 struct header_values *mk_header_create();
 void mk_header_set_content_length(struct request *sr, long len);
 

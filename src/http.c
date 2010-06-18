@@ -38,7 +38,6 @@
 #include "method.h"
 #include "socket.h"
 #include "mimetype.h"
-#include "logfile.h"
 #include "header.h"
 #include "epoll.h"
 #include "plugin.h"
@@ -171,8 +170,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     if (mk_string_search_n(uri_data, 
                            HTTP_DIRECTORY_BACKWARD,
                            uri_len) >= 0) {
-        sr->log->final_response = M_CLIENT_FORBIDDEN;
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
         return EXIT_ERROR;
     }
 
@@ -187,8 +185,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 #endif
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            sr->log->final_response = M_CLIENT_FORBIDDEN;
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
             return EXIT_ERROR;
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
@@ -198,7 +195,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             return EXIT_NORMAL;
         }
 
-        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, debug_error, sr->log);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, debug_error);
         return -1;
     }
 
@@ -229,9 +226,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* Check symbolic link file */
     if (sr->file_info->is_link == MK_FILE_TRUE) {
         if (config->symlink == VAR_OFF) {
-            sr->log->final_response = M_CLIENT_FORBIDDEN;
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr,
-                             debug_error, sr->log);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
             return EXIT_ERROR;
         }
         else {
@@ -247,8 +242,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     MK_TRACE("STAGE_30 returned %i", ret);
 #endif
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        sr->log->final_response = M_CLIENT_FORBIDDEN;
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
         return EXIT_ERROR;
     }
     else if (ret == MK_PLUGIN_RET_CONTINUE) {
@@ -260,7 +254,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1);
         return EXIT_ERROR;
     }
 
@@ -271,13 +265,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     }
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1);
         return EXIT_ERROR;
     }
 
     /* get file size */
     if (sr->file_info->size < 0) {
-        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1);
         return EXIT_ERROR;
     }
 
@@ -298,7 +292,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
         if ((date_file_server <= date_client) && (date_client > 0)) {
             sr->headers->status = M_NOT_MODIFIED;
-            mk_header_send(cr->socket, cr, sr, sr->log);
+            mk_header_send(cr->socket, cr, sr);
             mk_pointer_free(&gmt_file_unix_time);
             return EXIT_NORMAL;
         }
@@ -311,21 +305,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* Object size for log and response headers */
     sr->headers->content_length = sr->file_info->size;
 
-    if (sr->method == HTTP_METHOD_HEAD) {
-        sr->log->size = 0;
-        sr->log->size_p = mk_utils_int2mkp(0);
-    }
-    else {
-        sr->log->size = sr->file_info->size;
-        sr->log->size_p = sr->headers->content_length_p;
-    }
-
+    /* Process methods */
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         sr->headers->content_type = mime->type;
         /* Range */
         if (sr->range.data != NULL && config->resume == VAR_ON) {
             if (mk_http_range_parse(sr) < 0) {
-                mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
+                mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
                 mk_pointer_free(&gmt_file_unix_time);
                 return EXIT_ERROR;
             }
@@ -345,14 +331,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 #ifdef TRACE
             MK_TRACE("open() failed");
 #endif
-            sr->log->final_response = M_CLIENT_FORBIDDEN;
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error, sr->log);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
             return EXIT_ERROR;
         }
     }
 
     /* Send headers */
-    mk_header_send(cr->socket, cr, sr, sr->log);
+    mk_header_send(cr->socket, cr, sr);
 
     if (sr->headers->content_length == 0) {
         return 0;
@@ -362,7 +347,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
-            mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1, sr->log);
+            mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
             return EXIT_ERROR;
         }
 
@@ -432,7 +417,7 @@ int mk_http_directory_redirect_check(struct client_request *cr,
     sr->headers->pconnections_left =
         (config->max_keep_alive_request - cr->counter_connections);
 
-    mk_header_send(cr->socket, cr, sr, sr->log);
+    mk_header_send(cr->socket, cr, sr);
     mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 
     /* 

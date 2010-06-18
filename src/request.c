@@ -48,7 +48,6 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "socket.h"
-#include "logfile.h"
 #include "utils.h"
 #include "header.h"
 #include "user.h"
@@ -204,7 +203,6 @@ int mk_handler_write(int socket, struct client_request *cr)
     }
 
     sr = cr->request;
-
     while (sr) {
         /* Request not processed also no plugin has take some action */
         if (sr->bytes_to_send < 0 && !sr->handled_by) {
@@ -257,47 +255,36 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
     switch (s_request->method) {
     case METHOD_NOT_ALLOWED:
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr,
-                         s_request, 1, s_request->log);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1);
         return EXIT_NORMAL;
     case METHOD_NOT_FOUND:
-        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr,
-                         s_request, 1, s_request->log);
+        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr, s_request, 1);
         return EXIT_NORMAL;
     }
 
     s_request->user_home = VAR_OFF;
-    s_request->log->method = s_request->method;
 
     /* Valid request URI? */
     if (s_request->uri_processed == NULL) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
         return EXIT_NORMAL;
     }
 
     /* HTTP/1.1 needs Host header */
     if (!s_request->host.data && s_request->protocol == HTTP_PROTOCOL_11) {
-        s_request->log->final_response = M_CLIENT_BAD_REQUEST;
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
         return EXIT_NORMAL;
     }
 
     /* Method not allowed ? */
     if (s_request->method == METHOD_NOT_ALLOWED) {
-        s_request->log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1);
         return EXIT_NORMAL;
     }
 
     /* Validating protocol version */
     if (s_request->protocol == HTTP_PROTOCOL_UNKNOWN) {
-
-        s_request->log->final_response = M_SERVER_HTTP_VERSION_UNSUP;
-        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1);
         return EXIT_NORMAL;
     }
 
@@ -313,7 +300,6 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     else {
         s_request->host_conf = config->hosts;
     }
-    s_request->log->host_conf = s_request->host_conf;
 
     /* is requesting an user home directory ? */
     if (config->user_dir) {
@@ -368,8 +354,8 @@ int mk_request_header_process(struct request *sr)
 
     /* If verification fails it will return always
      * a bad request status
-     */
-    sr->log->final_response = M_CLIENT_BAD_REQUEST;
+     * FIXME */
+    //sr->log->final_response = M_CLIENT_BAD_REQUEST;
 
     /* Method */
     sr->method_p = mk_http_method_check_str(sr->method);
@@ -406,8 +392,7 @@ int mk_request_header_process(struct request *sr)
     }
 
     /* Request URI Part 2 */
-    sr->uri = sr->log->uri = mk_pointer_create(sr->body.data,
-                                               uri_init, uri_end + 1);
+    sr->uri = mk_pointer_create(sr->body.data, uri_init, uri_end + 1);
 
     if (sr->uri.len < 1) {
         return -1;
@@ -417,9 +402,8 @@ int mk_request_header_process(struct request *sr)
     /* HTTP Version */
     prot_end = fh_limit - 1;
     if (prot_end != prot_init && prot_end > 0) {
-        sr->protocol = sr->log->protocol =
-            mk_http_protocol_check(sr->body.data + prot_init,
-                                   prot_end - prot_init);
+        sr->protocol = mk_http_protocol_check(sr->body.data + prot_init,
+                                              prot_end - prot_init);
     }
 
     headers = sr->body.data + prot_end + mk_crlf.len;
@@ -505,7 +489,6 @@ int mk_request_header_process(struct request *sr)
             sr->connection.len = 0;
         }
     }
-    sr->log->final_response = M_HTTP_OK;
 
     return 0;
 }
@@ -575,14 +558,15 @@ mk_pointer mk_request_index(char *pathfile)
 
 /* Send error responses */
 void mk_request_error(int num_error, struct client_request *cr,
-                      struct request *s_request, int debug,
-                      struct log_info *s_log)
+                      struct request *s_request, int debug)
 {
     char *aux_message = 0;
     mk_pointer message, *page = 0;
     long n;
 
-    s_log->error_details.data = NULL;
+    /**
+     * fixme s_log->error_details.data = NULL;
+     */
 
     switch (num_error) {
     case M_CLIENT_BAD_REQUEST:
@@ -590,7 +574,6 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->uri,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->error_msg = request_error_msg_400;
         break;
 
     case M_CLIENT_FORBIDDEN:
@@ -598,8 +581,8 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->uri,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->error_msg = request_error_msg_403;
-        s_log->error_details = s_request->uri;
+        //s_log->error_msg = request_error_msg_403;
+        //s_log->error_details = s_request->uri;
         break;
 
     case M_CLIENT_NOT_FOUND:
@@ -609,8 +592,8 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            message,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->error_msg = request_error_msg_404;
-        s_log->error_details = s_request->uri;
+        //s_log->error_msg = request_error_msg_404;
+        //s_log->error_details = s_request->uri;
 
         mk_pointer_free(&message);
         break;
@@ -621,18 +604,18 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->host_conf->
                                            host_signature);
 
-        s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
-        s_log->error_msg = request_error_msg_405;
-        s_log->error_details = s_request->method_p;
+        //s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
+        //s_log->error_msg = request_error_msg_405;
+        //s_log->error_details = s_request->method_p;
         break;
 
     case M_CLIENT_REQUEST_TIMEOUT:
-        s_log->status = S_LOG_OFF;
-        s_log->error_msg = request_error_msg_408;
+        //s_log->status = S_LOG_OFF;
+        //s_log->error_msg = request_error_msg_408;
         break;
 
     case M_CLIENT_LENGTH_REQUIRED:
-        s_log->error_msg = request_error_msg_411;
+        //s_log->error_msg = request_error_msg_411;
         break;
 
     case M_SERVER_NOT_IMPLEMENTED:
@@ -640,9 +623,9 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            s_request->uri,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
-        s_log->error_msg = request_error_msg_501;
-        s_log->error_details = s_request->method_p;
+        //s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
+        //s_log->error_msg = request_error_msg_501;
+        //s_log->error_details = s_request->method_p;
         break;
 
     case M_SERVER_INTERNAL_ERROR:
@@ -652,7 +635,7 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            message,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->error_msg = request_error_msg_500;
+        //s_log->error_msg = request_error_msg_500;
 
         mk_pointer_free(&message);
         break;
@@ -663,11 +646,11 @@ void mk_request_error(int num_error, struct client_request *cr,
                                            message,
                                            s_request->host_conf->
                                            host_signature);
-        s_log->error_msg = request_error_msg_505;
+        //s_log->error_msg = request_error_msg_505;
         break;
     }
 
-    s_log->final_response = num_error;
+    //s_log->final_response = num_error;
 
     s_request->headers->status = num_error;
     if (page) {
@@ -689,7 +672,7 @@ void mk_request_error(int num_error, struct client_request *cr,
         mk_pointer_set(&s_request->headers->content_type, "text/html\r\n");
     }
 
-    mk_header_send(cr->socket, cr, s_request, s_log);
+    mk_header_send(cr->socket, cr, s_request);
 
     if (debug == 1) {
         n = write(cr->socket, page->data, page->len);
@@ -721,19 +704,11 @@ struct request *mk_request_alloc()
     struct request *request = 0;
 
     request = mk_mem_malloc(sizeof(struct request));
-    request->log = mk_mem_malloc(sizeof(struct log_info));
-
     request->status = VAR_OFF;  /* Request not processed yet */
     request->make_log = VAR_ON; /* build log file of this request ? */
     request->close_now = VAR_OFF;
 
     mk_pointer_reset(&request->body);
-
-    request->log->final_response = M_HTTP_OK;
-    request->log->status = S_LOG_ON;
-    mk_pointer_reset(&request->log->size_p);
-    mk_pointer_reset(&request->log->error_msg);
-
     request->status = VAR_ON;
     request->method = METHOD_NOT_FOUND;
 
@@ -818,25 +793,6 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->headers->location);
         mk_pointer_free(&sr->headers->last_modified);
         mk_mem_free(sr->headers);
-    }
-
-
-    if (sr->log) {
-        /*
-         * We do not free log->size_p, as if it was
-         * used due to an error, it points to the
-         * same memory block than header->content_length_p
-         * points to, we just reset it.
-         */
-        mk_pointer_reset(&sr->log->size_p);
-
-        /*
-         * sr->log->error_msg just point to
-         * local data on request.c, no
-         * dynamic allocation is made
-         */
-
-        mk_mem_free(sr->log);
     }
 
     mk_pointer_reset(&sr->body);

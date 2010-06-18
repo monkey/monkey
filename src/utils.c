@@ -52,6 +52,7 @@
 #include "chars.h"
 #include "socket.h"
 #include "clock.h"
+#include "user.h"
 
 /* Return data as mk_pointer to be sent
  * in response header 
@@ -264,4 +265,31 @@ int mk_utils_get_somaxconn()
      * value defined for somaxconn for years...
      */
     return 128;
+}
+
+/* Write Monkey's PID */
+int mk_utils_register_pid()
+{
+    FILE *pid_file;
+
+    remove(config->pid_file_path);
+    config->pid_status = VAR_OFF;
+
+    if ((pid_file = fopen(config->pid_file_path, "w")) == NULL) {
+        puts("Error: I can't log pid of monkey");
+        exit(1);
+    }
+
+    fprintf(pid_file, "%i", getpid());
+    fclose(pid_file);
+    config->pid_status = VAR_ON;
+
+    return 0;
+}
+
+/* Remove PID file */
+int mk_utils_remove_pid()
+{
+    mk_user_undo_uidgid();
+    return remove(config->pid_file_path);
 }

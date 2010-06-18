@@ -37,7 +37,6 @@
 #include "utils.h"
 #include "mimetype.h"
 #include "info.h"
-#include "logfile.h"
 #include "memory.h"
 #include "plugin.h"
 

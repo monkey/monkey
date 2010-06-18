@@ -27,7 +27,6 @@
 #include "header.h"
 #include "memory.h"
 #include "request.h"
-#include "logfile.h"
 #include "iov.h"
 #include "http_status.h"
 #include "config.h"
@@ -56,7 +55,7 @@ void mk_header_iov_free(struct mk_iov *iov)
 
 /* Send_Header , envia las cabeceras principales */
 int mk_header_send(int fd, struct client_request *cr,
-                   struct request *sr, struct log_info *s_log)
+                   struct request *sr)
 {
     int fd_status = 0;
     unsigned long len = 0;
@@ -81,19 +80,16 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_REDIR_MOVED:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
     case M_REDIR_MOVED_T:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved_t,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
     case M_NOT_MODIFIED:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_not_modified,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
@@ -121,7 +117,6 @@ int mk_header_send(int fd, struct client_request *cr,
     case M_CLIENT_REQUEST_TIMEOUT:
         mk_header_iov_add_entry(iov, mk_hr_client_request_timeout,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        s_log->status = S_LOG_OFF;
         break;
 
     case M_CLIENT_LENGTH_REQUIRED:
@@ -145,10 +140,6 @@ int mk_header_send(int fd, struct client_request *cr,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
     };
-
-    if (sh->status != 0) {
-        s_log->final_response = sh->status;
-    }
 
     if (fd_status < 0) {
         mk_header_iov_free(iov);
@@ -301,14 +292,6 @@ int mk_header_send(int fd, struct client_request *cr,
                             (sh->content_length - sh->ranges[1]),
                             (sh->content_length - 1), sh->content_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-        }
-
-        /* FIXME: logger routines and data should be handled by a plugin
-         * in Monkey 0.11.0
-         */
-        if (length >= 0) {
-            sr->log->size = length;
-            sr->log->size_p = mk_utils_int2mkp(length);
         }
     }
     else if (sh->content_length >= 0) {

@@ -37,7 +37,6 @@
 #include "http.h"
 #include "http_status.h"
 #include "socket.h"
-#include "logfile.h"
 #include "config.h"
 #include "utils.h"
 #include "file.h"
@@ -78,12 +77,12 @@ int mk_method_post(struct client_request *cr, struct request *sr)
     content_length_post = mk_method_post_content_length(cr->body);
 
     if (content_length_post == -1) {
-        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr, 0, sr->log);
+        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr, 0);
         return -1;
     }
 
     if (content_length_post <= 0 || content_length_post >= MAX_REQUEST_BODY) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0, sr->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0);
         return -1;
     }
 
@@ -92,7 +91,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
                                  mk_rh_content_type);
 
     if (!tmp.data) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0, sr->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0);
         return -1;
     }
     sr->content_type = tmp;
