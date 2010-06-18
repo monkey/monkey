@@ -136,11 +136,8 @@ struct host
     char *host_signature;
     mk_pointer header_host_signature;
 
-    int log_access[2];
-    int log_error[2];
-
     /* source configuration */
-    struct mk_config *_config;
+    struct mk_config *config;
 
     /* next node */
     struct host *next;

@@ -251,6 +251,7 @@ struct mk_config *mk_config_create(const char *path)
     }
     fflush(stdout);
     */
+
     fclose(f);
     return conf;
 }
@@ -539,7 +540,7 @@ struct host *mk_config_get_host(char *path)
 
     /* Alloc configuration node */
     host = mk_mem_malloc_z(sizeof(struct host));
-    host->_config = cnf;
+    host->config = cnf;
     host->file = mk_string_dup(path);
     host->servername = mk_config_section_getval(section, "Servername", 
                                                 MK_CONFIG_VAL_STR);
@@ -588,23 +589,6 @@ struct host *mk_config_get_host(char *path)
     host->error_log_path = mk_config_section_getval(section,
                                                     "ErrorLog", 
                                                     MK_CONFIG_VAL_STR);
-
-    if (host->access_log_path != NULL) {
-        if (pipe(host->log_access) < 0) {
-            perror("pipe");
-        } else {
-            fcntl(host->log_access[1], F_SETFL, O_NONBLOCK);
-        }
-    }
-    
-    if (host->error_log_path != NULL) {
-        if (pipe(host->log_error) < 0) {
-            perror("pipe");
-        } else {
-            fcntl(host->log_error[1], F_SETFL, O_NONBLOCK);
-        }
-    }
-    
     host->next = NULL;
     return host;
 }

@@ -284,7 +284,7 @@ LDFLAGS	=
 DESTDIR	= ../bin/monkey
 LIBS	= -ldl -lpthread $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
-	header.o config.o logfile.o signals.o \\
+	header.o config.o signals.o \\
 	user.o utils.o chars.o epoll.o scheduler.o \\
 	str.o memory.o connection.o iov.o http.o \\
 	file.o socket.o clock.o cache.o worker.o \\

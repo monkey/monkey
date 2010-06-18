@@ -144,11 +144,10 @@ int main(int argc, char **argv)
     }
 
     /* Workers: logger and clock */
-    mk_worker_spawn((void *) mk_logger_worker_init);
     mk_worker_spawn((void *) mk_clock_worker_init);
 
     /* Register PID of Monkey */
-    mk_logger_register_pid();
+    //mk_logger_register_pid();
 
     /* Init mk pointers */
     mk_mem_pointers_init();

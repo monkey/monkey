@@ -418,6 +418,9 @@ void mk_plugin_init()
     /* EPoll callbacks */
     api->epoll_create = (void *) mk_epoll_create;
     api->epoll_init = (void *) mk_epoll_init;
+    api->epoll_add = (void *) mk_epoll_add;
+    api->epoll_del = (void *) mk_epoll_del;
+    api->epoll_change_mode = (void *) mk_epoll_change_mode;
 
     /* Socket callbacks */
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
