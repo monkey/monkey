@@ -601,12 +601,6 @@ int mk_plugin_stage_run(mk_plugin_hook_t hook,
             MK_TRACE("[%s] STAGE 40", stm->p->shortname);
 #endif
             ret = stm->p->stage.s40(cr, sr);
-            switch (ret) {
-            case MK_PLUGIN_RET_NOT_ME:
-                break;
-            case MK_PLUGIN_RET_CONTINUE:
-                return MK_PLUGIN_RET_CONTINUE;
-            }
             stm = stm->next;
         }
     }

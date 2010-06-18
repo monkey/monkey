@@ -221,6 +221,9 @@ int mk_handler_write(int socket, struct client_request *cr)
             return final_status;
         }
         else if (final_status <= 0) {
+            /* STAGE_40, request has ended */
+            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket,
+                                NULL, cr, sr);
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
