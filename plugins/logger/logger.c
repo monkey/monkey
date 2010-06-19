@@ -121,7 +121,7 @@ void *mk_logger_worker_init(void *args)
 
     /* Monkey allow just 75% of a pipe capacity */
     pipe_size = sysconf(_SC_PAGESIZE) * 16;
-    buffer_limit = (pipe_size * MK_LOGFILE_PIPE_LIMIT);
+    buffer_limit = (pipe_size * MK_LOGGER_PIPE_LIMIT);
 
     /* Creating poll */
     efd = mk_api->epoll_create(max_events);
@@ -143,7 +143,7 @@ void *mk_logger_worker_init(void *args)
         lt_aux = lt_aux->next;
     }
     
-    timeout = time(NULL) + MK_LOGFILE_TIMEOUT;
+    timeout = time(NULL) + mk_logger_timeout;
 
     /* Reading pipe buffer */
     while (1) {
@@ -152,9 +152,7 @@ void *mk_logger_worker_init(void *args)
         struct epoll_event events[max_events];
         int num_fds = epoll_wait(efd, events, max_events, -1);
 
-        /* fixme */
-        //clk = (int) mk_api->utils_now_unix;
-        clk = time(NULL);
+        clk = mk_api->time_unix();
 
         for (i = 0; i < num_fds; i++) {
             target = mk_logger_match_by_fd(events[i].data.fd);
@@ -174,7 +172,7 @@ void *mk_logger_worker_init(void *args)
                 break;
             }
             else {
-                timeout = clk + MK_LOGFILE_TIMEOUT;
+                timeout = clk + mk_logger_timeout;
                 flog = open(target, O_WRONLY | O_CREAT, 0644);
 
                 if (flog == -1) {
@@ -197,10 +195,28 @@ void *mk_logger_worker_init(void *args)
 
 int _mkp_init(void **api, char *confdir)
 {
+    int timeout;
+    struct mk_config_section *section;
+
     mk_api = *api;
+    
+    /* Global configuration */
+    mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
+    section = mk_api->config_section_get(mk_api->config->config, "LOGGER");
+    if (section) {
+        timeout = (int) mk_api->config_section_getval(section,
+                                                      "FlushTimeout",
+                                                      MK_CONFIG_VAL_NUM);
+        if (timeout <= 0) {
+            fprintf(stderr, 
+                    "\nError: FlushTimeout does not have a proper value\n\n");
+            exit(1);
+        }
+        mk_logger_timeout = timeout;
+    }
 
     /* Init mk_pointers */
-    mk_api->pointer_set(&mk_logger_iov_dash, MK_LOGFILE_IOV_DASH);
+    mk_api->pointer_set(&mk_logger_iov_dash, MK_LOGGER_IOV_DASH);
     mk_api->pointer_set(&mk_logger_iov_space, MK_IOV_SPACE);
     mk_api->pointer_set(&mk_logger_iov_crlf, MK_IOV_CRLF);
 

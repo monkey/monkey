@@ -23,16 +23,18 @@
 #define S_LOG_ON 0
 #define S_LOG_OFF 1
 
-#define MK_LOGFILE_PIPE_LIMIT 0.75
-#define MK_LOGFILE_TIMEOUT 3
 
-#define MK_LOGFILE_IOV_DASH " - "
+#define MK_LOGGER_PIPE_LIMIT 0.75
+#define MK_LOGGER_TIMEOUT_DEFAULT 3
+
+#define MK_LOGGER_IOV_DASH " - "
 
 mk_pointer mk_logger_iov_dash;
 mk_pointer mk_logger_iov_space;
 mk_pointer mk_logger_iov_crlf;
 
-/* logfile.c */
+int mk_logger_timeout;
+
 pthread_key_t timer;
 
 struct log_target

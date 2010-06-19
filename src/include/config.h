@@ -119,7 +119,7 @@ struct server_config
     struct plugin *plugins;
 
     /* source configuration */
-    struct mk_config *_config;
+    struct mk_config *config;
 };
 
 struct server_config *config;

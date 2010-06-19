@@ -368,10 +368,13 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     cnf = mk_config_create(path);
     section = mk_config_section_get(cnf, "SERVER");
 
-    MK_TRACE("Section: %p", section);
+    if (!section) {
+        fprintf(stderr, "\nERROR: No 'SERVER' section defined");
+        exit(1);
+    }
 
     /* Map source configuration */
-    config->_config = cnf;
+    config->config = cnf;
 
     /* Listen */
     config->listen_addr = mk_config_section_getval(section, "Listen", 
