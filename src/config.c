@@ -73,7 +73,7 @@ void mk_config_section_add(struct mk_config *conf, char *section_name)
 
     /* Alloc section node */
     new = mk_mem_malloc(sizeof(struct mk_config_section));
-    new->name = section_name;
+    new->name = mk_string_dup(section_name);
     new->entry = NULL;
     new->next = NULL;
     
@@ -235,18 +235,18 @@ struct mk_config *mk_config_create(const char *path)
     }
 
     /*
-    struct mk_config *t;
+    struct mk_config_section *s;
     struct mk_config_entry *e;
 
-    t = conf;
-    while(t) {
-        printf("\n[%s]", t->header);
-        e = t->entry;
+    s = conf->section;
+    while(s) {
+        printf("\n[%s]", s->name);
+        e = s->entry;
         while(e) {
             printf("\n   %s = %s", e->key, e->val);
             e = e->next;
         }
-        t = t->next;
+        s = s->next;
     }
     fflush(stdout);
     */
@@ -367,6 +367,8 @@ void mk_config_read_files(char *path_conf, char *file_conf)
 
     cnf = mk_config_create(path);
     section = mk_config_section_get(cnf, "SERVER");
+
+    MK_TRACE("Section: %p", section);
 
     /* Map source configuration */
     config->_config = cnf;

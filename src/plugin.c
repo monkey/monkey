@@ -931,9 +931,6 @@ int mk_plugin_event_timeout(int socket)
 
 int mk_plugin_time_now_unix()
 {
-    //  printf("\n->%i", (int)  log_current_utime);
-    fflush(stdout);
-
     return log_current_utime;
 }
 
