@@ -62,15 +62,6 @@ int mk_conn_read(int socket)
         /* Create client */
         cr = mk_request_client_create(socket);
     }
-    else {
-        /* If cr struct already exists, that could means that we 
-         * are facing a keepalive connection, need to verify, if it 
-         * applies we increase the thread status for active connections
-         */
-        if (cr->counter_connections > 1 && cr->body_length == 0) {
-            /* FIXME: KA Connection */
-        }
-    }
 
     /* Read incomming data */
     ret = mk_handler_read(socket, cr);

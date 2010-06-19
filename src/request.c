@@ -355,11 +355,6 @@ int mk_request_header_process(struct request *sr)
     char *headers;
     mk_pointer host;
 
-    /* If verification fails it will return always
-     * a bad request status
-     * FIXME */
-    //sr->log->final_response = M_CLIENT_BAD_REQUEST;
-
     /* Method */
     sr->method_p = mk_http_method_check_str(sr->method);
 
@@ -531,7 +526,6 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     return var;
 }
 
-/* FIXME: IMPROVE access */
 /* Look for some  index.xxx in pathfile */
 mk_pointer mk_request_index(char *pathfile)
 {
