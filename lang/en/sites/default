@@ -23,6 +23,7 @@ cat > conf/sites/default <<EOF
 
     DocumentRoot $datadir
 
+[LOGGER]
     # AccessLog:
     # ----------
     # Registration file of correct request.

@@ -55,16 +55,12 @@ void mk_signal_handler(int signo)
         mk_signal_term();
         break;
 
-    case SIGBUS:
-        printf("%s => Invalid memory reference\n", log_current_time.data);
-        abort();
-        break;
-
     case SIGPIPE:
         printf("\n sigpipe");
         fflush(stdout);
         break;
 
+    case SIGBUS:
     case SIGSEGV:
         printf("%s => Invalid memory reference\n", log_current_time.data);
         break;

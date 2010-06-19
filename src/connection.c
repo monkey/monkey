@@ -197,10 +197,8 @@ int mk_conn_close(int socket)
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
     } 
-
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
-
     return 0;
 }
 

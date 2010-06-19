@@ -43,6 +43,7 @@
 #include "iov.h"
 #include "epoll.h"
 #include "worker.h"
+#include "clock.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -451,6 +452,11 @@ void mk_plugin_init()
 
     /* Some useful functions =) */
     api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
+
+    /* Time functions */
+    api->time_unix = (void *) mk_plugin_time_now_unix;
+    api->time_human = (void *) mk_plugin_time_now_human;
+
 #ifdef TRACE
     api->trace = (void *) mk_utils_trace;
 #endif
@@ -513,6 +519,8 @@ void mk_plugin_init()
     }
 
     api->plugins = config->plugins;
+    /* Look for plugins thread key data */
+    mk_plugin_preworker_calls();
     mk_mem_free(path);
 }
 
@@ -697,6 +705,9 @@ void mk_plugin_preworker_calls()
     while (p) {
         /* Init pthread keys */
         if (p->thread_key) {
+#ifdef TRACE
+            MK_TRACE("[%s] Set thread key", p->shortname);
+#endif
             ret = pthread_key_create(&p->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s",
@@ -916,4 +927,17 @@ int mk_plugin_event_timeout(int socket)
     }
 
     return 0;
+}
+
+int mk_plugin_time_now_unix()
+{
+    //  printf("\n->%i", (int)  log_current_utime);
+    fflush(stdout);
+
+    return log_current_utime;
+}
+
+mk_pointer *mk_plugin_time_now_human()
+{
+    return &log_current_time;
 }

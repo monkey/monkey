@@ -233,7 +233,11 @@ struct plugin_api
     int (*event_socket_change_mode) (int, int);
 
     /* system specific functions */
-    int (*sys_get_somaxconn) ();
+    int (*sys_get_somaxconn)();
+
+    /* Time utils functions */
+    int (*time_unix)();
+    mk_pointer *(*time_human)();
 
 #ifdef TRACE
     void (*trace)();
@@ -243,6 +247,7 @@ struct plugin_api
 
 typedef char mk_plugin_data_t[];
 typedef int mk_plugin_hook_t;
+typedef pthread_key_t mk_plugin_key_t;
 
 /* Plugin events thread key */
 pthread_key_t mk_plugin_event_k;
@@ -297,5 +302,8 @@ void mk_plugin_unregister(struct plugin *p);
 
 struct plugin *mk_plugin_alloc(void *handler, char *path);
 void mk_plugin_free(struct plugin *p);
+
+int mk_plugin_time_now_unix();
+mk_pointer *mk_plugin_time_now_human();
 
 #endif

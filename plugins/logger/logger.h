@@ -28,7 +28,9 @@
 
 #define MK_LOGFILE_IOV_DASH " - "
 
-mk_pointer mk_logfile_iov_dash;
+mk_pointer mk_logger_iov_dash;
+mk_pointer mk_logger_iov_space;
+mk_pointer mk_logger_iov_crlf;
 
 /* logfile.c */
 pthread_key_t timer;

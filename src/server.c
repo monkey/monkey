@@ -70,9 +70,6 @@ void mk_server_launch_workers()
 {
     int i;
 
-    /* Look for plugins thread key data */
-    mk_plugin_preworker_calls();
-
     /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
 

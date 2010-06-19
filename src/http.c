@@ -291,13 +291,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         date_file_server = sr->file_info->last_modification;
 
         if ((date_file_server <= date_client) && (date_client > 0)) {
-            sr->headers->status = M_NOT_MODIFIED;
+            mk_header_set_http_status(sr, M_NOT_MODIFIED);
             mk_header_send(cr->socket, cr, sr);
             mk_pointer_free(&gmt_file_unix_time);
             return EXIT_NORMAL;
         }
     }
-    sr->headers->status = M_HTTP_OK;
+    mk_header_set_http_status(sr, M_HTTP_OK);
     sr->headers->cgi = SH_NOCGI;
     sr->headers->last_modified = gmt_file_unix_time;
     sr->headers->location = NULL;
@@ -316,7 +316,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0)
-                sr->headers->status = M_HTTP_PARTIAL;
+                mk_header_set_http_status(sr, M_HTTP_PARTIAL);
         }
     }
     else {                      
@@ -408,7 +408,7 @@ int mk_http_directory_redirect_check(struct client_request *cr,
 
     mk_mem_free(host);
 
-    sr->headers->status = M_REDIR_MOVED;
+    mk_header_set_http_status(sr, M_REDIR_MOVED);
     sr->headers->content_length = 0;
     
     mk_pointer_reset(&sr->headers->content_type);

@@ -162,6 +162,7 @@ struct handler
 struct request
 {
     int status;
+
     int pipelined;              /* Pipelined request */
     mk_pointer body;
 
@@ -173,14 +174,15 @@ struct request
     int uri_twin;
 
     int protocol;
+    mk_pointer protocol_p;
 
     /* If request specify Connection: close, Monkey will
      * close the connection after send the response, by
-     * default this var is set as VAR_OFF;
+     * default this var is set to VAR_OFF;
      */
     int close_now;
 
-        /*---Request headers--*/
+    /*---Request headers--*/
     int content_length;
     mk_pointer accept;
     mk_pointer accept_language;
@@ -196,13 +198,13 @@ struct request
     mk_pointer referer;
     mk_pointer resume;
     mk_pointer user_agent;
-        /*---------------------*/
-
+    /*---------------------*/
+    
     /* POST */
     mk_pointer post_variables;
-        /*-----------------*/
+    /*-----------------*/
 
-        /*-Internal-*/
+    /*-Internal-*/
     mk_pointer real_path;       /* Absolute real path */
     char *user_uri;             /* ~user/...path */
     mk_pointer query_string;    /* ?... */
@@ -211,14 +213,11 @@ struct request
     char *script_filename;
     int keep_alive;
     int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
-
-        /*-Connection-*/
+    
+    /*-Connection-*/
     int port;
-        /*------------*/
-
-    int make_log;
-    int cgi_pipe[2];
-
+    /*------------*/
+    
     /* file descriptors */
     int fd_file;
 
@@ -238,6 +237,7 @@ struct request
 struct header_values
 {
     int status;
+    mk_pointer *status_p;
 
     long content_length;
     mk_pointer content_length_p;
@@ -253,7 +253,6 @@ struct header_values
     char *location;
 };
 
-
 struct request *mk_request_parse(struct client_request *cr);
 int mk_request_process(struct client_request *cr, struct request *s_request);
 mk_pointer mk_request_index(char *pathfile);
@@ -267,8 +266,8 @@ int mk_request_header_process(struct request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
-void mk_request_error(int num_error, struct client_request *cr,
-                      struct request *s_request, int debug);
+void mk_request_error(int http_status, struct client_request *cr,
+                      struct request *sr, int debug);
 
 struct request *mk_request_alloc();
 void mk_request_free_list(struct client_request *cr);

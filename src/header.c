@@ -303,7 +303,7 @@ int mk_header_send(int fd, struct client_request *cr,
                          mk_header_content_length.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
         mk_iov_add_entry(iov, sh->content_length_p.data, sh->content_length_p.len,
-                         mk_iov_none, MK_IOV_FREE_BUF);
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
     
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
@@ -335,6 +335,12 @@ char *mk_header_chunked_line(int len)
     snprintf(buf, 9, "%x%s", len, MK_CRLF);
 
     return buf;
+}
+
+void mk_header_set_http_status(struct request *sr, int status)
+{
+    sr->headers->status = status;
+    sr->headers->status_p = mk_http_status_get(status);
 }
 
 struct header_values *mk_header_create()

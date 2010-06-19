@@ -154,7 +154,6 @@ int main(int argc, char **argv)
     /* Create thread keys */
     pthread_key_create(&request_index, NULL);
     pthread_key_create(&epoll_fd, NULL);
-    pthread_key_create(&mk_cache_iov_log, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);
     pthread_key_create(&mk_plugin_event_k, NULL);

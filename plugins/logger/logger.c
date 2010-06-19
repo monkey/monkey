@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <pthread.h>
 
 #include "plugin.h"
 #include "utils.h"
@@ -41,11 +41,16 @@
 mk_plugin_data_t _shortname = "logger";
 mk_plugin_data_t _name = "Logger";
 mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_STAGE_40;
+mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX | 
+                          MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40;
 
+/* Thread key data */
+mk_plugin_key_t _mkp_data;
+
+/* Global Monkey core API */
 struct plugin_api *mk_api;
 
-char *mk_logger_match(int fd)
+char *mk_logger_match_by_fd(int fd)
 {
     struct log_target *aux;
 
@@ -64,6 +69,26 @@ char *mk_logger_match(int fd)
     return NULL;
 }
 
+struct log_target *mk_logger_match_by_host(struct host *host)
+{
+    struct log_target *target;
+
+    target = lt;
+    while (target) {
+        if (target->host == host) {
+            return target;
+        }
+        target = target->next;
+    }
+
+    return NULL;
+}
+
+struct iov *mk_logger_get_cache()
+{
+    return pthread_getspecific(_mkp_data);
+}
+
 void *mk_logger_worker_init(void *args)
 {
     int efd, max_events = mk_api->config->nhosts;
@@ -74,8 +99,6 @@ void *mk_logger_worker_init(void *args)
     int clk;
     char *target;
     struct log_target *lt_aux;
-
-    PLUGIN_TRACE("WORKER INIT!");
 
     /* pipe_size:
      * ---------- 
@@ -126,16 +149,15 @@ void *mk_logger_worker_init(void *args)
     while (1) {
         usleep(1200);
 
-        PLUGIN_TRACE("PRE");
         struct epoll_event events[max_events];
         int num_fds = epoll_wait(efd, events, max_events, -1);
 
         /* fixme */
-        //clk = log_current_utime;
+        //clk = (int) mk_api->utils_now_unix;
         clk = time(NULL);
 
         for (i = 0; i < num_fds; i++) {
-            target = mk_logger_match(events[i].data.fd);
+            target = mk_logger_match_by_fd(events[i].data.fd);
 
             if (!target) {
                 printf("\nERROR matching host/epoll_fd");
@@ -176,6 +198,12 @@ void *mk_logger_worker_init(void *args)
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+
+    /* Init mk_pointers */
+    mk_api->pointer_set(&mk_logger_iov_dash, MK_LOGFILE_IOV_DASH);
+    mk_api->pointer_set(&mk_logger_iov_space, MK_IOV_SPACE);
+    mk_api->pointer_set(&mk_logger_iov_crlf, MK_IOV_CRLF);
+
     return 0;
 }
 
@@ -185,15 +213,13 @@ void _mkp_exit()
 
 void _mkp_core_prctx()
 {
-    int i;
-
     struct log_target *new;
     struct host *host;
     struct mk_config_section *section;
     struct mk_config_entry *access_entry, *error_entry;
 
 #ifdef TRACE
-    PLUGIN_TRACE("Reading virtual host info");
+    PLUGIN_TRACE("Reading virtual hosts");
 #endif
 
     host = mk_api->config->hosts;
@@ -232,7 +258,7 @@ void _mkp_core_prctx()
                 new->next = NULL;
 
 #ifdef TRACE
-                PLUGIN_TRACE("Linking Vhost %s", host->servername);
+                PLUGIN_TRACE("Setting up vhost '%s'", host->servername);
 #endif                
                 /* Link node to main list */
                 if (!lt) {
@@ -251,31 +277,93 @@ void _mkp_core_prctx()
         }
         host = host->next;
     }
-    i = mk_api->worker_spawn((void *) mk_logger_worker_init);
-    PLUGIN_TRACE("CORE CTX!: %i", i);
+    
+    mk_api->worker_spawn((void *) mk_logger_worker_init);
 }
 
-int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
+void _mkp_core_thctx()
 {
-    printf("\n10) [socket %i] Llego una nueva conexión", socket);
-    fflush(stdout);
+    struct mk_iov *iov_log;
 
-    return MK_PLUGIN_RET_CONTINUE;
-}
-
-int _mkp_stage_20(struct client_request *cr, struct request *sr)
-{
-    printf("\n20) [socket %i] IP %s", cr->socket, cr->ipv4->data);
-    fflush(stdout);
-
-    return MK_PLUGIN_RET_CONTINUE;
+#ifdef TRACE
+    PLUGIN_TRACE("Creating thread cache");
+#endif
+    
+    /* Cache iov log struct */
+    iov_log = mk_api->iov_create(15, 0);
+    pthread_setspecific(_mkp_data, (void *) iov_log);
 }
 
 int _mkp_stage_40(struct client_request *cr, struct request *sr)
 {
-    printf("\n40) [socket %i] Request finalizado", cr->socket);
-    fflush(stdout);
-    
+    int http_status;
+    struct log_target *target;
+    struct mk_iov *iov;
+    mk_pointer *date;
+
+    http_status = sr->headers->status;
+
+    /* Get iov cache struct and reset indexes */
+    iov = (struct mk_iov *) mk_logger_get_cache();
+    iov->iov_idx = 0;
+    iov->buf_idx = 0;
+    iov->total_len = 0;
+
+    /* Access Log */
+    if (http_status < 400){
+        target = mk_logger_match_by_host(sr->host_conf);
+
+        if (!target) {
+#ifdef TRACE
+            PLUGIN_TRACE("No target found");
+#endif
+        }
+
+        /* No access file defined */
+        if (!target->file_access) {
+            return 0;
+        }
+
+        mk_api->iov_add_entry(iov, cr->ipv4->data, cr->ipv4->len,
+                              mk_logger_iov_dash, MK_IOV_NOT_FREE_BUF);
+
+        /* Date/time when object was requested */
+        date = mk_api->time_human();
+        mk_api->iov_add_entry(iov, 
+                              date->data, 
+                              date->len,
+                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);        
+
+        /* HTTP Method */
+        mk_api->iov_add_entry(iov, 
+                              sr->method_p.data, 
+                              sr->method_p.len, 
+                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+
+        /* HTTP URI required */
+        mk_api->iov_add_entry(iov, sr->uri.data, sr->uri.len,
+                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+
+        /* HTTP Protocol */
+        mk_api->iov_add_entry(iov, sr->protocol_p.data, sr->protocol_p.len,
+                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+
+        /* HTTP Status code response */
+        mk_api->iov_add_entry(iov, 
+                              sr->headers->status_p->data,
+                              sr->headers->status_p->len,
+                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+
+        /* Content Length */
+        mk_api->iov_add_entry(iov,
+                              sr->headers->content_length_p.data,
+                              sr->headers->content_length_p.len, 
+                              mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+
+        /* Write iov array to pipe */
+        mk_api->iov_send(target->fd_access[1], iov, MK_IOV_SEND_TO_PIPE);
+    }
+
+    pthread_setspecific(_mkp_data, (void *) iov);
     return 0;
 }
-
