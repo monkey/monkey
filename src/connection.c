@@ -140,8 +140,13 @@ int mk_conn_write(int socket)
         return -1;
     }
     else if (ret == 0) {
-        mk_request_free_list(cr);
-        return mk_http_request_end(socket);
+        if (mk_http_request_end(socket) < 0) {
+            mk_request_free_list(cr);
+            return -1;
+        }
+        else {
+            return 0;
+        }
     }
     else if (ret > 0) {
         return 0;
