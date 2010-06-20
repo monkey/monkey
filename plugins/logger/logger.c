@@ -30,12 +30,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "plugin.h"
 #include "utils.h"
 #include "logger.h"
+#include "pointers.h"
+#include "http_status.h"
 #include "epoll.h"
-#include "unistd.h"
 
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "logger";
@@ -46,9 +48,6 @@ mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX |
 
 /* Thread key data */
 mk_plugin_key_t _mkp_data;
-
-/* Global Monkey core API */
-struct plugin_api *mk_api;
 
 char *mk_logger_match_by_fd(int fd)
 {
@@ -216,9 +215,7 @@ int _mkp_init(void **api, char *confdir)
     }
 
     /* Init mk_pointers */
-    mk_api->pointer_set(&mk_logger_iov_dash, MK_LOGGER_IOV_DASH);
-    mk_api->pointer_set(&mk_logger_iov_space, MK_IOV_SPACE);
-    mk_api->pointer_set(&mk_logger_iov_crlf, MK_IOV_CRLF);
+    mk_logger_init_pointers();
 
     return 0;
 }
@@ -318,6 +315,15 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
     mk_pointer *date;
 
     http_status = sr->headers->status;
+ 
+    /* Look for target log file */
+    target = mk_logger_match_by_host(sr->host_conf);
+    if (!target) {
+#ifdef TRACE
+        PLUGIN_TRACE("No target found");
+#endif
+        return 0;
+    }
 
     /* Get iov cache struct and reset indexes */
     iov = (struct mk_iov *) mk_logger_get_cache();
@@ -325,30 +331,21 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
     iov->buf_idx = 0;
     iov->total_len = 0;
 
+    /* IP */
+    mk_api->iov_add_entry(iov, cr->ipv4->data, cr->ipv4->len,
+                          mk_logger_iov_dash, MK_IOV_NOT_FREE_BUF);
+
+    /* Date/time when object was requested */
+    date = mk_api->time_human();
+    mk_api->iov_add_entry(iov, date->data, date->len,
+                          mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+
     /* Access Log */
     if (http_status < 400){
-        target = mk_logger_match_by_host(sr->host_conf);
-
-        if (!target) {
-#ifdef TRACE
-            PLUGIN_TRACE("No target found");
-#endif
-        }
-
         /* No access file defined */
         if (!target->file_access) {
             return 0;
         }
-
-        mk_api->iov_add_entry(iov, cr->ipv4->data, cr->ipv4->len,
-                              mk_logger_iov_dash, MK_IOV_NOT_FREE_BUF);
-
-        /* Date/time when object was requested */
-        date = mk_api->time_human();
-        mk_api->iov_add_entry(iov, 
-                              date->data, 
-                              date->len,
-                              mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);        
 
         /* HTTP Method */
         mk_api->iov_add_entry(iov, 
@@ -374,12 +371,82 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
         mk_api->iov_add_entry(iov,
                               sr->headers->content_length_p.data,
                               sr->headers->content_length_p.len, 
-                              mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
         /* Write iov array to pipe */
         mk_api->iov_send(target->fd_access[1], iov, MK_IOV_SEND_TO_PIPE);
     }
+    else {
+        if (!target->file_error) {
+            return 0;
+        }
+        switch (http_status) {
+        case M_CLIENT_BAD_REQUEST:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_400.data,
+                                  error_msg_400.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_CLIENT_NOT_FOUND:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_404.data,
+                                  error_msg_404.len,
+                                  mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+            mk_api->iov_add_entry(iov,
+                                  sr->uri.data,
+                                  sr->uri.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_CLIENT_METHOD_NOT_ALLOWED:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_405.data,
+                                  error_msg_405.len,
+                                  mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+            mk_api->iov_add_entry(iov,
+                                  sr->method_p.data,
+                                  sr->method_p.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_CLIENT_REQUEST_TIMEOUT:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_408.data,
+                                  error_msg_408.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_CLIENT_LENGTH_REQUIRED:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_411.data,
+                                  error_msg_411.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_SERVER_NOT_IMPLEMENTED:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_501.data,
+                                  error_msg_501.len,
+                                  mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
-    pthread_setspecific(_mkp_data, (void *) iov);
+            mk_api->iov_add_entry(iov,
+                                  sr->method_p.data,
+                                  sr->method_p.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_SERVER_INTERNAL_ERROR:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_500.data,
+                                  error_msg_500.len,
+                                  mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
+            break;
+        case M_SERVER_HTTP_VERSION_UNSUP:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_505.data,
+                                  error_msg_505.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
+        }
+        /* Write iov array to pipe */
+        mk_api->iov_send(target->fd_error[1], iov, MK_IOV_SEND_TO_PIPE);
+    }
+
+
     return 0;
 }

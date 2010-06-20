@@ -4,8 +4,9 @@ DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
+	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c pointers.c
 	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c logger.c
-	gcc $(CFLAGS) $(DEFS) -shared -o monkey-logger.so logger.o -lc
+	gcc $(CFLAGS) $(DEFS) -shared -o monkey-logger.so logger.o pointers.o -lc
 clean:
 	rm -rf *.o *~
 	rm -rf *.*so*

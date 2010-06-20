@@ -227,7 +227,7 @@ int mk_handler_write(int socket, struct client_request *cr)
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
-                if (sr->close_now == VAR_ON) {
+                 if (sr->close_now == VAR_ON) {
                     return -1;
                 }
                 break;
@@ -251,8 +251,8 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     struct host *host;
 
     status = mk_request_header_process(s_request);
-
     if (status < 0) {
+        mk_header_set_http_status(s_request, M_CLIENT_BAD_REQUEST);
         return EXIT_ABORT;
     }
 
@@ -565,6 +565,9 @@ void mk_request_error(int http_status, struct client_request *cr,
      * fixme s_log->error_details.data = NULL;
      */
 
+    printf("\n->%i", sr->headers->status);
+    fflush(stdout);
+
     switch (http_status) {
     case M_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",
@@ -576,8 +579,6 @@ void mk_request_error(int http_status, struct client_request *cr,
         page = mk_request_set_default_page("Forbidden",
                                            sr->uri,
                                            sr->host_conf->host_signature);
-        //s_log->error_msg = request_error_msg_403;
-        //s_log->error_details = s_request->uri;
         break;
 
     case M_CLIENT_NOT_FOUND:
@@ -586,9 +587,6 @@ void mk_request_error(int http_status, struct client_request *cr,
         page = mk_request_set_default_page("Not Found",
                                            message,
                                            sr->host_conf->host_signature);
-        //s_log->error_msg = request_error_msg_404;
-        //s_log->error_details = s_request->uri;
-
         mk_pointer_free(&message);
         break;
 
@@ -596,28 +594,16 @@ void mk_request_error(int http_status, struct client_request *cr,
         page = mk_request_set_default_page("Method Not Allowed",
                                            sr->uri,
                                            sr->host_conf->host_signature);
-
-        //s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
-        //s_log->error_msg = request_error_msg_405;
-        //s_log->error_details = s_request->method_p;
         break;
 
     case M_CLIENT_REQUEST_TIMEOUT:
-        //s_log->status = S_LOG_OFF;
-        //s_log->error_msg = request_error_msg_408;
-        break;
-
     case M_CLIENT_LENGTH_REQUIRED:
-        //s_log->error_msg = request_error_msg_411;
         break;
 
     case M_SERVER_NOT_IMPLEMENTED:
         page = mk_request_set_default_page("Method Not Implemented",
                                            sr->uri,
                                            sr->host_conf->host_signature);
-        //s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
-        //s_log->error_msg = request_error_msg_501;
-        //s_log->error_details = s_request->method_p;
         break;
 
     case M_SERVER_INTERNAL_ERROR:
