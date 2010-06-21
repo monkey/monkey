@@ -33,6 +33,8 @@
 #define HTTP_METHOD_POST_STR "POST"
 #define HTTP_METHOD_HEAD_STR "HEAD"
 
+#include "memory.h"
+
 mk_pointer mk_http_method_get_p;
 mk_pointer mk_http_method_post_p;
 mk_pointer mk_http_method_head_p;

@@ -561,13 +561,6 @@ void mk_request_error(int http_status, struct client_request *cr,
     mk_pointer message, *page = 0;
     long n;
 
-    /**
-     * fixme s_log->error_details.data = NULL;
-     */
-
-    printf("\n->%i", sr->headers->status);
-    fflush(stdout);
-
     switch (http_status) {
     case M_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",

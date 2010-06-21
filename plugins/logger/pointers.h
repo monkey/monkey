@@ -34,7 +34,7 @@
 
 #define MK_LOGGER_IOV_DASH " - "
 #define MK_LOGGER_IOV_SPACE " "
-#define MK_LOGGER_IOV_LF "\n"
+#define MK_LOGGER_IOV_EMPTY "- "
 
 /* mk pointers for errors */
 mk_pointer error_msg_400;
@@ -50,7 +50,8 @@ mk_pointer error_msg_505;
 /* mk pointer for IOV */
 mk_pointer mk_logger_iov_dash;
 mk_pointer mk_logger_iov_space;
-mk_pointer mk_logger_iov_lf;
+mk_pointer mk_logger_iov_crlf;
+mk_pointer mk_logger_iov_empty;
 
 /* functions */
 void mk_logger_init_pointers();

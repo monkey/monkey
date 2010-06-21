@@ -28,7 +28,8 @@ void mk_logger_init_pointers()
     /* Writter helpers */
     mk_api->pointer_set(&mk_logger_iov_dash, MK_LOGGER_IOV_DASH);
     mk_api->pointer_set(&mk_logger_iov_space, MK_IOV_SPACE);
-    mk_api->pointer_set(&mk_logger_iov_lf, MK_IOV_LF);
+    mk_api->pointer_set(&mk_logger_iov_crlf, MK_IOV_CRLF);
+    mk_api->pointer_set(&mk_logger_iov_empty, MK_LOGGER_IOV_EMPTY);
 
     /* Error messages */
     mk_api->pointer_set(&error_msg_400, ERROR_MSG_400);
