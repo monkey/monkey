@@ -183,6 +183,7 @@ struct plugin_api
     struct file_info *(*file_get_info) (char *);
     int (*header_send) (int,
                           struct client_request *, struct request *);
+    void (*header_set_http_status) (struct request *, int);
 
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);

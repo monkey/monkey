@@ -407,6 +407,7 @@ void mk_plugin_init()
 
     /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
+    api->header_set_http_status = (void *) mk_header_set_http_status;
 
     /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;

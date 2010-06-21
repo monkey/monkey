@@ -229,22 +229,24 @@ int mk_dirhtml_read_config(char *path)
 {
     unsigned long len;
     char *default_file;
-    struct mk_config *p;
+    struct mk_config *conf;
+    struct mk_config_section *section;
 
     mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
-    p = conf = mk_api->config_create(default_file);
+    conf = mk_api->config_create(default_file);
+    section = mk_api->config_section_get(conf, "DIRLISTING");
+
+    if (!section) {
+        fprintf(stderr, "\nError, could not find DIRLISTING tag");
+        exit(1);
+    }
 
     /* alloc dirhtml config struct */
     dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
-
-    while (p) {
-        if (strcasecmp(p->key, "Theme") == 0) {
-            dirhtml_conf->theme = mk_api->str_dup(p->val);
-            mk_api->str_build(&dirhtml_conf->theme_path, &len,
-                              "%sthemes/%s/", path, dirhtml_conf->theme);
-        }
-        p = p->next;
-    }
+    dirhtml_conf->theme = mk_api->config_section_getval(section, "Theme", 
+                                                        MK_CONFIG_VAL_STR);
+    mk_api->str_build(&dirhtml_conf->theme_path, &len,
+                      "%sthemes/%s/", path, dirhtml_conf->theme);
 
     mk_api->mem_free(default_file);
     return 0;
@@ -702,7 +704,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     file_list = mk_dirhtml_create_list(dir, sr->real_path.data, &list_len);
 
     /* Building headers */
-    sr->headers->status = M_HTTP_OK;
+    mk_api->header_set_http_status(sr, M_HTTP_OK);
     sr->headers->cgi = SH_CGI;
     sr->headers->breakline = MK_HEADER_BREAKLINE;
     sr->headers->content_type = mk_dirhtml_default_mime;
@@ -713,7 +715,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     }
 
     /* Sending headers */
-    n = (int) mk_api->header_send(cr->socket, cr, sr, sr->log);
+    n = (int) mk_api->header_send(cr->socket, cr, sr);
 
     /* Creating response template */
     /* Set %_html_title_% */
