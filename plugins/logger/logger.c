@@ -372,14 +372,14 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
         if (sr->method != HTTP_METHOD_HEAD) {
             mk_api->iov_add_entry(iov,
                                   sr->headers->content_length_p.data,
-                                  sr->headers->content_length_p.len, 
-                                  mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                                  sr->headers->content_length_p.len - 2, 
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
         else {
             mk_api->iov_add_entry(iov,
                                   mk_logger_iov_empty.data,
                                   mk_logger_iov_empty.len, 
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
 
         /* Write iov array to pipe */
@@ -394,7 +394,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   error_msg_400.data,
                                   error_msg_400.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_CLIENT_NOT_FOUND:
             mk_api->iov_add_entry(iov,
@@ -404,7 +404,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   sr->uri.data,
                                   sr->uri.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_CLIENT_METHOD_NOT_ALLOWED:
             mk_api->iov_add_entry(iov,
@@ -414,19 +414,19 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   sr->method_p.data,
                                   sr->method_p.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_CLIENT_REQUEST_TIMEOUT:
             mk_api->iov_add_entry(iov,
                                   error_msg_408.data,
                                   error_msg_408.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_CLIENT_LENGTH_REQUIRED:
             mk_api->iov_add_entry(iov,
                                   error_msg_411.data,
                                   error_msg_411.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_SERVER_NOT_IMPLEMENTED:
             mk_api->iov_add_entry(iov,
@@ -437,7 +437,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   sr->method_p.data,
                                   sr->method_p.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_SERVER_INTERNAL_ERROR:
             mk_api->iov_add_entry(iov,
@@ -449,7 +449,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   error_msg_505.data,
                                   error_msg_505.len,
-                                  mk_logger_iov_crlf, MK_IOV_NOT_FREE_BUF);
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         }
         /* Write iov array to pipe */
