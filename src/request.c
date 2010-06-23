@@ -278,6 +278,11 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
                          s_request->log);
         return EXIT_NORMAL;
     }
+    if (s_request->uri_processed[0] != '/') {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
+                         s_request->log);
+        return EXIT_NORMAL;
+    }
 
     /* HTTP/1.1 needs Host header */
     if (!s_request->host.data && s_request->protocol == HTTP_PROTOCOL_11) {
