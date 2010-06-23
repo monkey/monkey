@@ -369,6 +369,9 @@ int mk_request_header_process(struct request *sr)
     uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
 
     if (uri_end <= 0) {
+#ifdef TRACE
+        MK_TRACE("Error, first header bad formed");
+#endif
         return -1;
     }
 
