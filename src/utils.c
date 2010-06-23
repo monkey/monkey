@@ -118,6 +118,10 @@ time_t PutDate_unix(char *date)
 
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
 {
+    if (len1 < 0 || len2 < 0) {
+        return -1;
+    }
+
     /* alloc space */
     p->data = (char *) mk_mem_malloc(len1 + len2 + 1);
 

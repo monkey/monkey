@@ -155,6 +155,10 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* Compose real path */
     if (sr->user_home == VAR_OFF) {
+        printf("\nuri data: '%s'", uri_data);
+        printf("\nuri len : %i", uri_len);
+        fflush(stdout);
+
         mk_buffer_cat(&sr->real_path, 
                       sr->host_conf->documentroot.data,
                       sr->host_conf->documentroot.len,
