@@ -253,8 +253,9 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     struct host *host;
 
     status = mk_request_header_process(s_request);
-
     if (status < 0) {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
+                         s_request->log);
         return EXIT_ABORT;
     }
 
@@ -306,7 +307,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
         s_request->log->final_response = M_SERVER_HTTP_VERSION_UNSUP;
         mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
                          s_request->log);
-        return EXIT_NORMAL;
+        return EXIT_ABORT;
     }
 
     if (s_request->host.data) {
@@ -413,6 +414,10 @@ int mk_request_header_process(struct request *sr)
 
     /* HTTP Version */
     prot_end = fh_limit - 1;
+    if (prot_init == prot_end) {
+        return  -1;
+    }
+    
     if (prot_end != prot_init && prot_end > 0) {
         sr->protocol = sr->log->protocol =
             mk_http_protocol_check(sr->body.data + prot_init,
