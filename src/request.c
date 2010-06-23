@@ -292,7 +292,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     /* Validating protocol version */
     if (s_request->protocol == HTTP_PROTOCOL_UNKNOWN) {
         mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1);
-        return EXIT_NORMAL;
+        return EXIT_ABORT;
     }
 
     if (s_request->host.data) {
@@ -374,7 +374,7 @@ int mk_request_header_process(struct request *sr)
 #endif
         return -1;
     }
-
+    
     prot_init = uri_end + 2;
 
     if (uri_end < uri_init) {
@@ -406,6 +406,10 @@ int mk_request_header_process(struct request *sr)
 
     /* HTTP Version */
     prot_end = fh_limit - 1;
+    if (prot_init == prot_end) {
+        return  -1;
+    }
+    
     if (prot_end != prot_init && prot_end > 0) {
         sr->protocol = mk_http_protocol_check(sr->body.data + prot_init,
                                               prot_end - prot_init);
