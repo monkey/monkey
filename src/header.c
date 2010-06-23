@@ -309,6 +309,7 @@ int mk_header_send(int fd, struct client_request *cr,
             mk_pointer_free(&sr->log->size_p);
             sr->log->size = length;
             sr->log->size_p = mk_utils_int2mkp(length);
+            sr->headers->content_length_p = sr->log->size_p;
         }
     }
     else if (sh->content_length >= 0) {
