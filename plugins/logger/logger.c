@@ -404,7 +404,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
             mk_api->iov_add_entry(iov,
                                   sr->uri.data,
                                   sr->uri.len,
-                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF)
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
         case M_CLIENT_NOT_FOUND:
             mk_api->iov_add_entry(iov,
