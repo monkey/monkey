@@ -130,7 +130,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     int debug_error = 0, bytes = 0;
     struct mimetype *mime;
     char *uri_data = NULL;
-    char uri_len = 0;
+    int uri_len = 0;
     mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
 
 #ifdef TRACE
@@ -155,15 +155,18 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* Compose real path */
     if (sr->user_home == VAR_OFF) {
-        printf("\nuri data: '%s'", uri_data);
-        printf("\nuri len : %i", uri_len);
-        fflush(stdout);
+        ret = mk_buffer_cat(&sr->real_path, 
+                            sr->host_conf->documentroot.data,
+                            sr->host_conf->documentroot.len,
+                            uri_data,
+                            uri_len);
 
-        mk_buffer_cat(&sr->real_path, 
-                      sr->host_conf->documentroot.data,
-                      sr->host_conf->documentroot.len,
-                      uri_data,
-                      uri_len);
+        if (ret < 0) {
+#ifdef TRACE
+            MK_TRACE("Error composing real path");
+#endif
+            return EXIT_ERROR;
+            }
     }
 
     if (sr->method != HTTP_METHOD_HEAD) {

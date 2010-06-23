@@ -376,6 +376,9 @@ int mk_request_header_process(struct request *sr)
     uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
 
     if (uri_end <= 0) {
+#ifdef TRACE
+        MK_TRACE("Error, first header bad formed");
+#endif
         return -1;
     }
 
@@ -399,7 +402,7 @@ int mk_request_header_process(struct request *sr)
                                                  init + 1, end + 1);
         }
     }
-
+    
     /* Request URI Part 2 */
     sr->uri = sr->log->uri = mk_pointer_create(sr->body.data,
                                                uri_init, uri_end + 1);
@@ -407,7 +410,6 @@ int mk_request_header_process(struct request *sr)
     if (sr->uri.len < 1) {
         return -1;
     }
-
 
     /* HTTP Version */
     prot_end = fh_limit - 1;
@@ -421,7 +423,7 @@ int mk_request_header_process(struct request *sr)
 
     /* URI processed */
     sr->uri_processed = mk_utils_hexuri_to_ascii(sr->uri);
-
+    
     if (!sr->uri_processed) {
         sr->uri_processed = mk_pointer_to_buf(sr->uri);
         sr->uri_twin = VAR_ON;
