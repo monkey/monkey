@@ -52,7 +52,7 @@ long int mk_method_post_content_length(char *body)
      * request has arrived, this function cannot be used from
      * mk_http_pending_request().
      */
-    toc = pthread_getspecific(mk_cache_header_toc);
+    toc = mk_cache_get(mk_cache_header_toc);
     tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, body,
                                  mk_rh_content_length);
 
@@ -86,7 +86,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
         return -1;
     }
 
-    toc = pthread_getspecific(mk_cache_header_toc);
+    toc = mk_cache_get(mk_cache_header_toc);
     tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, sr->body.data,
                                  mk_rh_content_type);
 

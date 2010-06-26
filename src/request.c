@@ -905,7 +905,7 @@ struct header_toc *mk_request_header_toc_create(int len)
     int i;
     struct header_toc *p;
 
-    p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
+    p = (struct header_toc *) mk_cache_get(mk_cache_header_toc);
 
     for (i = 0; i < len; i++) {
         p[i].init = NULL;

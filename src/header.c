@@ -45,7 +45,7 @@ int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
 
 struct mk_iov *mk_header_iov_get()
 {
-    return pthread_getspecific(mk_cache_iov_header);
+    return mk_cache_get(mk_cache_iov_header);
 }
 
 void mk_header_iov_free(struct mk_iov *iov)
