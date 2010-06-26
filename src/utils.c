@@ -57,27 +57,23 @@
 /* Return data as mk_pointer to be sent
  * in response header 
  */
-mk_pointer PutDate_string(time_t date)
+int mk_utils_utime2gmt(mk_pointer **p, time_t date)
 {
-    int n, size = 32;
-    mk_pointer date_gmt;
+    int n;
+    int size = 32;
     struct tm *gmt_tm;
-
-    mk_pointer_reset(&date_gmt);
 
     if (date == 0) {
         if ((date = time(NULL)) == -1) {
-            return date_gmt;
+            return -1;
         }
     }
 
-    date_gmt.data = mk_mem_malloc(size);
     gmt_tm = (struct tm *) gmtime(&date);
-    n = strftime(date_gmt.data, size - 1, GMT_DATEFORMAT, gmt_tm);
-    date_gmt.data[n] = '\0';
-    date_gmt.len = n;
+    n = strftime((*p)->data, size, GMT_DATEFORMAT, gmt_tm);
+    (*p)->len = size-1;
 
-    return date_gmt;
+    return 0;
 }
 
 time_t PutDate_unix(char *date)
@@ -94,7 +90,7 @@ time_t PutDate_unix(char *date)
     return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
+int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
 {
     /* Validate lengths */
     if (len1 < 0 || len2 < 0) {
@@ -195,13 +191,12 @@ mk_pointer mk_utils_int2mkp(int n)
     mk_pointer p;
     char *buf;
     unsigned long len;
-
+    
     buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
     len = snprintf(buf, MK_UTILS_INT2MKP_BUFFER_LEN, "%i\r\n", n);
 
     p.data = buf;
     p.len = len;
-
     return p;
 }
 

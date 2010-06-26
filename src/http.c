@@ -131,7 +131,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     struct mimetype *mime;
     char *uri_data = NULL;
     int uri_len = 0;
-    mk_pointer gmt_file_unix_time;      // gmt time of server file (unix time)
 
 #ifdef TRACE
     MK_TRACE("HTTP Protocol Init");
@@ -287,8 +286,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         (config->max_keep_alive_request - cr->counter_connections);
 
 
-    gmt_file_unix_time =
-        PutDate_string((time_t) sr->file_info->last_modification);
+    sr->headers->last_modified = sr->file_info->last_modification;
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
@@ -300,13 +298,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         if ((date_file_server <= date_client) && (date_client > 0)) {
             mk_header_set_http_status(sr, M_NOT_MODIFIED);
             mk_header_send(cr->socket, cr, sr);
-            mk_pointer_free(&gmt_file_unix_time);
             return EXIT_NORMAL;
         }
     }
     mk_header_set_http_status(sr, M_HTTP_OK);
     sr->headers->cgi = SH_NOCGI;
-    sr->headers->last_modified = gmt_file_unix_time;
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
@@ -319,7 +315,6 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         if (sr->range.data != NULL && config->resume == VAR_ON) {
             if (mk_http_range_parse(sr) < 0) {
                 mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
-                mk_pointer_free(&gmt_file_unix_time);
                 return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0)

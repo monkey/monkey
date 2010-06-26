@@ -27,6 +27,7 @@
                                  */
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;
+pthread_key_t mk_cache_header_lm;
 
 struct mk_cache_date_t
 {
@@ -40,6 +41,7 @@ struct mk_cache_date_t *mk_cache_file_date;
 
 
 void mk_cache_thread_init();
+void *mk_cache_get(pthread_key_t key);
 char *mk_cache_file_date_get(time_t time);
 
 #endif

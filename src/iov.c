@@ -41,7 +41,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
     iov = mk_mem_malloc(sizeof(struct mk_iov));
     iov->iov_idx = offset;
-    iov->io = mk_mem_malloc_z(n * sizeof(struct iovec));
+    iov->io = mk_mem_malloc(n * sizeof(struct iovec));
     iov->buf_to_free = mk_mem_malloc(n * sizeof(char *));
     iov->buf_idx = 0;
     iov->total_len = 0;
@@ -172,11 +172,18 @@ void mk_iov_free_marked(struct mk_iov *mk_io)
 
 void mk_iov_print(struct mk_iov *mk_io)
 {
-    int i;
+    int i, j;
+    char *c;
 
     for (i = 0; i < mk_io->iov_idx; i++) {
-        printf("\n%i len=%i)\n'%s'", i, mk_io->io[i].iov_len,
-               (char *) mk_io->io[i].iov_base);
+        printf("\n[index=%i len=%i]\n '", i, mk_io->io[i].iov_len);
+        fflush(stdout);
+        for (j=0; j < mk_io->io[i].iov_len; j++) {
+            c = mk_io->io[i].iov_base;
+            printf("%c", c[j]);
+            fflush(stdout);
+        }
+        printf("-'\n[end=%i]\n", j);
         fflush(stdout);
     }
 }

@@ -161,6 +161,19 @@ int mk_header_send(int fd, struct client_request *cr,
                      header_current_time.len,
                      mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
+    /* Last-Modified */
+    if (sh->last_modified > 0) {
+        mk_pointer *lm;
+        lm = mk_cache_get(mk_cache_header_lm);
+        mk_utils_utime2gmt(&lm, sh->last_modified);
+
+        mk_iov_add_entry(iov, mk_header_last_modified.data,
+                         mk_header_last_modified.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, lm->data, lm->len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
+
     /* Connection */
     if (config->keep_alive == VAR_ON &&
         sr->keep_alive == VAR_ON &&
@@ -200,16 +213,6 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov,
                          sh->location,
                          strlen(sh->location), mk_iov_crlf, MK_IOV_FREE_BUF);
-    }
-
-    /* Last-Modified */
-    if (sh->last_modified.len > 0) {
-        mk_iov_add_entry(iov, mk_header_last_modified.data,
-                         mk_header_last_modified.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        mk_iov_add_entry(iov, sh->last_modified.data,
-                         sh->last_modified.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
     /* Content type */
@@ -302,8 +305,10 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov, mk_header_content_length.data,
                          mk_header_content_length.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        
         mk_iov_add_entry(iov, sh->content_length_p.data, sh->content_length_p.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        
     }
     
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
@@ -353,9 +358,9 @@ struct header_values *mk_header_create()
     headers->ranges[1] = -1;
     headers->content_length = -1;
     headers->transfer_encoding = -1;
+    headers->last_modified = -1;
     mk_pointer_reset(&headers->content_length_p);
     mk_pointer_reset(&headers->content_type);
-    mk_pointer_reset(&headers->last_modified);
     headers->location = NULL;
 
     return headers;

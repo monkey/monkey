@@ -36,6 +36,8 @@
 #include "request.h"
 #include "memory.h"
 
+#define INTSIZE sizeof(int)
+
 #ifdef TRACE
 
 #define MK_TRACE_CORE 0
@@ -63,7 +65,7 @@ pthread_mutex_t mutex_trace;
 /* utils.c */
 int hex2int(char *pChars);
 
-mk_pointer PutDate_string(time_t date);
+int mk_utils_utime2gmt(mk_pointer **p, time_t date);
 time_t PutDate_unix(char *date);
 
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);

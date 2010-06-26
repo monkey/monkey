@@ -226,8 +226,8 @@ struct header_values
     int transfer_encoding;
     int breakline;
 
+    time_t last_modified;
     mk_pointer content_type;
-    mk_pointer last_modified;
     char *location;
 };
 

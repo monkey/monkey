@@ -640,7 +640,7 @@ void mk_request_error(int http_status, struct client_request *cr,
     sr->headers->location = NULL;
     sr->headers->cgi = SH_NOCGI;
     sr->headers->pconnections_left = 0;
-    mk_pointer_reset(&sr->headers->last_modified);
+    sr->headers->last_modified = -1;
 
     if (aux_message)
         mk_mem_free(aux_message);
@@ -773,7 +773,6 @@ void mk_request_free(struct request *sr)
     }
     if (sr->headers) {
         mk_mem_free(sr->headers->location);
-        mk_pointer_free(&sr->headers->last_modified);
         mk_mem_free(sr->headers);
 
         if (sr->headers->content_length >= 0) {
