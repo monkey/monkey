@@ -54,14 +54,24 @@
 #include "clock.h"
 #include "user.h"
 
-/* Return data as mk_pointer to be sent
- * in response header 
+/* Date helpers */
+const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+                              "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+/* This function given a unix time, set in a mk_pointer 
+ * the date in the RFC1123 format like:
+ *
+ *    Wed, 23 Jun 2010 22:32:01 GMT
+ *
+ * it also adds a 'CRLF' at the end
  */
 int mk_utils_utime2gmt(mk_pointer **p, time_t date)
 {
-    int n;
-    int size = 32;
-    struct tm *gmt_tm;
+    int size = 31;
+    unsigned int year;
+    char *buf=0;
+    struct tm *gtm;
 
     if (date == 0) {
         if ((date = time(NULL)) == -1) {
@@ -69,9 +79,68 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
         }
     }
 
-    gmt_tm = (struct tm *) gmtime(&date);
-    n = strftime((*p)->data, size, GMT_DATEFORMAT, gmt_tm);
-    (*p)->len = size-1;
+    /* Convert unix time to struct tm */
+    gtm = (struct tm *) gmtime(&date);
+    if (!gtm) {
+        return -1;
+    }
+
+    /* struct tm -> tm_year counts number of years after 1900 */
+    year = gtm->tm_year + 1900;
+    
+    /* Compose template */
+    buf = (*p)->data;
+
+    /* Week day */
+    *buf++ = mk_date_wd[gtm->tm_wday][0];
+    *buf++ = mk_date_wd[gtm->tm_wday][1];
+    *buf++ = mk_date_wd[gtm->tm_wday][2];
+    *buf++ = ',';
+    *buf++ = ' ';
+
+    /* Day of the month */
+    *buf++ = ('0' + (gtm->tm_mday / 10));
+    *buf++ = ('0' + (gtm->tm_mday % 10));
+    *buf++ = ' ';
+
+    /* Year month */
+    *buf++ = mk_date_ym[gtm->tm_mon][0];
+    *buf++ = mk_date_ym[gtm->tm_mon][1];
+    *buf++ = mk_date_ym[gtm->tm_mon][2];
+    *buf++ = ' ';
+
+    /* Year */
+    *buf++ = ('0' + (year / 1000) % 10);
+    *buf++ = ('0' + (year / 100) % 10);
+    *buf++ = ('0' + (year / 10) % 10);
+    *buf++ = ('0' + (year % 10));
+    *buf++ = ' ';
+
+    /* Hour */
+    *buf++ = ('0' + (gtm->tm_hour / 10));
+    *buf++ = ('0' + (gtm->tm_hour % 10));
+    *buf++ = ':';
+
+    /* Minutes */
+    *buf++ = ('0' + (gtm->tm_min / 10));
+    *buf++ = ('0' + (gtm->tm_min % 10));
+    *buf++ = ':';
+
+    /* Seconds */
+    *buf++ = ('0' + (gtm->tm_sec / 10));
+    *buf++ = ('0' + (gtm->tm_sec % 10));
+    *buf++ = ' ';
+
+    /* GMT Time zone + CRLF */
+    *buf++ = 'G';
+    *buf++ = 'M';
+    *buf++ = 'T';
+    *buf++ = '\r';
+    *buf++ = '\n';
+    *buf++ = '\0';
+    
+    /* Set mk_pointer data len */
+    (*p)->len = size;
 
     return 0;
 }
