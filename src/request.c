@@ -253,6 +253,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     status = mk_request_header_process(s_request);
     if (status < 0) {
         mk_header_set_http_status(s_request, M_CLIENT_BAD_REQUEST);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
         return EXIT_ABORT;
     }
 
