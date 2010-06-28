@@ -285,3 +285,54 @@ char *mk_string_build(char **buffer, unsigned long *len,
 
     return *buffer;
 }
+
+int mk_string_trim(char **str)
+{
+    int i;
+    unsigned int len;
+    char *left = 0, *right = 0;
+    char *buf;
+
+    buf = *str;
+    if (!buf) {
+        return -1;
+    }
+
+    len = strlen(buf);
+    left = buf;
+
+    /* left spaces */
+    while (left) {
+        if (isspace(*left)) {
+            *left++;
+        }
+        else {
+            break;
+        }
+    }
+
+    right = buf + (len - 1);
+    /* Validate right v/s left */
+    if (right < left) {
+        buf[0] = '\0';
+        return -1;
+    }
+
+    /* Move back */
+    while (right != buf){
+        if (isspace(*right)) {
+            *right--;
+        }
+        else {
+            break;
+        }
+    }
+
+    len = (right - left) + 1;
+    for(i=0; i<len; i++){
+        buf[i] = (char) left[i];
+    }
+    buf[i] = '\0';
+    
+    return 0;
+}
