@@ -229,6 +229,10 @@ struct mk_config *mk_config_create(const char *path)
                 continue;
             }
 
+            /* Trim strings */
+            mk_string_trim(&key);
+            mk_string_trim(&val);
+
             /* Register entry */
             mk_config_entry_add(conf, key, val);
         }
