@@ -395,7 +395,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     config->workers = (int) mk_config_section_getval(section,
                                                      "Workers", 
                                                      MK_CONFIG_VAL_NUM);
-    if (config->maxclients < 1) {
+    if (config->workers < 1) {
         mk_config_print_error_msg("Workers", path);
     }
 
@@ -629,7 +629,7 @@ void mk_config_add_index(char *indexname)
 
 void mk_config_set_init_values(void)
 {
-    /* Valores iniciales */
+    /* Init values */
     config->timeout = 15;
     config->hideversion = VAR_OFF;
     config->keep_alive = VAR_ON;
