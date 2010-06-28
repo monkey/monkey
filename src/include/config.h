@@ -89,7 +89,6 @@ struct server_config
     int symlink;                /* symbolic links */
     int serverport;             /* port */
     int timeout;                /* max time to wait for a new connection */
-    int maxclients;             /* max clients (max threads) */
     int hideversion;            /* hide version of server to clients ? */
     int standard_port;          /* common port used in web servers (80) */
     int pid_status;
@@ -105,9 +104,6 @@ struct server_config
     /* real user */
     uid_t egid;
     gid_t euid;
-
-    /* max ip */
-    int max_ip;
 
     struct dir_html_theme *dir_theme;
 

@@ -106,7 +106,6 @@ int mk_user_set_uidgid()
         struct rlimit rl;
 
         /* Just if i'm superuser */
-        rl.rlim_max = (256 * config->maxclients);
         rl.rlim_cur = rl.rlim_max;
         setrlimit(RLIMIT_NOFILE, &rl);
 

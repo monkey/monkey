@@ -635,8 +635,6 @@ void mk_config_set_init_values(void)
     config->keep_alive = VAR_ON;
     config->keep_alive_timeout = 15;
     config->max_keep_alive_request = 50;
-    config->maxclients = 150;
-    config->max_ip = 15;
     config->resume = VAR_ON;
     config->standard_port = 80;
     config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
