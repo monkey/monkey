@@ -45,4 +45,5 @@ struct mk_string_line *mk_string_split_line(char *line);
 int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len, 
                       const char *format, ...);
+int mk_string_itop(int n, mk_pointer *p);
 #endif

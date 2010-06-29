@@ -336,3 +336,46 @@ int mk_string_trim(char **str)
     
     return 0;
 }
+
+int mk_string_itop(int n, mk_pointer *p)
+{
+    /*
+      Code taken from some forum...
+    */
+    int i = 0;
+    int length = 0;
+    int temp = 0;
+    char *str;
+
+    str = (*p).data;
+
+    if (!str) {
+        return -1;
+    }
+
+    /* Generate digit characters in reverse order */
+    do {
+        str[i++] = ('0' + (n % 10));
+        n /= 10;
+    } while (n>0);
+    
+    /* Add CRLF and NULL byte */
+    str[i] = '\0';
+
+    (*p).len = length = i;
+    
+    for (i=0; i < (length/2); i++) {
+        temp = str[i];
+        str[i] = str[length-i-1];
+        str[length-i-1] = temp;
+    }
+
+    i = length;
+    str[i++] = '\r';
+    str[i++] = '\n';
+    str[i++] = '\0';
+
+    (*p).len+=2;
+
+    return 0;
+}

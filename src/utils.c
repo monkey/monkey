@@ -259,13 +259,14 @@ mk_pointer mk_utils_int2mkp(int n)
 {
     mk_pointer p;
     char *buf;
-    unsigned long len;
     
+    /* Alloc memory */
     buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
-    len = snprintf(buf, MK_UTILS_INT2MKP_BUFFER_LEN, "%i\r\n", n);
-
     p.data = buf;
-    p.len = len;
+
+    /* Convert int to string */
+    mk_string_itop(n, &p);
+    
     return p;
 }
 
