@@ -200,6 +200,9 @@ int _mkp_init(void **api, char *confdir)
 
     mk_api = *api;
     
+    /* Specific thread key */
+    pthread_key_create(&cache_content_length, NULL);
+
     /* Global configuration */
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
     section = mk_api->config_section_get(mk_api->config->config, "LOGGER");
@@ -298,6 +301,7 @@ void _mkp_core_prctx()
 void _mkp_core_thctx()
 {
     struct mk_iov *iov_log;
+    mk_pointer *content_length;
 
 #ifdef TRACE
     PLUGIN_TRACE("Creating thread cache");
@@ -306,6 +310,12 @@ void _mkp_core_thctx()
     /* Cache iov log struct */
     iov_log = mk_api->iov_create(15, 0);
     pthread_setspecific(_mkp_data, (void *) iov_log);
+
+    /* Cache content length */
+    content_length = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    content_length->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
+    content_length->len = -1;
+    pthread_setspecific(cache_content_length, (void *) content_length);
 }
 
 int _mkp_stage_40(struct client_request *cr, struct request *sr)
@@ -370,9 +380,13 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
 
         /* Content Length */
         if (sr->method != HTTP_METHOD_HEAD) {
+            /* Int to mk_pointer */
+            mk_pointer *cl;
+            cl = pthread_getspecific(cache_content_length);
+            mk_api->str_itop(sr->headers->content_length, cl);
+
             mk_api->iov_add_entry(iov,
-                                  sr->headers->content_length_p.data,
-                                  sr->headers->content_length_p.len - 2, 
+                                  cl->data, cl->len - 2, 
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
         else {

@@ -176,6 +176,7 @@ struct plugin_api
     int (*str_search) (char *, char *);
     int (*str_search_n) (char *, char *, int);
     char *(*str_copy_substr) (const char *, int, int);
+    int (*str_itop) (int, mk_pointer *);
     struct mk_string_line *(*str_split_line) (const char *);
 
     /* file functions */

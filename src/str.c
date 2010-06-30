@@ -347,7 +347,7 @@ int mk_string_itop(int n, mk_pointer *p)
     int temp = 0;
     char *str;
 
-    str = (*p).data;
+    str = p->data;
 
     if (!str) {
         return -1;
@@ -362,7 +362,7 @@ int mk_string_itop(int n, mk_pointer *p)
     /* Add CRLF and NULL byte */
     str[i] = '\0';
 
-    (*p).len = length = i;
+    p->len = length = i;
     
     for (i=0; i < (length/2); i++) {
         temp = str[i];
@@ -375,7 +375,7 @@ int mk_string_itop(int n, mk_pointer *p)
     str[i++] = '\n';
     str[i++] = '\0';
 
-    (*p).len+=2;
+    p->len+=2;
 
     return 0;
 }

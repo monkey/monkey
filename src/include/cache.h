@@ -28,6 +28,7 @@
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;
 pthread_key_t mk_cache_header_lm;
+pthread_key_t mk_cache_header_cl;
 
 struct mk_cache_date_t
 {

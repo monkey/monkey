@@ -53,6 +53,7 @@
 #include "socket.h"
 #include "clock.h"
 #include "user.h"
+#include "cache.h"
 
 /* Date helpers */
 const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -253,21 +254,6 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
     buf[buf_idx] = '\0';
 
     return buf;
-}
-
-mk_pointer mk_utils_int2mkp(int n)
-{
-    mk_pointer p;
-    char *buf;
-    
-    /* Alloc memory */
-    buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
-    p.data = buf;
-
-    /* Convert int to string */
-    mk_string_itop(n, &p);
-    
-    return p;
 }
 
 #ifdef TRACE

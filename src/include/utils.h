@@ -71,7 +71,6 @@ time_t PutDate_unix(char *date);
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
 int mk_utils_set_daemon();
-mk_pointer mk_utils_int2mkp(int n);
 char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
 
 #ifdef TRACE

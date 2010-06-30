@@ -399,6 +399,7 @@ void mk_plugin_init()
     api->str_search = (void *) mk_string_search;
     api->str_search_n = (void *) mk_string_search_n;
     api->str_copy_substr = (void *) mk_string_copy_substr;
+    api->str_itop = (void *) mk_string_itop;
     api->str_split_line = (void *) mk_string_split_line;
 
     /* File Callbacks */

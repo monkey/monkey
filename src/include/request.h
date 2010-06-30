@@ -218,7 +218,6 @@ struct header_values
     mk_pointer *status_p;
 
     long content_length;
-    mk_pointer content_length_p;
 
     int cgi;
     int pconnections_left;

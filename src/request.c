@@ -777,7 +777,7 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->headers);
 
         if (sr->headers->content_length >= 0) {
-            mk_pointer_free(&sr->headers->content_length_p);
+            //mk_pointer_free(&sr->headers->content_length_p);
         }
     }
 

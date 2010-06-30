@@ -299,14 +299,16 @@ int mk_header_send(int fd, struct client_request *cr,
     }
     else if (sh->content_length >= 0) {
         /* Map content length to MK_POINTER */
-        sh->content_length_p = mk_utils_int2mkp(sh->content_length);
+        mk_pointer *cl;
+        cl = mk_cache_get(mk_cache_header_cl);
+        mk_string_itop(sh->content_length, cl);
 
         /* Set headers */
         mk_iov_add_entry(iov, mk_header_content_length.data,
                          mk_header_content_length.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
         
-        mk_iov_add_entry(iov, sh->content_length_p.data, sh->content_length_p.len,
+        mk_iov_add_entry(iov, cl->data, cl->len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
         
     }
@@ -359,7 +361,7 @@ struct header_values *mk_header_create()
     headers->content_length = -1;
     headers->transfer_encoding = -1;
     headers->last_modified = -1;
-    mk_pointer_reset(&headers->content_length_p);
+    //    mk_pointer_reset(&headers->content_length_p);
     mk_pointer_reset(&headers->content_type);
     headers->location = NULL;
 
