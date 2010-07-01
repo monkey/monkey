@@ -145,10 +145,18 @@ class Child:
                 opts = self.c['opts']
                 opts.append(request.resource)
 
-            #print "command:", bin, opts
-            os.dup2(remote.fileno(), sys.stdout.fileno())
-            
             try:
+                os.dup2(remote.fileno(), sys.stdout.fileno())
+
+                # Write Post data to STDIN (Pipe)
+                if request.headers['REQUEST_METHOD'] == 'POST':
+                    # Temporal Pipe > STDIN
+                    pipe_r, pipe_w = os.pipe()
+                    os.dup2(pipe_r, sys.stdin.fileno())
+
+                    # Write POST content to Pipe
+                    os.write(pipe_w, request.headers['POST_VARS'])
+
                 os.execve(bin, opts, request.headers)
             except:
                 print "Content-Type: text/plain\r\n\r\n"
