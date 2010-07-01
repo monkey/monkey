@@ -132,13 +132,11 @@ void *mk_logger_worker_init(void *args)
         if (lt_aux->fd_access[0] > 0) {
             mk_api->epoll_add(efd, lt_aux->fd_access[0], 
                               MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
-            //mk_logger_target_add(lt_aux->fd_access[0], h->access_log_path);
         }
         /* Add error log file */
         if (lt_aux->fd_error[0] > 0) {
             mk_api->epoll_add(efd, lt_aux->fd_error[0], 
                               MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
-            //mk_logger_target_add(h->log_error[0], h->error_log_path);
         }
         lt_aux = lt_aux->next;
     }

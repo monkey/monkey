@@ -8,3 +8,10 @@ uri = /
 protocol = HTTP/1.1
 status = 200
 size = FILESIZE ../htdocs/index.html
+
+[error]
+ip = 127.0.0.1
+status = 411
+message = Length Required
+
+
