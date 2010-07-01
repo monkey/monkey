@@ -239,70 +239,12 @@ int mk_header_send(int fd, struct client_request *cr,
     }
 
     /* Content-Length */
-    if ((sh->content_length != 0 &&
-         (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
-        config->resume == VAR_ON) {
-        long int length = -1;
-
-        /* yyy- */
-        if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
-            length = (unsigned int)
-                (sh->content_length - sh->ranges[0]);
-            mk_string_build(&buffer, &len, "%s %i", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            mk_string_build(&buffer,
-                            &len,
-                            "%s bytes %d-%d/%d",
-                            RH_CONTENT_RANGE,
-                            sh->ranges[0],
-                            (sh->content_length - 1), sh->content_length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-        }
-
-        /* yyy-xxx */
-        if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
-            length = (unsigned int)
-                abs(sh->ranges[1] - sh->ranges[0]) + 1;
-            mk_string_build(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            mk_string_build(&buffer,
-                            &len,
-                            "%s bytes %d-%d/%d",
-                            RH_CONTENT_RANGE,
-                            sh->ranges[0], sh->ranges[1], sh->content_length);
-
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-        }
-
-        /* -xxx */
-        if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
-            length = (unsigned int) sh->ranges[1];
-
-            if (length > sh->content_length) {
-                length = sh->content_length;
-                sh->ranges[1] = sh->content_length;
-            }
-
-            mk_string_build(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            mk_string_build(&buffer,
-                            &len,
-                            "%s bytes %d-%d/%d",
-                            RH_CONTENT_RANGE,
-                            (sh->content_length - sh->ranges[1]),
-                            (sh->content_length - 1), sh->content_length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-        }
-    }
-    else if (sh->content_length >= 0) {
+    if (sh->content_length >= 0) {
         /* Map content length to MK_POINTER */
         mk_pointer *cl;
         cl = mk_cache_get(mk_cache_header_cl);
         mk_string_itop(sh->content_length, cl);
-
+        
         /* Set headers */
         mk_iov_add_entry(iov, mk_header_content_length.data,
                          mk_header_content_length.len,
@@ -311,6 +253,45 @@ int mk_header_send(int fd, struct client_request *cr,
         mk_iov_add_entry(iov, cl->data, cl->len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
         
+    }
+
+    if ((sh->content_length != 0 && 
+         (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
+        config->resume == VAR_ON) {
+        buffer = 0;
+
+        /* yyy- */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0],
+                            (sh->real_length - 1), sh->real_length);
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+
+        /* yyy-xxx */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0], sh->ranges[1], sh->real_length);
+
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+
+        /* -xxx */
+        if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            (sh->real_length - sh->ranges[1]),
+                            (sh->real_length - 1), sh->real_length);
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
     }
     
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {

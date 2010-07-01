@@ -307,6 +307,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* Object size for log and response headers */
     sr->headers->content_length = sr->file_info->size;
+    sr->headers->real_length = sr->file_info->size;
 
     /* Process methods */
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
@@ -317,8 +318,9 @@ int mk_http_init(struct client_request *cr, struct request *sr)
                 mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
                 return EXIT_ERROR;
             }
-            if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0)
+            if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0) {
                 mk_header_set_http_status(sr, M_HTTP_PARTIAL);
+            }
         }
     }
     else {                      
@@ -493,6 +495,7 @@ int mk_http_range_parse(struct request *sr)
 {
     int eq_pos, sep_pos, len;
     char *buffer = 0;
+    struct header_values *sh;
 
     if (!sr->range.data)
         return -1;
@@ -503,39 +506,40 @@ int mk_http_range_parse(struct request *sr)
     if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
         return -1;
 
-    if ((sep_pos = mk_string_search_n(sr->range.data, "-",
-                                      sr->range.len)) < 0)
+    if ((sep_pos = mk_string_search_n(sr->range.data, "-", sr->range.len)) < 0)
         return -1;
 
     len = sr->range.len;
+    sh = sr->headers;
 
     /* =-xxx */
     if (eq_pos + 1 == sep_pos) {
-        sr->headers->ranges[0] = -1;
-        sr->headers->ranges[1] =
-            (unsigned long) atol(sr->range.data + sep_pos + 1);
+        sh->ranges[0] = -1;
+        sh->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
 
-        if (sr->headers->ranges[1] <= 0) {
+        if (sh->ranges[1] <= 0) {
             return -1;
         }
 
+        sh->content_length = sh->ranges[1];
         return 0;
     }
 
     /* =yyy-xxx */
     if ((eq_pos + 1 != sep_pos) && (len > sep_pos + 1)) {
         buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, sep_pos);
-        sr->headers->ranges[0] = (unsigned long) atol(buffer);
+        sh->ranges[0] = (unsigned long) atol(buffer);
         mk_mem_free(buffer);
 
         buffer = mk_string_copy_substr(sr->range.data, sep_pos + 1, len);
-        sr->headers->ranges[1] = (unsigned long) atol(buffer);
+        sh->ranges[1] = (unsigned long) atol(buffer);
         mk_mem_free(buffer);
 
-        if (sr->headers->ranges[1] <= 0 ||
-            sr->headers->ranges[0] > sr->headers->ranges[1]) {
+        if (sh->ranges[1] <= 0 || (sh->ranges[0] > sh->ranges[1])) {
             return -1;
         }
+
+        sh->content_length = abs(sh->ranges[1] - sh->ranges[0]) + 1;
         return 0;
     }
     /* =yyy- */
@@ -543,6 +547,8 @@ int mk_http_range_parse(struct request *sr)
         buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, len);
         sr->headers->ranges[0] = (unsigned long) atol(buffer);
         mk_mem_free(buffer);
+
+        sh->content_length = (sh->content_length - sh->ranges[0]);
         return 0;
     }
 

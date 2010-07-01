@@ -217,7 +217,11 @@ struct header_values
     int status;
     mk_pointer *status_p;
 
+    /* Length of the content to send */
     long content_length;
+
+    /* Private value, real length of the file requested */
+    long real_length;
 
     int cgi;
     int pconnections_left;

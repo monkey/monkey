@@ -1,3 +1,4 @@
+
 #!/bin/sh
 TEST_FILES=`ls *.htt`
 TOTAL_TESTS=`echo $TEST_FILES | wc -w`
@@ -84,7 +85,7 @@ for test_file in $TEST_FILES; do
         else
             # We need to sleep for a while as Monkey needs to flush
             # the logs, that happens every 3 seconds
-            sleep 4
+            sleep 2
 	    CHECKLOG=`./checklog -l log_rules/$test_file`
 	    ERRCODE=$?
 	fi
@@ -99,6 +100,7 @@ for test_file in $TEST_FILES; do
 	    1)
                 [ $WITH_COLOR = yes ] && echo -n "[1;31m"
 		echo "=> [FAILED]"
+		echo $CHECKLOG
 		[ $WITH_COLOR = yes ] && echo -n "[m"
                 TESTS_FAILED=$((TESTS_FAILED+1))
 		[ $STOP_AT_ERRORS = yes ] && exit 1
