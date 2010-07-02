@@ -35,15 +35,15 @@ class BigPalm:
         self.conf.readconf("conf/palm.conf")
 
         signal.signal(signal.SIGINT, self._on_sigint_cb)
-        self._palms = []
+        self._palms = {}
 
         # Load Palms
         self.create_palms()
 
     def _on_sigint_cb(self, frame, a):
         for p in self._palms:
-            p.kill_childs()
-        
+            os.kill(self._palms[p], signal.SIGKILL)
+
         exit(0)
 
     def print_info(self):
@@ -76,10 +76,15 @@ class BigPalm:
             # Debug Message
             debug("[+] Handler [%s] running on port %i, %i childs" % (h, port, childs))
 
-            # Creating Palm
-            p = Palm(h, port, bin, opts)
-            p.create_n_childs(childs)
-            self._palms.append(p)
+            # Creating Palm under process context
+            pid = os.fork()
+            if pid:
+                self._palms[h] = pid
+            else:
+                p = Palm(h, port, bin, opts)
+                p.create_n_childs(childs)
+                while 1:
+                    time.sleep(1)
 
         while 1:
             time.sleep(1)
@@ -105,7 +110,7 @@ class Palm:
             self.create_child()
 
     def create_child(self):
-        child = Child(self.s, self)
+        child = Child(self.name, self.s, self)
         self._register_child(child)
 
     def _register_child(self, child):

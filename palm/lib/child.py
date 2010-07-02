@@ -22,9 +22,13 @@ import fcntl
 from debug import *
 
 class Child:
-    def __init__(self, s, conf):
-        self._s = s
-        self.conf = conf
+    def __init__(self, name, socket, parent):
+        # Listener socket
+        self.name = name
+        self._s = socket
+
+        # Parent Object
+        self.parent = parent
         self.split_conf()
 
         # On child end, re-create it
@@ -35,11 +39,11 @@ class Child:
 
     def split_conf(self):
         try:
-            opts = self.conf.opts.split()
+            opts = self.parent.opts.split()
         except:
             opts = []
 
-        self.c = {'bin': self.conf.bin, 'opts': opts}
+        self.c = {'bin': self.parent.bin, 'opts': opts}
 
     def _create(self):
         # Creating pipes
@@ -50,8 +54,8 @@ class Child:
         pid = os.fork()
         if pid:
             self._pid = pid
-
-            debug("    Creating child PID " + str(pid))
+            msg = "    Creating '%s' child PID %i" % (self.name, pid)
+            debug(msg)
 
             # Close unused pipe ends
             os.close(self.int_w)
@@ -62,17 +66,12 @@ class Child:
             os.close(self.ext_w)
 
             # Start child loop
-            self.start_child()
+            self.start_loop()
 
     def _child_exit(self,a, b):
-        os.wait()
-
-        os.close(self.ext_r)
-        os.close(self.ext_w)
-	self._create()
-
-    def write_to_child(self, message):
-        os.write(self.ext_w, message)
+        os.wait() 
+        debug("[-] Exit child '%s'" % self.name)
+        self._create()
 
     def read(self, fd):
         buf = ""
@@ -104,7 +103,6 @@ class Child:
 
             request.add_header(key, val)
 
-
         # Debug message
         msg = "[+] Request Headers\n"
         for h in request.headers:
@@ -114,7 +112,7 @@ class Child:
 
         return request
 
-    def start_child(self):
+    def start_loop(self):
         # Creating epoll for read pipe side
         while 1:
             remote, info = self._s.accept()
@@ -129,7 +127,7 @@ class Child:
 
             fcntl.fcntl(remote_fd, fcntl.F_SETFD, flags)
 
-            debug("[+] Request arrived [PID=%i]" % os.getpid())
+            debug("[+] |%s| Request arrived [PID=%i]" % (self.name, os.getpid()))
 
             buf = self.read(remote)
             request = self.parse_request(buf)
@@ -153,8 +151,6 @@ class Child:
                     # Temporal Pipe > STDIN
                     pipe_r, pipe_w = os.pipe()
                     os.dup2(pipe_r, sys.stdin.fileno())
-
-                    # Write POST content to Pipe
                     os.write(pipe_w, request.headers['POST_VARS'])
 
                 os.execve(bin, opts, request.headers)
