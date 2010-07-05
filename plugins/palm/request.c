@@ -54,11 +54,11 @@ void mk_palm_request_add(struct mk_palm_request *pr)
     struct mk_palm_request *pr_list, *aux;
 
     /* Get thread data */
-    pr_list = pthread_getspecific(_mk_plugin_data);
+    pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
     if(!pr_list) {
-        pthread_setspecific(_mk_plugin_data, pr);
+        pthread_setspecific(_mkp_data, pr);
         return;
     }
 
@@ -69,7 +69,7 @@ void mk_palm_request_add(struct mk_palm_request *pr)
     }
 
     aux->next = pr;
-    pthread_setspecific(_mk_plugin_data, pr_list);
+    pthread_setspecific(_mkp_data, pr_list);
 }
 
 /* It register the request and connection data, if it doesn't
@@ -81,7 +81,7 @@ struct mk_palm_request *mk_palm_request_get(int socket)
     struct mk_palm_request *pr, *aux;
 
     /* Get thread data */
-    pr = pthread_getspecific(_mk_plugin_data);
+    pr = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
     if(!pr) {
@@ -105,7 +105,7 @@ struct mk_palm_request *mk_palm_request_get_by_http(int socket)
     struct mk_palm_request *pr, *aux;
 
     /* Get thread data */
-    pr = pthread_getspecific(_mk_plugin_data);
+    pr = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
     if(!pr) {
@@ -128,7 +128,7 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
 {
     struct mk_palm_request *aux, *list;
 
-    list = pthread_getspecific(_mk_plugin_data);
+    list = pthread_getspecific(_mkp_data);
 
     if (!list) {
         return;
@@ -142,7 +142,7 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
             aux->headers_sent = pr->headers_sent;
 
             /* Update data */
-            pthread_setspecific(_mk_plugin_data, list);
+            pthread_setspecific(_mkp_data, list);
             return;
         }
         aux = aux->next;
@@ -153,7 +153,7 @@ void mk_palm_request_delete(int socket)
 {
     struct mk_palm_request *aux, *prev, *list;
 
-    list = pthread_getspecific(_mk_plugin_data);
+    list = pthread_getspecific(_mkp_data);
 
     if (!list) {
         return;
@@ -174,7 +174,7 @@ void mk_palm_request_delete(int socket)
                 prev->next = aux->next;
             }
             mk_api->mem_free(aux);
-            pthread_setspecific(_mk_plugin_data, list);
+            pthread_setspecific(_mkp_data, list);
             return;
         }
         aux = aux->next;

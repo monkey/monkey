@@ -598,6 +598,10 @@ int hangup(int sockfd)
     struct mk_palm_request *pr;
 
     pr = mk_palm_request_get(sockfd);
+    if (!pr) {
+        return MK_PLUGIN_RET_END;
+    }
+
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(sockfd);
 

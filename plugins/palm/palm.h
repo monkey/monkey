@@ -38,7 +38,7 @@ struct mk_palm
     struct mk_palm *next;
 };
 
-pthread_key_t _mk_plugin_data;
+pthread_key_t _mkp_data;
 
 struct plugin_api *mk_api;
 struct mk_config *conf;
