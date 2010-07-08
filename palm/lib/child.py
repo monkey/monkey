@@ -88,6 +88,8 @@ class Child:
 
     def parse_request(self, data):
         arr = data.split('\r\n')
+        request = None
+
         for line in arr[:-2]:
             # print line
             if line == arr[0]:
@@ -103,6 +105,10 @@ class Child:
 
             request.add_header(key, val)
 
+        """
+        if request is None:
+            exit(1)
+            """
         # Debug message
         msg = "[+] Request Headers\n"
         for h in request.headers:

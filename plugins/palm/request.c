@@ -57,7 +57,7 @@ void mk_palm_request_add(struct mk_palm_request *pr)
     pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
-    if(!pr_list) {
+    if (!pr_list) {
         pthread_setspecific(_mkp_data, pr);
         return;
     }
@@ -76,22 +76,22 @@ void mk_palm_request_add(struct mk_palm_request *pr)
  * exists it will be create it, otherwise will return the pointer
  * to the mk_palm_request struct node
  */
-struct mk_palm_request *mk_palm_request_get(int socket)
+struct mk_palm_request *mk_palm_request_get(int palm_fd)
 {
-    struct mk_palm_request *pr, *aux;
+    struct mk_palm_request *pr_list, *aux;
 
     /* Get thread data */
-    pr = pthread_getspecific(_mkp_data);
+    pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
-    if(!pr) {
+    if(!pr_list) {
         return NULL;
     }
 
     /* Look for node */
-    aux = pr;
+    aux = pr_list;
     while(aux){
-        if(aux->palm_fd == socket){
+        if(aux->palm_fd == palm_fd){
             return aux;
         }
         aux = aux->next;
@@ -102,18 +102,18 @@ struct mk_palm_request *mk_palm_request_get(int socket)
 
 struct mk_palm_request *mk_palm_request_get_by_http(int socket)
 {
-    struct mk_palm_request *pr, *aux;
+    struct mk_palm_request *pr_list, *aux;
 
     /* Get thread data */
-    pr = pthread_getspecific(_mkp_data);
+    pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
-    if(!pr) {
+    if(!pr_list) {
         return NULL;
     }
 
     /* Look for node */
-    aux = pr;
+    aux = pr_list;
     while(aux){
         if(aux->client_fd == socket){
             return aux;
@@ -126,15 +126,15 @@ struct mk_palm_request *mk_palm_request_get_by_http(int socket)
 
 void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
 {
-    struct mk_palm_request *aux, *list;
+    struct mk_palm_request *aux, *pr_list;
 
-    list = pthread_getspecific(_mkp_data);
+    pr_list = pthread_getspecific(_mkp_data);
 
-    if (!list) {
+    if (!pr_list) {
         return;
     }
 
-    aux = list;
+    aux = pr_list;
     while (aux) {
         if (aux->palm_fd == socket) {
             aux->bytes_sent = pr->bytes_sent;
@@ -142,50 +142,55 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
             aux->headers_sent = pr->headers_sent;
 
             /* Update data */
-            pthread_setspecific(_mkp_data, list);
+            pthread_setspecific(_mkp_data, pr_list);
             return;
-        }
+            }
         aux = aux->next;
     }
 }
 
 void mk_palm_request_delete(int socket)
 {
-    struct mk_palm_request *aux, *prev, *list;
+    struct mk_palm_request *aux, *prev, *pr_list;
 
-    list = pthread_getspecific(_mkp_data);
+    pr_list = pthread_getspecific(_mkp_data);
 
-    if (!list) {
+    if (!pr_list) {
         return;
     }
 
-    aux = list;
+    aux = pr_list;
     while(aux) {
         if (aux->palm_fd == socket) {
             /* first node */
-            if (aux == list) {
-                list = aux->next;
+            if (aux == pr_list) {
+                pr_list = aux->next;
             }
             else {
-                prev = list;
+                prev = pr_list;
                 while(prev->next != aux) {
                     prev = prev->next;
                 }
                 prev->next = aux->next;
             }
             mk_api->mem_free(aux);
-            pthread_setspecific(_mkp_data, list);
+            pthread_setspecific(_mkp_data, pr_list);
             return;
         }
         aux = aux->next;
     }
 }
 
-void mk_palm_free_request(int sockfd)
+void mk_palm_free_request(int palm_fd)
 {
-    /* get palm request node */
-    mk_palm_request_get(sockfd); 
+    struct mk_palm_request *pr = 0;
+
+    //    pr = mk_palm_request_get_by_http(sockfd);
+
+    //printf("\n->%p", pr);
+    //fflush(stdout);
+
     /* delete palm request node */
-    mk_palm_request_delete(sockfd);
-    mk_api->socket_close(sockfd);
+    mk_palm_request_delete(palm_fd);
+    mk_api->socket_close(palm_fd);
 }
