@@ -36,6 +36,13 @@ export CFLAGS=$RPM_OPT_FLAGS
 
 make
 
+%pre
+/usr/sbin/useradd -s /sbin/nologin -M -r -d %{webroot} \
+	-c "Monkey HTTP Daemon" monkey &>/dev/null ||: 
+
+%post
+sed -i 's/User nobody/User monkey/g' /etc/monkey/monkey.conf
+
 %install
 rm -rf %{buildroot}
 install -d %{buildroot}/usr/share/doc
@@ -55,6 +62,8 @@ rm -rf %{buildroot}
 %{_datadir}/*
 %{webroot}/*
 %{logdir}
+%defattr(-, monkey, monkey, 0750)
+%{_localstatedir}/log/monkey
 
 %changelog
 * Thu Jul 08 2010 Eduardo Silva <edsiper at, gmail.com> 0.11.0-1
