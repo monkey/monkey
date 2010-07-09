@@ -195,7 +195,6 @@ int mk_utils_set_daemon()
     };
 
     setsid();                   /* Create new session */
-    fclose(stdin);              /* close screen outputs */
     fclose(stderr);
     fclose(stdout);
 
