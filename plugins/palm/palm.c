@@ -43,7 +43,7 @@
 mk_plugin_data_t _shortname = "palm";
 mk_plugin_data_t _name = "Palm";
 mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
+mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30;
 
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
@@ -283,8 +283,14 @@ int _mkp_init(void **api, char *confdir)
     /* Init CGI memory buffers */
     mk_cgi_env();
 
-    pthread_setspecific(_mkp_data, NULL); 
+    pthread_key_create(&mk_plugin_event_k, NULL);
+ 
     return 0;
+}
+
+void _mkp_core_thctx()
+{
+    pthread_setspecific(_mkp_data, NULL);
 }
 
 void _mkp_exit()
@@ -594,18 +600,19 @@ int _mkp_event_read(int sockfd)
     return ret;
 }
 
+/* sockfd = palm_fd */
 int hangup(int sockfd)
 {
     struct mk_palm_request *pr;
 
-    pr = mk_palm_request_get(sockfd);
+    pr = mk_palm_request_get(sockfd)     ;
     if (!pr) {
         return MK_PLUGIN_RET_END;
     }
 
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(pr->palm_fd);
-
+    
 #ifdef TRACE
     PLUGIN_TRACE("Hung up socket %i", sockfd);
 #endif

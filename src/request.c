@@ -811,6 +811,11 @@ struct client_request *mk_request_client_create(int socket)
     sc = mk_sched_get_connection(NULL, socket);
     cr = mk_mem_malloc(sizeof(struct client_request));
 
+    if (!sc) {
+        MK_TRACE("FAILED SOCKET: %i", socket);
+        exit(1);
+    }
+
     /* IPv4 Address */
     cr->ipv4 = &sc->ipv4;
 
