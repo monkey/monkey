@@ -18,18 +18,19 @@ cat > conf/monkey.conf <<EOF
 
     # Listen:
     # -------
-    # Listen directive restrict Monkey to listen for incoming connections to just
-    # the network interface associated to the given value. In order to allow just
-    # loopback connection you could use:
+    # Listen directive restrict Monkey to listen for incoming connections to 
+    # just the network interface associated to the given value. In order to 
+    # allow just loopback connection you could use:
     #
     # Listen 127.0.0.1
 
     # Workers:
     # --------
-    # Monkey launches threads to attend clients; each worker thread is capable of
-    # attend more than one client request at the same time. The amount of 
-    # clients that can be handled by each thread is calculated using the number of
-    # file descriptors allowed by the system. This variable cannot be less than 1.
+    # Monkey launches threads to attend clients; each worker thread is capable
+    # of attend more than one client request at the same time. The amount of 
+    # clients that can be handled by each thread is calculated using the 
+    # number of file descriptors allowed by the system. This variable cannot 
+    # be less than 1.
 
     Workers 5
 
@@ -124,8 +125,9 @@ cat > conf/monkey.conf <<EOF
 [LOGGER]
     # FlushTimeout
     # ------------
-    # This value defines in seconds the waiting time before to flush the data to the log file.
-    # Allowed values must be greater than zero (FlushTimeout > 0) . 
+    # This value defines in seconds the waiting time before to flush the 
+    # data to the log file. 
+    # Allowed values must be greater than zero (FlushTimeout > 0). 
 
     FlushTimeout 3
 
