@@ -39,6 +39,7 @@ make
 %install
 rm -rf %{buildroot}
 install -d %{buildroot}/usr/share/doc
+install -d %{buildroot}%{logdir}
 
 make DESTDIR=%{buildroot} install
 
@@ -53,6 +54,7 @@ rm -rf %{buildroot}
 %{_libdir}/*
 %{_datadir}/*
 %{webroot}/*
+%{logdir}
 
 %changelog
 * Thu Jul 08 2010 Eduardo Silva <edsiper at, gmail.com> 0.11.0-1
