@@ -183,14 +183,6 @@ void mk_palm_request_delete(int socket)
 
 void mk_palm_free_request(int palm_fd)
 {
-    struct mk_palm_request *pr = 0;
-
-    //    pr = mk_palm_request_get_by_http(sockfd);
-
-    //printf("\n->%p", pr);
-    //fflush(stdout);
-
-    /* delete palm request node */
     mk_palm_request_delete(palm_fd);
     mk_api->socket_close(palm_fd);
 }

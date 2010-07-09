@@ -603,8 +603,8 @@ int hangup(int sockfd)
         return MK_PLUGIN_RET_END;
     }
 
-    mk_palm_free_request(pr->palm_fd);
     mk_api->http_request_end(pr->client_fd);
+    mk_palm_free_request(pr->palm_fd);
 
 #ifdef TRACE
     PLUGIN_TRACE("Hung up socket %i", sockfd);
