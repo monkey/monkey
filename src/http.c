@@ -127,7 +127,7 @@ mk_pointer mk_http_protocol_check_str(int protocol)
 int mk_http_init(struct client_request *cr, struct request *sr)
 {
     int ret;
-    int debug_error = 0, bytes = 0;
+    int bytes = 0;
     struct mimetype *mime;
     char *uri_data = NULL;
     int uri_len = 0;
@@ -168,15 +168,11 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         }
     }
 
-    if (sr->method != HTTP_METHOD_HEAD) {
-        debug_error = 1;
-    }
-
     /* Check backward directory request */
     if (mk_string_search_n(uri_data, 
                            HTTP_DIRECTORY_BACKWARD,
                            uri_len) >= 0) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
         return EXIT_ERROR;
     }
 
@@ -191,7 +187,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 #endif
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cr->socket, NULL, cr, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
             return EXIT_ERROR;
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
@@ -201,7 +197,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
             return EXIT_NORMAL;
         }
 
-        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, debug_error);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr);
         return -1;
     }
 
@@ -232,7 +228,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     /* Check symbolic link file */
     if (sr->file_info->is_link == MK_FILE_TRUE) {
         if (config->symlink == VAR_OFF) {
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
             return EXIT_ERROR;
         }
         else {
@@ -248,7 +244,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     MK_TRACE("STAGE_30 returned %i", ret);
 #endif
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
         return EXIT_ERROR;
     }
     else if (ret == MK_PLUGIN_RET_CONTINUE) {
@@ -260,7 +256,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
         return EXIT_ERROR;
     }
 
@@ -271,13 +267,13 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     }
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1);
+        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
         return EXIT_ERROR;
     }
 
     /* get file size */
     if (sr->file_info->size < 0) {
-        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr);
         return EXIT_ERROR;
     }
 
@@ -315,7 +311,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
         /* Range */
         if (sr->range.data != NULL && config->resume == VAR_ON) {
             if (mk_http_range_parse(sr) < 0) {
-                mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
+                mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
                 return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0) {
@@ -335,7 +331,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
 #ifdef TRACE
             MK_TRACE("open() failed");
 #endif
-            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, debug_error);
+            mk_request_error(M_CLIENT_FORBIDDEN, cr, sr);
             return EXIT_ERROR;
         }
     }
@@ -351,7 +347,7 @@ int mk_http_init(struct client_request *cr, struct request *sr)
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
-            mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 1);
+            mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
             return EXIT_ERROR;
         }
 

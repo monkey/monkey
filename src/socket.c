@@ -147,7 +147,7 @@ int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
     return plg_netiomap->writev(socket_fd, mk_io);
 }
 
-int mk_socket_send(int socket_fd, const void *buf, size_t count )
+int mk_socket_send(int socket_fd, const void *buf, size_t count)
 {
     return plg_netiomap->write(socket_fd, buf, count);
 }

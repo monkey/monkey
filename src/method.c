@@ -78,20 +78,19 @@ int mk_method_post(struct client_request *cr, struct request *sr)
 
     /* Length Required */
     if (content_length_post == -1) {
-        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr, 0);
+        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr);
         return -1;
     }
 
-
     /* Bad request */
     if (content_length_post <= 0) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
         return -1;
     }
 
     /* Content length too large */
     if (content_length_post >= MAX_REQUEST_BODY) {
-        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr, sr, 0);
+        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr, sr);
         return -1;
     }
 
@@ -100,7 +99,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
                                  mk_rh_content_type);
 
     if (!tmp.data) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
         return -1;
     }
     sr->content_type = tmp;

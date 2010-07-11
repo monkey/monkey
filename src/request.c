@@ -254,16 +254,16 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     status = mk_request_header_process(s_request);
     if (status < 0) {
         mk_header_set_http_status(s_request, M_CLIENT_BAD_REQUEST);
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_ABORT;
     }
 
     switch (s_request->method) {
     case METHOD_NOT_ALLOWED:
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request);
         return EXIT_NORMAL;
     case METHOD_NOT_FOUND:
-        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr, s_request, 1);
+        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr, s_request);
         return EXIT_NORMAL;
     }
 
@@ -271,29 +271,29 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
     /* Valid request URI? */
     if (s_request->uri_processed == NULL) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
     if (s_request->uri_processed[0] != '/') {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
 
     /* HTTP/1.1 needs Host header */
     if (!s_request->host.data && s_request->protocol == HTTP_PROTOCOL_11) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
 
     /* Method not allowed ? */
     if (s_request->method == METHOD_NOT_ALLOWED) {
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request);
         return EXIT_NORMAL;
     }
 
     /* Validating protocol version */
     if (s_request->protocol == HTTP_PROTOCOL_UNKNOWN) {
-        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1);
+        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request);
         return EXIT_ABORT;
     }
 
@@ -569,7 +569,7 @@ mk_pointer mk_request_index(char *pathfile)
 
 /* Send error responses */
 void mk_request_error(int http_status, struct client_request *cr, 
-                      struct request *sr, int debug){
+                      struct request *sr){
     char *aux_message = 0;
     mk_pointer message, *page = 0;
     long n;
@@ -660,11 +660,14 @@ void mk_request_error(int http_status, struct client_request *cr,
 
     mk_header_send(cr->socket, cr, sr);
 
-    if (page->len > 0) {
-        n = write(cr->socket, page->data, page->len);
+    if (page->len > 0 && sr->method != HTTP_METHOD_HEAD) {
+        n = mk_socket_send(cr->socket, page->data, page->len);
         mk_pointer_free(page);
         mk_mem_free(page);
     }
+
+    /* Turn off TCP_CORK */
+    mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 }
 
 /* Build error page */

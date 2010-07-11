@@ -247,8 +247,8 @@ int mk_request_header_process(struct request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
-void mk_request_error(int http_status, struct client_request *cr,
-                      struct request *sr, int debug);
+void mk_request_error(int http_status, struct client_request *cr, 
+                      struct request *sr);
 
 struct request *mk_request_alloc();
 void mk_request_free_list(struct client_request *cr);
