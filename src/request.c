@@ -660,7 +660,7 @@ void mk_request_error(int http_status, struct client_request *cr,
 
     mk_header_send(cr->socket, cr, sr);
 
-    if (page->len > 0 && sr->method != HTTP_METHOD_HEAD) {
+    if (page && sr->method != HTTP_METHOD_HEAD) {
         n = mk_socket_send(cr->socket, page->data, page->len);
         mk_pointer_free(page);
         mk_mem_free(page);
