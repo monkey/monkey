@@ -596,6 +596,15 @@ void mk_request_error(int http_status, struct client_request *cr,
         mk_pointer_free(&message);
         break;
 
+    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+        mk_string_build(&message.data, &message.len,
+                        "The request entity is too large.");
+        page = mk_request_set_default_page("Entity too large",
+                                           message,
+                                           sr->host_conf->host_signature);
+        mk_pointer_free(&message);
+        break;
+
     case M_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_request_set_default_page("Method Not Allowed",
                                            sr->uri,
@@ -618,8 +627,6 @@ void mk_request_error(int http_status, struct client_request *cr,
         page = mk_request_set_default_page("Internal Server Error",
                                            message,
                                            sr->host_conf->host_signature);
-        //s_log->error_msg = request_error_msg_500;
-
         mk_pointer_free(&message);
         break;
 
@@ -628,11 +635,8 @@ void mk_request_error(int http_status, struct client_request *cr,
         page = mk_request_set_default_page("HTTP Version Not Supported",
                                            message,
                                            sr->host_conf->host_signature);
-        //s_log->error_msg = request_error_msg_505;
         break;
     }
-
-    //s_log->final_response = num_error;
 
     mk_header_set_http_status(sr, http_status);
     if (page) {
@@ -656,7 +660,7 @@ void mk_request_error(int http_status, struct client_request *cr,
 
     mk_header_send(cr->socket, cr, sr);
 
-    if (debug == 1) {
+    if (page->len > 0) {
         n = write(cr->socket, page->data, page->len);
         mk_pointer_free(page);
         mk_mem_free(page);

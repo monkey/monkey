@@ -616,8 +616,8 @@ void mk_config_add_index(char *indexname)
     struct indexfile *new_index = 0, *aux_index;
 
     new_index = (struct indexfile *) malloc(sizeof(struct indexfile));
-    strncpy(new_index->indexname, indexname, MAX_INDEX_NOMBRE - 1);
-    new_index->indexname[MAX_INDEX_NOMBRE - 1] = '\0';
+    strncpy(new_index->indexname, indexname, MAX_INDEX_NAME - 1);
+    new_index->indexname[MAX_INDEX_NAME - 1] = '\0';
     new_index->next = NULL;
 
     if (first_index == NULL) {

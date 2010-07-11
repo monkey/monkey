@@ -40,6 +40,8 @@
 #define MK_HR_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed" MK_CRLF
 #define MK_HR_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout" MK_CRLF
 #define MK_HR_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required" MK_CRLF
+#define MK_HR_CLIENT_REQUEST_ENTITY_TOO_LARGE \
+  "HTTP/1.1 413 Request Entity Too Large" MK_CRLF
 #define MK_HR_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error" MK_CRLF
 #define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented" MK_CRLF
 #define MK_HR_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported" MK_CRLF
@@ -56,6 +58,7 @@ mk_pointer mk_hr_client_not_found;
 mk_pointer mk_hr_client_method_not_allowed;
 mk_pointer mk_hr_client_request_timeout;
 mk_pointer mk_hr_client_length_required;
+mk_pointer mk_hr_client_request_entity_too_large;
 mk_pointer mk_hr_server_internal_error;
 mk_pointer mk_hr_server_not_implemented;
 mk_pointer mk_hr_server_http_version_unsup;

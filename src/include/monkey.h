@@ -28,6 +28,7 @@ int server_fd;
 
 /* Max buf length sent by client */
 #define MAX_REQUEST_BODY 1024
+
 /* Max Path lenth */
 #define MAX_PATH 1024
 

@@ -124,6 +124,11 @@ int mk_header_send(int fd, struct client_request *cr,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
+    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+        mk_header_iov_add_entry(iov, mk_hr_client_request_entity_too_large,
+                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        break;
+
     case M_SERVER_NOT_IMPLEMENTED:
         mk_header_iov_add_entry(iov, mk_hr_server_not_implemented,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);

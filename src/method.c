@@ -76,13 +76,22 @@ int mk_method_post(struct client_request *cr, struct request *sr)
 
     content_length_post = mk_method_post_content_length(cr->body);
 
+    /* Length Required */
     if (content_length_post == -1) {
         mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr, 0);
         return -1;
     }
 
-    if (content_length_post <= 0 || content_length_post >= MAX_REQUEST_BODY) {
+
+    /* Bad request */
+    if (content_length_post <= 0) {
         mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr, 0);
+        return -1;
+    }
+
+    /* Content length too large */
+    if (content_length_post >= MAX_REQUEST_BODY) {
+        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr, sr, 0);
         return -1;
     }
 
@@ -103,7 +112,6 @@ int mk_method_post(struct client_request *cr, struct request *sr)
     sr->content_length = content_length_post;
 
     return 0;
-
 }
 
 /* Return POST variables sent in request */
