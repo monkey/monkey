@@ -450,6 +450,12 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
                                   error_msg_411.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
+        case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+            mk_api->iov_add_entry(iov,
+                                  error_msg_413.data,
+                                  error_msg_413.len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+            break;
         case M_SERVER_NOT_IMPLEMENTED:
             mk_api->iov_add_entry(iov,
                                   error_msg_501.data,

@@ -38,6 +38,7 @@ void mk_logger_init_pointers()
     mk_api->pointer_set(&error_msg_405, ERROR_MSG_405);
     mk_api->pointer_set(&error_msg_408, ERROR_MSG_408);
     mk_api->pointer_set(&error_msg_411, ERROR_MSG_411);
+    mk_api->pointer_set(&error_msg_413, ERROR_MSG_413);
     mk_api->pointer_set(&error_msg_500, ERROR_MSG_500);
     mk_api->pointer_set(&error_msg_501, ERROR_MSG_501);
     mk_api->pointer_set(&error_msg_505, ERROR_MSG_505);
