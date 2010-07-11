@@ -697,6 +697,9 @@ int mk_http_request_end(int socket)
     cr = mk_request_client_get(socket);
     
     if (!cr) {
+#ifdef TRACE
+        MK_TRACE("[FD %i] Not found", socket);
+#endif 
         return -1;
     }
 
@@ -715,6 +718,9 @@ int mk_http_request_end(int socket)
     mk_request_free_list(cr);
 
     if (ka < 0) {
+#ifdef TRACE
+        MK_TRACE("[FD %i] No KeepAlive mode, remove", cr->socket);
+#endif
         mk_request_client_remove(socket);
     }
     else {

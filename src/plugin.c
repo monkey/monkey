@@ -195,8 +195,7 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
         mk_plugin_load_symbol(handler, "_mkp_network_ip_maxlen");
 
     /* Thread key */
-    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler,
-                                                          "_mkp_data");
+    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mkp_data");
 
     /* Event handlers hooks */
     p->event_read = (int (*)())
@@ -447,6 +446,7 @@ void mk_plugin_init()
     /* Scheduler and Event callbacks */
     api->sched_get_connection = (void *) mk_sched_get_connection;
     api->event_add = (void *) mk_plugin_event_add;
+    api->event_del = (void *) mk_plugin_event_del;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
     
     /* Worker functions */
@@ -684,7 +684,7 @@ void mk_plugin_core_thread()
     p = config->plugins;
 
     while (p) {
-        /* Init plugin */
+        /* Init plugin thread context */
         if (p->core.thctx) {
             p->core.thctx();
         }
@@ -710,7 +710,7 @@ void mk_plugin_preworker_calls()
 #ifdef TRACE
             MK_TRACE("[%s] Set thread key", p->shortname);
 #endif
-            ret = pthread_key_create(&p->thread_key, NULL);
+            ret = pthread_key_create((void *)p->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s",
                        p->shortname);
@@ -720,6 +720,49 @@ void mk_plugin_preworker_calls()
         }
         p = p->next;
     }
+}
+
+int mk_plugin_event_del(int socket)
+{
+    struct plugin_event *list, *aux, *prev;
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] Plugin delete event", socket);
+#endif
+
+    if (socket <= 0) {
+        return -1;
+    }
+
+    list = mk_plugin_event_get_list();
+    
+    aux = list;
+    while (aux) {
+        if (aux->socket == socket) {
+            if (aux == list) {
+                list = aux->next;
+            }
+            else { 
+                prev = list;
+                while (prev->next != aux) {
+                    prev = prev->next;
+                }
+            
+                prev->next = aux->next;
+            }
+            mk_mem_free(aux);
+            mk_plugin_event_set_list(list);
+            return 0;
+        }
+        aux = aux->next;
+    }
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] not found :/");
+    exit(1);
+#endif
+
+    return -1;
 }
 
 int mk_plugin_event_add(int socket, int mode,
@@ -758,7 +801,7 @@ int mk_plugin_event_add(int socket, int mode,
         }
 
         aux->next = event;
-        mk_plugin_event_set_list(aux);
+        mk_plugin_event_set_list(list);
     }
 
     /* The thread event info has been registered, now we need
@@ -773,6 +816,11 @@ int mk_plugin_http_request_end(int socket)
     int ret;
 
     ret = mk_http_request_end(socket);
+
+#ifdef TRACE
+    MK_TRACE("PLUGIN HTTP REQUEST END [FD=%i] = ret %i", socket, ret);
+#endif
+
     if (ret < 0) {
         return mk_conn_close(socket);
     }
@@ -812,19 +860,19 @@ struct plugin_event *mk_plugin_event_get(int socket)
 
 int mk_plugin_event_set_list(struct plugin_event *event)
 {
-    return pthread_setspecific(mk_plugin_event_k, (void *) event);
+    return pthread_setspecific(mk_plugin_event_k, event);
 }
 
 struct plugin_event *mk_plugin_event_get_list()
 {
-    return (struct plugin_event *) pthread_getspecific(mk_plugin_event_k);
+    return pthread_getspecific(mk_plugin_event_k);
 
 }
 
 /* Plugin epoll event handlers
  * ---------------------------
  * this functions are called by connection.c functions as mk_conn_read(),
- * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout
+ * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout().
  *
  * Return Values:
  * -------------
@@ -836,15 +884,21 @@ int mk_plugin_event_read(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event read FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event read", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
     if (!event) {
+#ifdef TRACE
+        MK_TRACE(" not handled by plugin");
+#endif
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
     if (event->handler->event_read) {
+#ifdef TRACE
+        MK_TRACE(" handled by plugin");
+#endif
         return event->handler->event_read(socket);
     }
 
@@ -856,7 +910,7 @@ int mk_plugin_event_write(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event write FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event write", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -876,7 +930,7 @@ int mk_plugin_event_error(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event error FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event error", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -896,7 +950,7 @@ int mk_plugin_event_close(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event close FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event close", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -916,7 +970,7 @@ int mk_plugin_event_timeout(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event timeout FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event timeout", socket);
 #endif
 
     event = mk_plugin_event_get(socket);

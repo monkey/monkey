@@ -96,27 +96,27 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
             if (events[i].events & EPOLLIN) {
 #ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i READ", fd);
+                MK_TRACE("[FD %i] EPoll Event READ", fd);
 #endif
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
 #ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i WRITE", fd);
+                MK_TRACE("[FD %i] EPoll Event WRITE", fd);
 #endif
                 ret = (*handler->write) (fd);
             }
 
             else if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
 #ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
+                MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLER", fd);
 #endif
                 ret = (*handler->error) (fd);
             }
 
             if (ret < 0) {
 #ifdef TRACE
-                MK_TRACE("Epoll Event, FD %i FORCE CLOSE | ret = %i", fd, ret);
+                MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
 #endif
                 (*handler->close) (fd);
             }
@@ -185,26 +185,22 @@ int mk_epoll_change_mode(int efd, int fd, int mode)
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
     event.data.fd = fd;
 
-#ifdef TRACE
-    MK_TRACE("EPoll change mode FD %i", fd);
-#endif
-
     switch (mode) {
     case MK_EPOLL_READ:
 #ifdef TRACE
-        MK_TRACE("EPoll, changing mode to READ");
+        MK_TRACE("[FD %i] EPoll changing mode to READ", fd);
 #endif
         event.events |= EPOLLIN;
         break;
     case MK_EPOLL_WRITE:
 #ifdef TRACE
-        MK_TRACE("EPoll, changing mode to WRITE");
+        MK_TRACE("[FD %i] EPoll changing mode to WRITE", fd);
 #endif
         event.events |= EPOLLOUT;
         break;
     case MK_EPOLL_RW:
 #ifdef TRACE
-        MK_TRACE("Epoll, changing mode to READ/WRITE");
+        MK_TRACE("[FD %i] Epoll changing mode to READ/WRITE", fd);
 #endif
         event.events |= EPOLLIN | EPOLLOUT;
         break;

@@ -89,7 +89,7 @@ int mk_conn_write(int socket)
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, write on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, write", socket);
 #endif
 
     /* Plugin hook */
@@ -102,7 +102,7 @@ int mk_conn_write(int socket)
     }  
 
 #ifdef TRACE
-    MK_TRACE("Normal connection write handling...");
+    MK_TRACE("[FD %i] Normal connection write handling", socket);
 #endif
 
     sched = mk_sched_get_thread_conf();
@@ -185,7 +185,7 @@ int mk_conn_close(int socket)
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, closed on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, closed", socket);
 #endif
 
     /* Plugin hook */
@@ -204,7 +204,7 @@ int mk_conn_timeout(int socket)
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, timeout on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, timeout", socket);
 #endif
 
     /* Plugin hook */

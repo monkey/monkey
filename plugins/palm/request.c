@@ -22,9 +22,7 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#include "config.h"
 #include "plugin.h"
-#include "monkey.h"
 #include "palm.h"
 
 struct mk_palm_request *mk_palm_request_create(int client_fd,
@@ -54,7 +52,7 @@ void mk_palm_request_add(struct mk_palm_request *pr)
     struct mk_palm_request *pr_list, *aux;
 
     /* Get thread data */
-    pr_list = pthread_getspecific(_mkp_data);
+    pr_list = (struct mk_palm_request *) pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
     if (!pr_list) {
@@ -168,7 +166,7 @@ void mk_palm_request_delete(int socket)
             }
             else {
                 prev = pr_list;
-                while(prev->next != aux) {
+                while (prev->next != aux) {
                     prev = prev->next;
                 }
                 prev->next = aux->next;
@@ -183,6 +181,6 @@ void mk_palm_request_delete(int socket)
 
 void mk_palm_free_request(int palm_fd)
 {
-    mk_palm_request_delete(palm_fd);
     mk_api->socket_close(palm_fd);
+    mk_palm_request_delete(palm_fd);
 }

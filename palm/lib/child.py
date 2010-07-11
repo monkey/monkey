@@ -46,25 +46,13 @@ class Child:
         self.c = {'bin': self.parent.bin, 'opts': opts}
 
     def _create(self):
-        # Creating pipes
-        [self.ext_r, self.int_w] = os.pipe()
-        [self.int_r, self.ext_w] = os.pipe()
-
         # Fork process
         pid = os.fork()
         if pid:
             self._pid = pid
             msg = "    Creating '%s' child PID %i" % (self.name, pid)
             debug(msg)
-
-            # Close unused pipe ends
-            os.close(self.int_w)
-            os.close(self.int_r)
         else:
-            # Close unused pipe ends
-            os.close(self.ext_r)
-            os.close(self.ext_w)
-
             # Start child loop
             self.start_loop()
 
@@ -105,10 +93,11 @@ class Child:
 
             request.add_header(key, val)
 
-        """
+
         if request is None:
+            debug("[+] Invalid Exit")
             exit(1)
-            """
+
         # Debug message
         msg = "[+] Request Headers\n"
         for h in request.headers:

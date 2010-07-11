@@ -39,11 +39,13 @@
 #include "palm.h"
 #include "request.h"
 
+
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "palm";
 mk_plugin_data_t _name = "Palm";
 mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30;
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
+
 
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
@@ -251,7 +253,7 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 
     /* Send just headers from buffer */
 #ifdef TRACE
-    PLUGIN_TRACE("Sending headers to FD %i", cr->socket);
+    PLUGIN_TRACE("[FD %i] Sending headers", cr->socket);
 #endif
     n = (int) mk_api->header_send(cr->socket, cr, sr);
 
@@ -260,7 +262,7 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
      */
     mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
 #ifdef TRACE
-    PLUGIN_TRACE("Send headers returned %i", n);
+    PLUGIN_TRACE("[FD %i] Send headers returned %i", cr->socket, n);
 #endif
 
     return n;
@@ -283,14 +285,7 @@ int _mkp_init(void **api, char *confdir)
     /* Init CGI memory buffers */
     mk_cgi_env();
 
-    pthread_key_create(&mk_plugin_event_k, NULL);
- 
     return 0;
-}
-
-void _mkp_core_thctx()
-{
-    pthread_setspecific(_mkp_data, NULL);
 }
 
 void _mkp_exit()
@@ -309,7 +304,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     palm = mk_palm_get_handler(&sr->real_path);
     if (!palm || !sr->file_info) {
 #ifdef TRACE
-        PLUGIN_TRACE("PALM NOT ME");
+        PLUGIN_TRACE("[FD %i] Not handled by me", cr->socket);
 #endif
 
         return MK_PLUGIN_RET_NOT_ME;
@@ -354,9 +349,6 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
 {
     int ret;
     int palm_socket;
-
-    /* Get Palm handler */
-    //   palm = mk_palm_get_handler(&sr->uri);
 
     /* Connecting to Palm Server */
     palm_socket = mk_api->socket_create();
@@ -441,8 +433,8 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     if (n < 0) {
 #ifdef TRACE
         PLUGIN_TRACE("Error sending chunked body, socket_send() returned %i", n);
-#endif
         perror("socket_send");
+#endif
         return -1;
     }
 
@@ -485,8 +477,9 @@ int _mkp_event_read(int sockfd)
                                        (MK_PALM_BUFFER_SIZE - 1));
 
 #ifdef TRACE
-    PLUGIN_TRACE("socket read  : %i", pr->len_read);
-    PLUGIN_TRACE("headers sent : %i", pr->headers_sent);
+    PLUGIN_TRACE("FD %i", sockfd);
+    PLUGIN_TRACE("   socket read  : %i", pr->len_read);
+    PLUGIN_TRACE("   headers sent : %i", pr->headers_sent);
 #endif
 
     if (pr->len_read <= 0) {
@@ -511,7 +504,7 @@ int _mkp_event_read(int sockfd)
             /* Look for headers end */
             while (headers_end == -1) {
 #ifdef TRACE
-                PLUGIN_TRACE("CANNOT FIND HEADERS_END :/");
+                PLUGIN_TRACE("CANNOT FIND HEADERS_END in FD %i", pr->palm_fd);
 #endif
                 n = mk_api->socket_read(pr->palm_fd,
                                         pr->data_read + pr->len_read,
@@ -522,6 +515,7 @@ int _mkp_event_read(int sockfd)
                 }
                 else{
 #ifdef TRACE
+                    PLUGIN_TRACE("[FD %i] N READ: %i", pr->palm_fd, n);
                     PLUGIN_TRACE("********* FIXME ***********\n%s", pr->data_read);
                     //                    exit(1);
 #endif
@@ -590,7 +584,7 @@ int _mkp_event_read(int sockfd)
     }
     else {
 #ifdef TRACE
-        PLUGIN_TRACE("BIG ERROR!");
+        PLUGIN_TRACE("FIXME!, this should not happend");
 #endif
     }
 
@@ -605,25 +599,27 @@ int hangup(int sockfd)
 {
     struct mk_palm_request *pr;
 
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] hangup", sockfd);
+#endif
+
     pr = mk_palm_request_get(sockfd)     ;
     if (!pr) {
         return MK_PLUGIN_RET_END;
     }
-
+    
+    mk_api->socket_close(pr->palm_fd);
+    mk_api->event_del(pr->palm_fd);
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(pr->palm_fd);
     
-#ifdef TRACE
-    PLUGIN_TRACE("Hung up socket %i", sockfd);
-#endif
-
     return MK_PLUGIN_RET_END;
 }
 
 int _mkp_event_close(int sockfd)
 {
 #ifdef TRACE
-    PLUGIN_TRACE("event close");
+    PLUGIN_TRACE("[FD %i] event close", sockfd);
 #endif
 
     return hangup(sockfd);
@@ -632,7 +628,7 @@ int _mkp_event_close(int sockfd)
 int _mkp_event_error(int sockfd)
 {
 #ifdef TRACE
-    PLUGIN_TRACE("event error");
+    PLUGIN_TRACE("[FD %i] event error", sockfd);
 #endif
 
     return hangup(sockfd);

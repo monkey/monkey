@@ -159,7 +159,8 @@ int mk_handler_read(int socket, struct client_request *cr)
 {
     int bytes;
 
-    bytes = mk_socket_read(socket, (void *)cr->body + cr->body_length, MAX_REQUEST_BODY - cr->body_length);
+    bytes = mk_socket_read(socket, (void *)cr->body + cr->body_length, 
+                           MAX_REQUEST_BODY - cr->body_length);
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
@@ -812,7 +813,7 @@ struct client_request *mk_request_client_create(int socket)
     cr = mk_mem_malloc(sizeof(struct client_request));
 
     if (!sc) {
-        MK_TRACE("FAILED SOCKET: %i", socket);
+        //MK_TRACE("FAILED SOCKET: %i", socket);
         exit(1);
     }
 

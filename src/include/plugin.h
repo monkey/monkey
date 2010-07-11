@@ -19,12 +19,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "monkey.h"
 #include "config.h"
 #include "request.h"
 #include "memory.h"
 #include "iov.h"
 #include "socket.h"
 #include "epoll.h"
+#include "utils.h"
 
 #ifndef MK_PLUGIN_H
 #define MK_PLUGIN_H
@@ -232,6 +234,8 @@ struct plugin_api
     /* event's functions */
     int (*event_add) (int, int, struct plugin *, struct client_request *, 
                       struct request *);
+    int (*event_del) (int);
+
     int (*event_socket_change_mode) (int, int);
 
     /* system specific functions */
@@ -283,6 +287,8 @@ int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
                         struct client_request *cr, 
                         struct request *sr);
+int mk_plugin_event_del(int socket);
+
 int mk_plugin_event_set_list(struct plugin_event *event);
 struct plugin_event *mk_plugin_event_get_list();
 int mk_plugin_event_socket_change_mode(int socket, int mode);

@@ -303,7 +303,7 @@ int mk_header_send(int fd, struct client_request *cr,
     mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
 
 #ifdef TRACE
-    MK_TRACE("Headers sent");
+    MK_TRACE("Headers sent to FD %i", fd);
     printf("%s", ANSI_YELLOW);
     fflush(stdout);
     mk_iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
