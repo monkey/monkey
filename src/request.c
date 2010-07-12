@@ -319,8 +319,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
         return EXIT_NORMAL;
     }
     if (s_request->uri_processed[0] != '/') {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
 
