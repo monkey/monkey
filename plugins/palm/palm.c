@@ -359,6 +359,7 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
     if (ret < 0) {
         fprintf(stderr, "\nPalm: Cannot connect to %s on port %i",
                 palm->server_addr, palm->server_port);
+        mk_api->header_set_http_status(sr, M_SERVER_INTERNAL_ERROR);
         return NULL;
     }
 
