@@ -71,7 +71,7 @@ int mk_conn_read(int socket)
             mk_epoll_change_mode(sched->epoll_fd,
                                  socket, MK_EPOLL_WRITE);
         }
-        else if (cr->body_length + 1 >= MAX_REQUEST_BODY) {
+        else if (cr->body_length + 1 >= config->max_request_size) {
             /* Request is incomplete and our buffer is full, 
              * close connection 
              */

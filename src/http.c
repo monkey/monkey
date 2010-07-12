@@ -568,6 +568,7 @@ int mk_http_pending_request(struct client_request *cr)
         end = (cr->body + cr->body_length) - mk_endblock.len;
     }
     else {
+
         return -1;
     }
 

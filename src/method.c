@@ -71,7 +71,6 @@ int mk_method_post(struct client_request *cr, struct request *sr)
 {
     struct header_toc *toc = NULL;
     mk_pointer tmp;
-    char buffer[MAX_REQUEST_BODY];
     long content_length_post = 0;
 
     content_length_post = mk_method_post_content_length(cr->body);
@@ -89,7 +88,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
     }
 
     /* Content length too large */
-    if (content_length_post >= MAX_REQUEST_BODY) {
+    if (content_length_post >= cr->body_size) {
         mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr, sr);
         return -1;
     }
@@ -103,11 +102,6 @@ int mk_method_post(struct client_request *cr, struct request *sr)
         return -1;
     }
     sr->content_type = tmp;
-
-    if (sr->post_variables.len < content_length_post) {
-        content_length_post = strlen(buffer);
-    }
-
     sr->content_length = content_length_post;
 
     return 0;

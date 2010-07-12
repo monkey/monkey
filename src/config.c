@@ -648,6 +648,11 @@ void mk_config_set_init_values(void)
     config->user = NULL;
     config->open_flags = O_RDONLY | O_NONBLOCK;
 
+    /* Max request buffer size allowed
+     * right now, every chunk size is 1KB (1024 bytes),
+     * so we are setting a maximum request size to 16 KB */
+    config->max_request_size = MK_REQUEST_CHUNK * 16;
+
     /* Plugins */
     config->plugins = NULL;
 }

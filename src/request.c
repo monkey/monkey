@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 #include <time.h>
 #include <netdb.h>
 #include <sys/wait.h>
@@ -158,9 +159,47 @@ struct request *mk_request_parse(struct client_request *cr)
 int mk_handler_read(int socket, struct client_request *cr)
 {
     int bytes;
+    int pending = 0;
+    int available = 0;
+    int ret;
+    int new_size;
+    char *tmp = 0;
 
-    bytes = mk_socket_read(socket, (void *)cr->body + cr->body_length, 
-                           MAX_REQUEST_BODY - cr->body_length);
+    /* Check amount of data reported */
+    ret = ioctl(socket, FIONREAD, &pending);
+    if (ret == -1) {
+        mk_request_client_remove(socket);
+        return -1;
+    }
+
+    /* Reallocate buffer size if pending data does not have space */
+    if (pending > 0 && (pending >= (cr->body_size - (cr->body_length - 1)))) {
+        /* check available space */
+        available = (cr->body_size - cr->body_length) + MK_REQUEST_CHUNK;
+        if (pending < available) {
+            new_size = cr->body_size + MK_REQUEST_CHUNK + 1;
+        }
+        else {    
+            new_size = cr->body_size + pending + 1;
+        }
+
+        if (new_size > config->max_request_size) {
+
+        }
+
+        if (tmp) {
+            cr->body = tmp;
+            cr->body_size = new_size;
+        }
+        else {
+            mk_request_client_remove(socket);
+            return -1;
+        }
+    }
+    
+    /* Read content */
+    bytes = mk_socket_read(socket, cr->body + cr->body_length, 
+                           (cr->body_size - cr->body_length) );
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
@@ -176,7 +215,7 @@ int mk_handler_read(int socket, struct client_request *cr)
         return -1;
     }
 
-    if (bytes > 0) {
+    if (bytes >= 0) {
         cr->body_length += bytes;
         cr->body[cr->body_length] = '\0';
     }
@@ -820,7 +859,9 @@ struct client_request *mk_request_client_create(int socket)
     cr = mk_mem_malloc(sizeof(struct client_request));
 
     if (!sc) {
-        //MK_TRACE("FAILED SOCKET: %i", socket);
+#ifdef TRACE
+        MK_TRACE("FAILED SOCKET: %i", socket);
+#endif
         exit(1);
     }
 
@@ -837,8 +878,13 @@ struct client_request *mk_request_client_create(int socket)
     cr->init_time = sc->arrive_time;
 
     cr->next = NULL;
-    cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
+    cr->body = mk_mem_malloc(MK_REQUEST_CHUNK);
+
+    /* Buffer size based in Chunk bytes */
+    cr->body_size = MK_REQUEST_CHUNK;
+    /* Current data length */
     cr->body_length = 0;
+
     cr->body_pos_end = -1;
     cr->first_method = HTTP_METHOD_UNKNOWN;
 

@@ -105,6 +105,8 @@ struct server_config
     uid_t egid;
     gid_t euid;
 
+    int max_request_size;
+
     struct dir_html_theme *dir_theme;
 
     /* configured host quantity */

@@ -27,6 +27,10 @@
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
 
+
+/* Request buffer chunks = 1KB */
+#define MK_REQUEST_CHUNK (int) 1024
+
 #define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
 
 /* Handle index file names: index.* */
@@ -109,6 +113,7 @@ struct client_request
 
     mk_pointer *ipv4;
 
+    int body_size;
     int body_length;
 
     int body_pos_end;

@@ -62,14 +62,14 @@ extern void *mk_mem_malloc_z(size_t size)
 
 void *mk_mem_realloc(void *ptr, size_t size)
 {
-    char *aux = 0;
+    void *aux = 0;
 
     if ((aux = realloc(ptr, size)) == NULL) {
         perror("realloc");
         return NULL;
     }
 
-    return (void *) aux;
+    return aux;
 }
 
 void mk_mem_free(void *ptr)
