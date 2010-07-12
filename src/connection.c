@@ -28,6 +28,7 @@
 #include "socket.h"
 #include "plugin.h"
 #include "utils.h"
+#include "http_status.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -72,7 +73,7 @@ int mk_conn_read(int socket)
                                  socket, MK_EPOLL_WRITE);
         }
         else if (cr->body_length + 1 >= config->max_request_size) {
-            /* Request is incomplete and our buffer is full, 
+            /* Request is incomplete and our buffer is full,
              * close connection 
              */
             mk_request_client_remove(socket);

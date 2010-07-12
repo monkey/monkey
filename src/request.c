@@ -184,9 +184,10 @@ int mk_handler_read(int socket, struct client_request *cr)
         }
 
         if (new_size > config->max_request_size) {
-
+            return -1;
         }
 
+        tmp = mk_mem_realloc(cr->body, new_size);
         if (tmp) {
             cr->body = tmp;
             cr->body_size = new_size;
@@ -608,7 +609,7 @@ mk_pointer mk_request_index(char *pathfile)
 
 /* Send error responses */
 void mk_request_error(int http_status, struct client_request *cr, 
-                      struct request *sr){
+                      struct request *sr) {
     char *aux_message = 0;
     mk_pointer message, *page = 0;
     long n;
