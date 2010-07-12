@@ -109,6 +109,18 @@ cat > conf/monkey.conf <<EOF
 
     KeepAliveTimeout 15 
 
+    # MaxRequestSize
+    # ----------------
+    # When a request arrives, Monkey allocs a 'chunk' of memory space
+    # to receive the incoming data. As many times the incoming data 
+    # size is undeterminated, Monkey increase the buffer as required. This
+    # variable define the maximum size that the buffer can grow in terms
+    # of KB. Example: defining 'MaxRequestSize 32' means 32 Kilobytes.
+    # The value defined must be greater than zero. Default value defined 
+    # is 32.
+
+    MaxRequestSize 32
+
     # SymLink
     # -------
     # Allow request to symbolic link files.

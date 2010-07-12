@@ -470,6 +470,14 @@ void mk_config_read_files(char *path_conf, char *file_conf)
         mk_config_print_error_msg("Resume", path);
     }
 
+    /* Max Request Size */
+    config->max_request_size = (int) mk_config_section_getval(section,
+                                                              "MaxRequestSize",
+                                                              MK_CONFIG_VAL_NUM);
+    if (config->max_request_size <= 0) {
+        mk_config_print_error_msg("MaxRequestSize", path);
+    }
+
     /* Symbolic Links */
     config->symlink = (int) mk_config_section_getval(section,
                                                      "SymLink", MK_CONFIG_VAL_BOOL);
@@ -650,8 +658,8 @@ void mk_config_set_init_values(void)
 
     /* Max request buffer size allowed
      * right now, every chunk size is 1KB (1024 bytes),
-     * so we are setting a maximum request size to 16 KB */
-    config->max_request_size = MK_REQUEST_CHUNK * 16;
+     * so we are setting a maximum request size to 32 KB */
+    config->max_request_size = MK_REQUEST_CHUNK * 32;
 
     /* Plugins */
     config->plugins = NULL;
