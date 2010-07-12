@@ -70,9 +70,6 @@ void mk_server_launch_workers()
 {
     int i;
 
-    /* Get each worker clients capacity based on FDs system limits */
-    config->worker_capacity = mk_server_worker_capacity(config->workers);
-
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
         mk_sched_launch_thread(config->worker_capacity);

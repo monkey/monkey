@@ -22,6 +22,7 @@
 #ifndef MK_SERVER_H
 #define MK_SERVER_H
 
+int mk_server_worker_capacity(int nworkers);
 void mk_server_launch_workers();
 void mk_server_loop(int server_fd);
 

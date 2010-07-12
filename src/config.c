@@ -38,6 +38,7 @@
 #include "mimetype.h"
 #include "info.h"
 #include "memory.h"
+#include "server.h"
 #include "plugin.h"
 
 /* Raise a configuration error */
@@ -401,6 +402,8 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     if (config->workers < 1) {
         mk_config_print_error_msg("Workers", path);
     }
+    /* Get each worker clients capacity based on FDs system limits */
+    config->worker_capacity = mk_server_worker_capacity(config->workers);
 
     /* Timeout */
     config->timeout = (int) mk_config_section_getval(section,
