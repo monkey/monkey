@@ -21,9 +21,13 @@
 
 #include <sys/epoll.h>
 
+#ifndef MK_EPOLL_H
+#define MK_EPOLL_H
+
 #define MK_EPOLL_READ 0
 #define MK_EPOLL_WRITE 1
 #define MK_EPOLL_RW 2
+#define MK_EPOLL_
 
 /* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000
@@ -49,5 +53,8 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*close) (int),
                                          void (*timeout) (int));
 
-int mk_epoll_add_client(int efd, int socket, int mode, int behavior);
-int mk_epoll_socket_change_mode(int efd, int socket, int mode);
+int mk_epoll_add(int efd, int fd, int mode, int behavior);
+int mk_epoll_del(int efd, int fd); 
+int mk_epoll_change_mode(int efd, int fd, int mode);
+
+#endif

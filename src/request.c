@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 #include <time.h>
 #include <netdb.h>
 #include <sys/wait.h>
@@ -48,7 +49,6 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "socket.h"
-#include "logfile.h"
 #include "utils.h"
 #include "header.h"
 #include "user.h"
@@ -58,6 +58,7 @@
 #include "cache.h"
 #include "clock.h"
 #include "utils.h"
+#include "plugin.h"
 
 struct request *mk_request_parse(struct client_request *cr)
 {
@@ -66,8 +67,8 @@ struct request *mk_request_parse(struct client_request *cr)
     struct request *cr_buf = 0, *cr_search = 0;
 
     for (i = 0; i <= cr->body_pos_end; i++) {
-        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining 
-         * request can be involved. 
+        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
+         * request can be involved.
          */
         end = mk_string_search(cr->body + i, mk_endblock.data) + i;
 
@@ -93,7 +94,7 @@ struct request *mk_request_parse(struct client_request *cr)
 
         /* Looking for POST data */
         if (cr_buf->method == HTTP_METHOD_POST) {
-            cr_buf->post_variables = mk_method_post_get_vars(cr->body, 
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body,
                                                              end + mk_endblock.len);
             if (cr_buf->post_variables.len >= 0) {
                 i += cr_buf->post_variables.len;
@@ -124,8 +125,8 @@ struct request *mk_request_parse(struct client_request *cr)
         blocks++;
     }
 
-     
-    /* DEBUG BLOCKS 
+
+    /* DEBUG BLOCKS
     cr_search = cr->request;
     while(cr_search){
         printf("\n");
@@ -148,7 +149,7 @@ struct request *mk_request_parse(struct client_request *cr)
             }
             cr_search = cr_search->next;
         }
-        
+
         cr->pipelined = TRUE;
     }
 
@@ -158,9 +159,48 @@ struct request *mk_request_parse(struct client_request *cr)
 int mk_handler_read(int socket, struct client_request *cr)
 {
     int bytes;
+    int pending = 0;
+    int available = 0;
+    int ret;
+    int new_size;
+    char *tmp = 0;
 
-    bytes = read(socket, cr->body + cr->body_length,
-                 MAX_REQUEST_BODY - cr->body_length);
+    /* Check amount of data reported */
+    ret = ioctl(socket, FIONREAD, &pending);
+    if (ret == -1) {
+        mk_request_client_remove(socket);
+        return -1;
+    }
+
+    /* Reallocate buffer size if pending data does not have space */
+    if (pending > 0 && (pending >= (cr->body_size - (cr->body_length - 1)))) {
+        /* check available space */
+        available = (cr->body_size - cr->body_length) + MK_REQUEST_CHUNK;
+        if (pending < available) {
+            new_size = cr->body_size + MK_REQUEST_CHUNK + 1;
+        }
+        else {    
+            new_size = cr->body_size + pending + 1;
+        }
+
+        if (new_size > config->max_request_size) {
+            return -1;
+        }
+
+        tmp = mk_mem_realloc(cr->body, new_size);
+        if (tmp) {
+            cr->body = tmp;
+            cr->body_size = new_size;
+        }
+        else {
+            mk_request_client_remove(socket);
+            return -1;
+        }
+    }
+    
+    /* Read content */
+    bytes = mk_socket_read(socket, cr->body + cr->body_length, 
+                           (cr->body_size - cr->body_length) );
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
@@ -176,7 +216,7 @@ int mk_handler_read(int socket, struct client_request *cr)
         return -1;
     }
 
-    if (bytes > 0) {
+    if (bytes >= 0) {
         cr->body_length += bytes;
         cr->body[cr->body_length] = '\0';
     }
@@ -189,7 +229,7 @@ int mk_handler_write(int socket, struct client_request *cr)
     int bytes, final_status = 0;
     struct request *sr;
 
-    /* 
+    /*
      * Get node from schedule list node which contains
      * the information regarding to the current thread
      */
@@ -204,7 +244,6 @@ int mk_handler_write(int socket, struct client_request *cr)
     }
 
     sr = cr->request;
-
     while (sr) {
         /* Request not processed also no plugin has take some action */
         if (sr->bytes_to_send < 0 && !sr->handled_by) {
@@ -212,8 +251,7 @@ int mk_handler_write(int socket, struct client_request *cr)
         }
         /* Request with data to send by static file sender */
         else if (sr->bytes_to_send > 0 && !sr->handled_by) {
-            bytes = SendFile(socket, cr, sr);
-            final_status = bytes;
+            final_status = bytes = mk_http_send_file(cr, sr);
         }
 
         /*
@@ -224,17 +262,18 @@ int mk_handler_write(int socket, struct client_request *cr)
             return final_status;
         }
         else if (final_status <= 0) {
+            /* STAGE_40, request has ended */
+            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket,
+                                NULL, cr, sr);
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
-                mk_logger_write_log(cr, sr->log, sr->host_conf);
-                if (sr->close_now == VAR_ON) {
+                 if (sr->close_now == VAR_ON) {
                     return -1;
                 }
                 break;
             case EXIT_ABORT:
-                return -1;
-                break;
+                  return -1;
             }
         }
 
@@ -254,29 +293,29 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
     status = mk_request_header_process(s_request);
     if (status < 0) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_header_set_http_status(s_request, M_CLIENT_BAD_REQUEST);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_ABORT;
     }
 
     switch (s_request->method) {
     case METHOD_NOT_ALLOWED:
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr,
-                         s_request, 1, s_request->log);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request);
         return EXIT_NORMAL;
     case METHOD_NOT_FOUND:
-        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr,
-                         s_request, 1, s_request->log);
+        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cr, s_request);
         return EXIT_NORMAL;
     }
 
     s_request->user_home = VAR_OFF;
-    s_request->log->method = s_request->method;
 
     /* Valid request URI? */
     if (s_request->uri_processed == NULL) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
+        return EXIT_NORMAL;
+    }
+    if (s_request->uri_processed[0] != '/') {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
     if (s_request->uri_processed[0] != '/') {
@@ -287,26 +326,19 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
 
     /* HTTP/1.1 needs Host header */
     if (!s_request->host.data && s_request->protocol == HTTP_PROTOCOL_11) {
-        s_request->log->final_response = M_CLIENT_BAD_REQUEST;
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cr, s_request);
         return EXIT_NORMAL;
     }
 
     /* Method not allowed ? */
     if (s_request->method == METHOD_NOT_ALLOWED) {
-        s_request->log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cr, s_request);
         return EXIT_NORMAL;
     }
 
     /* Validating protocol version */
     if (s_request->protocol == HTTP_PROTOCOL_UNKNOWN) {
-
-        s_request->log->final_response = M_SERVER_HTTP_VERSION_UNSUP;
-        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request, 1,
-                         s_request->log);
+        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cr, s_request);
         return EXIT_ABORT;
     }
 
@@ -322,7 +354,6 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     else {
         s_request->host_conf = config->hosts;
     }
-    s_request->log->host_conf = s_request->host_conf;
 
     /* is requesting an user home directory ? */
     if (config->user_dir) {
@@ -341,6 +372,19 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
         }
     }
 
+    /* Plugins Stage 20 */
+    int ret;
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cr->socket, NULL, 
+                              cr, s_request);
+    
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+#ifdef TRACE
+        MK_TRACE("STAGE 20 requested close conexion");
+#endif
+        return EXIT_ABORT;
+    }
+
+    /* Normal HTTP process */
     status = mk_http_init(cr, s_request);
 
 #ifdef TRACE
@@ -350,7 +394,7 @@ int mk_request_process(struct client_request *cr, struct request *s_request)
     return status;
 }
 
-/* Return a struct with method, URI , protocol version 
+/* Return a struct with method, URI , protocol version
 and all static headers defined here sent in request */
 int mk_request_header_process(struct request *sr)
 {
@@ -361,11 +405,6 @@ int mk_request_header_process(struct request *sr)
     char *port = 0;
     char *headers;
     mk_pointer host;
-
-    /* If verification fails it will return always
-     * a bad request status
-     */
-    sr->log->final_response = M_CLIENT_BAD_REQUEST;
 
     /* Method */
     sr->method_p = mk_http_method_check_str(sr->method);
@@ -382,7 +421,7 @@ int mk_request_header_process(struct request *sr)
 #endif
         return -1;
     }
-
+    
     prot_init = uri_end + 2;
 
     if (uri_end < uri_init) {
@@ -405,8 +444,7 @@ int mk_request_header_process(struct request *sr)
     }
     
     /* Request URI Part 2 */
-    sr->uri = sr->log->uri = mk_pointer_create(sr->body.data,
-                                               uri_init, uri_end + 1);
+    sr->uri = mk_pointer_create(sr->body.data, uri_init, uri_end + 1);
 
     if (sr->uri.len < 1) {
         return -1;
@@ -419,9 +457,9 @@ int mk_request_header_process(struct request *sr)
     }
     
     if (prot_end != prot_init && prot_end > 0) {
-        sr->protocol = sr->log->protocol =
-            mk_http_protocol_check(sr->body.data + prot_init,
-                                   prot_end - prot_init);
+        sr->protocol = mk_http_protocol_check(sr->body.data + prot_init,
+                                              prot_end - prot_init);
+        sr->protocol_p = mk_http_protocol_check_str(sr->protocol);
     }
 
     headers = sr->body.data + prot_end + mk_crlf.len;
@@ -507,7 +545,6 @@ int mk_request_header_process(struct request *sr)
             sr->connection.len = 0;
         }
     }
-    sr->log->final_response = M_HTTP_OK;
 
     return 0;
 }
@@ -525,7 +562,7 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     if (toc) {
         for (i = 0; i < toc_len; i++) {
             /* status = 1 means that the toc entry was already
-             * checked by monkey 
+             * checked by monkey
              */
             if (toc[i].status == 1) {
                 continue;
@@ -546,22 +583,21 @@ mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
     return var;
 }
 
-/* FIXME: IMPROVE access */
 /* Look for some  index.xxx in pathfile */
 mk_pointer mk_request_index(char *pathfile)
 {
     unsigned long len;
     char *file_aux = 0;
     mk_pointer f;
-    struct indexfile *aux_index;
+    struct mk_string_line *aux_index;
 
     mk_pointer_reset(&f);
 
-    aux_index = first_index;
+    aux_index = config->index_files;
 
     while (aux_index) {
-        m_build_buffer(&file_aux, &len, "%s%s",
-                       pathfile, aux_index->indexname);
+        mk_string_build(&file_aux, &len, "%s%s",
+                        pathfile, aux_index->val);
 
         if (access(file_aux, F_OK) == 0) {
             f.data = file_aux;
@@ -576,86 +612,65 @@ mk_pointer mk_request_index(char *pathfile)
 }
 
 /* Send error responses */
-void mk_request_error(int num_error, struct client_request *cr,
-                      struct request *s_request, int debug,
-                      struct log_info *s_log)
-{
+void mk_request_error(int http_status, struct client_request *cr, 
+                      struct request *sr) {
     char *aux_message = 0;
     mk_pointer message, *page = 0;
     long n;
 
-    s_log->error_details.data = NULL;
-
-    switch (num_error) {
+    switch (http_status) {
     case M_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",
-                                           s_request->uri,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->error_msg = request_error_msg_400;
+                                           sr->uri,
+                                           sr->host_conf->host_signature);
         break;
 
     case M_CLIENT_FORBIDDEN:
         page = mk_request_set_default_page("Forbidden",
-                                           s_request->uri,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->error_msg = request_error_msg_403;
-        s_log->error_details = s_request->uri;
+                                           sr->uri,
+                                           sr->host_conf->host_signature);
         break;
 
     case M_CLIENT_NOT_FOUND:
-        m_build_buffer(&message.data, &message.len,
-                       "The requested URL was not found on this server.");
+        mk_string_build(&message.data, &message.len,
+                        "The requested URL was not found on this server.");
         page = mk_request_set_default_page("Not Found",
                                            message,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->error_msg = request_error_msg_404;
-        s_log->error_details = s_request->uri;
+                                           sr->host_conf->host_signature);
+        mk_pointer_free(&message);
+        break;
 
+    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+        mk_string_build(&message.data, &message.len,
+                        "The request entity is too large.");
+        page = mk_request_set_default_page("Entity too large",
+                                           message,
+                                           sr->host_conf->host_signature);
         mk_pointer_free(&message);
         break;
 
     case M_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_request_set_default_page("Method Not Allowed",
-                                           s_request->uri,
-                                           s_request->host_conf->
-                                           host_signature);
-
-        s_log->final_response = M_CLIENT_METHOD_NOT_ALLOWED;
-        s_log->error_msg = request_error_msg_405;
-        s_log->error_details = s_request->method_p;
+                                           sr->uri,
+                                           sr->host_conf->host_signature);
         break;
 
     case M_CLIENT_REQUEST_TIMEOUT:
-        s_log->status = S_LOG_OFF;
-        s_log->error_msg = request_error_msg_408;
-        break;
-
     case M_CLIENT_LENGTH_REQUIRED:
-        s_log->error_msg = request_error_msg_411;
         break;
 
     case M_SERVER_NOT_IMPLEMENTED:
         page = mk_request_set_default_page("Method Not Implemented",
-                                           s_request->uri,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->final_response = M_SERVER_NOT_IMPLEMENTED;
-        s_log->error_msg = request_error_msg_501;
-        s_log->error_details = s_request->method_p;
+                                           sr->uri,
+                                           sr->host_conf->host_signature);
         break;
 
     case M_SERVER_INTERNAL_ERROR:
-        m_build_buffer(&message.data, &message.len,
-                       "Problems found running %s ", s_request->uri);
+        mk_string_build(&message.data, &message.len,
+                        "Problems found running %s ", sr->uri);
         page = mk_request_set_default_page("Internal Server Error",
                                            message,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->error_msg = request_error_msg_500;
-
+                                           sr->host_conf->host_signature);
         mk_pointer_free(&message);
         break;
 
@@ -663,42 +678,40 @@ void mk_request_error(int num_error, struct client_request *cr,
         mk_pointer_reset(&message);
         page = mk_request_set_default_page("HTTP Version Not Supported",
                                            message,
-                                           s_request->host_conf->
-                                           host_signature);
-        s_log->error_msg = request_error_msg_505;
+                                           sr->host_conf->host_signature);
         break;
     }
 
-    s_log->final_response = num_error;
-
-    s_request->headers->status = num_error;
+    mk_header_set_http_status(sr, http_status);
     if (page) {
-        s_request->headers->content_length = page->len;
-        s_request->headers->content_length_p = mk_utils_int2mkp(page->len);
+        sr->headers->content_length = page->len;
     }
 
-    s_request->headers->location = NULL;
-    s_request->headers->cgi = SH_NOCGI;
-    s_request->headers->pconnections_left = 0;
-    mk_pointer_reset(&s_request->headers->last_modified);
+    sr->headers->location = NULL;
+    sr->headers->cgi = SH_NOCGI;
+    sr->headers->pconnections_left = 0;
+    sr->headers->last_modified = -1;
 
     if (aux_message)
         mk_mem_free(aux_message);
 
     if (!page) {
-        mk_pointer_reset(&s_request->headers->content_type);
+        mk_pointer_reset(&sr->headers->content_type);
     }
     else {
-        mk_pointer_set(&s_request->headers->content_type, "text/html\r\n");
+        mk_pointer_set(&sr->headers->content_type, "text/html\r\n");
     }
 
-    mk_header_send(cr->socket, cr, s_request, s_log);
+    mk_header_send(cr->socket, cr, sr);
 
-    if (debug == 1) {
-        n = write(cr->socket, page->data, page->len);
+    if (page && sr->method != HTTP_METHOD_HEAD) {
+        n = mk_socket_send(cr->socket, page->data, page->len);
         mk_pointer_free(page);
         mk_mem_free(page);
     }
+
+    /* Turn off TCP_CORK */
+    mk_socket_set_cork_flag(cr->socket, TCP_CORK_OFF);
 }
 
 /* Build error page */
@@ -711,8 +724,8 @@ mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
     p = mk_mem_malloc(sizeof(mk_pointer));
 
     temp = mk_pointer_to_buf(message);
-    m_build_buffer(&p->data, &p->len,
-                   MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+    mk_string_build(&p->data, &p->len,
+                    MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
     mk_mem_free(temp);
 
     return p;
@@ -724,19 +737,10 @@ struct request *mk_request_alloc()
     struct request *request = 0;
 
     request = mk_mem_malloc(sizeof(struct request));
-    request->log = mk_mem_malloc(sizeof(struct log_info));
-
     request->status = VAR_OFF;  /* Request not processed yet */
-    request->make_log = VAR_ON; /* build log file of this request ? */
     request->close_now = VAR_OFF;
 
     mk_pointer_reset(&request->body);
-
-    request->log->final_response = M_HTTP_OK;
-    request->log->status = S_LOG_ON;
-    mk_pointer_reset(&request->log->size_p);
-    mk_pointer_reset(&request->log->error_msg);
-
     request->status = VAR_ON;
     request->method = METHOD_NOT_FOUND;
 
@@ -779,7 +783,9 @@ struct request *mk_request_alloc()
     /* Response Headers */
     request->headers = mk_header_create();
 
+    /* Plugin handler */
     request->handled_by = NULL;
+
     return request;
 }
 
@@ -788,6 +794,9 @@ void mk_request_free_list(struct client_request *cr)
     struct request *sr = 0, *before = 0;
 
     /* sr = last node */
+#ifdef TRACE
+    MK_TRACE("Free struct client_request [FD %i]", cr->socket);
+#endif
 
     while (cr->request) {
         sr = before = cr->request;
@@ -812,34 +821,16 @@ void mk_request_free_list(struct client_request *cr)
 
 void mk_request_free(struct request *sr)
 {
-    /* I hate it, but I don't know another light way :( */
     if (sr->fd_file > 0) {
         close(sr->fd_file);
     }
     if (sr->headers) {
         mk_mem_free(sr->headers->location);
-        mk_pointer_free(&sr->headers->content_length_p);
-        mk_pointer_free(&sr->headers->last_modified);
         mk_mem_free(sr->headers);
-    }
 
-
-    if (sr->log) {
-        /*
-         * We do not free log->size_p, as if it was
-         * used due to an error, it points to the 
-         * same memory block than header->content_length_p
-         * points to, we just reset it.
-         */
-        mk_pointer_reset(&sr->log->size_p);
-
-        /*
-         * sr->log->error_msg just point to
-         * local data on request.c, no 
-         * dynamic allocation is made
-         */
-
-        mk_mem_free(sr->log);
+        if (sr->headers->content_length >= 0) {
+            //mk_pointer_free(&sr->headers->content_length_p);
+        }
     }
 
     mk_pointer_reset(&sr->body);
@@ -872,6 +863,13 @@ struct client_request *mk_request_client_create(int socket)
     sc = mk_sched_get_connection(NULL, socket);
     cr = mk_mem_malloc(sizeof(struct client_request));
 
+    if (!sc) {
+#ifdef TRACE
+        MK_TRACE("FAILED SOCKET: %i", socket);
+#endif
+        exit(1);
+    }
+
     /* IPv4 Address */
     cr->ipv4 = &sc->ipv4;
 
@@ -885,11 +883,17 @@ struct client_request *mk_request_client_create(int socket)
     cr->init_time = sc->arrive_time;
 
     cr->next = NULL;
-    cr->body = mk_mem_malloc(MAX_REQUEST_BODY);
+    cr->body = mk_mem_malloc(MK_REQUEST_CHUNK);
+
+    /* Buffer size based in Chunk bytes */
+    cr->body_size = MK_REQUEST_CHUNK;
+    /* Current data length */
     cr->body_length = 0;
+
     cr->body_pos_end = -1;
     cr->first_method = HTTP_METHOD_UNKNOWN;
 
+    /* Add this request to the thread request list */
     request_index = mk_sched_get_request_index();
     if (!request_index->first) {
         request_index->first = request_index->last = cr;
@@ -898,6 +902,8 @@ struct client_request *mk_request_client_create(int socket)
         request_index->last->next = cr;
         request_index->last = cr;
     }
+
+    /* Set again the global list */
     mk_sched_set_request_index(request_index);
 
     return cr;
@@ -922,9 +928,9 @@ struct client_request *mk_request_client_get(int socket)
 
 /*
  * From thread sched_list_node "list", remove the client_request
- * struct information 
+ * struct information
  */
-struct client_request *mk_request_client_remove(int socket)
+void mk_request_client_remove(int socket)
 {
     struct request_idx *request_index;
     struct client_request *cr, *aux;
@@ -955,7 +961,8 @@ struct client_request *mk_request_client_remove(int socket)
     mk_mem_free(cr->body);
     mk_mem_free(cr);
 
-    return NULL;
+    /* Update thread index */
+    mk_sched_set_request_index(request_index);
 }
 
 struct header_toc *mk_request_header_toc_create(int len)
@@ -963,7 +970,7 @@ struct header_toc *mk_request_header_toc_create(int len)
     int i;
     struct header_toc *p;
 
-    p = (struct header_toc *) pthread_getspecific(mk_cache_header_toc);
+    p = (struct header_toc *) mk_cache_get(mk_cache_header_toc);
 
     for (i = 0; i < len; i++) {
         p[i].init = NULL;

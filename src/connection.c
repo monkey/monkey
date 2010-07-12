@@ -28,6 +28,7 @@
 #include "socket.h"
 #include "plugin.h"
 #include "utils.h"
+#include "http_status.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -45,6 +46,9 @@ int mk_conn_read(int socket)
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
+            return -1;
+        }
         return ret;
     }        
 
@@ -53,21 +57,11 @@ int mk_conn_read(int socket)
     cr = mk_request_client_get(socket);
     if (!cr) {
         /* Note: Linux don't set TCP_NODELAY socket flag by default, 
-         * also we set the client socket on non-blocking mode
          */
         mk_socket_set_tcp_nodelay(socket);
-        mk_socket_set_nonblocking(socket);
 
+        /* Create client */
         cr = mk_request_client_create(socket);
-    }
-    else {
-        /* If cr struct already exists, that could means that we 
-         * are facing a keepalive connection, need to verify, if it 
-         * applies we increase the thread status for active connections
-         */
-        if (cr->counter_connections > 1 && cr->body_length == 0) {
-            /* FIXME: KA Connection */
-        }
     }
 
     /* Read incomming data */
@@ -75,11 +69,11 @@ int mk_conn_read(int socket)
 
     if (ret > 0) {
         if (mk_http_pending_request(cr) == 0) {
-            mk_epoll_socket_change_mode(sched->epoll_fd,
-                                        socket, MK_EPOLL_WRITE);
+            mk_epoll_change_mode(sched->epoll_fd,
+                                 socket, MK_EPOLL_WRITE);
         }
-        else if (cr->body_length + 1 >= MAX_REQUEST_BODY) {
-            /* Request is incomplete and our buffer is full, 
+        else if (cr->body_length + 1 >= config->max_request_size) {
+            /* Request is incomplete and our buffer is full,
              * close connection 
              */
             mk_request_client_remove(socket);
@@ -91,12 +85,12 @@ int mk_conn_read(int socket)
 
 int mk_conn_write(int socket)
 {
-    int ret = -1, ka;
+    int ret = -1;
     struct client_request *cr;
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, write on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, write", socket);
 #endif
 
     /* Plugin hook */
@@ -109,7 +103,7 @@ int mk_conn_write(int socket)
     }  
 
 #ifdef TRACE
-    MK_TRACE("Normal connection write handling...");
+    MK_TRACE("[FD %i] Normal connection write handling", socket);
 #endif
 
     sched = mk_sched_get_thread_conf();
@@ -125,7 +119,6 @@ int mk_conn_write(int socket)
     }
 
     ret = mk_handler_write(socket, cr);
-    ka = mk_http_keepalive_check(socket, cr);
 
     /* if ret < 0, means that some error
      * happened in the writer call, in the
@@ -133,21 +126,17 @@ int mk_conn_write(int socket)
      * processed, if ret > 0 means that some data
      * still need to be send.
      */
-    if (ret <= 0) {
+    if (ret < 0) {
         mk_request_free_list(cr);
-
-        /* We need to ask to http_keepalive if this 
-         * connection can continue working or we must 
-         * close it.
-         */
-        if (ka < 0 || ret < 0) {
-            mk_request_client_remove(socket);
+        mk_request_client_remove(socket);
+        return -1;
+    }
+    else if (ret == 0) {
+        if (mk_http_request_end(socket) < 0) {
+            mk_request_free_list(cr);
             return -1;
         }
         else {
-            mk_request_ka_next(cr);
-            mk_epoll_socket_change_mode(sched->epoll_fd,
-                                        socket, MK_EPOLL_READ);
             return 0;
         }
     }
@@ -161,12 +150,25 @@ int mk_conn_write(int socket)
 
 int mk_conn_error(int socket)
 {
+    int ret = -1;
     struct client_request *cr;
     struct sched_list_node *sched;
 
 #ifdef TRACE
     MK_TRACE("Connection Handler, error on FD %i", socket);
 #endif 
+
+    /* Plugin hook */
+    ret = mk_plugin_event_error(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
+#ifdef TRACE
+            MK_TRACE("CLOSING REQUEST");
+#endif
+            return -1;
+        }
+        return ret;
+    } 
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(NULL, socket);
@@ -180,25 +182,37 @@ int mk_conn_error(int socket)
 
 int mk_conn_close(int socket)
 {
+    int ret = -1;
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, closed on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, closed", socket);
 #endif
 
+    /* Plugin hook */
+    ret = mk_plugin_event_close(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    } 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
-
     return 0;
 }
 
 int mk_conn_timeout(int socket)
 {
+    int ret = -1;
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, timeout on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler, timeout", socket);
 #endif
+
+    /* Plugin hook */
+    ret = mk_plugin_event_timeout(socket);
+    if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
+        return ret;
+    } 
 
     sched = mk_sched_get_thread_conf();
     mk_sched_check_timeouts(sched);

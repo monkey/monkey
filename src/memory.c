@@ -62,14 +62,14 @@ extern void *mk_mem_malloc_z(size_t size)
 
 void *mk_mem_realloc(void *ptr, size_t size)
 {
-    char *aux = 0;
+    void *aux = 0;
 
     if ((aux = realloc(ptr, size)) == NULL) {
         perror("realloc");
         return NULL;
     }
 
-    return (void *) aux;
+    return aux;
 }
 
 void mk_mem_free(void *ptr)
@@ -134,17 +134,6 @@ void mk_pointer_set(mk_pointer * p, char *data)
 
 void mk_mem_pointers_init()
 {
-    /* Error messages */
-    mk_pointer_set(&request_error_msg_400, ERROR_MSG_400);
-    mk_pointer_set(&request_error_msg_403, ERROR_MSG_403);
-    mk_pointer_set(&request_error_msg_404, ERROR_MSG_404);
-    mk_pointer_set(&request_error_msg_405, ERROR_MSG_405);
-    mk_pointer_set(&request_error_msg_408, ERROR_MSG_408);
-    mk_pointer_set(&request_error_msg_411, ERROR_MSG_411);
-    mk_pointer_set(&request_error_msg_500, ERROR_MSG_500);
-    mk_pointer_set(&request_error_msg_501, ERROR_MSG_501);
-    mk_pointer_set(&request_error_msg_505, ERROR_MSG_505);
-
     /* Short server response headers */
     mk_pointer_set(&mk_header_short_date, MK_HEADER_SHORT_DATE);
     mk_pointer_set(&mk_header_short_location, MK_HEADER_SHORT_LOCATION);
@@ -187,6 +176,8 @@ void mk_mem_pointers_init()
                    MK_HR_CLIENT_REQUEST_TIMEOUT);
     mk_pointer_set(&mk_hr_client_length_required,
                    MK_HR_CLIENT_LENGTH_REQUIRED);
+    mk_pointer_set(&mk_hr_client_request_entity_too_large,
+                   MK_HR_CLIENT_REQUEST_ENTITY_TOO_LARGE);
     mk_pointer_set(&mk_hr_server_internal_error, MK_HR_SERVER_INTERNAL_ERROR);
     mk_pointer_set(&mk_hr_server_not_implemented,
                    MK_HR_SERVER_NOT_IMPLEMENTED);
@@ -206,9 +197,6 @@ void mk_mem_pointers_init()
 
     /* Server */
     mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
-
-    /* Logfile */
-    mk_pointer_set(&mk_logfile_iov_dash, MK_LOGFILE_IOV_DASH);
 
     /* HTTP */
     mk_pointer_set(&mk_http_method_get_p, HTTP_METHOD_GET_STR);

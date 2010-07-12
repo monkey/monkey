@@ -39,19 +39,31 @@
 void mk_mimetype_read_config()
 {
     char path[MAX_PATH];
-    struct mk_config *c;
+    struct mk_config *cnf;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
+    /* Read mime types configuration file */
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
-    c = mk_config_create(path);
+    cnf = mk_config_create(path);
 
-    while (c) {
-        if (mk_mimetype_add(c->key, c->val, NULL) != 0) {
-            puts("Error loading Mime Types");
-        }
-        c = c->next;
+    /* Get MimeTypes tag */
+    section = mk_config_section_get(cnf, "MIMETYPES");
+    if (!section) {
+        puts("Error: Invalid mime type file");
+        exit(1);
     }
 
-    mk_config_free(c);
+    entry = section->entry;
+
+    while (entry) {
+        if (mk_mimetype_add(entry->key, entry->val, NULL) != 0) {
+            puts("Error loading Mime Types");
+        }
+        entry = entry->next;
+    }
+
+    //mk_config_free(c);
 
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));

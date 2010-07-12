@@ -47,59 +47,104 @@
 #include "monkey.h"
 #include "memory.h"
 #include "utils.h"
+#include "file.h"
 #include "str.h"
 #include "config.h"
 #include "chars.h"
 #include "socket.h"
 #include "clock.h"
+#include "user.h"
+#include "cache.h"
 
-int SendFile(int socket, struct client_request *cr, struct request *sr)
-{
-    long int nbytes = 0;
+/* Date helpers */
+const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+                              "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-    nbytes = sendfile(socket, sr->fd_file, &sr->bytes_offset,
-                      sr->bytes_to_send);
-
-    if (nbytes > 0 && sr->loop == 0) {
-        mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
-    }
-
-    if (nbytes == -1) {
-        fprintf(stderr, "error from sendfile: %s\n", strerror(errno));
-        return -1;
-    }
-    else {
-        sr->bytes_to_send -= nbytes;
-    }
-
-    sr->loop++;
-    return sr->bytes_to_send;
-}
-
-/* Return data as mk_pointer to be sent
- * in response header 
+/* This function given a unix time, set in a mk_pointer 
+ * the date in the RFC1123 format like:
+ *
+ *    Wed, 23 Jun 2010 22:32:01 GMT
+ *
+ * it also adds a 'CRLF' at the end
  */
-mk_pointer PutDate_string(time_t date)
+int mk_utils_utime2gmt(mk_pointer **p, time_t date)
 {
-    int n, size = 32;
-    mk_pointer date_gmt;
-    struct tm *gmt_tm;
-
-    mk_pointer_reset(&date_gmt);
+    int size = 31;
+    unsigned int year;
+    char *buf=0;
+    struct tm *gtm;
 
     if (date == 0) {
         if ((date = time(NULL)) == -1) {
-            return date_gmt;
+            return -1;
         }
     }
 
-    date_gmt.data = mk_mem_malloc(size);
-    gmt_tm = (struct tm *) gmtime(&date);
-    n = strftime(date_gmt.data, size - 1, GMT_DATEFORMAT, gmt_tm);
-    date_gmt.data[n] = '\0';
-    date_gmt.len = n;
+    /* Convert unix time to struct tm */
+    gtm = (struct tm *) gmtime(&date);
+    if (!gtm) {
+        return -1;
+    }
 
-    return date_gmt;
+    /* struct tm -> tm_year counts number of years after 1900 */
+    year = gtm->tm_year + 1900;
+    
+    /* Compose template */
+    buf = (*p)->data;
+
+    /* Week day */
+    *buf++ = mk_date_wd[gtm->tm_wday][0];
+    *buf++ = mk_date_wd[gtm->tm_wday][1];
+    *buf++ = mk_date_wd[gtm->tm_wday][2];
+    *buf++ = ',';
+    *buf++ = ' ';
+
+    /* Day of the month */
+    *buf++ = ('0' + (gtm->tm_mday / 10));
+    *buf++ = ('0' + (gtm->tm_mday % 10));
+    *buf++ = ' ';
+
+    /* Year month */
+    *buf++ = mk_date_ym[gtm->tm_mon][0];
+    *buf++ = mk_date_ym[gtm->tm_mon][1];
+    *buf++ = mk_date_ym[gtm->tm_mon][2];
+    *buf++ = ' ';
+
+    /* Year */
+    *buf++ = ('0' + (year / 1000) % 10);
+    *buf++ = ('0' + (year / 100) % 10);
+    *buf++ = ('0' + (year / 10) % 10);
+    *buf++ = ('0' + (year % 10));
+    *buf++ = ' ';
+
+    /* Hour */
+    *buf++ = ('0' + (gtm->tm_hour / 10));
+    *buf++ = ('0' + (gtm->tm_hour % 10));
+    *buf++ = ':';
+
+    /* Minutes */
+    *buf++ = ('0' + (gtm->tm_min / 10));
+    *buf++ = ('0' + (gtm->tm_min % 10));
+    *buf++ = ':';
+
+    /* Seconds */
+    *buf++ = ('0' + (gtm->tm_sec / 10));
+    *buf++ = ('0' + (gtm->tm_sec % 10));
+    *buf++ = ' ';
+
+    /* GMT Time zone + CRLF */
+    *buf++ = 'G';
+    *buf++ = 'M';
+    *buf++ = 'T';
+    *buf++ = '\r';
+    *buf++ = '\n';
+    *buf++ = '\0';
+    
+    /* Set mk_pointer data len */
+    (*p)->len = size;
+
+    return 0;
 }
 
 time_t PutDate_unix(char *date)
@@ -116,13 +161,13 @@ time_t PutDate_unix(char *date)
     return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
+int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
 {
     /* Validate lengths */
     if (len1 < 0 || len2 < 0) {
-        return -1;
+         return -1;
     }
-    
+
     /* alloc space */
     p->data = (char *) mk_mem_malloc(len1 + len2 + 1);
 
@@ -135,49 +180,6 @@ int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2)
     p->len = len1 + len2;
 
     return 0;
-}
-
-char *m_build_buffer(char **buffer, unsigned long *len, const char *format,
-                     ...)
-{
-    va_list ap;
-    int length;
-    char *ptr;
-    static size_t _mem_alloc = 64;
-    size_t alloc = 0;
-
-    /* *buffer *must* be an empty/NULL buffer */
-
-    *buffer = (char *) mk_mem_malloc(_mem_alloc);
-    if (!*buffer) {
-        return NULL;
-    }
-    alloc = _mem_alloc;
-
-    va_start(ap, format);
-    length = vsnprintf(*buffer, alloc, format, ap);
-
-    if (length >= alloc) {
-        ptr = realloc(*buffer, length + 1);
-        if (!ptr) {
-            va_end(ap);
-            return NULL;
-        }
-        *buffer = ptr;
-        alloc = length + 1;
-        length = vsnprintf(*buffer, alloc, format, ap);
-    }
-    va_end(ap);
-
-    if (length < 0) {
-        return NULL;
-    }
-
-    ptr = *buffer;
-    ptr[length] = '\0';
-    *len = length;
-
-    return *buffer;
 }
 
 /* Run current process in background mode (daemon, evil Monkey >:) */
@@ -194,7 +196,6 @@ int mk_utils_set_daemon()
     };
 
     setsid();                   /* Create new session */
-    fclose(stdin);              /* close screen outputs */
     fclose(stderr);
     fclose(stdout);
 
@@ -255,21 +256,6 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
     return buf;
 }
 
-mk_pointer mk_utils_int2mkp(int n)
-{
-    mk_pointer p;
-    char *buf;
-    unsigned long len;
-
-    buf = mk_mem_malloc(MK_UTILS_INT2MKP_BUFFER_LEN);
-    len = snprintf(buf, MK_UTILS_INT2MKP_BUFFER_LEN, "%i\r\n", n);
-
-    p.data = buf;
-    p.len = len;
-
-    return p;
-}
-
 #ifdef TRACE
 #include <sys/time.h>
 void mk_utils_trace(const char *component, int color, const char *function, 
@@ -287,6 +273,9 @@ void mk_utils_trace(const char *component, int color, const char *function,
             return;
         }
     }
+
+    /* Mutex lock */
+    pthread_mutex_lock(&mutex_trace);
 
     gettimeofday(&tv, &tz);
  
@@ -313,6 +302,10 @@ void mk_utils_trace(const char *component, int color, const char *function,
     vfprintf( stderr, format, args );
     va_end( args );
     fprintf( stderr, "%s\n", ANSI_RESET);
+
+    /* Mutex unlock */
+    pthread_mutex_unlock(&mutex_trace);
+
 }
 #endif
 
@@ -324,8 +317,45 @@ int mk_utils_get_somaxconn()
      * 
      * '(warning: process `monkey' used the deprecated sysctl system call...'
      *
-     * In order to avoid that problem, this function will return the default 
-     * value defined for somaxconn for years...
+     * In order to avoid that problem, this function will check the proc filesystem,
+     * if it still fails, we will use the default value defined for somaxconn for years...
      */
-    return 128;
+    int somaxconn = 128;
+    char buf[16];
+    FILE *f;
+
+    f = fopen("/proc/sys/net/core/somaxconn", "r");
+    if(f && fgets(buf, 16, f)) {
+        somaxconn = atoi(buf);
+        fclose(f);
+    }
+
+    return somaxconn;
+}
+
+/* Write Monkey's PID */
+int mk_utils_register_pid()
+{
+    FILE *pid_file;
+
+    remove(config->pid_file_path);
+    config->pid_status = VAR_OFF;
+
+    if ((pid_file = fopen(config->pid_file_path, "w")) == NULL) {
+        puts("Error: I can't log pid of monkey");
+        exit(1);
+    }
+
+    fprintf(pid_file, "%i", getpid());
+    fclose(pid_file);
+    config->pid_status = VAR_ON;
+
+    return 0;
+}
+
+/* Remove PID file */
+int mk_utils_remove_pid()
+{
+    mk_user_undo_uidgid();
+    return remove(config->pid_file_path);
 }

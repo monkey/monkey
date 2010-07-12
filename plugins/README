@@ -4,8 +4,11 @@ Plugins are extra features which modifies the Monkey behavior, all of them
 are shared libraries which are loaded on runtime. 
 
 Each plugin is loaded per configuration instruction and it will work on a 
-defined stage or event. Monkey has different cycles since a connection is 
-accepted until it's finished. Stages are defined as follows:
+defined stage or event depending of it's type.
+
+Please review the file API.txt for more details
+
+
 
 MK_PLUGIN_STAGE_10: Server has not yet entered in the server loop, no 
 		    listeners yet available

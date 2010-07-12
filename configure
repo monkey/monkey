@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-VERSION="0.10.3"
+VERSION="0.11.0-dev"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 
@@ -85,7 +85,7 @@ main()
 {
 	local_dirs
 	dir=0
-	actual_path=`pwd`	
+	actual_path=`pwd`
 
 	if [ "$prefix" != "$actual_path" ]; then
 		dir=1
@@ -94,11 +94,11 @@ main()
 	if [ "$bindir" != "$actual_path/bin" ]; then
 		dir=1
 	fi
-	
+
 	if [ "$cgibin" != "$actual_path/cgi-bin" ]; then
 		dir=1
 	fi
-	
+
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
 		dir=1
 	fi
@@ -106,22 +106,22 @@ main()
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
 		dir=1
 	fi
-	
+
 	if [ "$logdir" != "$actual_path/logs" ]; then
 		dir=1
 	fi
 
-        echo 
+        echo
 	echo "Checking dependencies"
         echo "====================="
-        echo 
+        echo
 	messages_$lang "7"
 	check_lib lang
 
-        echo 
+        echo
         echo "Creating Makefiles and scripts"
         echo "=============================="
-        echo 
+        echo
 
 	messages_$lang "1"
 	create_conf prefix bindir cgibin sysconfdir datadir logdir
@@ -140,10 +140,10 @@ main()
 
 	messages_$lang "4"
 	create_info sysconfdir SYSNAME VERSION
-	
+
 	messages_$lang "5"
 	create_banana_script bindir logdir
-	echo 
+	echo
 	messages_$lang "6"
 
 	if [ "$dir" = 1 ]; then
@@ -184,7 +184,7 @@ create_makefile1()
 cat > Makefile << EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
-default: 
+default:
 	@(cd src; make all)
 
 plugins:
@@ -241,7 +241,7 @@ install:
 	make -C src all
 	install -d \$(BINDIR)
 	install -d \$(CGIBIN)
-	install -d \$(SYSCONFDIR) 
+	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
 	install -d \$(DATADIR)
@@ -259,14 +259,14 @@ $plgconf
 $plglist
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
-	@echo 
+	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
-	@echo 
+	@echo
 	@echo  "  # $bindir/monkey"
-	@echo 
-	@echo  "  For more help use '-h' option"	
-	@echo 
+	@echo
+	@echo  "  For more help use '-h' option"
+	@echo
 
 EOF
 }
@@ -275,23 +275,16 @@ EOF
 create_makefile2()
 {
 
-##### Internal options ####
-# just for remember that one time we support this :_(
-# ---------------------------------------------------
-#if [ "$disable_sendfile" = "on" ]; then
-#    internal_options="-DDISABLE_SENDFILE_SYSCALL"
-#fi
-
 cat > src/Makefile<<EOF
 CC	= $CC
 CFLAGS	= $CFLAGS
 DEFS    = $DEFS
 INCDIR  = ./include
-LDFLAGS	= 
+LDFLAGS	=
 DESTDIR	= ../bin/monkey
 LIBS	= -ldl -lpthread $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
-	header.o config.o logfile.o signals.o \\
+	header.o config.o signals.o \\
 	user.o utils.o chars.o epoll.o scheduler.o \\
 	str.o memory.o connection.o iov.o http.o \\
 	file.o socket.o clock.o cache.o worker.o \\
@@ -309,9 +302,9 @@ all: ../bin/monkey
 	@echo "Compiling Plugins"
 	@echo "================="
 	@(cd ../plugins && make all && cd ..)
-	
+
 clean:
-	rm -rf *.o 
+	rm -rf *.o
 	rm -rf ../bin/monkey
 
 distclean:
@@ -333,26 +326,50 @@ EOF
     dir=`pwd`
     plugins_load="../conf/plugins.load"
     echo -n > $plugins_load
-    echo "# Monkey plugins are loaded on run, by default all " >> $plugins_load
-    echo "# plugins are disabled, if you want to enable" >> $plugins_load
-    echo "# one, just remove the comment character for each line" >> $plugins_load
+    echo "# Monkey Plugins Loader" >> $plugins_load
+    echo "# =====================" >> $plugins_load
+    echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
+    echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
+    echo "# the absolute path for the desired plugin." >> $plugins_load
+    echo "#" >> $plugins_load
+    echo "# Please check the following list of available plugins:" >> $plugins_load
+    echo "" >> $plugins_load
+    echo "[PLUGINS]" >> $plugins_load
     echo "" >> $plugins_load
 
-    list=`echo */ "" | sed "s/\/ /\n/g"`
-    for i in $list;
-	do 
-	      if test -e $i/DISABLED ; then
-        	continue
-	      fi
+    for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
+    do
+        comment="    "
+	if test -e $plugin_dir/DISABLED ; then
+            continue
+	fi
 
-	      echo "	@(cd $i && make && cd ..)" >> Makefile;
+        if test -e $plugin_dir/MANDATORY ; then
+	    comment="    "
+        fi
 
-	      if [ "$plugdir" != "" ]; then
-		  echo "#LoadPlugin $plugdir/monkey-$i.so" >> ../conf/plugins.load
-	      else
-		  echo "#LoadPlugin $dir/$i/monkey-$i.so" >> ../conf/plugins.load
-	      fi
-	done	
+        if test -e $plugin_dir/OPTIONAL ; then
+            comment="    # "
+	fi
+
+        echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
+        sed -e "s/\$CC/$CC/" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+
+        if test -e $plugin_dir/ABOUT ; then
+            cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
+	    echo "    #" >> ../conf/plugins.load
+	else
+	    echo "    #" >> ../conf/plugins.load
+	fi
+
+	if [ "$plugdir" != "" ]; then
+	    echo "${comment}Load $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+	else
+	    echo "${comment}Load $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+	fi
+
+	echo "" >> ../conf/plugins.load
+    done
 
 # Add 'install' option to make file if plugdir was specified
 if [ "$plugdir" != "" ]; then
@@ -361,7 +378,7 @@ if [ "$plugdir" != "" ]; then
 
     list=`echo */ "" | sed "s/\/ /\n/g"`
     for i in $list;
-	do 
+	do
 	      echo -e "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
 	done
 fi
@@ -398,7 +415,7 @@ cat > bin/banana << EOF
 #
 # Monkey HTTP Daemon - Banana Script
 # -----------------------------------
-# This script allow you to control monkey. Written by Eduardo Silva 
+# This script allow you to control monkey. Written by Eduardo Silva
 # ----------------------------
 # Date		: 2002/09/01.
 # ----------------------------
@@ -409,7 +426,7 @@ cat > bin/banana << EOF
 #
 #	start	->	start monkey
 #	restart	->	restart monkey
-#	stop	->	stop monkey if this is running	
+#	stop	->	stop monkey if this is running
 #	help	->	what do u think ?
 
 PIDFILE="$logdir/monkey.pid"
@@ -467,7 +484,7 @@ for arg in \$*; do
 				fi
 			else
 				echo -n "Monkey is not running... "
-			fi		
+			fi
 			if ! test -x \$BINMONKEY ; then
 				echo "Error: I can't run binary file"
 				exit 1
@@ -491,12 +508,12 @@ chmod 755 bin/banana
 }
 
 #---------------------------#
-# End Functions		    
+# End Functions
 #---------------------------#
 
 
 #---------------------------#
-# Starting configure 	   
+# Starting configure
 #---------------------------#
 aux=`pwd`
 
@@ -510,7 +527,7 @@ plugdir=""
 
 for arg in $*; do
 	case "$arg" in
-		-*=*) 
+		-*=*)
 			optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
 		   *) optarg= ;;
 	esac
@@ -563,20 +580,20 @@ for arg in $*; do
 			echo "Usage: configure [--prefix=PREFIXDIR] [ --bindir=BINDIR]"
 			echo "                 [--sysconfdir=SYSCONFDIR] [--datadir=DATADIR]"
                         echo "                 [--logdir=LOGDIR] [--plugdir=PLUGDIR]"
-			echo 
+			echo
 			echo "Options: "
 			echo "  --help		  Display this help and exit"
 			echo "  --version		  Display version information and exit"
 			echo "  --debug		  Compile Monkey with debugging symbols"
 			echo "  --trace		  Compile Monkey with trace messages (don't use in production)"
-			echo 
+			echo
 			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
 			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"
 			echo "  --sysconfdir=SYSCONFDIR Install Monkey conf files under SYSCONFDIR dir"
 			echo "  --datadir=DATADIR	  Install Monkey data dir files under DATADIR directory"
 			echo "  --logdir=LOGDIR	  Install Monkey log files under LOGDIR directory"
 			echo "  --plugdir=PLUGDIR	  Target directory for Monkey plugins"
-			echo 
+			echo
 			exit 1
 			;;
 	esac
@@ -587,10 +604,10 @@ echo "        Monkey HTTP Daemon v$VERSION        "
 echo "*       http://www.monkey-project.com      *"
 echo "* ---------------------------------------- *"
 echo "*  We need beta testers, developers and    *"
-echo "*  translators!, if u want help to this    *"
-echo "*  project, email us :                     *"
+echo "* translators!, if you want to contribute  *"
+echo "* to this wonderful project contact us !   *"
 echo "*                                          *"
-echo "*         monkeyd@googlegroups.com         *"
+echo "*        irc.freenode.net #monkeyd         *"
 echo "*                                          *"
 echo "*         Thanks for use Monkey!!!         *"
 echo "*                                          *"
@@ -602,7 +619,13 @@ lang="en"
 
 # Configure environment
 if test -z "$CC" ; then
-    CC="gcc"
+    gcc_path=`which gcc`
+    if test -x "$gcc_path" ; then
+        CC="gcc"
+    else
+        echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler"
+        exit 1
+    fi
 fi
 
 if test -z "$STRIP" ; then
@@ -610,15 +633,15 @@ if test -z "$STRIP" ; then
 fi
 
 if test -z "$debug" ; then
-    CFLAGS="-O2 -Wall"
+    CFLAGS="$CFLAGS -O2 -Wall"
 else
-    CFLAGS="-g -Wall"
+    CFLAGS="$CFLAGS -g -Wall"
 fi
 
 if [ $trace ] ; then
     DEFS="-DTRACE"
 fi
 
-# Starting main function 
+# Starting main function
 main prefix lang bindir cgibin sysconfdir datadir logdir plugdir modules SYSNAME VERSION
 exit 0

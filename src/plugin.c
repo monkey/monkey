@@ -29,6 +29,7 @@
 #include <err.h>
 
 #include "config.h"
+#include "connection.h"
 #include "plugin.h"
 #include "monkey.h"
 #include "request.h"
@@ -37,9 +38,12 @@
 #include "str.h"
 #include "file.h"
 #include "header.h"
+#include "http.h"
 #include "memory.h"
 #include "iov.h"
 #include "epoll.h"
+#include "worker.h"
+#include "clock.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -67,75 +71,53 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
-void mk_plugin_register_add_to_stage(struct plugin **st, struct plugin *p)
+void mk_plugin_register_stagemap_add(struct plugin_stagem **stm, struct plugin *p)
 {
-    struct plugin *list;
+    struct plugin_stagem *list, *new;
 
-    if (!*st) {
-        *st = p;
+    new = mk_mem_malloc_z(sizeof(struct plugin_stagem));
+    new->p = p;
+    new->next = NULL;
+
+    if (!*stm) {
+        *stm = new;
         return;
     }
 
-    list = *st;
+    list = *stm;
 
     while (list->next) {
         list = list->next;
     }
 
-    list->next = p;
+    list->next = new;
 }
 
-void mk_plugin_register_stages(struct plugin *p)
+void mk_plugin_register_stagemap(struct plugin *p)
 {
-    struct plugin_list *new, *list;
-
-    /* Main plugin list */
-    new = mk_mem_malloc(sizeof(struct plugin_list));
-    new->p = p;
-    new->next = NULL;
-
-    if (!plg_list) {
-        plg_list = new;
-    }
-    else {
-        list = plg_list;
-        while (list->next) {
-            list = list->next;
-        }
-        list->next = new;
+    /* Plugin to stages */
+    if (*p->hooks & MK_PLUGIN_STAGE_10) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
     }
 
-    /* Assign plugin to stages */
-    if (*p->stages & MK_PLUGIN_STAGE_00) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_00, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_20) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_20, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_10) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_10, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_30) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_30, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_20) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_20, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_40) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_40, p);
     }
 
-    if (*p->stages & MK_PLUGIN_STAGE_30) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_30, p);
-    }
-
-    if (*p->stages & MK_PLUGIN_STAGE_40) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_40, p);
-    }
-
-    if (*p->stages & MK_PLUGIN_STAGE_50) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_50, p);
-    }
-
-    if (*p->stages & MK_PLUGIN_STAGE_60) {
-        mk_plugin_register_add_to_stage(&config->plugins->stage_60, p);
+    if (*p->hooks & MK_PLUGIN_STAGE_50) {
+        mk_plugin_register_stagemap_add(&plg_stagemap->stage_50, p);
     }
 }
 
-void *mk_plugin_register(void *handler, char *path)
+struct plugin *mk_plugin_alloc(void *handler, char *path)
 {
     struct plugin *p;
 
@@ -145,166 +127,421 @@ void *mk_plugin_register(void *handler, char *path)
     p->version = mk_plugin_load_symbol(handler, "_version");
     p->path = mk_string_dup(path);
     p->handler = handler;
-    p->stages =
-        (mk_plugin_stage_t *) mk_plugin_load_symbol(handler, "_stages");
+    p->hooks = (mk_plugin_hook_t *) mk_plugin_load_symbol(handler, "_hooks");
 
-    /* Plugin external functions */
-    p->call_init = (int (*)()) mk_plugin_load_symbol(handler,
-                                                     "_mk_plugin_init");
+    /* Mandatory functions */
+    p->init = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_init");
+    p->exit = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_exit");
 
-    p->call_worker_init = (int (*)()) mk_plugin_load_symbol(handler,
-                                                            "_mk_plugin_worker_init");
+    /* Core hooks */
+    p->core.prctx = (int (*)()) mk_plugin_load_symbol(handler,
+                                                      "_mkp_core_prctx");
+    p->core.thctx = (int (*)()) mk_plugin_load_symbol(handler,
+                                                      "_mkp_core_thctx");
 
-    p->call_stage_10 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_00");
+    /* Stage hooks */
+    p->stage.s10 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_10");
 
-    p->call_stage_10 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_10");
+    p->stage.s20 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_20");
 
-    p->call_stage_20 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_20");
+    p->stage.s30 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_30");
 
-    p->call_stage_30 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_30");
+    p->stage.s40 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_40");
 
-    p->call_stage_40 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40");
+    p->stage.s50 = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_stage_50");
 
-    p->call_stage_40_event_read = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_read");
+    /* Network I/O hooks */
+    p->net_io.accept = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_accept");
 
-    p->call_stage_40_event_write = (int (*)())
-        mk_plugin_load_symbol(handler, "_mk_plugin_stage_40_event_write");
+    p->net_io.read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_read");
 
-    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mk_plugin_data");
+    p->net_io.write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_write");
 
+    p->net_io.writev = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_writev");
+
+    p->net_io.close = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_close");
+
+    p->net_io.connect = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_connect");
+
+    p->net_io.send_file = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_send_file");
+
+    p->net_io.create_socket = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_create_socket");
+
+    p->net_io.bind = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_bind");
+
+    p->net_io.server = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_server");
+
+
+    /* Network IP hooks */
+    p->net_ip.addr = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_ip_addr");
+
+    p->net_ip.maxlen = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_ip_maxlen");
+
+    /* Thread key */
+    p->thread_key = (pthread_key_t) mk_plugin_load_symbol(handler, "_mkp_data");
+
+    /* Event handlers hooks */
+    p->event_read = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_read");
+
+    p->event_write = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_write");
+
+    p->event_error = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_error");
+
+    p->event_close = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_close");
+
+    p->event_timeout = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_event_timeout");
+
+    /* Next ! */
     p->next = NULL;
 
-    if (!p->name || !p->version || !p->stages) {
+    return p;
+}
+
+/* Load the plugins and set the library symbols to the
+ * local struct plugin *p node
+ */
+struct plugin *mk_plugin_register(struct plugin *p)
+{
+    if (!p->name || !p->version || !p->hooks) {
 #ifdef TRACE
-        MK_TRACE("Bad plugin definition: %s", path);
+        MK_TRACE("Plugin must define name, version and hooks. Check: %s", p->path);
 #endif
-        mk_mem_free(p);
+        mk_plugin_free(p);
         return NULL;
     }
 
-    mk_plugin_register_stages(p);
+    if (!p->init || !p->exit) {
+#ifdef TRACE
+        MK_TRACE("Plugin must define hooks 'init' and 'exit'");
+#endif        
+        mk_plugin_free(p);
+        return NULL;
+    }
+
+    /* NETWORK_IO Plugin */
+    if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
+        /* Validate mandatory calls */
+        if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
+            !p->net_io.writev || !p->net_io.close || !p->net_io.connect ||
+            !p->net_io.send_file || !p->net_io.create_socket || !p->net_io.bind ||
+            !p->net_io.server ) {
+#ifdef TRACE
+                MK_TRACE("Networking IO plugin incomplete: %s", p->path);
+                MK_TRACE("Mapped Functions\naccept : %p\nread : %p\n\
+write : %p\nwritev: %p\nclose : %p\nconnect : %p\nsendfile : %p\n\
+create socket : %p\nbind : %p\nserver : %p",
+                         p->net_io.accept,
+                         p->net_io.read,
+                         p->net_io.write,
+                         p->net_io.writev,
+                         p->net_io.close,
+                         p->net_io.connect,
+                         p->net_io.send_file,
+                         p->net_io.create_socket,
+                         p->net_io.bind,
+                         p->net_io.server);
+#endif
+                mk_plugin_free(p);
+                return NULL;
+            }
+
+        /* Restrict to one NETWORK_IO plugin */
+        if (!plg_netiomap) {
+            plg_netiomap = &p->net_io;
+        }
+        else {
+            fprintf(stderr,
+                    "\nError: Loading more than one Network IO Plugin: %s",
+                    p->path);
+            exit(1);
+        }
+    }
+
+    /* NETWORK_IP Plugin */
+    if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
+        /* Validate mandatory calls */
+        if (!p->net_ip.addr || !p->net_ip.maxlen) {
+#ifdef TRACE
+            MK_TRACE("Networking IP plugin incomplete: %s", p->path);
+            MK_TRACE("Mapped Functions\naddr   :%p\nmaxlen :%p",
+                     p->net_ip.addr,
+                     p->net_ip.maxlen);
+#endif
+            mk_plugin_free(p);
+            return NULL;
+        }
+
+        /* Restrict to one NETWORK_IP plugin */
+        if (!plg_netipmap) {
+            plg_netipmap = &p->net_ip;
+        }
+        else {
+            fprintf(stderr,
+                    "\nError: Loading more than one Network IP Plugin: %s",
+                    p->path);
+            exit(1);
+        }
+    }
+
+    /* Add Plugin to the end of the list */
+    if (!config->plugins) {
+        config->plugins = p;
+    }
+    else {
+        struct plugin *plg = config->plugins;
+        while(plg->next){
+            plg = plg->next;
+        }
+        plg->next = p;
+    }
+
+    mk_plugin_register_stagemap(p);
     return p;
+}
+
+void mk_plugin_unregister(struct plugin *p)
+{
+    struct plugin *node, *prev;
+
+    node = config->plugins;
+    
+    if (!node) {
+        return;
+    }
+
+    if (node == p) {
+        config->plugins = p->next;
+        mk_plugin_free(p);
+        return;
+    }
+
+    prev = node;
+    while (node->next != p) {
+        prev = node;
+        node = node->next;
+    }
+    
+    if (node) {
+        prev->next = p->next;
+        mk_plugin_free(p);
+        return;
+    }
+}
+
+void mk_plugin_free(struct plugin *p)
+{
+    mk_mem_free(p->path);
+    mk_mem_free(p);
+    p = NULL;
 }
 
 void mk_plugin_init()
 {
+    int ret;
     char *path;
+    char *plugin_confdir = 0;
     void *handle;
+    unsigned long len;
     struct plugin *p;
     struct plugin_api *api;
-    struct plugin_list *plist;
     struct mk_config *cnf;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
+    plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
+    plg_netiomap = NULL;
+    plg_netipmap = NULL;
 
     /* Setup and connections list */
     api->config = config;
     api->sched_list = &sched_list;
 
     /* API plugins funcions */
+
+    /* HTTP callbacks */
+    api->http_request_end = (void *) mk_plugin_http_request_end;
+
+    /* Memory callbacks */
+    api->pointer_set = (void *) mk_pointer_set;
+    api->pointer_print = (void *) mk_pointer_print;
+    api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
     api->mem_alloc = (void *) mk_mem_malloc;
     api->mem_alloc_z = (void *) mk_mem_malloc_z;
     api->mem_free = (void *) mk_mem_free;
-    api->str_build = (void *) m_build_buffer;
+
+    /* String Callbacks */
+    api->str_build = (void *) mk_string_build;
     api->str_dup = (void *) mk_string_dup;
     api->str_search = (void *) mk_string_search;
     api->str_search_n = (void *) mk_string_search_n;
     api->str_copy_substr = (void *) mk_string_copy_substr;
+    api->str_itop = (void *) mk_string_itop;
     api->str_split_line = (void *) mk_string_split_line;
+
+    /* File Callbacks */
     api->file_to_buffer = (void *) mk_file_to_buffer;
     api->file_get_info = (void *) mk_file_get_info;
+
+    /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
+    api->header_set_http_status = (void *) mk_header_set_http_status;
+
+    /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;
     api->iov_free = (void *) mk_iov_free;
     api->iov_add_entry = (void *) mk_iov_add_entry;
     api->iov_set_entry = (void *) mk_iov_set_entry;
     api->iov_send = (void *) mk_iov_send;
     api->iov_print = (void *) mk_iov_print;
-    api->pointer_set = (void *) mk_pointer_set;
-    api->pointer_print = (void *) mk_pointer_print;
-    api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
+
+    /* EPoll callbacks */
+    api->epoll_create = (void *) mk_epoll_create;
+    api->epoll_init = (void *) mk_epoll_init;
+    api->epoll_add = (void *) mk_epoll_add;
+    api->epoll_del = (void *) mk_epoll_del;
+    api->epoll_change_mode = (void *) mk_epoll_change_mode;
+
+    /* Socket callbacks */
     api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
     api->socket_connect = (void *) mk_socket_connect;
+    api->socket_reset = (void *) mk_socket_reset;
     api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
     api->socket_set_nonblocking = (void *) mk_socket_set_nonblocking;
     api->socket_create = (void *) mk_socket_create;
+    api->socket_close = (void *) mk_socket_close;
+    api->socket_sendv = (void *) mk_socket_sendv;
+    api->socket_send = (void *) mk_socket_send;
+    api->socket_read = (void *) mk_socket_read;
+    api->socket_send_file = (void *) mk_socket_send_file;
+    
+    /* Config Callbacks */
     api->config_create = (void *) mk_config_create;
     api->config_free = (void *) mk_config_free;
-    api->config_getval = (void *) mk_config_getval;
+    api->config_section_get = (void *) mk_config_section_get;
+    api->config_section_getval = (void *) mk_config_section_getval;
+
+    /* Scheduler and Event callbacks */
     api->sched_get_connection = (void *) mk_sched_get_connection;
     api->event_add = (void *) mk_plugin_event_add;
+    api->event_del = (void *) mk_plugin_event_del;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
+    
+    /* Worker functions */
+    api->worker_spawn = (void *) mk_worker_spawn;
+
+    /* Some useful functions =) */
+    api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
+
+    /* Time functions */
+    api->time_unix = (void *) mk_plugin_time_now_unix;
+    api->time_human = (void *) mk_plugin_time_now_human;
 
 #ifdef TRACE
     api->trace = (void *) mk_utils_trace;
 #endif
 
+    /* Read configuration file */
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
-
-    /* Read configuration file */
     cnf = mk_config_create(path);
-
-    while (cnf) {
-        if (strcasecmp(cnf->key, "LoadPlugin") == 0) {
-            handle = mk_plugin_load(cnf->val);
-            p = mk_plugin_register(handle, cnf->val);
-            if (!p) {
-                fprintf(stderr, "Plugin error: %s", cnf->val);
-                dlclose(handle);
-            }
-            else {
-                char *plugin_confdir = 0;
-                unsigned long len;
-
-                m_build_buffer(&plugin_confdir,
-                               &len,
-                               "%s/plugins/%s/",
-                               config->serverconf, p->shortname);
-
-                p->call_init(&api, plugin_confdir);
-            }
-        }
-        cnf = cnf->next;
+    
+    if (!cnf) {
+        puts("Error: Plugins configuration file could not be readed");
+        exit(1);
     }
 
-    api->plugins = plg_list;
-    plist = plg_list;
+    /* Read section 'PLUGINS' */
+    section = mk_config_section_get(cnf, "PLUGINS");
+
+    /* Read key entries */
+    entry = section->entry;
+    while (entry) {
+        if (strcasecmp(entry->key, "Load") == 0) {
+            handle = mk_plugin_load(entry->val);
+
+            p = mk_plugin_alloc(handle, entry->val);
+            if (!p) {
+                fprintf(stderr, "Plugin error: %s\n", entry->val);
+                dlclose(handle);
+            }
+
+            /* Build plugin configuration path */
+            mk_string_build(&plugin_confdir,
+                            &len,
+                            "%s/plugins/%s/",
+                            config->serverconf, p->shortname);
+
+#ifdef TRACE
+            MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
+#endif
+            /* Init plugin */
+            ret = p->init(&api, plugin_confdir);
+            if (ret < 0) {
+                /* Free plugin, do not register */
+#ifdef TRACE
+                MK_TRACE("Unregister plugin '%s'", p->shortname);
+#endif
+                mk_plugin_free(p);
+                entry = entry->next;
+                continue;
+            }
+
+            /* If everything worked, register plugin */
+            mk_plugin_register(p);
+        }
+        entry = entry->next;
+    }
+
+    if (!plg_netiomap) {
+        fprintf(stderr, "\nError: no Network plugin loaded >:|\n\n");
+        exit(1);
+    }
+
+    api->plugins = config->plugins;
+    /* Look for plugins thread key data */
+    mk_plugin_preworker_calls();
     mk_mem_free(path);
 }
 
-int mk_plugin_stage_run(mk_plugin_stage_t stage,
+int mk_plugin_stage_run(mk_plugin_hook_t hook,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr)
 {
     int ret;
-    struct plugin *p;
+    struct plugin_stagem *stm;
 
-    if (stage & MK_PLUGIN_STAGE_10) {
-        p = config->plugins->stage_10;
-        while (p) {
+    /* Connection just accept(ed) not assigned to worker thread */
+    if (hook & MK_PLUGIN_STAGE_10) {
+        stm = plg_stagemap->stage_10;
+        while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 10", p->shortname);
+            MK_TRACE("[%s] STAGE 10", stm->p->shortname);
 #endif
-            p->call_stage_10();
-            p = p->next;
-        }
-    }
-
-    if (stage & MK_PLUGIN_STAGE_20) {
-        p = config->plugins->stage_20;
-        while (p) {
-#ifdef TRACE
-            MK_TRACE("[%s] STAGE 20", p->shortname);
-#endif
-            ret = p->call_stage_20(socket, conx, cr);
+            ret = stm->p->stage.s10(socket, conx);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
 #ifdef TRACE
@@ -313,47 +550,86 @@ int mk_plugin_stage_run(mk_plugin_stage_t stage,
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
-            p = p->next;
+            stm = stm->next;
         }
     }
 
-    if (stage & MK_PLUGIN_STAGE_30) {
-        p = config->plugins->stage_30;
-        while (p) {
+    /* The HTTP Request stream has been just received */
+    if (hook & MK_PLUGIN_STAGE_20) {
+        stm = plg_stagemap->stage_20;
+        while (stm) {
 #ifdef TRACE
-            MK_TRACE("[%s] STAGE 30", p->shortname);
-#endif              
-            ret = p->call_stage_30(cr, sr);
+            MK_TRACE("[%s] STAGE 20", stm->p->shortname);
+#endif
+            ret = stm->p->stage.s20(cr, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
+#ifdef TRACE
+                MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
+#endif
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
-            p = p->next;
+            stm = stm->next;
         }
     }
 
-    /* Object handler */
-    if (stage & MK_PLUGIN_STAGE_40) {
+    /* The plugin acts like an Object handler, it will take care of the 
+     * request, it decides what to do with the request 
+     */
+    if (hook & MK_PLUGIN_STAGE_30) {
         /* The request just arrived and is required to check who can
          * handle it */
         if (!sr->handled_by){
-            p = config->plugins->stage_40;
-            while (p) {
+            stm = plg_stagemap->stage_30;
+            while (stm) {
                 /* Call stage */
 #ifdef TRACE
-                MK_TRACE("[%s] STAGE 40", p->shortname);
+                MK_TRACE("[%s] STAGE 30", stm->p->shortname);
 #endif
-                ret = p->call_stage_40(p, cr, sr);
+                ret = stm->p->stage.s30(stm->p, cr, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_CONTINUE:
                     return MK_PLUGIN_RET_CONTINUE;
+                case MK_PLUGIN_RET_END:
+                    return MK_PLUGIN_RET_END;
                 }
-                p = p->next;
+                
+                stm = stm->next;
             }
+        }
+    }
+
+    /* The request has ended, the content has been served */
+    if (hook & MK_PLUGIN_STAGE_40) {
+        stm = plg_stagemap->stage_40;
+        while (stm) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 40", stm->p->shortname);
+#endif
+            ret = stm->p->stage.s40(cr, sr);
+            stm = stm->next;
+        }
+    }
+
+    /* The request has ended, the content has been served */
+    if (hook & MK_PLUGIN_STAGE_50) {
+        stm = plg_stagemap->stage_50;
+        while (stm) {
+#ifdef TRACE
+            MK_TRACE("[%s] STAGE 50", stm->p->shortname);
+#endif
+            ret = stm->p->stage.s50(socket);
+            switch (ret) {
+            case MK_PLUGIN_RET_NOT_ME:
+                break;
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            }
+            stm = stm->next;
         }
     }
 
@@ -379,21 +655,41 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
 
 /* This function is called by every created worker
  * for plugins which need to set some data under a thread
- * context 
+ * context
  */
-void mk_plugin_worker_startup()
+void mk_plugin_core_process()
 {
-    struct plugin_list *plg;
+    struct plugin *p;
 
-    plg = plg_list;
+    p = config->plugins;
 
-    while (plg) {
+    while (p) {
         /* Init plugin */
-        if (plg->p->call_worker_init) {
-            plg->p->call_worker_init();
+        if (p->core.prctx) {
+            p->core.prctx(config);
         }
 
-        plg = plg->next;
+        p = p->next;
+    }
+}
+
+/* This function is called by every created worker
+ * for plugins which need to set some data under a thread
+ * context
+ */
+void mk_plugin_core_thread()
+{
+    struct plugin *p;
+
+    p = config->plugins;
+
+    while (p) {
+        /* Init plugin thread context */
+        if (p->core.thctx) {
+            p->core.thctx();
+        }
+
+        p = p->next;
     }
 }
 
@@ -404,27 +700,74 @@ void mk_plugin_worker_startup()
 void mk_plugin_preworker_calls()
 {
     int ret;
-    struct plugin_list *plg;
+    struct plugin *p;
 
-    plg = plg_list;
+    p = config->plugins;
 
-    while (plg) {
+    while (p) {
         /* Init pthread keys */
-        if (plg->p->thread_key) {
-            ret = pthread_key_create(&plg->p->thread_key, NULL);
+        if (p->thread_key) {
+#ifdef TRACE
+            MK_TRACE("[%s] Set thread key", p->shortname);
+#endif
+            ret = pthread_key_create((void *)p->thread_key, NULL);
             if (ret != 0) {
-                printf("\nPlugin Error: could not create key for %s", 
-                       plg->p->shortname);
+                printf("\nPlugin Error: could not create key for %s",
+                       p->shortname);
                 fflush(stdout);
                 exit(1);
             }
         }
-        plg = plg->next;
+        p = p->next;
     }
 }
 
-int mk_plugin_event_add(int socket, struct plugin *handler,
-                        struct client_request *cr, 
+int mk_plugin_event_del(int socket)
+{
+    struct plugin_event *list, *aux, *prev;
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] Plugin delete event", socket);
+#endif
+
+    if (socket <= 0) {
+        return -1;
+    }
+
+    list = mk_plugin_event_get_list();
+    
+    aux = list;
+    while (aux) {
+        if (aux->socket == socket) {
+            if (aux == list) {
+                list = aux->next;
+            }
+            else { 
+                prev = list;
+                while (prev->next != aux) {
+                    prev = prev->next;
+                }
+            
+                prev->next = aux->next;
+            }
+            mk_mem_free(aux);
+            mk_plugin_event_set_list(list);
+            return 0;
+        }
+        aux = aux->next;
+    }
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] not found :/");
+    exit(1);
+#endif
+
+    return -1;
+}
+
+int mk_plugin_event_add(int socket, int mode,
+                        struct plugin *handler,
+                        struct client_request *cr,
                         struct request *sr)
 {
     struct sched_list_node *sched;
@@ -433,11 +776,11 @@ int mk_plugin_event_add(int socket, struct plugin *handler,
     struct plugin_event *event;
 
     sched = mk_sched_get_thread_conf();
-    
+
     if (!sched || !handler || !cr || !sr) {
         return -1;
     }
-    
+
     /* Event node (this list exist at thread level */
     event = mk_mem_malloc(sizeof(struct plugin_event));
     event->socket = socket;
@@ -456,15 +799,32 @@ int mk_plugin_event_add(int socket, struct plugin *handler,
         while (aux->next) {
             aux = aux->next;
         }
-        
+
         aux->next = event;
-        mk_plugin_event_set_list(aux);
+        mk_plugin_event_set_list(list);
     }
 
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
-    mk_epoll_add_client(sched->epoll_fd, event->socket, 
-                        MK_EPOLL_WRITE, MK_EPOLL_BEHAVIOR_TRIGGERED);
+    mk_epoll_add(sched->epoll_fd, event->socket,
+                 mode, MK_EPOLL_BEHAVIOR_DEFAULT);
+    return 0;
+}
+
+int mk_plugin_http_request_end(int socket)
+{
+    int ret;
+
+    ret = mk_http_request_end(socket);
+
+#ifdef TRACE
+    MK_TRACE("PLUGIN HTTP REQUEST END [FD=%i] = ret %i", socket, ret);
+#endif
+
+    if (ret < 0) {
+        return mk_conn_close(socket);
+    }
+
     return 0;
 }
 
@@ -473,12 +833,12 @@ int mk_plugin_event_socket_change_mode(int socket, int mode)
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
-    
+
     if (!sched) {
         return -1;
     }
 
-    return mk_epoll_socket_change_mode(sched->epoll_fd, socket, mode);
+    return mk_epoll_change_mode(sched->epoll_fd, socket, mode);
 }
 
 struct plugin_event *mk_plugin_event_get(int socket)
@@ -494,26 +854,26 @@ struct plugin_event *mk_plugin_event_get(int socket)
 
         event = event->next;
     }
-    
+
     return NULL;
 }
 
 int mk_plugin_event_set_list(struct plugin_event *event)
 {
-    return pthread_setspecific(mk_plugin_event_k, (void *) event);
+    return pthread_setspecific(mk_plugin_event_k, event);
 }
 
 struct plugin_event *mk_plugin_event_get_list()
 {
-    return (struct plugin_event *) pthread_getspecific(mk_plugin_event_k);
+    return pthread_getspecific(mk_plugin_event_k);
 
 }
 
 /* Plugin epoll event handlers
  * ---------------------------
- * this functions are called by connection.c functions as mk_conn_read(), 
- * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout 
- * 
+ * this functions are called by connection.c functions as mk_conn_read(),
+ * mk_conn_write(),mk_conn_error(), mk_conn_close() and mk_conn_timeout().
+ *
  * Return Values:
  * -------------
  *    MK_PLUGIN_RET_EVENT_NOT_ME: There's no plugin hook associated
@@ -524,16 +884,22 @@ int mk_plugin_event_read(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event read FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event read", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
     if (!event) {
+#ifdef TRACE
+        MK_TRACE(" not handled by plugin");
+#endif
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->call_stage_40_event_read) {
-        event->handler->call_stage_40_event_read(event->cr, event->sr);
+    if (event->handler->event_read) {
+#ifdef TRACE
+        MK_TRACE(" handled by plugin");
+#endif
+        return event->handler->event_read(socket);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -544,7 +910,7 @@ int mk_plugin_event_write(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event write FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event write", socket);
 #endif
 
     event = mk_plugin_event_get(socket);
@@ -552,8 +918,8 @@ int mk_plugin_event_write(int socket)
         return MK_PLUGIN_RET_EVENT_NOT_ME;
     }
 
-    if (event->handler->call_stage_40_event_write) {
-        event->handler->call_stage_40_event_write(event->cr, event->sr);
+    if (event->handler->event_write) {
+        return event->handler->event_write(socket);
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -561,29 +927,70 @@ int mk_plugin_event_write(int socket)
 
 int mk_plugin_event_error(int socket)
 {
+    struct plugin_event *event;
+
 #ifdef TRACE
-    MK_TRACE("Plugin, event error FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event error", socket);
 #endif
 
-    return 0;
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_error) {
+        return event->handler->event_error(socket);
+    }
+
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_close(int socket)
 {
+    struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event close FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event close", socket);
 #endif
+
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_close) {
+        return event->handler->event_close(socket);
+    }
 
     return 0;
 }
 
 int mk_plugin_event_timeout(int socket)
 {
+    struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("Plugin, event timeout FD %i", socket);
+    MK_TRACE("[FD %i] Plugin event timeout", socket);
 #endif
 
+    event = mk_plugin_event_get(socket);
+    if (!event) {
+        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    if (event->handler->event_timeout) {
+        return event->handler->event_timeout(socket);
+    }
+
     return 0;
+}
+
+int mk_plugin_time_now_unix()
+{
+    return log_current_utime;
+}
+
+mk_pointer *mk_plugin_time_now_human()
+{
+    return &log_current_time;
 }

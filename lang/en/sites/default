@@ -1,39 +1,39 @@
-
 cat > conf/sites/default <<EOF
 # Default Host - Configuration
 # ============================
 # Here the variable principals of the program are defined in respect
 # to the configuration of the different types of directives.
 
-# DocumentRoot :
-# -------------
-# This variable corresponds to the location of the main server directory
-# of the web pages, where the files of your site are located.
-#
-# Example:
-#      DocumentRoot /home/krypton/htdocs
-#
+[HOST]
+    # ServerName :
+    # ------------
+    # Allow you to set a host and domain name (e.g monkey.linuxchile.cl). If
+    # you are working in a local network just set your IP address or if you
+    # are working like localhost set your loopback address (127.0.0.1).
 
-DocumentRoot $datadir
+    ServerName 127.0.0.1
 
-# ServerName :
-# ------------
-# Allow you to set a host and domain name (e.g monkey.linuxchile.cl). If
-# you are working in a local network just set your IP address or if you
-# are working like localhost set your loopback address (127.0.0.1).
+    # DocumentRoot :
+    # -------------
+    # This variable corresponds to the location of the main server directory
+    # of the web pages, where the files of your site are located.
+    #
+    # Example:
+    #      DocumentRoot /home/krypton/htdocs
 
-ServerName 127.0.0.1
+    DocumentRoot $datadir
 
-# AccessLog:
-# ----------
-# Registration file of correct request.
+[LOGGER]
+    # AccessLog:
+    # ----------
+    # Registration file of correct request.
 
-AccessLog $logdir/access.log
+    AccessLog $logdir/access.log
 
-# ErrorLog:
-# ---------
-# Registration file of incorrect request.
+    # ErrorLog:
+    # ---------
+    # Registration file of incorrect request.
 
-ErrorLog $logdir/error.log
+    ErrorLog $logdir/error.log
 
 EOF

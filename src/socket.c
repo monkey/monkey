@@ -7,7 +7,7 @@
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version. 
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,6 +26,7 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -33,8 +34,10 @@
 #include "socket.h"
 #include "memory.h"
 #include "utils.h"
+#include "plugin.h"
+#include "monkey.h"
 
-/* 
+/*
  * Example from:
  * http://www.baus.net/on-tcp_cork
  */
@@ -65,6 +68,7 @@ int mk_socket_set_nonblocking(int sockfd)
 int mk_socket_set_tcp_nodelay(int sockfd)
 {
     int on = 1;
+
     return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
@@ -98,37 +102,13 @@ int mk_socket_create()
     return sockfd;
 }
 
-int mk_socket_connect(int sockfd, char *server, int port)
+int mk_socket_connect(int socket_fd, char *host, int port)
 {
-    int res;
-    struct sockaddr_in *remote;
+    int ret;
 
-    remote = (struct sockaddr_in *)
-        mk_mem_malloc_z(sizeof(struct sockaddr_in));
-    remote->sin_family = AF_INET;
+    ret = plg_netiomap->connect(socket_fd, host, port);
 
-    res = inet_pton(AF_INET, server, (void *) (&(remote->sin_addr.s_addr)));
-
-    if (res < 0) {
-        perror("Can't set remote->sin_addr.s_addr");
-        mk_mem_free(remote);
-        return -1;
-    }
-    else if (res == 0) {
-        perror("Invalid IP address\n");
-        mk_mem_free(remote);
-        return -1;
-    }
-
-    remote->sin_port = htons(port);
-    if (connect(sockfd,
-                (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
-        close(sockfd);
-        perror("connect");
-        return -1;
-    }
-    mk_mem_free(remote);
-    return 0;
+    return ret;
 }
 
 void mk_socket_reset(int socket)
@@ -145,36 +125,41 @@ void mk_socket_reset(int socket)
 /* Just IPv4 for now... */
 int mk_socket_server(int port, char *listen_addr)
 {
-    int fd;
-    struct sockaddr_in local_sockaddr_in;
+    int socket_fd;
 
-    /* Create server socket */
-    fd = socket(PF_INET, SOCK_STREAM, 0);
-    mk_socket_set_tcp_nodelay(fd);
+    socket_fd = plg_netiomap->server(port, listen_addr);
 
-    local_sockaddr_in.sin_family = AF_INET;
-    local_sockaddr_in.sin_port = htons(port);
-    inet_pton(AF_INET, listen_addr, &local_sockaddr_in.sin_addr.s_addr);
-    memset(&(local_sockaddr_in.sin_zero), '\0', 8);
-
-    /* Avoid bind issues, reset socket */
-    mk_socket_reset(fd);
-
-    if (bind(fd, (struct sockaddr *) &local_sockaddr_in,
-             sizeof(struct sockaddr)) != 0) {
-        perror("bind");
-        printf("Error: Port %i cannot be used\n", port);
-        exit(1);
+    if (socket_fd < 0) {
+        exit(EXIT_FAILURE);
     }
 
-    /* Listen queue:
-     * The queue limit is given by /proc/sys/net/core/somaxconn
-     * we need to add a dynamic function to get that value on fly
-     */
-    if ((listen(fd, mk_utils_get_somaxconn())) != 0) {
-        perror("listen");
-        exit(1);
-    }
+    return socket_fd;
+}
 
-    return fd;
+/* NETWORK_IO plugin functions */
+int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
+{
+    return plg_netiomap->accept(server_fd, sock_addr);
+}
+
+int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
+{
+    return plg_netiomap->writev(socket_fd, mk_io);
+}
+
+int mk_socket_send(int socket_fd, const void *buf, size_t count)
+{
+    return plg_netiomap->write(socket_fd, buf, count);
+}
+
+int mk_socket_read(int socket_fd, void *buf, int count)
+{
+    return plg_netiomap->read(socket_fd, (void *)buf, count);
+}
+
+int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
+                        size_t file_count)
+{
+    return plg_netiomap->send_file(socket_fd, file_fd,
+                                   file_offset, file_count);
 }

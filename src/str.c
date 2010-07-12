@@ -24,6 +24,7 @@
 
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "request.h"
 #include "utils.h"
@@ -240,4 +241,141 @@ struct mk_string_line *mk_string_split_line(char *line)
     }
 
     return sl;
+}
+
+char *mk_string_build(char **buffer, unsigned long *len, 
+                      const char *format, ...)
+{
+    va_list ap;
+    int length;
+    char *ptr;
+    static size_t _mem_alloc = 64;
+    size_t alloc = 0;
+
+    /* *buffer *must* be an empty/NULL buffer */
+
+    *buffer = (char *) mk_mem_malloc(_mem_alloc);
+    if (!*buffer) {
+        return NULL;
+    }
+    alloc = _mem_alloc;
+
+    va_start(ap, format);
+    length = vsnprintf(*buffer, alloc, format, ap);
+
+    if (length >= alloc) {
+        ptr = realloc(*buffer, length + 1);
+        if (!ptr) {
+            va_end(ap);
+            return NULL;
+        }
+        *buffer = ptr;
+        alloc = length + 1;
+        length = vsnprintf(*buffer, alloc, format, ap);
+    }
+    va_end(ap);
+
+    if (length < 0) {
+        return NULL;
+    }
+
+    ptr = *buffer;
+    ptr[length] = '\0';
+    *len = length;
+
+    return *buffer;
+}
+
+int mk_string_trim(char **str)
+{
+    int i;
+    unsigned int len;
+    char *left = 0, *right = 0;
+    char *buf;
+
+    buf = *str;
+    if (!buf) {
+        return -1;
+    }
+
+    len = strlen(buf);
+    left = buf;
+
+    /* left spaces */
+    while (left) {
+        if (isspace(*left)) {
+            *left++;
+        }
+        else {
+            break;
+        }
+    }
+
+    right = buf + (len - 1);
+    /* Validate right v/s left */
+    if (right < left) {
+        buf[0] = '\0';
+        return -1;
+    }
+
+    /* Move back */
+    while (right != buf){
+        if (isspace(*right)) {
+            *right--;
+        }
+        else {
+            break;
+        }
+    }
+
+    len = (right - left) + 1;
+    for(i=0; i<len; i++){
+        buf[i] = (char) left[i];
+    }
+    buf[i] = '\0';
+    
+    return 0;
+}
+
+int mk_string_itop(int n, mk_pointer *p)
+{
+    /*
+      Code taken from some forum...
+    */
+    int i = 0;
+    int length = 0;
+    int temp = 0;
+    char *str;
+
+    str = p->data;
+
+    if (!str) {
+        return -1;
+    }
+
+    /* Generate digit characters in reverse order */
+    do {
+        str[i++] = ('0' + (n % 10));
+        n /= 10;
+    } while (n>0);
+    
+    /* Add CRLF and NULL byte */
+    str[i] = '\0';
+
+    p->len = length = i;
+    
+    for (i=0; i < (length/2); i++) {
+        temp = str[i];
+        str[i] = str[length-i-1];
+        str[length-i-1] = temp;
+    }
+
+    i = length;
+    str[i++] = '\r';
+    str[i++] = '\n';
+    str[i++] = '\0';
+
+    p->len+=2;
+
+    return 0;
 }

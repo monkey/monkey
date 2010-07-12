@@ -54,6 +54,7 @@ struct sched_list_node *sched_list;
 typedef struct
 {
     int epoll_fd;
+    int epoll_max_events;
     int max_events;
 } sched_thread_conf;
 

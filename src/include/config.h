@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
@@ -42,13 +41,30 @@
 #define MK_CONFIG_VAL_BOOL 2
 #define MK_CONFIG_VAL_LIST 3
 
+/* Indented configuration */
 struct mk_config
+{
+    int created;
+    char *file;
+
+    /* list of sections */
+    struct mk_config_section *section;
+};
+
+struct mk_config_section
+{
+    char *name;
+
+    struct mk_config_entry *entry;
+    struct mk_config_section *next;
+};
+
+struct mk_config_entry
 {
     char *key;
     char *val;
-    struct mk_config *next;
+    struct mk_config_entry *next;
 };
-
 
 /* Base struct of server */
 struct server_config
@@ -73,7 +89,6 @@ struct server_config
     int symlink;                /* symbolic links */
     int serverport;             /* port */
     int timeout;                /* max time to wait for a new connection */
-    int maxclients;             /* max clients (max threads) */
     int hideversion;            /* hide version of server to clients ? */
     int standard_port;          /* common port used in web servers (80) */
     int pid_status;
@@ -90,8 +105,9 @@ struct server_config
     uid_t egid;
     gid_t euid;
 
-    /* max ip */
-    int max_ip;
+    int max_request_size;
+
+    struct mk_string_line *index_files;
 
     struct dir_html_theme *dir_theme;
 
@@ -100,7 +116,10 @@ struct server_config
     struct host *hosts;
 
     mode_t open_flags;
-    struct plugin_stages *plugins;
+    struct plugin *plugins;
+
+    /* source configuration */
+    struct mk_config *config;
 };
 
 struct server_config *config;
@@ -117,10 +136,18 @@ struct host
     char *host_signature;
     mk_pointer header_host_signature;
 
-    int log_access[2];
-    int log_error[2];
+    /* source configuration */
+    struct mk_config *config;
 
+    /* next node */
     struct host *next;
+};
+
+/* Handle index file names: index.* */
+struct index_file
+{
+    char indexname[16];
+    struct indexfile *next;
 };
 
 /* Functions */
@@ -131,9 +158,16 @@ void mk_config_print_error_msg(char *variable, char *path);
 void mk_config_set_init_values(void);
 
 /* config helpers */
-struct mk_config *mk_config_create(char *path);
+void mk_config_error(const char *path, int line, const char *msg);
+
+struct mk_config *mk_config_create(const char *path);
+struct mk_config_section *mk_config_section_get(struct mk_config *conf, 
+                                                const char *section_name);
+void mk_config_section_add(struct mk_config *conf, char *section_name);
+void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
+
 void mk_config_free(struct mk_config *cnf);
-void *mk_config_getval(struct mk_config *cnf, char *key, int mode);
+void mk_config_free_entries(struct mk_config_section *section);
 
 
 int mk_config_get_bool(char *value);

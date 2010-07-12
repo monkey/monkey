@@ -27,15 +27,11 @@
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
 
-#define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
 
-/* Handle index file names: index.* */
-#define MAX_INDEX_NOMBRE 50
-struct indexfile
-{
-    char indexname[MAX_INDEX_NOMBRE];
-    struct indexfile *next;
-}        *first_index;
+/* Request buffer chunks = 4KB */
+#define MK_REQUEST_CHUNK (int) 4096
+
+#define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
 
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
@@ -93,28 +89,6 @@ parametros de una peticion */
 #define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
-/* Request error messages for log file */
-#define ERROR_MSG_400 "[error 400] Bad Request"
-#define ERROR_MSG_403 "[error 403] Forbidden"
-#define ERROR_MSG_404 "[error 404] Not Found"
-#define ERROR_MSG_405 "[error 405] Method Not Allowed"
-#define ERROR_MSG_408 "[error 408] Request Timeout"
-#define ERROR_MSG_411 "[error 411] Length Required"
-#define ERROR_MSG_500 "[error 500] Internal Server Error"
-#define ERROR_MSG_501 "[error 501] Not Implemented"
-#define ERROR_MSG_505 "[error 505] HTTP Version Not Supported"
-
-/* mk pointers with error messages */
-mk_pointer request_error_msg_400;
-mk_pointer request_error_msg_403;
-mk_pointer request_error_msg_404;
-mk_pointer request_error_msg_405;
-mk_pointer request_error_msg_408;
-mk_pointer request_error_msg_411;
-mk_pointer request_error_msg_500;
-mk_pointer request_error_msg_501;
-mk_pointer request_error_msg_505;
-
 struct request_idx
 {
     struct client_request *first;
@@ -131,6 +105,7 @@ struct client_request
 
     mk_pointer *ipv4;
 
+    int body_size;
     int body_length;
 
     int body_pos_end;
@@ -162,6 +137,7 @@ struct handler
 struct request
 {
     int status;
+
     int pipelined;              /* Pipelined request */
     mk_pointer body;
 
@@ -173,14 +149,15 @@ struct request
     int uri_twin;
 
     int protocol;
+    mk_pointer protocol_p;
 
     /* If request specify Connection: close, Monkey will
      * close the connection after send the response, by
-     * default this var is set as VAR_OFF;
+     * default this var is set to VAR_OFF;
      */
     int close_now;
 
-        /*---Request headers--*/
+    /*---Request headers--*/
     int content_length;
     mk_pointer accept;
     mk_pointer accept_language;
@@ -196,13 +173,13 @@ struct request
     mk_pointer referer;
     mk_pointer resume;
     mk_pointer user_agent;
-        /*---------------------*/
-
+    /*---------------------*/
+    
     /* POST */
     mk_pointer post_variables;
-        /*-----------------*/
+    /*-----------------*/
 
-        /*-Internal-*/
+    /*-Internal-*/
     mk_pointer real_path;       /* Absolute real path */
     char *user_uri;             /* ~user/...path */
     mk_pointer query_string;    /* ?... */
@@ -211,20 +188,16 @@ struct request
     char *script_filename;
     int keep_alive;
     int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
-
-        /*-Connection-*/
+    
+    /*-Connection-*/
     int port;
-        /*------------*/
-
-    int make_log;
-    int cgi_pipe[2];
-
+    /*------------*/
+    
     /* file descriptors */
     int fd_file;
 
     struct file_info *file_info;
     struct host *host_conf;
-    struct log_info *log;       /* Request Log */
     struct header_values *headers;      /* headers response */
     struct request *next;
 
@@ -239,9 +212,13 @@ struct request
 struct header_values
 {
     int status;
+    mk_pointer *status_p;
 
-    int content_length;
-    mk_pointer content_length_p;
+    /* Length of the content to send */
+    long content_length;
+
+    /* Private value, real length of the file requested */
+    long real_length;
 
     int cgi;
     int pconnections_left;
@@ -249,11 +226,10 @@ struct header_values
     int transfer_encoding;
     int breakline;
 
+    time_t last_modified;
     mk_pointer content_type;
-    mk_pointer last_modified;
     char *location;
 };
-
 
 struct request *mk_request_parse(struct client_request *cr);
 int mk_request_process(struct client_request *cr, struct request *s_request);
@@ -268,9 +244,8 @@ int mk_request_header_process(struct request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
-void mk_request_error(int num_error, struct client_request *cr,
-                      struct request *s_request, int debug,
-                      struct log_info *s_log);
+void mk_request_error(int http_status, struct client_request *cr, 
+                      struct request *sr);
 
 struct request *mk_request_alloc();
 void mk_request_free_list(struct client_request *cr);
@@ -278,7 +253,7 @@ void mk_request_free(struct request *sr);
 
 struct client_request *mk_request_client_create(int socket);
 struct client_request *mk_request_client_get(int socket);
-struct client_request *mk_request_client_remove(int socket);
+void mk_request_client_remove(int socket);
 
 void mk_request_init_error_msgs();
 

@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2009, Eduardo Silva P.
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,12 +27,13 @@
 #include "config.h"
 #include "plugin.h"
 #include "security.h"
+#include "utils.h"
 
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "security";
 mk_plugin_data_t _name = "Security";
-mk_plugin_data_t _version = "0.1";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_20 | MK_PLUGIN_STAGE_30;
+mk_plugin_data_t _version = "0.11.0";
+mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20;
 
 struct plugin_api *mk_api;
 struct mk_config *conf;
@@ -43,25 +44,28 @@ int mk_security_conf(char *confdir)
     int ret = 0;
     unsigned long len;
     char *conf_path;
-    struct mk_config *p;
     struct mk_security *new, *r;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
+    /* Read configuration */
     mk_api->str_build(&conf_path, &len, "%s/security.conf", confdir);
-
-    p = conf = mk_api->config_create(conf_path);
+    conf = mk_api->config_create(conf_path);
+    section = mk_api->config_section_get(conf, "RULES");
+    entry = section->entry;
 
     r = rules;
-    while (p) {
+    while (entry) {
         /* Passing to internal struct */
         new = mk_api->mem_alloc(sizeof(struct mk_security));
-        if (strcasecmp(p->key, "IP") == 0) {
+        if (strcasecmp(entry->key, "IP") == 0) {
             new->type = MK_SECURITY_TYPE_IP;
         }
-        else if (strcasecmp(p->key, "URL") == 0) {
+        else if (strcasecmp(entry->key, "URL") == 0) {
             new->type = MK_SECURITY_TYPE_URL;
         }
 
-        new->value = p->val;
+        new->value = entry->val;
         new->next = NULL;
 
         /* Linking node */
@@ -75,8 +79,27 @@ int mk_security_conf(char *confdir)
             }
             r->next = new;
         }
-        p = p->next;
+        entry = entry->next;
     }
+
+#ifdef TRACE
+    PLUGIN_TRACE("Security rules");
+    r = rules;
+    printf("%s", ANSI_YELLOW);
+    while (r) {
+        if (r->type == MK_SECURITY_TYPE_IP) {
+            printf("IP  :'");
+        }
+        else if (r->type == MK_SECURITY_TYPE_URL) {
+            printf("URL :'");
+        }
+        printf("%s'\n", r->value);
+        fflush(stdout);
+        r = r->next;
+    }
+    printf("%s", ANSI_RESET);
+    fflush(stdout);
+#endif
 
     mk_api->mem_free(conf_path);
     return ret;
@@ -98,11 +121,13 @@ int mk_security_check_ip(char *ipv4)
                         continue;
                 }
 
-                if (p->value[i] == '*')
+                if (p->value[i] == '*') {
                     return -1;
+                }
 
-                if (p->value[i] != ipv4[i])
+                if (p->value[i] != ipv4[i]) {
                     return 0;
+                }
             }
         }
         p = p->next;
@@ -111,9 +136,8 @@ int mk_security_check_ip(char *ipv4)
     if (ipv4[i] == '\0') {
         return -1;
     }
-    else {
-        return 0;
-    }
+
+    return 0;
 }
 
 int mk_security_check_url(mk_pointer url)
@@ -124,7 +148,7 @@ int mk_security_check_url(mk_pointer url)
     p = rules;
     while (p) {
         if (p->type == MK_SECURITY_TYPE_URL) {
-            n = (int) mk_api->str_search_n(url.data, p->value, url.len);
+            n = mk_api->str_search_n(url.data, p->value, url.len);
             if (n >= 0) {
                 return -1;
             }
@@ -135,7 +159,7 @@ int mk_security_check_url(mk_pointer url)
     return 0;
 }
 
-int _mk_plugin_init(void **api, char *confdir)
+int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     rules = 0;
@@ -145,18 +169,28 @@ int _mk_plugin_init(void **api, char *confdir)
     return 0;
 }
 
-int _mk_plugin_stage_20(unsigned int socket, struct sched_connection *conx)
+void _mkp_exit()
+{
+}
+
+int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
     if (mk_security_check_ip(conx->ipv4.data) != 0) {
+#ifdef TRACE
+        PLUGIN_TRACE("Close connection FD %i", socket);
+#endif
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mk_plugin_stage_30(struct client_request *cr, struct request *sr)
+int _mkp_stage_20(struct client_request *cr, struct request *sr)
 {
     if (mk_security_check_url(sr->uri) < 0) {
+#ifdef TRACE
+        PLUGIN_TRACE("Close connection FD %i", cr->socket);
+#endif
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 

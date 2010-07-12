@@ -35,11 +35,14 @@
 #include "str.h"
 #include "plugin.h"
 #include "worker.h"
-
+#include "utils.h"
 #include "cheetah.h"
 
 #define MK_CHEETAH_CLEAR "clear"
 #define MK_CHEETAH_CLEAR_SC "\\c"
+
+#define MK_CHEETAH_CONFIG "config"
+#define MK_CHEETAH_CONFIG_SC "\\f"
 
 #define MK_CHEETAH_STATUS "status"
 #define MK_CHEETAH_STATUS_SC "\\s"
@@ -74,8 +77,8 @@
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "cheetah";
 mk_plugin_data_t _name = "Cheetah";
-mk_plugin_data_t _version = "1.0";
-mk_plugin_stage_t _stages = MK_PLUGIN_STAGE_10;
+mk_plugin_data_t _version = "0.11.0";
+mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX;
 
 time_t init_time;
 struct plugin_api *mk_api;
@@ -183,7 +186,8 @@ void mk_cheetah_cmd_uptime()
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
+void mk_cheetah_cmd_plugins_print_stage(struct plugin *list, const char *stage, 
+                                        int stage_bw)
 {
     struct plugin *p;
 
@@ -192,31 +196,100 @@ void mk_cheetah_cmd_plugins_print(struct plugin *list, const char *stage)
     }
 
     p = list;
-    printf("* %s", stage);
-    printf("\n  Loaded plugins on this stage");
-    printf("\n  ----------------------------");
+
+    printf("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
+  
     while (p) {
-        printf("\n  [%s] %s v%s on \"%s\"",
-               p->shortname, p->name, p->version, p->path);
+        if (*p->hooks & stage_bw) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
         p = p->next;
     }
 
     printf("\n\n");
 }
 
+void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
+{
+    struct plugin *p;
+
+    p = list;
+
+    printf("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_CORE_PRCTX) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    printf("\n");
+    p = list;
+    printf("\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_CORE_THCTX) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    printf("\n\n");
+}
+
+void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
+{
+    struct plugin *p;
+
+    p = list;
+
+    printf("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    p = list;
+    printf("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
+
+    while (p) {
+        if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
+            printf("\n  [%s] %s v%s on \"%s\"",
+                   p->shortname, p->name, p->version, p->path);
+        }
+        p = p->next;
+    }
+
+    printf("\n");
+}
+
 void mk_cheetah_cmd_plugins()
 {
-    struct plugin_stages *p = mk_api->config->plugins;
+    struct plugin *list = mk_api->plugins;
 
-    printf("List of plugins loaded and stages associated\n\n");
+    printf("List of plugins and hooks associated\n");
 
-    mk_cheetah_cmd_plugins_print(p->stage_00, "STAGE_00");
-    mk_cheetah_cmd_plugins_print(p->stage_10, "STAGE_10");
-    mk_cheetah_cmd_plugins_print(p->stage_20, "STAGE_20");
-    mk_cheetah_cmd_plugins_print(p->stage_30, "STAGE_30");
-    mk_cheetah_cmd_plugins_print(p->stage_40, "STAGE_40");
-    mk_cheetah_cmd_plugins_print(p->stage_50, "STAGE_50");
-    mk_cheetah_cmd_plugins_print(p->stage_60, "STAGE_60");
+    if (!list) {
+        return;
+    }
+
+    mk_cheetah_cmd_plugins_print_core(list);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_10", MK_PLUGIN_STAGE_10);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_20", MK_PLUGIN_STAGE_20);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_30", MK_PLUGIN_STAGE_30);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_40", MK_PLUGIN_STAGE_40);
+    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
+    mk_cheetah_cmd_plugins_print_network(list);
+
+    printf("\n");
 }
 
 void mk_cheetah_cmd_vhosts()
@@ -276,6 +349,7 @@ void mk_cheetah_cmd_help()
     printf("\ncommand  shortcut  description");
     printf("\n----------------------------------------------------");
     printf("\n?          (\\?)    Synonym for 'help'");
+    printf("\nconfig     (\\f)    Display global configuration");
     printf("\nplugins    (\\g)    List loaded plugins and associated stages");
     printf("\nstatus     (\\s)    Display general web server information");
     printf("\nuptime     (\\u)    Display how long the web server has been running");
@@ -284,6 +358,79 @@ void mk_cheetah_cmd_help()
     printf("\nclear      (\\c)    Clear screen");
     printf("\nhelp       (\\h)    Print this help");
     printf("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
+}
+
+void mk_cheetah_cmd_config()
+{
+    struct mk_string_line *line;
+
+    printf("Basic configuration");
+    printf("\n-------------------");
+    printf("\nServer Port     : %i", mk_api->config->serverport);
+    
+    if (strcmp(mk_api->config->listen_addr, "0.0.0.0") == 0) {
+        printf("\nListen          : All interfaces");
+    }
+    else {
+        printf("\nListen          : %s", mk_api->config->listen_addr);
+    }
+    printf("\nWorkers         : %i threads", mk_api->config->workers);
+    printf("\nTimeout         : %i seconds", mk_api->config->timeout);
+    printf("\nPidFile         : %s", mk_api->config->pid_file_path);
+    printf("\nUserDir         : %s", mk_api->config->user_dir);
+
+    line = mk_api->config->index_files;
+    if (!line) {
+        printf("\nIndexFile       : No index files defined");
+    }
+    else {
+        printf("\nIndexFile       : ");
+        while (line) {
+            printf("%s ", line->val);
+            line = line->next;
+        }
+
+    }
+    
+    printf("\nHideVersion     : ");
+    if (mk_api->config->hideversion == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+
+    printf("\nResume          : ");
+    if (mk_api->config->resume == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+
+    printf("\nUser            : %s", mk_api->config->user);
+    printf("\n\nAdvanced configuration");
+    printf("\n----------------------");
+    printf("\nKeepAlive           : ");
+    if (mk_api->config->keep_alive == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+    printf("\nMaxKeepAliveRequest : %i req/connection", 
+           mk_api->config->max_keep_alive_request); 
+    printf("\nKeepAliveTimeout    : %i seconds", mk_api->config->keep_alive_timeout);
+    printf("\nMaxRequestSize      : %i KB", 
+           mk_api->config->max_request_size/1024);
+    printf("\nSymLink             : ");
+    if (mk_api->config->symlink == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+    printf("\n\n");
 }
 
 void mk_cheetah_cmd_status()
@@ -314,7 +461,11 @@ void mk_cheetah_cmd_status()
 
 void mk_cheetah_cmd(char *cmd)
 {
-    if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
+    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
+        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
+        mk_cheetah_cmd_config();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
         mk_cheetah_cmd_status();
     }
@@ -402,13 +553,17 @@ void *mk_cheetah_init(void *args)
 /* This function is called when the plugin is loaded, it must
  * return 
  */
-int _mk_plugin_init(void **api)
+int _mkp_init(void **api)
 {
     mk_api = *api;
     return 0;
 }
 
-int _mk_plugin_stage_10(struct server_config *config)
+void _mkp_exit()
+{
+}
+
+int _mkp_core_prctx(struct server_config *config)
 {
     pthread_t tid;
     pthread_attr_t thread_attr;

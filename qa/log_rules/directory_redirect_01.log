@@ -1,0 +1,11 @@
+# Monkey logfile example:
+# 127.0.0.1 - [02/Jun/2010 11:23:48 -0400] GET /imgs HTTP/1.1 301 0
+
+[access]
+ip = 127.0.0.1
+status = 301
+method = GET
+uri = /imgs
+protocol = HTTP/1.1
+size = 0
+

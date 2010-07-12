@@ -25,9 +25,10 @@
 #define MK_KNOWN_HEADERS 11     /* Number of different headers that
                                  * Monkey knows about 
                                  */
-pthread_key_t mk_cache_iov_log;
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;
+pthread_key_t mk_cache_header_lm;
+pthread_key_t mk_cache_header_cl;
 
 struct mk_cache_date_t
 {
@@ -41,6 +42,7 @@ struct mk_cache_date_t *mk_cache_file_date;
 
 
 void mk_cache_thread_init();
+void *mk_cache_get(pthread_key_t key);
 char *mk_cache_file_date_get(time_t time);
 
 #endif

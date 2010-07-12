@@ -19,6 +19,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -34,7 +35,7 @@
 #include "plugin.h"
 #include "utils.h"
 
-/* Return the number of clients that can be attended 
+/* Return the number of clients that can be attended
  * at the same time per worker thread
  */
 int mk_server_worker_capacity(int nworkers)
@@ -69,12 +70,6 @@ void mk_server_launch_workers()
 {
     int i;
 
-    /* Look for plugins thread key data */
-    mk_plugin_preworker_calls();
-
-    /* Get each worker clients capacity based on FDs system limits */
-    config->worker_capacity = mk_server_worker_capacity(config->workers);
-
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
         mk_sched_launch_thread(config->worker_capacity);
@@ -86,11 +81,9 @@ void mk_server_loop(int server_fd)
     int remote_fd;
     struct sockaddr_in sockaddr;
     struct sched_list_node *sched = sched_list;
-    socklen_t socket_size = sizeof(struct sockaddr_in);
 
     while (1) {
-        remote_fd = accept(server_fd, (struct sockaddr *) &sockaddr,
-                           &socket_size);
+        remote_fd = mk_socket_accept(server_fd, sockaddr);
 
         if (remote_fd == -1) {
             continue;
@@ -99,7 +92,7 @@ void mk_server_loop(int server_fd)
 #ifdef TRACE
         MK_TRACE("New connection arrived: FD %i", remote_fd);
 #endif
-        
+
         /* Assign socket to worker thread */
         mk_sched_add_client(sched, remote_fd);
 

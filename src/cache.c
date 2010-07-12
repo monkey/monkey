@@ -26,14 +26,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils.h"
 
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {
     struct request_idx *cache_request_idx;
-    struct mk_iov *cache_iov_log;
     struct mk_iov *cache_iov_header;
     struct header_toc *cache_header_toc;
+    mk_pointer *cache_header_lm; 
+    mk_pointer *cache_header_cl;
 
     /* client request index */
     cache_request_idx = mk_mem_malloc(sizeof(struct request_idx));
@@ -41,9 +43,17 @@ void mk_cache_thread_init()
     cache_request_idx->last = NULL;
     pthread_setspecific(request_index, (void *) cache_request_idx);
 
-    /* Cache iov log struct */
-    cache_iov_log = mk_iov_create(15, 0);
-    pthread_setspecific(mk_cache_iov_log, (void *) cache_iov_log);
+    /* Cache header request -> last modified */
+    cache_header_lm = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_lm->data = mk_mem_malloc_z(32);
+    cache_header_lm->len = -1;
+    pthread_setspecific(mk_cache_header_lm, (void *) cache_header_lm);
+
+    /* Cache header request -> content length */
+    cache_header_cl = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_cl->data = mk_mem_malloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
+    cache_header_cl->len = -1;
+    pthread_setspecific(mk_cache_header_cl, (void *) cache_header_cl);
 
     /* Cache iov header struct */
     cache_iov_header = mk_iov_create(32, 0);
@@ -55,4 +65,9 @@ void mk_cache_thread_init()
     cache_header_toc = mk_mem_malloc_z(sizeof(struct header_toc) *
                                        MK_KNOWN_HEADERS);
     pthread_setspecific(mk_cache_header_toc, (void *) cache_header_toc);
+}
+
+void *mk_cache_get(pthread_key_t key)
+{
+    return ( void *) pthread_getspecific(key);
 }

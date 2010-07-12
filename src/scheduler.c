@@ -45,26 +45,26 @@
 int mk_sched_register_thread(pthread_t tid, int efd)
 {
     int i;
-    struct sched_list_node *sr, *aux;
+    struct sched_list_node *sl, *aux;
 
-    sr = mk_mem_malloc_z(sizeof(struct sched_list_node));
-    sr->tid = tid;
-    sr->pid = -1;
-    sr->epoll_fd = efd;
-    sr->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
+    sl = mk_mem_malloc_z(sizeof(struct sched_list_node));
+    sl->tid = tid;
+    sl->pid = -1;
+    sl->epoll_fd = efd;
+    sl->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
                                 config->worker_capacity);
-    sr->request_handler = NULL;
-    sr->next = NULL;
+    sl->request_handler = NULL;
+    sl->next = NULL;
 
     for (i = 0; i < config->worker_capacity; i++) {
         /* Pre alloc IPv4 memory buffer */
-        sr->queue[i].ipv4.data = mk_mem_malloc_z(16);
-        sr->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
+        sl->queue[i].ipv4.data = mk_mem_malloc_z(16);
+        sl->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
     }
 
     if (!sched_list) {
-        sr->idx = 1;
-        sched_list = sr;
+        sl->idx = 1;
+        sched_list = sl;
         return 0;
     }
 
@@ -72,8 +72,8 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     while (aux->next) {
         aux = aux->next;
     }
-    sr->idx = aux->idx + 1;
-    aux->next = sr;
+    sl->idx = aux->idx + 1;
+    aux->next = sl;
 
     return 0;
 }
@@ -102,6 +102,7 @@ int mk_sched_launch_thread(int max_events)
 
     thconf = mk_mem_malloc(sizeof(sched_thread_conf));
     thconf->epoll_fd = efd;
+    thconf->epoll_max_events = max_events*2;
     thconf->max_events = max_events;
 
     pthread_attr_init(&attr);
@@ -133,7 +134,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
 
     /* Init specific thread cache */
     mk_cache_thread_init();
-    mk_plugin_worker_startup();
+    mk_plugin_core_thread();
 
     /* Epoll event handlers */
     handler = mk_epoll_set_handlers((void *) mk_conn_read,
@@ -153,7 +154,7 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
     thinfo->pid = syscall(__NR_gettid);
 
     mk_sched_set_thread_poll(thconf->epoll_fd);
-    mk_epoll_init(thconf->epoll_fd, handler, thconf->max_events);
+    mk_epoll_init(thconf->epoll_fd, handler, thconf->epoll_max_events);
 
     return 0;
 }
@@ -199,15 +200,17 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
 {
     unsigned int i, ret;
 
-    /* Look for an available slot */
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
+#ifdef TRACE
+            MK_TRACE("[FD %i] Add", remote_fd);
+#endif
             /* Set IP */
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
             mk_pointer_set( &sched->queue[i].ipv4, sched->queue[i].ipv4.data );
 
             /* Before to continue, we need to run plugin stage 20 */
-            ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20,
+            ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
                                       remote_fd,
                                       &sched->queue[i], NULL, NULL);
 
@@ -222,8 +225,8 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
 
-            mk_epoll_add_client(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                                MK_EPOLL_BEHAVIOR_TRIGGERED);
+            mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
+                         MK_EPOLL_BEHAVIOR_TRIGGERED);
             return 0;
         }
     }
@@ -237,11 +240,25 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
+#ifdef TRACE
+        MK_TRACE("[FD %i] Scheduler remove", remote_fd);
+#endif
         /* Close socket and change status */
         close(remote_fd);
+
+        /* Invoke plugins in stage 50 */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
+
+        /* Change node status */
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
+        sc->socket = -1;
         return 0;
     }
+#ifdef TRACE
+    else {
+        MK_TRACE("[FD %i] Not found");
+    }
+#endif
     return -1;
 }
 
@@ -253,6 +270,9 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
     if (!sched) {
         sched = mk_sched_get_thread_conf();
         if (!sched) {
+#ifdef TRACE
+            MK_TRACE("[FD %i] No scheduler information", remote_fd);
+#endif 
             close(remote_fd);
             return NULL;
         }
@@ -263,6 +283,10 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
             return &sched->queue[i];
         }
     }
+
+#ifdef TRACE
+    MK_TRACE("\n [%i] not found , why?\n\n", remote_fd);
+#endif
 
     return NULL;
 }
@@ -309,6 +333,8 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
                          req_cl->socket);
 #endif
                 close(req_cl->socket);
+                mk_sched_remove_client(sched, req_cl->socket);
+                mk_request_client_remove(req_cl->socket);
             }
         }
         req_cl = req_cl->next;

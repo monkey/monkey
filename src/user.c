@@ -58,8 +58,8 @@ int mk_user_init(struct client_request *cr, struct request *sr)
     user[limit] = '\0';
 
     if (sr->uri.data[offset + limit] == '/') {
-        m_build_buffer(&sr->uri.data, &sr->uri.len,
-                       "%s", sr->uri_processed + offset + limit);
+        mk_string_build(&sr->uri.data, &sr->uri.len,
+                        "%s", sr->uri_processed + offset + limit);
 
         /* Extract URI portion after /~user */
         sr->user_uri = (char *) mk_mem_malloc_z(sr->uri.len + 1);
@@ -73,21 +73,21 @@ int mk_user_init(struct client_request *cr, struct request *sr)
 
     if ((s_user = getpwnam(user)) == NULL) {
         mk_mem_free(user);
-        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr, 1, sr->log);
+        mk_request_error(M_CLIENT_NOT_FOUND, cr, sr);
         return -1;
     }
     mk_mem_free(user);
 
-    m_build_buffer(&user_server_root, &len, "%s/%s", s_user->pw_dir,
-                   config->user_dir);
+    mk_string_build(&user_server_root, &len, "%s/%s", s_user->pw_dir,
+                    config->user_dir);
 
     if (sr->user_uri != NULL) {
-        m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s%s",
-                       user_server_root, sr->user_uri);
+        mk_string_build(&sr->real_path.data, &sr->real_path.len, "%s%s",
+                        user_server_root, sr->user_uri);
     }
     else {
-        m_build_buffer(&sr->real_path.data, &sr->real_path.len, "%s",
-                       user_server_root);
+        mk_string_build(&sr->real_path.data, &sr->real_path.len, "%s",
+                        user_server_root);
     }
     mk_mem_free(user_server_root);
     return 0;
@@ -106,7 +106,6 @@ int mk_user_set_uidgid()
         struct rlimit rl;
 
         /* Just if i'm superuser */
-        rl.rlim_max = (256 * config->maxclients);
         rl.rlim_cur = rl.rlim_max;
         setrlimit(RLIMIT_NOFILE, &rl);
 
@@ -133,8 +132,8 @@ int mk_user_set_uidgid()
             exit(1);
         }
 
-        egid = geteuid();
-        euid = getegid();
+        EUID = geteuid();
+        EGID = getegid();
     }
     return 0;
 }

@@ -19,59 +19,39 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_LOGFILE_H
-#define MK_LOGFILE_H
-
 /* s_log status */
-#define S_LOG_ON 0
-#define S_LOG_OFF 1
+#ifndef MK_LOGGER_H
+#define MK_LOGGER_H
 
-#define MK_LOGFILE_PIPE_LIMIT 0.75
-#define MK_LOGFILE_TIMEOUT 3
+#define MK_LOGGER_PIPE_LIMIT 0.75
+#define MK_LOGGER_TIMEOUT_DEFAULT 3
 
-#define MK_LOGFILE_IOV_DASH " - "
+int mk_logger_timeout;
 
-mk_pointer mk_logfile_iov_dash;
-
-/* logfile.c */
+#include "pthread.h"
 pthread_key_t timer;
+pthread_key_t cache_content_length;
 
 struct log_target
 {
-    int fd;
-    char *target;
+    /* Pipes */
+    int fd_access[2];
+    int fd_error[2];
+
+    /* File paths */
+    char *file_access;
+    char *file_error;
+
+    struct host *host;
     struct log_target *next;
 };
+
 struct log_target *lt;
 
-struct log_info
-{
-    int method;
-    int protocol;
-
-    mk_pointer uri;
-    mk_pointer ip;
-
-    int final_response;         /* Ok: 200, Not Found 400, etc... */
-    int size;
-    mk_pointer size_p;
-    int status;                 /* on/off : 301. */
-    mk_pointer error_msg;
-    mk_pointer error_details;
-
-    struct host *host_conf;
-};
-
-int mk_logger_write_log(struct client_request *cr, struct log_info *log,
-                        struct host *h);
-int mk_logger_register_pid();
-int mk_logger_remove_pid();
+/* Global Monkey core API */
+struct plugin_api *mk_api;
 
 void *mk_logger_worker_init(void *args);
-
-int logger_add_request(struct log_info *log);
-
 void mk_logger_target_add(int fd, char *target);
-struct log_target *mk_logger_match(int fd);
 
 #endif

@@ -39,8 +39,6 @@
 #include "epoll.h"
 #include "utils.h"
 
-#define MAX_EVENTS 5000
-
 mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*write) (int),
                                          void (*error) (int),
@@ -76,7 +74,8 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     int i, fd, ret = -1;
     int num_fds;
     int fds_timeout;
-    struct epoll_event events[max_events];
+
+    struct epoll_event *events;
     struct sched_list_node *sched;
 
     /* Get thread conf */
@@ -86,38 +85,38 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     pthread_mutex_unlock(&mutex_wait_register);
 
     fds_timeout = log_current_utime + config->timeout;
+    events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
 
     while (1) {
+        ret = -1;
         num_fds = epoll_wait(efd, events, max_events, MK_EPOLL_WAIT_TIMEOUT);
 
         for (i = 0; i < num_fds; i++) {
             fd = events[i].data.fd;
 
-            // Case 1: Error condition
-            if (events[i].events & (EPOLLHUP | EPOLLERR)) {
-                (*handler->error) (fd);
-#ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i EPOLLHUP/EPOLLER", fd);
-#endif
-                continue;
-            }
-
             if (events[i].events & EPOLLIN) {
 #ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i READ", fd);
+                MK_TRACE("[FD %i] EPoll Event READ", fd);
 #endif
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
 #ifdef TRACE
-                MK_TRACE("EPoll Event, FD %i WRITE", fd);
+                MK_TRACE("[FD %i] EPoll Event WRITE", fd);
 #endif
                 ret = (*handler->write) (fd);
             }
 
+            else if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+#ifdef TRACE
+                MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLER", fd);
+#endif
+                ret = (*handler->error) (fd);
+            }
+
             if (ret < 0) {
 #ifdef TRACE
-                MK_TRACE("Epoll Event, FD %i FORCE CLOSE | ret = %i", fd, ret);
+                MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
 #endif
                 (*handler->close) (fd);
             }
@@ -131,12 +130,13 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     }
 }
 
-int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
+int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 {
     int ret;
-    struct epoll_event event = { EPOLLERR | EPOLLHUP };
+    struct epoll_event event;
 
-    event.data.fd = socket;
+    event.data.fd = fd;
+    event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
 
     if (behavior == MK_EPOLL_BEHAVIOR_TRIGGERED) {
         event.events |= EPOLLET;
@@ -154,43 +154,59 @@ int mk_epoll_add_client(int efd, int socket, int init_mode, int behavior)
         break;
     }
 
-    ret = epoll_ctl(efd, EPOLL_CTL_ADD, socket, &event);
+    ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0) {
         perror("epoll_ctl");
     }
     return ret;
 }
 
-int mk_epoll_socket_change_mode(int efd, int socket, int mode)
+int mk_epoll_del(int efd, int fd)
+{
+    int ret;
+
+    ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
+
+#ifdef TRACE
+    MK_TRACE("Epoll, removing fd %i from efd %i", fd, efd);
+#endif
+
+    if (ret < 0) {
+        perror("\nepoll_ctl");
+    }
+    return ret;
+}
+
+int mk_epoll_change_mode(int efd, int fd, int mode)
 {
     int ret;
     struct epoll_event event;
 
     event.events = EPOLLET | EPOLLERR | EPOLLHUP;
-    event.data.fd = socket;
+    event.data.fd = fd;
 
     switch (mode) {
     case MK_EPOLL_READ:
 #ifdef TRACE
-        MK_TRACE("EPoll, changing mode to READ");
+        MK_TRACE("[FD %i] EPoll changing mode to READ", fd);
 #endif
         event.events |= EPOLLIN;
         break;
     case MK_EPOLL_WRITE:
 #ifdef TRACE
-        MK_TRACE("EPoll, changing mode to WRITE");
+        MK_TRACE("[FD %i] EPoll changing mode to WRITE", fd);
 #endif
         event.events |= EPOLLOUT;
         break;
     case MK_EPOLL_RW:
 #ifdef TRACE
-        MK_TRACE("Epoll, changing mode to READ/WRITE");
+        MK_TRACE("[FD %i] Epoll changing mode to READ/WRITE", fd);
 #endif
         event.events |= EPOLLIN | EPOLLOUT;
         break;
     }
 
-    ret = epoll_ctl(efd, EPOLL_CTL_MOD, socket, &event);
+    ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
     if (ret < 0) {
         perror("\nepoll_ctl");
     }

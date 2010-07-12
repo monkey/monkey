@@ -39,7 +39,6 @@
 #include "user.h"
 #include "info.h"
 #include "utils.h"
-#include "logfile.h"
 #include "signals.h"
 #include "config.h"
 #include "memory.h"
@@ -124,6 +123,13 @@ int main(int argc, char **argv)
         config->file_config = MONKEY_PATH_CONF;
     }
 
+#ifdef TRACE
+    monkey_init_time = time(NULL);
+    MK_TRACE("Monkey TRACE is enabled");
+    envtrace = getenv("MONKEY_TRACE");
+    pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
+#endif
+
     mk_version();
     mk_signal_init();
     mk_config_start_configure();
@@ -137,43 +143,37 @@ int main(int argc, char **argv)
     }
 
     /* Workers: logger and clock */
-    mk_worker_spawn((void *) mk_logger_worker_init);
     mk_worker_spawn((void *) mk_clock_worker_init);
 
     /* Register PID of Monkey */
-    mk_logger_register_pid();
+    mk_utils_register_pid();
 
-
+    /* Init mk pointers */
     mk_mem_pointers_init();
 
     /* Create thread keys */
     pthread_key_create(&request_index, NULL);
     pthread_key_create(&epoll_fd, NULL);
-    pthread_key_create(&timer, NULL);
-    pthread_key_create(&mk_cache_iov_log, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);
+    pthread_key_create(&mk_cache_header_lm, NULL);
+    pthread_key_create(&mk_cache_header_cl, NULL);
     pthread_key_create(&mk_plugin_event_k, NULL);
 
     /* Change process owner */
     mk_user_set_uidgid();
 
+    /* Configuration sanity check */
     mk_config_sanity_check();
-
-    /* Launch monkey http workers */
-    mk_server_launch_workers();
 
     /* Print server details */
     mk_details();
 
-#ifdef TRACE
-    fprintf(stderr, "\n");
-    MK_TRACE("Monkey TRACE is enabled");
-    envtrace = getenv("MONKEY_TRACE");
-#endif
+    /* Invoke Plugin PRCTX hooks */
+    mk_plugin_core_process();
 
-    /* Plugins Stage 10 */
-    mk_plugin_stage_run(MK_PLUGIN_STAGE_10, 0, NULL, NULL, NULL);
+    /* Launch monkey http workers */
+    mk_server_launch_workers();
 
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(server_fd);

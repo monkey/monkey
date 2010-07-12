@@ -27,7 +27,6 @@
 #include "header.h"
 #include "memory.h"
 #include "request.h"
-#include "logfile.h"
 #include "iov.h"
 #include "http_status.h"
 #include "config.h"
@@ -36,6 +35,7 @@
 #include "clock.h"
 #include "cache.h"
 #include "http.h"
+#include "str.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
@@ -45,7 +45,7 @@ int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
 
 struct mk_iov *mk_header_iov_get()
 {
-    return pthread_getspecific(mk_cache_iov_header);
+    return mk_cache_get(mk_cache_iov_header);
 }
 
 void mk_header_iov_free(struct mk_iov *iov)
@@ -55,7 +55,7 @@ void mk_header_iov_free(struct mk_iov *iov)
 
 /* Send_Header , envia las cabeceras principales */
 int mk_header_send(int fd, struct client_request *cr,
-                   struct request *sr, struct log_info *s_log)
+                   struct request *sr)
 {
     int fd_status = 0;
     unsigned long len = 0;
@@ -80,19 +80,16 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_REDIR_MOVED:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
     case M_REDIR_MOVED_T:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_redir_moved_t,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
     case M_NOT_MODIFIED:
-        s_log->status = S_LOG_ON;
         mk_header_iov_add_entry(iov, mk_hr_not_modified,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
@@ -120,11 +117,15 @@ int mk_header_send(int fd, struct client_request *cr,
     case M_CLIENT_REQUEST_TIMEOUT:
         mk_header_iov_add_entry(iov, mk_hr_client_request_timeout,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        s_log->status = S_LOG_OFF;
         break;
 
     case M_CLIENT_LENGTH_REQUIRED:
         mk_header_iov_add_entry(iov, mk_hr_client_length_required,
+                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        break;
+
+    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+        mk_header_iov_add_entry(iov, mk_hr_client_request_entity_too_large,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
@@ -144,10 +145,6 @@ int mk_header_send(int fd, struct client_request *cr,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
     };
-
-    if (sh->status != 0) {
-        s_log->final_response = sh->status;
-    }
 
     if (fd_status < 0) {
         mk_header_iov_free(iov);
@@ -169,6 +166,19 @@ int mk_header_send(int fd, struct client_request *cr,
                      header_current_time.len,
                      mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
+    /* Last-Modified */
+    if (sh->last_modified > 0) {
+        mk_pointer *lm;
+        lm = mk_cache_get(mk_cache_header_lm);
+        mk_utils_utime2gmt(&lm, sh->last_modified);
+
+        mk_iov_add_entry(iov, mk_header_last_modified.data,
+                         mk_header_last_modified.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, lm->data, lm->len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
+
     /* Connection */
     if (config->keep_alive == VAR_ON &&
         sr->keep_alive == VAR_ON &&
@@ -176,14 +186,14 @@ int mk_header_send(int fd, struct client_request *cr,
 
         /* A valid connection header */
         if (sr->connection.len > 0) {
-            m_build_buffer(&buffer,
-                           &len,
-                           "Keep-Alive: timeout=%i, max=%i"
-                           MK_CRLF,
-                           config->keep_alive_timeout,
-                           (config->max_keep_alive_request -
-                            cr->counter_connections)
-                           );
+            mk_string_build(&buffer,
+                            &len,
+                            "Keep-Alive: timeout=%i, max=%i"
+                            MK_CRLF,
+                            config->keep_alive_timeout,
+                            (config->max_keep_alive_request -
+                             cr->counter_connections)
+                            );
             mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
             mk_iov_add_entry(iov,
                              mk_header_conn_ka.data,
@@ -210,16 +220,6 @@ int mk_header_send(int fd, struct client_request *cr,
                          strlen(sh->location), mk_iov_crlf, MK_IOV_FREE_BUF);
     }
 
-    /* Last-Modified */
-    if (sh->last_modified.len > 0) {
-        mk_iov_add_entry(iov, mk_header_last_modified.data,
-                         mk_header_last_modified.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        mk_iov_add_entry(iov, sh->last_modified.data,
-                         sh->last_modified.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    }
-
     /* Content type */
     if (sh->content_type.len > 0) {
         mk_iov_add_entry(iov,
@@ -244,84 +244,61 @@ int mk_header_send(int fd, struct client_request *cr,
     }
 
     /* Content-Length */
-    if ((sh->content_length != 0 &&
+    if (sh->content_length >= 0 && sr->method != HTTP_METHOD_HEAD) {
+        /* Map content length to MK_POINTER */
+        mk_pointer *cl;
+        cl = mk_cache_get(mk_cache_header_cl);
+        mk_string_itop(sh->content_length, cl);
+        
+        /* Set headers */
+        mk_iov_add_entry(iov, mk_header_content_length.data,
+                         mk_header_content_length.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        
+        mk_iov_add_entry(iov, cl->data, cl->len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        
+    }
+
+    if ((sh->content_length != 0 && 
          (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
         config->resume == VAR_ON) {
-        long int length = -1;
+        buffer = 0;
 
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
-            length = (unsigned int)
-                (sh->content_length - sh->ranges[0]);
-            m_build_buffer(&buffer, &len, "%s %i", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           sh->ranges[0],
-                           (sh->content_length - 1), sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0],
+                            (sh->real_length - 1), sh->real_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
 
         /* yyy-xxx */
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
-            length = (unsigned int)
-                abs(sh->ranges[1] - sh->ranges[0]) + 1;
-            m_build_buffer(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           sh->ranges[0], sh->ranges[1], sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0], sh->ranges[1], sh->real_length);
 
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
 
         /* -xxx */
         if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
-            length = (unsigned int) sh->ranges[1];
-
-            if (length > sh->content_length) {
-                length = sh->content_length;
-                sh->ranges[1] = sh->content_length;
-            }
-
-            m_build_buffer(&buffer, &len, "%s %d", RH_CONTENT_LENGTH, length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
-
-            m_build_buffer(&buffer,
-                           &len,
-                           "%s bytes %d-%d/%d",
-                           RH_CONTENT_RANGE,
-                           (sh->content_length - sh->ranges[1]),
-                           (sh->content_length - 1), sh->content_length);
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%d",
+                            RH_CONTENT_RANGE,
+                            (sh->real_length - sh->ranges[1]),
+                            (sh->real_length - 1), sh->real_length);
             mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
         }
-
-        /* FIXME: logger routines and data should be handled by a plugin
-         * in Monkey 0.11.0
-         */
-        if (length >= 0) {
-            mk_pointer_free(&sr->log->size_p);
-            sr->log->size = length;
-            sr->log->size_p = mk_utils_int2mkp(length);
-            sr->headers->content_length_p = sr->log->size_p;
-        }
     }
-    else if (sh->content_length >= 0) {
-        mk_iov_add_entry(iov, mk_header_content_length.data,
-                         mk_header_content_length.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
-        mk_iov_add_entry(iov, sh->content_length_p.data,
-                         sh->content_length_p.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    }
-
+    
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         mk_iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
@@ -330,12 +307,16 @@ int mk_header_send(int fd, struct client_request *cr,
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
     mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
 
-#ifdef DEBUG_HEADERS_OUT
+#ifdef TRACE
+    MK_TRACE("Headers sent to FD %i", fd);
+    printf("%s", ANSI_YELLOW);
+    fflush(stdout);
     mk_iov_send(0, iov, MK_IOV_SEND_TO_SOCKET);
+    printf("%s", ANSI_RESET);
+    fflush(stdout);
 #endif
 
     mk_header_iov_free(iov);
-
     return 0;
 }
 
@@ -349,6 +330,12 @@ char *mk_header_chunked_line(int len)
     return buf;
 }
 
+void mk_header_set_http_status(struct request *sr, int status)
+{
+    sr->headers->status = status;
+    sr->headers->status_p = mk_http_status_get(status);
+}
+
 struct header_values *mk_header_create()
 {
     struct header_values *headers;
@@ -359,9 +346,9 @@ struct header_values *mk_header_create()
     headers->ranges[1] = -1;
     headers->content_length = -1;
     headers->transfer_encoding = -1;
-    mk_pointer_reset(&headers->content_length_p);
+    headers->last_modified = -1;
+    //    mk_pointer_reset(&headers->content_length_p);
     mk_pointer_reset(&headers->content_type);
-    mk_pointer_reset(&headers->last_modified);
     headers->location = NULL;
 
     return headers;

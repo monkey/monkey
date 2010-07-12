@@ -1,0 +1,11 @@
+CC 	= $CC
+CFLAGS	= $CFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../src/include
+
+all:
+	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c cheetah.c
+	gcc $(CFLAGS) $(DEFS) -shared -Wl -o monkey-cheetah.so cheetah.o -lc
+clean:
+	rm -rf *.o
+	rm -rf *.*so*
