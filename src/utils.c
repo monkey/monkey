@@ -47,6 +47,7 @@
 #include "monkey.h"
 #include "memory.h"
 #include "utils.h"
+#include "file.h"
 #include "str.h"
 #include "config.h"
 #include "chars.h"
@@ -316,10 +317,20 @@ int mk_utils_get_somaxconn()
      * 
      * '(warning: process `monkey' used the deprecated sysctl system call...'
      *
-     * In order to avoid that problem, this function will return the default 
-     * value defined for somaxconn for years...
+     * In order to avoid that problem, this function will check the proc filesystem,
+     * if it still fails, we will use the default value defined for somaxconn for years...
      */
-    return 128;
+    int somaxconn = 128;
+    char buf[16];
+    FILE *f;
+
+    f = fopen("/proc/sys/net/core/somaxconn", "r");
+    if(f && fgets(buf, 16, f)) {
+        somaxconn = atoi(buf);
+        fclose(f);
+    }
+
+    return somaxconn;
 }
 
 /* Write Monkey's PID */
