@@ -182,12 +182,6 @@ struct mk_config *mk_config_create(const char *path)
             continue;
         }
         
-        /* Skip empty left spaces */
-        while(val && *val == ' ') val++;
-        if (!val) {
-            continue;
-        }
-
         /* Section definition */
         if (buf[0] == '[') {
             int end = -1;
@@ -379,7 +373,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     section = mk_config_section_get(cnf, "SERVER");
 
     if (!section) {
-        fprintf(stderr, "\nERROR: No 'SERVER' section defined");
+        fprintf(stderr, "\nERROR: No 'SERVER' section defined\n");
         exit(1);
     }
 
