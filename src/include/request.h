@@ -28,8 +28,8 @@
 #define MK_REQUEST_H
 
 
-/* Request buffer chunks = 1KB */
-#define MK_REQUEST_CHUNK (int) 1024
+/* Request buffer chunks = 4KB */
+#define MK_REQUEST_CHUNK (int) 4096
 
 #define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
 
