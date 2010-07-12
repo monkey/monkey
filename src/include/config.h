@@ -107,6 +107,8 @@ struct server_config
 
     int max_request_size;
 
+    struct mk_string_line *index_files;
+
     struct dir_html_theme *dir_theme;
 
     /* configured host quantity */
@@ -139,6 +141,13 @@ struct host
 
     /* next node */
     struct host *next;
+};
+
+/* Handle index file names: index.* */
+struct index_file
+{
+    char indexname[16];
+    struct indexfile *next;
 };
 
 /* Functions */

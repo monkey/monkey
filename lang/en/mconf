@@ -71,7 +71,7 @@ cat > conf/monkey.conf <<EOF
 
     # Resume:
     # -------
-    # Allow to retrieve chunks of file (values on/off).
+    # Allow clients to request files by ranges (values on/off).
 
     Resume on
 

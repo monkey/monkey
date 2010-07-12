@@ -33,14 +33,6 @@
 
 #define MK_REQUEST_DEFAULT_PAGE  "<HTML><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>%s</ADDRESS></BODY></HTML>"
 
-/* Handle index file names: index.* */
-#define MAX_INDEX_NAME 50
-struct indexfile
-{
-    char indexname[MAX_INDEX_NAME];
-    struct indexfile *next;
-}        *first_index;
-
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
 

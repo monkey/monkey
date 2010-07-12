@@ -584,15 +584,15 @@ mk_pointer mk_request_index(char *pathfile)
     unsigned long len;
     char *file_aux = 0;
     mk_pointer f;
-    struct indexfile *aux_index;
+    struct mk_string_line *aux_index;
 
     mk_pointer_reset(&f);
 
-    aux_index = first_index;
+    aux_index = config->index_files;
 
     while (aux_index) {
         mk_string_build(&file_aux, &len, "%s%s",
-                        pathfile, aux_index->indexname);
+                        pathfile, aux_index->val);
 
         if (access(file_aux, F_OK) == 0) {
             f.data = file_aux;

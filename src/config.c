@@ -356,7 +356,6 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     struct stat checkdir;
     struct mk_config *cnf;
     struct mk_config_section *section;
-    struct mk_string_line *line, *line_val;
 
     config->serverconf = mk_string_dup(path_conf);
     config->workers = MK_WORKERS_DEFAULT;
@@ -445,12 +444,8 @@ void mk_config_read_files(char *path_conf, char *file_conf)
                                                 "UserDir", MK_CONFIG_VAL_STR);
 
     /* Index files */
-    line_val = line = mk_config_section_getval(section,
-                                               "Indexfile", MK_CONFIG_VAL_LIST);
-    while (line_val != NULL) {
-        mk_config_add_index(line_val->val);
-        line_val = line_val->next;
-    }
+    config->index_files = mk_config_section_getval(section,
+                                                   "Indexfile", MK_CONFIG_VAL_LIST);
 
     /* HideVersion Variable */
     config->hideversion = (int) mk_config_section_getval(section,
@@ -621,27 +616,6 @@ void mk_config_print_error_msg(char *variable, char *path)
     exit(1);
 }
 
-/* Agrega distintos index.xxx */
-void mk_config_add_index(char *indexname)
-{
-    struct indexfile *new_index = 0, *aux_index;
-
-    new_index = (struct indexfile *) malloc(sizeof(struct indexfile));
-    strncpy(new_index->indexname, indexname, MAX_INDEX_NAME - 1);
-    new_index->indexname[MAX_INDEX_NAME - 1] = '\0';
-    new_index->next = NULL;
-
-    if (first_index == NULL) {
-        first_index = new_index;
-    }
-    else {
-        aux_index = first_index;
-        while (aux_index->next != NULL)
-            aux_index = aux_index->next;
-        aux_index->next = new_index;
-    }
-}
-
 void mk_config_set_init_values(void)
 {
     /* Init values */
@@ -658,6 +632,7 @@ void mk_config_set_init_values(void)
     config->nhosts = 0;
     config->user = NULL;
     config->open_flags = O_RDONLY | O_NONBLOCK;
+    config->index_files = NULL;
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
@@ -675,11 +650,6 @@ void mk_config_start_configure(void)
 
     mk_config_set_init_values();
     mk_config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
-
-    /* if not index names defined, set default */
-    if (first_index == NULL) {
-        mk_config_add_index("index.html");
-    }
 
     /* Load mimes */
     mk_mimetype_read_config();

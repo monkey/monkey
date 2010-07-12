@@ -41,6 +41,9 @@
 #define MK_CHEETAH_CLEAR "clear"
 #define MK_CHEETAH_CLEAR_SC "\\c"
 
+#define MK_CHEETAH_CONFIG "config"
+#define MK_CHEETAH_CONFIG_SC "\\f"
+
 #define MK_CHEETAH_STATUS "status"
 #define MK_CHEETAH_STATUS_SC "\\s"
 
@@ -346,6 +349,7 @@ void mk_cheetah_cmd_help()
     printf("\ncommand  shortcut  description");
     printf("\n----------------------------------------------------");
     printf("\n?          (\\?)    Synonym for 'help'");
+    printf("\nconfig     (\\f)    Display global configuration");
     printf("\nplugins    (\\g)    List loaded plugins and associated stages");
     printf("\nstatus     (\\s)    Display general web server information");
     printf("\nuptime     (\\u)    Display how long the web server has been running");
@@ -354,6 +358,79 @@ void mk_cheetah_cmd_help()
     printf("\nclear      (\\c)    Clear screen");
     printf("\nhelp       (\\h)    Print this help");
     printf("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
+}
+
+void mk_cheetah_cmd_config()
+{
+    struct mk_string_line *line;
+
+    printf("Basic configuration");
+    printf("\n-------------------");
+    printf("\nServer Port     : %i", mk_api->config->serverport);
+    
+    if (strcmp(mk_api->config->listen_addr, "0.0.0.0") == 0) {
+        printf("\nListen          : All interfaces");
+    }
+    else {
+        printf("\nListen          : %s", mk_api->config->listen_addr);
+    }
+    printf("\nWorkers         : %i threads", mk_api->config->workers);
+    printf("\nTimeout         : %i seconds", mk_api->config->timeout);
+    printf("\nPidFile         : %s", mk_api->config->pid_file_path);
+    printf("\nUserDir         : %s", mk_api->config->user_dir);
+
+    line = mk_api->config->index_files;
+    if (!line) {
+        printf("\nIndexFile       : No index files defined");
+    }
+    else {
+        printf("\nIndexFile       : ");
+        while (line) {
+            printf("%s ", line->val);
+            line = line->next;
+        }
+
+    }
+    
+    printf("\nHideVersion     : ");
+    if (mk_api->config->hideversion == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+
+    printf("\nResume          : ");
+    if (mk_api->config->resume == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+
+    printf("\nUser            : %s", mk_api->config->user);
+    printf("\n\nAdvanced configuration");
+    printf("\n----------------------");
+    printf("\nKeepAlive           : ");
+    if (mk_api->config->keep_alive == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+    printf("\nMaxKeepAliveRequest : %i req/connection", 
+           mk_api->config->max_keep_alive_request); 
+    printf("\nKeepAliveTimeout    : %i seconds", mk_api->config->keep_alive_timeout);
+    printf("\nMaxRequestSize      : %i KB", 
+           mk_api->config->max_request_size/1024);
+    printf("\nSymLink             : ");
+    if (mk_api->config->symlink == VAR_ON) {
+        printf("On");
+    }
+    else {
+        printf("Off");
+    }
+    printf("\n\n");
 }
 
 void mk_cheetah_cmd_status()
@@ -384,7 +461,11 @@ void mk_cheetah_cmd_status()
 
 void mk_cheetah_cmd(char *cmd)
 {
-    if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
+    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
+        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
+        mk_cheetah_cmd_config();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
         strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
         mk_cheetah_cmd_status();
     }
