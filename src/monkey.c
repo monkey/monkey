@@ -166,14 +166,14 @@ int main(int argc, char **argv)
     /* Configuration sanity check */
     mk_config_sanity_check();
 
+    /* Print server details */
+    mk_details();
+
     /* Invoke Plugin PRCTX hooks */
     mk_plugin_core_process();
 
     /* Launch monkey http workers */
     mk_server_launch_workers();
-
-    /* Print server details */
-    mk_details();
 
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(server_fd);
