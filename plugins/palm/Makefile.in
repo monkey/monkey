@@ -5,8 +5,8 @@ INCDIR  = ../../src/include
 SOURCES = palm.c cgi.c request.c
 
 all:
-	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
-	gcc $(CFLAGS) $(DEFS) -shared -o monkey-palm.so cgi.o palm.o request.o -lc
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
+	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-palm.so cgi.o palm.o request.o -lc
 clean:
 	rm -rf *.o
 	rm -rf *.*so*

@@ -4,8 +4,8 @@ DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c dirlisting.c
-	gcc $(CFLAGS) $(DEFS) -shared -Wl -o monkey-dirlisting.so dirlisting.o -lc
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c dirlisting.c
+	$(CC) $(CFLAGS) $(DEFS) -shared -Wl -o monkey-dirlisting.so dirlisting.o -lc
 clean:
 	rm -rf *.o
 	rm -rf *.*so*

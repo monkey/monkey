@@ -4,8 +4,8 @@ DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c security.c
-	gcc $(CFLAGS) $(DEFS) -shared -o monkey-security.so security.o -lc
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c security.c
+	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-security.so security.o -lc
 clean:
 	rm -rf *.o
 	rm -rf *.*so*

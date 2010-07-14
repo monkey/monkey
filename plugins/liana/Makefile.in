@@ -4,7 +4,7 @@ DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	gcc $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c liana.c
-	gcc $(CFLAGS) $(DEFS) -shared -o monkey-liana.so liana.o -lc
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c liana.c
+	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-liana.so liana.o -lc
 clean:
 	rm -rf *.o *~ *.*so*
