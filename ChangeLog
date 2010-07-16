@@ -1,3 +1,334 @@
+commit 924ac75d9ba4f5efd8163ef3c53522cccc2bcf47
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jul 14 10:55:40 2010 -0400
+
+    Plugins: use compiler defined in environment
+
+commit fd4a7a35469ebfc6e6622816c8199621a5e0be3d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 13:35:08 2010 -0400
+
+    Fix config.c merge
+
+commit 52eddac688373c6f0e46860e7324fd5a801df9df
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 13:25:06 2010 -0400
+
+    Update configure script to v0.11.0-git
+
+commit 51c34c1a2a13a230557584f92b4a90b761e58216
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 13:24:38 2010 -0400
+
+    Fix merge
+
+commit 30fc792384a1e564fdf707c5dab38bf8d4029ba8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 10:48:51 2010 -0400
+
+    Read somaxconn from procfs
+
+commit 28931dee0f8723d06e1ad31675945ca4ed9f4776
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 10:13:13 2010 -0400
+
+    Palm Plugin: Set status 500 on palm server connection problem
+
+commit 6c88d399921bedb862c8eab11192dac46ea2faa4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 10:04:56 2010 -0400
+
+    Missed realloc()
+
+commit df8493659092a84c69f6c0a6ba68fdfae4e31ab6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 00:34:27 2010 -0400
+
+    Ser worker capacity inside configuration
+
+commit bd38084c55f7caadc9664ad1c3af3a27b79ab4f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 00:30:06 2010 -0400
+
+    Cheetah! Plugin: Add new 'config' command
+    Remove indexfile struct
+
+commit 6462cf76e62e97faa3936666dd9509d30811e7da
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 23:52:14 2010 -0400
+
+    Print Monkey details before invoke process context
+
+commit c852ebed7aff6bcdd894d47c1451c832a1958370
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 23:47:19 2010 -0400
+
+    Default request chunk size set to 4096 bytes
+
+commit 5f702e42d3b541a06772a4ace443ba2f590f5b94
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 23:38:53 2010 -0400
+
+    New MaxRequestSize configuration directive
+
+commit f8f2a7f4eb175b08fc9819284d6bf030626c7e08
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 23:05:34 2010 -0400
+
+    Request buffer size now is dynamic :)
+
+commit 02c92f0fec10c86eaf18a82fe2eb126a809942b3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 18:44:04 2010 -0400
+
+    Request error: just validate page pointer
+
+commit 1435fb94b021225e35fbd6ba5d7e5903f584fb3f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 18:38:28 2010 -0400
+
+    Logger Plugin: Add 413 status 'Request Entity Too Large'
+
+commit 4df6376fcb2d2bc847332363d590c01535dabb3c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 18:21:32 2010 -0400
+
+    QA: Add test and checker for 413 error
+
+commit 0ed8022c6981c3b2c3ec5fc3ac0c6ce639c6b902
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 18:16:23 2010 -0400
+
+    Refactoring mk_request_error()
+    Do not send content-length header if HEAD method is used
+
+commit 370d661b54af1f0c88bf0f4a030ec55745e165dc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 18:03:01 2010 -0400
+
+    Add status code 413: Request Entity Too Large
+
+commit bf291c1c46a94087b5d6a33aea2672704b43731a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 11 11:48:18 2010 -0400
+
+    Fix plugin thread key API
+    Plugin: Fix thread event list
+    Plugin API: new event_del() interface
+    Palm Plugin: Fix
+    Palm Server: remove unnecessary pipe()s
+    More descriptive TRACE messages
+
+commit 72bb731716fb1d0c07b957471c5ffed45216cf7d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 19:07:06 2010 -0400
+
+    update a line
+
+commit b8e50e13f1bd5e139949def5ca32cc0e08b7781e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 14:50:37 2010 -0400
+
+    Palm Plugin: Fix request_free
+
+commit 8396ea6d5e99e74a30b3405d56012de540bb0494
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 11:40:15 2010 -0400
+
+    Do not close STDIN in daemon mode
+
+commit a7268886df2aeb5b008902ea44f5a4d89d1bbbaf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 11:12:24 2010 -0400
+
+    RPM SPEC: Add 'monkey' user to the system
+    RPM SPEC: Fix log directory permission
+
+commit 074e76d262d971266cc2930fa2aa92800ee04c5d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 10:33:09 2010 -0400
+
+    RPM Spec: add logdir
+
+commit df6273eaa8bf5bcaaff13ecaf194230cf86703b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 10:19:21 2010 -0400
+
+    Fix configuration text template line lengths
+
+commit 356a27c7221724f49c0ffffd3c2885c09cde1bd6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 9 09:53:48 2010 -0400
+
+    New RPM builder spec file
+
+commit 273ed1d3f5097e00cf475ba70ed121cb67e7ef73
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 8 14:28:44 2010 -0400
+
+    Palm Plugin: little changes
+
+commit e0a4f72493f0bd287906417fdeb12a883fbf3e46
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 5 16:03:26 2010 -0400
+
+    Palm Plugin: fix thread key var name
+
+commit be159a359954e9a2d1a2f23cca200d95b840f2b3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 2 08:37:16 2010 -0400
+
+    Palm: Launch each palm in a new process context
+    Palm: Fix auto create new child on die
+    Palm: Kill palm pids when the server exit
+
+commit bc5de8033ba88761edddd7202a97d46343f95b76
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 1 11:12:01 2010 -0400
+
+    Palm: Fix POST method
+
+commit 9cba0a0a7ca5494f58ea2c6252ccdf402421d14c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 30 22:55:09 2010 -0400
+
+    QA: remove files
+
+commit fdc7934d57f1196c57c4290a68e33918c219b4a4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 30 22:53:55 2010 -0400
+
+    Add missed QA log scripts
+
+commit 48c0af36778977475dc0e5d2800b678204d5d543
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 30 22:40:01 2010 -0400
+
+    QA: Fix headers case insensitive log check
+
+commit d58a0a61b4de2f70c19b106ecf81515a7f2b350f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 30 21:47:14 2010 -0400
+
+    Set content length inside http_range_parse() if ranges are set
+
+commit 83e6716334dee76368722a69036fbae0b02f4435
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 29 20:08:56 2010 -0400
+
+    Add mk_string_itop() to plugin API
+    Logger: use new str_itop() API
+    Remove mk_utils_int2mkp() function
+
+commit 355150aa5640d261bf3c08771b4a8f1af261c8ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 29 15:23:36 2010 -0400
+
+    Faster mk_utils_int2mkp()
+    Add mk_string_itop()
+
+commit f38ab6217b55eb8c5725c61911e39eae3b38adb0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 28 17:21:16 2010 -0400
+
+    Trim each key/value configuration string
+
+commit 8e4dad88cd26ce75a6699aaebf5281769ff66f59
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 28 17:17:50 2010 -0400
+
+    Add internal mk_string_trim()
+
+commit 88edd1d0397f315ffb188e15c60200f18566777f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 28 11:26:32 2010 -0400
+
+    Remove deprecated maxclients and maxip from configuration struct
+
+commit dc1a3f090af1225e15b751fefc05f1a253914f59
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 28 11:25:15 2010 -0400
+
+    Fix workers configuration value
+
+commit 3229fc1c8fe051fc4fba20ca063c80806611789b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 27 12:11:14 2010 -0400
+
+    Good bye strftime(), it's not you, it's me :P
+
+commit ccec86920bfee90d5c610ad412ba39a3c609fab6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 26 21:48:31 2010 -0400
+
+    Send bad request response headers on bad request
+
+commit ff220b1782bb875506c32f75e931e8ec8c845a8a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 26 16:11:55 2010 -0400
+
+    Replace some pthread_getspecific() calls for the new mk_cache_get()
+
+commit eabdee01173e11be445d0b0aa19b6c73627206ce
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 26 16:09:09 2010 -0400
+
+    QA: Add last_modified qa script
+
+commit 8fd4815879245979b191627767c1dd765a6b1ee0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 26 16:07:37 2010 -0400
+
+    Fix 'Last-Modified' response header
+
+commit 9ce7b4d9cf99db3191592352593bccab6fec4747
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:49:47 2010 -0400
+
+    Add uri_01 log checker
+
+commit 07377274e993e9098182cecfba1f5c9e541c8852
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:49:23 2010 -0400
+
+    QA: Add protocol test files
+
+commit 296c5135d00f0432254df4ffcc8da5d9220051c9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:49:01 2010 -0400
+
+    Forward Port: Validate empty protocol
+
+commit 11605af53081fa701f2d20ef0c8dbf9908829f1b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:46:11 2010 -0400
+
+    Forward Port: Fix data type for uri_len in http.c
+
+commit 762a439eb2af9dc0b6cf1cee5de8c3694623f542
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:44:08 2010 -0400
+
+    Forward Port: Protect mk_buffer_cat() from invalid length
+
+commit 4117c2b010d8982594ac7e64a8da11a699c5a0d5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:42:43 2010 -0400
+
+    QA: Add uri test files
+
+commit 7f1a723d158aac6ad35446e7c492260c35837241
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 18:40:20 2010 -0400
+
+    Forward Port: Force validation of initial slash in request URI
+
+commit dff448d17fab961ee7947e6e630296a9a16f87f4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 17:55:36 2010 -0400
+
+    Monkey 0.10.3
+
 commit ece8dbc85051f2ce7da69ae8b8338ab302cb6b15
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Jun 23 17:24:05 2010 -0400
@@ -59,6 +390,135 @@ Date:   Wed Jun 23 08:26:06 2010 -0400
 
     Force validation of initial slash in request URI
 
+commit 001f9d6788a4bdb6c44b5f4dad2d046bce6ea958
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 23 08:02:07 2010 -0400
+
+    Missing semicolon
+
+commit f86008fd2deeec9fab7a43c47b9ba024e3a4c8e9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 22 09:20:00 2010 -0400
+
+    Logger Plugin: Add FORBIDDEN error message
+
+commit f210e376562c1cd3c87f7f787ac7f7a86594a0f6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 22 09:19:39 2010 -0400
+
+    Logger Plugin: Use unix breakline code
+
+commit d485ad50ba910a1061d1c27bd33507666c21c0ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 21 13:16:31 2010 -0400
+
+    Plugin API: Add header_set_http_status() call
+    DirListing Plugin: support new configuration mode
+    DirListing Plugin: Fix theme and man configuration
+
+commit 721a688db4e16bf623a4c5751c6ac01aafc91bb5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 21 12:38:28 2010 -0400
+
+    Logger Plugin: fix entries
+
+commit bbacdcb12f5db1c019c7c16634d50bb32f55ecea
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 20 12:22:51 2010 -0400
+
+    Logger plugin: add files
+
+commit b9faf647bfd0464b6ce5f8265de28c72963198bf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 20 12:22:31 2010 -0400
+
+    Logger plugin: add error log support
+
+commit a9ced288e9e13de61e96c94d84b38e5543d2ed60
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 19 19:35:36 2010 -0400
+
+    Fix 'FIXME' code
+
+commit 1603fdeea80376391df445a6edfe25bc906eb047
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 19 19:32:59 2010 -0400
+
+    Do not free CR before check KeepAlive
+
+commit c76e77660c913c8b3ab151e76c085a5862cc5289
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 19 19:10:12 2010 -0400
+
+    Logger Plugin: add Global configuration section
+
+commit a8dd3baeabaafa75c290e5eb1cc86e7af535c005
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 19 18:44:04 2010 -0400
+
+    Fix configuration reader, do not override global section names
+
+commit 155e22d26a5ca0afc2face09c331f3c6a06b1d58
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 19 17:54:42 2010 -0400
+
+    Plugin API: Export time functions
+    Plugin API: Set plugin thread keys before invoke prctx()
+    Plugin API:
+    Core: add mk_header_set_http_status()
+    Core: remove old log cache
+    Core: add mk_pointer protocol_p to struct request
+    Do not free content_length_p when sending headers
+    Logger Plugin: Access log working
+
+commit 92e1144332495c0c0fb3b89f657f4cc9d68891c5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 18 18:06:52 2010 -0400
+
+    Enable STAGE_40
+
+commit b5043a203f5a7467321918fd1720de77a37c70a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 18 18:04:14 2010 -0400
+
+    Drop logfile.c dependency
+
+commit 6ab9a2bc6840f49ebb5652cdf54c91eb196b0e14
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 17 21:46:18 2010 -0400
+
+    Add Logger Plugin (under development)
+
+commit 19730b062f752401b89b9ee9f7e52638b024c1c5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 17 21:45:35 2010 -0400
+
+    Deprecate core logger
+
+commit 4300e297b1e74e1998ff0be05b9434a3e5ba684b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 17 17:08:55 2010 -0400
+
+    Plugin API: Export mk_epoll_ calls
+
+commit 93bc69fb47edc63d669968b5c55cb285676b1b49
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 15 17:38:03 2010 -0400
+
+    API: export mk_worker_spawn()
+
+commit 95a8b1867a0dcc6d4437fd9253f20a68531f2a13
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 15 17:25:26 2010 -0400
+
+    Fix plugin hooks declaration
+
+commit b35c51d4f5c3912100cc79b079b40c9adb902969
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 14 17:16:47 2010 -0400
+
+    Fix un-freed cr nodes
+
 commit 2109750a7af2d2888748f9df223fe750ab12943d
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Jun 12 15:28:33 2010 -0400
@@ -71,6 +531,90 @@ Date:   Sat Jun 12 14:35:13 2010 -0400
 
     Monkey 0.10.2
 
+commit 2f3ce8bd01ffd39c4fc042690978350a52055fd6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 14:24:52 2010 -0400
+
+    Rename Logo image file
+
+commit 134a226f9da58de0f550415dcecf9474c535c5dd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 14:06:47 2010 -0400
+
+    Close connection in handler write if process returns ABORT
+
+commit 8109a7409ec52aaab22e003cdaeec656123d5ca0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 13:50:26 2010 -0400
+
+    Load plugin trace message before load
+
+commit 2d76a292985125a66284b37371176f8af345fe59
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 12:34:55 2010 -0400
+
+    Security Plugin: add trace rules
+
+commit 40e673d32c4e8261abb97fef0714741cb3cfc202
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 12:16:29 2010 -0400
+
+    Adapt security plugin to new configuration model
+
+commit f4c72ed3b55a1100ae3bd2660530ddd777b8d7c5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 12:07:32 2010 -0400
+
+    Adapt palm plugin to new configuration model
+
+commit df7a1ce79bd4e7348163a323ec6c2066f5700d57
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 11:56:24 2010 -0400
+
+    Adapt palm configuration file
+
+commit 1e570d29f48ceb2c8280577cea76f677630a646c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 11:53:50 2010 -0400
+
+    Adapt server config to new configuration model
+
+commit 3b297b5767b34d8f8d99ebd0962f3df7c1b22671
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 11:42:15 2010 -0400
+
+    Adapt mime types reader to new configuration model
+
+commit a870e2522902d7d4611477680bd68fc8a231ad7a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 12 11:40:55 2010 -0400
+
+    Restructure configuration 'structs'
+
+commit b63883dc56f1d46a09b6e7fbe891225ef7310e74
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 11 20:06:57 2010 -0400
+
+    Read from indented configuration
+
+commit 0dddda3162e5ec33742f4b8befd469290f988847
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 11 08:32:36 2010 -0400
+
+    Indent configuration template
+
+commit 2d7f7fd0951d00b9be356fe99c68e04a1f3a894d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 10 00:08:22 2010 -0400
+
+    New configuration reader: indented mode
+
+commit cdf629003f5f9ecdbede745212e8a0f039cf37da
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 8 15:31:45 2010 -0400
+
+    Update configure message
+
 commit a103adf31f9bfb3341a59518f47b098693c56bcd
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Jun 8 14:40:55 2010 -0400
@@ -82,6 +626,832 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Jun 8 14:39:08 2010 -0400
 
     Fix #6: Monkey as daemon, logger do not write log files
+
+commit 9215903eda3bfba69345875631fbe728b9bb5567
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 14:49:01 2010 -0400
+
+    Colorize headers sent in MK_TRACE
+
+commit 28e197ba2249922f2b5efc45b2f6bfc100ef08b8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 14:36:29 2010 -0400
+
+    Fix: set right content length for headers
+
+commit 981be84767361782ebc79e93c304b9aee16e5963
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 14:34:43 2010 -0400
+
+    Print headers sent to STDOUT as MK_TRACE message
+
+commit 48ae46b3a8f5faa87749274409ed6639e8a441d1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 14:31:31 2010 -0400
+
+    Set content-length pointer inside header_send()
+
+commit dd3f39e1c5ce68fab353c96c0091f9c0deea0a6d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 14:04:03 2010 -0400
+
+    Check STAGE_30 return value for not found file request
+
+commit d451bf65e7cc23cb2430aae4accf9aa58a0d04b1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 13:18:03 2010 -0400
+
+    Return right data type for API->header_send()
+
+commit 0f843c580d0cf3eb7bd24f11b4f356ca152d8fc7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 10:45:58 2010 -0400
+
+    Remove unnecessary trace
+
+commit 8501f3f2099fa2a9c96274f3abe77302eae15b01
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 10:29:33 2010 -0400
+
+    Remove security rule in security.conf
+
+commit 3f1f05c99ac24f9d3e827d6a58064ba4179b8007
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 7 10:29:07 2010 -0400
+
+    Remove double STAGE_30 call
+
+commit 87bceea3be32c04ffe1648036ecf39b5558a1fd4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 14:10:32 2010 -0400
+
+    Set values for content_length and content_length_p in one function
+
+commit 1f04d77872cb7fcb9051302b3e8f1e9860e5d7bf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 13:21:26 2010 -0400
+
+    Return FORBIDDEN error if open() fails
+
+commit 3f37443e79ce331b4fba108ee7500d7a6c948e94
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 12:56:47 2010 -0400
+
+    Fix file permission check
+
+commit f7e11d100147a712fc4c7494453a204bee4475cb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 12:09:50 2010 -0400
+
+    Remove trace message
+
+commit 5acdd396a2cb2e6a6078e129405bf6fcb146ec3f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 11:29:57 2010 -0400
+
+    QA: Add log rule for directory redirect check
+
+commit d39e2e635983afac2436a8686ffc151e90918cb2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 11:22:25 2010 -0400
+
+    QA: Add directory redirect checker
+
+commit d5f007fba75c8539a4bcd3829554001fe9d50258
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 11:16:21 2010 -0400
+
+    Fix plugin return values for STAGE_30
+    Fix directory redirect
+
+commit 601344a416bf3bcebba035ee4d4ce3cc9c1c4237
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 2 08:12:29 2010 -0400
+
+    Update plugins version to Monkey version
+
+commit b6f8bdceead8751592d5111d93138e1ac5e03860
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 1 11:41:21 2010 -0400
+
+    Read env CFLAGS and fix some plugins variables declaration
+
+commit 09c24d197f25dfb700ccd83c121832e782225e28
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 1 09:54:46 2010 -0400
+
+    Fix #6: Monkey as daemon, logger do not write log files
+    For some unknown reason, when monkey goes into daemon mode after launch
+    the logger worker, this last one does not write to the log files.
+    Issue fixed moving the daemon routine before launch workers.
+
+commit 7cb8abf92576bc28e3435cf8798b32a651e2296b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 31 23:11:40 2010 -0400
+
+    Fix #7: QA script if_modified_since_test03.htt failed
+    Core was resetting requests nodes from client request struct
+    before check the KeepAlive. Also when the request client were
+    removed from thread index, the index was not updated.
+
+commit c710d7488760e1c620cf4ded083c79621b2f1353
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 29 08:47:43 2010 -0400
+
+    Plugin: Enable STAGE 50
+
+commit 16e728d524ed12c18c81b51cf6cb366c52b84fe4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 28 09:33:14 2010 -0400
+
+    Palm Plugin: remove dummy trace
+
+commit 71e7aab5b5a2edd407fd1744c96814d01adb69b5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 27 15:23:50 2010 -0400
+
+    Palm Server: fix debug message
+
+commit 1b52d13df15e91ff762359db541187ed76673005
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 26 16:43:08 2010 -0400
+
+    Improve plugins loader
+    Now plugins can return -1 when the init hook is called to avoid be registered
+
+commit b65c1859fa7c9066f91580caadd550fa20d17de5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 26 11:51:26 2010 -0400
+
+    Add _mkp_exit() missed hook to plugins
+
+commit 3d502bd2f960f76ec31a6e72e3cc868be34eb949
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 26 11:25:05 2010 -0400
+
+    Plugin: validate init and exit hooks
+
+commit 5ed3cbb26c764ea65e12879658bbee2bb83e2724
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 26 10:16:34 2010 -0400
+
+    Fix and implement new API spec
+    Dirlisting: fix stages for new API
+    Cheetah: fix stages for new API
+    Security: fix stages for new API
+
+commit 8099c9d51aede8dfc571658f00adea1f8646d25d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 21 09:44:39 2010 -0400
+
+    Palm Plugin:  update plugin data when deleting request node
+
+commit 505d98b75ee10b66e7b1852d0f7b901ac2ac3651
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 20 16:41:42 2010 -0400
+
+    Palm Server: add debug.py
+
+commit 88a1f3dcde4be3fd157c6cbaaf31a48d1a4ea1b2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 20 16:39:48 2010 -0400
+
+    Palm Server: Improve debug messages through env variable PALM_DEBUG
+
+commit cca96b62b5884425253bca94977dc5a024909f16
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 22:57:11 2010 -0400
+
+    Palm: handle errors when executing in child
+
+commit 741a988013d7ce78ca439b5b5c21ad8ee4f994a4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 22:27:30 2010 -0400
+
+    Palm Plugin: do not own request if file does not exists
+
+commit 4a746dfa79a8593f8709754209d9dfb17da347cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 22:22:03 2010 -0400
+
+    Palm: change ports (again)
+
+commit f572af89a787838c9dd8b3fd321e8d0e81ce6746
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 21:49:16 2010 -0400
+
+    TRACE: load plugin message
+
+commit 3c3c74fded312e591c622de9e0c2a0b04f6c265f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 11:39:41 2010 -0400
+
+    TRACE: Fix init time for first message
+
+commit 990e0aea2d01512bf2259cb7f374c40225c695e6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 11:34:46 2010 -0400
+
+    Move first monkey trace message to the begin
+
+commit 7a315dd952bee93cb1a2d64ece7b08f73d8f9233
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 11:29:48 2010 -0400
+
+    Palm Plugin: add trace for registered palms
+
+commit 9cab84ad6b316ee68c39356872bfebc7795f4123
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 18 11:22:17 2010 -0400
+
+    Palm: change configuration ports
+
+commit 8441f6be49c06e95ac4fd62474dc6aaeb799d065
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 16 22:32:05 2010 -0400
+
+    Palm Plugin: Add request method to environment request
+
+commit 5a1c793ef8775305e26457cb49b29256dac1e7b1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 16 22:04:29 2010 -0400
+
+    Palm: add hangup() function
+
+commit 0b0c433c61e4dd2d17fb903d8be11792da6eb350
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri May 14 21:09:04 2010 -0400
+
+    Added CC option to all plugins Makefile.in
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b1a544688d658de9d5c252d30c5c3dc43e20369
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri May 14 21:01:39 2010 -0400
+
+    Added a check to configure to verify that there's a compiler installed
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6b1c9d2be01306dc46b653b4168a70daf8eb6f6a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 14 18:17:02 2010 -0400
+
+    Optional Palm Plugin
+
+commit 4c2d64920177f074f1fc15483f3321e3f766959a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 14 18:06:43 2010 -0400
+
+    Plugins: improve plugins.load details and add plugins ABOUT doc
+
+commit 88bfd0f098bcd94611e76900cd9fea1658930e82
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri May 14 15:30:26 2010 -0400
+
+    Fix bug in configure, it wasn't looking the correct plugin dir. Added ABOUT option to added a proper comment line to plugins.load
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 09c34af7767557a9af9032af903ac63cababf036
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri May 14 15:11:33 2010 -0400
+
+    Fix configure to do sed work in-line to both expressionan create Makefile directly. Replaced ENABLED for OPTIONAL and added MANDATORY for plugins compile options
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e4b7cec9f8e5dd6a2099a9bf1ec85c57ea2c0e47
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri May 14 14:43:39 2010 -0400
+
+    Configure add proper cflags an defs to Makefiles at plugin dirs. Added proper #ifdef #endif to palm.c
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e010e9767db4f768ed7a2e4ef7c0517c4cd8e6fd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 14 13:25:38 2010 -0400
+
+    Config: skip 'value' empty left spaces
+
+commit 905c4bc9553200b9173eb707504e14db0c644119
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 14 10:55:59 2010 -0400
+
+    Plugin: new API call http_request_end()
+
+commit 343270c585eb69f6ebd86c233e61954b92f48622
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 8 13:51:24 2010 -0400
+
+    Palm Plugin: enable content length
+
+commit e556adc5533c86cb6b84544e5a50b5ce9a8f8b33
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 8 13:26:58 2010 -0400
+
+    Palm Plugin: do not use chunked transfer encoding for HTTP/1.0
+
+commit 46fcc7525d207a579a39530249bb13a4bb79db14
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 8 10:40:07 2010 -0400
+
+    Palm Plugin: Use real path instead of request uri
+
+commit c07531bd851afffe27f485b0a3c1720f0b296849
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 8 09:43:56 2010 -0400
+
+    Palm Plugin: Fix sockets and send final zero chunk
+
+commit 0cd799e85831d1e51bf61b13184b8939b2e2ce4f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 7 15:05:35 2010 -0400
+
+    Remove silly palm server code and remove tcp no delay in palm client
+
+commit 03ae7eb204862161312c7ddd63ecc8fcae0a5a0e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 7 14:12:54 2010 -0400
+
+    epoll: check error event after EPOLLIN & EPOLLOUT
+
+commit b22ded92a67ab3e4af435230634795c948a0b9d7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 5 09:54:35 2010 -0400
+
+    Do not start if socket server have failed
+
+commit 6a6f810d3d143748d111655c619cc0df5d9274a0
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue May 4 13:43:19 2010 -0400
+
+    Added declratino of mk_palm_request_get_by_http() to request.h of palm
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b4c7a78a7c8d3ac85f3bc0c5ab8f76ad11d25194
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 30 13:40:08 2010 -0400
+
+    Change plugin events and palm plugin hooks
+
+commit a2100cf1e23a62813ec3fcfc1d17bc170e49f840
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 16:54:57 2010 -0400
+
+    Plugin API: rename get_somaxconn() to sys_get_somaxconn()
+
+commit 60e1742bd255588d6ca3f65c1cf10efae352ef07
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Apr 29 16:45:51 2010 -0400
+
+    Added bind, listen, create_socket and server to liana and replace
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e1bf6e52f944c594bbe43ff484b2d895072fd0bd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 16:12:33 2010 -0400
+
+    Palm Plugin: free resources
+
+commit d29250f4b09649b6d3d7a6d296cd8788211506ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 15:53:01 2010 -0400
+
+    Palm Plugin: fix missed epoll notification
+
+commit 5d0c533a76b0f9fc045dfaac243ec4e60978c574
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 14:17:59 2010 -0400
+
+    Palm Plugin: change some trace messages
+
+commit 3b070c50155c31adc945d239b3d5d1ea1b59a1e8
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Apr 29 13:25:11 2010 -0400
+
+    Moved mk_socket_connect to the proper function inside of liana plugin
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 77b7d7bb2425e163ab0f9a04a00327dd56653fb1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 13:24:44 2010 -0400
+
+    Palm Plugin: set socket TCP_CORK to OFF after send headers
+
+commit 71ac4e0bea6cb03f4764f19a2fc76be90c511e87
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 13:17:56 2010 -0400
+
+    Palm Plugin: remove deprecated function
+
+commit 8478bd0035e79bf2c6513b10f112aa23c71e3309
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 13:05:19 2010 -0400
+
+    Palm Plugin: set socket status
+
+commit 5150567186bf2b5322512fa11ed06bf5f0227193
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 12:49:57 2010 -0400
+
+    Connection: use right plugin read returned value
+
+commit 4f8ba77d40f130c085bbd0a3e91ea06ed19591b5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 12:45:55 2010 -0400
+
+    Palm Plugin: fix return value for read()
+
+commit 18ed002a9584a76e92907ace72913f53a3c07735
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 29 12:42:39 2010 -0400
+
+    Remove silly message 'Aqui va'
+
+commit 8ab028f8491da993626bce4cd975ca7cc82aca8d
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Apr 29 12:14:39 2010 -0400
+
+    Replaced write() and read() for mk_api->socket_(send|read)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit eed08188a0cf441d27bab0fc5fa0cc2cc4ea3504
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Apr 28 16:48:02 2010 -0400
+
+    Added some missing .h at the top of request.c, fix Makefile to link request.o.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9b45505cadf6c86d62fe30b1caec1961408d1eb5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 27 16:41:11 2010 -0400
+
+    Palm: split request code
+
+commit a6ff7c0c65f34eb012ca9ab487451fdc71918c15
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Apr 27 15:46:37 2010 -0400
+
+    Some order in plugin.c. Added more callbacks realted to sockets in the plugin api. Proposed .gitignore
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b5fb90872ca66cbe86c12b71e53cfbb652cc92f8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 27 14:55:00 2010 -0400
+
+    Plugin event: return hook return values
+
+commit 6082f8400fab686c8f3b61cc0a372709d48d2cfd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 27 14:52:19 2010 -0400
+
+    Epoll: set ret to -1 in every cycle
+
+commit db34b2f0bf87c5d9afc8dd9c705fc9be315319b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 27 11:53:47 2010 -0400
+
+    Fix epoll interface events
+
+commit a5dab47ef17bbd250244c6dd23cab495dc25a2d3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 17:46:04 2010 -0400
+
+    Palm Server: os.wait() on child die
+
+commit 9dc53e21d4c5f992238d7098918963f45e716302
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 16:49:44 2010 -0400
+
+    Scheduler: remove incomplete client_request from list
+
+commit 1b7cc37a52ee11c14ae6be4b35dcf0d6076a115e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 15:58:14 2010 -0400
+
+    Epoll: add mk_epoll_del() interface
+
+commit 9f3be00c19541b776a62d7e8b27bdd638db7ad84
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 15:12:59 2010 -0400
+
+    Plugin: event add now requires EPOLL modes
+
+commit 78e8e4a9f38ca5a7abade8e3b5d0d616cd93dd32
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 14:18:47 2010 -0400
+
+    Add plugin handlers for events
+
+commit 0e3fc059a6765a90ced3eb9b73c159d1d9168857
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Apr 26 13:01:56 2010 -0400
+
+    Deleted some trailing whitespaces. Added a method to Request on palm server. Fixed palm plugin to work with the new api
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4805774da7cf47af18674b325c231f77150cc38b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 12:52:18 2010 -0400
+
+    Plugin API: Document event_* hook calls
+
+commit 141a4e631ad0254a702df57891353767b5ee6ced
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 12:43:55 2010 -0400
+
+    Plugin: remove old STAGE_60
+
+commit 53a5e4c2456b7d71713d308a1fded91b4cb13165
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 12:41:14 2010 -0400
+
+    Plugin: Add new event plugin hooks
+
+commit 1b2c755bf94f00896b934b4a0de05d845444d6e6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 12:03:17 2010 -0400
+
+    Liana Plugin: remove cast
+
+commit b995809ab33dc78c5f21e2f93711a5d7a683bce5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 11:56:47 2010 -0400
+
+    Plugin: use right return data type for exported functions
+
+commit e2119ef7817799b68216a80e4e236b00ea87bd74
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 26 11:41:11 2010 -0400
+
+    Rename m_build_buffer() to mk_string_build() and move it to str.c
+
+commit a2769ecd9ec34ef4cc1ba99d62f5c464393a655e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 25 11:56:32 2010 -0400
+
+    Plugin API: Add API definition
+
+commit a8f8963d2303b8290f307d96a2a4d61b82c8dbc7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 25 01:13:17 2010 -0400
+
+    Plugin API: Add function definitions
+
+commit 2f65eba33206de81902cae94aa2f92e1d47fe411
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 22 17:01:51 2010 -0400
+
+    Cheetah: colorize plugin category tags
+
+commit 27c028e68f9c64870da9d75dbbd0bbda6a43bbd4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 22 16:51:21 2010 -0400
+
+    Enable DirListing plugin
+    Core: fix directory http restriction
+
+commit 72b1ec2932fa8fc855d26b7a0ef22d77702748ba
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 22 14:23:02 2010 -0400
+
+    Rename api.txt to API.txt
+
+commit 55892b050fb3148d38d540454904ab33cab69626
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 20:49:10 2010 -0400
+
+    Liana: Accept socket and set non-block inmediately
+
+commit bbcd028276780c3611f6149188d0a6fcc381c99e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 20:47:10 2010 -0400
+
+    Plugin: change type for neti* map
+
+commit d9fa53c3d0a54e62a86a2134197d3adbdd990bdb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 13:07:23 2010 -0400
+
+    Liana: code cleanup
+
+commit c45e302e4cffa3fcd66b859bd30185f933a83f5b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 13:03:53 2010 -0400
+
+    New Liana Network Plugin
+
+commit 1945e06be0a9bba0b69331ff21371415c4decea1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 13:03:17 2010 -0400
+
+    Plugin: validate NETWORK IO
+
+commit c71471b1a434bee6d84d651170e5ac835cfbf8bb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 12:58:25 2010 -0400
+
+    Configure: optional ENABLED file under mandatory plugins directory
+
+commit 8ea12e29118da08294ae6dc25da0d40abeff301b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 12:44:47 2010 -0400
+
+    Core: add wrappers for network io calls
+
+commit 4b57e6fd888daf9d783d1c86ca61e731f45c961d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 11:50:20 2010 -0400
+
+    Plugin: add TRACE detailed message when NETWORK IO/IP plugin are cincomplete
+
+commit 359fdcadb0cae86924cb0e81e9600b2324632e70
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 11:37:35 2010 -0400
+
+    Plugin: restrict to one I/O and IP network plugin
+
+commit 284b3eba5cc211fc298984e66c8991a68356725e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 11:22:38 2010 -0400
+
+    Plugin: add net_io.sendfile hook
+
+commit 16feb3d280f1eb1f1c7f113977d5d18887eaff11
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 11:17:48 2010 -0400
+
+    Plugin API: add _mkp_network_io_send_file
+
+commit bb18a3cf9de4abae15e2adda572364cb8b4b7adb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 21 09:57:01 2010 -0400
+
+    Plugin: Fix reference under trace context
+
+commit b3d267a8685dbbd420bf7d2538f3d68ea5ff7519
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 23:14:15 2010 -0400
+
+    Plugin: free plugin struct if it fails
+
+commit 85ef77ad48e34939308b9aa65843ee0a5d0d5add
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 23:11:07 2010 -0400
+
+    Plugin: fix NETWORK_* validation
+
+commit e1c46f1f8f86b218640fa7519533d7da225ce5a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 23:09:34 2010 -0400
+
+    Plugin: Validate calls for NETWORK_IO and NETWORK_IP
+
+commit fbac72567e0d716f5581061bb573a1e507113277
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 23:01:45 2010 -0400
+
+    Cheetah Plugin: Add NETWORK IO/IP
+
+commit 67d02bbe5a7ec3874efc7f75505f1d7dd3bcbf98
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 21:08:35 2010 -0400
+
+    Cheetah API: add CORE THREAD CONTEXT
+
+commit 151b76d31c73d7b6753b23a430a50f470252c584
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 21:05:37 2010 -0400
+
+    Cheetah Plugin: adapt code to new API
+
+commit 7bd98e2b42b340f0581c86f2dc1845d3247d5993
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 19:59:01 2010 -0400
+
+    Security Plugin: adapt code to new API
+
+commit 5b5187b75a529891eabc33ac8326d911434c6c2e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 19:50:13 2010 -0400
+
+    Plugin: Add stages 50 and 60 to run command
+
+commit d5ea021bbf50a8b87dcd0c134eff00a4ba43503b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 19:44:12 2010 -0400
+
+    Plugin: set global stage map
+
+commit c958e5f1a7923e334d69b773e9bb94b88af40b0e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 17:58:58 2010 -0400
+
+    Fix data type
+
+commit 7aaf23da52c68fab31beb9dad4f3ca8b1acc9be9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 17:45:36 2010 -0400
+
+    Plugin: New internal structure
+
+commit 214d0d820734ba23a54bbf8d082225984dc639d1
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Apr 20 12:27:40 2010 -0400
+
+    Repalce __uint32_t for int, we don't need to use __uint32_t
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a1cecf6364aa9d814be656be09a0b60de3479ad1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 20 12:09:16 2010 -0400
+
+    Plugin API: description fixes
+
+commit 55919adde457f7cae9816b0ad3315452e4810fd4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 19 22:57:40 2010 -0400
+
+    Disable plugins
+
+commit a05898d496ca31c9e948eda126236a46cf7a2006
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 19 22:57:17 2010 -0400
+
+    Plugin API: use spec definitions
+
+commit 82957c6dc5669f9d5e0f133b055a73bc7bfd0368
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 19 17:20:18 2010 -0400
+
+    Cleanup utils.h
+
+commit 79887c974b2ca79d85fc7e23c4fc3050286bf971
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 19 17:17:05 2010 -0400
+
+    Deprecate SendFile()
+
+commit 817dc521016ea33e8d5c71048b588707535d68cc
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Apr 19 16:59:28 2010 -0400
+
+    Create layer to handler the send of data using a socket
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b446620f0632a0cada30c9df7940f91f3a9a1529
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 19 14:34:34 2010 -0400
+
+    Plugin API: little style change
+
+commit b44a645ab4a13d1986e64f0d3320152c95bc0351
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 16 17:28:42 2010 -0400
+
+    Plugin API: Change data type names and minor fixes
+
+commit ac924b118dcd6e588cfeb977e96d028252669220
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 16 14:33:32 2010 -0400
+
+    Plugin API: Add a list of Monkey functions exported to each plugin
+
+commit 7760b28036d893be26e00f39017de0526156dad6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 16 13:37:36 2010 -0400
+
+    Plugin API: Add mandatory hooks
+
+commit 354680601f978469898f302f46b0f92238e04764
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 16 13:16:03 2010 -0400
+
+    Plugin API: Add function hook names
+
+commit 5473daaf2674fdc374b3de53387c86324e9a246a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 16 12:57:38 2010 -0400
+
+    Add Plugin API spec
+
+commit 13a23ecbda005e21537aee68bf07d5d7654d3928
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 10 19:00:50 2010 -0400
+
+    Update branch version
 
 commit 88db3540cd7fcd22eaba8f2f4a225996960acf39
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -662,6 +2032,12 @@ Date:   Fri Mar 5 22:01:32 2010 -0300
 
     Change Website URL in default index.html
 
+commit 5df493be908591a92574fb497e8e7480ae753ed2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 15:44:09 2010 -0300
+
+    Set non-blocking socket on accept with accept4()
+
 commit b509b0aa20832bafecca73de8bef68820e10b73d
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Mar 3 14:26:44 2010 -0300
@@ -673,6 +2049,36 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Mar 3 14:20:07 2010 -0300
 
     Remove connections counter
+
+commit 90d308d9ec799424c2e6c37c4352ffcb1f1b7625
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 09:06:05 2010 -0300
+
+    Update version number to 0.11.0-dev
+
+commit 7665dde054961a1933a19534c8ed5a8141c9127c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 08:54:38 2010 -0300
+
+    Add missed plugins Makefile
+
+commit 91b45a755e0feaf5f1994e175f446101a391c9eb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 08:52:08 2010 -0300
+
+    Add DirListing module
+
+commit 82930bcf08f8c82bcea45e6b3ecd6b1b16e935a4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 08:49:38 2010 -0300
+
+    Add Palm Plugin
+
+commit dd0c1e749c1b37db33ead939d8c6b74d687c8ef5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 08:47:18 2010 -0300
+
+    Add Palm server
 
 commit 94f8ca3d923f8af10b4a423d2674b41867cf278f
 Author: Eduardo Silva <edsiper@gmail.com>
