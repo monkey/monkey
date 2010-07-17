@@ -185,15 +185,15 @@ cat > Makefile << EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
 default:
-	@(cd src; make all)
+	@(cd src; \$(MAKE) all)
 
 plugins:
-	@(cd plugins; make all)
+	@(cd plugins; \$(MAKE) all)
 
 clean:
-	@(cd src; make clean)
+	@(cd src; \$(MAKE) clean)
 distclean:
-	@(cd src; make distclean)
+	@(cd src; \$(MAKE) distclean)
 EOF
 }
 
@@ -231,14 +231,14 @@ LOGDIR=\$(DESTDIR)${logdir}
 PLUGINDIR=\$(DESTDIR)${plugdir}
 
 default:
-	@(cd src; make all)
+	@(cd src; \$(MAKE) all)
 clean:
-	@(cd src; make clean)
+	@(cd src; \$(MAKE) clean)
 distclean:
-	@(cd src; make distclean)
+	@(cd src; \$(MAKE) distclean)
 
 install:
-	make -C src all
+	\$(MAKE) -C src all
 	install -d \$(BINDIR)
 	install -d \$(CGIBIN)
 	install -d \$(SYSCONFDIR)
@@ -301,7 +301,7 @@ all: ../bin/monkey
 	@echo
 	@echo "Compiling Plugins"
 	@echo "================="
-	@(cd ../plugins && make all && cd ..)
+	@(cd ../plugins && \$(MAKE) all && cd ..)
 
 clean:
 	rm -rf *.o
@@ -352,8 +352,8 @@ EOF
             comment="    # "
 	fi
 
-        echo "	@(cd $plugin_dir && make && cd ..)" >> Makefile;
-        sed -e "s/\$CC/$CC/" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+        echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
+        sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         if test -e $plugin_dir/ABOUT ; then
             cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
@@ -371,7 +371,7 @@ EOF
 	echo "" >> ../conf/plugins.load
     done
 
-# Add 'install' option to make file if plugdir was specified
+# Add 'install' option to Makefile if plugdir was specified
 if [ "$plugdir" != "" ]; then
     echo -e "\ninstall:" >> Makefile
     echo -e "\tinstall -d $plugdir" >> Makefile
