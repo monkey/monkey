@@ -304,7 +304,7 @@ int mk_string_trim(char **str)
     /* left spaces */
     while (left) {
         if (isspace(*left)) {
-            *left++;
+            left++;
         }
         else {
             break;
@@ -321,7 +321,7 @@ int mk_string_trim(char **str)
     /* Move back */
     while (right != buf){
         if (isspace(*right)) {
-            *right--;
+            right--;
         }
         else {
             break;
@@ -333,7 +333,7 @@ int mk_string_trim(char **str)
         buf[i] = (char) left[i];
     }
     buf[i] = '\0';
-    
+
     return 0;
 }
 
