@@ -324,7 +324,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
             case MK_CONFIG_VAL_STR:
                 return (void *) entry->val;
             case MK_CONFIG_VAL_NUM:
-                return (void *) atoi(entry->val);
+                return (void *) (size_t) atoi(entry->val);
             case MK_CONFIG_VAL_BOOL:
                 on = strcasecmp(entry->val, VALUE_ON);
                 off = strcasecmp(entry->val, VALUE_OFF);
@@ -388,7 +388,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Connection port */
-    config->serverport = (int) mk_config_section_getval(section,
+    config->serverport = (size_t) mk_config_section_getval(section,
                                                         "Port", 
                                                         MK_CONFIG_VAL_NUM);
     if (!config->serverport >= 1 && !config->serverport <= 65535) {
@@ -396,7 +396,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Number of thread workers */
-    config->workers = (int) mk_config_section_getval(section,
+    config->workers = (size_t) mk_config_section_getval(section,
                                                      "Workers", 
                                                      MK_CONFIG_VAL_NUM);
     if (config->workers < 1) {
@@ -406,14 +406,14 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     config->worker_capacity = mk_server_worker_capacity(config->workers);
 
     /* Timeout */
-    config->timeout = (int) mk_config_section_getval(section,
+    config->timeout = (size_t) mk_config_section_getval(section,
                                                      "Timeout", MK_CONFIG_VAL_NUM);
     if (config->timeout < 1) {
         mk_config_print_error_msg("Timeout", path);
     }
     
     /* KeepAlive */
-    config->keep_alive = (int) mk_config_section_getval(section,
+    config->keep_alive = (size_t) mk_config_section_getval(section,
                                                         "KeepAlive",
                                                         MK_CONFIG_VAL_BOOL);
     if (config->keep_alive == VAR_ERR) {
@@ -421,7 +421,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* MaxKeepAliveRequest */
-    config->max_keep_alive_request = (int)
+    config->max_keep_alive_request = (size_t)
         mk_config_section_getval(section,
                                  "MaxKeepAliveRequest",
                                  MK_CONFIG_VAL_NUM);
@@ -431,7 +431,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* KeepAliveTimeout */
-    config->keep_alive_timeout = (int) mk_config_section_getval(section,
+    config->keep_alive_timeout = (size_t) mk_config_section_getval(section,
                                                                 "KeepAliveTimeout",
                                                                 MK_CONFIG_VAL_NUM);
     if (config->keep_alive_timeout == 0) {
@@ -451,7 +451,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
                                                    "Indexfile", MK_CONFIG_VAL_LIST);
 
     /* HideVersion Variable */
-    config->hideversion = (int) mk_config_section_getval(section,
+    config->hideversion = (size_t) mk_config_section_getval(section,
                                                          "HideVersion",
                                                          MK_CONFIG_VAL_BOOL);
     if (config->hideversion == VAR_ERR) {
@@ -462,14 +462,14 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     config->user = mk_config_section_getval(section, "User", MK_CONFIG_VAL_STR);
 
     /* Resume */
-    config->resume = (int) mk_config_section_getval(section,
+    config->resume = (size_t) mk_config_section_getval(section,
                                                     "Resume", MK_CONFIG_VAL_BOOL);
     if (config->resume == VAR_ERR) {
         mk_config_print_error_msg("Resume", path);
     }
 
     /* Max Request Size */
-    config->max_request_size = (int) mk_config_section_getval(section,
+    config->max_request_size = (size_t) mk_config_section_getval(section,
                                                               "MaxRequestSize",
                                                               MK_CONFIG_VAL_NUM);
     if (config->max_request_size <= 0) {
@@ -480,7 +480,7 @@ void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Symbolic Links */
-    config->symlink = (int) mk_config_section_getval(section,
+    config->symlink = (size_t) mk_config_section_getval(section,
                                                      "SymLink", MK_CONFIG_VAL_BOOL);
     if (config->symlink == VAR_ERR) {
         mk_config_print_error_msg("SymLink", path);

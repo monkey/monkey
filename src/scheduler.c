@@ -171,12 +171,12 @@ void mk_sched_set_request_index(struct request_idx *ri)
 
 void mk_sched_set_thread_poll(int epoll)
 {
-    pthread_setspecific(epoll_fd, (void *) epoll);
+    pthread_setspecific(epoll_fd, (void *) (size_t) epoll);
 }
 
 int mk_sched_get_thread_poll()
 {
-    return (int) pthread_getspecific(epoll_fd);
+    return (size_t) pthread_getspecific(epoll_fd);
 }
 
 struct sched_list_node *mk_sched_get_thread_conf()

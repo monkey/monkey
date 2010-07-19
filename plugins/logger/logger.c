@@ -205,7 +205,7 @@ int _mkp_init(void **api, char *confdir)
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
     section = mk_api->config_section_get(mk_api->config->config, "LOGGER");
     if (section) {
-        timeout = (int) mk_api->config_section_getval(section,
+        timeout = (size_t) mk_api->config_section_getval(section,
                                                       "FlushTimeout",
                                                       MK_CONFIG_VAL_NUM);
         if (timeout <= 0) {

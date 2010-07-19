@@ -82,8 +82,8 @@ int mk_palm_conf(char *confdir)
         new->server_addr = mk_api->config_section_getval(section, "ServerAddr",
                                                          MK_CONFIG_VAL_STR);
         /* Palm server TCP port */
-        new->server_port = (int) mk_api->config_section_getval(section, "ServerPort",
-                                                               MK_CONFIG_VAL_NUM);
+        new->server_port = (size_t) mk_api->config_section_getval(section, "ServerPort",
+                                                                  MK_CONFIG_VAL_NUM);
 
 #ifdef TRACE
         PLUGIN_TRACE("RegPalm '%s|%s|%s|%i'", new->extension, new->mimetype,
