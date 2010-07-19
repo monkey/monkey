@@ -249,7 +249,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
     va_list ap;
     int length;
     char *ptr;
-    static size_t _mem_alloc = 64;
+    static size_t _mem_alloc = (sizeof(char *) * 16);
     size_t alloc = 0;
 
     /* *buffer *must* be an empty/NULL buffer */
