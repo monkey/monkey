@@ -249,7 +249,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
     va_list ap;
     int length;
     char *ptr;
-    static size_t _mem_alloc = (sizeof(char *) * 16);
+    static size_t _mem_alloc = 64;
     size_t alloc = 0;
 
     /* *buffer *must* be an empty/NULL buffer */
@@ -262,18 +262,20 @@ char *mk_string_build(char **buffer, unsigned long *len,
 
     va_start(ap, format);
     length = vsnprintf(*buffer, alloc, format, ap);
+    va_end(ap);
 
     if (length >= alloc) {
         ptr = realloc(*buffer, length + 1);
         if (!ptr) {
-            va_end(ap);
             return NULL;
         }
         *buffer = ptr;
         alloc = length + 1;
+
+        va_start(ap, format);
         length = vsnprintf(*buffer, alloc, format, ap);
+        va_end(ap);
     }
-    va_end(ap);
 
     if (length < 0) {
         return NULL;
