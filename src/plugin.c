@@ -195,7 +195,8 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
         mk_plugin_load_symbol(handler, "_mkp_network_ip_maxlen");
 
     /* Thread key */
-    p->thread_key = (size_t) mk_plugin_load_symbol(handler, "_mkp_data");
+    p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler, 
+                                                            "_mkp_data");
 
     /* Event handlers hooks */
     p->event_read = (int (*)())
@@ -710,7 +711,7 @@ void mk_plugin_preworker_calls()
 #ifdef TRACE
             MK_TRACE("[%s] Set thread key", p->shortname);
 #endif
-            ret = pthread_key_create(&p->thread_key, NULL);
+            ret = pthread_key_create(p->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s",
                        p->shortname);

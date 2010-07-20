@@ -123,7 +123,7 @@ struct plugin
     int (*event_timeout) (int);
 
     /* Each plugin has a thread key for it's global data */
-    pthread_key_t thread_key;
+    pthread_key_t *thread_key;
 
     /* Next! */
     struct plugin *next;
