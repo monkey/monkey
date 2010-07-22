@@ -1,10 +1,3 @@
-%define webroot /var/www/monkey
-%define prefix /usr
-%define bindir /usr/bin
-%define sysconf /etc/monkey
-%define logdir /var/log/monkey
-%define plugdir /usr/lib/monkey
-
 Name: monkey
 Version: 0.11.0
 Release: 2%{?dist}
@@ -29,23 +22,23 @@ perfect solution for embedded and high production environments.
 %build
 export CFLAGS=%{optflags}
 ./configure \
-	--prefix=%{prefix} \
-	--bindir=%{bindir} \
-	--sysconfdir=%{sysconf} \
-	--datadir=%{webroot} \
-	--logdir=%{logdir} \
-	--plugdir=%{plugdir}
+	--prefix=%{_prefix} \
+	--bindir=%{_bindir} \
+	--sysconfdir=%{_sysconf}/%{name} \
+	--datadir=%{_var}/www/%{name} \
+	--logdir=%{_var}/log/%{name} \
+	--plugdir=%{_libexecdir}/%{name}
+
 make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
-install -d %{buildroot}/usr/share/doc
-install -d %{buildroot}%{logdir}
+install -d %{buildroot}%{_var}/log/%{name}
 
 make install DESTDIR=%{buildroot}
 
 %{__sed} -i 's/User nobody/User monkey/g' \
-         %{buildroot}%{_sysconf}/monkey/monkey.conf
+	 %{buildroot}%{_sysconf}/%{name}/monkey.conf
 
 %find_lang %{name}
 
@@ -62,14 +55,14 @@ exit 0
 %files -f %{name}.lang
 %defattr(-,root,root)
 %doc README LICENSE ChangeLog*
-%attr(644,root,root) %{_sysconfdir}/monkey/*
-%{_bindir}/*
-%{_libdir}/*
-%{_datadir}/*
-%{webroot}/*
-%{logdir}
-%defattr(-, monkey, monkey, 0750)
-%{_localstatedir}/log/monkey
+%attr(644,root,root) %config(noreplace) %{_sysconfdir}/%{name}/monkey.conf
+%attr(644,root,root) %config(noreplace) %{_sysconfdir}/%{name}/monkey.mime
+%attr(644,root,root) %{_sysconfdir}/%{name}/plugins
+%attr(644,root,root) %{_sysconfdir}/%{name}/sites
+%{_bindir}/banana
+%{_bindir}/monkey
+%dir %{_var}/www/%{name}
+%attr(0750, monkey, monkey) %ghost %{_localstatedir}/log/%{name}
 
 %changelog
 * Thu Jul 22 2010  Horst H. von Brand <vonbrand@inf.utfsm.cl> - 0.11.0-2
