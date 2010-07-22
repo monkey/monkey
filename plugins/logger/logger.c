@@ -200,6 +200,7 @@ int _mkp_init(void **api, char *confdir)
     
     /* Specific thread key */
     pthread_key_create(&cache_content_length, NULL);
+    pthread_key_create(&cache_status, NULL);
 
     /* Global configuration */
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
@@ -300,6 +301,7 @@ void _mkp_core_thctx()
 {
     struct mk_iov *iov_log;
     mk_pointer *content_length;
+    mk_pointer *status;
 
 #ifdef TRACE
     PLUGIN_TRACE("Creating thread cache");
@@ -314,6 +316,12 @@ void _mkp_core_thctx()
     content_length->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     content_length->len = -1;
     pthread_setspecific(cache_content_length, (void *) content_length);
+
+    /* Cahe status */
+    status = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    status->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
+    status->len = -1;
+    pthread_setspecific(cache_status, (void *) status);
 }
 
 int _mkp_stage_40(struct client_request *cr, struct request *sr)
@@ -322,9 +330,11 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
+    mk_pointer *content_length;
+    mk_pointer *status;
 
     http_status = sr->headers->status;
- 
+
     /* Look for target log file */
     target = mk_logger_match_by_host(sr->host_conf);
     if (!target) {
@@ -371,20 +381,21 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* HTTP Status code response */
+        status = pthread_getspecific(cache_status);
+        mk_api->str_itop(http_status, status);
         mk_api->iov_add_entry(iov, 
-                              sr->headers->status_p->data,
-                              sr->headers->status_p->len,
+                              status->data,
+                              status->len - 2,
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* Content Length */
         if (sr->method != HTTP_METHOD_HEAD) {
             /* Int to mk_pointer */
-            mk_pointer *cl;
-            cl = pthread_getspecific(cache_content_length);
-            mk_api->str_itop(sr->headers->content_length, cl);
+            content_length = pthread_getspecific(cache_content_length);
+            mk_api->str_itop(sr->headers->content_length, content_length);
 
             mk_api->iov_add_entry(iov,
-                                  cl->data, cl->len - 2, 
+                                  content_length->data, content_length->len - 2, 
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
         else {

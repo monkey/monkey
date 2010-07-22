@@ -212,7 +212,6 @@ struct request
 struct header_values
 {
     int status;
-    mk_pointer *status_p;
 
     /* Length of the content to send */
     long content_length;

@@ -333,7 +333,6 @@ char *mk_header_chunked_line(int len)
 void mk_header_set_http_status(struct request *sr, int status)
 {
     sr->headers->status = status;
-    sr->headers->status_p = mk_http_status_get(status);
 }
 
 struct header_values *mk_header_create()
@@ -347,7 +346,6 @@ struct header_values *mk_header_create()
     headers->content_length = -1;
     headers->transfer_encoding = -1;
     headers->last_modified = -1;
-    //    mk_pointer_reset(&headers->content_length_p);
     mk_pointer_reset(&headers->content_type);
     headers->location = NULL;
 

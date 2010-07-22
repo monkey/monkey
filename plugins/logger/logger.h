@@ -31,6 +31,7 @@ int mk_logger_timeout;
 #include "pthread.h"
 pthread_key_t timer;
 pthread_key_t cache_content_length;
+pthread_key_t cache_status;
 
 struct log_target
 {
