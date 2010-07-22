@@ -15,6 +15,7 @@ URL: http://www.monkey-project.com
 Source: http://www.monkey-project.com/releases/0.11/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+BuildRequires: gettext
 Requires(pre): shadow-utils
 
 %description
@@ -43,6 +44,8 @@ install -d %{buildroot}%{logdir}
 
 make install DESTDIR=%{buildroot}
 
+%find_lang %{name}
+
 %clean
 rm -rf %{buildroot}
 
@@ -56,7 +59,7 @@ exit 0
 %post
 sed -i 's/User nobody/User monkey/g' /etc/monkey/monkey.conf
 
-%files 
+%files -f %{name}.lang
 %defattr(-,root,root)
 %doc README LICENSE ChangeLog*
 %attr(644,root,root) %{_sysconfdir}/monkey/*
