@@ -1,4 +1,3 @@
-%define branch 0.11
 %define webroot /var/www/monkey
 %define prefix /usr
 %define bindir /usr/bin
@@ -6,15 +5,15 @@
 %define logdir /var/log/monkey
 %define plugdir /usr/lib/monkey
 
-Summary: Monkey is a Fast and Lightweight Web Server for Linux
+Summary: A fast and lightweight web server for Linux
 Name: monkey
 Version: 0.11.0
 Packager: Eduardo Silva <edsiper@gmail.com>
 Release: 1%{dist}
-License: GPL
+License: GPLv2+
 Group: System Environment/Daemons
-Source: http://www.monkey-project.com/releases/%{branch}/%{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Source: http://www.monkey-project.com/releases/0.11/%{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-buildroot
 URL: http://www.monkey-project.com
 
 %description
@@ -25,7 +24,7 @@ solution for embedded and high production environments.
 %prep
 %setup
 %build
-export CFLAGS=$RPM_OPT_FLAGS
+export CFLAGS=%{optflags}
 ./configure \
 	--prefix=%{prefix} \
 	--bindir=%{bindir} \
@@ -34,7 +33,7 @@ export CFLAGS=$RPM_OPT_FLAGS
 	--logdir=%{logdir} \
 	--plugdir=%{plugdir}
 
-make
+make %{?_smp_mflags}
 
 %pre
 /usr/sbin/useradd -s /sbin/nologin -M -r -d %{webroot} \
