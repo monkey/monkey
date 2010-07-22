@@ -191,6 +191,7 @@ int _mkp_stage_20(struct client_request *cr, struct request *sr)
 #ifdef TRACE
         PLUGIN_TRACE("Close connection FD %i", cr->socket);
 #endif
+        mk_api->header_set_http_status(sr, M_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 

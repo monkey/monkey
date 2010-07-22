@@ -26,6 +26,7 @@
 #include "iov.h"
 #include "socket.h"
 #include "epoll.h"
+#include "http_status.h"
 #include "utils.h"
 
 #ifndef MK_PLUGIN_H
