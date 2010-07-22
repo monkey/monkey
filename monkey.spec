@@ -44,6 +44,9 @@ install -d %{buildroot}%{logdir}
 
 make install DESTDIR=%{buildroot}
 
+%{__sed} -i 's/User nobody/User monkey/g' \
+         %{buildroot}%{_sysconf}/monkey/monkey.conf
+
 %find_lang %{name}
 
 %clean
@@ -55,9 +58,6 @@ getent passwd monkey > /dev/null || \
   useradd -r -g monkey -d %{webroot} -s /sbin/nologin \
 	  -c "Monkey HTTP Daemon" monkey
 exit 0
-
-%post
-sed -i 's/User nobody/User monkey/g' /etc/monkey/monkey.conf
 
 %files -f %{name}.lang
 %defattr(-,root,root)
