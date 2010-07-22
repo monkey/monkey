@@ -7,7 +7,7 @@
 
 Name: monkey
 Version: 0.11.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A fast and lightweight web server for Linux
 Group: System Environment/Daemons
 License: GPLv2+
@@ -72,5 +72,8 @@ exit 0
 %{_localstatedir}/log/monkey
 
 %changelog
-* Thu Jul 08 2010 Eduardo Silva <edsiper at, gmail.com> 0.11.0-1
+* Thu Jul 22 2010  Horst H. von Brand <vonbrand@inf.utfsm.cl> - 0.11.0-2
+- First cut at cleaning up specfile according to Fedora guidelines
+
+* Thu Jul 08 2010  Eduardo Silva <edsiper at gmail.com> 0.11.0-1
 - Initial rpm package for Fedora 13
