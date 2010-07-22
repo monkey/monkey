@@ -5,24 +5,26 @@
 %define logdir /var/log/monkey
 %define plugdir /usr/lib/monkey
 
-Summary: A fast and lightweight web server for Linux
 Name: monkey
 Version: 0.11.0
-Packager: Eduardo Silva <edsiper@gmail.com>
-Release: 1%{dist}
-License: GPLv2+
+Release: 1%{?dist}
+Summary: A fast and lightweight web server for Linux
 Group: System Environment/Daemons
-Source: http://www.monkey-project.com/releases/0.11/%{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-buildroot
+License: GPLv2+
 URL: http://www.monkey-project.com
+Source: http://www.monkey-project.com/releases/0.11/%{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires(pre): shadow-utils
 
 %description
-Monkey is a really fast and lightweight Web Server for Linux. It has been 
-designed to be very scalable with low memory and CPU consumption, the perfect
-solution for embedded and high production environments. 
+Monkey is a fast and lightweight web server for Linux. It has been
+designed to be very scalable with low memory and CPU consumption, the
+perfect solution for embedded and high production environments.
 
 %prep
-%setup
+%setup -q
+
 %build
 export CFLAGS=%{optflags}
 ./configure \
@@ -32,25 +34,27 @@ export CFLAGS=%{optflags}
 	--datadir=%{webroot} \
 	--logdir=%{logdir} \
 	--plugdir=%{plugdir}
-
 make %{?_smp_mflags}
-
-%pre
-/usr/sbin/useradd -s /sbin/nologin -M -r -d %{webroot} \
-	-c "Monkey HTTP Daemon" monkey &>/dev/null ||: 
-
-%post
-sed -i 's/User nobody/User monkey/g' /etc/monkey/monkey.conf
 
 %install
 rm -rf %{buildroot}
 install -d %{buildroot}/usr/share/doc
 install -d %{buildroot}%{logdir}
 
-make DESTDIR=%{buildroot} install
+make install DESTDIR=%{buildroot}
 
 %clean
 rm -rf %{buildroot}
+
+%pre
+getent group monkey  > /dev/null || groupadd -r monkey
+getent passwd monkey > /dev/null || \
+  useradd -r -g monkey -d %{webroot} -s /sbin/nologin \
+	  -c "Monkey HTTP Daemon" monkey
+exit 0
+
+%post
+sed -i 's/User nobody/User monkey/g' /etc/monkey/monkey.conf
 
 %files 
 %defattr(-,root,root)
