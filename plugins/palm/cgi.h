@@ -26,6 +26,7 @@
 #define MK_CGI_CONTENT_LENGTH "CONTENT_LENGTH"
 #define MK_CGI_CONTENT_TYPE "CONTENT_TYPE"
 #define MK_CGI_SERVER_ADDR "SERVER_ADDR"
+#define MK_CGI_SERVER_PORT "SERVER_PORT"
 #define MK_CGI_SERVER_NAME "SERVER_NAME"
 #define MK_CGI_SERVER_PROTOCOL "SERVER_PROTOCOL"
 #define MK_CGI_SERVER_SOFTWARE "SERVER_SOFTWARE"
@@ -41,7 +42,6 @@
 #define MK_CGI_HTTP_COOKIE "HTTP_COOKIE"
 #define MK_CGI_HTTP_REFERER "HTTP_REFERER"
 
-#define MK_CGI_SERVER_PORT "SERVER_PORT"
 #define MK_CGI_CGI_VERSION "CGI_VERSION"
 #define MK_CGI_GATEWAY_INTERFACE "GATEWAY_INTERFACE"
 #define MK_CGI_REMOTE_ADDR "REMOTE_ADDR"
@@ -57,6 +57,7 @@ mk_pointer mk_cgi_document_root;
 mk_pointer mk_cgi_content_length;
 mk_pointer mk_cgi_content_type;
 mk_pointer mk_cgi_server_addr;
+mk_pointer mk_cgi_server_port;
 mk_pointer mk_cgi_server_name;
 mk_pointer mk_cgi_server_protocol;
 mk_pointer mk_cgi_server_software;
@@ -69,7 +70,6 @@ mk_pointer mk_cgi_http_accept_language;
 mk_pointer mk_cgi_http_host;
 mk_pointer mk_cgi_http_cookie;
 mk_pointer mk_cgi_http_referer;
-mk_pointer mk_cgi_server_port;
 mk_pointer mk_cgi_cgi_version;
 mk_pointer mk_cgi_gateway_interface;
 mk_pointer mk_cgi_remote_addr;

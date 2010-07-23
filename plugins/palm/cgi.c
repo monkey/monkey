@@ -28,14 +28,22 @@
 
 void mk_cgi_env()
 {
+
     mk_api->pointer_set(&mk_cgi_document_root, MK_CGI_DOCUMENT_ROOT);
+
+    /* CONTENT_ */
     mk_api->pointer_set(&mk_cgi_content_length, MK_CGI_CONTENT_LENGTH);
     mk_api->pointer_set(&mk_cgi_content_type, MK_CGI_CONTENT_TYPE);
+
+    /* SERVER_ */
     mk_api->pointer_set(&mk_cgi_server_addr, MK_CGI_SERVER_ADDR);
+    mk_api->pointer_set(&mk_cgi_server_port, MK_CGI_SERVER_PORT);
     mk_api->pointer_set(&mk_cgi_server_name, MK_CGI_SERVER_NAME);
     mk_api->pointer_set(&mk_cgi_server_protocol, MK_CGI_SERVER_PROTOCOL);
     mk_api->pointer_set(&mk_cgi_server_software, MK_CGI_SERVER_SOFTWARE);
     mk_api->pointer_set(&mk_cgi_server_signature, MK_CGI_SERVER_SIGNATURE);
+
+    /* HTTP_ */
     mk_api->pointer_set(&mk_cgi_http_user_agent, MK_CGI_HTTP_USER_AGENT);
     mk_api->pointer_set(&mk_cgi_http_accept, MK_CGI_HTTP_ACCEPT);
     mk_api->pointer_set(&mk_cgi_http_accept_charset,
@@ -47,10 +55,12 @@ void mk_cgi_env()
     mk_api->pointer_set(&mk_cgi_http_host, MK_CGI_HTTP_HOST);
     mk_api->pointer_set(&mk_cgi_http_cookie, MK_CGI_HTTP_COOKIE);
     mk_api->pointer_set(&mk_cgi_http_referer, MK_CGI_HTTP_REFERER);
-    mk_api->pointer_set(&mk_cgi_server_port, MK_CGI_SERVER_PORT);
+
     mk_api->pointer_set(&mk_cgi_cgi_version, MK_CGI_CGI_VERSION);
     mk_api->pointer_set(&mk_cgi_gateway_interface, MK_CGI_GATEWAY_INTERFACE);
     mk_api->pointer_set(&mk_cgi_remote_addr, MK_CGI_REMOTE_ADDR);
+
+    /* REQUEST_ */
     mk_api->pointer_set(&mk_cgi_request_uri, MK_CGI_REQUEST_URI);
     mk_api->pointer_set(&mk_cgi_request_method, MK_CGI_REQUEST_METHOD);
     mk_api->pointer_set(&mk_cgi_script_name, MK_CGI_SCRIPT_NAME);

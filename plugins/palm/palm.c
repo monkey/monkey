@@ -201,7 +201,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     if (sr->referer.data)
         mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
 
-    //        mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_monkey_port);
+    mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
     mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
     //mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
     mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
@@ -211,7 +211,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
 
     /* real path is not an mk_pointer */
     mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
-    //mk_palm_iov_add_header(iov, mk_cgi_remote_port, cr->port);
+    //mk_palm_iov_add_header(iov, mk_cgi_remote_port, mk_api->config->port);
     mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
     mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
