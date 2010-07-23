@@ -144,6 +144,8 @@ int mk_header_send(int fd, struct client_request *cr,
                                 mk_hr_server_http_version_unsup,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
+    default:
+        return -1;
     };
 
     if (fd_status < 0) {
@@ -233,14 +235,18 @@ int mk_header_send(int fd, struct client_request *cr,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
-    /* Transfer Encoding */
-    switch (sh->transfer_encoding) {
-    case MK_HEADER_TE_TYPE_CHUNKED:
-        mk_iov_add_entry(iov,
-                         mk_header_te_chunked.data,
-                         mk_header_te_chunked.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
+    /* Transfer Encoding: the transfer encoding header is just sent when
+     * the response has some content defined by the HTTP status response 
+     */
+    if ((sh->status < M_REDIR_MULTIPLE) || (sh->status > M_REDIR_USE_PROXY)) {
+        switch (sh->transfer_encoding) {
+        case MK_HEADER_TE_TYPE_CHUNKED:
+            mk_iov_add_entry(iov,
+                             mk_header_te_chunked.data,
+                             mk_header_te_chunked.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            break;
+        }
     }
 
     /* Content-Length */
@@ -341,6 +347,7 @@ struct header_values *mk_header_create()
 
     headers =
         (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
+    headers->status = 0;
     headers->ranges[0] = -1;
     headers->ranges[1] = -1;
     headers->content_length = -1;

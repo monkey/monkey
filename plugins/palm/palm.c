@@ -243,7 +243,10 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 {
     int n;
 
-    sr->headers->status = M_HTTP_OK;
+    if (sr->headers->status == 0) {
+        sr->headers->status = M_HTTP_OK;
+    }
+
     sr->headers->cgi = SH_CGI;
 
     /* Chunked transfer encoding */
@@ -332,7 +335,6 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
 
     /* Send request */
     mk_palm_send_request(cr, sr);
-    mk_palm_send_headers(cr, sr);
 
 #ifdef TRACE
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
@@ -452,11 +454,62 @@ int mk_palm_send_end_chunk(int socket)
     return n;
 }
 
+/* Check if the CGI field 'Status: XYZ Some message' is 
+ * present, if so, it modifies the header struct response
+ * and return the offset position 
+ */
+int mk_palm_cgi_status(char *data, struct request *sr)
+{
+    int status;
+    int status_len = 3;
+    int offset = 0;
+    int field_len = 8;
+    char buffer[4];
+    char field[] = "Status: ";
+
+    if (strlen(data) <= (field_len + status_len)) {
+        return 0;
+    }
+
+    if (strncmp(data, field, field_len) == 0) {
+        /* Read HTTP status string */
+        strncpy(buffer, data + field_len, status_len);
+        buffer[3] = '\0';
+
+        /* Convert string status to int */
+        status = atoi(buffer);
+        if (status == 0) {
+            return 0;
+        }
+
+        /* Search breakline */
+        offset = mk_api->str_search(data, MK_IOV_CRLF);
+        if (offset > 0) {
+            offset += 2;
+        }
+        else {
+            offset = mk_api->str_search(data, MK_IOV_LF);
+            if (offset > 0) {
+                offset += 1;
+            }
+            else {
+                return 0;
+            }
+        }
+
+        sr->headers->status = status;
+        return offset;
+    }
+    
+    return 0;
+}
+
 int _mkp_event_read(int sockfd)
 {
     int n;
     int ret = -1;
     int headers_end = -1;
+    int offset;
     int read_offset = 0;
     struct mk_palm_request *pr;
 
@@ -535,8 +588,14 @@ int _mkp_event_read(int sockfd)
 #endif
             }
 
-            /* FIXME: What about if this socket_send wrote partial headers ? ugh! */
-            n = mk_api->socket_send(pr->client_fd, pr->data_read, headers_end);
+            /* Check if some 'Status:' field was sent in the first line */
+            offset = mk_palm_cgi_status(pr->data_read, pr->sr);
+
+            /* Send headers */
+            mk_palm_send_headers(pr->cr, pr->sr);
+            n = mk_api->socket_send(pr->client_fd, 
+                                    pr->data_read + offset, 
+                                    headers_end - offset);
 
 #ifdef TRACE
             PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
