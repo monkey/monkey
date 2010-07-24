@@ -91,8 +91,27 @@ class Child:
             key = line[:sep]
             val = line[sep+1:]
 
+            if key == 'POST_VARS' and len(val) > 0:
+                val = '*'
+
+            # Register key value
             request.add_header(key, val)
 
+
+        # Post-parse POST data
+        if request.get('POST_VARS') == '*':
+            init_key = '\r\nPOST_VARS='
+            len_key = len(init_key)
+
+            post_len = int(request.get('CONTENT_LENGTH'))
+            post_data = data.find(init_key)
+
+            # Set string offsets
+            offset_init = post_data + len_key
+            offset_end = post_data + len_key + post_len
+
+            # Override POST_VARS
+            request.add_header('POST_VARS', data[offset_init:offset_end])
 
         if request is None:
             debug("[+] Invalid Exit")
@@ -125,6 +144,7 @@ class Child:
             debug("[+] |%s| Request arrived [PID=%i]" % (self.name, os.getpid()))
 
             buf = self.read(remote)
+            print buf
             request = self.parse_request(buf)
 
             if self.c['bin'] is None:
@@ -138,6 +158,9 @@ class Child:
                 opts = self.c['opts']
                 opts.append(request.resource)
 
+            print "***"
+            print request.headers['POST_VARS']
+            print "***"
             try:
                 os.dup2(remote.fileno(), sys.stdout.fileno())
 
@@ -185,3 +208,5 @@ class Request:
     def add_header(self, key, val):
         self.headers[key] = val
 
+    def get(self, key):
+        return self.headers[key]
