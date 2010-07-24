@@ -97,6 +97,9 @@ class Child:
             # Register key value
             request.add_header(key, val)
 
+        if request is None:
+            debug("[+] Invalid Exit")
+            exit(1)
 
         # Post-parse POST data
         if request.get('POST_VARS') == '*':
@@ -112,10 +115,6 @@ class Child:
 
             # Override POST_VARS
             request.add_header('POST_VARS', data[offset_init:offset_end])
-
-        if request is None:
-            debug("[+] Invalid Exit")
-            exit(1)
 
         # Debug message
         msg = "[+] Request Headers\n"

@@ -218,7 +218,6 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
     mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
     //mk_palm_iov_add_header(iov, mk_cgi_remote_port, mk_api->config->port);
     mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
-    mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
     if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
         /* Content length */
@@ -232,6 +231,9 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
         mk_palm_iov_add_header(iov, mk_cgi_content_length, p);
         mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
     }
+
+    /* Post data */
+    mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
 
     /* CRLF */
     mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
