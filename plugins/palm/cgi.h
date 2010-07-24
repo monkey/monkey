@@ -54,14 +54,20 @@
 #define MK_CGI_POST_VARS "POST_VARS"
 
 mk_pointer mk_cgi_document_root;
+
+/* CONTENT_ */
 mk_pointer mk_cgi_content_length;
 mk_pointer mk_cgi_content_type;
+
+/* SERVER_ */
 mk_pointer mk_cgi_server_addr;
 mk_pointer mk_cgi_server_port;
 mk_pointer mk_cgi_server_name;
 mk_pointer mk_cgi_server_protocol;
 mk_pointer mk_cgi_server_software;
 mk_pointer mk_cgi_server_signature;
+
+/* HTTP_ */
 mk_pointer mk_cgi_http_user_agent;
 mk_pointer mk_cgi_http_accept;
 mk_pointer mk_cgi_http_accept_charset;
@@ -70,6 +76,7 @@ mk_pointer mk_cgi_http_accept_language;
 mk_pointer mk_cgi_http_host;
 mk_pointer mk_cgi_http_cookie;
 mk_pointer mk_cgi_http_referer;
+
 mk_pointer mk_cgi_cgi_version;
 mk_pointer mk_cgi_gateway_interface;
 mk_pointer mk_cgi_remote_addr;

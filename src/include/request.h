@@ -167,6 +167,7 @@ struct request
     mk_pointer connection;
     mk_pointer cookies;
     mk_pointer host;
+    mk_pointer host_port;
     mk_pointer if_modified_since;
     mk_pointer last_modified_since;
     mk_pointer range;

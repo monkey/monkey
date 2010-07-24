@@ -168,6 +168,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
                           MK_IOV_NOT_FREE_BUF);
 
     //        mk_palm_iov_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
+    mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
     mk_palm_iov_add_header(iov, mk_cgi_server_name, sr->host);
     mk_palm_iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
     mk_palm_iov_add_header(iov, mk_cgi_server_software,
@@ -192,16 +193,20 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
         mk_palm_iov_add_header(iov, mk_cgi_http_accept_language,
                                sr->accept_language);
 
-    if (sr->host.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host);
-
+    if (sr->host.data) {
+        if (sr->port != mk_api->config->standard_port) {
+            mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host_port);
+        }
+        else {
+            mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host);
+        }
+    }
     if (sr->cookies.data)
         mk_palm_iov_add_header(iov, mk_cgi_http_cookie, sr->cookies);
 
     if (sr->referer.data)
         mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
 
-    mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
     mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
     //mk_palm_iov_add_header(iov, mk_cgi_remote_addr, cr->ip);
     mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);

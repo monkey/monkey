@@ -483,8 +483,12 @@ int mk_request_header_process(struct request *sr)
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
+            /* just the host */
             sr->host.data = host.data;
             sr->host.len = pos_sep;
+
+            /* including the port */
+            sr->host_port = host;
 
             port = mk_string_copy_substr(host.data, pos_sep + 1, host.len);
             sr->port = atoi(port);
