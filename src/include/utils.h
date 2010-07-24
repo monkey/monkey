@@ -35,6 +35,7 @@
 
 #include "request.h"
 #include "memory.h"
+#include "list.h"
 
 #define INTSIZE sizeof(int)
 

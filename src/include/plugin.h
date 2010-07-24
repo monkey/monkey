@@ -28,6 +28,7 @@
 #include "epoll.h"
 #include "http_status.h"
 #include "utils.h"
+#include "list.h"
 
 #ifndef MK_PLUGIN_H
 #define MK_PLUGIN_H
