@@ -593,7 +593,14 @@ int mk_http_pending_request(struct client_request *cr)
     if (cr->first_method == HTTP_METHOD_POST) {
         if (cr->body_pos_end > 0) {
             int content_length;
+            int current;
+
             content_length = mk_method_post_content_length(cr->body);
+            current = cr->body_length - cr->body_pos_end - mk_endblock.len;
+
+#ifdef TRACE
+            MK_TRACE("HTTP POST DATA %i/%i", current, content_length);
+#endif
 
             /* if first block has ended, we need to verify if exists 
              * a previous block end, that will means that the POST 
@@ -609,18 +616,15 @@ int mk_http_pending_request(struct client_request *cr)
                     cr->status = MK_REQUEST_STATUS_COMPLETED;
                     return 0;
                 }
+                else {
+                    return -1;
+                }
             }
             else {
-                if ((cr->body_length-cr->body_pos_end-mk_endblock.len) < content_length) {
-#ifdef TRACE
-                    MK_TRACE("HTTP pending %i/%i", cr->body_length, content_length);
-#endif
+                if (current < content_length) {
                     return -1;
                 }
                 else {
-#ifdef TRACE
-                    MK_TRACE("HTTP done: %i/%i", cr->body_length - cr->body_pos_end - 4, content_length);
-#endif
                     cr->status = MK_REQUEST_STATUS_COMPLETED;
                     return 0;
                 }
