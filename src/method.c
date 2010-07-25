@@ -57,7 +57,27 @@ long int mk_method_post_content_length(char *body)
                                  mk_rh_content_length);
 
     if (!tmp.data) {
-        return -1;
+        int pos_header;
+        int pos_crlf;
+        char *str_cl;
+
+        /* Pre-parsing mode: Check if content-length was sent */
+        pos_header = mk_string_search(body, RH_CONTENT_LENGTH);
+        if (pos_header <= 0) {
+            return -1;
+        }
+
+        pos_crlf = mk_string_search(body + pos_header, MK_IOV_CRLF);
+        if (pos_crlf <= 0) {
+            return -1;
+        }
+
+        str_cl = mk_string_copy_substr(body + pos_header + mk_rh_content_length.len + 1,
+                                       0, pos_header + pos_crlf);
+        len = atoi(str_cl);
+        mk_mem_free(str_cl);
+
+        return len;
     }
 
     len = atoi(tmp.data);
@@ -65,11 +85,10 @@ long int mk_method_post_content_length(char *body)
     return len;
 }
 
-
 /* POST METHOD */
 int mk_method_post(struct client_request *cr, struct request *sr)
 {
-    struct header_toc *toc = NULL;
+     struct header_toc *toc = NULL;
     mk_pointer tmp;
     long content_length_post = 0;
 
@@ -108,19 +127,12 @@ int mk_method_post(struct client_request *cr, struct request *sr)
 }
 
 /* Return POST variables sent in request */
-mk_pointer mk_method_post_get_vars(char *body, int index)
+mk_pointer mk_method_post_get_vars(void *data, int size)
 {
-    long len = 1;
-    char *str = 0;
     mk_pointer p;
 
-    str = mk_string_copy_substr(body, index, strlen(body));
-    if (str) {
-        len = strlen(str);
-    }
-
-    p.data = str;
-    p.len = len;
+    p.data = data;
+    p.len = size;
 
     return p;
 }

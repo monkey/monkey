@@ -75,12 +75,25 @@ class Child:
         return buf
 
     def parse_request(self, data):
-        arr = data.split('\r\n')
+        offset = 0
+        length = len(data)
+        lines = []
+        post_data = None
         request = None
 
-        for line in arr[:-2]:
+        while offset < length:
+            if data[offset:offset+10] == 'POST_VARS=':
+                post_data = data[offset+10:length - 8]
+                offset = length
+                break
+            else:
+                end = offset + data[offset:].find('\r\n')
+                lines.append(data[offset:end])
+                offset = end + 2
+
+        for line in lines:
             # print line
-            if line == arr[0]:
+            if line == lines[0]:
                 request = Request(line)
                 continue
 
@@ -91,9 +104,6 @@ class Child:
             key = line[:sep]
             val = line[sep+1:]
 
-            if key == 'POST_VARS' and len(val) > 0:
-                val = '*'
-
             # Register key value
             request.add_header(key, val)
 
@@ -101,20 +111,9 @@ class Child:
             debug("[+] Invalid Exit")
             exit(1)
 
-        # Post-parse POST data
-        if request.get('POST_VARS') == '*':
-            init_key = '\r\nPOST_VARS='
-            len_key = len(init_key)
-
-            post_len = int(request.get('CONTENT_LENGTH'))
-            post_data = data.find(init_key)
-
-            # Set string offsets
-            offset_init = post_data + len_key
-            offset_end = post_data + len_key + post_len
-
-            # Override POST_VARS
-            request.add_header('POST_VARS', data[offset_init:offset_end])
+        if post_data is not None and request.headers.has_key('CONTENT_LENGTH'):
+            content_length = int(request.get('CONTENT_LENGTH'))
+            request.post_data = post_data
 
         # Debug message
         msg = "[+] Request Headers\n"
@@ -143,7 +142,6 @@ class Child:
             debug("[+] |%s| Request arrived [PID=%i]" % (self.name, os.getpid()))
 
             buf = self.read(remote)
-            print buf
             request = self.parse_request(buf)
 
             if self.c['bin'] is None:
@@ -157,9 +155,6 @@ class Child:
                 opts = self.c['opts']
                 opts.append(request.resource)
 
-            print "***"
-            print request.headers['POST_VARS']
-            print "***"
             try:
                 os.dup2(remote.fileno(), sys.stdout.fileno())
 
@@ -168,7 +163,7 @@ class Child:
                     # Temporal Pipe > STDIN
                     pipe_r, pipe_w = os.pipe()
                     os.dup2(pipe_r, sys.stdin.fileno())
-                    os.write(pipe_w, request.headers['POST_VARS'])
+                    os.write(pipe_w, request.post_data)
 
                 os.execve(bin, opts, request.headers)
             except:
@@ -199,6 +194,7 @@ class Request:
     def __init__(self, resource):
         self.resource = resource
         self.headers = {}
+        self.post_data = None
 
     def __str__(self):
         ret = str(self.resource) + ' ' + str(self.headers);

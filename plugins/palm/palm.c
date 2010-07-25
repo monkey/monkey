@@ -406,7 +406,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             }
 
             /* Socket stuff */
-            mk_api->socket_set_nonblocking(pr->palm_fd);
+            //mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
 

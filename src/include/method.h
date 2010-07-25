@@ -19,5 +19,5 @@
 
 /* method.c */
 int mk_method_post(struct client_request *cr, struct request *sr);
-mk_pointer mk_method_post_get_vars(char *body, int index);
+mk_pointer mk_method_post_get_vars(void *data, int size);
 long int mk_method_post_content_length(char *body);

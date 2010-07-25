@@ -94,8 +94,10 @@ struct request *mk_request_parse(struct client_request *cr)
 
         /* Looking for POST data */
         if (cr_buf->method == HTTP_METHOD_POST) {
-            cr_buf->post_variables = mk_method_post_get_vars(cr->body,
-                                                             end + mk_endblock.len);
+            int offset;
+            offset = end + mk_endblock.len;
+            cr_buf->post_variables = mk_method_post_get_vars(cr->body + offset,
+                                                             cr->body_length - offset);
             if (cr_buf->post_variables.len >= 0) {
                 i += cr_buf->post_variables.len;
             }
@@ -839,7 +841,6 @@ void mk_request_free(struct request *sr)
         mk_mem_free(sr->uri_processed);
     }
 
-    mk_pointer_free(&sr->post_variables);
     mk_mem_free(sr->user_uri);
     mk_pointer_reset(&sr->query_string);
 
