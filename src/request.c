@@ -158,6 +158,31 @@ struct request *mk_request_parse(struct client_request *cr)
     return cr->request;
 }
 
+/* This function allow the core to invoke the closing connection process
+ * when some connection was not proceesed due to a premature close or similar
+ * exception, it also take care of invoke the STAGE_40 and STAGE_50 plugins events
+ */
+void mk_request_premature_close(int http_status, struct client_request *cr)
+{
+    /* Validate bad implementations */
+    if (!cr->request) {
+        cr->request = mk_request_alloc();
+    }
+    
+    /* Raise error */
+    if (http_status > 0) {
+        mk_request_error(http_status, cr, cr->request);
+
+        /* STAGE_40, request has ended */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cr->socket,
+                            NULL, cr, cr->request);
+    }
+
+    /* STAGE_50, connection closed */
+    mk_plugin_stage_run(MK_PLUGIN_STAGE_50, cr->socket, NULL, NULL, NULL);
+    mk_request_client_remove(cr->socket);
+}
+
 int mk_handler_read(int socket, struct client_request *cr)
 {
     int bytes;
@@ -170,7 +195,7 @@ int mk_handler_read(int socket, struct client_request *cr)
     /* Check amount of data reported */
     ret = ioctl(socket, FIONREAD, &pending);
     if (ret == -1) {
-        mk_request_client_remove(socket);
+        mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cr);
         return -1;
     }
 
@@ -186,6 +211,7 @@ int mk_handler_read(int socket, struct client_request *cr)
         }
 
         if (new_size > config->max_request_size) {
+            mk_request_premature_close(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr);
             return -1;
         }
 
@@ -195,7 +221,7 @@ int mk_handler_read(int socket, struct client_request *cr)
             cr->body_size = new_size;
         }
         else {
-            mk_request_client_remove(socket);
+            mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cr);
             return -1;
         }
     }
