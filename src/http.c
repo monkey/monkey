@@ -602,6 +602,10 @@ int mk_http_pending_request(struct client_request *cr)
             MK_TRACE("HTTP POST DATA %i/%i", current, content_length);
 #endif
 
+            if (content_length >= config->max_request_size) {
+                return 0;
+            }
+
             /* if first block has ended, we need to verify if exists 
              * a previous block end, that will means that the POST 
              * method has sent the whole information. 
