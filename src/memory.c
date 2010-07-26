@@ -48,14 +48,14 @@ void *mk_mem_malloc(size_t size)
 
 extern void *mk_mem_malloc_z(size_t size)
 {
-    char *buf = 0;
+    void *buf = 0;
 
     buf = mk_mem_malloc(size);
     if (!buf) {
         return NULL;
     }
 
-    bzero(buf, size);
+    memset(buf, '\0', size);
 
     return buf;
 }
