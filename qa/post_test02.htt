@@ -14,11 +14,9 @@
 
 # Why post_test02.htt sometimes fail ?
 # ------------------------------------
-# Sometimes this test fails, because httest send the whole data by parts, so when
-# Monkey read the first part including headers and a part of body, if a 
-# content-length header doesn't exists, Monkey doesn't wait for the whole request
-# and send the error 411, sometimes httest cannot handle this information as it is 
-# in writting mode.
+# it fails because the httest tool catch the close connection from Monkey before it
+# finish to send the whole request, Monkey will not continue working in a request
+# which will not work properly, bad monkey >:D
 
 INCLUDE __CONFIG
 
