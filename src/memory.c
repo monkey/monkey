@@ -188,6 +188,7 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_header_conn_ka, MK_HEADER_CONN_KA);
     mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
     mk_pointer_set(&mk_header_content_length, MK_HEADER_CONTENT_LENGTH);
+    mk_pointer_set(&mk_header_content_encoding, MK_HEADER_CONTENT_ENCODING);
     mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
     mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
     mk_pointer_set(&mk_header_last_modified, MK_HEADER_LAST_MODIFIED);

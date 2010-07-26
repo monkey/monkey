@@ -249,6 +249,16 @@ int mk_header_send(int fd, struct client_request *cr,
         }
     }
 
+    /* Content-Encoding */
+    if (sh->content_encoding.len > 0) {
+        mk_iov_add_entry(iov, mk_header_content_encoding.data,
+                         mk_header_content_encoding.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, sh->content_encoding.data,
+                         sh->content_encoding.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
+
     /* Content-Length */
     if (sh->content_length >= 0 && sr->method != HTTP_METHOD_HEAD) {
         /* Map content length to MK_POINTER */
@@ -354,6 +364,7 @@ struct header_values *mk_header_create()
     headers->transfer_encoding = -1;
     headers->last_modified = -1;
     mk_pointer_reset(&headers->content_type);
+    mk_pointer_reset(&headers->content_encoding);
     headers->location = NULL;
 
     return headers;
