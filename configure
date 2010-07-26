@@ -43,7 +43,7 @@ messages_en()
 			echo "+ Creating banana script"
 		;;
 		"6")
-			echo -n "Configuration done, just type 'make"
+			echo -n "Configuration done, just type 'make' to build or 'make help"
 		;;
 		"7")
 			echo -n "+ Checking for Pthreads lib.........."
@@ -189,6 +189,18 @@ default:
 
 plugins:
 	@(cd plugins; \$(MAKE) all)
+
+monkeyversion:
+	@echo $VERSION
+
+help:
+	@echo "Make help:"
+	@echo "  plugins       - Build webserver's plugins"
+	@echo "  monkeyversion - Output the webserver's version"
+	@echo "  clean         - Remove generated binary files"
+	@echo "  distclean     - Clean plus configuration and Make files"
+	@echo " "
+	@echo " Execute 'make' to build the webserver."
 
 clean:
 	@(cd src; \$(MAKE) clean)
