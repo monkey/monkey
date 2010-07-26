@@ -200,7 +200,7 @@ help:
 	@echo "  clean         - Remove generated binary files"
 	@echo "  distclean     - Clean plus configuration and Make files"
 	@echo " "
-	@echo " Execute 'make' to build the webserver."
+	@echo "Execute 'make' to build the webserver."
 
 clean:
 	@(cd src; \$(MAKE) clean)
