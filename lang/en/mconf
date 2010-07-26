@@ -2,7 +2,7 @@
 cat > conf/monkey.conf <<EOF
 # Monkey HTTP Daemon - Configuration
 # ==================================
-# Here the variable principals of the program are defined in respect
+# These are the main variables and their descriptions, defined in respect
 # to the configuration of the different types of directives.
 
 [SERVER]
@@ -10,16 +10,15 @@ cat > conf/monkey.conf <<EOF
     # ------
     # Port is the number of the door in which Monkey will be listened through
     # connections and petitions. This number can have any value between 1 and
-    # 65535. Whatever specified number less than or equal to 1024, only will
-    # be able to be established as a connection door if the user posesses 
-    # privledges of Root.
+    # 65535. If the specified number is less than or equal to 1024, only root 
+    # superuser's owned process will be able to be established as a connection.
 
     Port 2001
 
     # Listen:
     # -------
-    # Listen directive restrict Monkey to listen for incoming connections to 
-    # just the network interface associated to the given value. In order to 
+    # The Listen directive restricts Monkey from listening for incoming connections 
+    # other than the network interface associated to the given value. In order to 
     # allow just loopback connection you could use:
     #
     # Listen 127.0.0.1
@@ -27,7 +26,7 @@ cat > conf/monkey.conf <<EOF
     # Workers:
     # --------
     # Monkey launches threads to attend clients; each worker thread is capable
-    # of attend more than one client request at the same time. The amount of 
+    # of attending more than one client request at one time. The amount of 
     # clients that can be handled by each thread is calculated using the 
     # number of file descriptors allowed by the system. This variable cannot 
     # be less than 1.
@@ -36,8 +35,8 @@ cat > conf/monkey.conf <<EOF
 
     # Timeout :
     # ---------
-    # The lasgest span of time expressed in seconds during which you should
-    # wait to recive the information or waiting time for the remote host to
+    # The largest span of time, expressed in seconds, during which you should
+    # wait to receive the information or waiting time for the remote host to
     # accept an answer. (Timeout > 0)
 
     Timeout 15
@@ -56,7 +55,7 @@ cat > conf/monkey.conf <<EOF
 
     # Indexfile :
     # -----------
-    # Number of the inicial file of aperture when calling a directory.
+    # Number of the initial file of aperture when calling a directory.
 
     Indexfile index.html index.htm
     
@@ -78,10 +77,9 @@ cat > conf/monkey.conf <<EOF
     # User :
     # ------
     # If you want the webserver to run as a process of a defined user, you can
-    # define it in this variable, so that the change of the user can done,
-    # it's necessary to execute Monkey with root priviledges. In case it's
-    # started by a user that doesn't have root priviledges, this variable will
-    # be omitted.
+    # define it in this variable. For the change of user to work, it's necessary
+    # to execute Monkey with root privileges. If it's started by a user that
+    # that doesn't have root privileges, this variable will be omitted.
 
     User nobody
 
@@ -98,7 +96,7 @@ cat > conf/monkey.conf <<EOF
 
     # MaxKeepAliveRequest
     # -------------------
-    # Maximun number of request per connection. (value > 0)
+    # Maximum number of requests per connection. (value > 0)
 
     MaxKeepAliveRequest 20
 
@@ -113,8 +111,8 @@ cat > conf/monkey.conf <<EOF
     # ----------------
     # When a request arrives, Monkey allocs a 'chunk' of memory space
     # to receive the incoming data. As many times the incoming data 
-    # size is undeterminated, Monkey increase the buffer as required. This
-    # variable define the maximum size that the buffer can grow in terms
+    # size is undeterminated, Monkey increases the buffer as required. This
+    # variable defines the maximum size that the buffer can grow in terms
     # of KB. Example: defining 'MaxRequestSize 32' means 32 Kilobytes.
     # The value defined must be greater than zero. Default value defined 
     # is 32.
@@ -130,14 +128,14 @@ cat > conf/monkey.conf <<EOF
 
 # Logger:
 # ------- 
-# This plugin allows to create log files for each request arrived, it uses an 
-# access and error file which are defined inside every virtual host file, this
-# section set just global directives for the plugin.
+# This plugin allows the creation of log files for each request that arrives.
+# It uses an access and error file which are defined inside every virtual 
+# host file, this section set just global directives for the plugin.
 
 [LOGGER]
     # FlushTimeout
     # ------------
-    # This value defines in seconds the waiting time before to flush the 
+    # This value defines, in seconds, the waiting time before to flush the 
     # data to the log file. 
     # Allowed values must be greater than zero (FlushTimeout > 0). 
 
