@@ -191,20 +191,17 @@ void *mk_logger_worker_init(void *args)
     }
 }
 
-int _mkp_init(void **api, char *confdir)
+int mk_logger_read_config(char *path)
 {
     int timeout;
+    unsigned long len;
+    char *default_file;
+    struct mk_config *conf;
     struct mk_config_section *section;
 
-    mk_api = *api;
-    
-    /* Specific thread key */
-    pthread_key_create(&cache_content_length, NULL);
-    pthread_key_create(&cache_status, NULL);
-
-    /* Global configuration */
-    mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
-    section = mk_api->config_section_get(mk_api->config->config, "LOGGER");
+    mk_api->str_build(&default_file, &len, "%slogger.conf", path);
+    conf = mk_api->config_create(default_file);
+    section = mk_api->config_section_get(conf, "LOGGER");
     if (section) {
         timeout = (size_t) mk_api->config_section_getval(section,
                                                       "FlushTimeout",
@@ -216,6 +213,23 @@ int _mkp_init(void **api, char *confdir)
         }
         mk_logger_timeout = timeout;
     }
+
+    mk_api->mem_free(default_file);
+
+    return 0;
+}
+
+int _mkp_init(void **api, char *confdir)
+{
+    mk_api = *api;
+    
+    /* Specific thread key */
+    pthread_key_create(&cache_content_length, NULL);
+    pthread_key_create(&cache_status, NULL);
+
+    /* Global configuration */
+    mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
+    mk_logger_read_config(confdir);
 
     /* Init mk_pointers */
     mk_logger_init_pointers();
