@@ -115,6 +115,11 @@ class Child:
             content_length = int(request.get('CONTENT_LENGTH'))
             request.post_data = post_data
 
+            # FIXME: Dirty hack to limit the post data length
+            if content_length > 65536:
+                request.headers['CONTENT_LENGTH'] = str(65536)
+                request.post_data = post_data[:65536]
+
         # Debug message
         msg = "[+] Request Headers\n"
         for h in request.headers:
