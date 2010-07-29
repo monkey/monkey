@@ -1,3 +1,234 @@
+commit 5beb18fd6d45f3ff739f69dad62b9abb6b2ad096
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 17:38:17 2010 -0400
+
+    Limit POST DATA length to 65536 bytes
+
+commit 51a7e58736ec510dcfa12ec781a16b59e68f61e7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 10:02:31 2010 -0400
+
+    move thread init keys to new func
+
+commit ee2e8a08182094d4a21f3a46b32d08bdd12bb593
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jul 28 18:48:41 2010 -0400
+
+    Move logger global configuration to conf/plugins/logger/logger.conf
+
+commit 4e8904d569afabf0baffb8a705a36c09e3bc65cf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 26 12:36:14 2010 -0400
+
+    Fix data type in mk_mem_malloc_z()
+
+commit ba9bc9b0382ae6c996d339ebe8a8664de219e3ab
+Author: Davidlohr Bueso <dave.bueso@gmail.com>
+Date:   Mon Jul 26 11:10:28 2010 -0400
+
+    [PATCH] Grammar and typo fixes
+
+commit 9de8f26ce29358d04bc31af98cfea5c6158f251f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 26 11:01:54 2010 -0400
+
+    Fix space
+
+commit cd5d99614961182d6ad1dbf9b36a885d6e08c21e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 26 10:35:42 2010 -0400
+
+    Add Content-Encoding header support
+
+commit 1125d0a2a21b3a8ebc0e5430a68fb3149f9322a2
+Author: Davidlohr Bueso <dave.bueso@gmail.com>
+Date:   Mon Jul 26 10:17:24 2010 -0400
+
+    [PATCH] Makefile changes
+
+commit 595cd5c336bf7e0caf9238433c223138b0162b97
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 20:11:02 2010 -0400
+
+    QA: update post_test02.htt comments
+
+commit d3b0873baf6132c07f46549ff3d36c9c3025f814
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 19:54:33 2010 -0400
+
+    Validate content-length in http pending
+
+commit 1200abd552e02ab1937f4ae9ab94bff156fd603a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 19:51:03 2010 -0400
+
+    Do not process request if post data is still pending
+
+commit 9057accef008661f4e4978912f13b661a21d6ac1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 18:58:03 2010 -0400
+
+    Implement mk_request_premature_close
+
+commit 4173c8ed7211baa2259c5c73d571a04d7eece398
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 18:09:26 2010 -0400
+
+    Add missed list.h
+
+commit 75fc5f98ea307cea8b64a9cec24f2d52fe17c1fb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 25 18:08:12 2010 -0400
+
+    HTTP: Improve POST data receiver
+    Palm: Safe POST data sender
+
+commit a0c75be90c8e57eeff576bbac15a72c01ddaab07
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 24 01:57:27 2010 -0400
+
+    Little Palm fixes
+
+commit 073733b953e8980f11bb5d0a9f4aa0272a534b32
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 24 01:41:50 2010 -0400
+
+    Palm Server: Fix POST data support
+
+commit 0b706441321e08cb6a8163b29ab1951f4276b0d9
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Jul 23 21:10:03 2010 -0400
+
+    [PATCH] Added list.h with the needed definitions to manage double linked list. Added list.h to plugin.h and utils.h
+
+commit 3d1c5ef131ade47652459b6ba27ee76254b26a5d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 23 21:02:33 2010 -0400
+
+    Palm Plugin: Enable REMOTE_ADDR cgi header to palm request
+
+commit ae02e21a017b80e55cdc77270ef642b05a86b304
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 23 20:58:12 2010 -0400
+
+    Add host_port mk_pointer to request struct
+    Palm Plugin: add HOST_PORT header in palm request
+
+commit 0e6273e1c20c6f9437e9d09f9dc11a725761b010
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 23 19:55:05 2010 -0400
+
+    Set mk_pointer config->port and add server port to Palm plugin
+
+commit 62686138c50dc3888dd53a7bc2baa68ac53f969e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 23 18:22:06 2010 -0400
+
+    Validate header response status on send
+    Palm Plugin: check Status CGI field
+
+commit 81ba0f36a7aa173fbbcfaa04728d3a1b73f5d632
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:33:30 2010 -0400
+
+    [PATCH 6/6] Fix file/directory names
+
+commit 9d5e869d701be53b650fa9f1378b137ce5ffaff0
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:32:52 2010 -0400
+
+    [PATCH 5/6] Bump release in specfile
+
+commit 1c63c46f0f075bfb77a945b3a93ad8ca35e1989a
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:32:02 2010 -0400
+
+    [PATCH 4/6] Package correct monkey.conf in specfile
+
+commit 67a824425ada06058a43ccb5c9af357e6b62ef65
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:31:28 2010 -0400
+
+    [PATCH 3/6] Add locale handling to specfile
+
+commit cba7391985ec410c2efc49c5651699f37f4a995c
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:30:45 2010 -0400
+
+    [PATCH 2/6] Reorder tags in specfile according to Fedora guidelines
+
+commit f97e6010f9480097842bbc5d729e4c89ab4b62e8
+Author: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Date:   Thu Jul 22 14:29:18 2010 -0400
+
+    [PATCH 1/6] Minor cleanup of the spec file
+
+commit 0dfa317d1c5b33aeebdc21bb15d18f16a7e3cbc4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 22 11:25:39 2010 -0400
+
+    Update version to 0.11.1-git
+
+commit d2d8a3384f40a5ccbf2ae12841e052f63f0ce28b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 22 11:03:24 2010 -0400
+
+    Security Plugin: set http status for URL rule match
+
+commit 9ccb145c6c2ba71aece45697a6c87dedd1382911
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 22 10:20:47 2010 -0400
+
+    Strip plugins on make install
+
+commit 4c5e441895fbe30e32907d326c145799c67901b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 22 09:57:19 2010 -0400
+
+    Drop status_p from headers and fix Logger plugin
+
+commit 76ce40169c0311aa940edfce59b1c1c26ef71e2c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jul 20 15:04:18 2010 -0400
+
+    Fix thread_key plugin connector
+
+commit bc8f78bc072ba5ef163aa33bfa00d77ff81d0e98
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 19 12:33:55 2010 -0400
+
+    Safe use of va_start()/vsnprintf()/va_end()
+
+commit a34265f1e00e4af717d335ab48c49a268a10c945
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 19 12:13:51 2010 -0400
+
+    Dirty hack to fix vsnprintf() problem in 32 and 64 bits
+
+commit 573f51412b628a4f643b0227fdedeb104305007b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 19 11:12:12 2010 -0400
+
+    Fix 64 bits warnings and issues
+
+commit 792f05a50ee763a9b9e80867a86b521c1f67607b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 17 10:30:31 2010 -0400
+
+    Configure script: replace make by $(MAKE)
+
+commit 12c8cd5d413e1820481af7dd5a102a9b692d9924
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 17 10:20:02 2010 -0400
+
+    Fix pointers warning
+
+commit d4b84332f2a54f1030957eb3e0d834bb4546cfdc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 16 08:53:43 2010 -0400
+
+    Monkey 0.11.0
+
 commit 924ac75d9ba4f5efd8163ef3c53522cccc2bcf47
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Jul 14 10:55:40 2010 -0400
