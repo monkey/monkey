@@ -19,6 +19,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+
 #include <stdio.h>
 #include <sys/types.h>
 
@@ -54,6 +55,18 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 #else
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
+
+void mk_thread_keys_init()
+{
+    /* Create thread keys */
+    pthread_key_create(&request_index, NULL);
+    pthread_key_create(&epoll_fd, NULL);
+    pthread_key_create(&mk_cache_iov_header, NULL);
+    pthread_key_create(&mk_cache_header_toc, NULL);
+    pthread_key_create(&mk_cache_header_lm, NULL);
+    pthread_key_create(&mk_cache_header_cl, NULL);
+    pthread_key_create(&mk_plugin_event_k, NULL);
+}
 
 void mk_details()
 {
@@ -151,14 +164,8 @@ int main(int argc, char **argv)
     /* Init mk pointers */
     mk_mem_pointers_init();
 
-    /* Create thread keys */
-    pthread_key_create(&request_index, NULL);
-    pthread_key_create(&epoll_fd, NULL);
-    pthread_key_create(&mk_cache_iov_header, NULL);
-    pthread_key_create(&mk_cache_header_toc, NULL);
-    pthread_key_create(&mk_cache_header_lm, NULL);
-    pthread_key_create(&mk_cache_header_cl, NULL);
-    pthread_key_create(&mk_plugin_event_k, NULL);
+    /* Init thread keys */
+    mk_thread_keys_init();
 
     /* Change process owner */
     mk_user_set_uidgid();
