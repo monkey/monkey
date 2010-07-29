@@ -22,6 +22,8 @@
 #ifndef MK_STR_H
 #define MK_STR_H
 
+#include "memory.h"
+
 struct mk_string_line
 {
     char *val;

@@ -253,7 +253,7 @@ struct plugin_api
 
 };
 
-typedef char mk_plugin_data_t[];
+typedef char *mk_plugin_data_t;
 typedef int mk_plugin_hook_t;
 typedef pthread_key_t mk_plugin_key_t;
 

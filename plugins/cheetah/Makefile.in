@@ -2,10 +2,11 @@ CC 	= $CC
 CFLAGS	= $CFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
+OBJECTS = cheetah.o cmd.o
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c cheetah.c
-	$(CC) $(CFLAGS) $(DEFS) -shared -Wl -o monkey-cheetah.so cheetah.o -lc
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c cheetah.c cmd.c
+	$(CC) $(CFLAGS) $(DEFS) -shared -Wl -o monkey-cheetah.so $(OBJECTS) -lc
 clean:
-	rm -rf *.o
+	rm -rf *.o *~
 	rm -rf *.*so*

@@ -19,6 +19,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_CHEETAH_H
+#define MK_CHEETAH_H
+
 /* Colors */
 #define ANSI_BOLD "\033[1m"
 #define ANSI_CYAN "\033[36m" 
@@ -68,4 +71,16 @@
 #define MK_CHEETAH_ONEHOUR  3600
 #define MK_CHEETAH_ONEMINUTE  60
 
+/* global vars */
+struct plugin_api *mk_api;
+
+/* functions */
 void *mk_cheetah_init(void *args);
+
+/* registration variables */
+mk_plugin_data_t _shortname;
+mk_plugin_data_t _name;
+mk_plugin_data_t _version;
+mk_plugin_hook_t _hooks;
+
+#endif
