@@ -5,11 +5,8 @@
 #include <string.h>
 #include <pwd.h>
 
-#include "str.h"
-#include "info.h"
-#include "memory.h"
+#include "MKPlugin.h"
 
-#include "plugin.h"
 #include "cheetah.h"
 #include "cmd.h"
 

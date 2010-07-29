@@ -22,16 +22,10 @@
 /* System headers */
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <string.h>
-#include <unistd.h>
-#include <time.h>
 
-/* Monkey Headers */
-#include "monkey.h"
-#include "info.h"
-#include "str.h"
-#include "plugin.h"
+/* Monkey Plugin Interface */
+#include "MKPlugin.h"
 
 /* Local header files */
 #include "cmd.h"
