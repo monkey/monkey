@@ -38,42 +38,6 @@
 #include "utils.h"
 #include "cheetah.h"
 
-#define MK_CHEETAH_CLEAR "clear"
-#define MK_CHEETAH_CLEAR_SC "\\c"
-
-#define MK_CHEETAH_CONFIG "config"
-#define MK_CHEETAH_CONFIG_SC "\\f"
-
-#define MK_CHEETAH_STATUS "status"
-#define MK_CHEETAH_STATUS_SC "\\s"
-
-#define MK_CHEETAH_HELP "help"
-#define MK_CHEETAH_HELP_SC "\\h"
-
-#define MK_CHEETAH_SHELP "?"
-#define MK_CHEETAH_SHELP_SC "\\?"
-
-#define MK_CHEETAH_UPTIME "uptime"
-#define MK_CHEETAH_UPTIME_SC "\\u"
-
-#define MK_CHEETAH_PLUGINS "plugins"
-#define MK_CHEETAH_PLUGINS_SC "\\g"
-
-#define MK_CHEETAH_VHOSTS "vhosts"
-#define MK_CHEETAH_VHOSTS_SC "\\v"
-
-#define MK_CHEETAH_WORKERS "workers"
-#define MK_CHEETAH_WORKERS_SC "\\w"
-
-#define MK_CHEETAH_QUIT "quit"
-#define MK_CHEETAH_QUIT_SC "\\q"
-
-#define MK_CHEETAH_PROMPT "%s%scheetah>%s "
-#define MK_CHEETAH_PROC_TASK "/proc/%i/task/%i/stat"
-#define MK_CHEETAH_ONEDAY  86400
-#define MK_CHEETAH_ONEHOUR  3600
-#define MK_CHEETAH_ONEMINUTE  60
-
 /* Plugin data for register */
 mk_plugin_data_t _shortname = "cheetah";
 mk_plugin_data_t _name = "Cheetah";
