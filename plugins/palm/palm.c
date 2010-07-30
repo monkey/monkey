@@ -25,27 +25,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "config.h"
-#include "plugin.h"
-#include "str.h"
-#include "http.h"
-#include "http_status.h"
-#include "monkey.h"
-#include "epoll.h"
-#include "utils.h"
-#include "header.h"
+#include "MKPlugin.h"
 
 #include "cgi.h"
 #include "palm.h"
 #include "request.h"
-
-
-/* Plugin data for register */
-mk_plugin_data_t _shortname = "palm";
-mk_plugin_data_t _name = "Palm";
-mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
-
 
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
@@ -701,3 +685,7 @@ int _mkp_event_error(int sockfd)
     return hangup(sockfd);
 }
 
+MONKEY_PLUGIN("palm",              /* shortname */
+              "Palm Client",       /* name */
+              "0.12.0",            /* version */
+              MK_PLUGIN_STAGE_30); /* hooks */
