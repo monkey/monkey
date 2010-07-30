@@ -243,7 +243,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
         return NULL;
     }
 
-    if (!p->register_plugin || p->init || !p->exit) {
+    if (!p->init || !p->exit) {
 #ifdef TRACE
         MK_TRACE("Plugin must define hooks 'init' and 'exit'");
 #endif        

@@ -108,10 +108,9 @@ struct plugin
     char *version;
     char *path;
     void *handler;
-    int hooks;
+    unsigned int hooks;
 
     /* Mandatory calls */
-    int (*register_plugin)();
     int (*init) (void *, char *);
     int  (*exit) ();
 
