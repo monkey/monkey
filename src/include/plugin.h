@@ -107,9 +107,10 @@ struct plugin
     char *version;
     char *path;
     void *handler;
-    int *hooks;
+    int hooks;
 
     /* Mandatory calls */
+    int (*register_plugin)();
     int (*init) (void *, char *);
     int  (*exit) ();
 
@@ -262,14 +263,22 @@ typedef pthread_key_t mk_plugin_key_t;
 /* Plugin events thread key */
 pthread_key_t mk_plugin_event_k;
 
-struct plugin_event {
+struct plugin_event 
+{
     int socket;
-
+    
     struct plugin *handler;
     struct client_request *cr;
     struct request *sr;
 
     struct plugin_event *next;
+};
+
+struct plugin_info {
+    const char *shortname;
+    const char *name;
+    const char *version;
+    unsigned int hooks;
 };
 
 void mk_plugin_init();

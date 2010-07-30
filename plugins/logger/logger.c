@@ -21,10 +21,11 @@
 
 #define _GNU_SOURCE
 
-#include <unistd.h>
+/* System Headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,23 +33,12 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "http.h"
-#include "plugin.h"
-#include "utils.h"
+/* Monkey Plugin Interface */
+#include "MKPlugin.h"
+
+/* Local Headers */
 #include "logger.h"
 #include "pointers.h"
-#include "http_status.h"
-#include "epoll.h"
-
-/* Plugin data for register */
-mk_plugin_data_t _shortname = "logger";
-mk_plugin_data_t _name = "Logger";
-mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX | 
-                          MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40;
-
-/* Thread key data */
-mk_plugin_key_t _mkp_data;
 
 char *mk_logger_match_by_fd(int fd)
 {
@@ -222,7 +212,10 @@ int mk_logger_read_config(char *path)
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
-    
+
+    printf("\nconfdir: '%s'", confdir);
+    fflush(stdout);
+
     /* Specific thread key */
     pthread_key_create(&cache_content_length, NULL);
     pthread_key_create(&cache_status, NULL);
@@ -509,6 +502,12 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
         mk_api->iov_send(target->fd_error[1], iov, MK_IOV_SEND_TO_PIPE);
     }
 
-
     return 0;
 }
+
+
+MONKEY_PLUGIN("logger", /* shortname */
+              "Logger", /* name */
+              "0.12.0", /* version */
+              /* hooks */
+              MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);

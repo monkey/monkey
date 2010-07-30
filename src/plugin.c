@@ -54,6 +54,7 @@ void *mk_plugin_load(char *path)
         fprintf(stderr, "Error during dlopen(): %s\n", dlerror());
         exit(1);
     }
+
     return handle;
 }
 
@@ -96,23 +97,23 @@ void mk_plugin_register_stagemap_add(struct plugin_stagem **stm, struct plugin *
 void mk_plugin_register_stagemap(struct plugin *p)
 {
     /* Plugin to stages */
-    if (*p->hooks & MK_PLUGIN_STAGE_10) {
+    if (p->hooks & MK_PLUGIN_STAGE_10) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
     }
 
-    if (*p->hooks & MK_PLUGIN_STAGE_20) {
+    if (p->hooks & MK_PLUGIN_STAGE_20) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_20, p);
     }
 
-    if (*p->hooks & MK_PLUGIN_STAGE_30) {
+    if (p->hooks & MK_PLUGIN_STAGE_30) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_30, p);
     }
 
-    if (*p->hooks & MK_PLUGIN_STAGE_40) {
+    if (p->hooks & MK_PLUGIN_STAGE_40) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_40, p);
     }
 
-    if (*p->hooks & MK_PLUGIN_STAGE_50) {
+    if (p->hooks & MK_PLUGIN_STAGE_50) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_50, p);
     }
 }
@@ -120,14 +121,23 @@ void mk_plugin_register_stagemap(struct plugin *p)
 struct plugin *mk_plugin_alloc(void *handler, char *path)
 {
     struct plugin *p;
+    struct plugin_info *info;
 
     p = mk_mem_malloc_z(sizeof(struct plugin));
-    p->shortname = mk_plugin_load_symbol(handler, "_shortname");
-    p->name = mk_plugin_load_symbol(handler, "_name");
-    p->version = mk_plugin_load_symbol(handler, "_version");
+    info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
+
+    if (!info) {
+        printf("\nPlugin Error: '%s'\nis not registering properly\n\n", path);
+        exit(1);
+    }
+
+    p->shortname = (char *) (*info).shortname;
+    p->name = (char *) (*info).name;
+    p->version = (char *) (*info).version;
+    p->hooks = (unsigned int) (*info).hooks;
+
     p->path = mk_string_dup(path);
     p->handler = handler;
-    p->hooks = (mk_plugin_hook_t *) mk_plugin_load_symbol(handler, "_hooks");
 
     /* Mandatory functions */
     p->init = (int (*)()) mk_plugin_load_symbol(handler, "_mkp_init");
@@ -233,7 +243,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
         return NULL;
     }
 
-    if (!p->init || !p->exit) {
+    if (!p->register_plugin || p->init || !p->exit) {
 #ifdef TRACE
         MK_TRACE("Plugin must define hooks 'init' and 'exit'");
 #endif        
@@ -242,7 +252,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
     }
 
     /* NETWORK_IO Plugin */
-    if (*p->hooks & MK_PLUGIN_NETWORK_IO) {
+    if (p->hooks & MK_PLUGIN_NETWORK_IO) {
         /* Validate mandatory calls */
         if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
             !p->net_io.writev || !p->net_io.close || !p->net_io.connect ||
@@ -281,7 +291,7 @@ create socket : %p\nbind : %p\nserver : %p",
     }
 
     /* NETWORK_IP Plugin */
-    if (*p->hooks & MK_PLUGIN_NETWORK_IP) {
+    if (p->hooks & MK_PLUGIN_NETWORK_IP) {
         /* Validate mandatory calls */
         if (!p->net_ip.addr || !p->net_ip.maxlen) {
 #ifdef TRACE
@@ -498,6 +508,7 @@ void mk_plugin_init()
 #ifdef TRACE
             MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
 #endif
+            
             /* Init plugin */
             ret = p->init(&api, plugin_confdir);
             if (ret < 0) {
