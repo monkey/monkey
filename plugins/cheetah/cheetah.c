@@ -31,6 +31,11 @@
 #include "cmd.h"
 #include "cheetah.h"
 
+MONKEY_PLUGIN("cheetah",              /* shortname */
+              "Cheetah! Shell",       /* name */
+              "0.12.0",               /* version */
+              MK_PLUGIN_CORE_PRCTX);  /* hooks */
+
 void mk_cheetah_cmd(char *cmd)
 {
     if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
@@ -150,8 +155,3 @@ int _mkp_core_prctx(struct server_config *config)
 
     return 0;
 }
-
-MONKEY_PLUGIN("cheetah",              /* shortname */
-              "Cheetah! Shell",       /* name */
-              "0.12.0",               /* version */
-              MK_PLUGIN_CORE_PRCTX);  /* hooks */
