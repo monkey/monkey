@@ -213,9 +213,6 @@ int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
 
-    printf("\nconfdir: '%s'", confdir);
-    fflush(stdout);
-
     /* Specific thread key */
     pthread_key_create(&cache_content_length, NULL);
     pthread_key_create(&cache_status, NULL);

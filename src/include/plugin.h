@@ -256,8 +256,6 @@ struct plugin_api
 
 };
 
-typedef char *mk_plugin_data_t;
-typedef int mk_plugin_hook_t;
 typedef pthread_key_t mk_plugin_key_t;
 
 /* Plugin events thread key */
@@ -282,7 +280,7 @@ struct plugin_info {
 };
 
 void mk_plugin_init();
-int mk_plugin_stage_run(mk_plugin_hook_t stage,
+int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr);

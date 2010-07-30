@@ -29,16 +29,8 @@
 #include <sys/socket.h>
 #include <sys/sendfile.h>
 
-#include "config.h"
-#include "plugin.h"
+#include "MKPlugin.h"
 
-/* Plugin data for register */
-mk_plugin_data_t _shortname = "liana";
-mk_plugin_data_t _name = "Liana Network";
-mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_NETWORK_IO;
-
-struct plugin_api *mk_api;
 struct mk_config *conf;
 
 int _mkp_init(void **api, char *confdir)
@@ -205,3 +197,8 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     return socket_fd;
 }
+
+MONKEY_PLUGIN("liana",         /* shortname */
+              "Liana Network", /* name */
+              "0.12.0",        /* version */
+              MK_PLUGIN_NETWORK_IO); /* hooks */

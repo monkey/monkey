@@ -538,7 +538,7 @@ void mk_plugin_init()
     mk_mem_free(path);
 }
 
-int mk_plugin_stage_run(mk_plugin_hook_t hook,
+int mk_plugin_stage_run(unsigned int hook,
                         unsigned int socket,
                         struct sched_connection *conx,
                         struct client_request *cr, struct request *sr)
