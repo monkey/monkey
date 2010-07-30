@@ -31,14 +31,6 @@
 #include "cmd.h"
 #include "cheetah.h"
 
-void register_plugin()
-{
-    _shortname = "cheetah";
-    _name      = "Cheetah";
-    _version   = "0.12.0";
-    _hooks     = MK_PLUGIN_CORE_PRCTX;
-}
-
 void mk_cheetah_cmd(char *cmd)
 {
     if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
@@ -125,8 +117,6 @@ void mk_cheetah_loop()
 
 void *mk_cheetah_init(void *args)
 {
-    register_plugin();
-
     init_time = time(NULL);
     mk_cheetah_loop();
     return 0;
@@ -160,3 +150,8 @@ int _mkp_core_prctx(struct server_config *config)
 
     return 0;
 }
+
+MONKEY_PLUGIN("cheetah",              /* shortname */
+              "Cheetah! Shell",       /* name */
+              "0.12.0",               /* version */
+              MK_PLUGIN_CORE_PRCTX);  /* hooks */

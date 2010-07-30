@@ -26,18 +26,11 @@
 #include "plugin.h"
 #include "http.h"
 
-/* Registration variables */
-mk_plugin_data_t _shortname;
-mk_plugin_data_t _name;
-mk_plugin_data_t _version;
-mk_plugin_hook_t _hooks;
-
 /* global vars */
 struct plugin_api *mk_api;
 mk_plugin_key_t _mkp_data;
 
-
-#define MONKEY_PLUGIN(a, b, c, d)                   \
+#define MONKEY_PLUGIN(a, b, c, d) \
     struct plugin_info _plugin_info = {a, b, c, d}
 
 #endif

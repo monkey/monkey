@@ -373,7 +373,8 @@ void mk_cheetah_cmd_status()
         sl = sl->next;
     }
 
-    printf("Cheetah Plugin v%s\n\n", _version);
+    /* FIXME */
+    //printf("Cheetah Plugin v%s\n\n", _plugin_info->version);
     printf("Monkey Version     : %s\n", VERSION);
     printf("Configutarion path : %s\n", mk_api->config->serverconf);
     printf("Process ID         : %i\n", getpid());

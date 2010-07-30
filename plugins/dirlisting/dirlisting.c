@@ -53,14 +53,9 @@
 #include "file.h"
 #include "iov.h"
 
-#include "plugin.h"
-#include "dirlisting.h"
+#include "MKPlugin.h"
 
-/* Plugin data for register */
-mk_plugin_data_t _shortname = "dirlisting";
-mk_plugin_data_t _name = "Directory Listing";
-mk_plugin_data_t _version = "0.11.0";
-mk_plugin_hook_t _hooks = MK_PLUGIN_STAGE_30;
+#include "dirlisting.h"
 
 /* DIR_HTML logic:
  * ---------------
@@ -862,3 +857,8 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     mk_dirhtml_init(cr, sr);
     return MK_PLUGIN_RET_END;
 }
+
+MONKEY_PLUGIN("dirlisting",          /* shortname */
+              "Directory Listing",   /* name */
+              "0.12.0",              /* version */
+              MK_PLUGIN_STAGE_30);   /* hooks */
