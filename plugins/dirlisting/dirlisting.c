@@ -842,18 +842,11 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     if (sr->file_info->is_directory == MK_FILE_FALSE) {
         return MK_PLUGIN_RET_NOT_ME;
     }
-
-    /* check setup 
-    if (sr->host_conf->getdir == VAR_OFF) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cr, sr, 1, sr->log);
-        return -1;
-    }
-    */
-
+    
 #ifdef TRACE
     PLUGIN_TRACE("Dirlisting attending socket %i", cr->socket);
 #endif
-
+    
     mk_dirhtml_init(cr, sr);
     return MK_PLUGIN_RET_END;
 }

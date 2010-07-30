@@ -46,7 +46,9 @@
 #define MK_TRACE_COMP_CORE "core"
 
 #define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define PLUGIN_TRACE(...) mk_api->trace(_shortname, MK_TRACE_PLUGIN, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+
+#include "plugin.h"
+#define PLUGIN_TRACE(...) mk_api->trace("FIXME", MK_TRACE_PLUGIN, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ANSI_BOLD "\033[1m"
 #define ANSI_CYAN "\033[36m" 
