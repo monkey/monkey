@@ -31,6 +31,11 @@
 #include "palm.h"
 #include "request.h"
 
+MONKEY_PLUGIN("palm",              /* shortname */
+              "Palm Client",       /* name */
+              "0.12.0",            /* version */
+              MK_PLUGIN_STAGE_30); /* hooks */
+
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
 {
@@ -685,7 +690,3 @@ int _mkp_event_error(int sockfd)
     return hangup(sockfd);
 }
 
-MONKEY_PLUGIN("palm",              /* shortname */
-              "Palm Client",       /* name */
-              "0.12.0",            /* version */
-              MK_PLUGIN_STAGE_30); /* hooks */

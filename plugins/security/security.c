@@ -28,6 +28,11 @@
 
 #include "security.h"
 
+MONKEY_PLUGIN("security",  /* shortname */
+              "Security",  /* name */ 
+              "0.12.0",    /* version */
+              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
+
 struct mk_config *conf;
 
 /* Read database configuration parameters */
@@ -189,8 +194,3 @@ int _mkp_stage_20(struct client_request *cr, struct request *sr)
 
     return MK_PLUGIN_RET_CONTINUE;
 }
-
-MONKEY_PLUGIN("security",  /* shortname */
-              "Security",  /* name */ 
-              "0.12.0",    /* version */
-              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */

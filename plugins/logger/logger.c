@@ -40,6 +40,12 @@
 #include "logger.h"
 #include "pointers.h"
 
+MONKEY_PLUGIN("logger", /* shortname */
+              "Logger", /* name */
+              "0.12.0", /* version */
+              /* hooks */
+              MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);
+
 char *mk_logger_match_by_fd(int fd)
 {
     struct log_target *aux;
@@ -501,10 +507,3 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
 
     return 0;
 }
-
-
-MONKEY_PLUGIN("logger", /* shortname */
-              "Logger", /* name */
-              "0.12.0", /* version */
-              /* hooks */
-              MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);

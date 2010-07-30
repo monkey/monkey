@@ -40,22 +40,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "monkey.h"
-#include "http.h"
-#include "http_status.h"
-#include "str.h"
-#include "memory.h"
-#include "utils.h"
-#include "config.h"
-#include "method.h"
-#include "socket.h"
-#include "header.h"
-#include "file.h"
-#include "iov.h"
-
 #include "MKPlugin.h"
 
 #include "dirlisting.h"
+
+MONKEY_PLUGIN("dirlisting",          /* shortname */
+              "Directory Listing",   /* name */
+              "0.12.0",              /* version */
+              MK_PLUGIN_STAGE_30);   /* hooks */
 
 /* DIR_HTML logic:
  * ---------------
@@ -850,8 +842,3 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     mk_dirhtml_init(cr, sr);
     return MK_PLUGIN_RET_END;
 }
-
-MONKEY_PLUGIN("dirlisting",          /* shortname */
-              "Directory Listing",   /* name */
-              "0.12.0",              /* version */
-              MK_PLUGIN_STAGE_30);   /* hooks */
