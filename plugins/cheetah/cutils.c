@@ -90,6 +90,6 @@ void mk_cheetah_print_running_user()
     uid = getuid();
     getpwuid_r(uid, &pwd, buf, bufsize, &result);
 
-    printf("%s\n", pwd.pw_name);
+    CHEETAH_WRITE("%s\n", pwd.pw_name);
     free(buf);
 }
