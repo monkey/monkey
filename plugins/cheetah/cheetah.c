@@ -36,56 +36,6 @@ MONKEY_PLUGIN("cheetah",              /* shortname */
               "0.12.0",               /* version */
               MK_PLUGIN_CORE_PRCTX);  /* hooks */
 
-void mk_cheetah_cmd(char *cmd)
-{
-    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
-        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
-        mk_cheetah_cmd_config();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
-        strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
-        mk_cheetah_cmd_status();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
-             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
-        mk_cheetah_cmd_clear();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
-             strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
-        mk_cheetah_cmd_uptime();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_PLUGINS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_PLUGINS_SC) == 0) {
-        mk_cheetah_cmd_plugins();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_WORKERS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_WORKERS_SC) == 0) {
-        mk_cheetah_cmd_workers();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_VHOSTS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_VHOSTS_SC) == 0) {
-        mk_cheetah_cmd_vhosts();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
-             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
-        mk_cheetah_cmd_help();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
-             strcmp(cmd, MK_CHEETAH_QUIT_SC) == 0) {
-        mk_cheetah_cmd_quit();
-    }
-    else if (strlen(cmd) == 0) {
-        return;
-    }
-    else {
-        printf("Invalid command, type 'help' for a list of available commands\n");
-    }
-
-    fflush(stdout);
-}
-
 void mk_cheetah_loop()
 {
     int len;

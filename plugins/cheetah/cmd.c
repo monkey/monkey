@@ -8,73 +8,57 @@
 #include "MKPlugin.h"
 
 #include "cheetah.h"
+#include "cutils.h"
 #include "cmd.h"
 
-void mk_cheetah_print_worker_memory_usage(pid_t pid)
+void mk_cheetah_cmd(char *cmd)
 {
-    int last, init, n, c = 0;
-    int s = 1024;
-    char *buf;
-    char *value;
-    pid_t ppid;
-    FILE *f;
-
-    ppid = getpid();
-    buf = mk_api->mem_alloc(s);
-    sprintf(buf, MK_CHEETAH_PROC_TASK, ppid, pid);
-
-    f = fopen(buf, "r");
-    if (!f) {
-        printf("Cannot get details\n");
+    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
+        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
+        mk_cheetah_cmd_config();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
+        strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
+        mk_cheetah_cmd_status();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
+             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
+        mk_cheetah_cmd_clear();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
+             strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
+        mk_cheetah_cmd_uptime();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_PLUGINS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_PLUGINS_SC) == 0) {
+        mk_cheetah_cmd_plugins();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_WORKERS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_WORKERS_SC) == 0) {
+        mk_cheetah_cmd_workers();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_VHOSTS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_VHOSTS_SC) == 0) {
+        mk_cheetah_cmd_vhosts();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
+        mk_cheetah_cmd_help();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
+             strcmp(cmd, MK_CHEETAH_QUIT_SC) == 0) {
+        mk_cheetah_cmd_quit();
+    }
+    else if (strlen(cmd) == 0) {
         return;
     }
-
-    buf = fgets(buf, s, f);
-    if (!buf) {
-        printf("Cannot format details\n");
-        return;
-    }
-    fclose(f);
-
-    last = 0;
-    init = 0;
-
-    printf("\n");
-    return;
-
-    while ((n = mk_api->str_search(buf + last, " ")) > 0) {
-        if (c == 23) {
-            value = mk_api->str_copy_substr(buf, init, last + n);
-            printf("%s\n", value);
-            mk_mem_free(buf);
-            mk_mem_free(value);
-            return;
-        }
-        init = last + n + 1;
-        last += n + 1;
-        c++;
-    }
-}
-
-void mk_cheetah_print_running_user()
-{
-    struct passwd pwd;
-    struct passwd *result;
-    char *buf;
-    size_t bufsize;
-    uid_t uid;
-
-    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (bufsize == -1) {
-        bufsize = 16384;
+    else {
+        printf("Invalid command, type 'help' for a list of available commands\n");
     }
 
-    buf = malloc(bufsize);
-    uid = getuid();
-    getpwuid_r(uid, &pwd, buf, bufsize, &result);
-
-    printf("%s\n", pwd.pw_name);
-    free(buf);
+    fflush(stdout);
 }
 
 void mk_cheetah_cmd_clear()
@@ -386,3 +370,5 @@ void mk_cheetah_cmd_status()
            nthreads, mk_api->config->workers);
 
 }
+
+

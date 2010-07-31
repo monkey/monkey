@@ -1,8 +1,7 @@
 time_t init_time;
 
 /* commands */
-void mk_cheetah_print_worker_memory_usage(pid_t pid);
-void mk_cheetah_print_running_user();
+void mk_cheetah_cmd(char *cmd);
 
 void mk_cheetah_cmd_clear();
 void mk_cheetah_cmd_uptime();
