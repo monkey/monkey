@@ -122,7 +122,7 @@ void mk_cheetah_config(char *path)
 
 void mk_cheetah_create_pipe()
 {
-    int ret;
+    int fd, ret;
     unsigned long len;
     char *buf=NULL;
     FILE *f;
@@ -135,8 +135,14 @@ void mk_cheetah_create_pipe()
         exit(1);
     }
 
-    f = fopen(buf, "rw");
+    /* A real nasty code, if we run fopen() directly we get a weird
+     * behavior after open the file (could be related to a FIFO issue ?)
+     */
+    fd = open(buf, O_RDWR);
+    f = fdopen(fd, "rw");
+
     cheetah_pipe = buf;
+
     cheetah_input = cheetah_output = f;
 }
 
@@ -170,6 +176,7 @@ int _mkp_init(void **api, char *confdir)
 void _mkp_exit()
 {
     if (listen_mode == LISTEN_CLIENT) {
+        /* Remote named pipe */
         unlink(cheetah_pipe);
         mk_api->mem_free(cheetah_pipe);
     }
