@@ -538,6 +538,19 @@ void mk_plugin_init()
     mk_mem_free(path);
 }
 
+void mk_plugin_exit_all()
+{
+    struct plugin *p;
+    
+    p = config->plugins;
+    
+    while (p) {
+        /* Invoke exit hook */
+        p->exit();
+        p = p->next;
+    }
+}
+
 int mk_plugin_stage_run(unsigned int hook,
                         unsigned int socket,
                         struct sched_connection *conx,

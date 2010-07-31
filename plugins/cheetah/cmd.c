@@ -55,10 +55,10 @@ void mk_cheetah_cmd(char *cmd)
         return;
     }
     else {
-        printf("Invalid command, type 'help' for a list of available commands\n");
+      CHEETAH_WRITE("Invalid command, type 'help' for a list of available commands\n");
     }
 
-    fflush(stdout);
+    CHEETAH_FLUSH();
 }
 
 void mk_cheetah_cmd_clear()

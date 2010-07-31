@@ -80,6 +80,8 @@
 
 int listen_mode;
 
+char *cheetah_pipe;
+
 FILE *cheetah_input;
 FILE *cheetah_output;
 

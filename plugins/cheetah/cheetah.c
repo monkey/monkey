@@ -136,6 +136,7 @@ void mk_cheetah_create_pipe()
     }
 
     f = fopen(buf, "rw");
+    cheetah_pipe = buf;
     cheetah_input = cheetah_output = f;
 }
 
@@ -168,6 +169,10 @@ int _mkp_init(void **api, char *confdir)
 
 void _mkp_exit()
 {
+    if (listen_mode == LISTEN_CLIENT) {
+        unlink(cheetah_pipe);
+        mk_api->mem_free(cheetah_pipe);
+    }
 }
 
 int _mkp_core_prctx(struct server_config *config)

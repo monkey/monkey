@@ -47,6 +47,7 @@ void mk_signal_handler(int signo)
 
     case SIGINT:
         mk_utils_remove_pid();
+        mk_plugin_exit_all();
         printf("\n\n%s => Interrupt from keyboard\n\n",
                log_current_time.data);
         exit(0);
