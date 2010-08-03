@@ -1,0 +1,5 @@
+Liana SSl Networking Plugin
+===========================
+
+Liana SSL is the base network plugin for Monkey, as it's brother
+provides some basic socket calls to work over SSL
