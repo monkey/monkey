@@ -27,16 +27,19 @@
 #include <sys/socket.h>
 #include <sys/sendfile.h>
 
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+
 #include "config.h"
 #include "plugin.h"
+#include "MKPlugin.h"
 
 #include <matrixSsl.h>
 
 /* Plugin data for register */
-mk_plugin_data_t _shortname = "liana_ssl";
-mk_plugin_data_t _name = "Liana SSL Network";
-mk_plugin_data_t _version = "0.1";
-mk_plugin_hook_t _hooks = MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_NETWORK_IO;
+MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.1", MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_NETWORK_IO);
 
 struct plugin_api *mk_api;
 
@@ -44,7 +47,7 @@ struct mk_list *list_head;
 
 struct mk_liana_ssl
 {
-    sslConn_t *conn;
+    ssl_t *conn;
     int socket_fd;
     struct mk_list *cons;
 };
@@ -68,6 +71,10 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     int remote_fd;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
+#ifdef TRACE
+    PLUGIN_TRACE("Accept Connection");
+#endif
+
     remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
                         &socket_size, SOCK_NONBLOCK);
     return remote_fd;
@@ -77,6 +84,10 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 {
     ssize_t bytes_read;
 
+#ifdef TRACE
+    PLUGIN_TRACE("Reading");
+#endif
+
     bytes_read = read(socket_fd, (void *)buf, count);
 
     return bytes_read;
@@ -85,7 +96,9 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
 {
     ssize_t bytes_sent = -1;
-
+#ifdef TRACE
+    PLUGIN_TRACE("Write");
+#endif
     bytes_sent = write(socket_fd, buf, count);
 
     return bytes_sent;
@@ -94,7 +107,9 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
     ssize_t bytes_sent = -1;
-
+#ifdef TRACE
+    PLUGIN_TRACE("WriteV");
+#endif
     bytes_sent = mk_api->iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
 
     return bytes_sent;
@@ -159,7 +174,9 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
 int _mkp_network_io_create_socket(int domain, int type, int protocol)
 {
     int socket_fd;
-
+#ifdef TRACE
+    PLUGIN_TRACE("Create Socket");
+#endif
     socket_fd = socket(domain, type, protocol);
 
     return socket_fd;
@@ -192,9 +209,16 @@ int _mkp_network_io_server(int port, char *listen_addr)
     int ret;
     struct sockaddr_in local_sockaddr_in;
 
+#ifdef TRACE
+    PLUGIN_TRACE("Create SSL socket");
+#endif
+
     socket_fd = _mkp_network_io_create_socket(PF_INET, SOCK_STREAM, 0);
     if( socket_fd == -1) {
         perror("Error creating server socket");
+#ifdef TRACE
+        PLUGIN_TRACE("Error creating server socket");
+#endif
         return -1;
     }
     mk_api->socket_set_tcp_nodelay(socket_fd);
@@ -211,8 +235,15 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     if(ret == -1) {
         printf("Error: Port %i cannot be used\n", port);
+#ifdef TRACE
+        PLUGIN_TRACE("Error: Port %i cannot be used", port);
+#endif
         return -1;
     }
+
+#ifdef TRACE
+    PLUGIN_TRACE("Socket created, returned socket");
+#endif
 
 
     return socket_fd;
