@@ -153,8 +153,8 @@ void _mkp_exit()
 {
     if (listen_mode == LISTEN_SERVER) {
         /* Remote named pipe */
-        unlink(cheetah_pipe);
-        mk_api->mem_free(cheetah_pipe);
+        unlink(cheetah_server);
+        mk_api->mem_free(cheetah_server);
     }
 }
 

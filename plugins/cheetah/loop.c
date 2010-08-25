@@ -37,7 +37,6 @@ void mk_cheetah_loop_server()
     int n, ret;
     int buf_len;
     unsigned long len;
-    char *sock_path = 0;
     char buf[1024];
     char cmd[1024];
     int server_fd;
@@ -53,13 +52,14 @@ void mk_cheetah_loop_server()
         exit(1);
     }
 
-    mk_api->str_build(&sock_path, &len, "/tmp/cheetah.%i", 
+    cheetah_server = NULL;
+    mk_api->str_build(&cheetah_server, &len, "/tmp/cheetah.%i", 
                       mk_api->config->serverport);
     
-    unlink(sock_path);
+    unlink(cheetah_server);
 
     address.sun_family = AF_UNIX;
-    sprintf(address.sun_path, "%s", sock_path);
+    sprintf(address.sun_path, "%s", cheetah_server);
     address_length = sizeof(address.sun_family) + len;
 
     if(bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
