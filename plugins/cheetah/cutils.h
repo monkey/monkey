@@ -19,5 +19,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_CHEETAH_CUTILS_H
+#define MK_CHEETAH_CUTILS_H
+
+#define CHEETAH_WRITE(...) mk_cheetah_write(__VA_ARGS__);
+#define CHEETAH_FLUSH() fflush(cheetah_output);fflush(cheetah_input);
+
 void mk_cheetah_print_worker_memory_usage(pid_t pid);
 void mk_cheetah_print_running_user();
+int mk_cheetah_write(const char *format, ...);
+
+#endif

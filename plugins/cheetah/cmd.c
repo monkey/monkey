@@ -1,3 +1,24 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
+/*  Monkey HTTP Daemon
+ *  ------------------
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -11,7 +32,7 @@
 #include "cutils.h"
 #include "cmd.h"
 
-void mk_cheetah_cmd(char *cmd)
+int mk_cheetah_cmd(char *cmd)
 {
     if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
         strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
@@ -49,21 +70,22 @@ void mk_cheetah_cmd(char *cmd)
     }
     else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
              strcmp(cmd, MK_CHEETAH_QUIT_SC) == 0) {
-        mk_cheetah_cmd_quit();
+        return mk_cheetah_cmd_quit();
     }
     else if (strlen(cmd) == 0) {
-        return;
+        return 0;
     }
     else {
       CHEETAH_WRITE("Invalid command, type 'help' for a list of available commands\n");
     }
 
     CHEETAH_FLUSH();
+    return 0;
 }
 
 void mk_cheetah_cmd_clear()
 {
-    printf("\033[2J\033[1;1H");
+    CHEETAH_WRITE("\033[2J\033[1;1H");
 }
 
 void mk_cheetah_cmd_uptime()
@@ -91,7 +113,7 @@ void mk_cheetah_cmd_uptime()
     minutes = upminh / MK_CHEETAH_ONEMINUTE;
     seconds = upminh - minutes * MK_CHEETAH_ONEMINUTE;
 
-    printf
+    CHEETAH_WRITE
         ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n\n",
          days, (days > 1) ? "s" : "", hours, (hours > 1) ? "s" : "", minutes,
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
@@ -247,11 +269,16 @@ void mk_cheetah_cmd_workers()
     CHEETAH_WRITE("\n");
 }
 
-void mk_cheetah_cmd_quit()
+int mk_cheetah_cmd_quit()
 {
     CHEETAH_WRITE("Cheeta says: Good Bye!\n");
-    fflush(stdout);
-    pthread_exit(NULL);
+    if (listen_mode == LISTEN_STDIN) {
+        pthread_exit(NULL);
+        return 0;
+    }
+    else {
+        return -1;
+    }
 }
 
 void mk_cheetah_cmd_help()

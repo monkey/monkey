@@ -33,7 +33,9 @@
 
 /* Local header files */
 #include "cmd.h"
+#include "cutils.h"
 #include "cheetah.h"
+#include "loop.h"
 
 MONKEY_PLUGIN("cheetah",              /* shortname */
               "Cheetah! Shell",       /* name */
@@ -51,7 +53,7 @@ void mk_cheetah_welcome_msg()
     CHEETAH_FLUSH();
 }
 
-void mk_cheetah_loop()
+void mk_cheetah_loop_stdin()
 {
     int len;
     char cmd[200];
@@ -62,8 +64,8 @@ void mk_cheetah_loop()
 
     while (1) {
         CHEETAH_WRITE(MK_CHEETAH_PROMPT, ANSI_BOLD, ANSI_GREEN, ANSI_RESET);
+        
         rcmd = fgets(line, sizeof(line), cheetah_input);
-
         len = strlen(line);
         
         if (len == 0){
@@ -112,38 +114,12 @@ void mk_cheetah_config(char *path)
     if (strcasecmp(listen, LISTEN_STDIN_STR) == 0) {
         listen_mode = LISTEN_STDIN;
     }
-    else if (strcasecmp(listen, LISTEN_CLIENT_STR) == 0) {
-        listen_mode = LISTEN_CLIENT;
+    else if (strcasecmp(listen, LISTEN_SERVER_STR) == 0) {
+        listen_mode = LISTEN_SERVER;
     }
     else {
 
     }
-}
-
-void mk_cheetah_create_pipe()
-{
-    int fd, ret;
-    unsigned long len;
-    char *buf=NULL;
-    FILE *f;
-
-    mk_api->str_build(&buf, &len, "/tmp/cheetah.%i", mk_api->config->serverport);
-
-    ret = mkfifo(buf, 0666);
-    if ((ret == -1) && (errno != EEXIST)) {
-        perror("Error creating pipe");
-        exit(1);
-    }
-
-    /* A real nasty code, if we run fopen() directly we get a weird
-     * behavior after open the file (could be related to a FIFO issue ?)
-     */
-    fd = open(buf, O_RDWR);
-    f = fdopen(fd, "rw");
-
-    cheetah_pipe = buf;
-
-    cheetah_input = cheetah_output = f;
 }
 
 void *mk_cheetah_init(void *args)
@@ -152,12 +128,12 @@ void *mk_cheetah_init(void *args)
     if (listen_mode == LISTEN_STDIN) {
         cheetah_input = stdin;
         cheetah_output = stdout;
+        mk_cheetah_loop_stdin();
     }
-    else if (listen_mode == LISTEN_CLIENT) {
-        mk_cheetah_create_pipe();
+    else if (listen_mode == LISTEN_SERVER) {
+        mk_cheetah_loop_server();
     }
 
-    mk_cheetah_loop();
     return 0;
 }
 
@@ -175,7 +151,7 @@ int _mkp_init(void **api, char *confdir)
 
 void _mkp_exit()
 {
-    if (listen_mode == LISTEN_CLIENT) {
+    if (listen_mode == LISTEN_SERVER) {
         /* Remote named pipe */
         unlink(cheetah_pipe);
         mk_api->mem_free(cheetah_pipe);

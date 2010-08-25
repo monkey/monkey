@@ -1,7 +1,7 @@
 time_t init_time;
 
 /* commands */
-void mk_cheetah_cmd(char *cmd);
+int mk_cheetah_cmd(char *cmd);
 
 void mk_cheetah_cmd_clear();
 void mk_cheetah_cmd_uptime();
@@ -16,7 +16,7 @@ void mk_cheetah_cmd_plugins();
 void mk_cheetah_cmd_vhosts();
 void mk_cheetah_cmd_workers();
 
-void mk_cheetah_cmd_quit();
+int  mk_cheetah_cmd_quit();
 void mk_cheetah_cmd_help();
 void mk_cheetah_cmd_config();
 void mk_cheetah_cmd_status();

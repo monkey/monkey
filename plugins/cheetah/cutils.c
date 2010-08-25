@@ -23,9 +23,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <stdarg.h>
+#include <string.h>
 
 #include "MKPlugin.h"
 #include "cheetah.h"
+#include "cutils.h"
 
 void mk_cheetah_print_worker_memory_usage(pid_t pid)
 {
@@ -42,13 +45,13 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
 
     f = fopen(buf, "r");
     if (!f) {
-        printf("Cannot get details\n");
+        CHEETAH_WRITE("Cannot get details\n");
         return;
     }
 
     buf = fgets(buf, s, f);
     if (!buf) {
-        printf("Cannot format details\n");
+        CHEETAH_WRITE("Cannot format details\n");
         return;
     }
     fclose(f);
@@ -56,7 +59,7 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
     last = 0;
     init = 0;
 
-    printf("\n");
+    CHEETAH_WRITE("\n");
     return;
 
     while ((n = mk_api->str_search(buf + last, " ")) > 0) {
@@ -92,4 +95,26 @@ void mk_cheetah_print_running_user()
 
     CHEETAH_WRITE("%s\n", pwd.pw_name);
     free(buf);
+}
+
+int mk_cheetah_write(const char *format, ...)
+{
+    int len = 0;
+    char buf[1024];
+    va_list ap;
+
+    va_start(ap, format);
+    len = vsprintf(buf, format, ap);
+
+    if (listen_mode == LISTEN_STDIN) {
+        len = fprintf(cheetah_output, buf);
+    }
+    else if (listen_mode == LISTEN_SERVER) {
+        len = write(cheetah_socket, buf, len);
+    }
+
+    memset(buf, '\0', sizeof(buf));
+    va_end(ap);
+
+    return len;
 }
