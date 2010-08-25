@@ -107,7 +107,7 @@ int mk_cheetah_write(const char *format, ...)
     len = vsprintf(buf, format, ap);
 
     if (listen_mode == LISTEN_STDIN) {
-        len = fprintf(cheetah_output, buf);
+        len = fprintf(cheetah_output, buf, NULL);
     }
     else if (listen_mode == LISTEN_SERVER) {
         len = write(cheetah_socket, buf, len);
