@@ -130,9 +130,6 @@ struct host
     char *servername;           /* host name */
     mk_pointer documentroot;
 
-    char *access_log_path;      /* access log file */
-    char *error_log_path;       /* error log file */
-
     char *host_signature;
     mk_pointer header_host_signature;
 

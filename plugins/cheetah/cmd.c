@@ -236,9 +236,6 @@ void mk_cheetah_cmd_vhosts()
         CHEETAH_WRITE("      - Configuration Path     : %s\n", host->file);
         CHEETAH_WRITE("      - Document Root          : %s\n",
                host->documentroot.data);
-        CHEETAH_WRITE("      - Access Log             : %s\n",
-               host->access_log_path);
-        CHEETAH_WRITE("      - Error Log              : %s\n", host->error_log_path);
         host = host->next;
     }
 
