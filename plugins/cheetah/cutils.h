@@ -22,6 +22,8 @@
 #ifndef MK_CHEETAH_CUTILS_H
 #define MK_CHEETAH_CUTILS_H
 
+#include <stdio.h>
+
 #define CHEETAH_WRITE(...) mk_cheetah_write(__VA_ARGS__);
 #define CHEETAH_FLUSH() fflush(cheetah_output);fflush(cheetah_input);
 

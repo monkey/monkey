@@ -20,13 +20,8 @@
  */
 
 /* System headers */
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-
-#include <sys/stat.h>
-#include <fcntl.h>
 
 /* Monkey Plugin Interface */
 #include "MKPlugin.h"
@@ -51,34 +46,6 @@ void mk_cheetah_welcome_msg()
     CHEETAH_WRITE("\n      << %sType 'help' or '\\h' for help%s >>\n\n",
                   ANSI_BLUE, ANSI_RESET);
     CHEETAH_FLUSH();
-}
-
-void mk_cheetah_loop_stdin()
-{
-    int len;
-    char cmd[200];
-    char line[200];
-    char *rcmd;
-
-    mk_cheetah_welcome_msg();
-
-    while (1) {
-        CHEETAH_WRITE(MK_CHEETAH_PROMPT, ANSI_BOLD, ANSI_GREEN, ANSI_RESET);
-        
-        rcmd = fgets(line, sizeof(line), cheetah_input);
-        len = strlen(line);
-        
-        if (len == 0){
-            CHEETAH_WRITE("\n");
-            mk_cheetah_cmd_quit();
-        }
-
-        strncpy(cmd, line, len - 1);
-        cmd[len - 1] = '\0';
-
-        mk_cheetah_cmd(cmd);
-        bzero(line, sizeof(line));
-    }
 }
 
 void mk_cheetah_config(char *path)
