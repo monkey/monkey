@@ -85,7 +85,15 @@ void mk_cheetah_config(char *path)
         listen_mode = LISTEN_SERVER;
     }
     else {
+        printf("\nCheetah! Error: Invalid LISTEN value");
+        exit(1);
+    }
 
+    /* Cheetah cannot work in STDIN mode if Monkey is working in background */
+    if (listen_mode == LISTEN_STDIN && mk_api->config->is_daemon == VAR_ON) {
+        printf("\nCheetah!: Forcing SERVER mode as Monkey is running in background\n");
+        fflush(stdout);
+        listen_mode = LISTEN_SERVER;
     }
 }
 
@@ -111,7 +119,7 @@ int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     init_time = time(NULL);
-    
+
     mk_cheetah_config(confdir);
     return 0;
 }

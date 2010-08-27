@@ -228,7 +228,6 @@ void mk_cheetah_cmd_plugins()
 void mk_cheetah_cmd_vhosts()
 {
     struct host *host;
-    struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
 
