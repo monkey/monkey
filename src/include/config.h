@@ -69,6 +69,8 @@ struct mk_config_entry
 /* Base struct of server */
 struct server_config
 {
+    int is_daemon;
+
     mk_pointer port;
 
     char *serverconf;           /* path to configuration files */
