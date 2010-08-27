@@ -47,7 +47,13 @@ struct mk_list *list_head;
 
 struct mk_liana_ssl
 {
-    ssl_t *conn;
+    ssl_t *ssl;
+    /* Buffers to communicate */
+    sslBuf_t inbuf;
+    sslBuf_t insock;
+    sslBuf_t outsock;
+    int outBufferCount;
+
     int socket_fd;
     struct mk_list *cons;
 };
@@ -55,6 +61,20 @@ struct mk_liana_ssl
 sslKeys_t *keys;
 
 static pthread_key_t key;
+
+int liana_ssl_read(struct mk_liana_ssl *conn, char *buf, int len) {
+    int bytes;
+
+    bytes = recv(conn->socket_fd, (char *)conn->insock.end,
+                 (int)((conn->insock.buf + conn->insock.size) - conn->insock.end), MSG_NOSIGNAL);
+
+    if(bytes < 0) return -1;
+
+}
+
+int liana_ssl_handshake(struct mk_liana_ssl *conn) {
+
+}
 
 int _mkp_init(void **api, char *confdir)
 {
@@ -69,14 +89,49 @@ void _mkp_exit()
 int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 {
     int remote_fd;
+    int ret;
     socklen_t socket_size = sizeof(struct sockaddr_in);
+    struct mk_liana_ssl *conn = (struct mk_liana_ssl *) malloc( sizeof(struct mk_liana_ssl *) );
+
 
 #ifdef TRACE
-    PLUGIN_TRACE("Accept Connection");
+    PLUGIN_TRACE("Accepting Connection");
 #endif
 
     remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
                         &socket_size, SOCK_NONBLOCK);
+
+    if( remote_fd == -1 ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Error accepting connection" );
+#endif
+        return -1;
+    }
+
+    if((ret = matrixSslNewSession( &conn->ssl, keys, NULL, SSL_FLAGS_SERVER )) < 0) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Error initiating the ssl session" );
+#endif
+        matrixSslDeleteSession( conn->ssl );
+        return -1;
+    }
+#ifdef TRACE
+    PLUGIN_TRACE( "Ssl session started" );
+#endif
+
+    memset( $conn->inbuf, 0x0, sizeof( sslBuf_t ) );
+    conn->insock.size = 1024;
+    conn->insock.start = conn->inssock.end = conn->insock.buf = (unsigned char *) malloc( conn->insock.size);
+    conn->outsock.size = 1024;
+    conn->outsock.start = conn->outsock.end = conn->outsock.buf = (unsigned char *) malloc( conn->outsock.size);
+    conn->inbuf.size = 0;
+    conn->inbuf.start = conn->inbuf.end = conn->inbuf.buf = NULL;
+
+    conn->socket_fd = remote_fd;
+
+    ret = liana_ssl_handshake( conn );
+
+
     return remote_fd;
 }
 
@@ -281,6 +336,18 @@ int _mkp_core_prctx(struct server_config *config)
 #ifdef TRACE
     PLUGIN_TRACE("MatrixSsl Started");
 #endif
+
+    if( matrixSslReadKeys( &keys, "/home/zeus/src/monkey.git/certSrv.pem", "/home/zeus/src/monkey.git/privkeySrv.pem", NULL, NULL ) < 0 ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "MatrixSsl couldn't read the certificates" );
+#endif
+        return 0;
+    }
+
+#ifdef TRACE
+    PLUGIN_TRACE( "MatrixSsl just read the certificates, ready to go!" );
+#endif
+
 
 
     return 0;
