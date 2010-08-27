@@ -405,6 +405,15 @@ void mk_cheetah_cmd_status()
     //CHEETAH_WRITE("Cheetah Plugin v%s\n\n", _plugin_info->version);
     CHEETAH_WRITE("Monkey Version     : %s\n", VERSION);
     CHEETAH_WRITE("Configutarion path : %s\n", mk_api->config->serverconf);
+
+    CHEETAH_WRITE("Cheetah! mode      : ");
+    if (listen_mode == LISTEN_STDIN) {
+        CHEETAH_WRITE("STDIN\n");
+    }
+    else {
+        CHEETAH_WRITE("SERVER @ %s\n", cheetah_server);
+    }
+
     CHEETAH_WRITE("Process ID         : %i\n", getpid());
     CHEETAH_WRITE("Process User       : ");
     mk_cheetah_print_running_user();
