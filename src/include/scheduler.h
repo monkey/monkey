@@ -22,6 +22,8 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
+#include "list.h"
+
 #define MK_SCHEDULER_CONN_AVAILABLE -1
 #define MK_SCHEDULER_CONN_PENDING 0
 #define MK_SCHEDULER_CONN_PROCESS 1
@@ -44,11 +46,11 @@ struct sched_list_node
 
     struct sched_connection *queue;
     struct client_request *request_handler;
-    struct sched_list_node *next;
 
+    struct mk_list _head;
 };
 
-struct sched_list_node *sched_list;
+struct mk_list *sched_list;
 
 /* Struct under thread context */
 typedef struct

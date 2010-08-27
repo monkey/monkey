@@ -165,7 +165,7 @@ struct plugin_api
 {
     struct server_config *config;
     struct plugin *plugins;
-    struct sched_list_node **sched_list;
+    struct mk_list **sched_list;
 
     /* HTTP request function */
     int *(*http_request_end) (int);

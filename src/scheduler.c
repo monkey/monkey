@@ -45,7 +45,7 @@
 int mk_sched_register_thread(pthread_t tid, int efd)
 {
     int i;
-    struct sched_list_node *sl, *aux;
+    struct sched_list_node *sl, *last;
 
     sl = mk_mem_malloc_z(sizeof(struct sched_list_node));
     sl->tid = tid;
@@ -54,7 +54,6 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     sl->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
                                 config->worker_capacity);
     sl->request_handler = NULL;
-    sl->next = NULL;
 
     for (i = 0; i < config->worker_capacity; i++) {
         /* Pre alloc IPv4 memory buffer */
@@ -64,16 +63,21 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 
     if (!sched_list) {
         sl->idx = 1;
-        sched_list = sl;
+
+        /* Alloc and init list */
+        sched_list = mk_mem_malloc(sizeof(struct mk_list));
+        mk_list_init(sched_list);
+
+        mk_list_add(&sl->_head, sched_list);
         return 0;
     }
 
-    aux = sched_list;
-    while (aux->next) {
-        aux = aux->next;
-    }
-    sl->idx = aux->idx + 1;
-    aux->next = sl;
+    /* Update index with last node from the sched_list */
+    last = mk_list_entry(sched_list->prev, struct sched_list_node, _head);
+    sl->idx = last->idx + 1;
+
+    /* Add node to list */
+    mk_list_add(&sl->_head, sched_list);
 
     return 0;
 }
@@ -181,16 +185,17 @@ int mk_sched_get_thread_poll()
 
 struct sched_list_node *mk_sched_get_thread_conf()
 {
+    struct mk_list *list_node;
     struct sched_list_node *node;
     pthread_t current;
 
     current = pthread_self();
-    node = sched_list;
-    while (node) {
+
+    mk_list_foreach(list_node, sched_list) {
+        node = mk_list_entry(list_node, struct sched_list_node, _head);
         if (pthread_equal(node->tid, current) != 0) {
             return node;
         }
-        node = node->next;
     }
 
     return NULL;
