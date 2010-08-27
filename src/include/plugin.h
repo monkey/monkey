@@ -280,6 +280,8 @@ struct plugin_info {
 };
 
 void mk_plugin_init();
+void mk_plugin_exit_all();
+
 int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
                         struct sched_connection *conx,

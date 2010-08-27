@@ -34,6 +34,7 @@
 #include "utils.h"
 #include "chars.h"
 #include "clock.h"
+#include "plugin.h"
 
 /* (by Daniel R. Ome) */
 void mk_signal_handler(int signo)
