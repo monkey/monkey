@@ -228,15 +228,35 @@ void mk_cheetah_cmd_plugins()
 void mk_cheetah_cmd_vhosts()
 {
     struct host *host;
+    struct mk_config *cnf;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
     host = mk_api->config->hosts;
 
     while (host) {
-        CHEETAH_WRITE("* VHost '%s'\n", host->servername);
-        CHEETAH_WRITE("      - Configuration Path     : %s\n", host->file);
-        CHEETAH_WRITE("      - Document Root          : %s\n",
-               host->documentroot.data);
+        CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n", 
+                      ANSI_BOLD, ANSI_YELLOW, 
+                      host->servername, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
+        CHEETAH_WRITE("      - Configuration Path : %s\n", host->file);
+        CHEETAH_WRITE("      - Document Root      : %s\n", host->documentroot.data);
+
+        if (host->config) {
+            section = host->config->section->next;
+            while (section) {
+                CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
+                              section->name);
+                entry = section->entry;
+                while (entry) {
+                    CHEETAH_WRITE("        - %s : %s\n", entry->key, entry->val);
+                    entry = entry->next;
+                }
+                section = section->next;
+            }
+        }
         host = host->next;
+
+        
     }
 
     CHEETAH_WRITE("\n");
