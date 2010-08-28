@@ -80,10 +80,11 @@ void mk_server_loop(int server_fd)
 {
     int remote_fd;
     struct sockaddr_in sockaddr;
-    struct mk_list *temp;
+    struct mk_list *list;
     struct sched_list_node *sched;
 
-    sched = mk_list_entry(sched_list->next, struct sched_list_node, _head);
+    list = sched_list;
+    sched = mk_list_entry_next(list, struct sched_list_node, _head, sched_list);
 
     while (1) {
         remote_fd = mk_socket_accept(server_fd, sockaddr);
@@ -100,7 +101,6 @@ void mk_server_loop(int server_fd)
         mk_sched_add_client(sched, remote_fd);
 
         /* Next node */
-        sched = mk_list_entry(sched_list->next, struct sched_list_node, _head);
-
+        sched = mk_list_entry_next(list, struct sched_list_node, _head, sched_list);
     }
 }

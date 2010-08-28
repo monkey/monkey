@@ -73,7 +73,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     }
 
     /* Update index with last node from the sched_list */
-    last = mk_list_entry(sched_list->prev, struct sched_list_node, _head);
+    last = mk_list_entry_last(sched_list, struct sched_list_node, _head);
     sl->idx = last->idx + 1;
 
     /* Add node to list */
