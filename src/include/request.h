@@ -89,12 +89,6 @@ parametros de una peticion */
 #define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
-struct request_idx
-{
-    struct client_request *first;
-    struct client_request *last;
-};
-
 struct client_request
 {
     int pipelined;              /* Pipelined request */
@@ -113,10 +107,11 @@ struct client_request
 
     time_t init_time;
     struct request *request;    /* Parsed request */
-    struct client_request *next;
+
+    struct mk_list _head;
 };
 
-pthread_key_t request_index;
+pthread_key_t request_list;
 
 struct header_toc
 {

@@ -59,7 +59,7 @@ static const char MONKEY_BUILT[] = "Unknown";
 void mk_thread_keys_init()
 {
     /* Create thread keys */
-    pthread_key_create(&request_index, NULL);
+    pthread_key_create(&request_list, NULL);
     pthread_key_create(&epoll_fd, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);

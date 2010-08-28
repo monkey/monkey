@@ -882,9 +882,9 @@ void mk_request_free(struct request *sr)
  */
 struct client_request *mk_request_client_create(int socket)
 {
-    struct request_idx *request_index;
     struct client_request *cr;
     struct sched_connection *sc;
+    struct mk_list *cr_list;
 
     sc = mk_sched_get_connection(NULL, socket);
     cr = mk_mem_malloc(sizeof(struct client_request));
@@ -908,7 +908,7 @@ struct client_request *mk_request_client_create(int socket)
     /* creation time in unix time */
     cr->init_time = sc->arrive_time;
 
-    cr->next = NULL;
+    /* alloc space for body content */
     cr->body = mk_mem_malloc(MK_REQUEST_CHUNK);
 
     /* Buffer size based in Chunk bytes */
@@ -920,36 +920,31 @@ struct client_request *mk_request_client_create(int socket)
     cr->first_method = HTTP_METHOD_UNKNOWN;
 
     /* Add this request to the thread request list */
-    request_index = mk_sched_get_request_index();
-    if (!request_index->first) {
-        request_index->first = request_index->last = cr;
-    }
-    else {
-        request_index->last->next = cr;
-        request_index->last = cr;
-    }
+    cr_list = mk_sched_get_request_list();
+
+    /* Add node to list */
+    mk_list_add(&cr->_head, cr_list);
 
     /* Set again the global list */
-    mk_sched_set_request_index(request_index);
+    mk_sched_set_request_list(cr_list);
 
     return cr;
 }
 
 struct client_request *mk_request_client_get(int socket)
 {
-    struct request_idx *request_index;
-    struct client_request *cr = NULL;
+    struct client_request *cr_node = NULL;
+    struct mk_list *cr_list, *cr_head;
 
-    request_index = mk_sched_get_request_index();
-    cr = request_index->first;
-    while (cr != NULL) {
-        if (cr->socket == socket) {
-            break;
+    cr_list = mk_sched_get_request_list();
+    mk_list_foreach(cr_head, cr_list) {
+        cr_node = mk_list_entry(cr_head, struct client_request, _head);
+        if (cr_node->socket == socket) {
+            return cr_node;
         }
-        cr = cr->next;
     }
 
-    return cr;
+    return NULL;
 }
 
 /*
@@ -958,37 +953,23 @@ struct client_request *mk_request_client_get(int socket)
  */
 void mk_request_client_remove(int socket)
 {
-    struct request_idx *request_index;
-    struct client_request *cr, *aux;
+    struct client_request *cr_node;
+    struct mk_list *cr_list, *cr_head;
 
-    request_index = mk_sched_get_request_index();
-    cr = request_index->first;
-
-    while (cr) {
-        if (cr->socket == socket) {
-            if (cr == request_index->first) {
-                request_index->first = cr->next;
-            }
-            else {
-                aux = request_index->first;
-                while (aux->next != cr) {
-                    aux = aux->next;
-                }
-                aux->next = cr->next;
-                if (!aux->next) {
-                    request_index->last = aux;
-                }
-            }
+    cr_list = mk_sched_get_request_list();
+    
+    mk_list_foreach(cr_head, cr_list) {
+        cr_node = mk_list_entry(cr_head, struct client_request, _head);
+        if (cr_node->socket == socket) {
+            mk_list_del(cr_head);
+            mk_mem_free(cr_node->body);
+            mk_mem_free(cr_node);
             break;
         }
-        cr = cr->next;
     }
 
-    mk_mem_free(cr->body);
-    mk_mem_free(cr);
-
     /* Update thread index */
-    mk_sched_set_request_index(request_index);
+    mk_sched_set_request_list(cr_list);
 }
 
 struct header_toc *mk_request_header_toc_create(int len)
