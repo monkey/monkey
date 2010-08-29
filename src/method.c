@@ -86,29 +86,29 @@ long int mk_method_post_content_length(char *body)
 }
 
 /* POST METHOD */
-int mk_method_post(struct client_request *cr, struct request *sr)
+int mk_method_post(struct client_session *cs, struct session_request *sr)
 {
      struct header_toc *toc = NULL;
     mk_pointer tmp;
     long content_length_post = 0;
 
-    content_length_post = mk_method_post_content_length(cr->body);
+    content_length_post = mk_method_post_content_length(cs->body);
 
     /* Length Required */
     if (content_length_post == -1) {
-        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cr, sr);
+        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cs, sr);
         return -1;
     }
 
     /* Bad request */
     if (content_length_post <= 0) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
         return -1;
     }
 
     /* Content length too large */
-    if (content_length_post >= cr->body_size) {
-        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cr, sr);
+    if (content_length_post >= cs->body_size) {
+        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
         return -1;
     }
 
@@ -117,7 +117,7 @@ int mk_method_post(struct client_request *cr, struct request *sr)
                                  mk_rh_content_type);
 
     if (!tmp.data) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cr, sr);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
         return -1;
     }
     sr->content_type = tmp;

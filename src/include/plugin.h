@@ -75,9 +75,9 @@ struct plugin_core
 struct plugin_stage
 {
     int (*s10) (int, struct sched_connection *);
-    int (*s20) (struct client_request *, struct request *);
-    int (*s30) (struct plugin *, struct client_request *, struct request *);
-    int (*s40) (struct client_request *, struct request *);
+    int (*s20) (struct client_session *, struct session_request *);
+    int (*s30) (struct plugin *, struct client_session *, struct session_request *);
+    int (*s40) (struct client_session *, struct session_request *);
     int (*s50) (int);
 };
 
@@ -190,8 +190,8 @@ struct plugin_api
     char *(*file_to_buffer) (char *);
     struct file_info *(*file_get_info) (char *);
     int (*header_send) (int,
-                          struct client_request *, struct request *);
-    void (*header_set_http_status) (struct request *, int);
+                          struct client_session *, struct session_request *);
+    void (*header_set_http_status) (struct session_request *, int);
 
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
@@ -237,8 +237,8 @@ struct plugin_api
     int (*worker_spawn) (void (*func) (void *));
 
     /* event's functions */
-    int (*event_add) (int, int, struct plugin *, struct client_request *, 
-                      struct request *);
+    int (*event_add) (int, int, struct plugin *, struct client_session *, 
+                      struct session_request *);
     int (*event_del) (int);
 
     int (*event_socket_change_mode) (int, int);
@@ -266,8 +266,8 @@ struct plugin_event
     int socket;
     
     struct plugin *handler;
-    struct client_request *cr;
-    struct request *sr;
+    struct client_session *cs;
+    struct session_request *sr;
 
     struct plugin_event *next;
 };
@@ -285,21 +285,21 @@ void mk_plugin_exit_all();
 int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
                         struct sched_connection *conx,
-                        struct client_request *cr, struct request *sr);
+                        struct client_session *cs, struct session_request *sr);
 
 void mk_plugin_core_process();
 void mk_plugin_core_thread();
 
-void mk_plugin_request_handler_add(struct request *sr, struct plugin *p);
-void mk_plugin_request_handler_del(struct request *sr, struct plugin *p);
+void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p);
+void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p);
 
 void mk_plugin_preworker_calls();
 
 /* Plugins events interface */
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_request *cr, 
-                        struct request *sr);
+                        struct client_session *cs, 
+                        struct session_request *sr);
 int mk_plugin_event_del(int socket);
 
 int mk_plugin_event_set_list(struct plugin_event *event);

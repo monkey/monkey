@@ -126,12 +126,12 @@ int mk_sched_launch_thread(int max_events)
 
 void mk_sched_thread_lists_init()
 {
-    struct mk_list *cr_list;
+    struct mk_list *cs_list;
 
-    /* client_request mk_list */
-    cr_list = mk_mem_malloc(sizeof(struct mk_list));
-    mk_list_init(cr_list);
-    mk_sched_set_request_list(cr_list);
+    /* client_session mk_list */
+    cs_list = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(cs_list);
+    mk_sched_set_request_list(cs_list);
 }
 
 /* created thread, all this calls are in the thread context */
@@ -310,8 +310,8 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
 int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
     int i, client_timeout;
-    struct client_request *cr_node;
-    struct mk_list *cr_list, *cr_head;
+    struct client_session *cs_node;
+    struct mk_list *cs_list, *cs_head;
 
     /* PENDING CONN TIMEOUT */
     for (i = 0; i < config->worker_capacity; i++) {
@@ -330,17 +330,17 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     }
 
     /* PROCESSING CONN TIMEOUT */
-    cr_list = mk_sched_get_request_list();
+    cs_list = mk_sched_get_request_list();
 
-    mk_list_foreach(cr_head, cr_list) {
-        cr_node = mk_list_entry(cr_head, struct client_request, _head);
+    mk_list_foreach(cs_head, cs_list) {
+        cs_node = mk_list_entry(cs_head, struct client_session, _head);
 
-        if (cr_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
-            if (cr_node->counter_connections == 0) {
-                client_timeout = cr_node->init_time + config->timeout;
+        if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
+            if (cs_node->counter_connections == 0) {
+                client_timeout = cs_node->init_time + config->timeout;
             }
             else {
-                client_timeout = cr_node->init_time + config->keep_alive_timeout;
+                client_timeout = cs_node->init_time + config->keep_alive_timeout;
             }
 
             /* Check timeout */
@@ -349,9 +349,9 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
                 MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
                          req_cl->socket);
 #endif
-                close(cr_node->socket);
-                mk_sched_remove_client(sched, cr_node->socket);
-                mk_request_client_remove(cr_node->socket);
+                close(cs_node->socket);
+                mk_sched_remove_client(sched, cs_node->socket);
+                mk_session_remove(cs_node->socket);
             }
         }
     }

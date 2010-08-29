@@ -65,6 +65,12 @@ static inline void mk_list_del(struct mk_list *entry)
     __mk_list_del(entry->prev, entry->next);
 }
 
+static inline int mk_list_is_empty(struct mk_list *head)
+{
+    if (head->next == head) return 0;
+    else return -1;
+}
+
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
 
 #define mk_list_entry( ptr, type, member ) container_of( ptr, type, member )

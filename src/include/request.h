@@ -89,7 +89,7 @@ parametros de una peticion */
 #define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
-struct client_request
+struct client_session
 {
     int pipelined;              /* Pipelined request */
     int socket;
@@ -106,8 +106,8 @@ struct client_request
     int first_method;
 
     time_t init_time;
-    struct request *request;    /* Parsed request */
 
+    struct mk_list request_list;
     struct mk_list _head;
 };
 
@@ -129,7 +129,7 @@ struct handler
     struct handler *next;
 };
 
-struct request
+struct session_request
 {
     int status;
 
@@ -195,7 +195,6 @@ struct request
     struct file_info *file_info;
     struct host *host_conf;
     struct header_values *headers;      /* headers response */
-    struct request *next;
 
     long loop;
     long bytes_to_send;
@@ -203,6 +202,8 @@ struct request
 
     /* Plugin handlers */
     struct plugin *handled_by;
+
+    struct mk_list _head;
 };
 
 struct header_values
@@ -227,8 +228,8 @@ struct header_values
     char *location;
 };
 
-struct request *mk_request_parse(struct client_request *cr);
-int mk_request_process(struct client_request *cr, struct request *s_request);
+int mk_request_parse(struct client_session *cs);
+int mk_request_process(struct client_session *cs, struct session_request *sr);
 mk_pointer mk_request_index(char *pathfile);
 
 
@@ -236,30 +237,30 @@ mk_pointer mk_request_index(char *pathfile);
 mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
                                         char *signature);
 
-int mk_request_header_process(struct request *sr);
+int mk_request_header_process(struct session_request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
                                   char *request_body, mk_pointer header);
 
-void mk_request_error(int http_status, struct client_request *cr, 
-                      struct request *sr);
+void mk_request_error(int http_status, struct client_session *cs, 
+                      struct session_request *sr);
 
-struct request *mk_request_alloc();
-void mk_request_free_list(struct client_request *cr);
-void mk_request_free(struct request *sr);
+struct session_request *mk_request_alloc();
+void mk_request_free_list(struct client_session *cs);
+void mk_request_free(struct session_request *sr);
 
-struct client_request *mk_request_client_create(int socket);
-struct client_request *mk_request_client_get(int socket);
-void mk_request_client_remove(int socket);
+struct client_session *mk_session_create(int socket);
+struct client_session *mk_session_get(int socket);
+void mk_session_remove(int socket);
 
 void mk_request_init_error_msgs();
 
-int mk_handler_read(int socket, struct client_request *cr);
-int mk_handler_write(int socket, struct client_request *cr);
+int mk_handler_read(int socket, struct client_session *cs);
+int mk_handler_write(int socket, struct client_session *cs);
 
 
 struct header_toc *mk_request_header_toc_create(int len);
 void mk_request_header_toc_parse(struct header_toc *toc, int toc_len,
                                  char *data, int len);
 
-void mk_request_ka_next(struct client_request *cr);
+void mk_request_ka_next(struct client_session *cs);
 #endif

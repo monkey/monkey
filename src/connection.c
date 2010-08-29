@@ -36,7 +36,7 @@
 int mk_conn_read(int socket)
 {
     int ret;
-    struct client_request *cr;
+    struct client_session *cs;
     struct sched_list_node *sched;
 
 #ifdef TRACE
@@ -54,29 +54,29 @@ int mk_conn_read(int socket)
 
     sched = mk_sched_get_thread_conf();
 
-    cr = mk_request_client_get(socket);
-    if (!cr) {
+    cs = mk_session_get(socket);
+    if (!cs) {
         /* Note: Linux don't set TCP_NODELAY socket flag by default, 
          */
         mk_socket_set_tcp_nodelay(socket);
 
         /* Create client */
-        cr = mk_request_client_create(socket);
+        cs = mk_session_create(socket);
     }
 
     /* Read incomming data */
-    ret = mk_handler_read(socket, cr);
+    ret = mk_handler_read(socket, cs);
 
     if (ret > 0) {
-        if (mk_http_pending_request(cr) == 0) {
+        if (mk_http_pending_request(cs) == 0) {
             mk_epoll_change_mode(sched->epoll_fd,
                                  socket, MK_EPOLL_WRITE);
         }
-        else if (cr->body_length + 1 >= config->max_request_size) {
+        else if (cs->body_length + 1 >= config->max_request_size) {
             /* Request is incomplete and our buffer is full,
              * close connection 
              */
-            mk_request_client_remove(socket);
+            mk_session_remove(socket);
             return -1;
         }
     }
@@ -87,7 +87,7 @@ int mk_conn_read(int socket)
 int mk_conn_write(int socket)
 {
     int ret = -1;
-    struct client_request *cr;
+    struct client_session *cs;
     struct sched_list_node *sched;
 
 #ifdef TRACE
@@ -113,13 +113,13 @@ int mk_conn_write(int socket)
     /* Get node from schedule list node which contains
      * the information regarding to the current client/socket
      */
-    cr = mk_request_client_get(socket);
+    cs = mk_session_get(socket);
 
-    if (!cr) {
+    if (!cs) {
         return -1;
     }
 
-    ret = mk_handler_write(socket, cr);
+    ret = mk_handler_write(socket, cs);
 
     /* if ret < 0, means that some error
      * happened in the writer call, in the
@@ -128,13 +128,13 @@ int mk_conn_write(int socket)
      * still need to be send.
      */
     if (ret < 0) {
-        mk_request_free_list(cr);
-        mk_request_client_remove(socket);
+        mk_request_free_list(cs);
+        mk_session_remove(socket);
         return -1;
     }
     else if (ret == 0) {
         if (mk_http_request_end(socket) < 0) {
-            mk_request_free_list(cr);
+            mk_request_free_list(cs);
             return -1;
         }
         else {
@@ -152,7 +152,7 @@ int mk_conn_write(int socket)
 int mk_conn_error(int socket)
 {
     int ret = -1;
-    struct client_request *cr;
+    struct client_session *cs;
     struct sched_list_node *sched;
 
 #ifdef TRACE
@@ -173,9 +173,9 @@ int mk_conn_error(int socket)
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(NULL, socket);
-    cr = mk_request_client_get(socket);
-    if (cr) {
-        mk_request_client_remove(socket);
+    cs = mk_session_get(socket);
+    if (cs) {
+        mk_session_remove(socket);
     }
 
     return 0;

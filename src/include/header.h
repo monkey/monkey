@@ -56,9 +56,9 @@ mk_pointer mk_hr_client_bad_request;
 mk_pointer mk_hr_client_forbidden;
 mk_pointer mk_hr_client_not_found;
 mk_pointer mk_hr_client_method_not_allowed;
-mk_pointer mk_hr_client_request_timeout;
+mk_pointer mk_hr_client_session_timeout;
 mk_pointer mk_hr_client_length_required;
-mk_pointer mk_hr_client_request_entity_too_large;
+mk_pointer mk_hr_client_session_entity_too_large;
 mk_pointer mk_hr_server_internal_error;
 mk_pointer mk_hr_server_not_implemented;
 mk_pointer mk_hr_server_http_version_unsup;
@@ -95,9 +95,9 @@ mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
-int mk_header_send(int fd, struct client_request *cr, struct request *sr);
+int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
 struct header_values *mk_header_create();
-void mk_header_set_http_status(struct request *sr, int status);
-void mk_header_set_content_length(struct request *sr, long len);
+void mk_header_set_http_status(struct session_request *sr, int status);
+void mk_header_set_content_length(struct session_request *sr, long len);
 
 #endif

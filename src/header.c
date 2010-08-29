@@ -54,8 +54,8 @@ void mk_header_iov_free(struct mk_iov *iov)
 }
 
 /* Send_Header , envia las cabeceras principales */
-int mk_header_send(int fd, struct client_request *cr,
-                   struct request *sr)
+int mk_header_send(int fd, struct client_session *cs,
+                   struct session_request *sr)
 {
     int fd_status = 0;
     unsigned long len = 0;
@@ -115,7 +115,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_CLIENT_REQUEST_TIMEOUT:
-        mk_header_iov_add_entry(iov, mk_hr_client_request_timeout,
+        mk_header_iov_add_entry(iov, mk_hr_client_session_timeout,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
@@ -125,7 +125,7 @@ int mk_header_send(int fd, struct client_request *cr,
         break;
 
     case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
-        mk_header_iov_add_entry(iov, mk_hr_client_request_entity_too_large,
+        mk_header_iov_add_entry(iov, mk_hr_client_session_entity_too_large,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
@@ -184,7 +184,7 @@ int mk_header_send(int fd, struct client_request *cr,
     /* Connection */
     if (config->keep_alive == VAR_ON &&
         sr->keep_alive == VAR_ON &&
-        cr->counter_connections < config->max_keep_alive_request) {
+        cs->counter_connections < config->max_keep_alive_request) {
 
         /* A valid connection header */
         if (sr->connection.len > 0) {
@@ -194,7 +194,7 @@ int mk_header_send(int fd, struct client_request *cr,
                             MK_CRLF,
                             config->keep_alive_timeout,
                             (config->max_keep_alive_request -
-                             cr->counter_connections)
+                             cs->counter_connections)
                             );
             mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
             mk_iov_add_entry(iov,
@@ -346,7 +346,7 @@ char *mk_header_chunked_line(int len)
     return buf;
 }
 
-void mk_header_set_http_status(struct request *sr, int status)
+void mk_header_set_http_status(struct session_request *sr, int status)
 {
     sr->headers->status = status;
 }

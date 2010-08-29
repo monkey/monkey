@@ -45,7 +45,7 @@ struct sched_list_node
     int epoll_fd;
 
     struct sched_connection *queue;
-    struct client_request *request_handler;
+    struct client_session *request_handler;
 
     struct mk_list _head;
 };

@@ -172,11 +172,11 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_hr_client_not_found, MK_HR_CLIENT_NOT_FOUND);
     mk_pointer_set(&mk_hr_client_method_not_allowed,
                    MK_HR_CLIENT_METHOD_NOT_ALLOWED);
-    mk_pointer_set(&mk_hr_client_request_timeout,
+    mk_pointer_set(&mk_hr_client_session_timeout,
                    MK_HR_CLIENT_REQUEST_TIMEOUT);
     mk_pointer_set(&mk_hr_client_length_required,
                    MK_HR_CLIENT_LENGTH_REQUIRED);
-    mk_pointer_set(&mk_hr_client_request_entity_too_large,
+    mk_pointer_set(&mk_hr_client_session_entity_too_large,
                    MK_HR_CLIENT_REQUEST_ENTITY_TOO_LARGE);
     mk_pointer_set(&mk_hr_server_internal_error, MK_HR_SERVER_INTERNAL_ERROR);
     mk_pointer_set(&mk_hr_server_not_implemented,

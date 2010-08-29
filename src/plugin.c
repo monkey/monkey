@@ -554,7 +554,7 @@ void mk_plugin_exit_all()
 int mk_plugin_stage_run(unsigned int hook,
                         unsigned int socket,
                         struct sched_connection *conx,
-                        struct client_request *cr, struct request *sr)
+                        struct client_session *cs, struct session_request *sr)
 {
     int ret;
     struct plugin_stagem *stm;
@@ -586,7 +586,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 20", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s20(cr, sr);
+            ret = stm->p->stage.s20(cs, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
 #ifdef TRACE
@@ -612,7 +612,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
                 MK_TRACE("[%s] STAGE 30", stm->p->shortname);
 #endif
-                ret = stm->p->stage.s30(stm->p, cr, sr);
+                ret = stm->p->stage.s30(stm->p, cs, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
@@ -635,7 +635,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 40", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s40(cr, sr);
+            ret = stm->p->stage.s40(cs, sr);
             stm = stm->next;
         }
     }
@@ -661,7 +661,7 @@ int mk_plugin_stage_run(unsigned int hook,
     return -1;
 }
 
-void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
+void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p)
 {
     if (!sr->handled_by) {
         sr->handled_by = p;
@@ -669,7 +669,7 @@ void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
     }
 }
 
-void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
+void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p)
 {
     if (!sr->handled_by) {
         return;
@@ -792,8 +792,8 @@ int mk_plugin_event_del(int socket)
 
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_request *cr,
-                        struct request *sr)
+                        struct client_session *cs,
+                        struct session_request *sr)
 {
     struct sched_list_node *sched;
     struct plugin_event *list;
@@ -802,7 +802,7 @@ int mk_plugin_event_add(int socket, int mode,
 
     sched = mk_sched_get_thread_conf();
 
-    if (!sched || !handler || !cr || !sr) {
+    if (!sched || !handler || !cs || !sr) {
         return -1;
     }
 
@@ -810,7 +810,7 @@ int mk_plugin_event_add(int socket, int mode,
     event = mk_mem_malloc(sizeof(struct plugin_event));
     event->socket = socket;
     event->handler = handler;
-    event->cr = cr;
+    event->cs = cs;
     event->sr = sr;
     event->next = NULL;
 
