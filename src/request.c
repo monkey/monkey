@@ -827,9 +827,6 @@ void mk_request_free_list(struct client_session *cs)
         mk_list_del(sr_head);
         mk_request_free(sr_node);
     }
-
-    printf("\nfree list, is_empty: %i", mk_list_is_empty(&cs->request_list));
-    fflush(stdout);
 }
 
 void mk_request_free(struct session_request *sr)
