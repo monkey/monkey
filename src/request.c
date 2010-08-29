@@ -150,15 +150,16 @@ int mk_request_parse(struct client_session *cs)
  */
 void mk_request_premature_close(int http_status, struct client_session *cs)
 {
-    /* Validate bad implementations 
-    if (!cs->request) {
-        cs->request = mk_request_alloc();
-    }
-    */
     struct session_request *sr;
     struct mk_list *sr_list = &cs->request_list;
 
-    sr = mk_list_entry_first(sr_list, struct session_request, _head);
+    if (mk_list_is_empty(sr_list) == 0) {
+        sr = mk_request_alloc();
+        mk_list_add(&sr->_head, &cs->request_list);
+    }
+    else {
+        sr = mk_list_entry_first(sr_list, struct session_request, _head);
+    }
 
     /* Raise error */
     if (http_status > 0) {
@@ -745,6 +746,7 @@ mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
     mk_pointer *p;
 
     p = mk_mem_malloc(sizeof(mk_pointer));
+    p->data = NULL;
 
     temp = mk_pointer_to_buf(message);
     mk_string_build(&p->data, &p->len,
