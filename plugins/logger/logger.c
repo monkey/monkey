@@ -334,7 +334,7 @@ void _mkp_core_thctx()
     pthread_setspecific(cache_status, (void *) status);
 }
 
-int _mkp_stage_40(struct client_request *cr, struct request *sr)
+int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
     int http_status;
     struct log_target *target;
@@ -361,7 +361,7 @@ int _mkp_stage_40(struct client_request *cr, struct request *sr)
     iov->total_len = 0;
 
     /* IP */
-    mk_api->iov_add_entry(iov, cr->ipv4->data, cr->ipv4->len,
+    mk_api->iov_add_entry(iov, cs->ipv4->data, cs->ipv4->len,
                           mk_logger_iov_dash, MK_IOV_NOT_FREE_BUF);
 
     /* Date/time when object was requested */
