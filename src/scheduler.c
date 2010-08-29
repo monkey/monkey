@@ -347,7 +347,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
             if (client_timeout <= log_current_utime) {
 #ifdef TRACE
                 MK_TRACE("Scheduler, closing fd %i due to timeout (incomplete)",
-                         req_cl->socket);
+                         cs_node->socket);
 #endif
                 close(cs_node->socket);
                 mk_sched_remove_client(sched, cs_node->socket);

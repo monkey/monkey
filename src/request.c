@@ -216,7 +216,7 @@ int mk_handler_read(int socket, struct client_session *cs)
             return -1;
         }
     }
-    
+
     /* Read content */
     bytes = mk_socket_read(socket, cs->body + cs->body_length, 
                            (cs->body_size - cs->body_length) );
@@ -258,7 +258,7 @@ int mk_handler_write(int socket, struct client_session *cs)
     }
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
-        if (!mk_request_parse(cs)) {
+        if (mk_request_parse(cs) != 0) {
             return -1;
         }
     }

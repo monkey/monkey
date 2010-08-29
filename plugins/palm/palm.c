@@ -252,7 +252,7 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 
     /* Send just headers from buffer */
 #ifdef TRACE
-    PLUGIN_TRACE("[FD %i] Sending headers", cr->socket);
+    PLUGIN_TRACE("[FD %i] Sending headers", cs->socket);
 #endif
     n = (int) mk_api->header_send(cs->socket, cs, sr);
 
@@ -261,7 +261,7 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
      */
     mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
 #ifdef TRACE
-    PLUGIN_TRACE("[FD %i] Send headers returned %i", cr->socket, n);
+    PLUGIN_TRACE("[FD %i] Send headers returned %i", cs->socket, n);
 #endif
 
     return n;
@@ -304,7 +304,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     palm = mk_palm_get_handler(&sr->real_path);
     if (!palm || !sr->file_info) {
 #ifdef TRACE
-        PLUGIN_TRACE("[FD %i] Not handled by me", cr->socket);
+        PLUGIN_TRACE("[FD %i] Not handled by me", cs->socket);
 #endif
 
         return MK_PLUGIN_RET_NOT_ME;
