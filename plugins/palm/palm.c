@@ -136,8 +136,8 @@ void mk_palm_iov_add_header(struct mk_iov *iov,
                           mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 }
 
-struct mk_iov *mk_palm_create_env(struct client_request *cr,
-                                  struct request *sr)
+struct mk_iov *mk_palm_create_env(struct client_session *cs,
+                                  struct session_request *sr)
 {
     struct mk_iov *iov;
 
@@ -197,7 +197,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
         mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
 
     mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
-    mk_palm_iov_add_header(iov, mk_cgi_remote_addr, *cr->ipv4);
+    mk_palm_iov_add_header(iov, mk_cgi_remote_addr, *cs->ipv4);
     mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
     mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method_p);
     mk_palm_iov_add_header(iov, mk_cgi_script_name, sr->uri);
@@ -235,7 +235,7 @@ struct mk_iov *mk_palm_create_env(struct client_request *cr,
 }
 
 
-int mk_palm_send_headers(struct client_request *cr, struct request *sr)
+int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 {
     int n;
 
@@ -254,12 +254,12 @@ int mk_palm_send_headers(struct client_request *cr, struct request *sr)
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i] Sending headers", cr->socket);
 #endif
-    n = (int) mk_api->header_send(cr->socket, cr, sr);
+    n = (int) mk_api->header_send(cs->socket, cs, sr);
 
     /* Monkey core send_headers set TCP_CORK_ON, we need to get
      * back the status to OFF
      */
-    mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+    mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i] Send headers returned %i", cr->socket, n);
 #endif
@@ -291,7 +291,8 @@ void _mkp_exit()
 {
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct request *sr)
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+                  struct session_request *sr)
 {
     struct mk_palm *palm;
     struct mk_palm_request *pr;
@@ -310,7 +311,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     }
 
     /* Connect to server */
-    pr = mk_palm_do_instance(palm, cr, sr);
+    pr = mk_palm_do_instance(palm, cs, sr);
 
     if (!pr) {
 #ifdef TRACE
@@ -324,13 +325,13 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     mk_palm_request_add(pr);
 
     /* Register socket with thread Epoll interface */
-    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cr, sr);
+    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cs, sr);
 #ifdef TRACE
     PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
 #endif
 
     /* Send request */
-    mk_palm_send_request(cr, sr);
+    mk_palm_send_request(cs, sr);
 
 #ifdef TRACE
     PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
@@ -342,8 +343,8 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
 
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
-                                            struct client_request *cr,
-                                            struct request *sr)
+                                            struct client_session *cs,
+                                            struct session_request *sr)
 {
     int ret;
     int palm_socket;
@@ -362,10 +363,10 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
     }
 
     /* Return instance */
-    return mk_palm_request_create(cr->socket, palm_socket, cr, sr, palm);
+    return mk_palm_request_create(cs->socket, palm_socket, cs, sr, palm);
 }
 
-void mk_palm_send_request(struct client_request *cr, struct request *sr)
+void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 {
     int n;
     ssize_t bytes_iov=-1;
@@ -376,7 +377,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
     PLUGIN_TRACE("Sending request to Palm Server");
 #endif
 
-    pr = mk_palm_request_get_by_http(cr->socket);
+    pr = mk_palm_request_get_by_http(cs->socket);
     if (pr) {
         if (pr->bytes_sent == 0) {
 
@@ -384,7 +385,7 @@ void mk_palm_send_request(struct client_request *cr, struct request *sr)
             PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
 #endif
             /* Palm environment vars */
-            iov = mk_palm_create_env(cr, sr);
+            iov = mk_palm_create_env(cs, sr);
 
             /* Write request to palm server */
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
@@ -454,7 +455,7 @@ int mk_palm_send_end_chunk(int socket)
  * present, if so, it modifies the header struct response
  * and return the offset position 
  */
-int mk_palm_cgi_status(char *data, struct request *sr)
+int mk_palm_cgi_status(char *data, struct session_request *sr)
 {
     int status;
     int status_len = 3;
@@ -588,7 +589,7 @@ int _mkp_event_read(int sockfd)
             offset = mk_palm_cgi_status(pr->data_read, pr->sr);
 
             /* Send headers */
-            mk_palm_send_headers(pr->cr, pr->sr);
+            mk_palm_send_headers(pr->cs, pr->sr);
             n = mk_api->socket_send(pr->client_fd, 
                                     pr->data_read + offset, 
                                     headers_end - offset);

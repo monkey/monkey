@@ -27,8 +27,8 @@
 
 struct mk_palm_request *mk_palm_request_create(int client_fd,
                                                int palm_fd,
-                                               struct client_request *cr,
-                                               struct request *sr,
+                                               struct client_session *cs,
+                                               struct session_request *sr,
                                                struct mk_palm *palm)
 {
     struct mk_palm_request *new;
@@ -40,7 +40,7 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
     new->bytes_sent = 0;
     new->bytes_read = 0;
     new->headers_sent = VAR_OFF;
-    new->cr = cr;
+    new->cs = cs;
     new->sr = sr;
     new->next = NULL;
 

@@ -52,7 +52,8 @@ mk_pointer mk_iov_equal;
 struct mk_palm *palms;
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
-                                            struct client_request *cr, struct request *sr);
-void mk_palm_send_request(struct client_request *cr, struct request *sr);
+                                            struct client_session *cs, 
+                                            struct session_request *sr);
+void mk_palm_send_request(struct client_session *cr, struct session_request *sr);
 
 #endif

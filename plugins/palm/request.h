@@ -45,8 +45,8 @@ struct mk_palm_request
     struct mk_palm *palm;
 
     /* Client request data */
-    struct client_request *cr;
-    struct request *sr;
+    struct client_session *cs;
+    struct session_request *sr;
 
     /* Next node */
     struct mk_palm_request *next;
@@ -54,8 +54,8 @@ struct mk_palm_request
 
 struct mk_palm_request *mk_palm_request_create(int client_fd,
                                                int palm_fd,
-                                               struct client_request *cr,
-                                               struct request *sr,
+                                               struct client_session *cs,
+                                               struct session_request *sr,
                                                struct mk_palm *palm);
 void mk_palm_request_add(struct mk_palm_request *pr);
 struct mk_palm_request *mk_palm_request_get(int socket);
