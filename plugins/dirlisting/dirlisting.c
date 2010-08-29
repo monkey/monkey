@@ -626,7 +626,7 @@ int mk_dirhtml_entry_cmp(const void *a, const void *b)
     return strcmp((*f_a)->name, (*f_b)->name);
 }
 
-int mk_dirhtml_send(int fd, struct request *sr, struct mk_iov *data)
+int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
 {
     int n;
     unsigned long len;
@@ -670,7 +670,7 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
     mk_api->mem_free(toc);
 }
 
-int mk_dirhtml_init(struct client_request *cr, struct request *sr)
+int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 {
     DIR *dir;
     int i = 0, n;
@@ -702,7 +702,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     }
 
     /* Sending headers */
-    n = (int) mk_api->header_send(cr->socket, cr, sr);
+    n = (int) mk_api->header_send(cs->socket, cs, sr);
 
     /* Creating response template */
     /* Set %_html_title_% */
@@ -733,7 +733,7 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
     }
     qsort(toc, list_len, sizeof(*toc), mk_dirhtml_entry_cmp);
 
-    n = mk_dirhtml_send(cr->socket, sr, iov_header);
+    n = mk_dirhtml_send(cs->socket, sr, iov_header);
 
     if (n < 0) {
         closedir(dir);
@@ -780,11 +780,11 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
                                              values_entry);
 
         /* send entry */
-        n = mk_dirhtml_send(cr->socket, sr, iov_entry);
+        n = mk_dirhtml_send(cs->socket, sr, iov_entry);
 
         if ((i % 20) == 0 && i > 0) {
-            mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
-            mk_api->socket_cork_flag(cr->socket, TCP_CORK_ON);
+            mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
+            mk_api->socket_cork_flag(cs->socket, TCP_CORK_ON);
         }
 
         if (n < 0) {
@@ -796,11 +796,11 @@ int mk_dirhtml_init(struct client_request *cr, struct request *sr)
         mk_api->iov_free(iov_entry);
     }
 
-    n = mk_dirhtml_send(cr->socket, sr, iov_footer);
-    mk_api->socket_cork_flag(cr->socket, TCP_CORK_OFF);
+    n = mk_dirhtml_send(cs->socket, sr, iov_footer);
+    mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
 
     if (sr->protocol >= HTTP_PROTOCOL_11 && n >= 0) {
-        mk_dirhtml_send_chunked_end(cr->socket);
+        mk_dirhtml_send_chunked_end(cs->socket);
     }
 
     closedir(dir);
@@ -823,7 +823,8 @@ void _mkp_exit()
 {
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct request *sr)
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+                  struct session_request *sr)
 {
     /* Validate file/directory */
     if (!sr->file_info) {
@@ -839,6 +840,6 @@ int _mkp_stage_30(struct plugin *plugin, struct client_request *cr, struct reque
     PLUGIN_TRACE("Dirlisting attending socket %i", cr->socket);
 #endif
     
-    mk_dirhtml_init(cr, sr);
+    mk_dirhtml_init(cs, sr);
     return MK_PLUGIN_RET_END;
 }
