@@ -23,6 +23,7 @@
 #define MK_PALM_REQUEST_H
 
 #include "palm.h"
+#include "list.h"
 
 struct mk_palm_request
 {
@@ -31,7 +32,6 @@ struct mk_palm_request
 
     char data_pending[MK_PALM_BUFFER_SIZE*2];
     char data_read[MK_PALM_BUFFER_SIZE];
-
   
     int len_pending;
     int len_read;
@@ -48,10 +48,10 @@ struct mk_palm_request
     struct client_session *cs;
     struct session_request *sr;
 
-    /* Next node */
-    struct mk_palm_request *next;
+    struct mk_list _head;
 };
 
+void mk_palm_request_init();
 struct mk_palm_request *mk_palm_request_create(int client_fd,
                                                int palm_fd,
                                                struct client_session *cs,

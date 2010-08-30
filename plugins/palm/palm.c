@@ -273,6 +273,9 @@ int _mkp_init(void **api, char *confdir)
     mk_api = *api;
     palms = 0;
 
+    /* Init request list */
+    mk_palm_request_init();
+
     /* Init some pointers */
     mk_api->pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
     mk_api->pointer_set(&mk_iov_crlf, MK_IOV_CRLF);

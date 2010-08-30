@@ -42,31 +42,21 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
     new->headers_sent = VAR_OFF;
     new->cs = cs;
     new->sr = sr;
-    new->next = NULL;
 
     return new;
 }
 
 void mk_palm_request_add(struct mk_palm_request *pr)
 {
-    struct mk_palm_request *pr_list, *aux;
+    struct mk_list *pr_list;
 
     /* Get thread data */
-    pr_list = (struct mk_palm_request *) pthread_getspecific(_mkp_data);
+    pr_list = (struct mk_list *) pthread_getspecific(_mkp_data);
 
-    /* No connection previously was found */
-    if (!pr_list) {
-        pthread_setspecific(_mkp_data, pr);
-        return;
-    }
+    /* Add node to list */
+    mk_list_add(&pr->_head, pr_list);
 
-    /* Add Node */
-    aux = pr_list;
-    while(aux->next){
-        aux = aux->next;
-    }
-
-    aux->next = pr;
+    /* Update thread key */
     pthread_setspecific(_mkp_data, pr_list);
 }
 
@@ -76,23 +66,22 @@ void mk_palm_request_add(struct mk_palm_request *pr)
  */
 struct mk_palm_request *mk_palm_request_get(int palm_fd)
 {
-    struct mk_palm_request *pr_list, *aux;
+    struct mk_palm_request *pr_node;
+    struct mk_list *pr_list, *pr_head;
 
     /* Get thread data */
     pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
-    if(!pr_list) {
+    if(mk_list_is_empty(pr_list) == 0) {
         return NULL;
     }
 
-    /* Look for node */
-    aux = pr_list;
-    while(aux){
-        if(aux->palm_fd == palm_fd){
-            return aux;
+    mk_list_foreach(pr_head, pr_list) {
+        pr_node = mk_list_entry(pr_head, struct mk_palm_request, _head);
+        if(pr_node->palm_fd == palm_fd){
+            return pr_node;
         }
-        aux = aux->next;
     }
 
     return NULL;
@@ -100,23 +89,23 @@ struct mk_palm_request *mk_palm_request_get(int palm_fd)
 
 struct mk_palm_request *mk_palm_request_get_by_http(int socket)
 {
-    struct mk_palm_request *pr_list, *aux;
+    struct mk_palm_request *pr_node;
+    struct mk_list *pr_list, *pr_head;
 
     /* Get thread data */
     pr_list = pthread_getspecific(_mkp_data);
 
     /* No connection previously was found */
-    if(!pr_list) {
+    if(mk_list_is_empty(pr_list) == 0) {
         return NULL;
     }
 
     /* Look for node */
-    aux = pr_list;
-    while(aux){
-        if(aux->client_fd == socket){
-            return aux;
+    mk_list_foreach(pr_head, pr_list) {
+        pr_node = mk_list_entry(pr_head, struct mk_palm_request, _head);
+        if(pr_node->client_fd == socket){
+            return pr_node;
         }
-        aux = aux->next;
     }
 
     return NULL;
@@ -124,58 +113,47 @@ struct mk_palm_request *mk_palm_request_get_by_http(int socket)
 
 void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
 {
-    struct mk_palm_request *aux, *pr_list;
+    struct mk_palm_request *pr_node;
+    struct mk_list *pr_list, *pr_head;
 
     pr_list = pthread_getspecific(_mkp_data);
-
-    if (!pr_list) {
+    if (mk_list_is_empty(pr_list) == 0) {
         return;
     }
 
-    aux = pr_list;
-    while (aux) {
-        if (aux->palm_fd == socket) {
-            aux->bytes_sent = pr->bytes_sent;
-            aux->bytes_read = pr->bytes_read;
-            aux->headers_sent = pr->headers_sent;
+    mk_list_foreach(pr_head, pr_list) {
+        pr_node = mk_list_entry(pr_head, struct mk_palm_request, _head);
+        if (pr_node->palm_fd == socket) {
+            pr_node->bytes_sent = pr->bytes_sent;
+            pr_node->bytes_read = pr->bytes_read;
+            pr_node->headers_sent = pr->headers_sent;
 
             /* Update data */
             pthread_setspecific(_mkp_data, pr_list);
             return;
             }
-        aux = aux->next;
     }
 }
 
 void mk_palm_request_delete(int socket)
 {
-    struct mk_palm_request *aux, *prev, *pr_list;
+    struct mk_palm_request *pr_node;
+    struct mk_list *pr_list, *pr_head;
 
     pr_list = pthread_getspecific(_mkp_data);
-
-    if (!pr_list) {
+    if (mk_list_is_empty(pr_list) == 0) {
         return;
     }
 
-    aux = pr_list;
-    while(aux) {
-        if (aux->palm_fd == socket) {
-            /* first node */
-            if (aux == pr_list) {
-                pr_list = aux->next;
-            }
-            else {
-                prev = pr_list;
-                while (prev->next != aux) {
-                    prev = prev->next;
-                }
-                prev->next = aux->next;
-            }
-            mk_api->mem_free(aux);
+    mk_list_foreach(pr_head, pr_list) {
+        pr_node = mk_list_entry(pr_head, struct mk_palm_request, _head);
+        
+        if (pr_node->palm_fd == socket) {
+            mk_list_del(pr_head);
+            mk_api->mem_free(pr_node);
             pthread_setspecific(_mkp_data, pr_list);
             return;
         }
-        aux = aux->next;
     }
 }
 
@@ -183,4 +161,12 @@ void mk_palm_free_request(int palm_fd)
 {
     mk_api->socket_close(palm_fd);
     mk_palm_request_delete(palm_fd);
+}
+
+void mk_palm_request_init()
+{
+    struct mk_list *palm_request_list;
+
+    palm_request_list = mk_api->mem_alloc(sizeof(struct mk_list));
+    pthread_setspecific(_mkp_data, palm_request_list);
 }
