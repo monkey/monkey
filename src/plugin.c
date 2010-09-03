@@ -224,9 +224,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     p->event_timeout = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_event_timeout");
 
-    /* Next ! */
-    p->next = NULL;
-
     return p;
 }
 
@@ -317,48 +314,17 @@ create socket : %p\nbind : %p\nserver : %p",
     }
 
     /* Add Plugin to the end of the list */
-    if (!config->plugins) {
-        config->plugins = p;
-    }
-    else {
-        struct plugin *plg = config->plugins;
-        while(plg->next){
-            plg = plg->next;
-        }
-        plg->next = p;
-    }
+    mk_list_add(&p->_head, config->plugins);
 
+    /* Register plugins stages */
     mk_plugin_register_stagemap(p);
     return p;
 }
 
 void mk_plugin_unregister(struct plugin *p)
 {
-    struct plugin *node, *prev;
-
-    node = config->plugins;
-    
-    if (!node) {
-        return;
-    }
-
-    if (node == p) {
-        config->plugins = p->next;
-        mk_plugin_free(p);
-        return;
-    }
-
-    prev = node;
-    while (node->next != p) {
-        prev = node;
-        node = node->next;
-    }
-    
-    if (node) {
-        prev->next = p->next;
-        mk_plugin_free(p);
-        return;
-    }
+    mk_list_del(&p->_head);
+    mk_plugin_free(p);
 }
 
 void mk_plugin_free(struct plugin *p)
@@ -533,6 +499,7 @@ void mk_plugin_init()
     }
 
     api->plugins = config->plugins;
+
     /* Look for plugins thread key data */
     mk_plugin_preworker_calls();
     mk_mem_free(path);
@@ -540,14 +507,12 @@ void mk_plugin_init()
 
 void mk_plugin_exit_all()
 {
-    struct plugin *p;
-    
-    p = config->plugins;
-    
-    while (p) {
-        /* Invoke exit hook */
-        p->exit();
-        p = p->next;
+    struct plugin *node;
+    struct mk_list *head;
+
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        node->exit();
     }
 }
 
@@ -684,17 +649,16 @@ void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p)
  */
 void mk_plugin_core_process()
 {
-    struct plugin *p;
+    struct plugin *node;
+    struct mk_list *head;
 
-    p = config->plugins;
-
-    while (p) {
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        
         /* Init plugin */
-        if (p->core.prctx) {
-            p->core.prctx(config);
+        if (node->core.prctx) {
+            node->core.prctx(config);
         }
-
-        p = p->next;
     }
 }
 
@@ -704,17 +668,17 @@ void mk_plugin_core_process()
  */
 void mk_plugin_core_thread()
 {
-    struct plugin *p;
 
-    p = config->plugins;
+    struct plugin *node;
+    struct mk_list *head;
 
-    while (p) {
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+
         /* Init plugin thread context */
-        if (p->core.thctx) {
-            p->core.thctx();
+        if (node->core.thctx) {
+            node->core.thctx();
         }
-
-        p = p->next;
     }
 }
 
@@ -725,25 +689,25 @@ void mk_plugin_core_thread()
 void mk_plugin_preworker_calls()
 {
     int ret;
-    struct plugin *p;
+    struct plugin *node;
+    struct mk_list *head;
 
-    p = config->plugins;
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
 
-    while (p) {
         /* Init pthread keys */
-        if (p->thread_key) {
+        if (node->thread_key) {
 #ifdef TRACE
-            MK_TRACE("[%s] Set thread key", p->shortname);
+            MK_TRACE("[%s] Set thread key", node->shortname);
 #endif
-            ret = pthread_key_create(p->thread_key, NULL);
+            ret = pthread_key_create(node->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s",
-                       p->shortname);
+                       node->shortname);
                 fflush(stdout);
                 exit(1);
             }
         }
-        p = p->next;
     }
 }
 

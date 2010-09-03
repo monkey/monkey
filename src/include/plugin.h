@@ -131,7 +131,7 @@ struct plugin
     pthread_key_t *thread_key;
 
     /* Next! */
-    struct plugin *next;
+    struct mk_list _head;
 };
 
 
@@ -164,7 +164,7 @@ struct plugin_network_ip *plg_netipmap;
 struct plugin_api
 {
     struct server_config *config;
-    struct plugin *plugins;
+    struct mk_list *plugins;
     struct mk_list **sched_list;
 
     /* HTTP request function */

@@ -118,7 +118,7 @@ struct server_config
     struct host *hosts;
 
     mode_t open_flags;
-    struct plugin *plugins;
+    struct mk_list *plugins;
 
     /* source configuration */
     struct mk_config *config;

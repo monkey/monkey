@@ -639,7 +639,8 @@ void mk_config_set_init_values(void)
     config->max_request_size = MK_REQUEST_CHUNK * 8;
 
     /* Plugins */
-    config->plugins = NULL;
+    config->plugins = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(config->plugins);
 }
 
 /* read main configuration from monkey.conf */
