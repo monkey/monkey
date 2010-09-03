@@ -119,86 +119,81 @@ void mk_cheetah_cmd_uptime()
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print_stage(struct plugin *list, const char *stage, 
+void mk_cheetah_cmd_plugins_print_stage(struct mk_list *list, const char *stage, 
                                         int stage_bw)
 {
     struct plugin *p;
+    struct mk_list *head;
 
-    if (!list) {
+    if (mk_list_is_empty(list) == 0) {
         return;
     }
 
-    p = list;
-
     CHEETAH_WRITE("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
-  
-    while (p) {
-       if (p->hooks & stage_bw) {
+
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
+        if (p->hooks & stage_bw) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
     CHEETAH_WRITE("\n\n");
 }
 
-void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
+void mk_cheetah_cmd_plugins_print_core(struct mk_list *list)
 {
     struct plugin *p;
-
-    p = list;
+    struct mk_list *head;
 
     CHEETAH_WRITE("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
+
         if (p->hooks & MK_PLUGIN_CORE_PRCTX) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    CHEETAH_WRITE("\n");
-    p = list;
-    CHEETAH_WRITE("\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+    CHEETAH_WRITE("\n\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
+
         if (p->hooks & MK_PLUGIN_CORE_THCTX) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
                    p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
     CHEETAH_WRITE("\n\n");
 }
 
-void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
+void mk_cheetah_cmd_plugins_print_network(struct mk_list *list)
 {
     struct plugin *p;
-
-    p = list;
+    struct mk_list *head;
 
     CHEETAH_WRITE("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
 
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
         if (p->hooks & MK_PLUGIN_NETWORK_IO) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    p = list;
     CHEETAH_WRITE("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
-
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
         if (p->hooks & MK_PLUGIN_NETWORK_IP) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
     CHEETAH_WRITE("\n");
@@ -206,7 +201,7 @@ void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
 
 void mk_cheetah_cmd_plugins()
 {
-    struct plugin *list = mk_api->plugins;
+    struct mk_list *list = mk_api->plugins;
 
     CHEETAH_WRITE("List of plugins and hooks associated\n");
 
@@ -263,12 +258,14 @@ void mk_cheetah_cmd_vhosts()
 
 void mk_cheetah_cmd_workers()
 {
-    struct sched_list_node *sl;
-    sl = *mk_api->sched_list;
+    struct sched_list_node *node;
+    struct mk_list *head;
 
-    while (sl) {
-        CHEETAH_WRITE("* Worker %i\n", sl->idx);
-        CHEETAH_WRITE("      - Task ID           : %i\n", sl->pid);
+    mk_list_foreach(head, *mk_api->sched_list) {
+        node = mk_list_entry(head, struct sched_list_node, _head);
+
+        CHEETAH_WRITE("* Worker %i\n", node->idx);
+        CHEETAH_WRITE("      - Task ID           : %i\n", node->pid);
 
         /* Memory Usage 
         CHEETAH_WRITE("      - Memory usage      : ");
@@ -278,8 +275,6 @@ void mk_cheetah_cmd_workers()
         CHEETAH_WRITE("      - Active Requests   : %i\n", sl->active_requests);
         CHEETAH_WRITE("      - Closed Requests   : %i\n", sl->closed_requests);
         */
-        
-        sl = sl->next;
     }
 
     CHEETAH_WRITE("\n");
@@ -390,14 +385,10 @@ void mk_cheetah_cmd_config()
 void mk_cheetah_cmd_status()
 {
     int nthreads = 0;
+    struct mk_list *head;
 
-    struct sched_list_node *sl;
-
-
-    sl = *mk_api->sched_list;
-    while (sl) {
+    mk_list_foreach(head, *mk_api->sched_list) {
         nthreads++;
-        sl = sl->next;
     }
 
     /* FIXME */
