@@ -483,12 +483,12 @@ int mk_palm_cgi_status(char *data, struct session_request *sr)
         }
 
         /* Search breakline */
-        offset = mk_api->str_search(data, MK_IOV_CRLF);
+        offset = mk_api->str_search(data, MK_IOV_CRLF, MK_STR_SENSITIVE);
         if (offset > 0) {
             offset += 2;
         }
         else {
-            offset = mk_api->str_search(data, MK_IOV_LF);
+            offset = mk_api->str_search(data, MK_IOV_LF, MK_STR_SENSITIVE);
             if (offset > 0) {
                 offset += 1;
             }
@@ -549,10 +549,10 @@ int _mkp_event_read(int sockfd)
     else if (pr->len_read > 0) {
         if (pr->headers_sent == VAR_OFF) {
             headers_end = mk_api->str_search(pr->data_read,
-                                             MK_IOV_CRLFCRLF);
+                                             MK_IOV_CRLFCRLF, MK_STR_SENSITIVE);
             if (headers_end == -1) {
                 headers_end = mk_api->str_search(pr->data_read,
-                                                 MK_IOV_LFLFLFLF);
+                                                 MK_IOV_LFLFLFLF, MK_STR_SENSITIVE);
             }
 
             /* Look for headers end */
@@ -575,8 +575,8 @@ int _mkp_event_read(int sockfd)
 #endif
                 }
 
-                headers_end = (int) mk_api->str_search(pr->data_read,
-                                                       MK_IOV_CRLFCRLF);
+                headers_end = mk_api->str_search(pr->data_read, MK_IOV_CRLFCRLF,
+                                                 MK_STR_SENSITIVE);
             }
 
             if (headers_end > 0) {

@@ -49,10 +49,10 @@ int mk_string_char_search(const char *string, int c, int len);
 int mk_string_char_search_r(const char *string, int c, int len);
 
 /* Locate a substring, returns the position of the substring */
-int mk_string_search(const char *haystack, const char *needle, int ignore_case);
+int mk_string_search(const char *haystack, const char *needle, int sensitive);
 
 /* Locate a substring, compare the first n bytes of haystack */
-int mk_string_search_n(const char *haystack, const char *needle, int ignore_case, int len);
+int mk_string_search_n(const char *haystack, const char *needle, int sensitive, int len);
 
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);

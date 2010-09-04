@@ -62,7 +62,7 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
     CHEETAH_WRITE("\n");
     return;
 
-    while ((n = mk_api->str_search(buf + last, " ")) > 0) {
+    while ((n = mk_api->str_search(buf + last, " ", MK_STR_SENSITIVE)) > 0) {
         if (c == 23) {
             value = mk_api->str_copy_substr(buf, init, last + n);
             printf("%s\n", value);

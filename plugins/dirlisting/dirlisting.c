@@ -308,7 +308,7 @@ int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
 
     for (i = 0; tpl[i]; i++) {
         len = strlen(tpl[i]);
-        match = (int) mk_api->str_search_n(content, tpl[i], len);
+        match = (int) mk_api->str_search_n(content, tpl[i], MK_STR_INSENSITIVE, len);
         if (match >= 0) {
             return i;
         }
@@ -326,9 +326,8 @@ int mk_dirhtml_content_count_tags(char *content, char *tpl[])
 
     len = strlen(content);
     while (loop < len) {
-        pos =
-            (int) mk_api->str_search_n(content + loop, MK_DIRHTML_TAG_INIT,
-                                       -1);
+        pos = mk_api->str_search(content + loop, MK_DIRHTML_TAG_INIT, MK_STR_INSENSITIVE);
+
         if (pos >= 0) {
             tpl_idx = mk_dirhtml_theme_match_tag(content + loop, tpl);
             if (tpl_idx >= 0) {
@@ -367,8 +366,8 @@ struct dirhtml_template *mk_dirhtml_template_create(char *content)
 
     /* Parsing content */
     while (i < cont_len) {
-        pos = (int) mk_api->str_search_n(content + i,
-                                         MK_DIRHTML_TAG_INIT, -1);
+        pos = (int) mk_api->str_search(content + i,
+                                       MK_DIRHTML_TAG_INIT, MK_STR_INSENSITIVE);
 
         if (pos < 0) {
             break;
