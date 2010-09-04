@@ -171,6 +171,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Check backward directory request */
     if (mk_string_search_n(uri_data, 
                            HTTP_DIRECTORY_BACKWARD,
+                           MK_STR_SENSITIVE,
                            uri_len) >= 0) {
         mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
@@ -501,13 +502,13 @@ int mk_http_range_parse(struct session_request *sr)
     if (!sr->range.data)
         return -1;
 
-    if ((eq_pos = mk_string_search_n(sr->range.data, "=", sr->range.len)) < 0)
+    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0)
         return -1;
 
     if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
         return -1;
 
-    if ((sep_pos = mk_string_search_n(sr->range.data, "-", sr->range.len)) < 0)
+    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0)
         return -1;
 
     len = sr->range.len;
@@ -573,7 +574,6 @@ int mk_http_pending_request(struct client_session *cs)
         end = (cs->body + cs->body_length) - mk_endblock.len;
     }
     else {
-
         return -1;
     }
 
@@ -582,8 +582,7 @@ int mk_http_pending_request(struct client_session *cs)
         if (strncmp(end, mk_endblock.data, mk_endblock.len) == 0) {
             cs->body_pos_end = cs->body_length - mk_endblock.len;
         }
-        else if ((n = mk_string_search(cs->body, mk_endblock.data)) >= 0 ){
-
+        else if ((n = mk_string_search(cs->body, mk_endblock.data, MK_STR_SENSITIVE)) >= 0 ){
             cs->body_pos_end = n;
         }
         else {

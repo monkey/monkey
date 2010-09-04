@@ -71,7 +71,7 @@ int mk_request_parse(struct client_session *cs)
         /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
          * request can be involved.
          */
-        end = mk_string_search(cs->body + i, mk_endblock.data) + i;
+        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
 
         if (end <  0) {
             return -1;
@@ -433,7 +433,7 @@ int mk_request_header_process(struct session_request *sr)
     uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
     fh_limit = (index(sr->body.data, '\n') - sr->body.data);
 
-    uri_end = mk_string_search_r(sr->body.data, ' ', fh_limit) - 1;
+    uri_end = mk_string_char_search_r(sr->body.data, ' ', fh_limit) - 1;
 
     if (uri_end <= 0) {
 #ifdef TRACE

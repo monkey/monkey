@@ -49,7 +49,7 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
     sr->user_home = VAR_ON;
 
     user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
-    limit = mk_string_search(sr->uri_processed + offset, "/");
+    limit = mk_string_char_search(sr->uri_processed + offset, '/', -1);
 
     if (limit == -1)
         limit = strlen(sr->uri_processed) - offset;

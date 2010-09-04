@@ -33,43 +33,43 @@
 
 #include <stdio.h>
 
-/* Return a buffer with a new string from string */
-char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
+/* Get position of a substring.
+ * Original version taken from google, modified in order
+ * to send the position instead the substring.
+ */
+int _mk_string_search(const char *string, const char *search, int sensitive, int len)
 {
-    unsigned int size, bytes;
-    char *buffer = 0;
+    char *np;
+    int res;
 
-    size = (unsigned int) (pos_end - pos_init) + 1;
-    if (size <= 2)
-        size = 4;
-
-    buffer = malloc(size);
-
-    if (!buffer) {
-        return NULL;
+    if (sensitive == MK_STR_INSENSITIVE) {
+        np = strcasestr(string, search);
+    }
+    else if (sensitive == MK_STR_SENSITIVE) {
+        np = strstr(string, search);
     }
 
-    if (pos_init > pos_end) {
-        mk_mem_free(buffer);
-        return NULL;
+    if (!np) {
+        return -1;
     }
 
-    bytes = pos_end - pos_init;
-    memcpy(buffer, string + pos_init, bytes);
-    buffer[bytes] = '\0';
-
-    return (char *) buffer;
+    res = np - string;
+    if (res > len && len >= 0) {
+        return -1;
+    }
+    return (np - string);
 }
 
-int mk_string_char_search(char *string, int c, int n)
+/* Lookup char into string, return position */
+int mk_string_char_search(const char *string, int c, int len)
 {
     int i;
 
-    if (n < 0) {
-        n = strlen(string);
+    if (len < 0) {
+        len = strlen(string);
     }
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < len; i++) {
         if (string[i] == c)
             return i;
     }
@@ -77,46 +77,20 @@ int mk_string_char_search(char *string, int c, int n)
     return -1;
 }
 
-/* Get position of a substring.
- * Original version taken from google, modified in order
- * to send the position instead the substring.
- */
-int _mk_string_search(char *string, char *search, int n)
-{
-    char *np;
-    int res;
-
-    np = strcasestr(string, search);
-    if (!np) {
-        return -1;
-    }
-
-    res = np - string;
-    if (res > n && n >= 0) {
-        return -1;
-    }
-    return (np - string);
-}
-
-int mk_string_search(char *string, char *search)
-{
-    return _mk_string_search(string, search, -1);
-}
-
-/* lookup char in reverse order */
-int mk_string_search_r(char *string, char search, int n)
+/* Find char into string searching in reverse order, returns position */
+int mk_string_char_search_r(const char *string, int c, int len)
 {
     int i, j;
 
-    if (n >= 0) {
-        j = n;
+    if (len >= 0) {
+        j = len;
     }
     else {
         j = strlen(string);
     }
 
     for (i = j; i >= 0; i--) {
-        if (string[i] == search) {
+        if (string[i] == c) {
             return i;
         }
     }
@@ -124,9 +98,14 @@ int mk_string_search_r(char *string, char search, int n)
     return -1;
 }
 
-int mk_string_search_n(char *string, char *search, int n)
+int mk_string_search(const char *haystack, const char *needle, int sensitive)
 {
-    return _mk_string_search(string, search, n);
+    return _mk_string_search(haystack, needle, sensitive, -1);
+}
+
+int mk_string_search_n(const char *haystack, const char *needle, int sensitive, int len)
+{
+    return _mk_string_search(haystack, needle, sensitive, len);
 }
 
 char *mk_string_remove_space(char *buf)
@@ -381,3 +360,32 @@ int mk_string_itop(int n, mk_pointer *p)
 
     return 0;
 }
+
+/* Return a buffer with a new string from string */
+char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
+{
+    unsigned int size, bytes;
+    char *buffer = 0;
+
+    size = (unsigned int) (pos_end - pos_init) + 1;
+    if (size <= 2)
+        size = 4;
+
+    buffer = malloc(size);
+
+    if (!buffer) {
+        return NULL;
+    }
+
+    if (pos_init > pos_end) {
+        mk_mem_free(buffer);
+        return NULL;
+    }
+
+    bytes = pos_end - pos_init;
+    memcpy(buffer, string + pos_init, bytes);
+    buffer[bytes] = '\0';
+
+    return (char *) buffer;
+}
+

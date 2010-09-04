@@ -62,12 +62,12 @@ long int mk_method_post_content_length(char *body)
         char *str_cl;
 
         /* Pre-parsing mode: Check if content-length was sent */
-        pos_header = mk_string_search(body, RH_CONTENT_LENGTH);
+        pos_header = mk_string_search(body, RH_CONTENT_LENGTH, MK_STR_INSENSITIVE);
         if (pos_header <= 0) {
             return -1;
         }
 
-        pos_crlf = mk_string_search(body + pos_header, MK_IOV_CRLF);
+        pos_crlf = mk_string_search(body + pos_header, MK_IOV_CRLF, MK_STR_SENSITIVE);
         if (pos_crlf <= 0) {
             return -1;
         }

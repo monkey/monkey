@@ -180,8 +180,8 @@ struct plugin_api
     /* string functions */
     char *(*str_build) (char **, unsigned long *, const char *, ...);
     char *(*str_dup) (const char *);
-    int (*str_search) (char *, char *);
-    int (*str_search_n) (char *, char *, int);
+    int (*str_search) (const char *, const char *, int);
+    int (*str_search_n) (const char *, const char *, int, int);
     char *(*str_copy_substr) (const char *, int, int);
     int (*str_itop) (int, mk_pointer *);
     struct mk_string_line *(*str_split_line) (const char *);
