@@ -36,7 +36,7 @@
 #include "plugin.h"
 #include "MKPlugin.h"
 
-#include <matrixSsl.h>
+#include <matrixssl/matrixsslApi.h>
 
 /* Plugin data for register */
 MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.1", MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_NETWORK_IO);
@@ -48,12 +48,6 @@ struct mk_list *list_head;
 struct mk_liana_ssl
 {
     ssl_t *ssl;
-    /* Buffers to communicate */
-    sslBuf_t inbuf;
-    sslBuf_t insock;
-    sslBuf_t outsock;
-    int outBufferCount;
-
     int socket_fd;
     struct mk_list *cons;
 };
@@ -62,18 +56,30 @@ sslKeys_t *keys;
 
 static pthread_key_t key;
 
-int liana_ssl_read(struct mk_liana_ssl *conn, char *buf, int len) {
-    int bytes;
-
-    bytes = recv(conn->socket_fd, (char *)conn->insock.end,
-                 (int)((conn->insock.buf + conn->insock.size) - conn->insock.end), MSG_NOSIGNAL);
-
-    if(bytes < 0) return -1;
-
-}
 
 int liana_ssl_handshake(struct mk_liana_ssl *conn) {
+    unsigned char *buf = NULL;
+    int len;
+    ssize_t bytes_read;
 
+#ifdef TRACE
+    PLUGIN_TRACE( "Trying to hanshake" );
+#endif
+
+    len = matrixSslgetReadbuf( conn->ssl, &buf );
+
+    if( len == PS_ARG_FAIL ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Error trying to read data for handshake" );
+#endif
+        return -1;
+    }
+
+    bytes_read = _mkp_network_io_read( conn->socket_fd, buf, len );
+
+
+
+    return 0;
 }
 
 int _mkp_init(void **api, char *confdir)
@@ -90,6 +96,9 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 {
     int remote_fd;
     int ret;
+    int bytes_to_read;
+    int len;
+    unsigned char *buf = NULL;
     socklen_t socket_size = sizeof(struct sockaddr_in);
     struct mk_liana_ssl *conn = (struct mk_liana_ssl *) malloc( sizeof(struct mk_liana_ssl *) );
 
@@ -119,18 +128,53 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     PLUGIN_TRACE( "Ssl session started" );
 #endif
 
-    memset( $conn->inbuf, 0x0, sizeof( sslBuf_t ) );
-    conn->insock.size = 1024;
-    conn->insock.start = conn->inssock.end = conn->insock.buf = (unsigned char *) malloc( conn->insock.size);
-    conn->outsock.size = 1024;
-    conn->outsock.start = conn->outsock.end = conn->outsock.buf = (unsigned char *) malloc( conn->outsock.size);
-    conn->inbuf.size = 0;
-    conn->inbuf.start = conn->inbuf.end = conn->inbuf.buf = NULL;
+    mk_list_add( conn->cons, list_head );
 
-    conn->socket_fd = remote_fd;
+    liana_ssl_handshake( conn );
 
-    ret = liana_ssl_handshake( conn );
 
+    /*     bytes_to_read = recv( remote_fd, buf, len, MSG_DONTWAIT); */
+
+    /*     if( bytes_to_read < 0 ) { */
+    /* #ifdef TRACE */
+    /*         PLUGIN_TRACE( "Error reading handshake data" ); */
+    /* #endif */
+    /*         return -1; */
+    /*     } */
+
+    /*     ret = matrixSslReceivedData( conn->ssl, bytes_to_read, &buf, (unsigned int *)&len); */
+
+    /* #ifdef TRACE */
+    /*     PLUGIN_TRACE( "Receiving handshake data Success" ); */
+    /* #endif */
+
+    /*     printf( "Return code %d\n", ret ); */
+
+    /*     if( ret == 1 ) { */
+    /*         ret = matrixSslGetOutdata( conn->ssl, &buf); */
+
+    /*         len = send( remote_fd, buf, ret, MSG_DONTWAIT ); */
+
+    /*         printf( "sent data %d\n", len ); */
+    /*         ret = matrixSslSentData( conn->ssl, len ); */
+
+    /*         len = matrixSslGetReadbuf( conn->ssl, &buf ); */
+    /*         printf( "return read data %d\n", len ); */
+    /*         bytes_to_read = recv( remote_fd, buf, len, MSG_DONTWAIT); */
+    /*         printf(" bytes recv %d\n", bytes_to_read ); */
+    /*         if( bytes_to_read < 0 ) { */
+    /*             perror("Error?"); */
+    /* #ifdef TRACE */
+    /*             PLUGIN_TRACE( "Error reading handshake data" ); */
+    /* #endif */
+    /*             return -1; */
+    /*         } */
+
+    /*         ret = matrixSslReceivedData( conn->ssl, bytes_to_read, &buf, (unsigned int *)&len); */
+
+    /*         printf( "Return code %d\n", ret ); */
+
+    /*     } */
 
     return remote_fd;
 }
@@ -138,12 +182,39 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 int _mkp_network_io_read(int socket_fd, void *buf, int count)
 {
     ssize_t bytes_read;
+    struct mk_list *curr;
+    struct mk_liana_ssl *conn;
+    int ret;
+
+#ifdef TRACE
+    PLUGIN_TRACE( "Locating socket on ssl connections list" );
+#endif
+    mk_list_foreach(curr, list_head) {
+        conn = mk_list_entry( curr, struct mk_list_ssl, cons);
+        if( conn->socket_fd == socket_fd )
+            break;
+        conn = NULL;
+    }
+    if( conn == NULL ) return -1;
 
 #ifdef TRACE
     PLUGIN_TRACE("Reading");
 #endif
 
     bytes_read = read(socket_fd, (void *)buf, count);
+
+#ifdef TRACE
+    PLUGIN_TRACE( "Decoding data from ssl connection" );
+#endif
+
+    ret = matrixSslReceivedData( conn->ssl, bytes_read, (unsigned char )&buf, (uint32 )&count);
+
+    if( ret == PS_MEM_FAIL  || ret == PS_ARG_FAIL || ret == PS_PROTOCOL_FAIL ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "An error occurred while trying to decode the ssl data" );
+#endif
+        return -1;
+    }
 
     return bytes_read;
 }
@@ -308,6 +379,7 @@ int _mkp_core_prctx(struct server_config *config)
 {
     int res;
 
+
     res = pthread_key_create(&key, NULL);
 
     if( res != 0 ) {
@@ -337,7 +409,14 @@ int _mkp_core_prctx(struct server_config *config)
     PLUGIN_TRACE("MatrixSsl Started");
 #endif
 
-    if( matrixSslReadKeys( &keys, "/home/zeus/src/monkey.git/certSrv.pem", "/home/zeus/src/monkey.git/privkeySrv.pem", NULL, NULL ) < 0 ) {
+    if( matrixSslNewKeys( &keys ) < 0 ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "MatrixSSL couldn't init the keys" );
+#endif
+        return 0;
+    }
+
+    if( matrixSslLoadRsaKeys( keys, "/home/zeus/src/monkey.git/certSrv.pem", "/home/zeus/src/monkey.git/privkeySrv.pem", NULL, NULL ) < 0 ) {
 #ifdef TRACE
         PLUGIN_TRACE( "MatrixSsl couldn't read the certificates" );
 #endif
