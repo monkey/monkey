@@ -28,6 +28,11 @@
 
 #include "security.h"
 
+MONKEY_PLUGIN("security",  /* shortname */
+              "Security",  /* name */ 
+              "0.12.0",    /* version */
+              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
+
 struct mk_config *conf;
 
 /* Read database configuration parameters */
@@ -140,7 +145,7 @@ int mk_security_check_url(mk_pointer url)
     p = rules;
     while (p) {
         if (p->type == MK_SECURITY_TYPE_URL) {
-            n = mk_api->str_search_n(url.data, p->value, url.len);
+            n = mk_api->str_search_n(url.data, p->value, MK_STR_INSENSITIVE, url.len);
             if (n >= 0) {
                 return -1;
             }
@@ -177,11 +182,11 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mkp_stage_20(struct client_request *cr, struct request *sr)
+int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
     if (mk_security_check_url(sr->uri) < 0) {
 #ifdef TRACE
-        PLUGIN_TRACE("Close connection FD %i", cr->socket);
+        PLUGIN_TRACE("Close connection FD %i", cs->socket);
 #endif
         mk_api->header_set_http_status(sr, M_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
@@ -189,8 +194,3 @@ int _mkp_stage_20(struct client_request *cr, struct request *sr)
 
     return MK_PLUGIN_RET_CONTINUE;
 }
-
-MONKEY_PLUGIN("security",  /* shortname */
-              "Security",  /* name */ 
-              "0.12.0",    /* version */
-              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */

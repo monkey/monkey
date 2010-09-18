@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2010, Eduardo Silva P. <edsiper@gmail.com>
@@ -21,6 +23,7 @@
 
 /* MIME Structs variables*/
 #include "memory.h"
+#include "list.h"
 
 #define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
 #define MIMETYPE_DEFAULT_NAME "default"
@@ -33,16 +36,19 @@ struct mimetype
 {
     char *name;
     mk_pointer type;
-    char *script_bin_path;
-    struct mimetype *next;
-}       *first_mime;
+
+    struct mk_list _head;
+
+};
+
+struct mk_list *mimetype_list;
 
 struct mimetype *mimetype_default;
 
 void mk_mimetype_read_config();
 
 int mk_mimetype_free(char **arr);
-int mk_mimetype_add(char *name, char *type, char *bin_path);
+int mk_mimetype_add(char *name, char *type);
 
 struct mimetype *mk_mimetype_find(mk_pointer * filename);
 struct mimetype *mk_mimetype_cmp(char *name);

@@ -59,7 +59,7 @@ static const char MONKEY_BUILT[] = "Unknown";
 void mk_thread_keys_init()
 {
     /* Create thread keys */
-    pthread_key_create(&request_index, NULL);
+    pthread_key_create(&request_list, NULL);
     pthread_key_create(&epoll_fd, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_toc, NULL);
@@ -102,10 +102,10 @@ void mk_help()
 int main(int argc, char **argv)
 {
     int opt;
-    int daemon = 0;
 
     config = mk_mem_malloc(sizeof(struct server_config));
     config->file_config = 0;
+    config->is_daemon = VAR_OFF;
 
     opterr = 0;
     while ((opt = getopt(argc, argv, "DSvhc:")) != -1) {
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
             mk_help();
             break;
         case 'D':
-            daemon = 1;
+            config->is_daemon = VAR_ON;
             break;
         case 'c':
             if (strlen(optarg) != 0) {
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     server_fd = mk_socket_server(config->serverport, config->listen_addr);
 
     /* Running Monkey as daemon */
-    if (daemon) {
+    if (config->is_daemon == VAR_ON) {
         mk_utils_set_daemon();
     }
 

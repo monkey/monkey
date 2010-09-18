@@ -224,9 +224,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     p->event_timeout = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_event_timeout");
 
-    /* Next ! */
-    p->next = NULL;
-
     return p;
 }
 
@@ -317,48 +314,17 @@ create socket : %p\nbind : %p\nserver : %p",
     }
 
     /* Add Plugin to the end of the list */
-    if (!config->plugins) {
-        config->plugins = p;
-    }
-    else {
-        struct plugin *plg = config->plugins;
-        while(plg->next){
-            plg = plg->next;
-        }
-        plg->next = p;
-    }
+    mk_list_add(&p->_head, config->plugins);
 
+    /* Register plugins stages */
     mk_plugin_register_stagemap(p);
     return p;
 }
 
 void mk_plugin_unregister(struct plugin *p)
 {
-    struct plugin *node, *prev;
-
-    node = config->plugins;
-    
-    if (!node) {
-        return;
-    }
-
-    if (node == p) {
-        config->plugins = p->next;
-        mk_plugin_free(p);
-        return;
-    }
-
-    prev = node;
-    while (node->next != p) {
-        prev = node;
-        node = node->next;
-    }
-    
-    if (node) {
-        prev->next = p->next;
-        mk_plugin_free(p);
-        return;
-    }
+    mk_list_del(&p->_head);
+    mk_plugin_free(p);
 }
 
 void mk_plugin_free(struct plugin *p)
@@ -533,15 +499,27 @@ void mk_plugin_init()
     }
 
     api->plugins = config->plugins;
+
     /* Look for plugins thread key data */
     mk_plugin_preworker_calls();
     mk_mem_free(path);
 }
 
+void mk_plugin_exit_all()
+{
+    struct plugin *node;
+    struct mk_list *head;
+
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        node->exit();
+    }
+}
+
 int mk_plugin_stage_run(unsigned int hook,
                         unsigned int socket,
                         struct sched_connection *conx,
-                        struct client_request *cr, struct request *sr)
+                        struct client_session *cs, struct session_request *sr)
 {
     int ret;
     struct plugin_stagem *stm;
@@ -573,7 +551,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 20", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s20(cr, sr);
+            ret = stm->p->stage.s20(cs, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
 #ifdef TRACE
@@ -599,7 +577,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
                 MK_TRACE("[%s] STAGE 30", stm->p->shortname);
 #endif
-                ret = stm->p->stage.s30(stm->p, cr, sr);
+                ret = stm->p->stage.s30(stm->p, cs, sr);
 
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
@@ -622,7 +600,7 @@ int mk_plugin_stage_run(unsigned int hook,
 #ifdef TRACE
             MK_TRACE("[%s] STAGE 40", stm->p->shortname);
 #endif
-            ret = stm->p->stage.s40(cr, sr);
+            ret = stm->p->stage.s40(cs, sr);
             stm = stm->next;
         }
     }
@@ -648,7 +626,7 @@ int mk_plugin_stage_run(unsigned int hook,
     return -1;
 }
 
-void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
+void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p)
 {
     if (!sr->handled_by) {
         sr->handled_by = p;
@@ -656,7 +634,7 @@ void mk_plugin_request_handler_add(struct request *sr, struct plugin *p)
     }
 }
 
-void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
+void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p)
 {
     if (!sr->handled_by) {
         return;
@@ -671,17 +649,16 @@ void mk_plugin_request_handler_del(struct request *sr, struct plugin *p)
  */
 void mk_plugin_core_process()
 {
-    struct plugin *p;
+    struct plugin *node;
+    struct mk_list *head;
 
-    p = config->plugins;
-
-    while (p) {
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        
         /* Init plugin */
-        if (p->core.prctx) {
-            p->core.prctx(config);
+        if (node->core.prctx) {
+            node->core.prctx(config);
         }
-
-        p = p->next;
     }
 }
 
@@ -691,17 +668,17 @@ void mk_plugin_core_process()
  */
 void mk_plugin_core_thread()
 {
-    struct plugin *p;
 
-    p = config->plugins;
+    struct plugin *node;
+    struct mk_list *head;
 
-    while (p) {
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+
         /* Init plugin thread context */
-        if (p->core.thctx) {
-            p->core.thctx();
+        if (node->core.thctx) {
+            node->core.thctx();
         }
-
-        p = p->next;
     }
 }
 
@@ -712,25 +689,25 @@ void mk_plugin_core_thread()
 void mk_plugin_preworker_calls()
 {
     int ret;
-    struct plugin *p;
+    struct plugin *node;
+    struct mk_list *head;
 
-    p = config->plugins;
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
 
-    while (p) {
         /* Init pthread keys */
-        if (p->thread_key) {
+        if (node->thread_key) {
 #ifdef TRACE
-            MK_TRACE("[%s] Set thread key", p->shortname);
+            MK_TRACE("[%s] Set thread key", node->shortname);
 #endif
-            ret = pthread_key_create(p->thread_key, NULL);
+            ret = pthread_key_create(node->thread_key, NULL);
             if (ret != 0) {
                 printf("\nPlugin Error: could not create key for %s",
-                       p->shortname);
+                       node->shortname);
                 fflush(stdout);
                 exit(1);
             }
         }
-        p = p->next;
     }
 }
 
@@ -779,8 +756,8 @@ int mk_plugin_event_del(int socket)
 
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_request *cr,
-                        struct request *sr)
+                        struct client_session *cs,
+                        struct session_request *sr)
 {
     struct sched_list_node *sched;
     struct plugin_event *list;
@@ -789,7 +766,7 @@ int mk_plugin_event_add(int socket, int mode,
 
     sched = mk_sched_get_thread_conf();
 
-    if (!sched || !handler || !cr || !sr) {
+    if (!sched || !handler || !cs || !sr) {
         return -1;
     }
 
@@ -797,7 +774,7 @@ int mk_plugin_event_add(int socket, int mode,
     event = mk_mem_malloc(sizeof(struct plugin_event));
     event->socket = socket;
     event->handler = handler;
-    event->cr = cr;
+    event->cs = cs;
     event->sr = sr;
     event->next = NULL;
 

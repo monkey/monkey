@@ -22,6 +22,8 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
+#include "list.h"
+
 #define MK_SCHEDULER_CONN_AVAILABLE -1
 #define MK_SCHEDULER_CONN_PENDING 0
 #define MK_SCHEDULER_CONN_PROCESS 1
@@ -43,12 +45,12 @@ struct sched_list_node
     int epoll_fd;
 
     struct sched_connection *queue;
-    struct client_request *request_handler;
-    struct sched_list_node *next;
+    struct client_session *request_handler;
 
+    struct mk_list _head;
 };
 
-struct sched_list_node *sched_list;
+struct mk_list *sched_list;
 
 /* Struct under thread context */
 typedef struct
@@ -64,8 +66,9 @@ int mk_sched_register_thread(pthread_t tid, int epoll_fd);
 int mk_sched_launch_thread(int max_events);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner();
-struct request_idx *mk_sched_get_request_index();
-void mk_sched_set_request_index(struct request_idx *ri);
+
+struct mk_list *mk_sched_get_request_list();
+void mk_sched_set_request_list(struct mk_list *list);
 
 int mk_sched_get_thread_poll();
 void mk_sched_set_thread_poll(int epoll);

@@ -128,7 +128,7 @@ struct dirhtml_template
     *mk_dirhtml_template_list_add(struct dirhtml_template **header,
                                   char *buf, int len, char **tpl, int tag);
 
-int mk_dirhtml_init(struct client_request *cr, struct request *sr);
+int mk_dirhtml_init(struct client_session *cs, struct session_request *sr);
 int mk_dirhtml_read_config(char *path);
 int mk_dirhtml_theme_load();
 int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl);
@@ -137,7 +137,7 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
                                             int tag_id, mk_pointer sep,
                                             char *value, char **tags);
 
-struct f_list *get_dir_content(struct request *sr, char *path);
+struct f_list *get_dir_content(struct session_request *sr, char *path);
 
 
 #endif

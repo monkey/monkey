@@ -29,5 +29,5 @@ __Connection: close
 __
 _-someVariable=1234&daemon=monkeyd&SESSION=e1d83283d597ca88f599e34c8ef2e8c3
 _EXPECT . "HTTP/1.1 411 Length Required"
-_WAIT
+_WAIT 0
 END

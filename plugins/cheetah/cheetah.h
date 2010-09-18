@@ -71,7 +71,23 @@
 #define MK_CHEETAH_ONEHOUR  3600
 #define MK_CHEETAH_ONEMINUTE  60
 
+/* Configurarion: Listen */
+#define LISTEN_STDIN_STR "STDIN"
+#define LISTEN_SERVER_STR "SERVER"
+
+#define LISTEN_STDIN 0
+#define LISTEN_SERVER 1
+
+int listen_mode;
+
+char *cheetah_server;
+
+int cheetah_socket;
+FILE *cheetah_input;
+FILE *cheetah_output;
+
 /* functions */
 void *mk_cheetah_init(void *args);
+void mk_cheetah_welcome_msg();
 
 #endif

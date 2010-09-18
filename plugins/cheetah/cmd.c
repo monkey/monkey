@@ -1,3 +1,24 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
+/*  Monkey HTTP Daemon
+ *  ------------------
+ *  Copyright (C) 2001-2010, Eduardo Silva P.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -8,78 +29,63 @@
 #include "MKPlugin.h"
 
 #include "cheetah.h"
+#include "cutils.h"
 #include "cmd.h"
 
-void mk_cheetah_print_worker_memory_usage(pid_t pid)
+int mk_cheetah_cmd(char *cmd)
 {
-    int last, init, n, c = 0;
-    int s = 1024;
-    char *buf;
-    char *value;
-    pid_t ppid;
-    FILE *f;
-
-    ppid = getpid();
-    buf = mk_api->mem_alloc(s);
-    sprintf(buf, MK_CHEETAH_PROC_TASK, ppid, pid);
-
-    f = fopen(buf, "r");
-    if (!f) {
-        printf("Cannot get details\n");
-        return;
+    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
+        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
+        mk_cheetah_cmd_config();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
+        strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
+        mk_cheetah_cmd_status();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
+             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
+        mk_cheetah_cmd_clear();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
+             strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
+        mk_cheetah_cmd_uptime();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_PLUGINS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_PLUGINS_SC) == 0) {
+        mk_cheetah_cmd_plugins();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_WORKERS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_WORKERS_SC) == 0) {
+        mk_cheetah_cmd_workers();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_VHOSTS) == 0 ||
+             strcmp(cmd, MK_CHEETAH_VHOSTS_SC) == 0) {
+        mk_cheetah_cmd_vhosts();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
+             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
+        mk_cheetah_cmd_help();
+    }
+    else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
+             strcmp(cmd, MK_CHEETAH_QUIT_SC) == 0) {
+        return mk_cheetah_cmd_quit();
+    }
+    else if (strlen(cmd) == 0) {
+        return 0;
+    }
+    else {
+      CHEETAH_WRITE("Invalid command, type 'help' for a list of available commands\n");
     }
 
-    buf = fgets(buf, s, f);
-    if (!buf) {
-        printf("Cannot format details\n");
-        return;
-    }
-    fclose(f);
-
-    last = 0;
-    init = 0;
-
-    printf("\n");
-    return;
-
-    while ((n = mk_api->str_search(buf + last, " ")) > 0) {
-        if (c == 23) {
-            value = mk_api->str_copy_substr(buf, init, last + n);
-            printf("%s\n", value);
-            mk_mem_free(buf);
-            mk_mem_free(value);
-            return;
-        }
-        init = last + n + 1;
-        last += n + 1;
-        c++;
-    }
-}
-
-void mk_cheetah_print_running_user()
-{
-    struct passwd pwd;
-    struct passwd *result;
-    char *buf;
-    size_t bufsize;
-    uid_t uid;
-
-    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (bufsize == -1) {
-        bufsize = 16384;
-    }
-
-    buf = malloc(bufsize);
-    uid = getuid();
-    getpwuid_r(uid, &pwd, buf, bufsize, &result);
-
-    printf("%s\n", pwd.pw_name);
-    free(buf);
+    CHEETAH_FLUSH();
+    return 0;
 }
 
 void mk_cheetah_cmd_clear()
 {
-    printf("\033[2J\033[1;1H");
+    CHEETAH_WRITE("\033[2J\033[1;1H");
 }
 
 void mk_cheetah_cmd_uptime()
@@ -107,102 +113,97 @@ void mk_cheetah_cmd_uptime()
     minutes = upminh / MK_CHEETAH_ONEMINUTE;
     seconds = upminh - minutes * MK_CHEETAH_ONEMINUTE;
 
-    printf
+    CHEETAH_WRITE
         ("Server has been running: %i day%s, %i hour%s, %i minute%s and %i second%s\n\n",
          days, (days > 1) ? "s" : "", hours, (hours > 1) ? "s" : "", minutes,
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print_stage(struct plugin *list, const char *stage, 
+void mk_cheetah_cmd_plugins_print_stage(struct mk_list *list, const char *stage, 
                                         int stage_bw)
 {
     struct plugin *p;
+    struct mk_list *head;
 
-    if (!list) {
+    if (mk_list_is_empty(list) == 0) {
         return;
     }
 
-    p = list;
+    CHEETAH_WRITE("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
 
-    printf("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
-  
-    while (p) {
-       if (p->hooks & stage_bw) {
-            printf("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
+        if (p->hooks & stage_bw) {
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    printf("\n\n");
+    CHEETAH_WRITE("\n\n");
 }
 
-void mk_cheetah_cmd_plugins_print_core(struct plugin *list)
+void mk_cheetah_cmd_plugins_print_core(struct mk_list *list)
 {
     struct plugin *p;
+    struct mk_list *head;
 
-    p = list;
+    CHEETAH_WRITE("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
-    printf("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
 
-    while (p) {
         if (p->hooks & MK_PLUGIN_CORE_PRCTX) {
-            printf("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    printf("\n");
-    p = list;
-    printf("\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+    CHEETAH_WRITE("\n\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
+
         if (p->hooks & MK_PLUGIN_CORE_THCTX) {
-            printf("\n  [%s] %s v%s on \"%s\"",
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
                    p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    printf("\n\n");
+    CHEETAH_WRITE("\n\n");
 }
 
-void mk_cheetah_cmd_plugins_print_network(struct plugin *list)
+void mk_cheetah_cmd_plugins_print_network(struct mk_list *list)
 {
     struct plugin *p;
+    struct mk_list *head;
 
-    p = list;
+    CHEETAH_WRITE("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
 
-    printf("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
-
-    while (p) {
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
         if (p->hooks & MK_PLUGIN_NETWORK_IO) {
-            printf("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    p = list;
-    printf("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
-
-    while (p) {
+    CHEETAH_WRITE("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
+    mk_list_foreach(head, list) {
+        p = mk_list_entry(head, struct plugin, _head);
         if (p->hooks & MK_PLUGIN_NETWORK_IP) {
-            printf("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
         }
-        p = p->next;
     }
 
-    printf("\n");
+    CHEETAH_WRITE("\n");
 }
 
 void mk_cheetah_cmd_plugins()
 {
-    struct plugin *list = mk_api->plugins;
+    struct mk_list *list = mk_api->plugins;
 
-    printf("List of plugins and hooks associated\n");
+    CHEETAH_WRITE("List of plugins and hooks associated\n");
 
     if (!list) {
         return;
@@ -216,173 +217,201 @@ void mk_cheetah_cmd_plugins()
     mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
     mk_cheetah_cmd_plugins_print_network(list);
 
-    printf("\n");
+    CHEETAH_WRITE("\n");
 }
 
 void mk_cheetah_cmd_vhosts()
 {
     struct host *host;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
 
     host = mk_api->config->hosts;
 
     while (host) {
-        printf("* VHost '%s'\n", host->servername);
-        printf("      - Configuration Path     : %s\n", host->file);
-        printf("      - Document Root          : %s\n",
-               host->documentroot.data);
-        printf("      - Access Log             : %s\n",
-               host->access_log_path);
-        printf("      - Error Log              : %s\n", host->error_log_path);
+        CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n", 
+                      ANSI_BOLD, ANSI_YELLOW, 
+                      host->servername, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
+        CHEETAH_WRITE("      - Configuration Path : %s\n", host->file);
+        CHEETAH_WRITE("      - Document Root      : %s\n", host->documentroot.data);
+
+        if (host->config) {
+            section = host->config->section->next;
+            while (section) {
+                CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
+                              section->name);
+                entry = section->entry;
+                while (entry) {
+                    CHEETAH_WRITE("        - %s : %s\n", entry->key, entry->val);
+                    entry = entry->next;
+                }
+                section = section->next;
+            }
+        }
         host = host->next;
+
+        
     }
 
-    printf("\n");
+    CHEETAH_WRITE("\n");
 }
 
 void mk_cheetah_cmd_workers()
 {
-    struct sched_list_node *sl;
-    sl = *mk_api->sched_list;
+    struct sched_list_node *node;
+    struct mk_list *head;
 
-    while (sl) {
-        printf("* Worker %i\n", sl->idx);
-        printf("      - Task ID           : %i\n", sl->pid);
+    mk_list_foreach(head, *mk_api->sched_list) {
+        node = mk_list_entry(head, struct sched_list_node, _head);
+
+        CHEETAH_WRITE("* Worker %i\n", node->idx);
+        CHEETAH_WRITE("      - Task ID           : %i\n", node->pid);
 
         /* Memory Usage 
-        printf("      - Memory usage      : ");
+        CHEETAH_WRITE("      - Memory usage      : ");
         mk_cheetah_print_worker_memory_usage(sl->pid);
 
         
-        printf("      - Active Requests   : %i\n", sl->active_requests);
-        printf("      - Closed Requests   : %i\n", sl->closed_requests);
+        CHEETAH_WRITE("      - Active Requests   : %i\n", sl->active_requests);
+        CHEETAH_WRITE("      - Closed Requests   : %i\n", sl->closed_requests);
         */
-        
-        sl = sl->next;
     }
 
-    printf("\n");
+    CHEETAH_WRITE("\n");
 }
 
-void mk_cheetah_cmd_quit()
+int mk_cheetah_cmd_quit()
 {
-    printf("Cheeta says: Good Bye!\n");
-    fflush(stdout);
-    pthread_exit(NULL);
+    CHEETAH_WRITE("Cheeta says: Good Bye!\n");
+    if (listen_mode == LISTEN_STDIN) {
+        pthread_exit(NULL);
+        return 0;
+    }
+    else {
+        return -1;
+    }
 }
 
 void mk_cheetah_cmd_help()
 {
-    printf("List of available commands for Cheetah Shell\n");
-    printf("\ncommand  shortcut  description");
-    printf("\n----------------------------------------------------");
-    printf("\n?          (\\?)    Synonym for 'help'");
-    printf("\nconfig     (\\f)    Display global configuration");
-    printf("\nplugins    (\\g)    List loaded plugins and associated stages");
-    printf("\nstatus     (\\s)    Display general web server information");
-    printf("\nuptime     (\\u)    Display how long the web server has been running");
-    printf("\nvhosts     (\\v)    List virtual hosts configured");
-    printf("\nworkers    (\\w)    Show thread workers information\n");
-    printf("\nclear      (\\c)    Clear screen");
-    printf("\nhelp       (\\h)    Print this help");
-    printf("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
+    CHEETAH_WRITE("List of available commands for Cheetah Shell\n");
+    CHEETAH_WRITE("\ncommand  shortcut  description");
+    CHEETAH_WRITE("\n----------------------------------------------------");
+    CHEETAH_WRITE("\n?          (\\?)    Synonym for 'help'");
+    CHEETAH_WRITE("\nconfig     (\\f)    Display global configuration");
+    CHEETAH_WRITE("\nplugins    (\\g)    List loaded plugins and associated stages");
+    CHEETAH_WRITE("\nstatus     (\\s)    Display general web server information");
+    CHEETAH_WRITE("\nuptime     (\\u)    Display how long the web server has been running");
+    CHEETAH_WRITE("\nvhosts     (\\v)    List virtual hosts configured");
+    CHEETAH_WRITE("\nworkers    (\\w)    Show thread workers information\n");
+    CHEETAH_WRITE("\nclear      (\\c)    Clear screen");
+    CHEETAH_WRITE("\nhelp       (\\h)    Print this help");
+    CHEETAH_WRITE("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
 }
 
 void mk_cheetah_cmd_config()
 {
     struct mk_string_line *line;
 
-    printf("Basic configuration");
-    printf("\n-------------------");
-    printf("\nServer Port     : %i", mk_api->config->serverport);
+    CHEETAH_WRITE("Basic configuration");
+    CHEETAH_WRITE("\n-------------------");
+    CHEETAH_WRITE("\nServer Port     : %i", mk_api->config->serverport);
     
     if (strcmp(mk_api->config->listen_addr, "0.0.0.0") == 0) {
-        printf("\nListen          : All interfaces");
+        CHEETAH_WRITE("\nListen          : All interfaces");
     }
     else {
-        printf("\nListen          : %s", mk_api->config->listen_addr);
+        CHEETAH_WRITE("\nListen          : %s", mk_api->config->listen_addr);
     }
-    printf("\nWorkers         : %i threads", mk_api->config->workers);
-    printf("\nTimeout         : %i seconds", mk_api->config->timeout);
-    printf("\nPidFile         : %s", mk_api->config->pid_file_path);
-    printf("\nUserDir         : %s", mk_api->config->user_dir);
+    CHEETAH_WRITE("\nWorkers         : %i threads", mk_api->config->workers);
+    CHEETAH_WRITE("\nTimeout         : %i seconds", mk_api->config->timeout);
+    CHEETAH_WRITE("\nPidFile         : %s", mk_api->config->pid_file_path);
+    CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
 
     line = mk_api->config->index_files;
     if (!line) {
-        printf("\nIndexFile       : No index files defined");
+        CHEETAH_WRITE("\nIndexFile       : No index files defined");
     }
     else {
-        printf("\nIndexFile       : ");
+        CHEETAH_WRITE("\nIndexFile       : ");
         while (line) {
-            printf("%s ", line->val);
+            CHEETAH_WRITE("%s ", line->val);
             line = line->next;
         }
 
     }
     
-    printf("\nHideVersion     : ");
+    CHEETAH_WRITE("\nHideVersion     : ");
     if (mk_api->config->hideversion == VAR_ON) {
-        printf("On");
+        CHEETAH_WRITE("On");
     }
     else {
-        printf("Off");
+        CHEETAH_WRITE("Off");
     }
 
-    printf("\nResume          : ");
+    CHEETAH_WRITE("\nResume          : ");
     if (mk_api->config->resume == VAR_ON) {
-        printf("On");
+        CHEETAH_WRITE("On");
     }
     else {
-        printf("Off");
+        CHEETAH_WRITE("Off");
     }
 
-    printf("\nUser            : %s", mk_api->config->user);
-    printf("\n\nAdvanced configuration");
-    printf("\n----------------------");
-    printf("\nKeepAlive           : ");
+    CHEETAH_WRITE("\nUser            : %s", mk_api->config->user);
+    CHEETAH_WRITE("\n\nAdvanced configuration");
+    CHEETAH_WRITE("\n----------------------");
+    CHEETAH_WRITE("\nKeepAlive           : ");
     if (mk_api->config->keep_alive == VAR_ON) {
-        printf("On");
+        CHEETAH_WRITE("On");
     }
     else {
-        printf("Off");
+        CHEETAH_WRITE("Off");
     }
-    printf("\nMaxKeepAliveRequest : %i req/connection", 
+    CHEETAH_WRITE("\nMaxKeepAliveRequest : %i req/connection", 
            mk_api->config->max_keep_alive_request); 
-    printf("\nKeepAliveTimeout    : %i seconds", mk_api->config->keep_alive_timeout);
-    printf("\nMaxRequestSize      : %i KB", 
+    CHEETAH_WRITE("\nKeepAliveTimeout    : %i seconds", mk_api->config->keep_alive_timeout);
+    CHEETAH_WRITE("\nMaxRequestSize      : %i KB", 
            mk_api->config->max_request_size/1024);
-    printf("\nSymLink             : ");
+    CHEETAH_WRITE("\nSymLink             : ");
     if (mk_api->config->symlink == VAR_ON) {
-        printf("On");
+        CHEETAH_WRITE("On");
     }
     else {
-        printf("Off");
+        CHEETAH_WRITE("Off");
     }
-    printf("\n\n");
+    CHEETAH_WRITE("\n\n");
 }
 
 void mk_cheetah_cmd_status()
 {
     int nthreads = 0;
+    struct mk_list *head;
 
-    struct sched_list_node *sl;
-
-
-    sl = *mk_api->sched_list;
-    while (sl) {
+    mk_list_foreach(head, *mk_api->sched_list) {
         nthreads++;
-        sl = sl->next;
     }
 
     /* FIXME */
-    //printf("Cheetah Plugin v%s\n\n", _plugin_info->version);
-    printf("Monkey Version     : %s\n", VERSION);
-    printf("Configutarion path : %s\n", mk_api->config->serverconf);
-    printf("Process ID         : %i\n", getpid());
-    printf("Process User       : ");
+    //CHEETAH_WRITE("Cheetah Plugin v%s\n\n", _plugin_info->version);
+    CHEETAH_WRITE("Monkey Version     : %s\n", VERSION);
+    CHEETAH_WRITE("Configutarion path : %s\n", mk_api->config->serverconf);
+
+    CHEETAH_WRITE("Cheetah! mode      : ");
+    if (listen_mode == LISTEN_STDIN) {
+        CHEETAH_WRITE("STDIN\n");
+    }
+    else {
+        CHEETAH_WRITE("SERVER @ %s\n", cheetah_server);
+    }
+
+    CHEETAH_WRITE("Process ID         : %i\n", getpid());
+    CHEETAH_WRITE("Process User       : ");
     mk_cheetah_print_running_user();
 
-    printf("Server Port        : %i\n", mk_api->config->serverport);
-    printf("Worker Threads     : %i (per configuration: %i)\n\n",
+    CHEETAH_WRITE("Server Port        : %i\n", mk_api->config->serverport);
+    CHEETAH_WRITE("Worker Threads     : %i (per configuration: %i)\n\n",
            nthreads, mk_api->config->workers);
 
 }
+
+

@@ -24,6 +24,12 @@
 
 #include "memory.h"
 
+/* Case sensitive OFF */
+#define MK_STR_SENSITIVE 0
+
+/* Case sensitive ON */
+#define MK_STR_INSENSITIVE 1
+
 struct mk_string_line
 {
     char *val;
@@ -31,13 +37,22 @@ struct mk_string_line
     struct mk_string_line *next;
 };
 
-char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
+/* Base function for search routines, it accept modifiers to enable/disable
+ * the case sensitive feature and also allow to specify a haystack len 
+ */
+int _mk_string_search(const char *haystack, const char *needle, int ignore_case, int len);
 
-int mk_string_char_search(char *string, int c, int n);
-int _mk_string_search(char *string, char *search, int n);
-int mk_string_search(char *string, char *search);
-int mk_string_search_n(char *string, char *search, int n);
-int mk_string_search_r(char *string, char search, int n);
+/* Lookup char into string, return position */
+int mk_string_char_search(const char *string, int c, int len);
+
+/* Find char into string searching in reverse order, returns position */
+int mk_string_char_search_r(const char *string, int c, int len);
+
+/* Locate a substring, returns the position of the substring */
+int mk_string_search(const char *haystack, const char *needle, int sensitive);
+
+/* Locate a substring, compare the first n bytes of haystack */
+int mk_string_search_n(const char *haystack, const char *needle, int sensitive, int len);
 
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
@@ -48,4 +63,6 @@ int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len, 
                       const char *format, ...);
 int mk_string_itop(int n, mk_pointer *p);
+char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
+
 #endif

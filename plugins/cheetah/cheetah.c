@@ -20,7 +20,6 @@
  */
 
 /* System headers */
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -29,110 +28,109 @@
 
 /* Local header files */
 #include "cmd.h"
+#include "cutils.h"
 #include "cheetah.h"
+#include "loop.h"
 
-void mk_cheetah_cmd(char *cmd)
+MONKEY_PLUGIN("cheetah",              /* shortname */
+              "Cheetah! Shell",       /* name */
+              "0.12.0",               /* version */
+              MK_PLUGIN_CORE_PRCTX);  /* hooks */
+
+void mk_cheetah_welcome_msg()
 {
-    if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
-        strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
-        mk_cheetah_cmd_config();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_STATUS) == 0 ||
-        strcmp(cmd, MK_CHEETAH_STATUS_SC) == 0) {
-        mk_cheetah_cmd_status();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_CLEAR) == 0 ||
-             strcmp(cmd, MK_CHEETAH_CLEAR_SC) == 0) {
-        mk_cheetah_cmd_clear();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_UPTIME) == 0 ||
-             strcmp(cmd, MK_CHEETAH_UPTIME_SC) == 0) {
-        mk_cheetah_cmd_uptime();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_PLUGINS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_PLUGINS_SC) == 0) {
-        mk_cheetah_cmd_plugins();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_WORKERS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_WORKERS_SC) == 0) {
-        mk_cheetah_cmd_workers();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_VHOSTS) == 0 ||
-             strcmp(cmd, MK_CHEETAH_VHOSTS_SC) == 0) {
-        mk_cheetah_cmd_vhosts();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_HELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_HELP_SC) == 0 ||
-             strcmp(cmd, MK_CHEETAH_SHELP) == 0 ||
-             strcmp(cmd, MK_CHEETAH_SHELP_SC) == 0) {
-        mk_cheetah_cmd_help();
-    }
-    else if (strcmp(cmd, MK_CHEETAH_QUIT) == 0 ||
-             strcmp(cmd, MK_CHEETAH_QUIT_SC) == 0) {
-        mk_cheetah_cmd_quit();
-    }
-    else if (strlen(cmd) == 0) {
-        return;
-    }
-    else {
-        printf("Invalid command, type 'help' for a list of available commands\n");
-    }
-
-    fflush(stdout);
+    CHEETAH_WRITE("\n%s%s***%s Welcome to %sCheetah!%s, the %sMonkey Shell %s:) %s***%s\n",
+                  ANSI_BOLD, ANSI_YELLOW,
+                  ANSI_WHITE, ANSI_GREEN, 
+                  ANSI_WHITE, ANSI_RED, ANSI_WHITE, ANSI_YELLOW, ANSI_RESET);
+    CHEETAH_WRITE("\n      << %sType 'help' or '\\h' for help%s >>\n\n",
+                  ANSI_BLUE, ANSI_RESET);
+    CHEETAH_FLUSH();
 }
 
-void mk_cheetah_loop()
+void mk_cheetah_config(char *path)
 {
-    int len;
-    char cmd[200];
-    char line[200];
-    char *rcmd;
+    unsigned long len;
+    char *listen = NULL;
+    char *default_file = NULL;
+    struct mk_config *conf;
+    struct mk_config_section *section;
 
-    printf("\n%s%s***%s Welcome to %sCheetah!%s, the %sMonkey Shell %s:) %s***%s\n",
-           ANSI_BOLD, ANSI_YELLOW,
-           ANSI_WHITE, ANSI_GREEN, 
-           ANSI_WHITE, ANSI_RED, ANSI_WHITE, ANSI_YELLOW, ANSI_RESET);
-    printf("\n      << %sType 'help' or '\\h' for help%s >>\n\n",
-           ANSI_BLUE, ANSI_RESET);
-    fflush(stdout);
+    /* this variable is defined in cheetah.h and points to
+     * the FILE *descriptor where to write out the data
+     */
+    cheetah_output = NULL;
 
-    while (1) {
-        printf(MK_CHEETAH_PROMPT, ANSI_BOLD, ANSI_GREEN, ANSI_RESET);
-        rcmd = fgets(line, sizeof(line), stdin);
+    /* read configuration file */
+    mk_api->str_build(&default_file, &len, "%scheetah.conf", path);
+    conf = mk_api->config_create(default_file);
+    section = mk_api->config_section_get(conf, "CHEETAH");
 
-        len = strlen(line);
-        
-        if (len == 0){
-            printf("\n");
-            mk_cheetah_cmd_quit();
-        }
+    if (!section) {
+        CHEETAH_WRITE("\nError, could not find CHEETAH tag");
+        exit(1);
+    }
 
-        strncpy(cmd, line, len - 1);
-        cmd[len - 1] = '\0';
+    /* no longer needed */
+    mk_api->mem_free(default_file);
 
-        mk_cheetah_cmd(cmd);
-        bzero(line, sizeof(line));
+    /* Listen directive */
+    listen = mk_api->config_section_getval(section, "Listen", 
+                                           MK_CONFIG_VAL_STR);
+
+    if (strcasecmp(listen, LISTEN_STDIN_STR) == 0) {
+        listen_mode = LISTEN_STDIN;
+    }
+    else if (strcasecmp(listen, LISTEN_SERVER_STR) == 0) {
+        listen_mode = LISTEN_SERVER;
+    }
+    else {
+        printf("\nCheetah! Error: Invalid LISTEN value");
+        exit(1);
+    }
+
+    /* Cheetah cannot work in STDIN mode if Monkey is working in background */
+    if (listen_mode == LISTEN_STDIN && mk_api->config->is_daemon == VAR_ON) {
+        printf("\nCheetah!: Forcing SERVER mode as Monkey is running in background\n");
+        fflush(stdout);
+        listen_mode = LISTEN_SERVER;
     }
 }
 
 void *mk_cheetah_init(void *args)
 {
-    init_time = time(NULL);
-    mk_cheetah_loop();
+    /* Open right FDs for I/O */
+    if (listen_mode == LISTEN_STDIN) {
+        cheetah_input = stdin;
+        cheetah_output = stdout;
+        mk_cheetah_loop_stdin();
+    }
+    else if (listen_mode == LISTEN_SERVER) {
+        mk_cheetah_loop_server();
+    }
+
     return 0;
 }
 
 /* This function is called when the plugin is loaded, it must
  * return 
  */
-int _mkp_init(void **api)
+int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+    init_time = time(NULL);
+
+    mk_cheetah_config(confdir);
     return 0;
 }
 
 void _mkp_exit()
 {
+    if (listen_mode == LISTEN_SERVER) {
+        /* Remote named pipe */
+        unlink(cheetah_server);
+        mk_api->mem_free(cheetah_server);
+    }
 }
 
 int _mkp_core_prctx(struct server_config *config)
@@ -142,16 +140,11 @@ int _mkp_core_prctx(struct server_config *config)
 
     pthread_attr_init(&thread_attr);
     pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-    if (pthread_create(&tid, &thread_attr, (void *) mk_cheetah_init, config) <
-        0) {
+    if (pthread_create(&tid, &thread_attr, 
+                       (void *) mk_cheetah_init, config) < 0) {
         perror("pthread_create");
         exit(1);
     }
-
+    
     return 0;
 }
-
-MONKEY_PLUGIN("cheetah",              /* shortname */
-              "Cheetah! Shell",       /* name */
-              "0.12.0",               /* version */
-              MK_PLUGIN_CORE_PRCTX);  /* hooks */

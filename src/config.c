@@ -602,15 +602,6 @@ struct host *mk_config_get_host(char *path)
                     &host->header_host_signature.len,
                     "Server: %s", host->host_signature);
 
-
-    /* Access log */
-    host->access_log_path = mk_config_section_getval(section,
-                                                     "AccessLog", 
-                                                     MK_CONFIG_VAL_STR);
-    /* Error log */
-    host->error_log_path = mk_config_section_getval(section,
-                                                    "ErrorLog", 
-                                                    MK_CONFIG_VAL_STR);
     host->next = NULL;
     return host;
 }
@@ -648,7 +639,8 @@ void mk_config_set_init_values(void)
     config->max_request_size = MK_REQUEST_CHUNK * 8;
 
     /* Plugins */
-    config->plugins = NULL;
+    config->plugins = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(config->plugins);
 }
 
 /* read main configuration from monkey.conf */

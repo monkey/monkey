@@ -31,6 +31,11 @@
 
 #include "MKPlugin.h"
 
+MONKEY_PLUGIN("liana",         /* shortname */
+              "Liana Network", /* name */
+              "0.12.0",        /* version */
+              MK_PLUGIN_NETWORK_IO); /* hooks */
+
 struct mk_config *conf;
 
 int _mkp_init(void **api, char *confdir)
@@ -197,8 +202,3 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     return socket_fd;
 }
-
-MONKEY_PLUGIN("liana",         /* shortname */
-              "Liana Network", /* name */
-              "0.12.0",        /* version */
-              MK_PLUGIN_NETWORK_IO); /* hooks */

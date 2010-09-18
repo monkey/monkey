@@ -69,6 +69,8 @@ struct mk_config_entry
 /* Base struct of server */
 struct server_config
 {
+    int is_daemon;
+
     mk_pointer port;
 
     char *serverconf;           /* path to configuration files */
@@ -116,7 +118,7 @@ struct server_config
     struct host *hosts;
 
     mode_t open_flags;
-    struct plugin *plugins;
+    struct mk_list *plugins;
 
     /* source configuration */
     struct mk_config *config;
@@ -129,9 +131,6 @@ struct host
     char *file;                 /* configuration file */
     char *servername;           /* host name */
     mk_pointer documentroot;
-
-    char *access_log_path;      /* access log file */
-    char *error_log_path;       /* error log file */
 
     char *host_signature;
     mk_pointer header_host_signature;

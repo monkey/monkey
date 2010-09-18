@@ -31,17 +31,10 @@
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {
-    struct request_idx *cache_request_idx;
     struct mk_iov *cache_iov_header;
     struct header_toc *cache_header_toc;
     mk_pointer *cache_header_lm; 
     mk_pointer *cache_header_cl;
-
-    /* client request index */
-    cache_request_idx = mk_mem_malloc(sizeof(struct request_idx));
-    cache_request_idx->first = NULL;
-    cache_request_idx->last = NULL;
-    pthread_setspecific(request_index, (void *) cache_request_idx);
 
     /* Cache header request -> last modified */
     cache_header_lm = mk_mem_malloc_z(sizeof(mk_pointer));

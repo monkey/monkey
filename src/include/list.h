@@ -65,9 +65,25 @@ static inline void mk_list_del(struct mk_list *entry)
     __mk_list_del(entry->prev, entry->next);
 }
 
+static inline int mk_list_is_empty(struct mk_list *head)
+{
+    if (head->next == head) return 0;
+    else return -1;
+}
+
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
 
 #define mk_list_entry( ptr, type, member ) container_of( ptr, type, member )
 
+/* First node of the list */
+#define mk_list_entry_first(ptr, type, member) container_of(ptr->next, type, member)
+
+/* Last node of the list */
+#define mk_list_entry_last(ptr, type, member) container_of(ptr->prev, type, member)
+
+/* Next node */
+#define mk_list_entry_next(ptr, type, member, head)  \
+    container_of(ptr->next, type, member); \
+    if (ptr->next == (head)->prev) ptr = head; else ptr = ptr->next;
 
 #endif /* !MK_LIST_H_ */

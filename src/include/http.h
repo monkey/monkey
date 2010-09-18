@@ -69,17 +69,17 @@ int mk_http_method_get(char *body);
 int mk_http_protocol_check(char *protocol, int len);
 mk_pointer mk_http_protocol_check_str(int protocol);
 
-int mk_http_init(struct client_request *cr, struct request *sr);
-int mk_http_keepalive_check(int socket, struct client_request *cr);
-int mk_http_directory_redirect_check(struct client_request *cr,
-                                     struct request *sr);
-int mk_http_range_set(struct request *sr, long file_size);
-int mk_http_range_parse(struct request *sr);
+int mk_http_init(struct client_session *cs, struct session_request *sr);
+int mk_http_keepalive_check(int socket, struct client_session *cs);
+int mk_http_directory_redirect_check(struct client_session *cs,
+                                     struct session_request *sr);
+int mk_http_range_set(struct session_request *sr, long file_size);
+int mk_http_range_parse(struct session_request *sr);
 
 mk_pointer *mk_http_status_get(short int code);
 void mk_http_status_list_init();
-int mk_http_pending_request(struct client_request *cr);
-int mk_http_send_file(struct client_request *cr, struct request *sr);
+int mk_http_pending_request(struct client_session *cs);
+int mk_http_send_file(struct client_session *cs, struct session_request *sr);
 int mk_http_request_end(int socket);
 
 #endif
