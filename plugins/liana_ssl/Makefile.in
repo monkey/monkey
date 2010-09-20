@@ -4,7 +4,7 @@ DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR)  -I/usr/include/matrixssl -fPIC -c liana_ssl.c
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -I/usr/include/matrixssl -DLINUX -fPIC -c liana_ssl.c
 	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-liana_ssl.so liana_ssl.o -lmatrixssl
 clean:
 	rm -rf *.o *~ *.*so*
