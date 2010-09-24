@@ -53,14 +53,53 @@ struct mk_liana_ssl
 };
 
 sslKeys_t *keys;
+char *cert_file;
+char *key_file;
 
 static pthread_key_t key;
+
+int liana_conf(char *confdir) {
+    int ret = 0;
+    unsigned long len;
+    char *conf_path;
+    struct mk_config_section *section;
+    struct mk_config *conf;
+
+    /* Read palm configuration file */
+    mk_api->str_build(&conf_path, &len, "%s/liana_ssl.conf", confdir);
+    conf = mk_api->config_create(conf_path);
+    section = conf->section;
+
+    while (section) {
+        /* Just read PALM sections */
+        if (strcasecmp(section->name, "LIANA_SSL") != 0) {
+            section = section->next;
+            continue;
+        }
+
+        cert_file = mk_api->config_section_getval(section, "CertFile", MK_CONFIG_VAL_STR);
+#ifdef TRACE
+        PLUGIN_TRACE("Register Certificate File '%s'", cert_file);
+#endif
+
+        key_file = mk_api->config_section_getval(section, "KeyFile", MK_CONFIG_VAL_STR);
+#ifdef TRACE
+        PLUGIN_TRACE("Register Key File '%s'", key_file);
+#endif
+
+        section = section->next;
+    }
+
+    mk_api->mem_free(conf_path);
+
+    return ret;
+}
 
 int liana_ssl_handshake(struct mk_liana_ssl *conn) {
     unsigned char *buf = NULL;
     unsigned char *buf_sent = NULL;
     int len;
-    int ret;
+    int ret = 0;
     ssize_t bytes_read;
     ssize_t bytes_sent;
 
@@ -165,6 +204,9 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn) {
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+
+    liana_conf(confdir);
+
     return 0;
 }
 
@@ -483,7 +525,7 @@ int _mkp_core_prctx(struct server_config *config)
         return 0;
     }
 
-    if( matrixSslLoadRsaKeys( keys, "/home/zeus/src/monkey.git/certSrv.pem", "/home/zeus/src/monkey.git/privkeySrv.pem", NULL, NULL ) < 0 ) {
+    if( matrixSslLoadRsaKeys( keys, cert_file, key_file, NULL, NULL ) < 0 ) {
 #ifdef TRACE
         PLUGIN_TRACE( "MatrixSsl couldn't read the certificates" );
 #endif
