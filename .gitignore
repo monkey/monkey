@@ -3,5 +3,4 @@
 *.so
 *.pyc
 bin/*
-conf/*
 Makefile
