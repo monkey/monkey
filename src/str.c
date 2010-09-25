@@ -39,7 +39,7 @@
  */
 int _mk_string_search(const char *string, const char *search, int sensitive, int len)
 {
-    char *np;
+    char *np = 0;
     int res;
 
     if (sensitive == MK_STR_INSENSITIVE) {

@@ -321,7 +321,7 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
-    mk_iov_send(fd, iov, MK_IOV_SEND_TO_SOCKET);
+    mk_socket_sendv(fd, iov, MK_IOV_SEND_TO_SOCKET);
 
 #ifdef TRACE
     MK_TRACE("Headers sent to FD %i", fd);
