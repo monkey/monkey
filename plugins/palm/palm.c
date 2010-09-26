@@ -34,7 +34,7 @@
 MONKEY_PLUGIN("palm",              /* shortname */
               "Palm Client",       /* name */
               "0.12.0",            /* version */
-              MK_PLUGIN_STAGE_30); /* hooks */
+              MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hooks */
 
 /* Read database configuration parameters */
 int mk_palm_conf(char *confdir)
@@ -267,14 +267,16 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
     return n;
 }
 
+void _mkp_core_thctx()
+{
+    /* Init request list */
+    mk_palm_request_init();
+}
 
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
     palms = 0;
-
-    /* Init request list */
-    mk_palm_request_init();
 
     /* Init some pointers */
     mk_api->pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);

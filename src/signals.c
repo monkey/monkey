@@ -23,16 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "monkey.h"
 #include "signals.h"
-#include "utils.h"
-#include "chars.h"
 #include "clock.h"
 #include "plugin.h"
 

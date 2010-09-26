@@ -48,6 +48,7 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
 
 void mk_palm_request_add(struct mk_palm_request *pr)
 {
+    /* palm request list (thread context) */
     struct mk_list *pr_list;
 
     /* Get thread data */
@@ -168,5 +169,6 @@ void mk_palm_request_init()
     struct mk_list *palm_request_list;
 
     palm_request_list = mk_api->mem_alloc(sizeof(struct mk_list));
+    mk_list_init(palm_request_list);
     pthread_setspecific(_mkp_data, palm_request_list);
 }
