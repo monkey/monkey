@@ -165,7 +165,7 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn) {
                     return -1;
                 }
 
-                bytes_sent = send( conn->socket_fd, (void *)buf_sent, len, MSG_DONTWAIT);
+                bytes_sent = write( conn->socket_fd, (void *)buf_sent, len);
                 if( bytes_sent == -1 ) {
 #ifdef TRACE
                     PLUGIN_TRACE( "An error ocurred trying to send data" );
@@ -173,7 +173,7 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn) {
                     return -1;
                 }
 #ifdef TRACE
-                PLUGIN_TRACE( "Has sent %d data to end the handshake", bytes_sent );
+                PLUGIN_TRACE( "Has sent %d of %d data to end the handshake ", bytes_sent, len );
 #endif
                 ret = matrixSslSentData( conn->ssl, (uint32)bytes_sent );
 
@@ -255,7 +255,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 
     mk_list_add( &conn->cons, list_head );
 
-    ret = liana_ssl_handshake( conn );
+    //    ret = liana_ssl_handshake( conn );
 
     if( ret != 0 ) {
 #ifdef TRACE
@@ -313,9 +313,9 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
     if( ret == MATRIXSSL_RECEIVED_ALERT ) {
         if( *ssl_buf == SSL_ALERT_LEVEL_FATAL ) {
 #ifdef TRACE
-            PLUGIN_TRACE( "A fatal alert has raise, we must close the conneciton" );
+            PLUGIN_TRACE( "A fatal alert has raise, we must close the connection" );
 #endif
-            return -1;
+            return 0;
         } else {
             return 0;
         }
@@ -396,6 +396,10 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
                               size_t file_count)
 {
     ssize_t bytes_written = -1;
+
+#ifdef TRACE
+    PLUGIN_TRACE( "Send file");
+#endif
 
     bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
