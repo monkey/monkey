@@ -115,11 +115,6 @@ class Child:
             content_length = int(request.get('CONTENT_LENGTH'))
             request.post_data = post_data
 
-            # FIXME: Dirty hack to limit the post data length
-            if content_length > 65536:
-                request.headers['CONTENT_LENGTH'] = str(65536)
-                request.post_data = post_data[:65536]
-
         # Debug message
         msg = "[+] Request Headers\n"
         for h in request.headers:
@@ -160,21 +155,47 @@ class Child:
                 opts = self.c['opts']
                 opts.append(request.resource)
 
-            try:
-                os.dup2(remote.fileno(), sys.stdout.fileno())
+            # Any output to socket
+            os.dup2(remote.fileno(), sys.stdout.fileno())
 
-                # Write Post data to STDIN (Pipe)
-                if request.headers['REQUEST_METHOD'] == 'POST':
+            # Handle POST method
+            if request.headers['REQUEST_METHOD'] == 'POST':
+                content_length = int(request.get('CONTENT_LENGTH'))
+
+                # Use pipe() for small post data
+                if content_length <= 65536:
                     # Temporal Pipe > STDIN
                     pipe_r, pipe_w = os.pipe()
+                    os.dup2(remote.fileno(), sys.stdout.fileno())
                     os.dup2(pipe_r, sys.stdin.fileno())
                     os.write(pipe_w, request.post_data)
+                else:
+                    # Pipes
+                    pipe_write = os.pipe()
+                                        
+                    pid = os.fork()
+                    if pid != 0: # parent
+                        os.close(pipe_write[0])
+                        os.write(pipe_write[1], request.post_data)
+                        os.close(pipe_write[1])
 
-                os.execve(bin, opts, request.headers)
+                        try:
+                            os.waitpid(pid, 0)
+                        except:
+                            pass
+                        exit(0)
+
+                    # Child
+                    os.dup2(pipe_write[0], sys.stdin.fileno())
+                        
+            # Launch process
+            os.execve(bin, opts, request.headers)
+
+            """
             except:
                 print "Content-Type: text/plain\r\n\r\n"
 
-                print "*** INTERNAL ERROR ***"
+                print "*** PALM INTERNAL ERROR ***"
                 print 
 
                 print "Child Executing"
@@ -188,7 +209,7 @@ class Child:
                     print h, "=", request.headers[h]
 
                 exit(1)
-
+                """
     def get_pid(self):
         return self._pid
 
