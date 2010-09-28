@@ -255,7 +255,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 
     mk_list_add( &conn->cons, list_head );
 
-    //    ret = liana_ssl_handshake( conn );
+    ret = liana_ssl_handshake( conn );
 
     if( ret != 0 ) {
 #ifdef TRACE
@@ -321,6 +321,7 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
         }
     }
 
+
     strncpy( (char *)buf, (const char *)ssl_buf, count );
     bytes_read = len;
 
@@ -330,12 +331,29 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
 {
     ssize_t bytes_sent = -1;
+    struct mk_list *curr;
+    struct mk_liana_ssl *conn = NULL;
+    int ret;
+    int len;
 
 #ifdef TRACE
     PLUGIN_TRACE("Write");
 #endif
 
-    bytes_sent = write(socket_fd, buf, count);
+    mk_list_foreach(curr, list_head) {
+        conn = mk_list_entry( curr, struct mk_liana_ssl, cons);
+        if( conn->socket_fd == socket_fd )
+            break;
+        conn = NULL;
+    }
+    if( conn == NULL ) return -1;
+
+
+    len = matrixSslGetOutdata( conn->ssl, (unsigned char **)&buf );
+
+    bytes_sent = write(socket_fd, buf, len);
+
+    ret = matrixSslSentData( conn->ssl, bytes_sent );
 
     return bytes_sent;
 }
@@ -346,7 +364,10 @@ int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 #ifdef TRACE
     PLUGIN_TRACE("WriteV");
 #endif
-    bytes_sent = mk_api->iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
+
+    bytes_sent = _mkp_network_io_write(socket_fd, mk_io->io->iov_base, mk_io->io->iov_len);
+
+    //    bytes_sent = mk_api->iov_send(socket_fd, mk_io, MK_IOV_SEND_TO_SOCKET);
 
     return bytes_sent;
 }
@@ -392,21 +413,30 @@ int _mkp_network_io_connect(int socket_fd, char *host, int port)
     return 0;
 }
 
-int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
+int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t file_offset,
                               size_t file_count)
 {
     ssize_t bytes_written = -1;
+    void *buf_file = mk_api->mem_alloc( file_count );
+    ssize_t len;
 
 #ifdef TRACE
     PLUGIN_TRACE( "Send file");
 #endif
 
-    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
-    if (bytes_written == -1) {
-        perror( "error from sendfile" );
+    len = read(file_fd, buf_file, file_count);
+    if( len == -1 ) {
+        perror( "error leyendo? :S");
         return -1;
     }
+    bytes_written = _mkp_network_io_write(socket_fd, buf_file, len);
+    if (bytes_written == -1) {
+        perror( "error from sendfile" );
+            return -1;
+    }
+
+    //    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
     return bytes_written;
 }
