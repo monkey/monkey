@@ -89,6 +89,7 @@ void mk_signal_term()
     signal(SIGSEGV, (void *) SIG_DFL);
     signal(SIGTERM, (void *) SIG_DFL);
     signal(SIGUSR2, (void *) SIG_DFL);
+    exit(0);
 }
 
 void mk_signal_thread_sigpipe_safe()
