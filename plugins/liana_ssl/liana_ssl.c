@@ -323,7 +323,7 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
     len = matrixSslGetWritebuf( conn->ssl, (unsigned char **)&buf_sent, count);
     strncpy( buf_sent, buf, count);
     len = matrixSslEncodeWritebuf( conn->ssl, count );
-    
+
     len = matrixSslGetOutdata( conn->ssl, (unsigned char **)&buf_sent_to );
 
     if( len < 0 ) {
@@ -343,11 +343,14 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
     ssize_t bytes_sent = -1;
+    int i;
 #ifdef TRACE
     PLUGIN_TRACE("WriteV");
 #endif
 
-    bytes_sent = _mkp_network_io_write(socket_fd, mk_io->io->iov_base, mk_io->io->iov_len);
+    for( i = 0; i < mk_io->iov_idx; i++ ) {
+        bytes_sent = _mkp_network_io_write(socket_fd, mk_io->io[i].iov_base, mk_io->io[i].iov_len);
+    }
 
     return bytes_sent;
 }
