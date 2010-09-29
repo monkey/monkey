@@ -813,8 +813,7 @@ struct session_request *mk_request_alloc()
 void mk_request_free_list(struct client_session *cs)
 {
     struct session_request *sr_node;
-    struct mk_list *sr_head;
-    struct mk_list *temp;
+    struct mk_list *sr_head, *temp;
 
     /* sr = last node */
 #ifdef TRACE
@@ -935,11 +934,11 @@ struct client_session *mk_session_get(int socket)
 void mk_session_remove(int socket)
 {
     struct client_session *cs_node;
-    struct mk_list *cs_list, *cs_head;
+    struct mk_list *cs_list, *cs_head, *temp;
 
     cs_list = mk_sched_get_request_list();
     
-    mk_list_foreach(cs_head, cs_list) {
+    mk_list_foreach_safe(cs_head, temp, cs_list) {
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
         if (cs_node->socket == socket) {
             mk_list_del(cs_head);
