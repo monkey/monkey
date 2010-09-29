@@ -63,6 +63,8 @@ static inline void __mk_list_del(struct mk_list *prev, struct mk_list *next)
 static inline void mk_list_del(struct mk_list *entry)
 {
     __mk_list_del(entry->prev, entry->next);
+    entry->prev = NULL;
+    entry->next = NULL;
 }
 
 static inline int mk_list_is_empty(struct mk_list *head)
@@ -72,6 +74,8 @@ static inline int mk_list_is_empty(struct mk_list *head)
 }
 
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
+#define mk_list_foreach_safe(curr, n, head) \
+    for (curr = (head)->next, n = curr->next; curr != (head); curr = n, n = curr->next)
 
 #define mk_list_entry( ptr, type, member ) container_of( ptr, type, member )
 

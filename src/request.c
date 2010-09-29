@@ -814,13 +814,14 @@ void mk_request_free_list(struct client_session *cs)
 {
     struct session_request *sr_node;
     struct mk_list *sr_head;
+    struct mk_list *temp;
 
     /* sr = last node */
 #ifdef TRACE
     MK_TRACE("Free struct client_session [FD %i]", cs->socket);
 #endif
 
-    mk_list_foreach(sr_head, &cs->request_list) {
+    mk_list_foreach_safe(sr_head, temp, &cs->request_list) {
         sr_node = mk_list_entry(sr_head, struct session_request, _head);
         mk_list_del(sr_head);
         mk_request_free(sr_node);
@@ -832,6 +833,7 @@ void mk_request_free(struct session_request *sr)
     if (sr->fd_file > 0) {
         close(sr->fd_file);
     }
+
     if (sr->headers) {
         mk_mem_free(sr->headers->location);
         mk_mem_free(sr->headers);
