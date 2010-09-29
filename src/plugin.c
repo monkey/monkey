@@ -203,7 +203,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     p->net_io.server = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_server");
 
-
     /* Network IP hooks */
     p->net_ip.addr = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_ip_addr");
@@ -877,28 +876,33 @@ struct plugin_event *mk_plugin_event_get_list()
 
 int mk_plugin_event_read(int socket)
 {
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
     MK_TRACE("[FD %i] Plugin event read", socket);
 #endif
 
+    /* Socket registered by plugin */
     event = mk_plugin_event_get(socket);
-    if (!event) {
+    if (event) {
+        if (event->handler->event_read) {
 #ifdef TRACE
-        MK_TRACE(" not handled by plugin");
+            MK_TRACE(" handled by plugin");
 #endif
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+            return event->handler->event_read(socket);
+        }
     }
 
-    if (event->handler->event_read) {
-#ifdef TRACE
-        MK_TRACE(" handled by plugin");
-#endif
-        return event->handler->event_read(socket);
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_read) {
+            return node->event_read(socket);
+        }
     }
 
-    return MK_PLUGIN_RET_CONTINUE;
+    return MK_PLUGIN_RET_EVENT_NOT_ME;
 }
 
 int mk_plugin_event_write(int socket)

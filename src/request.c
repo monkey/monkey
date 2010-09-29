@@ -339,10 +339,6 @@ int mk_request_process(struct client_session *cs, struct session_request *sr)
         mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
-    if (sr->uri_processed[0] != '/') {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
-    }
 
     /* HTTP/1.1 needs Host header */
     if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
