@@ -69,7 +69,7 @@ int liana_conf(char *confdir) {
     section = conf->section;
 
     while (section) {
-        /* Just read PALM sections */
+        /* Just read PALM sections... yes it's a joke for edsiper XD */
         if (strcasecmp(section->name, "LIANA_SSL") != 0) {
             section = section->next;
             continue;
@@ -215,56 +215,20 @@ void _mkp_exit()
 int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 {
     int remote_fd;
-    int ret;
-    struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
     socklen_t socket_size = sizeof(struct sockaddr_in);
-    struct mk_liana_ssl *conn = (struct mk_liana_ssl *) malloc( sizeof(struct mk_liana_ssl *) );
-
-    if(list_head == NULL) {
-/* #ifdef TRACE */
-/*         PLUGIN_TRACE( "Can't get the list_head within this thread" ); */
-/* #endif */
-//        return -1;
-    }
-
 
 #ifdef TRACE
     PLUGIN_TRACE("Accepting Connection");
 #endif
 
-    /* remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr, */
-    /*                     &socket_size, SOCK_NONBLOCK); */
+    remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
+                        &socket_size, SOCK_NONBLOCK);
 
-    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr, &socket_size);
-
+    //    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr, &socket_size);
 
     if( remote_fd == -1 ) {
 #ifdef TRACE
         PLUGIN_TRACE( "Error accepting connection" );
-#endif
-        return -1;
-    }
-
-    conn->socket_fd = remote_fd;
-
-    if((ret = matrixSslNewServerSession( &conn->ssl, keys, NULL )) < 0) {
-#ifdef TRACE
-        PLUGIN_TRACE( "Error initiating the ssl session" );
-#endif
-        matrixSslDeleteSession( conn->ssl );
-        return -1;
-    }
-#ifdef TRACE
-    PLUGIN_TRACE( "Ssl session started" );
-#endif
-
-    mk_list_add( &conn->cons, list_head );
-
-    ret = liana_ssl_handshake( conn );
-
-    if( ret != 0 ) {
-#ifdef TRACE
-        PLUGIN_TRACE( "Error trying to handshake with the client" );
 #endif
         return -1;
     }
@@ -568,11 +532,44 @@ void _mkp_core_thctx() {
     pthread_setspecific(_mkp_data, list_head);
 }
 
-int _mkp_event_read(int sockfd) {
+int _mkp_event_read(int socket_fd) {
+    int ret;
+    struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
+    struct mk_list *curr;
+    struct mk_liana_ssl *conn;
 
+    mk_list_foreach(curr, list_head) {
+        conn = mk_list_entry( curr, struct mk_liana_ssl, cons );
+        if(conn->socket_fd == socket_fd)
+            return MK_PLUGIN_RET_EVENT_NOT_ME;
+    }
+
+    conn = (struct mk_liana_ssl *) malloc(sizeof(struct mk_liana_ssl));
+
+    if((ret = matrixSslNewServerSession( &conn->ssl, keys, NULL )) < 0) {
 #ifdef TRACE
-    PLUGIN_TRACE( "Event read?" );
+        PLUGIN_TRACE( "Error initiating the ssl session" );
 #endif
+        matrixSslDeleteSession( conn->ssl );
+        return -1;
+    }
+#ifdef TRACE
+    PLUGIN_TRACE( "Ssl session started" );
+#endif
+
+    conn->socket_fd = socket_fd;
+
+    mk_list_add( &conn->cons, list_head );
+
+    ret = liana_ssl_handshake( conn );
+
+    if( ret != 0 ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Error trying to handshake with the client" );
+#endif
+        return -1;
+    }
+
 
 
     return 0;
