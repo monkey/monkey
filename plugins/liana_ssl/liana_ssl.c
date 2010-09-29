@@ -43,8 +43,6 @@ MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.1", MK_PLUGIN_CORE_PRCTX | MK
 
 struct plugin_api *mk_api;
 
-struct mk_list *list_head;
-
 struct mk_liana_ssl
 {
     ssl_t *ssl;
@@ -56,7 +54,7 @@ sslKeys_t *keys;
 char *cert_file;
 char *key_file;
 
-static pthread_key_t key;
+pthread_key_t _mkp_data;
 
 int liana_conf(char *confdir) {
     int ret = 0;
@@ -218,9 +216,16 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 {
     int remote_fd;
     int ret;
-
+    struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
     socklen_t socket_size = sizeof(struct sockaddr_in);
     struct mk_liana_ssl *conn = (struct mk_liana_ssl *) malloc( sizeof(struct mk_liana_ssl *) );
+
+    if(list_head == NULL) {
+/* #ifdef TRACE */
+/*         PLUGIN_TRACE( "Can't get the list_head within this thread" ); */
+/* #endif */
+//        return -1;
+    }
 
 
 #ifdef TRACE
@@ -270,6 +275,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
 int _mkp_network_io_read(int socket_fd, void *buf, int count)
 {
     ssize_t bytes_read;
+    struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
     struct mk_list *curr;
     struct mk_liana_ssl *conn = NULL;
     int ret;
@@ -331,6 +337,7 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
 {
     ssize_t bytes_sent = -1;
+    struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
     struct mk_list *curr;
     struct mk_liana_ssl *conn = NULL;
     int ret;
@@ -433,7 +440,7 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t file_offset,
     bytes_written = _mkp_network_io_write(socket_fd, buf_file, len);
     if (bytes_written == -1) {
         perror( "error from sendfile" );
-            return -1;
+        return -1;
     }
 
     //    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
@@ -520,27 +527,6 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
 int _mkp_core_prctx(struct server_config *config)
 {
-    int res;
-
-
-    res = pthread_key_create(&key, NULL);
-
-    if( res != 0 ) {
-#ifdef TRACE
-        PLUGIN_TRACE("Can't create key for ssl plugin");
-#endif
-        return 0;
-    }
-
-#ifdef TRACE
-    PLUGIN_TRACE("Pthread key created");
-#endif
-
-    list_head = (struct mk_list *)malloc(sizeof(struct mk_list *));
-    mk_list_init(list_head);
-
-    pthread_setspecific(key, (void *)list_head);
-
     if( matrixSslOpen() < 0 ) {
 #ifdef TRACE
         PLUGIN_TRACE("Can't start matrixSsl");
@@ -570,6 +556,23 @@ int _mkp_core_prctx(struct server_config *config)
     PLUGIN_TRACE( "MatrixSsl just read the certificates, ready to go!" );
 #endif
 
+
+
+    return 0;
+}
+
+void _mkp_core_thctx() {
+    struct mk_list *list_head = mk_api->mem_alloc(sizeof(struct mk_list));
+
+    mk_list_init(list_head);
+    pthread_setspecific(_mkp_data, list_head);
+}
+
+int _mkp_event_read(int sockfd) {
+
+#ifdef TRACE
+    PLUGIN_TRACE( "Event read?" );
+#endif
 
 
     return 0;
