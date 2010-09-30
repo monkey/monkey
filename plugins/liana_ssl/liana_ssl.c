@@ -303,10 +303,12 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
     struct mk_list *list_head = (struct mk_list *)pthread_getspecific(_mkp_data);
     struct mk_list *curr;
     struct mk_liana_ssl *conn = NULL;
-    char *buf_sent;
-    char *buf_sent_to;
+    char *buf_plain;
+    char *buf_ssl;
     int ret;
     int len;
+
+    if( buf == NULL ) return 0;
 
 #ifdef TRACE
     PLUGIN_TRACE("Write");
@@ -320,24 +322,40 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count )
     }
     if( conn == NULL ) return -1;
 
-    len = matrixSslGetWritebuf( conn->ssl, (unsigned char **)&buf_sent, count);
-    strncpy( buf_sent, buf, count);
-    len = matrixSslEncodeWritebuf( conn->ssl, count );
+    len = matrixSslGetWritebuf( conn->ssl, (unsigned char **)&buf_plain, count);
 
-    len = matrixSslGetOutdata( conn->ssl, (unsigned char **)&buf_sent_to );
+    if( len == PS_MEM_FAIL || len == PS_ARG_FAIL || len == PS_FAILURE ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Can't allocate memory for plain content" );
+#endif
+        return -1;
+    }
+
+    strncpy( buf_plain, buf, len);
+
+    len = matrixSslEncodeWritebuf( conn->ssl, strlen(buf_plain));
+
+    if( len == PS_ARG_FAIL || len == PS_PROTOCOL_FAIL || len == PS_FAILURE ) {
+#ifdef TRACE
+        PLUGIN_TRACE( "Failed while encoding message" );
+#endif
+        return -1;
+    }
+
+    len = matrixSslGetOutdata( conn->ssl, (unsigned char **)&buf_ssl );
 
     if( len < 0 ) {
 #ifdef TRACE
         PLUGIN_TRACE( "Error encoding data to send" );
 #endif
-        return 0;
+        return -1;
     }
 
-    bytes_sent = write(socket_fd, buf_sent_to, len);
+    bytes_sent = write(socket_fd, buf_ssl, len);
 
     ret = matrixSslSentData( conn->ssl, bytes_sent );
 
-    return bytes_sent;
+    return strlen(buf_plain);
 }
 
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
@@ -402,23 +420,30 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
     ssize_t bytes_written = -1;
     void *buf_file = mk_api->mem_alloc( file_count );
     ssize_t len;
+    ssize_t bytes_left;
 
 #ifdef TRACE
     PLUGIN_TRACE( "Send file");
 #endif
 
+    bytes_left = file_count;
 
-    len = pread(file_fd, buf_file, file_count, *file_offset);
-    if( len == -1 ) {
-        perror( "error leyendo? :S");
-        return -1;
-    }
-    bytes_written = _mkp_network_io_write(socket_fd, buf_file, file_count);
-    if (bytes_written == -1) {
-        perror( "error from sendfile" );
-        return -1;
-    }
+    while( bytes_left != 0 ) {
+        len = pread(file_fd, buf_file, 1000, *file_offset);
+        if( len == -1 ) {
+            perror( "error leyendo? :S");
+            return -1;
+        }
 
+        bytes_written = _mkp_network_io_write(socket_fd, buf_file, file_count);
+        if (bytes_written == -1) {
+            perror( "error from sendfile" );
+            return -1;
+        }
+
+        *file_offset += bytes_written;
+        bytes_left -= bytes_written;
+    }
     return bytes_written;
 }
 
