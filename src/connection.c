@@ -50,14 +50,14 @@ int mk_conn_read(int socket)
             return -1;
         }
         return ret;
-    }        
+    }
 
     sched = mk_sched_get_thread_conf();
 
     cs = mk_session_get(socket);
     if (!cs) {
-        /* Note: Linux don't set TCP_NODELAY socket flag by default, 
-         */
+        /* Note: Linux don't set TCP_NODELAY socket flag by default,          
+	*/
         mk_socket_set_tcp_nodelay(socket);
 
         /* Create client */
@@ -74,7 +74,7 @@ int mk_conn_read(int socket)
         }
         else if (cs->body_length + 1 >= config->max_request_size) {
             /* Request is incomplete and our buffer is full,
-             * close connection 
+             * close connection
              */
             mk_session_remove(socket);
             return -1;
@@ -101,7 +101,7 @@ int mk_conn_write(int socket)
 #endif
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
-    }  
+    }
 
 #ifdef TRACE
     MK_TRACE("[FD %i] Normal connection write handling", socket);
@@ -157,7 +157,7 @@ int mk_conn_error(int socket)
 
 #ifdef TRACE
     MK_TRACE("Connection Handler, error on FD %i", socket);
-#endif 
+#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_error(socket);
@@ -169,7 +169,7 @@ int mk_conn_error(int socket)
             return -1;
         }
         return ret;
-    } 
+    }
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(NULL, socket);
@@ -194,7 +194,7 @@ int mk_conn_close(int socket)
     ret = mk_plugin_event_close(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
-    } 
+    }
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
     return 0;
@@ -213,7 +213,7 @@ int mk_conn_timeout(int socket)
     ret = mk_plugin_event_timeout(socket);
     if (ret != MK_PLUGIN_RET_EVENT_NOT_ME) {
         return ret;
-    } 
+    }
 
     sched = mk_sched_get_thread_conf();
     mk_sched_check_timeouts(sched);
