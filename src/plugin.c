@@ -867,8 +867,15 @@ struct plugin_event *mk_plugin_event_get_list()
  *    MK_PLUGIN_RET_EVENT_NOT_ME: There's no plugin hook associated
  */
 
+void mk_plugin_event_bad_return(const char *hook, int ret)
+{
+    fprintf(stderr, "[%s] Not allowed return value %i", hook, ret);
+    exit(1);
+}
+
 int mk_plugin_event_read(int socket)
 {
+    int ret;
     struct plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
@@ -891,11 +898,20 @@ int mk_plugin_event_read(int socket)
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_read) {
-            return node->event_read(socket);
+            ret = node->event_read(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("read", ret);
+            }
         }
     }
 
-    return MK_PLUGIN_RET_EVENT_NEXT;
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
 int mk_plugin_event_write(int socket)

@@ -63,14 +63,14 @@
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 
 /* 
- * Event return values 
+ * Event return values
  * -------------------
  * Any plugin can hook to any socket event, when a worker thread receives
  * a socket event through epoll(), it will check first the plugins hooks
  * before return the control to Monkey core.
  */
 
- /* The plugin requested caller to continue invoking next plugins */
+ /* The plugin request to the caller to continue invoking next plugins */
 #define MK_PLUGIN_RET_EVENT_NEXT -300
 
 /* The plugin has taken some action and no other plugin should go
@@ -79,7 +79,10 @@
 #define MK_PLUGIN_RET_EVENT_OWNED -400
 
 /* The plugin request to finalize the session request */
-#define MK_PLUGIN_RET_EVENT_END -500
+#define MK_PLUGIN_RET_EVENT_CLOSE -500
+
+/* The plugin request to the caller skip event hooks */
+#define MK_PLUGIN_RET_EVENT_CONTINUE -600
 
 /* Contexts: process/thread */
 struct plugin_core

@@ -45,11 +45,13 @@ int mk_conn_read(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
-    if (ret != MK_PLUGIN_RET_EVENT_NEXT) {
-        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
-            return -1;
-        }
-        return ret;
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
+        break; /* just return controller to invoker */
     }
 
     sched = mk_sched_get_thread_conf();
