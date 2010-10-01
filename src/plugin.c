@@ -101,10 +101,6 @@ void mk_plugin_register_stagemap(struct plugin *p)
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
     }
 
-    if (p->hooks & MK_PLUGIN_STAGE_15) {
-        mk_plugin_register_stagemap_add(&plg_stagemap->stage_15, p);
-    }
-
     if (p->hooks & MK_PLUGIN_STAGE_20) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_20, p);
     }
@@ -156,9 +152,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     /* Stage hooks */
     p->stage.s10 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_10");
-
-    p->stage.s15 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_stage_15");
 
     p->stage.s20 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_20");

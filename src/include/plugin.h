@@ -47,15 +47,14 @@
 
 /* Plugin: Stages */
 #define MK_PLUGIN_STAGE_10 (4)     /* Connection just accept()ed */
-#define MK_PLUGIN_STAGE_15 (8)     /* Connection just assigned to worker thread */
-#define MK_PLUGIN_STAGE_20 (16)    /* HTTP Request arrived */
-#define MK_PLUGIN_STAGE_30 (32)    /* Object handler  */
-#define MK_PLUGIN_STAGE_40 (64)    /* Content served */
-#define MK_PLUGIN_STAGE_50 (128)   /* Conection ended */
+#define MK_PLUGIN_STAGE_20 (8)    /* HTTP Request arrived */
+#define MK_PLUGIN_STAGE_30 (16)    /* Object handler  */
+#define MK_PLUGIN_STAGE_40 (32)    /* Content served */
+#define MK_PLUGIN_STAGE_50 (64)   /* Conection ended */
 
 /* Plugin: Network type */
-#define MK_PLUGIN_NETWORK_IO (256)
-#define MK_PLUGIN_NETWORK_IP (512)
+#define MK_PLUGIN_NETWORK_IO (128)
+#define MK_PLUGIN_NETWORK_IP (256)
 
 /* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
@@ -65,6 +64,7 @@
 
 /* Event return values */
 #define MK_PLUGIN_RET_EVENT_NOT_ME -300
+#define MK_PLUGIN_RET_EVENT_CONTINUE -400
 
 /* Contexts: process/thread */
 struct plugin_core
@@ -76,7 +76,6 @@ struct plugin_core
 struct plugin_stage
 {
     int (*s10) (int, struct sched_connection *);
-    int (*s15) (int, struct sched_connection *);
     int (*s20) (struct client_session *, struct session_request *);
     int (*s30) (struct plugin *, struct client_session *, struct session_request *);
     int (*s40) (struct client_session *, struct session_request *);
