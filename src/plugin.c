@@ -895,7 +895,7 @@ int mk_plugin_event_read(int socket)
         }
     }
 
-    return MK_PLUGIN_RET_EVENT_NOT_ME;
+    return MK_PLUGIN_RET_EVENT_NEXT;
 }
 
 int mk_plugin_event_write(int socket)
@@ -908,7 +908,7 @@ int mk_plugin_event_write(int socket)
 
     event = mk_plugin_event_get(socket);
     if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     if (event->handler->event_write) {
@@ -928,7 +928,7 @@ int mk_plugin_event_error(int socket)
 
     event = mk_plugin_event_get(socket);
     if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     if (event->handler->event_error) {
@@ -948,7 +948,7 @@ int mk_plugin_event_close(int socket)
 
     event = mk_plugin_event_get(socket);
     if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     if (event->handler->event_close) {
@@ -968,7 +968,7 @@ int mk_plugin_event_timeout(int socket)
 
     event = mk_plugin_event_get(socket);
     if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     if (event->handler->event_timeout) {

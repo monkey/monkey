@@ -521,7 +521,7 @@ int _mkp_event_read(int sockfd)
 #ifdef TRACE
         PLUGIN_TRACE("[FD %i] Invalid palm request, not found", sockfd);
 #endif
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     /* Reset read buffer */
