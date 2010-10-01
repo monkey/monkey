@@ -40,7 +40,7 @@ int mk_conn_read(int socket)
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("Connection Handler, read on FD %i", socket);
+    MK_TRACE("[FD %i] Connection Handler / read", socket);
 #endif
 
     /* Plugin hook */
@@ -50,7 +50,7 @@ int mk_conn_read(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
+    case MK_PLUGIN_RET_CONTINUE:
         break; /* just return controller to invoker */
     }
 
@@ -58,8 +58,7 @@ int mk_conn_read(int socket)
 
     cs = mk_session_get(socket);
     if (!cs) {
-        /* Note: Linux don't set TCP_NODELAY socket flag by default,          
-	*/
+        /* Note: Linux don't set TCP_NODELAY socket flag by default */
         mk_socket_set_tcp_nodelay(socket);
 
         /* Create client */
@@ -93,16 +92,18 @@ int mk_conn_write(int socket)
     struct sched_list_node *sched;
 
 #ifdef TRACE
-    MK_TRACE("[FD %i] Connection Handler, write", socket);
+    MK_TRACE("[FD %i] Connection Handler / write", socket);
 #endif
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);
-#ifdef TRACE
-    MK_TRACE("Check plugin hook | ret = %i", ret);
-#endif
-    if (ret != MK_PLUGIN_RET_EVENT_NEXT) {
-        return ret;
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_CONTINUE:
+        break; /* just return controller to invoker */
     }
 
 #ifdef TRACE
@@ -163,14 +164,13 @@ int mk_conn_error(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_error(socket);
-    if (ret != MK_PLUGIN_RET_EVENT_NEXT) {
-        if (ret == MK_PLUGIN_RET_END || ret == MK_PLUGIN_RET_CLOSE_CONX){
-#ifdef TRACE
-            MK_TRACE("CLOSING REQUEST");
-#endif
-            return -1;
-        }
-        return ret;
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_CONTINUE:
+        break; /* just return controller to invoker */
     }
 
     sched = mk_sched_get_thread_conf();
@@ -194,9 +194,15 @@ int mk_conn_close(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_close(socket);
-    if (ret != MK_PLUGIN_RET_EVENT_NEXT) {
-        return ret;
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_CONTINUE:
+        break; /* just return controller to invoker */
     }
+
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
     return 0;
@@ -213,8 +219,13 @@ int mk_conn_timeout(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_timeout(socket);
-    if (ret != MK_PLUGIN_RET_EVENT_NEXT) {
-        return ret;
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_CONTINUE:
+        break; /* just return controller to invoker */
     }
 
     sched = mk_sched_get_thread_conf();

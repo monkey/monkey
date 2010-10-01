@@ -889,7 +889,7 @@ int mk_plugin_event_read(int socket)
     if (event) {
         if (event->handler->event_read) {
 #ifdef TRACE
-            MK_TRACE(" handled by plugin");
+            MK_TRACE(" event read handled by plugin");
 #endif
             return event->handler->event_read(socket);
         }
@@ -911,11 +911,14 @@ int mk_plugin_event_read(int socket)
         }
     }
 
-    return MK_PLUGIN_RET_EVENT_CONTINUE;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_write(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -923,19 +926,39 @@ int mk_plugin_event_write(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NEXT;
+    if (event) {
+        if (event->handler->event_write) {
+#ifdef TRACE
+            MK_TRACE(" event write handled by plugin");
+#endif
+            return event->handler->event_write(socket);
+        }
     }
-
-    if (event->handler->event_write) {
-        return event->handler->event_write(socket);
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_write) {
+            ret = node->event_write(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("write", ret);
+            }
+        }
     }
-
+    
     return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_error(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -943,12 +966,29 @@ int mk_plugin_event_error(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NEXT;
+    if (event) {
+        if (event->handler->event_error) {
+#ifdef TRACE
+            MK_TRACE(" event error handled by plugin");
+#endif
+            return event->handler->event_error(socket);
+        }
     }
-
-    if (event->handler->event_error) {
-        return event->handler->event_error(socket);
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_error) {
+            ret = node->event_error(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("error", ret);
+            }
+        }
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -956,6 +996,9 @@ int mk_plugin_event_error(int socket)
 
 int mk_plugin_event_close(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -963,19 +1006,39 @@ int mk_plugin_event_close(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NEXT;
+    if (event) {
+        if (event->handler->event_close) {
+#ifdef TRACE
+            MK_TRACE(" event close handled by plugin");
+#endif
+            return event->handler->event_close(socket);
+        }
+    }
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_close) {
+            ret = node->event_close(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("close", ret);
+            }
+        }
     }
 
-    if (event->handler->event_close) {
-        return event->handler->event_close(socket);
-    }
-
-    return 0;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_timeout(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -983,15 +1046,32 @@ int mk_plugin_event_timeout(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NEXT;
+    if (event) {
+        if (event->handler->event_timeout) {
+#ifdef TRACE
+            MK_TRACE(" event close handled by plugin");
+#endif
+            return event->handler->event_timeout(socket);
+        }
+    }
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_timeout) {
+            ret = node->event_timeout(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("timeout", ret);
+            }
+        }
     }
 
-    if (event->handler->event_timeout) {
-        return event->handler->event_timeout(socket);
-    }
-
-    return 0;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_time_now_unix()
