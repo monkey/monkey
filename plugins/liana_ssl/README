@@ -3,3 +3,20 @@ Liana SSl Networking Plugin
 
 Liana SSL is the base network plugin for Monkey, as it's brother
 provides some basic socket calls to work over SSL
+
+To enable the this plugin you must enable it using the configure script
+and disabling the liana plugin, or deleting the DISABLED file and running:
+
+touch ENABLED
+
+in the plugins/liana_ssl directory then edit plugins.load and comment the
+the line where it enables monkey-liana.so.
+
+Your keys must go on conf/plugins/liana_ssl/liana_ssl.conf with the
+proper format.
+
+If you want to test the ssl support you can generate a certificate and
+key files using these commands:
+
+openssl genrsa -out privkey.pem 1024
+openssl req -new -x509 -key privkey.pem -out cert.pem -days 1095
