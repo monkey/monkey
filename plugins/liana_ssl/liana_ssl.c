@@ -563,6 +563,8 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
 int _mkp_core_prctx(struct server_config *config)
 {
+    struct file_info *ssl_file_info = NULL;
+
     if (matrixSslOpen() < 0) {
 #ifdef TRACE
         PLUGIN_TRACE("Can't start matrixSsl");
@@ -580,6 +582,23 @@ int _mkp_core_prctx(struct server_config *config)
 #endif
         return 0;
     }
+
+    ssl_file_info = mk_api->file_get_info(cert_file);
+    if(ssl_file_info == NULL) {
+#ifdef TRACE
+        PLUGIN_TRACE("Can't get the info of the certificate file");
+#endif
+        exit(1);
+    }
+
+    ssl_file_info = mk_api->file_get_info(key_file);
+    if(ssl_file_info == NULL) {
+#ifdef TRACE
+        PLUGIN_TRACE("Can't get the info of the key file");
+#endif
+        exit(1);
+    }
+
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
 #ifdef TRACE
@@ -644,8 +663,6 @@ int _mkp_event_read(int socket_fd)
 #endif
         return -1;
     }
-
-
 
     return 0;
 }

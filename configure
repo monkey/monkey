@@ -352,17 +352,26 @@ EOF
 
     for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
     do
+        enabled=`echo $enabled_plugins | grep -w $plugin_dir`
+        enabled=$?
+        disabled=`echo $disabled_plugins | grep -w $plugin_dir`
+        disabled=$?
+
         comment="    "
-	if test -e $plugin_dir/DISABLED ; then
-            continue
+	if test -e $plugin_dir/DISABLED || [ $disabled -eq 0 ] ; then
+            if [ $enabled -eq 1 ] ; then
+                continue
+            fi
 	fi
 
-        if test -e $plugin_dir/MANDATORY ; then
+        if test -e $plugin_dir/MANDATORY && [ $disabled -eq 1 ] ; then
 	    comment="    "
         fi
 
-        if test -e $plugin_dir/OPTIONAL ; then
-            comment="    # "
+        if test -e $plugin_dir/OPTIONAL && [ $disabled -eq 1 ]; then
+            if [ $enabled -eq 1 ] ; then
+                comment="    # "
+            fi
 	fi
 
         echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
@@ -579,6 +588,12 @@ for arg in $*; do
 		--trace*)
 			trace=1
 			;;
+                --enable-plugins*)
+                	enabled_plugins=$optarg
+                        ;;
+                --disable-plugins*)
+                	disabled_plugins=$optarg
+                        ;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
