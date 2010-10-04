@@ -357,6 +357,9 @@ void mk_plugin_init()
 
     /* API plugins funcions */
 
+    /* Error helper */
+    api->error = (void *) mk_error;
+
     /* HTTP callbacks */
     api->http_request_end = (void *) mk_plugin_http_request_end;
 
@@ -869,7 +872,7 @@ struct plugin_event *mk_plugin_event_get_list()
 
 void mk_plugin_event_bad_return(const char *hook, int ret)
 {
-    fprintf(stderr, "[%s] Not allowed return value %i", hook, ret);
+    fprintf(stderr, "\n[%s] Not allowed return value %i", hook, ret);
     exit(1);
 }
 

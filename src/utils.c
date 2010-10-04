@@ -359,3 +359,29 @@ int mk_utils_remove_pid()
     mk_user_undo_uidgid();
     return remove(config->pid_file_path);
 }
+
+void mk_error(int type, const char *format, ...)
+{
+    char *error_header;
+    va_list args;
+
+    va_start(args, format);
+
+    if (type == MK_ERROR_WARNING) {
+        error_header = "WARNING";
+    }
+    else {
+        error_header = "Faltal";
+    }
+
+    fprintf(stderr, "%s[%s%s%s]%s ", 
+            ANSI_BOLD, ANSI_RED, error_header, ANSI_WHITE, ANSI_RESET);
+
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fprintf(stderr, "%s\n", ANSI_RESET);
+    
+    if (type == MK_ERROR_FATAL) {
+        exit(1);
+    }
+}

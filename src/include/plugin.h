@@ -187,6 +187,9 @@ struct plugin_api
     struct mk_list *plugins;
     struct mk_list **sched_list;
 
+    /* Error helper */
+    int *(*error) (int, const char *, ...);
+
     /* HTTP request function */
     int *(*http_request_end) (int);
 

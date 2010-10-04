@@ -25,6 +25,9 @@
 #include <sys/sysctl.h>
 #include <unistd.h>
 
+#define MK_ERROR_WARNING 0
+#define MK_ERROR_FATAL 1
+
 #define TRUE 1
 #define FALSE 0
 
@@ -39,16 +42,7 @@
 
 #define INTSIZE sizeof(int)
 
-#ifdef TRACE
-
-#define MK_TRACE_CORE 0
-#define MK_TRACE_PLUGIN 1
-#define MK_TRACE_COMP_CORE "core"
-
-#define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-
-#include "plugin.h"
-
+/* ANSI Colors */
 #define ANSI_BOLD "\033[1m"
 #define ANSI_CYAN "\033[36m" 
 #define ANSI_MAGENTA "\033[35m"
@@ -58,6 +52,17 @@
 #define ANSI_GREEN "\033[32m"
 #define ANSI_WHITE "\033[37m"
 #define ANSI_RESET "\033[0m"
+
+/* Trace definitions */
+#ifdef TRACE
+
+#define MK_TRACE_CORE 0
+#define MK_TRACE_PLUGIN 1
+#define MK_TRACE_COMP_CORE "core"
+
+#define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+
+#include "plugin.h"
 
 char *envtrace;
 pthread_mutex_t mutex_trace;
@@ -83,5 +88,7 @@ void mk_utils_trace(const char *component, int color, const char *function,
 int mk_utils_get_somaxconn();
 int mk_utils_register_pid();
 int mk_utils_remove_pid();
+
+void mk_error(int type, const char *format, ...);
 
 #endif
