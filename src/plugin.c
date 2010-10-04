@@ -51,8 +51,7 @@ void *mk_plugin_load(char *path)
 
     handle = dlopen(path, RTLD_LAZY);
     if (!handle) {
-        fprintf(stderr, "Error during dlopen(): %s\n", dlerror());
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error during dlopen(): %s", dlerror());
     }
 
     return handle;
@@ -127,8 +126,7 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
 
     if (!info) {
-        printf("\nPlugin Error: '%s'\nis not registering properly\n\n", path);
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Plugin Error: '%s'\nis not registering properly", path);
     }
 
     p->shortname = (char *) (*info).shortname;
@@ -279,10 +277,9 @@ create socket : %p\nbind : %p\nserver : %p",
             plg_netiomap = &p->net_io;
         }
         else {
-            fprintf(stderr,
-                    "\nError: Loading more than one Network IO Plugin: %s",
-                    p->path);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, 
+                     "Error: Loading more than one Network IO Plugin: %s",
+                     p->path);
         }
     }
 
@@ -305,10 +302,9 @@ create socket : %p\nbind : %p\nserver : %p",
             plg_netipmap = &p->net_ip;
         }
         else {
-            fprintf(stderr,
-                    "\nError: Loading more than one Network IP Plugin: %s",
-                    p->path);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, 
+                     "Error: Loading more than one Network IP Plugin: %s",
+                     p->path);
         }
     }
 
@@ -448,8 +444,7 @@ void mk_plugin_init()
     cnf = mk_config_create(path);
     
     if (!cnf) {
-        puts("Error: Plugins configuration file could not be readed");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: Plugins configuration file could not be readed");
     }
 
     /* Read section 'PLUGINS' */
@@ -496,8 +491,7 @@ void mk_plugin_init()
     }
 
     if (!plg_netiomap) {
-        fprintf(stderr, "\nError: no Network plugin loaded >:|\n\n");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: no Network plugin loaded >:|");
     }
 
     api->plugins = config->plugins;
@@ -704,10 +698,9 @@ void mk_plugin_preworker_calls()
 #endif
             ret = pthread_key_create(node->thread_key, NULL);
             if (ret != 0) {
-                printf("\nPlugin Error: could not create key for %s",
-                       node->shortname);
-                fflush(stdout);
-                exit(1);
+                mk_error(MK_ERROR_FATAL, 
+                         "Plugin Error: could not create key for %s",
+                         node->shortname);
             }
         }
     }
@@ -872,8 +865,7 @@ struct plugin_event *mk_plugin_event_get_list()
 
 void mk_plugin_event_bad_return(const char *hook, int ret)
 {
-    fprintf(stderr, "\n[%s] Not allowed return value %i", hook, ret);
-    exit(1);
+    mk_error(MK_ERROR_FATAL, "[%s] Not allowed return value %i", hook, ret);
 }
 
 int mk_plugin_event_read(int socket)

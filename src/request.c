@@ -871,7 +871,7 @@ struct client_session *mk_session_create(int socket)
 #ifdef TRACE
         MK_TRACE("FAILED SOCKET: %i", socket);
 #endif
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Sched connection not found");
     }
 
     /* IPv4 Address */

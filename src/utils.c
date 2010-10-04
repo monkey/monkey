@@ -342,8 +342,7 @@ int mk_utils_register_pid()
     config->pid_status = VAR_OFF;
 
     if ((pid_file = fopen(config->pid_file_path, "w")) == NULL) {
-        puts("Error: I can't log pid of monkey");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: I can't log pid of monkey");
     }
 
     fprintf(pid_file, "%i", getpid());

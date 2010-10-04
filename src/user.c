@@ -111,25 +111,22 @@ int mk_user_set_uidgid()
 
         /* Check if user exists  */
         if ((usr = getpwnam(config->user)) == NULL) {
-            printf("Error: Invalid user '%s'\n", config->user);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, "Error: Invalid user '%s'", config->user);
         }
 
 
         if (initgroups(config->user, usr->pw_gid) != 0) {
-            exit(1);
+            mk_error(MK_ERROR_FATAL, "Error: initgroups() failed");
         }
 
         /* Change process UID and GID */
         if (setgid(usr->pw_gid) == -1) {
-            printf("I can't change the GID to %u\n", usr->pw_gid);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, "Error: I can't change the GID to %u", usr->pw_gid);
         }
 
 
         if (setuid(usr->pw_uid) == -1) {
-            printf("I can't change the UID to %u\n", usr->pw_uid);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, "Error: I can't change the UID to %u", usr->pw_uid);
         }
 
         EUID = geteuid();
