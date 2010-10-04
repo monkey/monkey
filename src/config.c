@@ -44,10 +44,7 @@
 /* Raise a configuration error */
 void mk_config_error(const char *path, int line, const char *msg)
 {
-    printf("\nReading %s", path);
-    printf("\nError in line %i: %s\n\n", line, msg);
-    fflush(stdout);
-    exit(1);
+    mk_error(MK_ERROR_FATAL, "Reading %s\nError in line %i: %s", path, line, msg);
 }
 
 /* Returns a configuration section by [section name] */

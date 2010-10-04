@@ -371,10 +371,10 @@ void mk_error(int type, const char *format, ...)
         error_header = "WARNING";
     }
     else {
-        error_header = "Faltal";
+        error_header = "Fatal";
     }
 
-    fprintf(stderr, "%s[%s%s%s]%s ", 
+    fprintf(stderr, "\n%s[%s%s%s]%s ", 
             ANSI_BOLD, ANSI_RED, error_header, ANSI_WHITE, ANSI_RESET);
 
     vfprintf(stderr, format, args);
