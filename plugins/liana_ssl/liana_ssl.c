@@ -655,7 +655,7 @@ int _mkp_event_read(int socket_fd)
         PLUGIN_TRACE("Error initiating the ssl session");
 #endif
         matrixSslDeleteSession(conn->ssl);
-        return -1;
+        return MK_PLUGIN_RET_EVENT_CLOSE;
     }
 #ifdef TRACE
     PLUGIN_TRACE("Ssl session started");
@@ -671,8 +671,8 @@ int _mkp_event_read(int socket_fd)
 #ifdef TRACE
         PLUGIN_TRACE("Error trying to handshake with the client");
 #endif
-        return -1;
+        return MK_PLUGIN_RET_EVENT_CLOSE;
     }
 
-    return 0;
+    return MK_PLUGIN_RET_EVENT_NEXT;
 }
