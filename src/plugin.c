@@ -51,8 +51,7 @@ void *mk_plugin_load(char *path)
 
     handle = dlopen(path, RTLD_LAZY);
     if (!handle) {
-        fprintf(stderr, "Error during dlopen(): %s\n", dlerror());
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error during dlopen(): %s", dlerror());
     }
 
     return handle;
@@ -101,10 +100,6 @@ void mk_plugin_register_stagemap(struct plugin *p)
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_10, p);
     }
 
-    if (p->hooks & MK_PLUGIN_STAGE_15) {
-        mk_plugin_register_stagemap_add(&plg_stagemap->stage_15, p);
-    }
-
     if (p->hooks & MK_PLUGIN_STAGE_20) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_20, p);
     }
@@ -131,8 +126,7 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
 
     if (!info) {
-        printf("\nPlugin Error: '%s'\nis not registering properly\n\n", path);
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Plugin Error: '%s'\nis not registering properly", path);
     }
 
     p->shortname = (char *) (*info).shortname;
@@ -156,9 +150,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     /* Stage hooks */
     p->stage.s10 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_10");
-
-    p->stage.s15 = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_stage_15");
 
     p->stage.s20 = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_stage_20");
@@ -286,10 +277,9 @@ create socket : %p\nbind : %p\nserver : %p",
             plg_netiomap = &p->net_io;
         }
         else {
-            fprintf(stderr,
-                    "\nError: Loading more than one Network IO Plugin: %s",
-                    p->path);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, 
+                     "Error: Loading more than one Network IO Plugin: %s",
+                     p->path);
         }
     }
 
@@ -312,10 +302,9 @@ create socket : %p\nbind : %p\nserver : %p",
             plg_netipmap = &p->net_ip;
         }
         else {
-            fprintf(stderr,
-                    "\nError: Loading more than one Network IP Plugin: %s",
-                    p->path);
-            exit(1);
+            mk_error(MK_ERROR_FATAL, 
+                     "Error: Loading more than one Network IP Plugin: %s",
+                     p->path);
         }
     }
 
@@ -363,6 +352,9 @@ void mk_plugin_init()
     api->sched_list = &sched_list;
 
     /* API plugins funcions */
+
+    /* Error helper */
+    api->error = (void *) mk_error;
 
     /* HTTP callbacks */
     api->http_request_end = (void *) mk_plugin_http_request_end;
@@ -452,8 +444,7 @@ void mk_plugin_init()
     cnf = mk_config_create(path);
     
     if (!cnf) {
-        puts("Error: Plugins configuration file could not be readed");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: Plugins configuration file could not be readed");
     }
 
     /* Read section 'PLUGINS' */
@@ -500,8 +491,7 @@ void mk_plugin_init()
     }
 
     if (!plg_netiomap) {
-        fprintf(stderr, "\nError: no Network plugin loaded >:|\n\n");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: no Network plugin loaded >:|");
     }
 
     api->plugins = config->plugins;
@@ -708,10 +698,9 @@ void mk_plugin_preworker_calls()
 #endif
             ret = pthread_key_create(node->thread_key, NULL);
             if (ret != 0) {
-                printf("\nPlugin Error: could not create key for %s",
-                       node->shortname);
-                fflush(stdout);
-                exit(1);
+                mk_error(MK_ERROR_FATAL, 
+                         "Plugin Error: could not create key for %s",
+                         node->shortname);
             }
         }
     }
@@ -874,8 +863,14 @@ struct plugin_event *mk_plugin_event_get_list()
  *    MK_PLUGIN_RET_EVENT_NOT_ME: There's no plugin hook associated
  */
 
+void mk_plugin_event_bad_return(const char *hook, int ret)
+{
+    mk_error(MK_ERROR_FATAL, "[%s] Not allowed return value %i", hook, ret);
+}
+
 int mk_plugin_event_read(int socket)
 {
+    int ret;
     struct plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
@@ -889,7 +884,7 @@ int mk_plugin_event_read(int socket)
     if (event) {
         if (event->handler->event_read) {
 #ifdef TRACE
-            MK_TRACE(" handled by plugin");
+            MK_TRACE(" event read handled by plugin");
 #endif
             return event->handler->event_read(socket);
         }
@@ -898,15 +893,27 @@ int mk_plugin_event_read(int socket)
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_read) {
-            return node->event_read(socket);
+            ret = node->event_read(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("read", ret);
+            }
         }
     }
 
-    return MK_PLUGIN_RET_EVENT_NOT_ME;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_write(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -914,19 +921,39 @@ int mk_plugin_event_write(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    if (event) {
+        if (event->handler->event_write) {
+#ifdef TRACE
+            MK_TRACE(" event write handled by plugin");
+#endif
+            return event->handler->event_write(socket);
+        }
     }
-
-    if (event->handler->event_write) {
-        return event->handler->event_write(socket);
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_write) {
+            ret = node->event_write(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("write", ret);
+            }
+        }
     }
-
+    
     return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_error(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -934,12 +961,29 @@ int mk_plugin_event_error(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    if (event) {
+        if (event->handler->event_error) {
+#ifdef TRACE
+            MK_TRACE(" event error handled by plugin");
+#endif
+            return event->handler->event_error(socket);
+        }
     }
-
-    if (event->handler->event_error) {
-        return event->handler->event_error(socket);
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_error) {
+            ret = node->event_error(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("error", ret);
+            }
+        }
     }
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -947,6 +991,9 @@ int mk_plugin_event_error(int socket)
 
 int mk_plugin_event_close(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -954,19 +1001,39 @@ int mk_plugin_event_close(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    if (event) {
+        if (event->handler->event_close) {
+#ifdef TRACE
+            MK_TRACE(" event close handled by plugin");
+#endif
+            return event->handler->event_close(socket);
+        }
+    }
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_close) {
+            ret = node->event_close(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("close", ret);
+            }
+        }
     }
 
-    if (event->handler->event_close) {
-        return event->handler->event_close(socket);
-    }
-
-    return 0;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_event_timeout(int socket)
 {
+    int ret;
+    struct plugin *node;
+    struct mk_list *head;
     struct plugin_event *event;
 
 #ifdef TRACE
@@ -974,15 +1041,32 @@ int mk_plugin_event_timeout(int socket)
 #endif
 
     event = mk_plugin_event_get(socket);
-    if (!event) {
-        return MK_PLUGIN_RET_EVENT_NOT_ME;
+    if (event) {
+        if (event->handler->event_timeout) {
+#ifdef TRACE
+            MK_TRACE(" event close handled by plugin");
+#endif
+            return event->handler->event_timeout(socket);
+        }
+    }
+    
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (node->event_timeout) {
+            ret = node->event_timeout(socket);
+            switch(ret) {
+            case MK_PLUGIN_RET_EVENT_NEXT:
+                continue;
+            case MK_PLUGIN_RET_EVENT_OWNED:
+            case MK_PLUGIN_RET_EVENT_CLOSE:
+                return ret;
+            default:
+                mk_plugin_event_bad_return("timeout", ret);
+            }
+        }
     }
 
-    if (event->handler->event_timeout) {
-        return event->handler->event_timeout(socket);
-    }
-
-    return 0;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_plugin_time_now_unix()

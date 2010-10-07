@@ -31,6 +31,7 @@
 #include "mimetype.h"
 #include "memory.h"
 #include "str.h"
+#include "utils.h"
 #include "config.h"
 #include "request.h"
 #include "monkey.h"
@@ -52,8 +53,7 @@ void mk_mimetype_read_config()
     /* Get MimeTypes tag */
     section = mk_config_section_get(cnf, "MIMETYPES");
     if (!section) {
-        puts("Error: Invalid mime type file");
-        exit(1);
+        mk_error(MK_ERROR_FATAL, "Error: Invalid mime type file");
     }
 
     /* Alloc and init mk_list header */

@@ -645,7 +645,7 @@ int _mkp_event_read(int socket_fd)
     mk_list_foreach(curr, list_head) {
         conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
         if (conn->socket_fd == socket_fd)
-            return MK_PLUGIN_RET_EVENT_NOT_ME;
+            return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     conn = (struct mk_liana_ssl *) malloc(sizeof(struct mk_liana_ssl));

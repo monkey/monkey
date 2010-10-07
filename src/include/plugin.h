@@ -47,15 +47,14 @@
 
 /* Plugin: Stages */
 #define MK_PLUGIN_STAGE_10 (4)     /* Connection just accept()ed */
-#define MK_PLUGIN_STAGE_15 (8)     /* Connection just assigned to worker thread */
-#define MK_PLUGIN_STAGE_20 (16)    /* HTTP Request arrived */
-#define MK_PLUGIN_STAGE_30 (32)    /* Object handler  */
-#define MK_PLUGIN_STAGE_40 (64)    /* Content served */
-#define MK_PLUGIN_STAGE_50 (128)   /* Conection ended */
+#define MK_PLUGIN_STAGE_20 (8)    /* HTTP Request arrived */
+#define MK_PLUGIN_STAGE_30 (16)    /* Object handler  */
+#define MK_PLUGIN_STAGE_40 (32)    /* Content served */
+#define MK_PLUGIN_STAGE_50 (64)   /* Conection ended */
 
 /* Plugin: Network type */
-#define MK_PLUGIN_NETWORK_IO (256)
-#define MK_PLUGIN_NETWORK_IP (512)
+#define MK_PLUGIN_NETWORK_IO (128)
+#define MK_PLUGIN_NETWORK_IP (256)
 
 /* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
@@ -63,8 +62,27 @@
 #define MK_PLUGIN_RET_END 200
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 
-/* Event return values */
-#define MK_PLUGIN_RET_EVENT_NOT_ME -300
+/* 
+ * Event return values
+ * -------------------
+ * Any plugin can hook to any socket event, when a worker thread receives
+ * a socket event through epoll(), it will check first the plugins hooks
+ * before return the control to Monkey core.
+ */
+
+ /* The plugin request to the caller to continue invoking next plugins */
+#define MK_PLUGIN_RET_EVENT_NEXT -300
+
+/* The plugin has taken some action and no other plugin should go
+ * over the event in question, return as soon as possible
+ */
+#define MK_PLUGIN_RET_EVENT_OWNED -400
+
+/* The plugin request to finalize the session request */
+#define MK_PLUGIN_RET_EVENT_CLOSE -500
+
+/* The plugin request to the caller skip event hooks */
+#define MK_PLUGIN_RET_EVENT_CONTINUE -600
 
 /* Contexts: process/thread */
 struct plugin_core
@@ -76,7 +94,6 @@ struct plugin_core
 struct plugin_stage
 {
     int (*s10) (int, struct sched_connection *);
-    int (*s15) (int, struct sched_connection *);
     int (*s20) (struct client_session *, struct session_request *);
     int (*s30) (struct plugin *, struct client_session *, struct session_request *);
     int (*s40) (struct client_session *, struct session_request *);
@@ -169,6 +186,9 @@ struct plugin_api
     struct server_config *config;
     struct mk_list *plugins;
     struct mk_list **sched_list;
+
+    /* Error helper */
+    int *(*error) (int, const char *, ...);
 
     /* HTTP request function */
     int *(*http_request_end) (int);
