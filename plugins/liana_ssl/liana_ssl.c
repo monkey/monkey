@@ -326,6 +326,7 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
 {
     ssize_t bytes_sent = -1;
+    ssize_t bytes_written;
     struct mk_list *list_head =
         (struct mk_list *) pthread_getspecific(_mkp_data);
     struct mk_list *curr;
@@ -361,9 +362,15 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
         return -1;
     }
 
-    strncpy(buf_plain, buf, len);
+    memcpy(buf_plain, buf, len);
 
-    len = matrixSslEncodeWritebuf(conn->ssl, strlen(buf_plain));
+    if( len < count ) {
+        bytes_sent = len;
+    } else {
+        bytes_sent = count;
+    }
+
+    len = matrixSslEncodeWritebuf(conn->ssl, bytes_sent);
 
     if (len == PS_ARG_FAIL || len == PS_PROTOCOL_FAIL || len == PS_FAILURE) {
 #ifdef TRACE
@@ -381,26 +388,28 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
         return -1;
     }
 
-    bytes_sent = write(socket_fd, buf_ssl, len);
+    bytes_written = write(socket_fd, buf_ssl, len);
+    if( bytes_written == -1 )
+        perror("error?");
+    ret = matrixSslSentData(conn->ssl, bytes_written);
 
-    ret = matrixSslSentData(conn->ssl, bytes_sent);
-
-    return strlen(buf_plain);
+    return bytes_sent;
 }
 
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
     ssize_t bytes_sent = -1;
     int i;
+    char *buf = (char *)mk_api->mem_alloc(mk_io->total_len * sizeof(char *));
 #ifdef TRACE
     PLUGIN_TRACE("WriteV");
 #endif
 
     for (i = 0; i < mk_io->iov_idx; i++) {
-        bytes_sent =
-            _mkp_network_io_write(socket_fd, mk_io->io[i].iov_base,
-                                  mk_io->io[i].iov_len);
+        buf = strcat(buf, mk_io->io[i].iov_base);
     }
+
+    bytes_sent = _mkp_network_io_write(socket_fd, buf, mk_io->total_len);
 
     return bytes_sent;
 }
@@ -461,14 +470,14 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
     bytes_left = file_count;
 
     while (bytes_left != 0) {
-        len = pread(file_fd, buf_file, 1000, *file_offset);
+
+        len = pread(file_fd, buf_file, bytes_left, *file_offset);
         if (len == -1) {
             perror("error leyendo? :S");
             return -1;
         }
-
         bytes_written =
-            _mkp_network_io_write(socket_fd, buf_file, file_count);
+            _mkp_network_io_write(socket_fd, buf_file, len);
         if (bytes_written == -1) {
             perror("error from sendfile");
             return -1;
@@ -477,7 +486,8 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
         *file_offset += bytes_written;
         bytes_left -= bytes_written;
     }
-    return bytes_written;
+
+    return file_count;
 }
 
 int _mkp_network_io_create_socket(int domain, int type, int protocol)
@@ -645,7 +655,7 @@ int _mkp_event_read(int socket_fd)
         PLUGIN_TRACE("Error initiating the ssl session");
 #endif
         matrixSslDeleteSession(conn->ssl);
-        return -1;
+        return MK_PLUGIN_RET_EVENT_CLOSE;
     }
 #ifdef TRACE
     PLUGIN_TRACE("Ssl session started");
@@ -661,8 +671,8 @@ int _mkp_event_read(int socket_fd)
 #ifdef TRACE
         PLUGIN_TRACE("Error trying to handshake with the client");
 #endif
-        return -1;
+        return MK_PLUGIN_RET_EVENT_CLOSE;
     }
 
-    return 0;
+    return MK_PLUGIN_RET_EVENT_NEXT;
 }
