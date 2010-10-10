@@ -156,6 +156,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0) {
+        mk_error(MK_ERROR_WARNING, "[FD %i] epoll_ctl()");
         perror("epoll_ctl");
     }
     return ret;

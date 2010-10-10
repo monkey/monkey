@@ -420,6 +420,8 @@ void mk_plugin_init()
 
     /* Scheduler and Event callbacks */
     api->sched_get_connection = (void *) mk_sched_get_connection;
+    api->sched_remove_client = (void *) mk_plugin_sched_remove_client;
+
     api->event_add = (void *) mk_plugin_event_add;
     api->event_del = (void *) mk_plugin_event_del;
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
@@ -445,6 +447,7 @@ void mk_plugin_init()
     
     if (!cnf) {
         mk_error(MK_ERROR_FATAL, "Error: Plugins configuration file could not be readed");
+        mk_mem_free(path);
     }
 
     /* Read section 'PLUGINS' */
@@ -759,13 +762,14 @@ int mk_plugin_event_add(int socket, int mode,
     struct plugin_event *aux;
     struct plugin_event *event;
 
+    
     sched = mk_sched_get_thread_conf();
-
+    /*
     if (!sched || !handler || !cs || !sr) {
         return -1;
     }
-
-    /* Event node (this list exist at thread level */
+    */
+    /* Event node (this list exist at thread level 
     event = mk_mem_malloc(sizeof(struct plugin_event));
     event->socket = socket;
     event->handler = handler;
@@ -773,7 +777,7 @@ int mk_plugin_event_add(int socket, int mode,
     event->sr = sr;
     event->next = NULL;
 
-    /* Get thread event list */
+     Get thread event list 
     list = mk_plugin_event_get_list();
     if (!list) {
         mk_plugin_event_set_list(event);
@@ -787,10 +791,10 @@ int mk_plugin_event_add(int socket, int mode,
         aux->next = event;
         mk_plugin_event_set_list(list);
     }
-
+    */
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
-    mk_epoll_add(sched->epoll_fd, event->socket,
+    mk_epoll_add(sched->epoll_fd, socket,
                  mode, MK_EPOLL_BEHAVIOR_DEFAULT);
     return 0;
 }
@@ -899,6 +903,7 @@ int mk_plugin_event_read(int socket)
                 continue;
             case MK_PLUGIN_RET_EVENT_OWNED:
             case MK_PLUGIN_RET_EVENT_CLOSE:
+            case MK_PLUGIN_RET_EVENT_CONTINUE:
                 return ret;
             default:
                 mk_plugin_event_bad_return("read", ret);
@@ -1019,6 +1024,7 @@ int mk_plugin_event_close(int socket)
                 continue;
             case MK_PLUGIN_RET_EVENT_OWNED:
             case MK_PLUGIN_RET_EVENT_CLOSE:
+            case MK_PLUGIN_RET_EVENT_CONTINUE:
                 return ret;
             default:
                 mk_plugin_event_bad_return("close", ret);
@@ -1077,4 +1083,16 @@ int mk_plugin_time_now_unix()
 mk_pointer *mk_plugin_time_now_human()
 {
     return &log_current_time;
+}
+
+int mk_plugin_sched_remove_client(int socket)
+{
+    struct sched_list_node *node;
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] remove client", socket);
+#endif
+
+    node = mk_sched_get_thread_conf();
+    return mk_sched_remove_client(node, socket);
 }

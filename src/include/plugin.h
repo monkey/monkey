@@ -253,6 +253,10 @@ struct plugin_api
     struct mk_config_section *(*config_section_get) (struct mk_config *,
                                                      char *);
     void *(*config_section_getval) (struct mk_config_section *, char *, int);
+
+
+    /* Scheduler */
+    int (*sched_remove_client) (int);
     struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
                                                       int);
 
@@ -349,5 +353,7 @@ void mk_plugin_free(struct plugin *p);
 
 int mk_plugin_time_now_unix();
 mk_pointer *mk_plugin_time_now_human();
+
+int mk_plugin_sched_remove_client(int socket);
 
 #endif

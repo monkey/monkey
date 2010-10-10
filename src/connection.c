@@ -45,6 +45,7 @@ int mk_conn_read(int socket)
 
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
+
     switch(ret) {
     case MK_PLUGIN_RET_EVENT_OWNED:
         return MK_PLUGIN_RET_CONTINUE;

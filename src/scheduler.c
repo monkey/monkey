@@ -272,7 +272,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     }
 #ifdef TRACE
     else {
-        MK_TRACE("[FD %i] Not found");
+        MK_TRACE("[FD %i] Not found", remote_fd);
     }
 #endif
     return -1;
@@ -301,7 +301,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
     }
 
 #ifdef TRACE
-    MK_TRACE("\n [%i] not found , why?\n\n", remote_fd);
+    MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
 #endif
 
     return NULL;
