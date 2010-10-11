@@ -1,6 +1,0 @@
-Monkey Palm Server
-==================
-
-This server is a 'server applications' complement for Monkey HTTP 
-Daemon, it uses it's own protocol to communicate with the server.
-
