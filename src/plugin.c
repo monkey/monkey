@@ -764,34 +764,32 @@ int mk_plugin_event_add(int socket, int mode,
 
     
     sched = mk_sched_get_thread_conf();
-    /*
-    if (!sched || !handler || !cs || !sr) {
-        return -1;
-    }
-    */
-    /* Event node (this list exist at thread level 
-    event = mk_mem_malloc(sizeof(struct plugin_event));
-    event->socket = socket;
-    event->handler = handler;
-    event->cs = cs;
-    event->sr = sr;
-    event->next = NULL;
 
-     Get thread event list 
-    list = mk_plugin_event_get_list();
-    if (!list) {
-        mk_plugin_event_set_list(event);
-    }
-    else {
-        aux = list;
-        while (aux->next) {
-            aux = aux->next;
+    if (sched && handler && cs && sr) {
+        /* Event node (this list exist at thread level */
+        event = mk_mem_malloc(sizeof(struct plugin_event));
+        event->socket = socket;
+        event->handler = handler;
+        event->cs = cs;
+        event->sr = sr;
+        event->next = NULL;
+        
+        /* Get thread event list */
+        list = mk_plugin_event_get_list();
+        if (!list) {
+            mk_plugin_event_set_list(event);
         }
-
-        aux->next = event;
-        mk_plugin_event_set_list(list);
+        else {
+            aux = list;
+            while (aux->next) {
+                aux = aux->next;
+            }
+            
+            aux->next = event;
+            mk_plugin_event_set_list(list);
+        }
     }
-    */
+
     /* The thread event info has been registered, now we need
        to register the socket involved to the thread epoll array */
     mk_epoll_add(sched->epoll_fd, socket,
@@ -984,6 +982,7 @@ int mk_plugin_event_error(int socket)
                 continue;
             case MK_PLUGIN_RET_EVENT_OWNED:
             case MK_PLUGIN_RET_EVENT_CLOSE:
+            case MK_PLUGIN_RET_EVENT_CONTINUE:
                 return ret;
             default:
                 mk_plugin_event_bad_return("error", ret);
@@ -1065,6 +1064,7 @@ int mk_plugin_event_timeout(int socket)
                 continue;
             case MK_PLUGIN_RET_EVENT_OWNED:
             case MK_PLUGIN_RET_EVENT_CLOSE:
+            case MK_PLUGIN_RET_EVENT_CONTINUE:
                 return ret;
             default:
                 mk_plugin_event_bad_return("timeout", ret);

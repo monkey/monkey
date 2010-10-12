@@ -312,7 +312,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
         PLUGIN_TRACE("[FD %i] Not handled by me", cs->socket);
 #endif
 
-        return MK_PLUGIN_RET_NOT_ME;
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
     /* Connect to server */
@@ -546,7 +546,7 @@ int _mkp_event_read(int sockfd)
             n = mk_palm_send_end_chunk(pr->client_fd);
         }
 
-        return MK_PLUGIN_RET_END;
+        return MK_PLUGIN_RET_EVENT_CLOSE;
     }
     else if (pr->len_read > 0) {
         if (pr->headers_sent == VAR_OFF) {
@@ -640,7 +640,7 @@ int _mkp_event_read(int sockfd)
         }
 
         mk_api->socket_cork_flag(pr->client_fd, TCP_CORK_OFF);
-        ret = MK_PLUGIN_RET_CONTINUE;
+        ret = MK_PLUGIN_RET_EVENT_OWNED;
 
         mk_palm_request_update(sockfd, pr);
     }
@@ -667,7 +667,7 @@ int hangup(int sockfd)
 
     pr = mk_palm_request_get(sockfd)     ;
     if (!pr) {
-        return MK_PLUGIN_RET_END;
+        return MK_PLUGIN_RET_EVENT_CONTINUE;
     }
     
     mk_api->socket_close(pr->palm_fd);
@@ -675,7 +675,7 @@ int hangup(int sockfd)
     mk_api->http_request_end(pr->client_fd);
     mk_palm_free_request(pr->palm_fd);
     
-    return MK_PLUGIN_RET_END;
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
 int _mkp_event_close(int sockfd)
