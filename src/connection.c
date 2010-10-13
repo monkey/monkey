@@ -64,6 +64,9 @@ int mk_conn_read(int socket)
 
         /* Create client */
         cs = mk_session_create(socket);
+        if (!cs) {
+            return -1;
+        }
     }
 
     /* Read incomming data */

@@ -139,14 +139,14 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
 void mk_palm_request_delete(int socket)
 {
     struct mk_palm_request *pr_node;
-    struct mk_list *pr_list, *pr_head;
+    struct mk_list *pr_list, *pr_temp, *pr_head;
 
     pr_list = pthread_getspecific(_mkp_data);
     if (mk_list_is_empty(pr_list) == 0) {
         return;
     }
 
-    mk_list_foreach(pr_head, pr_list) {
+    mk_list_foreach_safe(pr_head, pr_temp, pr_list) {
         pr_node = mk_list_entry(pr_head, struct mk_palm_request, _head);
         
         if (pr_node->palm_fd == socket) {
@@ -156,12 +156,6 @@ void mk_palm_request_delete(int socket)
             return;
         }
     }
-}
-
-void mk_palm_free_request(int palm_fd)
-{
-    mk_api->socket_close(palm_fd);
-    mk_palm_request_delete(palm_fd);
 }
 
 void mk_palm_request_init()

@@ -865,14 +865,16 @@ struct client_session *mk_session_create(int socket)
     struct mk_list *cs_list;
 
     sc = mk_sched_get_connection(NULL, socket);
-    cs = mk_mem_malloc(sizeof(struct client_session));
-
     if (!sc) {
 #ifdef TRACE
         MK_TRACE("FAILED SOCKET: %i", socket);
 #endif
-        mk_error(MK_ERROR_FATAL, "Sched connection not found");
+        mk_error(MK_ERROR_WARNING, "Sched connection not found");
+        return NULL;
     }
+
+    /* Alloc memory for node */
+    cs = mk_mem_malloc(sizeof(struct client_session));
 
     /* IPv4 Address */
     cs->ipv4 = &sc->ipv4;

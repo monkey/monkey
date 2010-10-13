@@ -745,8 +745,7 @@ int mk_plugin_event_del(int socket)
     }
 
 #ifdef TRACE
-    MK_TRACE("[FD %i] not found :/");
-    exit(1);
+    MK_TRACE("[FD %i] not found, could not delete event node :/");
 #endif
 
     return -1;
@@ -870,6 +869,22 @@ void mk_plugin_event_bad_return(const char *hook, int ret)
     mk_error(MK_ERROR_FATAL, "[%s] Not allowed return value %i", hook, ret);
 }
 
+int mk_plugin_event_check_return(const char *hook, int ret)
+{
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_NEXT:
+    case MK_PLUGIN_RET_EVENT_OWNED:
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
+        return 0;
+    default:
+        mk_plugin_event_bad_return(hook, ret);
+    }
+    
+    /* don't cry gcc :_( */
+    return -1;
+}
+
 int mk_plugin_event_read(int socket)
 {
     int ret;
@@ -878,7 +893,7 @@ int mk_plugin_event_read(int socket)
     struct plugin_event *event;
 
 #ifdef TRACE
-    MK_TRACE("[FD %i] Plugin event read", socket);
+    MK_TRACE("[FD %i] Read Event", socket);
 #endif
 
     /* Socket registered by plugin */
@@ -886,7 +901,7 @@ int mk_plugin_event_read(int socket)
     if (event) {
         if (event->handler->event_read) {
 #ifdef TRACE
-            MK_TRACE(" event read handled by plugin");
+            MK_TRACE("[%s] plugin handler",  event->handler->name);
 #endif
             return event->handler->event_read(socket);
         }
@@ -896,15 +911,14 @@ int mk_plugin_event_read(int socket)
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_read) {
             ret = node->event_read(socket);
-            switch(ret) {
-            case MK_PLUGIN_RET_EVENT_NEXT:
+
+            /* validate return value */
+            mk_plugin_event_check_return("read", ret);
+            if (ret == MK_PLUGIN_RET_EVENT_NEXT) {
                 continue;
-            case MK_PLUGIN_RET_EVENT_OWNED:
-            case MK_PLUGIN_RET_EVENT_CLOSE:
-            case MK_PLUGIN_RET_EVENT_CONTINUE:
+            }
+            else {
                 return ret;
-            default:
-                mk_plugin_event_bad_return("read", ret);
             }
         }
     }
@@ -937,14 +951,14 @@ int mk_plugin_event_write(int socket)
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_write) {
             ret = node->event_write(socket);
-            switch(ret) {
-            case MK_PLUGIN_RET_EVENT_NEXT:
+
+            /* validate return value */
+            mk_plugin_event_check_return("write", ret);
+            if (ret == MK_PLUGIN_RET_EVENT_NEXT) {
                 continue;
-            case MK_PLUGIN_RET_EVENT_OWNED:
-            case MK_PLUGIN_RET_EVENT_CLOSE:
+            }
+            else {
                 return ret;
-            default:
-                mk_plugin_event_bad_return("write", ret);
             }
         }
     }
@@ -977,15 +991,14 @@ int mk_plugin_event_error(int socket)
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_error) {
             ret = node->event_error(socket);
-            switch(ret) {
-            case MK_PLUGIN_RET_EVENT_NEXT:
+
+            /* validate return value */
+            mk_plugin_event_check_return("error", ret);
+            if (ret == MK_PLUGIN_RET_EVENT_NEXT) {
                 continue;
-            case MK_PLUGIN_RET_EVENT_OWNED:
-            case MK_PLUGIN_RET_EVENT_CLOSE:
-            case MK_PLUGIN_RET_EVENT_CONTINUE:
+            }
+            else {
                 return ret;
-            default:
-                mk_plugin_event_bad_return("error", ret);
             }
         }
     }
@@ -1018,15 +1031,14 @@ int mk_plugin_event_close(int socket)
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_close) {
             ret = node->event_close(socket);
-            switch(ret) {
-            case MK_PLUGIN_RET_EVENT_NEXT:
+
+            /* validate return value */
+            mk_plugin_event_check_return("close", ret);
+            if (ret == MK_PLUGIN_RET_EVENT_NEXT) {
                 continue;
-            case MK_PLUGIN_RET_EVENT_OWNED:
-            case MK_PLUGIN_RET_EVENT_CLOSE:
-            case MK_PLUGIN_RET_EVENT_CONTINUE:
+            }
+            else {
                 return ret;
-            default:
-                mk_plugin_event_bad_return("close", ret);
             }
         }
     }
@@ -1059,15 +1071,14 @@ int mk_plugin_event_timeout(int socket)
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_timeout) {
             ret = node->event_timeout(socket);
-            switch(ret) {
-            case MK_PLUGIN_RET_EVENT_NEXT:
+
+            /* validate return value */
+            mk_plugin_event_check_return("timeout", ret);
+            if (ret == MK_PLUGIN_RET_EVENT_NEXT) {
                 continue;
-            case MK_PLUGIN_RET_EVENT_OWNED:
-            case MK_PLUGIN_RET_EVENT_CLOSE:
-            case MK_PLUGIN_RET_EVENT_CONTINUE:
+            }
+            else {
                 return ret;
-            default:
-                mk_plugin_event_bad_return("timeout", ret);
             }
         }
     }

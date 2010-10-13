@@ -173,7 +173,7 @@ int mk_epoll_del(int efd, int fd)
 #endif
 
     if (ret < 0) {
-        perror("\nepoll_ctl");
+        perror("epoll_ctl");
     }
     return ret;
 }
@@ -209,7 +209,7 @@ int mk_epoll_change_mode(int efd, int fd, int mode)
 
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
     if (ret < 0) {
-        perror("\nepoll_ctl");
+        perror("epoll_ctl");
     }
     return ret;
 }

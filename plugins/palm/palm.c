@@ -252,7 +252,7 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 
     /* Send just headers from buffer */
 #ifdef TRACE
-    PLUGIN_TRACE("[FD %i] Sending headers", cs->socket);
+    PLUGIN_TRACE("[CLIENT_FD %i] Sending headers", cs->socket);
 #endif
     n = (int) mk_api->header_send(cs->socket, cs, sr);
 
@@ -261,7 +261,7 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
      */
     mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
 #ifdef TRACE
-    PLUGIN_TRACE("[FD %i] Send headers returned %i", cs->socket, n);
+    PLUGIN_TRACE("[CLIENT_FD %i] Send headers returned %i", cs->socket, n);
 #endif
 
     return n;
@@ -519,7 +519,7 @@ int _mkp_event_read(int sockfd)
 
     if (!pr){
 #ifdef TRACE
-        PLUGIN_TRACE("[FD %i] Invalid palm request, not found", sockfd);
+        PLUGIN_TRACE("[FD %i] this FD is not a Palm Request", sockfd);
 #endif
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
@@ -533,9 +533,9 @@ int _mkp_event_read(int sockfd)
                                        (MK_PALM_BUFFER_SIZE - 1));
 
 #ifdef TRACE
-    PLUGIN_TRACE("FD %i", sockfd);
-    PLUGIN_TRACE("   socket read  : %i", pr->len_read);
-    PLUGIN_TRACE("   headers sent : %i", pr->headers_sent);
+    PLUGIN_TRACE("[CLIENT_FD %i | PALM_FD %i]", pr->client_fd, pr->palm_fd);
+    PLUGIN_TRACE(" socket read  : %i", pr->len_read);
+    PLUGIN_TRACE(" headers sent : %i", pr->headers_sent);
 #endif
 
     if (pr->len_read <= 0) {
@@ -569,11 +569,11 @@ int _mkp_event_read(int sockfd)
                 if (n > 0) {
                     pr->len_read += n;
                 }
-                else{
+                else if (n <= 0){
 #ifdef TRACE
                     PLUGIN_TRACE("[FD %i] N READ: %i", pr->palm_fd, n);
                     PLUGIN_TRACE("********* FIXME ***********\n%s", pr->data_read);
-                    //                    exit(1);
+                    hangup(pr->palm_fd);
 #endif
                 }
 
@@ -600,8 +600,12 @@ int _mkp_event_read(int sockfd)
                                     headers_end - offset);
 
 #ifdef TRACE
-            PLUGIN_TRACE("Headers sent to HTTP client: %i", n);
+            PLUGIN_TRACE("[CLIENT_FD %i] Headers sent to HTTP client: %i",
+                         pr->client_fd, n);
 #endif
+            if (n < 0) {
+                //return MK_PLUGIN_RET_EVENT_CLOSE;
+            }
 
             /* Enable headers flag */
             pr->headers_sent = VAR_ON;
@@ -610,9 +614,6 @@ int _mkp_event_read(int sockfd)
 
         int sent = 0;
         while (sent != (pr->len_read - read_offset)) {
-#ifdef TRACE
-            PLUGIN_TRACE("LOOP");
-#endif
             if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
                 n = mk_palm_send_chunk(pr->client_fd,
                                        pr->data_read + read_offset + sent,
@@ -624,16 +625,15 @@ int _mkp_event_read(int sockfd)
                                         pr->len_read - read_offset - sent);
             }
 
-            if (n < 0) {
+            if (n <= 0) {
 #ifdef TRACE
-                PLUGIN_TRACE("WRITE ERROR");
+                PLUGIN_TRACE("[CLIENT_FD %i] WRITE ERROR", pr->client_fd);
 #endif
-                perror("socket_send");
                 return MK_PLUGIN_RET_END;
             }
             else {
 #ifdef TRACE
-                PLUGIN_TRACE("BYTES SENT: %i", n);
+                PLUGIN_TRACE("[CLIENT_FD %i] Bytes sent: %i", pr->client_fd, n);
 #endif
                 sent += n;
             }
@@ -667,13 +667,16 @@ int hangup(int sockfd)
 
     pr = mk_palm_request_get(sockfd)     ;
     if (!pr) {
-        return MK_PLUGIN_RET_EVENT_CONTINUE;
+#ifdef TRACE
+        PLUGIN_TRACE("[PALM_FD %i] this FD is not a Palm Request", sockfd);
+#endif
+        return MK_PLUGIN_RET_EVENT_NEXT;
     }
     
-    mk_api->socket_close(pr->palm_fd);
     mk_api->event_del(pr->palm_fd);
     mk_api->http_request_end(pr->client_fd);
-    mk_palm_free_request(pr->palm_fd);
+    mk_api->socket_close(pr->palm_fd);
+    mk_palm_request_delete(pr->palm_fd);
     
     return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
