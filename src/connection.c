@@ -21,17 +21,7 @@
 
 #include "monkey.h"
 #include "http.h"
-#include "connection.h"
-#include "scheduler.h"
-#include "epoll.h"
-#include "request.h"
-#include "socket.h"
 #include "plugin.h"
-#include "utils.h"
-#include "http_status.h"
-
-#include <string.h>
-#include <stdio.h>
 
 int mk_conn_read(int socket)
 {

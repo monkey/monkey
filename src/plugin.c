@@ -22,26 +22,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <dlfcn.h>
 #include <err.h>
 
-#include "config.h"
 #include "connection.h"
-#include "plugin.h"
-#include "monkey.h"
 #include "request.h"
-#include "scheduler.h"
 #include "utils.h"
-#include "str.h"
 #include "file.h"
-#include "header.h"
 #include "http.h"
-#include "memory.h"
-#include "iov.h"
-#include "epoll.h"
 #include "worker.h"
 #include "clock.h"
 
@@ -585,6 +573,10 @@ int mk_plugin_stage_run(unsigned int hook,
                     return MK_PLUGIN_RET_CONTINUE;
                 case MK_PLUGIN_RET_END:
                     return MK_PLUGIN_RET_END;
+                default:
+                    mk_error(MK_ERROR_FATAL, 
+                             "Plugin '%s' returns invalid value %i",
+                             stm->p->shortname, ret);
                 }
                 
                 stm = stm->next;
@@ -871,6 +863,26 @@ void mk_plugin_event_bad_return(const char *hook, int ret)
 
 int mk_plugin_event_check_return(const char *hook, int ret)
 {
+#ifdef TRACE
+    MK_TRACE("Hook '%s' returned %i", hook, ret);
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_NEXT:
+        MK_TRACE("ret = MK_PLUGIN_RET_EVENT_NEXT");
+        break;
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        MK_TRACE("ret = MK_PLUGIN_RET_EVENT_OWNED");
+        break;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        MK_TRACE("ret = MK_PLUGIN_RET_EVENT_CLOSE");
+        break;
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
+        MK_TRACE("ret = MK_PLUGIN_RET_EVENT_CONTINUE");
+        break;
+    default:
+        MK_TRACE("ret = UNKNOWN, bad monkey!, follow the spec! >:D");
+    }
+
+#endif
     switch(ret) {
     case MK_PLUGIN_RET_EVENT_NEXT:
     case MK_PLUGIN_RET_EVENT_OWNED:
@@ -903,7 +915,9 @@ int mk_plugin_event_read(int socket)
 #ifdef TRACE
             MK_TRACE("[%s] plugin handler",  event->handler->name);
 #endif
-            return event->handler->event_read(socket);
+            ret = event->handler->event_read(socket);
+            mk_plugin_event_check_return("read|handled_by", ret);
+            return ret;
         }
     }
 
@@ -943,7 +957,9 @@ int mk_plugin_event_write(int socket)
 #ifdef TRACE
             MK_TRACE(" event write handled by plugin");
 #endif
-            return event->handler->event_write(socket);
+            ret = event->handler->event_write(socket);
+            mk_plugin_event_check_return("write|handled_by", ret);
+            return ret;
         }
     }
     
@@ -983,7 +999,9 @@ int mk_plugin_event_error(int socket)
 #ifdef TRACE
             MK_TRACE(" event error handled by plugin");
 #endif
-            return event->handler->event_error(socket);
+            ret = event->handler->event_error(socket);
+            mk_plugin_event_check_return("error|handled_by", ret);
+            return ret;
         }
     }
     
@@ -1023,7 +1041,9 @@ int mk_plugin_event_close(int socket)
 #ifdef TRACE
             MK_TRACE(" event close handled by plugin");
 #endif
-            return event->handler->event_close(socket);
+            ret = event->handler->event_close(socket);
+            mk_plugin_event_check_return("close|handled_by", ret);
+            return ret;
         }
     }
     
@@ -1063,7 +1083,9 @@ int mk_plugin_event_timeout(int socket)
 #ifdef TRACE
             MK_TRACE(" event close handled by plugin");
 #endif
-            return event->handler->event_timeout(socket);
+            ret = event->handler->event_timeout(socket);
+            mk_plugin_event_check_return("timeout|handled_by", ret);
+            return ret;
         }
     }
     

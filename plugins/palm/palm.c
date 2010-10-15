@@ -214,7 +214,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
         PLUGIN_TRACE("[FD %i] Not handled by me", cs->socket);
 #endif
 
-        return MK_PLUGIN_RET_EVENT_NEXT;
+        return MK_PLUGIN_RET_NOT_ME;
     }
 
     /* Connect to server */
@@ -224,7 +224,6 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 #ifdef TRACE
         PLUGIN_TRACE("return %i (MK_PLUGIN_RET_END)", MK_PLUGIN_RET_END);
 #endif
-
         return MK_PLUGIN_RET_END;
     }
 
@@ -247,7 +246,6 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
     return MK_PLUGIN_RET_CONTINUE;
 }
-
 
 
 struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
@@ -527,7 +525,7 @@ int _mkp_event_read(int sockfd)
 #ifdef TRACE
                 PLUGIN_TRACE("[CLIENT_FD %i] WRITE ERROR", pr->client_fd);
 #endif
-                return MK_PLUGIN_RET_END;
+                return MK_PLUGIN_RET_EVENT_CLOSE;
             }
             else {
 #ifdef TRACE
@@ -538,8 +536,8 @@ int _mkp_event_read(int sockfd)
         }
 
         mk_api->socket_cork_flag(pr->client_fd, TCP_CORK_OFF);
-        //ret = MK_PLUGIN_RET_EVENT_OWNED;
-        ret = MK_PLUGIN_RET_END;
+        ret = MK_PLUGIN_RET_EVENT_OWNED;
+
         mk_palm_request_update(sockfd, pr);
     }
     else {
@@ -570,7 +568,7 @@ int hangup(int sockfd)
 #endif
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
-    
+
     mk_api->event_del(pr->palm_fd);
     mk_api->http_request_end(pr->client_fd);
     mk_api->socket_close(pr->palm_fd);

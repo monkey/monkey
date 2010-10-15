@@ -311,7 +311,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
     int i, client_timeout;
     struct client_session *cs_node;
-    struct mk_list *cs_list, *cs_head, *temp;
+    struct mk_list *cs_list, *cs_head, *cs_temp;
 
     /* PENDING CONN TIMEOUT */
     for (i = 0; i < config->worker_capacity; i++) {
@@ -332,7 +332,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     /* PROCESSING CONN TIMEOUT */
     cs_list = mk_sched_get_request_list();
 
-    mk_list_foreach_safe(cs_head, temp, cs_list) {
+    mk_list_foreach_safe(cs_head, cs_temp, cs_list) {
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
 
         if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {

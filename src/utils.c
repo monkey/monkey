@@ -381,6 +381,7 @@ void mk_error(int type, const char *format, ...)
     fprintf(stderr, "%s", ANSI_RESET);
     
     if (type == MK_ERROR_FATAL) {
+        fprintf(stderr, "\n");
         exit(1);
     }
 }

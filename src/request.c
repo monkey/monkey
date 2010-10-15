@@ -817,7 +817,7 @@ void mk_request_free_list(struct client_session *cs)
 
     /* sr = last node */
 #ifdef TRACE
-    MK_TRACE("Free struct client_session [FD %i]", cs->socket);
+    MK_TRACE("[FD %i] Free struct client_session", cs->socket);
 #endif
 
     mk_list_foreach_safe(sr_head, temp, &cs->request_list) {
