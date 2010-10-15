@@ -103,12 +103,12 @@ int _mkp_network_io_connect(int socket_fd, char *host, int port)
     res = inet_pton(AF_INET, host, (void *) (&(remote->sin_addr.s_addr)));
 
     if (res < 0) {
-        perror("Can't set remote->sin_addr.s_addr");
+        mk_api->error(MK_ERROR_WARNING, "Can't set remote->sin_addr.s_addr");
         mk_api->mem_free(remote);
         return -1;
     }
     else if (res == 0) {
-        perror("Invalid IP address\n");
+        mk_api->error(MK_ERROR_WARNING, "Invalid IP address");
         mk_api->mem_free(remote);
         return -1;
     }
@@ -117,7 +117,7 @@ int _mkp_network_io_connect(int socket_fd, char *host, int port)
     if (connect(socket_fd,
                 (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
         close(socket_fd);
-        perror("connect");
+        mk_api->error(MK_ERROR_WARNING, "connect");
         return -1;
     }
 

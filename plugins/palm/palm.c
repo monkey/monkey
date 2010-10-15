@@ -30,6 +30,7 @@
 #include "cgi.h"
 #include "palm.h"
 #include "request.h"
+#include "protocol.h"
 
 MONKEY_PLUGIN("palm",              /* shortname */
               "Palm Client",       /* name */
@@ -127,114 +128,6 @@ struct mk_palm *mk_palm_get_handler(mk_pointer * file)
     return NULL;
 }
 
-void mk_palm_iov_add_header(struct mk_iov *iov,
-                            mk_pointer header, mk_pointer value)
-{
-    mk_api->iov_add_entry(iov, header.data, header.len,
-                          mk_iov_equal, MK_IOV_NOT_FREE_BUF);
-    mk_api->iov_add_entry(iov, value.data, value.len,
-                          mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
-}
-
-struct mk_iov *mk_palm_create_env(struct client_session *cs,
-                                  struct session_request *sr)
-{
-    struct mk_iov *iov;
-
-    iov = mk_api->iov_create(100, 0);
-#ifdef TRACE
-    PLUGIN_TRACE( "Create environment for palm server");
-#endif
-    mk_api->iov_add_entry(iov, sr->real_path.data,
-                          sr->real_path.len, mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
-
-    mk_api->iov_add_entry(iov, mk_cgi_document_root.data,
-                          mk_cgi_document_root.len,
-                          mk_iov_equal, MK_IOV_NOT_FREE_BUF);
-
-    mk_api->iov_add_entry(iov, sr->host_conf->documentroot.data,
-                          sr->host_conf->documentroot.len, mk_iov_crlf,
-                          MK_IOV_NOT_FREE_BUF);
-
-    //        mk_palm_iov_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
-    mk_palm_iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
-    mk_palm_iov_add_header(iov, mk_cgi_server_name, sr->host);
-    mk_palm_iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
-    mk_palm_iov_add_header(iov, mk_cgi_server_software,
-                           mk_api->config->server_software);
-    //mk_palm_iov_add_header(iov, mk_cgi_server_signature, sr->host_conf->host_signature);
-
-    if (sr->user_agent.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_user_agent, sr->user_agent);
-
-    if (sr->accept.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_accept, sr->accept);
-
-    if (sr->accept_charset.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_accept_charset,
-                               sr->accept_charset);
-
-    if (sr->accept_encoding.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_accept_encoding,
-                               sr->accept_encoding);
-
-    if (sr->accept_language.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_accept_language,
-                               sr->accept_language);
-
-    if (sr->host.data) {
-        if (sr->port != mk_api->config->standard_port) {
-            mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host_port);
-        }
-        else {
-            mk_palm_iov_add_header(iov, mk_cgi_http_host, sr->host);
-        }
-    }
-    if (sr->cookies.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_cookie, sr->cookies);
-
-    if (sr->referer.data)
-        mk_palm_iov_add_header(iov, mk_cgi_http_referer, sr->referer);
-
-    mk_palm_iov_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
-    mk_palm_iov_add_header(iov, mk_cgi_remote_addr, *cs->ipv4);
-    mk_palm_iov_add_header(iov, mk_cgi_request_uri, sr->uri);
-    mk_palm_iov_add_header(iov, mk_cgi_request_method, sr->method_p);
-    mk_palm_iov_add_header(iov, mk_cgi_script_name, sr->uri);
-
-
-    /* real path is not an mk_pointer */
-    mk_palm_iov_add_header(iov, mk_cgi_script_filename, sr->real_path);
-    //mk_palm_iov_add_header(iov, mk_cgi_remote_port, mk_api->config->port);
-    mk_palm_iov_add_header(iov, mk_cgi_query_string, sr->query_string);
-
-    if (sr->method == HTTP_METHOD_POST && sr->content_length > 0) {
-        /* Content length */
-        mk_pointer p;
-        unsigned long len;
-        char *length = 0;
-        mk_api->str_build(&length, &len, "%i", sr->content_length);
-        p.data = length;
-        p.len = len;
-
-        mk_palm_iov_add_header(iov, mk_cgi_content_length, p);
-        mk_palm_iov_add_header(iov, mk_cgi_content_type, sr->content_type);
-    }
-
-    /* Post data */
-    mk_palm_iov_add_header(iov, mk_cgi_post_vars, sr->post_variables);
-
-    /* CRLF */
-    mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
-                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
-                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    mk_api->iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
-                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    return iov;
-}
-
-
 int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 {
     int n;
@@ -271,6 +164,9 @@ void _mkp_core_thctx()
 {
     /* Init request list */
     mk_palm_request_init();
+
+    /* Init prototol template */
+    mk_palm_protocol_thread_init();
 }
 
 int _mkp_init(void **api, char *confdir)
@@ -278,9 +174,15 @@ int _mkp_init(void **api, char *confdir)
     mk_api = *api;
     palms = 0;
 
-    /* Init some pointers */
+    /* init thread keys */
+    pthread_key_create(&iov_protocol_request, NULL);
+    pthread_key_create(&iov_protocol_request_idx, NULL);
+
+    /* set pointers */
     mk_api->pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
+    mk_api->pointer_set(&mk_iov_empty, MK_IOV_NONE);
     mk_api->pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
+    mk_api->pointer_set(&mk_iov_crlfcrlf, MK_IOV_CRLFCRLF);
     mk_api->pointer_set(&mk_iov_equal, MK_IOV_EQUAL);
 
     /* Read configuration */
@@ -339,7 +241,8 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     mk_palm_send_request(cs, sr);
 
 #ifdef TRACE
-    PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CONTINUE)", MK_PLUGIN_RET_CONTINUE);
+    PLUGIN_TRACE("[PALM_FD %i] return %i (MK_PLUGIN_RET_CONTINUE)", 
+                 pr->palm_fd, MK_PLUGIN_RET_CONTINUE);
 #endif
 
     return MK_PLUGIN_RET_CONTINUE;
@@ -361,8 +264,8 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                        palm->server_port);
 
     if (ret < 0) {
-        fprintf(stderr, "\nPalm: Cannot connect to %s on port %i",
-                palm->server_addr, palm->server_port);
+        mk_api->error(MK_ERROR_WARNING, "Palm: Could not connect to %s:%i",
+                      palm->server_addr, palm->server_port);
         mk_api->header_set_http_status(sr, M_SERVER_INTERNAL_ERROR);
         return NULL;
     }
@@ -390,18 +293,17 @@ void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
             PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
 #endif
             /* Palm environment vars */
-            iov = mk_palm_create_env(cs, sr);
+            iov = mk_palm_protocol_request_new(cs, sr);
 
             /* Write request to palm server */
-            bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov, MK_IOV_SEND_TO_SOCKET);
+            bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, 
+                                                   iov, 
+                                                   MK_IOV_SEND_TO_SOCKET);
 
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
                 n = (long) bytes_iov;
             }
-
-            /* Socket stuff */
-            //mk_api->socket_set_nonblocking(pr->palm_fd);
         }
     }
 
@@ -415,7 +317,6 @@ int mk_palm_send_chunk(int socket, void *buffer, unsigned int len)
     int n;
     char *chunk_size=0;
     unsigned long chunk_len=0;
-
 
     mk_api->socket_cork_flag(socket, TCP_CORK_ON);
     mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
@@ -524,9 +425,6 @@ int _mkp_event_read(int sockfd)
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
 
-    /* Reset read buffer */
-    bzero(pr->data_read, MK_PALM_BUFFER_SIZE);
-
     /* Read data */
     pr->len_read = mk_api->socket_read(pr->palm_fd,
                                        pr->data_read,
@@ -540,7 +438,7 @@ int _mkp_event_read(int sockfd)
 
     if (pr->len_read <= 0) {
 #ifdef TRACE
-        PLUGIN_TRACE("Ending connection: read() = %i", pr->len_read);
+        PLUGIN_TRACE(" ending connection: read() = %i", pr->len_read);
 #endif
         if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
             n = mk_palm_send_end_chunk(pr->client_fd);
@@ -640,8 +538,8 @@ int _mkp_event_read(int sockfd)
         }
 
         mk_api->socket_cork_flag(pr->client_fd, TCP_CORK_OFF);
-        ret = MK_PLUGIN_RET_EVENT_OWNED;
-
+        //ret = MK_PLUGIN_RET_EVENT_OWNED;
+        ret = MK_PLUGIN_RET_END;
         mk_palm_request_update(sockfd, pr);
     }
     else {

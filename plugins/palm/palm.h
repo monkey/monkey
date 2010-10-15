@@ -23,7 +23,7 @@
 #ifndef MK_PALM_H
 #define MK_PALM_H
 
-#define MK_PALM_BUFFER_SIZE 8192
+#define MK_PALM_BUFFER_SIZE 32768
 
 #include "request.h"
 
@@ -46,7 +46,9 @@ struct mk_config *conf;
 #include "iov.h"
 
 mk_pointer mk_monkey_protocol;
+mk_pointer mk_iov_empty;
 mk_pointer mk_iov_crlf;
+mk_pointer mk_iov_crlfcrlf;
 mk_pointer mk_iov_equal;
 
 struct mk_palm *palms;
@@ -55,5 +57,6 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                             struct client_session *cs, 
                                             struct session_request *sr);
 void mk_palm_send_request(struct client_session *cr, struct session_request *sr);
+int hangup(int sockfd);
 
 #endif

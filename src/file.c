@@ -85,7 +85,7 @@ struct file_info *mk_file_get_info(char *path)
     }
 #ifdef TRACE
     else {
-        MK_TRACE("Target has not execution permission");
+        MK_TRACE("warning: target has not execution permission");
     }
 #endif
 

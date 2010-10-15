@@ -46,6 +46,7 @@ void mk_cgi_env()
     /* HTTP_ */
     mk_api->pointer_set(&mk_cgi_http_user_agent, MK_CGI_HTTP_USER_AGENT);
     mk_api->pointer_set(&mk_cgi_http_accept, MK_CGI_HTTP_ACCEPT);
+
     mk_api->pointer_set(&mk_cgi_http_accept_charset,
                         MK_CGI_HTTP_ACCEPT_CHARSET);
     mk_api->pointer_set(&mk_cgi_http_accept_encoding,

@@ -378,7 +378,7 @@ void mk_error(int type, const char *format, ...)
 
     vfprintf(stderr, format, args);
     va_end(args);
-    fprintf(stderr, "%s\n", ANSI_RESET);
+    fprintf(stderr, "%s", ANSI_RESET);
     
     if (type == MK_ERROR_FATAL) {
         exit(1);

@@ -30,7 +30,6 @@ struct mk_palm_request
     int client_fd;
     int palm_fd;
 
-    char data_pending[MK_PALM_BUFFER_SIZE*2];
     char data_read[MK_PALM_BUFFER_SIZE];
   
     int len_pending;
@@ -63,4 +62,5 @@ struct mk_palm_request *mk_palm_request_get_by_http(int socket);
 void mk_palm_request_update(int socket, struct mk_palm_request  *pr);
 void mk_palm_request_delete(int socket);
 void mk_palm_free_request(int sockfd);
+
 #endif
