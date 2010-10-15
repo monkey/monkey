@@ -296,7 +296,7 @@ struct plugin_event
     struct client_session *cs;
     struct session_request *sr;
 
-    struct plugin_event *next;
+    struct mk_list _head;
 };
 
 struct plugin_info {
@@ -308,6 +308,8 @@ struct plugin_info {
 
 void mk_plugin_init();
 void mk_plugin_exit_all();
+
+void mk_plugin_event_init_list();
 
 int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
@@ -329,8 +331,8 @@ int mk_plugin_event_add(int socket, int mode,
                         struct session_request *sr);
 int mk_plugin_event_del(int socket);
 
-int mk_plugin_event_set_list(struct plugin_event *event);
-struct plugin_event *mk_plugin_event_get_list();
+int mk_plugin_event_set_list(struct mk_list *list);
+struct mk_list *mk_plugin_event_get_list();
 int mk_plugin_event_socket_change_mode(int socket, int mode);
 
 /* Plugins event handlers */

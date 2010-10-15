@@ -149,6 +149,9 @@ void *mk_sched_launch_epoll_loop(void *thread_conf)
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
     mk_cache_thread_init();
+
+    /* Plugin thread context calls */
+    mk_plugin_event_init_list();
     mk_plugin_core_thread();
 
     /* Epoll event handlers */

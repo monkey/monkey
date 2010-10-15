@@ -703,7 +703,8 @@ void mk_plugin_preworker_calls()
 
 int mk_plugin_event_del(int socket)
 {
-    struct plugin_event *list, *aux, *prev;
+    struct mk_list *head, *list, *temp;
+    struct plugin_event *node;
 
 #ifdef TRACE
     MK_TRACE("[FD %i] Plugin delete event", socket);
@@ -714,26 +715,14 @@ int mk_plugin_event_del(int socket)
     }
 
     list = mk_plugin_event_get_list();
-    
-    aux = list;
-    while (aux) {
-        if (aux->socket == socket) {
-            if (aux == list) {
-                list = aux->next;
-            }
-            else { 
-                prev = list;
-                while (prev->next != aux) {
-                    prev = prev->next;
-                }
-            
-                prev->next = aux->next;
-            }
-            mk_mem_free(aux);
+    mk_list_foreach_safe(head, temp, list) {
+        node = mk_list_entry(head, struct plugin_event, _head);
+        if (node->socket == socket) {
+            mk_list_del(head);
+            mk_mem_free(node);
             mk_plugin_event_set_list(list);
             return 0;
         }
-        aux = aux->next;
     }
 
 #ifdef TRACE
@@ -749,10 +738,9 @@ int mk_plugin_event_add(int socket, int mode,
                         struct session_request *sr)
 {
     struct sched_list_node *sched;
-    struct plugin_event *list;
-    struct plugin_event *aux;
     struct plugin_event *event;
 
+    struct mk_list *list;
     
     sched = mk_sched_get_thread_conf();
 
@@ -763,22 +751,11 @@ int mk_plugin_event_add(int socket, int mode,
         event->handler = handler;
         event->cs = cs;
         event->sr = sr;
-        event->next = NULL;
         
         /* Get thread event list */
         list = mk_plugin_event_get_list();
-        if (!list) {
-            mk_plugin_event_set_list(event);
-        }
-        else {
-            aux = list;
-            while (aux->next) {
-                aux = aux->next;
-            }
-            
-            aux->next = event;
-            mk_plugin_event_set_list(list);
-        }
+        mk_list_add(&event->_head, list);
+        mk_plugin_event_set_list(list);
     }
 
     /* The thread event info has been registered, now we need
@@ -820,30 +797,37 @@ int mk_plugin_event_socket_change_mode(int socket, int mode)
 
 struct plugin_event *mk_plugin_event_get(int socket)
 {
-    struct plugin_event *event;
+    struct mk_list *head, *list;
+    struct plugin_event *node;
 
-    event = mk_plugin_event_get_list();
-
-    while (event){
-        if (event->socket == socket) {
-            return event;
+    list = mk_plugin_event_get_list();
+    mk_list_foreach(head, list) {
+        node = mk_list_entry(head, struct plugin_event, _head);
+        if (node->socket == socket) {
+            return node;
         }
-
-        event = event->next;
     }
 
     return NULL;
 }
 
-int mk_plugin_event_set_list(struct plugin_event *event)
+void mk_plugin_event_init_list()
 {
-    return pthread_setspecific(mk_plugin_event_k, event);
+    struct mk_list *list;
+
+    list = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(list);
+    mk_plugin_event_set_list(list);
 }
 
-struct plugin_event *mk_plugin_event_get_list()
+int mk_plugin_event_set_list(struct mk_list *list)
+{
+    return pthread_setspecific(mk_plugin_event_k, list);
+}
+
+struct mk_list *mk_plugin_event_get_list()
 {
     return pthread_getspecific(mk_plugin_event_k);
-
 }
 
 /* Plugin epoll event handlers
