@@ -182,11 +182,7 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     /* Connection */
-    if (config->keep_alive == VAR_ON &&
-        sr->keep_alive == VAR_ON &&
-        cs->counter_connections < config->max_keep_alive_request) {
-
-        /* A valid connection header */
+    if (mk_http_keepalive_check(fd, cs) == 0) {
         if (sr->connection.len > 0) {
             mk_string_build(&buffer,
                             &len,
@@ -203,13 +199,13 @@ int mk_header_send(int fd, struct client_session *cs,
                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
     }
-    else if(sr->close_now == VAR_ON) {
+    else {
         mk_iov_add_entry(iov,
                          mk_header_conn_close.data,
                          mk_header_conn_close.len,
                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
     }
-
+    
     /* Location */
     if (sh->location != NULL) {
         mk_iov_add_entry(iov,
@@ -323,6 +319,7 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
     mk_socket_sendv(fd, iov, MK_IOV_SEND_TO_SOCKET);
 
+    /*
 #ifdef TRACE
     MK_TRACE("Headers sent to FD %i", fd);
     printf("%s", ANSI_YELLOW);
@@ -331,7 +328,7 @@ int mk_header_send(int fd, struct client_session *cs,
     printf("%s", ANSI_RESET);
     fflush(stdout);
 #endif
-
+    */
     mk_header_iov_free(iov);
     return 0;
 }

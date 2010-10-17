@@ -41,7 +41,7 @@ int mk_conn_read(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_CONTINUE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 
@@ -96,7 +96,7 @@ int mk_conn_write(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_CONTINUE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 
@@ -163,7 +163,7 @@ int mk_conn_error(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_CONTINUE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 
@@ -193,7 +193,7 @@ int mk_conn_close(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_CONTINUE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 
@@ -218,7 +218,7 @@ int mk_conn_timeout(int socket)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
-    case MK_PLUGIN_RET_CONTINUE:
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 

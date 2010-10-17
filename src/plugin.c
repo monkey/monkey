@@ -32,6 +32,7 @@
 #include "http.h"
 #include "worker.h"
 #include "clock.h"
+#include "plugin.h"
 
 void *mk_plugin_load(char *path)
 {
@@ -769,10 +770,14 @@ int mk_plugin_http_request_end(int socket)
 {
     int ret;
 
+#ifdef TRACE
+    MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", socket);
+#endif
+
     ret = mk_http_request_end(socket);
 
 #ifdef TRACE
-    MK_TRACE("PLUGIN HTTP REQUEST END [FD=%i] = ret %i", socket, ret);
+    MK_TRACE(" ret = %i", ret);
 #endif
 
     if (ret < 0) {
@@ -921,7 +926,7 @@ int mk_plugin_event_read(int socket)
         }
     }
 
-    return MK_PLUGIN_RET_CONTINUE;
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
 int mk_plugin_event_write(int socket)

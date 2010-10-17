@@ -30,8 +30,10 @@ struct mk_palm_request
     int client_fd;
     int palm_fd;
 
-    char data_read[MK_PALM_BUFFER_SIZE];
-  
+    char buffer[MK_PALM_BUFFER_SIZE];
+    int buffer_len;
+    int buffer_offset;
+
     int len_pending;
     int len_read;
     int offset_pending;

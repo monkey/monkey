@@ -72,7 +72,7 @@ void mk_palm_protocol_thread_init()
      * in the iov buf array and we set the internal offset to 2, as the first position of the
      * array 0 and 1, are used to hold the script path used in Palm protocol
      */
-    iov = mk_api->iov_create(96, 1);
+    iov = mk_api->iov_create(96, 2);
     
     /* Add static data to cached iov struct, this data never change once Monkey is running */
     mk_api->iov_set_entry(iov, 
@@ -170,9 +170,9 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     idx = _iov_fill_empty(iov, sr->real_path, 0);
     idx = _iov_fill_empty(iov, sr->host_conf->documentroot, idx);
 
-    //        mk_palm_iov_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
-
+    //mk_palm_iov_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
     //mk_palm_iov_add_header(iov, mk_cgi_server_signature, sr->host_conf->host_signature);
+
     idx = _iov_fill_empty(iov, sr->host, idx);
     idx = _iov_fill_empty(iov, sr->user_agent, idx);
     idx = _iov_fill_empty(iov, sr->accept, idx);

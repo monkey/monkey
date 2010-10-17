@@ -33,15 +33,16 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
 {
     struct mk_palm_request *new;
 
-    new = mk_api->mem_alloc(sizeof(struct mk_palm_request));
+    new = mk_api->mem_alloc_z(sizeof(struct mk_palm_request));
     new->client_fd = client_fd;
     new->palm_fd = palm_fd;
     new->palm = palm;
-    new->bytes_sent = 0;
-    new->bytes_read = 0;
     new->headers_sent = VAR_OFF;
     new->cs = cs;
     new->sr = sr;
+
+    new->buffer_len = 0;
+    new->buffer_offset = 0;
 
     return new;
 }

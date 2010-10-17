@@ -242,7 +242,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Plugin Stage 30: look for handlers for this request */
     ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cs, sr);
 #ifdef TRACE
-    MK_TRACE("STAGE_30 returned %i", ret);
+    MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
 #endif
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
@@ -444,11 +444,27 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
     }
 
     sr_head = &cs->request_list;
-    sr_node = mk_list_entry_first(sr_head, struct session_request, _head);
+    sr_node = mk_list_entry_last(sr_head, struct session_request, _head);
     if (config->keep_alive == VAR_OFF || sr_node->keep_alive == VAR_OFF) {
         return -1;
     }
 
+    /* Old client without Connection header */
+    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->connection.len <= 0) {
+        return -1;
+    }
+
+    /* Old client and content length to send is unknown */
+    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->headers->content_length <= 0) {
+        return -1;
+    }
+
+    /* Connection was forced to close */
+    if (sr_node->close_now == VAR_ON) {
+        return -1;
+    }
+
+    /* Client has reached keep-alive connections limit */
     if (cs->counter_connections >= config->max_keep_alive_request) {
         return -1;
     }

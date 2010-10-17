@@ -29,6 +29,7 @@
 
 #include "memory.h"
 #include "clock.h"
+#include "utils.h"
 
 void mk_clock_log_set_time()
 {
