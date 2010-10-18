@@ -627,8 +627,8 @@ for arg in $*; do
 			echo "  --datadir=DATADIR       Install Monkey data dir files under DATADIR directory"
 			echo "  --logdir=LOGDIR         Install Monkey log files under LOGDIR directory"
 			echo "  --plugdir=PLUGDIR       Target directory for Monkey plugins"
-                        echo "  --enable-plugins=a,b  Enable the listed plugins"
-                        echo "  --disable-plugins=a,b Disable the listed plugins"
+                        echo "  --enable-plugins=a,b    Enable the listed plugins"
+                        echo "  --disable-plugins=a,b   Disable the listed plugins"
 			echo
 			exit 1
 			;;
