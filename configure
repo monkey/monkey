@@ -116,10 +116,10 @@ main()
 	echo "+ Creating banana script"
 	create_banana_script bindir logdir
 
-        echo 
+        echo
         echo -e "\033[1mPlugins to be compiled\033[0m"
         echo -e "\033[1m======================\033[0m"
-        echo 
+        echo
         create_makefile_plugins $plugdir
 
         echo
@@ -131,8 +131,8 @@ main()
 	if [ "$DEFS" != "" ]; then
             echo -e "DEFS\t\t= $DEFS"
         fi
-        
-        echo 
+
+        echo
         echo -e "PREFIX\t\t= $prefix"
         echo -e "BINDIR\t\t= $bindir"
         echo -e "CGIBIN\t\t= $cgibin"
@@ -144,7 +144,7 @@ main()
             echo -e "PLUGDIR\t\t= $plugdir"
         fi
 
-        echo 
+        echo
         echo "--"
 	echo -n "Monkey configuration is done, just type 'make' to build or 'make help"
 	if [ "$dir" = 1 ]; then
@@ -354,6 +354,7 @@ EOF
     do
         enabled=`echo $enabled_plugins | grep -w $plugin_dir`
         enabled=$?
+
         disabled=`echo $disabled_plugins | grep -w $plugin_dir`
         disabled=$?
 
@@ -374,8 +375,8 @@ EOF
             fi
 	fi
 
-        for i in $plugin_dir; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`; 
-            echo -e "+ ${name}${i:1}"; 
+        for i in $plugin_dir; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
+            echo -e "+ ${name}${i:1}";
         done
 
         echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
@@ -552,6 +553,7 @@ logdir="$aux/logs"
 plugdir=""
 
 for arg in $*; do
+
 	case "$arg" in
 		-*=*)
 			optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
@@ -625,8 +627,8 @@ for arg in $*; do
 			echo "  --datadir=DATADIR       Install Monkey data dir files under DATADIR directory"
 			echo "  --logdir=LOGDIR         Install Monkey log files under LOGDIR directory"
 			echo "  --plugdir=PLUGDIR       Target directory for Monkey plugins"
-                        echo "  --enable-plugins=\"a b\"  Enable the listed plugins"
-                        echo "  --disable-plugins=\"a b\" Disable the listed plugins"
+                        echo "  --enable-plugins=a,b  Enable the listed plugins"
+                        echo "  --disable-plugins=a,b Disable the listed plugins"
 			echo
 			exit 1
 			;;
