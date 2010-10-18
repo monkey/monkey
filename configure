@@ -2,7 +2,7 @@
 #
 #  Monkey HTTP Daemon
 #  ------------------
-#  Copyright (C) 2001-2009, Eduardo Silva P.
+#  Copyright (C) 2001-2010, Eduardo Silva P.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,35 +21,7 @@
 VERSION="0.12.0-dev"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
-
 INCDIR="src/include/"
-
-messages_en()
-{
-	case "$*" in
-		"1")
-			echo "+ Creating conf/monkey.conf"
-		;;
-		"2")
-			echo "+ Creating Makefile"
-		;;
-		"3")
-			echo "+ Creating src/Makefile"
-		;;
-		"4")
-			echo "+ Creating src/include/info.h"
-		;;
-		"5")
-			echo "+ Creating banana script"
-		;;
-		"6")
-			echo -n "Configuration done, just type 'make' to build or 'make help"
-		;;
-		"7")
-			echo -n "+ Checking for Pthreads lib.........."
-		;;
-	esac
-}
 
 # Create configuration files under 'conf/'
 make_conf()
@@ -112,48 +84,76 @@ main()
 	fi
 
         echo
-	echo "Checking dependencies"
-        echo "====================="
+	echo -e "\033[1mChecking dependencies\033[0m"
+        echo -e "\033[1m=====================\033[0m"
         echo
-	messages_$lang "7"
+	echo -n "+ Checking for Pthreads lib.........."
 	check_lib lang
 
         echo
-        echo "Creating Makefiles and scripts"
-        echo "=============================="
+        echo -e "\033[1mCreating Makefiles and scripts\033[0m"
+        echo -e "\033[1m==============================\033[0m"
         echo
 
-	messages_$lang "1"
+	echo "+ Creating conf/monkey.conf"
 	create_conf prefix bindir cgibin sysconfdir datadir logdir
 
 	make_conf  $lang
-	messages_$lang "2"
 
+	echo "+ Creating Makefile"
 	if [ "$dir" = 0 ]; then
 		create_makefile1 bindir
 	else
 		create_makefile1_install prefix bindir cgibin sysconfdir datadir logdir
 	fi
 
-	messages_$lang "3"
+	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script add_obj_mod cheetah_obj
 
-	messages_$lang "4"
+        echo "+ Creating src/include/info.h"
 	create_info sysconfdir SYSNAME VERSION
 
-	messages_$lang "5"
+	echo "+ Creating banana script"
 	create_banana_script bindir logdir
-	echo
-	messages_$lang "6"
 
+        echo 
+        echo -e "\033[1mPlugins to be compiled\033[0m"
+        echo -e "\033[1m======================\033[0m"
+        echo 
+        create_makefile_plugins $plugdir
+
+        echo
+        echo -e "\033[1mMonkey Configuration\033[0m"
+        echo -e "\033[1m====================\033[0m"
+        echo -e "COMPILER\t= $CC"
+        echo -e "CFLAGS\t\t= $CFLAGS"
+
+	if [ "$DEFS" != "" ]; then
+            echo -e "DEFS\t\t= $DEFS"
+        fi
+        
+        echo 
+        echo -e "PREFIX\t\t= $prefix"
+        echo -e "BINDIR\t\t= $bindir"
+        echo -e "CGIBIN\t\t= $cgibin"
+        echo -e "SYSCONFDIR\t= $sysconfdir"
+        echo -e "DATADIR\t\t= $datadir"
+        echo -e "LOGDIR\t\t= $logdir"
+
+	if [ "$plugdir" != "" ]; then
+            echo -e "PLUGDIR\t\t= $plugdir"
+        fi
+
+        echo 
+        echo "--"
+	echo -n "Monkey configuration is done, just type 'make' to build or 'make help"
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
 	else
 		echo "' "
 	fi
-	echo
-
-        create_makefile_plugins $plugdir
+	echo "Have fun! ;)"
+        echo
 
 	echo "#define CC \"${CC}\"" > src/include/env.h
 }
@@ -373,6 +373,10 @@ EOF
                 comment="    # "
             fi
 	fi
+
+        for i in $plugin_dir; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`; 
+            echo -e "+ ${name}${i:1}"; 
+        done
 
         echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
         sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
@@ -631,7 +635,7 @@ done
 
 echo "********************************************"
 echo "        Monkey HTTP Daemon v$VERSION        "
-echo "*       http://www.monkey-project.com      *"
+echo "*         www.monkey-project.com           *"
 echo "* ---------------------------------------- *"
 echo "*  We need beta testers, developers and    *"
 echo "* translators!, if you want to contribute  *"
