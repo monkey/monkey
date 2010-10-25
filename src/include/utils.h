@@ -22,7 +22,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/sysctl.h>
 #include <unistd.h>
 
 #define MK_ERROR_WARNING 0
