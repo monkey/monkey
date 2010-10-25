@@ -1,0 +1,11 @@
+CC 	= $CC
+CFLAGS	= $CFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../src/include
+
+all:
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c mandril.c
+	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-mandril.so mandril.o -lc
+clean:
+	rm -rf *.o
+	rm -rf *.*so*
