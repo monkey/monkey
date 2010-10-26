@@ -683,7 +683,7 @@ int _mkp_core_prctx(struct server_config *config)
 
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
-        mk_api->error (MK_ERROR_FATAL, ("MatrixSsl couldn't read the certificates");
+        mk_api->error (MK_ERROR_FATAL, "MatrixSsl couldn't read the certificates");
     }
 
 #ifdef TRACE
