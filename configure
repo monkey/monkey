@@ -82,7 +82,7 @@ main()
 	if [ "$logdir" != "$actual_path/logs" ]; then
 		dir=1
 	fi
-        
+
         if [ $platform == "generic" ]; then
             echo
 	    echo -e "\033[1mChecking dependencies\033[0m"
@@ -359,6 +359,12 @@ EOF
     echo "[PLUGINS]" >> $plugins_load
     echo "" >> $plugins_load
 
+    if [ $platform == "android" ]; then
+        if test -z $disabled_plugins; then
+            disabled_plugins="cheetah,palm,logger"
+        fi
+    fi
+
     for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
     do
         enabled=`echo $enabled_plugins | grep -w $plugin_dir`
@@ -366,6 +372,7 @@ EOF
 
         disabled=`echo $disabled_plugins | grep -w $plugin_dir`
         disabled=$?
+
 
         comment="    "
 	if test -e $plugin_dir/DISABLED || [ $disabled -eq 0 ] ; then
