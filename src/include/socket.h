@@ -27,6 +27,10 @@
 #include "iov.h"
 #include "request.h"
 
+#ifndef SOCK_NONBLOCK
+#define SOCK_NONBLOCK 00004000
+#endif
+
 /* Socket_Timeout() */
 #define ST_RECV 0
 #define ST_SEND 1

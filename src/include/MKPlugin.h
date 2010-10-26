@@ -26,6 +26,7 @@
 #include "plugin.h"
 #include "http.h"
 #include "file.h"
+#include "socket.h"
 
 /* global vars */
 struct plugin_api *mk_api;
