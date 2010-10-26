@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/sendfile.h>
+#include <fcntl.h>
 
 #include "MKPlugin.h"
 
@@ -53,8 +54,17 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     int remote_fd;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
+#ifndef accept4
+    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr,
+                       &socket_size);
+    if (fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
+        mk_api->error(MK_ERROR_FATAL, "Can't set to non-blocking the socket");
+    }
+#else
     remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
                         &socket_size, SOCK_NONBLOCK);
+#endif
+
     return remote_fd;
 }
 
