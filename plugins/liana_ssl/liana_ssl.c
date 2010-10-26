@@ -247,6 +247,25 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn)
     return 0;
 }
 
+int liana_ssl_close(struct mk_liana_ssl *conn) {
+    int len;
+    int ret;
+    unsigned char *buf_close;
+
+    ret = matrixSslEncodeClosureAlert (conn->ssl);
+
+    if( ret == MATRIXSSL_ERROR || ret == PS_ARG_FAIL || ret == PS_MEM_FAIL) return -1;
+
+    len = matrixSslGetOutdata (conn->ssl, &buf_close);
+
+    ret = write (conn->socket_fd, (void *)buf_close, len);
+
+    if(ret != len) return -1;
+
+
+    return 0;
+}
+
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
@@ -777,6 +796,9 @@ int _mkp_event_close(int socket_fd)
         if (curr == NULL) break;
         conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
         if (conn->socket_fd == socket_fd) {
+
+            liana_ssl_close (conn);
+
             matrixSslDeleteSession (conn->ssl);
             mk_list_del(curr);
             pthread_setspecific(_mkp_data, list_head);
