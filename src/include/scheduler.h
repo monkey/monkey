@@ -23,6 +23,7 @@
 #define MK_SCHEDULER_H
 
 #include "list.h"
+#include <pthread.h>
 
 #define MK_SCHEDULER_CONN_AVAILABLE -1
 #define MK_SCHEDULER_CONN_PENDING 0

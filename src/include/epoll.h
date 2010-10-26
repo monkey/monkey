@@ -35,6 +35,10 @@
 #define MK_EPOLL_BEHAVIOR_DEFAULT 2
 #define MK_EPOLL_BEHAVIOR_TRIGGERED 3
 
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
 typedef struct
 {
     int (*read) (int);

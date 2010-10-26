@@ -25,6 +25,7 @@
 #define MK_CLOCK_H
 
 #include <time.h>
+#include "memory.h"
 
 time_t log_current_utime;
 time_t monkey_init_time;
