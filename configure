@@ -82,13 +82,15 @@ main()
 	if [ "$logdir" != "$actual_path/logs" ]; then
 		dir=1
 	fi
-
-        echo
-	echo -e "\033[1mChecking dependencies\033[0m"
-        echo -e "\033[1m=====================\033[0m"
-        echo
-	echo -n "+ Checking for Pthreads lib.........."
-	check_lib lang
+        
+        if [ $platform == "generic" ]; then
+            echo
+	    echo -e "\033[1mChecking dependencies\033[0m"
+            echo -e "\033[1m=====================\033[0m"
+            echo
+	    echo -n "+ Checking for Pthreads lib.........."
+	    check_lib lang
+        fi
 
         echo
         echo -e "\033[1mCreating Makefiles and scripts\033[0m"
@@ -108,7 +110,7 @@ main()
 	fi
 
 	echo "+ Creating src/Makefile"
-	create_makefile2 mod_libs mod_obj make_script add_obj_mod cheetah_obj
+	create_makefile2 mod_libs mod_obj make_script platform
 
         echo "+ Creating src/include/info.h"
 	create_info sysconfdir SYSNAME VERSION
@@ -125,6 +127,7 @@ main()
         echo
         echo -e "\033[1mMonkey Configuration\033[0m"
         echo -e "\033[1m====================\033[0m"
+        echo -e "PLATFORM\t= $platform"
         echo -e "COMPILER\t= $CC"
         echo -e "CFLAGS\t\t= $CFLAGS"
 
@@ -288,6 +291,12 @@ EOF
 create_makefile2()
 {
 
+if [ $platform == "generic" ]; then
+    libs="-lpthread"
+elif [ $platform == "android" ]; then
+    libs=""
+fi
+
 cat > src/Makefile<<EOF
 CC	= $CC
 CFLAGS	= $CFLAGS
@@ -295,7 +304,7 @@ DEFS    = $DEFS
 INCDIR  = ./include
 LDFLAGS	=
 DESTDIR	= ../bin/monkey
-LIBS	= -ldl -lpthread $mod_libs $MORE_LIBS
+LIBS	= -ldl $libs $mod_libs $MORE_LIBS
 OBJ	= monkey.o method.o mimetype.o request.o \\
 	header.o config.o signals.o \\
 	user.o utils.o chars.o epoll.o scheduler.o \\
@@ -551,6 +560,7 @@ sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
 plugdir=""
+platform="generic"
 
 for arg in $*; do
 
@@ -600,6 +610,9 @@ for arg in $*; do
                 --disable-plugins*)
                 	disabled_plugins=$optarg
                         ;;
+                --platform*)
+                        platform=$optarg
+                        ;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
@@ -629,6 +642,7 @@ for arg in $*; do
 			echo "  --plugdir=PLUGDIR       Target directory for Monkey plugins"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
                         echo "  --disable-plugins=a,b   Disable the listed plugins"
+                        echo "  --platform=PLATFORM     Target platform: generic or android (default generic)"
 			echo
 			exit 1
 			;;
@@ -678,6 +692,11 @@ if [ $trace ] ; then
     DEFS="-DTRACE"
 fi
 
+if [ $platform != "generic" ] && [ $platform != "android" ]; then
+    echo -e "\nError: invalid platform $platform\n"
+    exit 1
+fi
+
 # Starting main function
-main prefix lang bindir cgibin sysconfdir datadir logdir plugdir modules SYSNAME VERSION
+main prefix lang bindir cgibin sysconfdir datadir logdir plugdir platform SYSNAME VERSION
 exit 0
