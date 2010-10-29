@@ -83,13 +83,24 @@ main()
 		dir=1
 	fi
 
+        echo
+	echo -e "\033[1mChecking dependencies\033[0m"
+        echo -e "\033[1m=====================\033[0m"
+        echo
+
+        # Check for accept4()
+        echo -n "+ Checking for accept4() function... "
+        check_accept4_func result
+        if [ $result == 0 ]; then
+            echo "Yes"
+        else
+            echo "No"
+            DEFS="$DEFS -DACCEPT_GENERIC"
+        fi
+
         if [ $platform == "generic" ]; then
-            echo
-	    echo -e "\033[1mChecking dependencies\033[0m"
-            echo -e "\033[1m=====================\033[0m"
-            echo
-	    echo -n "+ Checking for Pthreads lib.........."
-	    check_lib lang
+	    echo -n "+ Checking for pthreads lib......... "
+	    check_pthread_lib lang
         fi
 
         echo
@@ -161,22 +172,46 @@ main()
 	echo "#define CC \"${CC}\"" > src/include/env.h
 }
 
+# Check accept4() function
+check_accept4_func()
+{
+cat > check.c <<EOF
+#include <sys/types.h>
+#include <sys/socket.h>
+
+int main()
+{ 
+   accept2(0, 0, 0, 0); 
+   return 0;
+}
+EOF
+
+functest=`$CC check.c &>configure.log`
+funcstatus=`cat configure.log`
+if test -n "$funcstatus" ; then
+    result=-1
+else
+    result=0
+fi
+rm -rf check* configure.log a.out
+}
+
 # Check pthreads lib
-check_lib()
+check_pthread_lib()
 {
 cat > check.c <<EOF
 #include <pthread.h>
 int main(){ return 0;}
 EOF
 
-libtest=`gcc check.c -lpthread &>configure.log`
+libtest=`$CC check.c -lpthread &>configure.log`
 libstatus=`cat configure.log`
 if  test -n "$libstatus"  ; then
-	echo "no"
+	echo "No"
 	rm -fr check* configure.log
 	exit 1
 fi
-echo "yes"
+echo "Yes"
 rm -fr check* configure.log a.out
 }
 
