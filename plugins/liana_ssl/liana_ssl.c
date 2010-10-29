@@ -692,12 +692,12 @@ int _mkp_core_prctx(struct server_config *config)
 
     ssl_file_info = mk_api->file_get_info(cert_file);
     if(ssl_file_info == NULL) {
-        mk_api->error(MK_ERROR_FATAL, "Can't get the info of the certificate file");
+        mk_api->error(MK_ERROR_FATAL, "Cannot read certificate file '%s'", cert_file);
     }
 
     ssl_file_info = mk_api->file_get_info(key_file);
     if(ssl_file_info == NULL) {
-        mk_api->error (MK_ERROR_FATAL, "Can't get the info of the key file");
+        mk_api->error (MK_ERROR_FATAL, "Cannot read key file '%s'", key_file);
     }
 
 
