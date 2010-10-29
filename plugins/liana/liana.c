@@ -54,7 +54,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     int remote_fd;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
-#ifndef accept4
+#ifdef ACCEPT_GENERIC
     remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr,
                        &socket_size);
 

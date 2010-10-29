@@ -181,7 +181,7 @@ cat > check.c <<EOF
 
 int main()
 { 
-   accept2(0, 0, 0, 0); 
+   accept4(0, 0, 0, 0); 
    return 0;
 }
 EOF
