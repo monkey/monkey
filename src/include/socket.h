@@ -28,7 +28,7 @@
 #include "request.h"
 
 #ifndef SOCK_NONBLOCK
-#define SOCK_NONBLOCK 00004000
+#define SOCK_NONBLOCK 04000
 #endif
 
 /* Socket_Timeout() */
