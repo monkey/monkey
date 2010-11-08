@@ -222,19 +222,32 @@ void mk_cheetah_cmd_plugins()
 
 void mk_cheetah_cmd_vhosts()
 {
+    int n;
     struct host *host;
+    struct host_alias *alias;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
+    struct mk_list *head, *host_list;
 
     host = mk_api->config->hosts;
-
     while (host) {
+        host_list = &host->server_names;
+        alias = mk_list_entry_first(host_list, struct host_alias, _head);
+
         CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n", 
                       ANSI_BOLD, ANSI_YELLOW, 
-                      host->servername, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
-        CHEETAH_WRITE("      - Configuration Path : %s\n", host->file);
-        CHEETAH_WRITE("      - Document Root      : %s\n", host->documentroot.data);
+                      alias->name, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
 
+        CHEETAH_WRITE("      - Names         : ");
+        mk_list_foreach(head, host_list) {
+            alias = mk_list_entry(head, struct host_alias, _head);
+            CHEETAH_WRITE("%s ", alias->name);
+        }
+        CHEETAH_WRITE("\n");
+
+        CHEETAH_WRITE("      - Document root : %s\n", host->documentroot.data);
+        CHEETAH_WRITE("      - Config file   : %s\n", host->file);
+       
         if (host->config) {
             section = host->config->section->next;
             while (section) {
@@ -242,7 +255,7 @@ void mk_cheetah_cmd_vhosts()
                               section->name);
                 entry = section->entry;
                 while (entry) {
-                    CHEETAH_WRITE("        - %s : %s\n", entry->key, entry->val);
+                    CHEETAH_WRITE("        - %11.10s : %s\n", entry->key, entry->val);
                     entry = entry->next;
                 }
                 section = section->next;
