@@ -20,6 +20,7 @@
  */
 
 #include "memory.h"
+#include "list.h"
 
 #ifndef MK_CONFIG_H
 #define MK_CONFIG_H
@@ -128,8 +129,9 @@ struct server_config *config;
 
 struct host
 {
-    char *file;                 /* configuration file */
-    char *servername;           /* host name */
+    char *file;                   /* configuration file */
+    struct mk_list server_names;  /* host names (a b c...) */
+
     mk_pointer documentroot;
 
     char *host_signature;
@@ -140,6 +142,14 @@ struct host
 
     /* next node */
     struct host *next;
+};
+
+struct host_alias
+{
+    char *name;
+    int len;
+
+    struct mk_list _head;
 };
 
 /* Handle index file names: index.* */

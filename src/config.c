@@ -542,8 +542,10 @@ struct host *mk_config_get_host(char *path)
     unsigned long len = 0;
     struct stat checkdir;
     struct host *host;
+    struct host_alias *new_alias;
     struct mk_config *cnf;
     struct mk_config_section *section;
+    struct mk_string_line *line, *line_p;
 
     /* Read configuration file */
     cnf = mk_config_create(path);
@@ -555,8 +557,21 @@ struct host *mk_config_get_host(char *path)
     host = mk_mem_malloc_z(sizeof(struct host));
     host->config = cnf;
     host->file = mk_string_dup(path);
-    host->servername = mk_config_section_getval(section, "Servername", 
-                                                MK_CONFIG_VAL_STR);
+
+    /* Alloc list for host name aliases */
+    mk_list_init(&host->server_names); 
+
+    line_p = line = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
+    while (line_p) {
+        /* Alloc node */
+        new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
+        new_alias->name = line_p->val;
+        new_alias->len = line_p->len;
+
+        mk_list_add(&new_alias->_head, &host->server_names);
+
+        line_p = line_p->next;
+    }
 
     /* document root handled by a mk_pointer */
     host->documentroot.data = mk_config_section_getval(section,
@@ -574,7 +589,7 @@ struct host *mk_config_get_host(char *path)
                  path);
     }
 
-    if (!host->servername) {
+    if (mk_list_is_empty(&host->server_names) == 0) {
         mk_config_free(cnf);
         return NULL;
     }
@@ -655,13 +670,19 @@ void mk_config_start_configure(void)
 
 struct host *mk_config_host_find(mk_pointer host)
 {
+    struct host_alias *entry;
+    struct mk_list *head;
     struct host *aux_host;
 
     aux_host = config->hosts;
-
     while (aux_host) {
-        if (strncasecmp(aux_host->servername, host.data, host.len) == 0) {
-            return aux_host;
+        mk_list_foreach(head, &aux_host->server_names) {
+            entry = mk_list_entry(head, struct host_alias, _head);
+            if (entry->len == host.len &&
+                strncasecmp(entry->name, host.data, host.len) == 0) {
+
+                return aux_host;
+            }
         }
         aux_host = aux_host->next;
     }
