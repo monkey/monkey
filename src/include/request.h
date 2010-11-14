@@ -181,7 +181,7 @@ struct session_request
     mk_pointer query_string;    /* ?... */
 
     char *virtual_user;         /* Virtualhost user */
-    char *script_filename;
+
     int keep_alive;
     int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
     

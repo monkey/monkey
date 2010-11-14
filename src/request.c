@@ -792,7 +792,7 @@ struct session_request *mk_request_alloc()
 
     request->file_info = NULL;
     request->virtual_user = NULL;
-    request->script_filename = NULL;
+
     mk_pointer_reset(&request->real_path);
     request->host_conf = config->hosts;
 
@@ -850,7 +850,7 @@ void mk_request_free(struct session_request *sr)
 
     mk_mem_free(sr->file_info);
     mk_mem_free(sr->virtual_user);
-    mk_mem_free(sr->script_filename);
+
     mk_pointer_free(&sr->real_path);
     mk_mem_free(sr);
 }
