@@ -283,9 +283,6 @@ void _mkp_core_prctx()
                 new->host = host;
                 new->next = NULL;
 
-#ifdef TRACE
-                PLUGIN_TRACE("Setting up vhost '%s'", host->servername);
-#endif                
                 /* Link node to main list */
                 if (!lt) {
                     lt = new;

@@ -58,7 +58,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 
     for (i = 0; i < config->worker_capacity; i++) {
         /* Pre alloc IPv4 memory buffer */
-        sl->queue[i].ipv4.data = mk_mem_malloc_z(16);
+	sl->queue[i].ipv4.data = mk_mem_malloc_z(16);
         sl->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
     }
 
