@@ -68,7 +68,7 @@ void mk_cheetah_config(char *path)
 
     if (!section) {
         CHEETAH_WRITE("\nError, could not find CHEETAH tag");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* no longer needed */
@@ -86,7 +86,7 @@ void mk_cheetah_config(char *path)
     }
     else {
         printf("\nCheetah! Error: Invalid LISTEN value");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* Cheetah cannot work in STDIN mode if Monkey is working in background */
@@ -143,7 +143,7 @@ int _mkp_core_prctx(struct server_config *config)
     if (pthread_create(&tid, &thread_attr, 
                        (void *) mk_cheetah_init, config) < 0) {
         perror("pthread_create");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     return 0;

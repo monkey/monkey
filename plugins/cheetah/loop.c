@@ -77,7 +77,7 @@ void mk_cheetah_loop_server()
     server_fd = socket(PF_UNIX, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket() failed");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     cheetah_server = NULL;
@@ -92,12 +92,12 @@ void mk_cheetah_loop_server()
 
     if(bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
         perror("bind");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     if(listen(server_fd, 5) != 0) {
         perror("listen");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while(1) {

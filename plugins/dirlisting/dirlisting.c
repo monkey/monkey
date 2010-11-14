@@ -225,7 +225,7 @@ int mk_dirhtml_read_config(char *path)
 
     if (!section) {
         fprintf(stderr, "\nError, could not find DIRLISTING tag");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* alloc dirhtml config struct */

@@ -205,7 +205,7 @@ int mk_logger_read_config(char *path)
         if (timeout <= 0) {
             fprintf(stderr, 
                     "\nError: FlushTimeout does not have a proper value\n\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         mk_logger_timeout = timeout;
     }
@@ -265,7 +265,7 @@ void _mkp_core_prctx()
                 if (access_entry) {
                     if (pipe(new->fd_access) < 0) {
                         perror("pipe");
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
                     new->file_access = (char *) access_entry;
@@ -274,7 +274,7 @@ void _mkp_core_prctx()
                 if (error_entry) {
                     if (pipe(new->fd_error) < 0) {
                         perror("pipe");
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
                     new->file_error = (char *) error_entry;
