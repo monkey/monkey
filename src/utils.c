@@ -189,10 +189,9 @@ int mk_utils_set_daemon()
     case 0:
         break;
     case -1:
-        exit(1);
-        break;                  /* Error */
+        exit(EXIT_FAILURE);
     default:
-        exit(0);                /* Success */
+        exit(EXIT_SUCCESS);
     };
 
     setsid();                   /* Create new session */
@@ -382,6 +381,6 @@ void mk_error(int type, const char *format, ...)
     
     if (type == MK_ERROR_FATAL) {
         fprintf(stderr, "\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }

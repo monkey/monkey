@@ -95,7 +95,7 @@ void mk_help()
     printf("  -D\t\trun Monkey as daemon\n");
     printf("  -v\t\tshow version number\n");
     printf("  -h\t\tprint this help\n\n");
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /* MAIN */
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'v':
             mk_version();
-            exit(0);
+            exit(EXIT_SUCCESS);
             break;
         case 'h':
             mk_help();

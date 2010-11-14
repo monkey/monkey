@@ -118,7 +118,7 @@ void mk_socket_reset(int socket)
     if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &status, sizeof(int)) ==
         -1) {
         perror("setsockopt");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
