@@ -44,7 +44,7 @@ void mk_signal_handler(int signo)
         mk_plugin_exit_all();
         printf("\n\n%s => Interrupt from keyboard\n\n",
                log_current_time.data);
-        exit(0);
+        _exit(EXIT_SUCCESS);
     case SIGHUP:
         printf("%s => Hangup\n", log_current_time.data);
         mk_signal_term();
@@ -89,7 +89,7 @@ void mk_signal_term()
     signal(SIGSEGV, (void *) SIG_DFL);
     signal(SIGTERM, (void *) SIG_DFL);
     signal(SIGUSR2, (void *) SIG_DFL);
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 void mk_signal_thread_sigpipe_safe()
