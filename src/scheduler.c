@@ -52,6 +52,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
     sl->tid = tid;
     sl->pid = -1;
     sl->epoll_fd = efd;
+    sl->active_connections = 0;
     sl->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
                                 config->worker_capacity);
     sl->request_handler = NULL;
@@ -216,9 +217,32 @@ struct sched_list_node *mk_sched_get_thread_conf()
     return NULL;
 }
 
-int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
+int mk_sched_add_client(int remote_fd)
 {
     unsigned int i, ret;
+    struct mk_list *sched_head;
+    struct sched_list_node *node=NULL, *sched=NULL;
+
+    sched = mk_list_entry_first(sched_list, struct sched_list_node, _head);
+
+    /* Look for worker with less overhead */
+    mk_list_foreach(sched_head, sched_list) {
+      node = mk_list_entry(sched_head, struct sched_list_node, _head);
+    
+      if (node->active_connections == 0) {
+        sched = node;
+        break;
+      }
+      else {
+        if (node->active_connections < sched->active_connections) {
+          sched = node;
+        }
+      }
+    }
+
+#ifdef TRACE
+    MK_TRACE("Balance FD %i to WID %i", remote_fd, sched->idx);
+#endif
 
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
@@ -241,6 +265,7 @@ int mk_sched_add_client(struct sched_list_node *sched, int remote_fd)
             }
 
             /* Socket and status */
+            sched->active_connections++;
             sched->queue[i].socket = remote_fd;
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
@@ -270,6 +295,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
 
         /* Change node status */
+        sched->active_connections--;
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         sc->socket = -1;
         return 0;

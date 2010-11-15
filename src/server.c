@@ -95,12 +95,18 @@ void mk_server_loop(int server_fd)
 
 #ifdef TRACE
         MK_TRACE("New connection arrived: FD %i", remote_fd);
+
+        struct mk_list *sched_head;
+        struct sched_list_node *node;
+
+        MK_TRACE("Worker Status");
+        mk_list_foreach(sched_head, sched_list) {
+            node = mk_list_entry(sched_head, struct sched_list_node, _head);
+            MK_TRACE(" WID %i / conx = %i", node->idx, node->active_connections);
+        }
 #endif
 
         /* Assign socket to worker thread */
-        mk_sched_add_client(sched, remote_fd);
-
-        /* Next node */
-        sched = mk_list_entry_next(list, struct sched_list_node, _head, sched_list);
+        mk_sched_add_client(remote_fd);
     }
 }
