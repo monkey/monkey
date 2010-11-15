@@ -374,13 +374,11 @@ struct mk_patas_node *mk_patas_node_next_target()
     pthread_mutex_lock(&mutex_patas_target);
 
     if (!mk_patas_nodes_head) {
-        node = mk_list_entry_first(mk_patas_nodes_list, struct mk_patas_node, _head);
-        mk_patas_nodes_head = mk_patas_nodes_list->next;
+        mk_patas_nodes_head = mk_patas_nodes_list;
     }
-    else {
-        node = mk_list_entry_next(mk_patas_nodes_head, struct mk_patas_node, 
-                                  _head, mk_patas_nodes_list);
-    }
+    
+    node = mk_list_entry_next(mk_patas_nodes_head, struct mk_patas_node, _head,
+                              mk_patas_nodes_list);
 
     /* Mutex unlock */
     pthread_mutex_unlock(&mutex_patas_target);
