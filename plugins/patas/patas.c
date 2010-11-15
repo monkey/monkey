@@ -29,6 +29,7 @@
 
 /* Networking - I/O*/
 #include <fcntl.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -69,6 +70,41 @@ void mk_patas_conx_init()
     mk_patas_conx_set(thread_conx_list);
 }
 
+int mk_patas_validate_node(const char *host, int port)
+{
+    int i, j;
+    char local_addr[16], node_addr[16];
+    struct hostent local, *node;
+    struct in_addr **node_addr_list, **local_addr_list;
+
+    memcpy(&local, gethostbyname("localhost"), sizeof(struct hostent));
+    node = gethostbyname(host);
+
+    if (!node) {
+        mk_api->error(MK_ERROR_WARNING, "Could not determinate hostname");
+        return -1;
+    }
+
+    local_addr_list = (struct in_addr **) local.h_addr_list;
+    node_addr_list = (struct in_addr **) node->h_addr_list;
+
+    for (i=0; local_addr_list[i] != NULL; i++) {
+        inet_ntop(PF_INET, local.h_addr_list[i], local_addr, 16 );
+
+        for (j=0; node_addr_list[j] != NULL; j++) {
+            inet_ntop(PF_INET, node->h_addr_list[j], node_addr, 16);
+
+            if (strcmp(local_addr, node_addr) == 0 && mk_api->config->serverport == port) {
+                mk_api->error(MK_ERROR_WARNING, "Node %s:%i = localhost:%i, skip node\n",
+                              host, port, port);
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 /* Read configuration parameters */
 int mk_patas_conf(char *confdir)
 {
@@ -105,15 +141,21 @@ int mk_patas_conf(char *confdir)
             }
 
             if (val_host && val_port > 0) {
+                /* validate that node:ip is not pointing this server */
+                if (mk_patas_validate_node(val_host, val_port) < 0) {
+                    break;
+                }
+
                 /* alloc node */
                 node = mk_api->mem_alloc(sizeof(struct mk_patas_node));
-#ifdef TRACE
-                PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
-#endif
+
                 node->host = val_host;
                 node->port = val_port;
 
                 /* add node to list */
+#ifdef TRACE
+                PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
+#endif
                 mk_list_add(&node->_head, mk_patas_nodes_list);
                 mk_patas_n_nodes++;
             }
