@@ -1,0 +1,12 @@
+CC 	= $CC
+CFLAGS	= $CFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../src/include
+SOURCES = patas.c connection.c
+OBJECTS = patas.o connection.o
+
+all:
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
+	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-patas.so $(OBJECTS) -lc
+clean:
+	rm -rf *.o *~ *.*so*
