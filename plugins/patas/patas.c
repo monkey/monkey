@@ -108,6 +108,7 @@ int mk_patas_validate_node(const char *host, int port)
 /* Read configuration parameters */
 int mk_patas_conf(char *confdir)
 {
+    int res;
     int val_port;
     char *val_host;
     unsigned long len;
@@ -148,10 +149,28 @@ int mk_patas_conf(char *confdir)
 
                 /* alloc node */
                 node = mk_api->mem_alloc(sizeof(struct mk_patas_node));
-
                 node->host = val_host;
                 node->port = val_port;
+                
+                /* pre-socket stuff */
+                node->sockaddr = mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
+                node->sockaddr->sin_family = AF_INET;
 
+                res = inet_pton(AF_INET, node->host, 
+                                (void *) (&(node->sockaddr->sin_addr.s_addr)));
+                if (res < 0) {
+                    mk_api->error(MK_ERROR_WARNING, "Can't set remote->sin_addr.s_addr");
+                    mk_api->mem_free(node->sockaddr);
+                    return -1;
+                }
+                else if (res == 0) {
+                    mk_api->error(MK_ERROR_WARNING, "Invalid IP address");
+                    mk_api->mem_free(node->sockaddr);
+                    return -1;
+                }
+
+                node->sockaddr->sin_port = htons(node->port);
+                
                 /* add node to list */
 #ifdef TRACE
                 PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
@@ -392,32 +411,12 @@ struct mk_patas_node *mk_patas_node_next_target()
 
 int mk_patas_node_connect(struct mk_patas_node *node)
 {
-    int res;
     int socket;
-    struct sockaddr_in *remote;
 
     /* create socket */
     socket = mk_api->socket_create();
 
-    remote = (struct sockaddr_in *)
-        mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
-    remote->sin_family = AF_INET;
-
-    res = inet_pton(AF_INET, node->host, (void *) (&(remote->sin_addr.s_addr)));
-
-    if (res < 0) {
-        mk_api->error(MK_ERROR_WARNING, "Can't set remote->sin_addr.s_addr");
-        mk_api->mem_free(remote);
-        return -1;
-    }
-    else if (res == 0) {
-        mk_api->error(MK_ERROR_WARNING, "Invalid IP address");
-        mk_api->mem_free(remote);
-        return -1;
-    }
-
-    remote->sin_port = htons(node->port);
-    if (connect(socket, (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
+    if (connect(socket, (struct sockaddr *) node->sockaddr, sizeof(struct sockaddr)) == -1) {
         close(socket);
 
 #ifdef TRACE

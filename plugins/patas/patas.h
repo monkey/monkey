@@ -27,6 +27,7 @@ struct mk_patas_node {
     /* Node data */
     char *host;
     unsigned int port;
+    struct sockaddr_in *sockaddr;
 
     /* Monkey list */
     struct mk_list _head;
