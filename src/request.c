@@ -1002,7 +1002,7 @@ mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_bo
 
 void mk_request_ka_next(struct client_session *cs)
 {
-    bzero(cs->body, sizeof(cs->body));
+    memset(cs->body, '\0', sizeof(cs->body));
     cs->first_method = -1;
     cs->body_pos_end = -1;
     cs->body_length = 0;
