@@ -762,6 +762,19 @@ struct session_request *mk_request_alloc()
     /* Plugin handler */
     request->handled_by = NULL;
 
+    /* 
+     * FIXME: these fields will be dropped once plugins
+     * uses the new headers ToC interface
+     */
+    request->accept.data = NULL;
+    request->accept_language.data = NULL;
+    request->accept_encoding.data = NULL;
+    request->accept_charset.data = NULL;
+    request->cookies.data = NULL;
+    request->referer.data = NULL;
+    request->resume.data = NULL;
+    request->user_agent.data = NULL;
+
     return request;
 }
 
