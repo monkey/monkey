@@ -40,12 +40,7 @@ int server_fd;
 
 
 /* Thread mutexes */
-pthread_mutex_t mutex_thread_list;
-pthread_mutex_t mutex_thread_counter;
-pthread_mutex_t mutex_cgi_child;
-pthread_mutex_t mutex_logfile;
 pthread_mutex_t mutex_wait_register;
-
 mk_pointer mk_monkey_protocol;
 mk_pointer mk_monkey_port;
 

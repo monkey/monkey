@@ -53,8 +53,7 @@ long int mk_method_post_content_length(char *body)
      * mk_http_pending_request().
      */
     toc = mk_cache_get(mk_cache_header_toc);
-    tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, body,
-                                 mk_rh_content_length);
+    tmp = mk_request_header_find(toc, body, mk_rh_content_length);
 
     if (!tmp.data) {
         int pos_header;
@@ -88,7 +87,6 @@ long int mk_method_post_content_length(char *body)
 /* POST METHOD */
 int mk_method_post(struct client_session *cs, struct session_request *sr)
 {
-     struct header_toc *toc = NULL;
     mk_pointer tmp;
     long content_length_post = 0;
 
@@ -112,10 +110,7 @@ int mk_method_post(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
-    toc = mk_cache_get(mk_cache_header_toc);
-    tmp = mk_request_header_find(toc, MK_KNOWN_HEADERS, sr->body.data,
-                                 mk_rh_content_type);
-
+    tmp = mk_request_header_find(sr->headers_toc, sr->body.data, mk_rh_content_type);
     if (!tmp.data) {
         mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
         return -1;

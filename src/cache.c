@@ -32,7 +32,6 @@
 void mk_cache_thread_init()
 {
     struct mk_iov *cache_iov_header;
-    struct header_toc *cache_header_toc;
     mk_pointer *cache_header_lm; 
     mk_pointer *cache_header_cl;
 
@@ -51,13 +50,6 @@ void mk_cache_thread_init()
     /* Cache iov header struct */
     cache_iov_header = mk_iov_create(32, 0);
     pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
-
-    /* Cache header toc, monkey just search for MK_KNOWN_HEADERS
-     * in request 
-     */
-    cache_header_toc = mk_mem_malloc_z(sizeof(struct header_toc) *
-                                       MK_KNOWN_HEADERS);
-    pthread_setspecific(mk_cache_header_toc, (void *) cache_header_toc);
 }
 
 void *mk_cache_get(pthread_key_t key)

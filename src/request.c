@@ -488,15 +488,13 @@ int mk_request_header_process(struct session_request *sr)
         sr->uri_twin = VAR_ON;
     }
 
-    /* Creating table of content (index) for request headers */
-    int toc_len = MK_KNOWN_HEADERS;
-    int headers_len = sr->body.len - (prot_end + mk_crlf.len);
-
-    struct header_toc *toc = mk_request_header_toc_create(toc_len);
-    mk_request_header_toc_parse(toc, toc_len, headers, headers_len);
+    /* Creating Table of Content (index) for HTTP headers */
+    sr->headers_len = sr->body.len - (prot_end + mk_crlf.len);
+    mk_request_header_toc_init(sr->headers_toc);
+    mk_request_header_toc_parse(sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
-    host = mk_request_header_find(toc, toc_len, headers, mk_rh_host);
+    host = mk_request_header_find(sr->headers_toc, headers, mk_rh_host);
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
@@ -520,26 +518,25 @@ int mk_request_header_process(struct session_request *sr)
         sr->host.data = NULL;
     }
 
-    /* Looking for headers */
-    sr->accept = mk_request_header_find(toc, toc_len, headers, mk_rh_accept);
-    sr->accept_charset = mk_request_header_find(toc, toc_len, headers,
+    /* Looking for headers that ONLY Monkey uses */
+    sr->connection = mk_request_header_find(sr->headers_toc, headers, mk_rh_connection);
+    sr->range = mk_request_header_find(sr->headers_toc, headers, mk_rh_range);
+    sr->if_modified_since = mk_request_header_find(sr->headers_toc, headers,
+                                                   mk_rh_if_modified_since);
+
+
+    /* FIXME: this headers pointers should not be here, just keeping the reference
+     * to avoid problems with Palm plugin
+     */
+    sr->accept = mk_request_header_find(sr->headers_toc, headers, mk_rh_accept);
+    sr->accept_charset = mk_request_header_find(sr->headers_toc, headers,
                                                 mk_rh_accept_charset);
-    sr->accept_encoding = mk_request_header_find(toc, toc_len, headers,
+    sr->accept_encoding = mk_request_header_find(sr->headers_toc, headers,
                                                  mk_rh_accept_encoding);
 
-
-    sr->accept_language = mk_request_header_find(toc, toc_len, headers,
+    sr->accept_language = mk_request_header_find(sr->headers_toc, headers,
                                                  mk_rh_accept_language);
-    sr->cookies = mk_request_header_find(toc, toc_len, headers, mk_rh_cookie);
-    sr->connection = mk_request_header_find(toc, toc_len, headers,
-                                            mk_rh_connection);
-    sr->referer = mk_request_header_find(toc, toc_len, headers,
-                                         mk_rh_referer);
-    sr->user_agent = mk_request_header_find(toc, toc_len, headers,
-                                            mk_rh_user_agent);
-    sr->range = mk_request_header_find(toc, toc_len, headers, mk_rh_range);
-    sr->if_modified_since = mk_request_header_find(toc, toc_len, headers,
-                                                   mk_rh_if_modified_since);
+    sr->cookies = mk_request_header_find(sr->headers_toc, headers, mk_rh_cookie);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {
@@ -567,40 +564,6 @@ int mk_request_header_process(struct session_request *sr)
     }
 
     return 0;
-}
-
-/* Return value of some variable sent in request */
-mk_pointer mk_request_header_find(struct header_toc * toc, int toc_len,
-                                  char *request_body, mk_pointer header)
-{
-    int i;
-    mk_pointer var;
-
-    var.data = NULL;
-    var.len = 0;
-
-    if (toc) {
-        for (i = 0; i < toc_len; i++) {
-            /* status = 1 means that the toc entry was already
-             * checked by monkey
-             */
-            if (toc[i].status == 1) {
-                continue;
-            }
-
-            if (!toc[i].init)
-                break;
-
-            if (strncasecmp(toc[i].init, header.data, header.len) == 0) {
-                var.data = toc[i].init + header.len + 1;
-                var.len = toc[i].end - var.data;
-                toc[i].status = 1;
-                return var;
-            }
-        }
-    }
-
-    return var;
 }
 
 /* Look for some  index.xxx in pathfile */
@@ -769,21 +732,13 @@ struct session_request *mk_request_alloc()
     request->uri_processed = NULL;
     request->uri_twin = VAR_OFF;
 
-    request->accept.data = NULL;
-    request->accept_language.data = NULL;
-    request->accept_encoding.data = NULL;
-    request->accept_charset.data = NULL;
     request->content_length = 0;
     request->content_type.data = NULL;
     request->connection.data = NULL;
-    request->cookies.data = NULL;
     request->host.data = NULL;
     request->if_modified_since.data = NULL;
     request->last_modified_since.data = NULL;
     request->range.data = NULL;
-    request->referer.data = NULL;
-    request->resume.data = NULL;
-    request->user_agent.data = NULL;
 
     request->post_variables.data = NULL;
 
@@ -954,6 +909,16 @@ void mk_session_remove(int socket)
     mk_sched_set_request_list(cs_list);
 }
 
+void mk_request_header_toc_init(struct header_toc *toc)
+{
+    int i;
+    for (i=0; i < MK_HEADERS_TOC_LEN; i++) {
+        toc[i].init = NULL;
+        toc[i].end = NULL;
+        toc[i].status = 0;
+    }
+}
+
 struct header_toc *mk_request_header_toc_create(int len)
 {
     int i;
@@ -969,13 +934,13 @@ struct header_toc *mk_request_header_toc_create(int len)
     return p;
 }
 
-void mk_request_header_toc_parse(struct header_toc *toc, int toc_len, char *data, int len)
+void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len)
 {
     char *p, *l = 0;
     int i;
 
-    p = data;
-    for (i = 0; i < toc_len && p && l < data + len; i++) {
+    p = (char *)data;
+    for (i = 0; i < MK_HEADERS_TOC_LEN && p && l < data + len; i++) {
         l = strstr(p, MK_CRLF);
         if (l) {
             toc[i].init = p;
@@ -986,6 +951,40 @@ void mk_request_header_toc_parse(struct header_toc *toc, int toc_len, char *data
             break;
         }
     }
+}
+
+/* Return value of some variable sent in request */
+mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_body, 
+                                  mk_pointer header)
+{
+    int i;
+    mk_pointer var;
+
+    var.data = NULL;
+    var.len = 0;
+
+    if (toc) {
+        for (i = 0; i < MK_HEADERS_TOC_LEN; i++) {
+            /* status = 1 means that the toc entry was already
+             * checked by Monkey
+             */
+            if (toc[i].status == 1) {
+                continue;
+            }
+
+            if (!toc[i].init)
+                break;
+
+            if (strncasecmp(toc[i].init, header.data, header.len) == 0) {
+                var.data = toc[i].init + header.len + 1;
+                var.len = toc[i].end - var.data;
+                toc[i].status = 1;
+                return var;
+            }
+        }
+    }
+
+    return var;
 }
 
 void mk_request_ka_next(struct client_session *cs)

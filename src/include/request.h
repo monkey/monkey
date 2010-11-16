@@ -89,6 +89,8 @@ parametros de una peticion */
 #define EXIT_ABORT -2
 #define EXIT_PCONNECTION 24
 
+#define MK_HEADERS_TOC_LEN 32
+
 struct client_session
 {
     int pipelined;              /* Pipelined request */
@@ -136,6 +138,11 @@ struct session_request
     int pipelined;              /* Pipelined request */
     mk_pointer body;
 
+    /* HTTP Headers Table of Content */ 
+    struct header_toc headers_toc[MK_HEADERS_TOC_LEN];
+    int headers_len;
+    
+
     /*----First header of client request--*/
     int method;
     mk_pointer method_p;
@@ -154,13 +161,16 @@ struct session_request
 
     /*---Request headers--*/
     int content_length;
+
     mk_pointer accept;
     mk_pointer accept_language;
     mk_pointer accept_encoding;
     mk_pointer accept_charset;
+
     mk_pointer content_type;
     mk_pointer connection;
     mk_pointer cookies;
+
     mk_pointer host;
     mk_pointer host_port;
     mk_pointer if_modified_since;
@@ -169,6 +179,7 @@ struct session_request
     mk_pointer referer;
     mk_pointer resume;
     mk_pointer user_agent;
+
     /*---------------------*/
     
     /* POST */
@@ -238,8 +249,8 @@ mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
                                         char *signature);
 
 int mk_request_header_process(struct session_request *sr);
-mk_pointer mk_request_header_find(struct header_toc *toc, int toc_len,
-                                  char *request_body, mk_pointer header);
+mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_body, 
+                                  mk_pointer header);
 
 void mk_request_error(int http_status, struct client_session *cs, 
                       struct session_request *sr);
@@ -257,10 +268,9 @@ void mk_request_init_error_msgs();
 int mk_handler_read(int socket, struct client_session *cs);
 int mk_handler_write(int socket, struct client_session *cs);
 
-
+void mk_request_header_toc_init(struct header_toc *toc);
 struct header_toc *mk_request_header_toc_create(int len);
-void mk_request_header_toc_parse(struct header_toc *toc, int toc_len,
-                                 char *data, int len);
+void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len);
 
 void mk_request_ka_next(struct client_session *cs);
 #endif
