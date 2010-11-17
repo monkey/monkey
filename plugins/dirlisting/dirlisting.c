@@ -152,7 +152,7 @@ struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
      */
 
     while ((ent = readdir(dir)) != NULL) {
-        if (ent->d_name[0] == '.')
+        if ((ent->d_name[0] == '.') && (strcmp(ent->d_name, "..") != 0))
             continue;
 
         /* Look just for files and dirs */
