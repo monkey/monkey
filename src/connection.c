@@ -168,7 +168,7 @@ int mk_conn_error(int socket)
     }
 
     sched = mk_sched_get_thread_conf();
-    mk_sched_remove_client(NULL, socket);
+    mk_sched_remove_client(sched, socket);
     cs = mk_session_get(socket);
     if (cs) {
         mk_session_remove(socket);
