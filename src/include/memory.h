@@ -37,10 +37,9 @@ struct list_sint
 
 typedef struct list_sint mk_list_sint_t;
 
-void *mk_mem_malloc(size_t size);
-extern void *mk_mem_malloc_z(size_t size);
-
-void *mk_mem_realloc(void *ptr, size_t size);
+void *mk_mem_malloc(const size_t size);
+void *mk_mem_malloc_z(const size_t size);
+void *mk_mem_realloc(void *ptr, const size_t size);
 void mk_mem_free(void *ptr);
 void mk_mem_pointers_init();
 

@@ -34,37 +34,37 @@
 #include "iov.h"
 #include "user.h"
 
-void *mk_mem_malloc(size_t size)
+inline __attribute__((alloc_size(1)))
+void *mk_mem_malloc(const size_t size)
 {
-    void *aux = 0;
-
-    if ((aux = malloc(size)) == NULL) {
+    void *aux = malloc(size);
+    
+    if (!aux && size) {
         perror("malloc");
         return NULL;
     }
-
+    
     return aux;
 }
 
-extern void *mk_mem_malloc_z(size_t size)
+inline __attribute__((alloc_size(1)))
+void *mk_mem_malloc_z(const size_t size)
 {
-    void *buf = 0;
-
-    buf = mk_mem_malloc(size);
-    if (!buf) {
+    void *buf = mk_mem_malloc(size);
+    if (!buf)
         return NULL;
-    }
 
     memset(buf, '\0', size);
 
     return buf;
 }
 
-void *mk_mem_realloc(void *ptr, size_t size)
+inline __attribute__((alloc_size(1,2)))
+void *mk_mem_realloc(void *ptr, const size_t size)
 {
-    void *aux = 0;
+    void *aux = realloc(ptr, size);
 
-    if ((aux = realloc(ptr, size)) == NULL) {
+    if (!aux && size) {
         perror("realloc");
         return NULL;
     }
