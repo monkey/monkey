@@ -354,8 +354,10 @@ int mk_utils_register_pid()
 /* Remove PID file */
 int mk_utils_remove_pid()
 {
+    char *pidfile = config->pid_file_path;
+  
     mk_user_undo_uidgid();
-    return remove(config->pid_file_path);
+    return unlink(pidfile);
 }
 
 void mk_error(int type, const char *format, ...)

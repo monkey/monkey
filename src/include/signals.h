@@ -1,6 +1,7 @@
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2010, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2010 Davidlohr Bueso <dave@gnu.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,8 +18,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* signals.c */
-void mk_signal_handler(int signo);
+#ifndef MK_SIG_H
+#define MK_SIG_H
+
 void mk_signal_init();
-void mk_signal_term();
 void mk_signal_thread_sigpipe_safe();
+
+#endif

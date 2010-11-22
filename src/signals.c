@@ -3,6 +3,7 @@
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2010, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2010 Davidlohr Bueso <dave@gnu.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,74 +23,28 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "monkey.h"
 #include "signals.h"
 #include "clock.h"
 #include "plugin.h"
 
-/* (by Daniel R. Ome) */
-void mk_signal_handler(int signo)
+/* when we catch a signal and want to exit we call this function
+   to do it gracefully */
+void mk_signal_exit()
 {
+    /* ignore future signals to properly handle the cleanup */
+    signal(SIGTERM, SIG_IGN);
+    signal(SIGINT,  SIG_IGN);
+    signal(SIGHUP,  SIG_IGN);
 
-    switch (signo) {
-    case SIGUSR2:
-        /* Fixme: not yet implemented */
-        printf("%s => Monkey reconfiguration \n", log_current_time.data);
-        break;
-
-    case SIGINT:
-        mk_utils_remove_pid();
-        mk_plugin_exit_all();
-        printf("\n\n%s => Interrupt from keyboard\n\n",
-               log_current_time.data);
-        _exit(EXIT_SUCCESS);
-    case SIGHUP:
-        printf("%s => Hangup\n", log_current_time.data);
-        mk_signal_term();
-        break;
-
-    case SIGPIPE:
-        printf("\n sigpipe");
-        fflush(stdout);
-        break;
-
-    case SIGBUS:
-    case SIGSEGV:
-        printf("%s => Invalid memory reference\n", log_current_time.data);
-        break;
-
-    case SIGTERM:
-        printf("%s => Termination signal\n", log_current_time.data);
-        mk_signal_term();
-        break;
-    }
-
-    pthread_exit(NULL);
-}
-
-void mk_signal_init()
-{
-    signal(SIGHUP, (void *) mk_signal_handler);
-    signal(SIGINT, (void *) mk_signal_handler);
-    signal(SIGPIPE, (void *) mk_signal_handler);
-    signal(SIGBUS, (void *) mk_signal_handler);
-    signal(SIGSEGV, (void *) mk_signal_handler);
-    signal(SIGTERM, (void *) mk_signal_handler);
-    signal(SIGUSR2, (void *) mk_signal_handler);
-}
-
-void mk_signal_term()
-{
-    signal(SIGHUP, (void *) SIG_DFL);
-    signal(SIGINT, (void *) SIG_DFL);
-    signal(SIGPIPE, (void *) SIG_DFL);
-    signal(SIGBUS, (void *) SIG_DFL);
-    signal(SIGSEGV, (void *) SIG_DFL);
-    signal(SIGTERM, (void *) SIG_DFL);
-    signal(SIGUSR2, (void *) SIG_DFL);
-    exit(EXIT_SUCCESS);
+    mk_utils_remove_pid();
+    mk_plugin_exit_all();    
+    _exit(EXIT_SUCCESS);
 }
 
 void mk_signal_thread_sigpipe_safe()
@@ -99,4 +54,50 @@ void mk_signal_thread_sigpipe_safe()
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &set, &old);
+}
+
+
+void mk_signal_handler(int signo, siginfo_t *si, void *context)
+{
+    switch (signo) {
+    case SIGTERM:
+    case SIGINT:
+        mk_signal_exit();
+        break;
+    case SIGHUP:
+        /*
+         * TODO:
+         * we should implement the httpd config reload here (not in SIGUSR2).
+         * Daemon processes “overload” this signal with a mechanism to instruct them to
+         * reload their configuration files. Sending SIGHUP to Apache, for example,
+         * instructs it to reread httpd.conf.
+         */
+        mk_signal_exit();
+        break;
+    case SIGBUS:
+    case SIGSEGV:
+        printf("Caught %s (%d), code = %d\n", sys_siglist[signo], signo, si->si_code);
+        printf("Fault addr = %p \n",si->si_addr);
+        pthread_exit(NULL);
+    default:
+        /* let the kernel handle it */
+        kill(getpid(), signo);
+    }
+
+}
+
+void mk_signal_init()
+{
+    struct sigaction act;
+    memset(&act, 0x0, sizeof(act));
+ 
+    /* allow signals to be handled concurrently */
+    act.sa_flags = SA_SIGINFO | SA_NODEFER;
+    act.sa_sigaction = &mk_signal_handler;
+
+    sigaction(SIGSEGV, &act, NULL);
+    sigaction(SIGBUS,  &act, NULL);
+    sigaction(SIGHUP,  &act, NULL);
+    sigaction(SIGINT,  &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
 }
