@@ -331,8 +331,6 @@ int mk_plugin_event_add(int socket, int mode,
                         struct session_request *sr);
 int mk_plugin_event_del(int socket);
 
-int mk_plugin_event_set_list(struct mk_list *list);
-struct mk_list *mk_plugin_event_get_list();
 int mk_plugin_event_socket_change_mode(int socket, int mode);
 
 /* Plugins event handlers */

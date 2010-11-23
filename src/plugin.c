@@ -34,6 +34,16 @@
 #include "clock.h"
 #include "plugin.h"
 
+static int mk_plugin_event_set_list(struct mk_list *list)
+{
+    return pthread_setspecific(mk_plugin_event_k, list);
+}
+
+static struct mk_list *mk_plugin_event_get_list()
+{
+    return pthread_getspecific(mk_plugin_event_k);
+}
+
 void *mk_plugin_load(char *path)
 {
     void *handle;
@@ -823,16 +833,6 @@ void mk_plugin_event_init_list()
     list = mk_mem_malloc(sizeof(struct mk_list));
     mk_list_init(list);
     mk_plugin_event_set_list(list);
-}
-
-int mk_plugin_event_set_list(struct mk_list *list)
-{
-    return pthread_setspecific(mk_plugin_event_k, list);
-}
-
-struct mk_list *mk_plugin_event_get_list()
-{
-    return pthread_getspecific(mk_plugin_event_k);
 }
 
 /* Plugin epoll event handlers

@@ -239,25 +239,17 @@ struct header_values
     char *location;
 };
 
-int mk_request_parse(struct client_session *cs);
-int mk_request_process(struct client_session *cs, struct session_request *sr);
 mk_pointer mk_request_index(char *pathfile);
 
 
 /* Custom HTML Page for errors */
-mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
-                                        char *signature);
-
-int mk_request_header_process(struct session_request *sr);
 mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_body, 
                                   mk_pointer header);
 
 void mk_request_error(int http_status, struct client_session *cs, 
                       struct session_request *sr);
 
-struct session_request *mk_request_alloc();
 void mk_request_free_list(struct client_session *cs);
-void mk_request_free(struct session_request *sr);
 
 struct client_session *mk_session_create(int socket);
 struct client_session *mk_session_get(int socket);
@@ -269,8 +261,6 @@ int mk_handler_read(int socket, struct client_session *cs);
 int mk_handler_write(int socket, struct client_session *cs);
 
 void mk_request_header_toc_init(struct header_toc *toc);
-struct header_toc *mk_request_header_toc_create(int len);
-void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len);
 
 void mk_request_ka_next(struct client_session *cs);
 #endif

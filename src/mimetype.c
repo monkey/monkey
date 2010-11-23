@@ -37,6 +37,52 @@
 #include "monkey.h"
 #include "list.h"
 
+/* Match mime type for requested resource */
+static struct mimetype *mk_mimetype_cmp(char *name)
+{
+    struct mk_list *list_node;
+    struct mimetype *aux;
+
+    mk_list_foreach(list_node, mimetype_list) {
+        aux = mk_list_entry(list_node, struct mimetype, _head);
+        if (strcasecmp(aux->name, name) == 0) {
+            return aux;
+        }
+    }
+
+    return NULL;
+}
+
+static int mk_mimetype_add(char *name, char *type)
+{
+    int len;
+    struct mimetype *new_mime;
+
+    new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
+
+    new_mime->name = name;
+
+    /* Alloc space */
+    len = strlen(type) + 3;
+    new_mime->type.data = mk_mem_malloc(len);
+    new_mime->type.len = len - 1;
+
+    /* Copy mime type and add CRLF */
+    strcpy(new_mime->type.data, type);
+    strcat(new_mime->type.data, MK_CRLF);
+    new_mime->type.data[len-1] = '\0';
+
+    /* Free incoming type, 'name' is not freed as it's used in 
+     * the main mimetype list
+     */
+    mk_mem_free(type);
+
+    /* Add node to main list */
+    mk_list_add(&new_mime->_head, mimetype_list);
+
+    return 0;
+}
+
 /* Load mimetypes */
 void mk_mimetype_read_config()
 {
@@ -74,36 +120,6 @@ void mk_mimetype_read_config()
     mk_pointer_set(&mimetype_default->type, MIMETYPE_DEFAULT_TYPE);
 }
 
-int mk_mimetype_add(char *name, char *type)
-{
-    int len;
-    struct mimetype *new_mime;
-
-    new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
-
-    new_mime->name = name;
-
-    /* Alloc space */
-    len = strlen(type) + 3;
-    new_mime->type.data = mk_mem_malloc(len);
-    new_mime->type.len = len - 1;
-
-    /* Copy mime type and add CRLF */
-    strcpy(new_mime->type.data, type);
-    strcat(new_mime->type.data, MK_CRLF);
-    new_mime->type.data[len-1] = '\0';
-
-    /* Free incoming type, 'name' is not freed as it's used in 
-     * the main mimetype list
-     */
-    mk_mem_free(type);
-
-    /* Add node to main list */
-    mk_list_add(&new_mime->_head, mimetype_list);
-
-    return 0;
-}
-
 struct mimetype *mk_mimetype_find(mk_pointer * filename)
 {
     int j, len;
@@ -119,26 +135,4 @@ struct mimetype *mk_mimetype_find(mk_pointer * filename)
     }
 
     return mk_mimetype_cmp(filename->data + j + 1);
-}
-
-/* Match mime type for requested resource */
-struct mimetype *mk_mimetype_cmp(char *name)
-{
-    struct mk_list *list_node;
-    struct mimetype *aux;
-
-    mk_list_foreach(list_node, mimetype_list) {
-        aux = mk_list_entry(list_node, struct mimetype, _head);
-        if (strcasecmp(aux->name, name) == 0) {
-            return aux;
-        }
-    }
-
-    return NULL;
-}
-
-int mk_mimetype_free(char **arr)
-{
-    mk_mem_free(arr);
-    return 0;
 }

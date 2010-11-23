@@ -31,7 +31,7 @@
 #include "clock.h"
 #include "utils.h"
 
-void mk_clock_log_set_time()
+static void mk_clock_log_set_time()
 {
     time_t utime;
 

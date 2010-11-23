@@ -41,6 +41,13 @@
 #include "server.h"
 #include "plugin.h"
 
+/* Imprime error de configuracion y cierra */
+static void mk_config_print_error_msg(char *variable, char *path)
+{
+    mk_error(MK_ERROR_FATAL, "Error in %s variable under %s, has an invalid value",
+             variable, path);
+}
+
 /* Raise a configuration error */
 void mk_config_error(const char *path, int line, const char *msg)
 {
@@ -345,7 +352,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 }
 
 /* Read configuration files */
-void mk_config_read_files(char *path_conf, char *file_conf)
+static void mk_config_read_files(char *path_conf, char *file_conf)
 {
     unsigned long len;
     char *path = 0;
@@ -608,13 +615,6 @@ struct host *mk_config_get_host(char *path)
 
     host->next = NULL;
     return host;
-}
-
-/* Imprime error de configuracion y cierra */
-void mk_config_print_error_msg(char *variable, char *path)
-{
-    mk_error(MK_ERROR_FATAL, "Error in %s variable under %s, has an invalid value",
-             variable, path);
 }
 
 void mk_config_set_init_values(void)

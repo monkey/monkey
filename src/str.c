@@ -33,7 +33,10 @@
 
 #include <stdio.h>
 
-/* Get position of a substring.
+/* 
+ * Base function for search routines, it accept modifiers to enable/disable
+ * the case sensitive feature and also allow to specify a haystack len 
+ * Get position of a substring.
  * Original version taken from google, modified in order
  * to send the position instead the substring.
  */

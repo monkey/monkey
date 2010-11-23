@@ -161,9 +161,7 @@ struct index_file
 
 /* Functions */
 void mk_config_start_configure(void);
-void mk_config_read_files(char *path_conf, char *file_conf);
 void mk_config_add_index(char *indexname);
-void mk_config_print_error_msg(char *variable, char *path);
 void mk_config_set_init_values(void);
 
 /* config helpers */

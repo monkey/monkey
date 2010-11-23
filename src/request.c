@@ -60,359 +60,120 @@
 #include "utils.h"
 #include "plugin.h"
 
-int mk_request_parse(struct client_session *cs)
+/* Create a memory allocation in order to handle the request data */
+static struct session_request *mk_request_alloc()
 {
-    int i, end;
-    int blocks = 0;
-    struct session_request *sr_node;
-    struct mk_list *sr_list, *sr_head;
+    struct session_request *request = 0;
 
-    for (i = 0; i <= cs->body_pos_end; i++) {
-        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
-         * request can be involved.
-         */
-        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+    request = mk_mem_malloc(sizeof(struct session_request));
+    request->status = VAR_OFF;  /* Request not processed yet */
+    request->close_now = VAR_OFF;
 
-        if (end <  0) {
-            return -1;
-        }
+    mk_pointer_reset(&request->body);
+    request->status = VAR_ON;
+    request->method = METHOD_NOT_FOUND;
 
-        /* Allocating request block */
-        sr_node = mk_request_alloc();
+    mk_pointer_reset(&request->uri);
+    request->uri_processed = NULL;
+    request->uri_twin = VAR_OFF;
 
-        /* We point the block with a mk_pointer */
-        sr_node->body.data = cs->body + i;
-        sr_node->body.len = end - i;
+    request->content_length = 0;
+    request->content_type.data = NULL;
+    request->connection.data = NULL;
+    request->host.data = NULL;
+    request->if_modified_since.data = NULL;
+    request->last_modified_since.data = NULL;
+    request->range.data = NULL;
 
-        /* Method, previous catch in mk_http_pending_request */
-        if (i == 0) {
-            sr_node->method = cs->first_method;
-        }
-        else {
-            sr_node->method = mk_http_method_get(sr_node->body.data);
-        }
+    request->post_variables.data = NULL;
 
-        /* Looking for POST data */
-        if (sr_node->method == HTTP_METHOD_POST) {
-            int offset;
-            offset = end + mk_endblock.len;
-            sr_node->post_variables = mk_method_post_get_vars(cs->body + offset,
-                                                              cs->body_length - offset);
-            if (sr_node->post_variables.len >= 0) {
-                i += sr_node->post_variables.len;
-            }
-        }
+    request->user_uri = NULL;
+    mk_pointer_reset(&request->query_string);
 
-        /* Increase index to the end of the current block */
-        i = (end + mk_endblock.len) - 1;
+    request->file_info = NULL;
+    request->virtual_user = NULL;
 
-        /* Link block */
-        mk_list_add(&sr_node->_head, &cs->request_list);
+    mk_pointer_reset(&request->real_path);
+    request->host_conf = config->hosts;
 
-        /* Update counter */
-        blocks++;
-    }
+    request->loop = 0;
+    request->bytes_to_send = -1;
+    request->bytes_offset = 0;
+    request->fd_file = -1;
 
+    /* Response Headers */
+    request->headers = mk_header_create();
 
-    /* DEBUG BLOCKS
-    cr_search = cs->request;
-    while(cr_search){
-        printf("\n");
-        MK_TRACE("BLOCK INIT");
-        mk_pointer_print(cr_search->body);
-        MK_TRACE("BLOCK_END");
+    /* Plugin handler */
+    request->handled_by = NULL;
 
-        cr_search = cr_search->next;
-    }
-    */
-
-    /* Checking pipelining connection */
-    if (blocks > 1) {
-        sr_list = &cs->request_list;
-        mk_list_foreach(sr_head, sr_list) {
-            sr_node = mk_list_entry(sr_head, struct session_request, _head);
-            /* Pipelining request must use GET or HEAD methods */
-            if (sr_node->method != HTTP_METHOD_GET &&
-                sr_node->method != HTTP_METHOD_HEAD) {
-                return -1;
-            }
-        }
-
-        cs->pipelined = TRUE;
-    }
-
-    return 0;
-}
-
-/* This function allow the core to invoke the closing connection process
- * when some connection was not proceesed due to a premature close or similar
- * exception, it also take care of invoke the STAGE_40 and STAGE_50 plugins events
- */
-void mk_request_premature_close(int http_status, struct client_session *cs)
-{
-    struct session_request *sr;
-    struct mk_list *sr_list = &cs->request_list;
-
-    if (mk_list_is_empty(sr_list) == 0) {
-        sr = mk_request_alloc();
-        mk_list_add(&sr->_head, &cs->request_list);
-    }
-    else {
-        sr = mk_list_entry_first(sr_list, struct session_request, _head);
-    }
-
-    /* Raise error */
-    if (http_status > 0) {
-        mk_request_error(http_status, cs, sr);
-
-        /* STAGE_40, request has ended */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
-                            NULL, cs, sr);
-    }
-
-    /* STAGE_50, connection closed */
-    mk_plugin_stage_run(MK_PLUGIN_STAGE_50, cs->socket, NULL, NULL, NULL);
-    mk_session_remove(cs->socket);
-}
-
-int mk_handler_read(int socket, struct client_session *cs)
-{
-    int bytes;
-    int pending = 0;
-    int available = 0;
-    int ret;
-    int new_size;
-    char *tmp = 0;
-
-    /* Check amount of data reported */
-    ret = ioctl(socket, FIONREAD, &pending);
-    if (ret == -1) {
-        mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
-        return -1;
-    }
-
-    /* Reallocate buffer size if pending data does not have space */
-    if (pending > 0 && (pending >= (cs->body_size - (cs->body_length - 1)))) {
-        /* check available space */
-        available = (cs->body_size - cs->body_length) + MK_REQUEST_CHUNK;
-        if (pending < available) {
-            new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
-        }
-        else {    
-            new_size = cs->body_size + pending + 1;
-        }
-
-        if (new_size > config->max_request_size) {
-            mk_request_premature_close(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
-            return -1;
-        }
-
-        tmp = mk_mem_realloc(cs->body, new_size);
-        if (tmp) {
-            cs->body = tmp;
-            cs->body_size = new_size;
-        }
-        else {
-            mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
-            return -1;
-        }
-    }
-
-    /* Read content */
-    bytes = mk_socket_read(socket, cs->body + cs->body_length, 
-                           (cs->body_size - cs->body_length) );
-
-    if (bytes < 0) {
-        if (errno == EAGAIN) {
-            return 1;
-        }
-        else {
-            mk_session_remove(socket);
-            return -1;
-        }
-    }
-    if (bytes == 0) {
-        mk_session_remove(socket);
-        return -1;
-    }
-
-    if (bytes >= 0) {
-        cs->body_length += bytes;
-        cs->body[cs->body_length] = '\0';
-    }
-
-    return bytes;
-}
-
-int mk_handler_write(int socket, struct client_session *cs)
-{
-    int bytes, final_status = 0;
-    struct session_request *sr_node;
-    struct mk_list *sr_list, *sr_head;
-
-    /*
-     * Get node from schedule list node which contains
-     * the information regarding to the current thread
+    /* 
+     * FIXME: these fields will be dropped once plugins
+     * uses the new headers ToC interface
      */
-    if (!cs) {
-        return -1;
-    }
+    request->accept.data = NULL;
+    request->accept_language.data = NULL;
+    request->accept_encoding.data = NULL;
+    request->accept_charset.data = NULL;
+    request->cookies.data = NULL;
+    request->referer.data = NULL;
+    request->resume.data = NULL;
+    request->user_agent.data = NULL;
 
-    if (mk_list_is_empty(&cs->request_list) == 0) {
-        if (mk_request_parse(cs) != 0) {
-            return -1;
-        }
-    }
-
-    sr_list = &cs->request_list;
-    mk_list_foreach(sr_head, sr_list) {
-        sr_node = mk_list_entry(sr_head, struct session_request, _head);
-
-        /* Request not processed also no plugin has take some action */
-        if (sr_node->bytes_to_send < 0 && !sr_node->handled_by) {
-            final_status = mk_request_process(cs, sr_node);
-        }
-        /* Request with data to send by static file sender */
-        else if (sr_node->bytes_to_send > 0 && !sr_node->handled_by) {
-            final_status = bytes = mk_http_send_file(cs, sr_node);
-        }
-
-        /*
-         * If we got an error, we don't want to parse
-         * and send information for another pipelined request
-         */
-        if (final_status > 0) {
-            return final_status;
-        }
-        else if (final_status <= 0) {
-            /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
-                                NULL, cs, sr_node);
-            switch (final_status) {
-            case EXIT_NORMAL:
-            case EXIT_ERROR:
-                 if (sr_node->close_now == VAR_ON) {
-                    return -1;
-                }
-                break;
-            case EXIT_ABORT:
-                  return -1;
-            }
-        }
-    }
-
-    /* If we are here, is because all pipelined request were
-     * processed successfully, let's return 0;
-     */
-    return 0;
+    return request;
 }
 
-int mk_request_process(struct client_session *cs, struct session_request *sr)
+
+static void mk_request_free(struct session_request *sr)
 {
-    int status = 0;
-    struct host *host;
-
-    status = mk_request_header_process(sr);
-    if (status < 0) {
-        mk_header_set_http_status(sr, M_CLIENT_BAD_REQUEST);
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_ABORT;
+    if (sr->fd_file > 0) {
+        close(sr->fd_file);
     }
 
-    switch (sr->method) {
-    case METHOD_NOT_ALLOWED:
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
-        return EXIT_NORMAL;
-    case METHOD_NOT_FOUND:
-        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cs, sr);
-        return EXIT_NORMAL;
+    if (sr->headers) {
+        mk_mem_free(sr->headers->location);
+        mk_mem_free(sr->headers);
     }
 
-    sr->user_home = VAR_OFF;
+    mk_pointer_reset(&sr->body);
+    mk_pointer_reset(&sr->uri);
 
-    /* Valid request URI? */
-    if (sr->uri_processed == NULL) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
-    }
-    if (sr->uri_processed[0] != '/') {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
+    if (sr->uri_twin == VAR_ON) {
+        mk_mem_free(sr->uri_processed);
     }
 
-    /* HTTP/1.1 needs Host header */
-    if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
-    }
+    mk_mem_free(sr->user_uri);
+    mk_pointer_reset(&sr->query_string);
 
-    /* Method not allowed ? */
-    if (sr->method == METHOD_NOT_ALLOWED) {
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
-        return EXIT_NORMAL;
-    }
+    mk_mem_free(sr->file_info);
+    mk_mem_free(sr->virtual_user);
 
-    /* Validating protocol version */
-    if (sr->protocol == HTTP_PROTOCOL_UNKNOWN) {
-        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cs, sr);
-        return EXIT_ABORT;
-    }
+    mk_pointer_free(&sr->real_path);
+    mk_mem_free(sr);
+}
 
-    if (sr->host.data) {
-        host = mk_config_host_find(sr->host);
-        if (host) {
-            sr->host_conf = host;
+static void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len)
+{
+    char *p, *l = 0;
+    int i;
+
+    p = (char *)data;
+    for (i = 0; i < MK_HEADERS_TOC_LEN && p && l < data + len; i++) {
+        l = strstr(p, MK_CRLF);
+        if (l) {
+            toc[i].init = p;
+            toc[i].end = l;
+            p = l + mk_crlf.len;
         }
         else {
-            sr->host_conf = config->hosts;
+            break;
         }
     }
-    else {
-        sr->host_conf = config->hosts;
-    }
-
-    /* is requesting an user home directory ? */
-    if (config->user_dir) {
-        if (strncmp(sr->uri_processed,
-                    mk_user_home.data, mk_user_home.len) == 0) {
-            if (mk_user_init(cs, sr) != 0) {
-                return EXIT_NORMAL;
-            }
-        }
-    }
-
-    /* Handling method requested */
-    if (sr->method == HTTP_METHOD_POST) {
-        if ((status = mk_method_post(cs, sr)) == -1) {
-            return status;
-        }
-    }
-
-    /* Plugins Stage 20 */
-    int ret;
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cs->socket, NULL, 
-                              cs, sr);
-    
-    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-#ifdef TRACE
-        MK_TRACE("STAGE 20 requested close conexion");
-#endif
-        return EXIT_ABORT;
-    }
-
-    /* Normal HTTP process */
-    status = mk_http_init(cs, sr);
-
-#ifdef TRACE
-    MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
-#endif
-
-    return status;
 }
 
 /* Return a struct with method, URI , protocol version
 and all static headers defined here sent in request */
-int mk_request_header_process(struct session_request *sr)
+static int mk_request_header_process(struct session_request *sr)
 {
     int uri_init = 0, uri_end = 0;
     char *query_init = 0;
@@ -566,6 +327,374 @@ int mk_request_header_process(struct session_request *sr)
     return 0;
 }
 
+static int mk_request_parse(struct client_session *cs)
+{
+    int i, end;
+    int blocks = 0;
+    struct session_request *sr_node;
+    struct mk_list *sr_list, *sr_head;
+
+    for (i = 0; i <= cs->body_pos_end; i++) {
+        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
+         * request can be involved.
+         */
+        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+
+        if (end <  0) {
+            return -1;
+        }
+
+        /* Allocating request block */
+        sr_node = mk_request_alloc();
+
+        /* We point the block with a mk_pointer */
+        sr_node->body.data = cs->body + i;
+        sr_node->body.len = end - i;
+
+        /* Method, previous catch in mk_http_pending_request */
+        if (i == 0) {
+            sr_node->method = cs->first_method;
+        }
+        else {
+            sr_node->method = mk_http_method_get(sr_node->body.data);
+        }
+
+        /* Looking for POST data */
+        if (sr_node->method == HTTP_METHOD_POST) {
+            int offset;
+            offset = end + mk_endblock.len;
+            sr_node->post_variables = mk_method_post_get_vars(cs->body + offset,
+                                                              cs->body_length - offset);
+            if (sr_node->post_variables.len >= 0) {
+                i += sr_node->post_variables.len;
+            }
+        }
+
+        /* Increase index to the end of the current block */
+        i = (end + mk_endblock.len) - 1;
+
+        /* Link block */
+        mk_list_add(&sr_node->_head, &cs->request_list);
+
+        /* Update counter */
+        blocks++;
+    }
+
+
+    /* DEBUG BLOCKS
+    cr_search = cs->request;
+    while(cr_search){
+        printf("\n");
+        MK_TRACE("BLOCK INIT");
+        mk_pointer_print(cr_search->body);
+        MK_TRACE("BLOCK_END");
+
+        cr_search = cr_search->next;
+    }
+    */
+
+    /* Checking pipelining connection */
+    if (blocks > 1) {
+        sr_list = &cs->request_list;
+        mk_list_foreach(sr_head, sr_list) {
+            sr_node = mk_list_entry(sr_head, struct session_request, _head);
+            /* Pipelining request must use GET or HEAD methods */
+            if (sr_node->method != HTTP_METHOD_GET &&
+                sr_node->method != HTTP_METHOD_HEAD) {
+                return -1;
+            }
+        }
+
+        cs->pipelined = TRUE;
+    }
+
+    return 0;
+}
+
+/* This function allow the core to invoke the closing connection process
+ * when some connection was not proceesed due to a premature close or similar
+ * exception, it also take care of invoke the STAGE_40 and STAGE_50 plugins events
+ */
+static void mk_request_premature_close(int http_status, struct client_session *cs)
+{
+    struct session_request *sr;
+    struct mk_list *sr_list = &cs->request_list;
+
+    if (mk_list_is_empty(sr_list) == 0) {
+        sr = mk_request_alloc();
+        mk_list_add(&sr->_head, &cs->request_list);
+    }
+    else {
+        sr = mk_list_entry_first(sr_list, struct session_request, _head);
+    }
+
+    /* Raise error */
+    if (http_status > 0) {
+        mk_request_error(http_status, cs, sr);
+
+        /* STAGE_40, request has ended */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
+                            NULL, cs, sr);
+    }
+
+    /* STAGE_50, connection closed */
+    mk_plugin_stage_run(MK_PLUGIN_STAGE_50, cs->socket, NULL, NULL, NULL);
+    mk_session_remove(cs->socket);
+}
+
+static int mk_request_process(struct client_session *cs, struct session_request *sr)
+{
+    int status = 0;
+    struct host *host;
+
+    status = mk_request_header_process(sr);
+    if (status < 0) {
+        mk_header_set_http_status(sr, M_CLIENT_BAD_REQUEST);
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_ABORT;
+    }
+
+    switch (sr->method) {
+    case METHOD_NOT_ALLOWED:
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        return EXIT_NORMAL;
+    case METHOD_NOT_FOUND:
+        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    sr->user_home = VAR_OFF;
+
+    /* Valid request URI? */
+    if (sr->uri_processed == NULL) {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_NORMAL;
+    }
+    if (sr->uri_processed[0] != '/') {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    /* HTTP/1.1 needs Host header */
+    if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
+        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    /* Method not allowed ? */
+    if (sr->method == METHOD_NOT_ALLOWED) {
+        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    /* Validating protocol version */
+    if (sr->protocol == HTTP_PROTOCOL_UNKNOWN) {
+        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cs, sr);
+        return EXIT_ABORT;
+    }
+
+    if (sr->host.data) {
+        host = mk_config_host_find(sr->host);
+        if (host) {
+            sr->host_conf = host;
+        }
+        else {
+            sr->host_conf = config->hosts;
+        }
+    }
+    else {
+        sr->host_conf = config->hosts;
+    }
+
+    /* is requesting an user home directory ? */
+    if (config->user_dir) {
+        if (strncmp(sr->uri_processed,
+                    mk_user_home.data, mk_user_home.len) == 0) {
+            if (mk_user_init(cs, sr) != 0) {
+                return EXIT_NORMAL;
+            }
+        }
+    }
+
+    /* Handling method requested */
+    if (sr->method == HTTP_METHOD_POST) {
+        if ((status = mk_method_post(cs, sr)) == -1) {
+            return status;
+        }
+    }
+
+    /* Plugins Stage 20 */
+    int ret;
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cs->socket, NULL, 
+                              cs, sr);
+    
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+#ifdef TRACE
+        MK_TRACE("STAGE 20 requested close conexion");
+#endif
+        return EXIT_ABORT;
+    }
+
+    /* Normal HTTP process */
+    status = mk_http_init(cs, sr);
+
+#ifdef TRACE
+    MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
+#endif
+
+    return status;
+}
+
+/* Build error page */
+static mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
+                                        char *signature)
+{
+    char *temp;
+    mk_pointer *p;
+
+    p = mk_mem_malloc(sizeof(mk_pointer));
+    p->data = NULL;
+
+    temp = mk_pointer_to_buf(message);
+    mk_string_build(&p->data, &p->len,
+                    MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+    mk_mem_free(temp);
+
+    return p;
+}
+
+int mk_handler_read(int socket, struct client_session *cs)
+{
+    int bytes;
+    int pending = 0;
+    int available = 0;
+    int ret;
+    int new_size;
+    char *tmp = 0;
+
+    /* Check amount of data reported */
+    ret = ioctl(socket, FIONREAD, &pending);
+    if (ret == -1) {
+        mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
+        return -1;
+    }
+
+    /* Reallocate buffer size if pending data does not have space */
+    if (pending > 0 && (pending >= (cs->body_size - (cs->body_length - 1)))) {
+        /* check available space */
+        available = (cs->body_size - cs->body_length) + MK_REQUEST_CHUNK;
+        if (pending < available) {
+            new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
+        }
+        else {    
+            new_size = cs->body_size + pending + 1;
+        }
+
+        if (new_size > config->max_request_size) {
+            mk_request_premature_close(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
+            return -1;
+        }
+
+        tmp = mk_mem_realloc(cs->body, new_size);
+        if (tmp) {
+            cs->body = tmp;
+            cs->body_size = new_size;
+        }
+        else {
+            mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
+            return -1;
+        }
+    }
+
+    /* Read content */
+    bytes = mk_socket_read(socket, cs->body + cs->body_length, 
+                           (cs->body_size - cs->body_length) );
+
+    if (bytes < 0) {
+        if (errno == EAGAIN) {
+            return 1;
+        }
+        else {
+            mk_session_remove(socket);
+            return -1;
+        }
+    }
+    if (bytes == 0) {
+        mk_session_remove(socket);
+        return -1;
+    }
+
+    if (bytes >= 0) {
+        cs->body_length += bytes;
+        cs->body[cs->body_length] = '\0';
+    }
+
+    return bytes;
+}
+
+int mk_handler_write(int socket, struct client_session *cs)
+{
+    int bytes, final_status = 0;
+    struct session_request *sr_node;
+    struct mk_list *sr_list, *sr_head;
+
+    /*
+     * Get node from schedule list node which contains
+     * the information regarding to the current thread
+     */
+    if (!cs) {
+        return -1;
+    }
+
+    if (mk_list_is_empty(&cs->request_list) == 0) {
+        if (mk_request_parse(cs) != 0) {
+            return -1;
+        }
+    }
+
+    sr_list = &cs->request_list;
+    mk_list_foreach(sr_head, sr_list) {
+        sr_node = mk_list_entry(sr_head, struct session_request, _head);
+
+        /* Request not processed also no plugin has take some action */
+        if (sr_node->bytes_to_send < 0 && !sr_node->handled_by) {
+            final_status = mk_request_process(cs, sr_node);
+        }
+        /* Request with data to send by static file sender */
+        else if (sr_node->bytes_to_send > 0 && !sr_node->handled_by) {
+            final_status = bytes = mk_http_send_file(cs, sr_node);
+        }
+
+        /*
+         * If we got an error, we don't want to parse
+         * and send information for another pipelined request
+         */
+        if (final_status > 0) {
+            return final_status;
+        }
+        else if (final_status <= 0) {
+            /* STAGE_40, request has ended */
+            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
+                                NULL, cs, sr_node);
+            switch (final_status) {
+            case EXIT_NORMAL:
+            case EXIT_ERROR:
+                 if (sr_node->close_now == VAR_ON) {
+                    return -1;
+                }
+                break;
+            case EXIT_ABORT:
+                  return -1;
+            }
+        }
+    }
+
+    /* If we are here, is because all pipelined request were
+     * processed successfully, let's return 0;
+     */
+    return 0;
+}
+
 /* Look for some  index.xxx in pathfile */
 mk_pointer mk_request_index(char *pathfile)
 {
@@ -697,87 +826,6 @@ void mk_request_error(int http_status, struct client_session *cs,
     mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
 }
 
-/* Build error page */
-mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
-                                        char *signature)
-{
-    char *temp;
-    mk_pointer *p;
-
-    p = mk_mem_malloc(sizeof(mk_pointer));
-    p->data = NULL;
-
-    temp = mk_pointer_to_buf(message);
-    mk_string_build(&p->data, &p->len,
-                    MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
-    mk_mem_free(temp);
-
-    return p;
-}
-
-/* Create a memory allocation in order to handle the request data */
-struct session_request *mk_request_alloc()
-{
-    struct session_request *request = 0;
-
-    request = mk_mem_malloc(sizeof(struct session_request));
-    request->status = VAR_OFF;  /* Request not processed yet */
-    request->close_now = VAR_OFF;
-
-    mk_pointer_reset(&request->body);
-    request->status = VAR_ON;
-    request->method = METHOD_NOT_FOUND;
-
-    mk_pointer_reset(&request->uri);
-    request->uri_processed = NULL;
-    request->uri_twin = VAR_OFF;
-
-    request->content_length = 0;
-    request->content_type.data = NULL;
-    request->connection.data = NULL;
-    request->host.data = NULL;
-    request->if_modified_since.data = NULL;
-    request->last_modified_since.data = NULL;
-    request->range.data = NULL;
-
-    request->post_variables.data = NULL;
-
-    request->user_uri = NULL;
-    mk_pointer_reset(&request->query_string);
-
-    request->file_info = NULL;
-    request->virtual_user = NULL;
-
-    mk_pointer_reset(&request->real_path);
-    request->host_conf = config->hosts;
-
-    request->loop = 0;
-    request->bytes_to_send = -1;
-    request->bytes_offset = 0;
-    request->fd_file = -1;
-
-    /* Response Headers */
-    request->headers = mk_header_create();
-
-    /* Plugin handler */
-    request->handled_by = NULL;
-
-    /* 
-     * FIXME: these fields will be dropped once plugins
-     * uses the new headers ToC interface
-     */
-    request->accept.data = NULL;
-    request->accept_language.data = NULL;
-    request->accept_encoding.data = NULL;
-    request->accept_charset.data = NULL;
-    request->cookies.data = NULL;
-    request->referer.data = NULL;
-    request->resume.data = NULL;
-    request->user_agent.data = NULL;
-
-    return request;
-}
-
 void mk_request_free_list(struct client_session *cs)
 {
     struct session_request *sr_node;
@@ -793,34 +841,6 @@ void mk_request_free_list(struct client_session *cs)
         mk_list_del(sr_head);
         mk_request_free(sr_node);
     }
-}
-
-void mk_request_free(struct session_request *sr)
-{
-    if (sr->fd_file > 0) {
-        close(sr->fd_file);
-    }
-
-    if (sr->headers) {
-        mk_mem_free(sr->headers->location);
-        mk_mem_free(sr->headers);
-    }
-
-    mk_pointer_reset(&sr->body);
-    mk_pointer_reset(&sr->uri);
-
-    if (sr->uri_twin == VAR_ON) {
-        mk_mem_free(sr->uri_processed);
-    }
-
-    mk_mem_free(sr->user_uri);
-    mk_pointer_reset(&sr->query_string);
-
-    mk_mem_free(sr->file_info);
-    mk_mem_free(sr->virtual_user);
-
-    mk_pointer_free(&sr->real_path);
-    mk_mem_free(sr);
 }
 
 /* Create a client request struct and put it on the
@@ -929,40 +949,6 @@ void mk_request_header_toc_init(struct header_toc *toc)
         toc[i].init = NULL;
         toc[i].end = NULL;
         toc[i].status = 0;
-    }
-}
-
-struct header_toc *mk_request_header_toc_create(int len)
-{
-    int i;
-    struct header_toc *p;
-
-    p = (struct header_toc *) mk_cache_get(mk_cache_header_toc);
-
-    for (i = 0; i < len; i++) {
-        p[i].init = NULL;
-        p[i].end = NULL;
-        p[i].status = 0;
-    }
-    return p;
-}
-
-void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len)
-{
-    char *p, *l = 0;
-    int i;
-
-    p = (char *)data;
-    for (i = 0; i < MK_HEADERS_TOC_LEN && p && l < data + len; i++) {
-        l = strstr(p, MK_CRLF);
-        if (l) {
-            toc[i].init = p;
-            toc[i].end = l;
-            p = l + mk_crlf.len;
-        }
-        else {
-            break;
-        }
     }
 }
 

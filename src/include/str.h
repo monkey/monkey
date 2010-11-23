@@ -37,11 +37,6 @@ struct mk_string_line
     struct mk_string_line *next;
 };
 
-/* Base function for search routines, it accept modifiers to enable/disable
- * the case sensitive feature and also allow to specify a haystack len 
- */
-int _mk_string_search(const char *haystack, const char *needle, int ignore_case, int len);
-
 /* Lookup char into string, return position */
 int mk_string_char_search(const char *string, int c, int len);
 
