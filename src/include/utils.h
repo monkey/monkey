@@ -90,4 +90,6 @@ int mk_utils_remove_pid();
 
 void mk_error(int type, const char *format, ...);
 
+pthread_t mk_utils_worker_spawn(void (*func) (void *));
+
 #endif

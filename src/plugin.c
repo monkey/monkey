@@ -30,7 +30,6 @@
 #include "utils.h"
 #include "file.h"
 #include "http.h"
-#include "worker.h"
 #include "clock.h"
 #include "plugin.h"
 
@@ -426,7 +425,7 @@ void mk_plugin_init()
     api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
     
     /* Worker functions */
-    api->worker_spawn = (void *) mk_worker_spawn;
+    api->worker_spawn = (void *) mk_utils_worker_spawn;
 
     /* Some useful functions =) */
     api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;

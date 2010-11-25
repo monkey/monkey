@@ -45,7 +45,6 @@
 #include "memory.h"
 #include "clock.h"
 #include "cache.h"
-#include "worker.h"
 #include "server.h"
 #include "plugin.h"
 #include "env.h"
@@ -155,7 +154,7 @@ int main(int argc, char **argv)
     }
 
     /* Workers: logger and clock */
-    mk_worker_spawn((void *) mk_clock_worker_init);
+    mk_utils_worker_spawn((void *) mk_clock_worker_init);
 
     /* Register PID of Monkey */
     mk_utils_register_pid();
