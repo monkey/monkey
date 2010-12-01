@@ -28,7 +28,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#ifndef O_NOATIME
 #define O_NOATIME       01000000
+#endif
 
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
 #define MK_DEFAULT_LISTEN_ADDR "0.0.0.0"

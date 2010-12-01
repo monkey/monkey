@@ -25,18 +25,24 @@
 #include "plugin.h"
 #include "patas.h"
 
-struct mk_patas_conx *mk_patas_connection_create(int remote_socket, int proxy_socket,
+struct mk_patas_conx *mk_patas_connection_create(int socket_remote, int socket_node,
                                                  struct mk_patas_node *node)
 {
     struct mk_patas_conx *new;
 
     new = mk_api->mem_alloc(sizeof(struct mk_patas_conx));
     new->node = node;
-    new->remote_socket = remote_socket;
-    new->proxy_socket = proxy_socket;
+    new->socket_remote = socket_remote;
+    new->socket_node = socket_node;
 
-    new->buffer = mk_api->mem_alloc(MK_PATAS_BUF_SIZE);
-    new->buffer_size = MK_PATAS_BUF_SIZE;
+    //new->buf_remote = mk_api->mem_alloc(MK_PATAS_BUF_SIZE);
+    new->buf_size_remote = MK_PATAS_BUF_SIZE;
+    new->buf_len_remote = 0;
+
+    //new->buf_node = mk_api->mem_alloc(MK_PATAS_BUF_SIZE);
+    new->buf_size_node = MK_PATAS_BUF_SIZE;
+    new->buf_len_node = 0;
+    new->buf_pending_node = 0;
 
     return new;
 }
@@ -75,7 +81,7 @@ struct mk_patas_conx *mk_patas_connection_get(int socket)
 
     mk_list_foreach(pc_head, pc_list) {
         pc_node = mk_list_entry(pc_head, struct mk_patas_conx, _head);
-        if (pc_node->remote_socket == socket || pc_node->proxy_socket == socket) {
+        if (pc_node->socket_remote == socket || pc_node->socket_node == socket) {
             return pc_node;
         }
     }
@@ -96,23 +102,22 @@ void mk_patas_connection_delete(int socket)
     mk_list_foreach_safe(pc_head, pc_temp, pc_list) {
         pc_node = mk_list_entry(pc_head, struct mk_patas_conx, _head);
         
-        if (pc_node->remote_socket == socket || pc_node->proxy_socket == socket) {
+        if (pc_node->socket_remote == socket || pc_node->socket_node == socket) {
             mk_list_del(pc_head);
 
-            if (pc_node->proxy_socket == socket) {
-                mk_api->sched_remove_client(pc_node->remote_socket);
-                pc_node->remote_socket = -1;
+            if (pc_node->socket_node == socket) {
+                mk_api->sched_remove_client(pc_node->socket_remote);
+                pc_node->socket_remote = -1;
             }
 
-            if (pc_node->remote_socket > 0) {
-                close(pc_node->remote_socket);
+            if (pc_node->socket_remote > 0) {
+                close(pc_node->socket_remote);
             }
 
-            if (pc_node->proxy_socket > 0) {
-                close(pc_node->proxy_socket);
+            if (pc_node->socket_node > 0) {
+                close(pc_node->socket_node);
             }
 
-            mk_api->mem_free(pc_node->buffer);
             mk_api->mem_free(pc_node);
 
             pthread_setspecific(_mkp_data, pc_list);
@@ -121,11 +126,23 @@ void mk_patas_connection_delete(int socket)
     }
 }
 
-void mk_palm_request_init()
+int mk_patas_connect(struct mk_patas_node *node)
 {
-    struct mk_list *palm_request_list;
+    int socket;
 
-    palm_request_list = mk_api->mem_alloc(sizeof(struct mk_list));
-    mk_list_init(palm_request_list);
-    pthread_setspecific(_mkp_data, palm_request_list);
+    /* create socket */
+    socket = mk_api->socket_create();
+
+    if (connect(socket, (struct sockaddr *) node->sockaddr, sizeof(struct sockaddr)) == -1) {
+        close(socket);
+
+#ifdef TRACE
+        mk_api->error(MK_ERROR_WARNING, "Could not connect to node: %s:%i\n", 
+                      node->host, node->port);
+#endif
+
+        return -1;
+    }
+
+    return socket;
 }

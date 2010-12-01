@@ -436,6 +436,7 @@ void mk_plugin_init()
 
 #ifdef TRACE
     api->trace = (void *) mk_utils_trace;
+    api->errno_print = (void *) mk_utils_print_errno;
 #endif
 
     /* Read configuration file */

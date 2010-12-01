@@ -24,3 +24,4 @@ struct mk_patas_conx *mk_patas_connection_create(int remote_socket, int proxy_so
 void mk_patas_connection_add(struct mk_patas_conx *pc);
 struct mk_patas_conx *mk_patas_connection_get(int socket);
 void mk_patas_connection_delete(int socket);
+int mk_patas_connect(struct mk_patas_node *node);
