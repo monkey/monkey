@@ -357,7 +357,7 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
                 ("An error occurred while trying to decode the ssl data");
 #endif
             matrixSslProcessedData(conn->ssl, &buf_ssl, (uint32 *)&len);
-
+            _mkp_network_io_close(socket_fd);
             return -1;
         }
 
@@ -375,6 +375,8 @@ int _mkp_network_io_read(int socket_fd, void *buf, int count)
 #endif
         len = matrixSslGetOutdata(conn->ssl, (unsigned char **)&buf_ssl);
     }
+
+    if( buf_ssl == NULL) return 0;
 
     strncpy((char *) buf, (const char *) buf_ssl, count);
     bytes_read = len;
@@ -563,33 +565,13 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
     PLUGIN_TRACE("Send file");
 #endif
 
-    bytes_left = file_count;
+    len = pread(file_fd, buffer_send_file, MK_LIANA_SSL_BUFFER_PLAIN, *file_offset);
+    if (len == -1) return -1;
 
-    while (bytes_left != 0) {
+    bytes_written = _mkp_network_io_write(socket_fd, buffer_send_file, len);
+    if (bytes_written != -1 ) *file_offset += bytes_written;
 
-        if (bytes_left <= MK_LIANA_SSL_BUFFER_PLAIN) {
-            bytes_read = bytes_left;
-        } else {
-            bytes_read = MK_LIANA_SSL_BUFFER_PLAIN;
-        }
-
-        len = pread(file_fd, buffer_send_file, bytes_read, *file_offset);
-
-        if (len == -1) {
-            return -1;
-        }
-
-        bytes_written = _mkp_network_io_write(socket_fd, buffer_send_file, len);
-
-        if (bytes_written == -1) {
-            return -1;
-        }
-
-        *file_offset += bytes_written;
-        bytes_left -= bytes_written;
-    }
-
-    return file_count;
+    return bytes_written;
 }
 
 int _mkp_network_io_create_socket(int domain, int type, int protocol)
