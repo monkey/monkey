@@ -123,6 +123,9 @@ struct server_config
     mode_t open_flags;
     struct mk_list *plugins;
 
+    /* Safe EPOLLOUT event */
+    int safe_event_write;
+
     /* source configuration */
     struct mk_config *config;
 };

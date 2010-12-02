@@ -642,6 +642,11 @@ void mk_config_set_init_values(void)
 
     /* Plugins */
     config->plugins = mk_mem_malloc(sizeof(struct mk_list));
+
+    /* Internals */
+    config->safe_event_write = VAR_OFF;
+
+    /* Init plugin list */
     mk_list_init(config->plugins);
 }
 
