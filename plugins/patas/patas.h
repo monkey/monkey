@@ -41,16 +41,24 @@ int mk_patas_n_nodes;
 /* Connections */
 struct mk_patas_conx {
 
-    int remote_socket;
-    int proxy_socket;
+    int socket_remote;
+    int socket_node;
 
-    unsigned char *buffer;
-    unsigned int buffer_size;
-    unsigned long buffer_len;
+    /* Remote buffers */
+    unsigned char buf_remote[MK_PATAS_BUF_SIZE];
+    unsigned int buf_size_remote;
+    unsigned long buf_len_remote;
 
+    /* Node buffers */
+    unsigned char buf_node[MK_PATAS_BUF_SIZE];
+    unsigned int buf_size_node;
+    unsigned long buf_len_node;
+    unsigned long buf_pending_node;
+
+    /* Target node */
     struct mk_patas_node *node;
 
-    /* Monkey list */
+    /* Monkey list head */
     struct mk_list _head;
 };
 

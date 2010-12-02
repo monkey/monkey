@@ -306,6 +306,39 @@ void mk_utils_trace(const char *component, int color, const char *function,
     pthread_mutex_unlock(&mutex_trace);
 
 }
+
+int mk_utils_print_errno(int errno)
+{
+        switch(errno) {
+        case EAGAIN:
+            MK_TRACE("EAGAIN");
+            return -1;
+        case EBADF:
+            MK_TRACE("EBADF");
+            return -1;
+        case EFAULT:
+            MK_TRACE("EFAULT");
+            return -1;
+        case EFBIG:
+            MK_TRACE("EFBIG");
+            return -1;
+        case EINTR:
+            MK_TRACE("EINTR");
+            return -1;
+        case EINVAL:
+            MK_TRACE("EINVAL");
+            return -1;
+        case EPIPE:
+            MK_TRACE("EPIPE");
+            return -1;
+        default:
+            MK_TRACE("DONT KNOW");
+            return 0;
+        }
+
+        return 0;
+}
+
 #endif
 
 /* Get SOMAXCONN value. Based on sysctl manpage */

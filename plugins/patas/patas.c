@@ -43,7 +43,7 @@
 MONKEY_PLUGIN("patas",               /* shortname */
               "Patas Monkey",        /* name */ 
               "0.12.0",              /* version */
-              MK_PLUGIN_CORE_THCTX); /* hook for thread context call */
+              MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hook for thread context call */
 
 /* get thread connections list */
 struct mk_list *mk_patas_conx_get()
@@ -111,6 +111,7 @@ int mk_patas_conf(char *confdir)
     int res;
     int val_port;
     char *val_host;
+    char *val_uri;
     unsigned long len;
     char *conf_path;
 
@@ -131,55 +132,49 @@ int mk_patas_conf(char *confdir)
         entry = section->entry;
         val_host = NULL;
         val_port = -1;
+        val_uri = NULL;
 
-        while (entry) {
-            /* Passing to internal struct */
-            if (strcasecmp(entry->key, "IP") == 0) {
-                val_host = entry->val;
+        /* Get section values */
+        val_host = mk_api->config_section_getval(section, "IP", MK_CONFIG_VAL_STR);
+        val_port = (int) mk_api->config_section_getval(section, "Port", MK_CONFIG_VAL_NUM);
+        val_uri  = mk_api->config_section_getval(section, "Uri", MK_CONFIG_VAL_LIST);
+
+        if (val_host && val_uri && val_port > 0) {
+            /* validate that node:ip is not pointing this server */
+            if (mk_patas_validate_node(val_host, val_port) < 0) {
+                break;
             }
-            else if (strcasecmp(entry->key, "Port") == 0) {
-                val_port = atoi(entry->val);
+
+            /* alloc node */
+            node = mk_api->mem_alloc(sizeof(struct mk_patas_node));
+            node->host = val_host;
+            node->port = val_port;
+                
+            /* pre-socket stuff */
+            node->sockaddr = mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
+            node->sockaddr->sin_family = AF_INET;
+
+            res = inet_pton(AF_INET, node->host, 
+                            (void *) (&(node->sockaddr->sin_addr.s_addr)));
+            if (res < 0) {
+                mk_api->error(MK_ERROR_WARNING, "Can't set remote->sin_addr.s_addr");
+                mk_api->mem_free(node->sockaddr);
+                return -1;
+            }
+            else if (res == 0) {
+                mk_api->error(MK_ERROR_WARNING, "Invalid IP address");
+                mk_api->mem_free(node->sockaddr);
+                return -1;
             }
 
-            if (val_host && val_port > 0) {
-                /* validate that node:ip is not pointing this server */
-                if (mk_patas_validate_node(val_host, val_port) < 0) {
-                    break;
-                }
-
-                /* alloc node */
-                node = mk_api->mem_alloc(sizeof(struct mk_patas_node));
-                node->host = val_host;
-                node->port = val_port;
+            node->sockaddr->sin_port = htons(node->port);
                 
-                /* pre-socket stuff */
-                node->sockaddr = mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
-                node->sockaddr->sin_family = AF_INET;
-
-                res = inet_pton(AF_INET, node->host, 
-                                (void *) (&(node->sockaddr->sin_addr.s_addr)));
-                if (res < 0) {
-                    mk_api->error(MK_ERROR_WARNING, "Can't set remote->sin_addr.s_addr");
-                    mk_api->mem_free(node->sockaddr);
-                    return -1;
-                }
-                else if (res == 0) {
-                    mk_api->error(MK_ERROR_WARNING, "Invalid IP address");
-                    mk_api->mem_free(node->sockaddr);
-                    return -1;
-                }
-
-                node->sockaddr->sin_port = htons(node->port);
-                
-                /* add node to list */
+            /* add node to list */
 #ifdef TRACE
-                PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
+            PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
 #endif
-                mk_list_add(&node->_head, mk_patas_nodes_list);
-                mk_patas_n_nodes++;
-            }
-            
-            entry = entry->next;
+            mk_list_add(&node->_head, mk_patas_nodes_list);
+            mk_patas_n_nodes++;
         }
         section = section->next;
     }
@@ -223,117 +218,190 @@ void _mkp_core_thctx()
     mk_patas_conx_init();
 }
 
-int _mkp_event_read(int socket)
+static int mk_patas_write_pending_to_remote(int socket, struct mk_patas_conx *conx)
 {
-    int connect_tries = 0;
-    int sent=0, bytes=-1, av_bytes=-1, ret;
-    int temp_socket = -1, to_socket = 0;
-    struct mk_patas_node *node = NULL;
-    struct mk_patas_conx *conx = NULL;
+    int bytes;
 
-    conx = mk_patas_connection_get(socket);
-
-    /* New connection arrived */
     if (!conx) {
-        node = mk_patas_node_next_target();
-        conx = mk_patas_connection_create(socket, -1, node);
-        mk_patas_connection_add(conx);
+        return MK_PLUGIN_RET_EVENT_NEXT;
+    }
+    
+    if (conx->buf_pending_node > 0) {
+#ifdef TRACE
+        PLUGIN_TRACE("PENDING: %i", conx->buf_pending_node);
+#endif
+        bytes = write(conx->socket_remote, 
+                      conx->buf_node + (conx->buf_len_node - conx->buf_pending_node),
+                      conx->buf_pending_node);
+
+#ifdef TRACE
+        PLUGIN_TRACE("  written: %i", bytes);
+#endif
+
+        if (bytes >= 0) {
+            conx->buf_pending_node -= bytes;
+        }
+        else {
+            switch(errno) {
+            case EAGAIN:
+#ifdef TRACE
+                PLUGIN_TRACE("EAGAIN");
+#endif
+                return MK_PLUGIN_RET_EVENT_OWNED;
+            default:
+                return MK_PLUGIN_RET_EVENT_CLOSE;
+            }
+        }
+    }
+
+    return MK_PLUGIN_RET_EVENT_OWNED;
+}
+
+static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_conx *conx)
+{
+    int bytes = -1;
+    int read_limit = 0;
+
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] Reading from NODE", socket);
+#endif
+
+    /* Process pending data */
+    if (conx->buf_pending_node > 0) {
+#ifdef TRACE
+        PLUGIN_TRACE("     Pending %i bytes", conx->buf_pending_node);
+#endif
+        return mk_patas_write_pending_to_remote(socket, conx);
+    }
+
+    /* check Node EOF, at this point no pending data should exists */
+    if (av_bytes == 0) {
+        return MK_PLUGIN_RET_EVENT_CLOSE;
+    }
+
+    if (av_bytes < conx->buf_size_node) {
+        read_limit = av_bytes;
     }
     else {
-        node = conx->node;
+        read_limit = conx->buf_size_node;
     }
+
+    bytes = read(conx->socket_node, conx->buf_node, read_limit);
+    if (bytes <= 0) {
+#ifdef TRACE
+        PLUGIN_TRACE("[FD %i] Node END", conx->socket_node);
+#endif
+        close(conx->socket_node);
+        conx->socket_node = -1;
+        return MK_PLUGIN_RET_EVENT_OWNED;
+    }
+    else {
+        conx->buf_len_node = bytes;
+    }
+
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] read %i bytes", socket, bytes);
+#endif
+
+    /* Write node data to remote client */
+    bytes = write(conx->socket_remote, conx->buf_node, conx->buf_len_node);
+
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] written %i/%i bytes ", 
+                 conx->socket_remote, bytes, conx->buf_len_node);
+#endif
+
+    if (bytes == 0) {
+        return MK_PLUGIN_RET_EVENT_CLOSE;
+    }
+    else if (bytes < 0) {
+#ifdef TRACE
+        mk_api->errno_print(errno);
+#endif        
+        switch(errno) {
+        case EAGAIN:
+            /* 
+             * Could not write because can block on socket, 
+             * let's set as pending 
+             */
+#ifdef TRACE
+            PLUGIN_TRACE("EAGAIN");
+#endif
+            conx->buf_pending_node += conx->buf_len_node;
+            return MK_PLUGIN_RET_EVENT_OWNED;
+        case EPIPE:
+            return MK_PLUGIN_RET_EVENT_CLOSE;
+
+        }
+    }
+
+    if (bytes == conx->buf_len_node) { 
+        conx->buf_len_node = 0;
+    }
+    else {
+        conx->buf_pending_node = conx->buf_len_node - bytes;
+    }
+
+    return MK_PLUGIN_RET_EVENT_OWNED;
+}
+
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+                  struct session_request *sr)
+{
+
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] STAGE 30", cs->socket);
+#endif
+
+    return MK_PLUGIN_RET_CONTINUE;
+}
+/*
+int _mkp_event_write(int socket)
+{
+    struct mk_patas_conx *conx = NULL;
+
+#ifdef TRACE
+    PLUGIN_TRACE("[FD %i] Writting to REMOTE", socket);
+#endif
+
+    conx = mk_patas_connection_get(socket);
+    if (!conx) {
+        return MK_PLUGIN_RET_EVENT_NEXT;
+    }
+    
+    return mk_patas_write_pending_to_remote(socket, conx);
+}
+*/
+int _mkp_event_read(int socket)
+{
+    int av_bytes=-1, ret;
+    struct mk_patas_conx *conx = NULL;
+
+    return MK_PLUGIN_RET_EVENT_NEXT;
+
+    /* Get connection node */
+    conx = mk_patas_connection_get(socket);
 
     /* Check amount of data available */
     ret = ioctl(socket, FIONREAD, &av_bytes);
     if (ret == -1) {
 #ifdef TRACE
-        PLUGIN_TRACE("[FD %i] ioctl()", socket);
-        perror("ioctl");
+        PLUGIN_TRACE("[FD %i] ERROR ioctl(FIONREAD)", socket);
 #endif
-        return MK_PLUGIN_RET_EVENT_CLOSE;
-    }
-
-    if (av_bytes == 0) {
-        if (socket == conx->proxy_socket) {
-            return MK_PLUGIN_RET_EVENT_CLOSE;
-        }
-        return MK_PLUGIN_RET_EVENT_CONTINUE;
+        return MK_PLUGIN_RET_EVENT_OWNED;
     }
 
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i] available bytes: %i", socket, av_bytes);
 #endif
 
-    if (conx->remote_socket == socket) {
-        to_socket = conx->proxy_socket;
+    /* Map right handler */
+    if (!conx || conx->socket_remote == socket) {
+        //return mk_patas_read_from_remote(socket, av_bytes, conx);
     }
-    else if (conx->proxy_socket == socket) {
-        to_socket = conx->remote_socket;
+    else if (conx->socket_node == socket) {
+        return mk_patas_read_from_node(socket, av_bytes, conx);
     }
-
-    sent = 0;
-
-    do {
-        bytes = read(socket, conx->buffer, conx->buffer_size);
-#ifdef TRACE
-        PLUGIN_TRACE("[FD %i] bytes read: %i", socket, bytes);
-#endif    
-        
-        /* EOF */
-        if (bytes == 0) {
-            if (socket == conx->proxy_socket) {
-            return MK_PLUGIN_RET_EVENT_CLOSE;
-            }
-            return MK_PLUGIN_RET_EVENT_OWNED;
-        }
-        else if (bytes < 0) {
-            return MK_PLUGIN_RET_EVENT_CLOSE;
-        }
-
-        /* Connect to node server */
-        if (conx->proxy_socket == -1) {
-            while (temp_socket == -1) {
-                temp_socket = mk_patas_node_connect(node);
-                connect_tries++;
-
-                if (temp_socket == -1) {
-                    if (connect_tries >= mk_patas_n_nodes) {
-#ifdef TRACE
-                        PLUGIN_TRACE("Drop connection %i, no available nodes", socket);
-#endif
-                        return MK_PLUGIN_RET_EVENT_CLOSE;
-                    }
-                    else {
-                        node = mk_patas_node_next_target();
-                        conx->node = node;
-                        temp_socket = mk_patas_node_connect(node);
-                    }
-                }
-            }
-#ifdef TRACE
-            PLUGIN_TRACE("[FD %i] connect to node %s:%i", 
-                         temp_socket, node->host, node->port);
-#endif
-            conx->proxy_socket = to_socket = temp_socket;
-            
-            /* Add node socket to epoll thread array */
-            mk_api->event_add(temp_socket, MK_EPOLL_READ, NULL, NULL, NULL);
-        }
-    
-        conx->buffer_len = bytes;
-        bytes = write(to_socket, conx->buffer, conx->buffer_len);
-
-#ifdef TRACE
-        PLUGIN_TRACE("[FD %i] bytes written: %i", to_socket, bytes);
-#endif
-        
-        if (bytes == -1) {
-            return MK_PLUGIN_RET_EVENT_CLOSE;
-        }
-        
-        sent += bytes;
-
-    } while (sent < av_bytes);
 
     return MK_PLUGIN_RET_EVENT_OWNED;
 }
@@ -407,25 +475,4 @@ struct mk_patas_node *mk_patas_node_next_target()
 #endif
 
     return node;
-}
-
-int mk_patas_node_connect(struct mk_patas_node *node)
-{
-    int socket;
-
-    /* create socket */
-    socket = mk_api->socket_create();
-
-    if (connect(socket, (struct sockaddr *) node->sockaddr, sizeof(struct sockaddr)) == -1) {
-        close(socket);
-
-#ifdef TRACE
-        mk_api->error(MK_ERROR_WARNING, "Could not connect to node: %s:%i\n", 
-                      node->host, node->port);
-#endif
-
-        return -1;
-    }
-
-    return socket;
 }

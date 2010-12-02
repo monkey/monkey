@@ -82,6 +82,7 @@ char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
 #ifdef TRACE
 void mk_utils_trace(const char *component, int color, const char *function, 
                     char *file, int line, const char* format, ...);
+int mk_utils_print_errno(int errno);
 #endif
 
 int mk_utils_get_somaxconn();
