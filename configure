@@ -416,6 +416,12 @@ EOF
             fi
 	fi
 
+        if test -e $plugin_dir/EXPERIMENTAL || [ $disabled -eq 0 ]; then
+            if [ $enabled -eq 1 ] ; then
+                continue
+            fi
+        fi
+
         if test -e $plugin_dir/MANDATORY && [ $disabled -eq 1 ] ; then
 	    comment="    "
         fi
