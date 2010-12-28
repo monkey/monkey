@@ -46,7 +46,7 @@ int mk_security_conf(char *confdir)
     struct mk_config_entry *entry;
 
     /* Read configuration */
-    mk_api->str_build(&conf_path, &len, "%s/security.conf", confdir);
+    mk_api->str_build(&conf_path, &len, "%s/mandril.conf", confdir);
     conf = mk_api->config_create(conf_path);
     section = mk_api->config_section_get(conf, "RULES");
     entry = section->entry;
