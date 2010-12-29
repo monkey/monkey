@@ -35,7 +35,7 @@
 
 static int mk_plugin_event_set_list(struct mk_list *list)
 {
-    return pthread_setspecific(mk_plugin_event_k, list);
+    return pthread_setspecific(mk_plugin_event_k, (void *) list);
 }
 
 static struct mk_list *mk_plugin_event_get_list()
@@ -816,6 +816,15 @@ struct plugin_event *mk_plugin_event_get(int socket)
     struct plugin_event *node;
 
     list = mk_plugin_event_get_list();
+
+    /* 
+     * In some cases this function is invoked from scheduler.c when a connection is
+     * closed, on that moment there's no thread context so the returned list is NULL.
+     */
+    if (!list) {
+        return NULL;
+    }
+
     mk_list_foreach(head, list) {
         node = mk_list_entry(head, struct plugin_event, _head);
         if (node->socket == socket) {
@@ -832,6 +841,7 @@ void mk_plugin_event_init_list()
 
     list = mk_mem_malloc(sizeof(struct mk_list));
     mk_list_init(list);
+
     mk_plugin_event_set_list(list);
 }
 
