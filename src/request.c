@@ -778,12 +778,9 @@ void mk_request_error(int http_status, struct client_session *cs,
         break;
 
     case M_SERVER_INTERNAL_ERROR:
-        mk_string_build(&message.data, &message.len,
-                        "Problems found running %s ", sr->uri);
         page = mk_request_set_default_page("Internal Server Error",
-                                           message,
+                                           sr->uri,
                                            sr->host_conf->host_signature);
-        mk_pointer_free(&message);
         break;
 
     case M_SERVER_HTTP_VERSION_UNSUP:
