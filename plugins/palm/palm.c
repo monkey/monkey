@@ -553,7 +553,7 @@ int hangup(int sockfd)
         pr = mk_palm_request_get_by_http(sockfd);
         if (pr) {
 #ifdef TRACE
-            PLUGIN_TRACE("[FD %i] but is the client assotiated to FD %i",
+            PLUGIN_TRACE("[FD %i] but the client is associated to FD %i",
                          sockfd, pr->palm_fd);
 #endif
             mk_api->socket_close(pr->palm_fd);

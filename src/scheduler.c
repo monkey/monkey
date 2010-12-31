@@ -241,7 +241,7 @@ int mk_sched_add_client(int remote_fd)
     }
 
 #ifdef TRACE
-    MK_TRACE("Balance FD %i to WID %i", remote_fd, sched->idx);
+    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 #endif
 
     for (i = 0; i < config->worker_capacity; i++) {
