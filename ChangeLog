@@ -1,3 +1,1042 @@
+commit 62156adb40ec8853b61d3b40a263dc737d36033e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Dec 31 11:21:59 2010 -0300
+
+    Fix error message for M_SERVER_INTERNAL_ERROR
+
+commit 445d4d6b1b92d7fc58396302810178fd5815ed62
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Dec 31 10:29:15 2010 -0300
+
+    Fix plugin interface for returned values, now plugins can specify
+    some error exception and Monkey will handle it properly
+
+commit 8fbd19a7fe9e16d17d1a05af10321b4f6fea0899
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Dec 31 09:54:26 2010 -0300
+
+    Palm: comment old validation for iov array
+    Core: fix typo messages
+
+commit 65d00f052e8e8c236f61cf8fda237c40cc455f7c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Dec 29 09:14:07 2010 -0300
+
+    Mandril: comment security rules
+
+commit e69245043e9e7d6222a74b4ae91212477caf2e0e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Dec 29 01:28:58 2010 -0300
+
+    Do not crash when mk_plugin_event_get() is invoked from process
+    context due to a STAGE_10 running plugin.
+
+commit c82e65e2789b44a0fffca6cd35dff033f9e90137
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Dec 28 20:59:27 2010 -0300
+
+    Mandril plugin: rename configuration file
+
+commit fba91d428686729d1acbb9df23694a34add93a48
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Dec 28 20:41:10 2010 -0300
+
+    QA: add log rules for error_413_01 and error_413_02
+
+commit 3e1b75a7562809cc04833932eed7327254d32f48
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Dec 18 13:41:45 2010 -0300
+
+    When an experimental plugin is enabled using --enable-plugins in
+    configure script, the plugin entry now is commented in plugins.load.
+
+commit 2f5c892403c36cbb98a7f25548f65c7e4451b51a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Dec 18 13:27:27 2010 -0300
+
+    Patas plugin to EXPERIMENTAL
+
+commit 986bb06101a607ab45d4145e5fb16f0ba1c72f50
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Dec 18 13:27:05 2010 -0300
+
+    Plugins now can be in EXPERIMENTAL stage
+
+commit c65da1f09e1c640bfe4cb224de44c1b7b889376d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Dec 2 18:53:35 2010 -0300
+
+    Liana_SSL: enable safe_event_write flag
+
+commit 36090436a0f67ca541f031a6c21ddd913b078805
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Dec 2 18:52:35 2010 -0300
+
+    New internal safe_event_write flag
+
+commit 9140e667ca5639d35b69f3e0236642d84e0a15d4
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Dec 2 16:04:12 2010 -0300
+
+    liana_ssl: Let monkey decide how many times call _mkp_network_io_send_file() to send a file
+
+commit 8f0a9634e723f0283e66b79e7d817e1372468d7b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Dec 1 10:14:37 2010 -0300
+
+    Add new mk_utils_errno_print() for tracing context/API
+    Patas: refactoring stage plugin
+
+commit a80c456fea4fc1c16f722fc6da5dcd05904c7a78
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Nov 25 10:39:52 2010 -0300
+
+    [PATCH] Move mk_worker_spawn() to utils
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f1f3bec9c0f8bd251cb8f9ab0e5515c62b80a0f2
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Nov 23 10:24:11 2010 -0300
+
+    [PATCH] Use static identifier for functions and variables which have local file scope.
+    This optmization reduces the size of the binary file.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 080b696d4f5280b17678240295a390b736067d27
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Mon Nov 22 16:59:57 2010 -0300
+
+    * Use sigaction(2) instead of non trustworthy signal(2)
+    
+    * Currently monkey's signal handling mechanism is very open to race conditions because the handler is does not guarantee reentrancy.
+            - Change remove(2) to unlink(2) in mk_utils_remove() to use reentrant functions.
+    
+    * Layout basics to implement the configuration reload in SIGHUP, this is the most common scenario for deamonized procs.
+    
+    * Avoid until needed handling SIGUSR[N]
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 87f7741020018aa2f9f77b4dd59fe6860f26132f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 18 18:35:23 2010 -0300
+
+    On connection error, pass missing sched node
+
+commit 160fbafdcb76df626d466e950109af95ce4d88e8
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Nov 18 18:15:54 2010 -0300
+
+    We can apply a few optimizations to mk_mem_malloc, mk_mem_malloc_z and mk_mem_realloc:
+    * Since they are called frequently they are good candidates to inline
+    * Use GCC's alloc_size function attribute[1]
+    * When we pass a zero value for the size to a memory allocation function (ie: malloc)
+      it is not an error and should return NULL gracefully [2]
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fcfb3e7c5cbb0a7ea75af2907b8424d10e20f90e
+Author: Felipe Ortega <felipe@tezeract.org>
+Date:   Tue Nov 16 23:58:21 2010 -0300
+
+    Fix #28: Back one directory level
+
+commit 60c85fddf0d31c2d332c8fe95019a3c76a7c82fd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 16 09:36:16 2010 -0300
+
+    Patas Plugin: pre-resolve node/socket details
+    When the plugin read the nodes configuration, now it performs the
+    socket sockaddr allocation on that place, avoiding to do the same
+    process every time when connecting to a node server.
+
+commit 0e8f0b46ffa84c3dc99176e17bb7f595426d716c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 16 09:00:48 2010 -0300
+
+    Replace bzero w/memset
+
+commit 8f2e425c3a88f2ac3d0b6d27d0d233e8cf81a69e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 16 08:58:03 2010 -0300
+
+    Init old http field headers
+
+commit cf943f87e8578777d9815c9e49b233928ed68f44
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 16 08:50:56 2010 -0300
+
+    Ticket #24: Improve TOC headers
+    Now Monkey handles all request HTTP headers in persistent table of content or
+    ToC, this can be accessed from session_request->headers_toc
+
+commit ab9d982b6ef43e9305d9f1ee062ff1290d656154
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 15:29:47 2010 -0300
+
+    clean up
+
+commit c35d2eaece4fb4f89a9b666e92c13ac0c9366582
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 14:54:02 2010 -0300
+
+    Ticket #22: Load Balancing
+    Now the scheduler determinate the less overhead thread worker and
+    assign the new incoming connection to it.
+
+commit b3c9899f6582aa300a02df4ca8f4bc5ab38b554a
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Mon Nov 15 10:09:58 2010 -0300
+
+    Use _exit(2) instead of exit(2) for signal handlers. The former is a guaranteed-reentrant function.
+    Also replace exit status with proper glibc constant.
+
+commit a43c7054436ac1f4b9bab31369c11d7bd2ae35ad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 09:28:18 2010 -0300
+
+    Patas Plugin: fix doc
+
+commit 67f2c388315efb02959980042845704b446a84f8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 07:56:23 2010 -0300
+
+    Patas Plugin: fix head for next target node
+
+commit f37ed8edd744ad5385885ad8a57cfc1416a0acb6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 01:30:20 2010 -0300
+
+    Patas Plugin: validate node:port != localhost:port
+
+commit ef6eda30d45d822889e3be737ffdd821716da14a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 15 00:39:03 2010 -0300
+
+    Patas: change nodes default port in configuration
+
+commit 5673d22d6a0955e5691f5c107841bb3aef42c295
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Nov 14 21:57:32 2010 -0300
+
+    New Patas Plugin (proxy reverse)
+
+commit d53f3df27c97c717e5f85ca590b3e4550edf23a2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Nov 14 20:19:21 2010 -0300
+
+    Logger: remove unnecessary trace
+
+commit ca385ec02d4dcc1ccfc64f242ce54cb76c076bc2
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sun Nov 14 02:02:34 2010 -0300
+
+    plugins: Use glibc EXIT_{FAILURE,SUCCESS} constants instead of 0 or 1 values
+    This applies to the monkey plugins.
+
+commit 1fca7bc7c5b8c4a67abfd2d940e2e32b722443ad
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sun Nov 14 02:01:27 2010 -0300
+
+    Use glibc EXIT_{FAILURE,SUCCESS} constants instead of 0 or 1 values.
+    This applies to the monkey core (not plugins)
+
+commit a32c2614e64d5e77ddb21a1caaccb412e65f7c88
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Nov 14 02:00:45 2010 -0300
+
+    Remove script_filename var
+
+commit 4540f6b31423a52f2d7a261cae5c955517e96eb9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 8 17:25:23 2010 -0300
+
+    Cheetah: print vhost aliases
+
+commit 7163f64ed4b757d5bdc43e87c4815ea90e5f0d0c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Nov 8 16:28:48 2010 -0300
+
+    Support virtual host aliases
+
+commit 886c6fc6ea7291b242ecafd024d47d569ef8880b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 29 20:24:25 2010 -0300
+
+    liana_ssl: add friendly message when certificate/key cannot be opened
+
+commit 40eb2ed2a843d10e7e6c5cb21e85ae495bf9c0d3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 29 20:15:40 2010 -0300
+
+    fix SOCK_NONBLOCK value
+
+commit 690a795471f122cbbd6c14e96dd6863917d2bd40
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 29 20:11:31 2010 -0300
+
+    liana: fix macro check for accept4()
+
+commit 87670e1468ede6b04bb5e75edf7095b33293bd39
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 29 20:08:05 2010 -0300
+
+    Configure: check for accept4() function, if it does not exists,
+    use the generic accept().
+
+commit bceb8844c7f30063f27eb15674831104d1d2d59c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Oct 28 16:35:01 2010 -0300
+
+    Fix: set non-block to right socket
+
+commit 61e087db4f6e5969134cf455a2396d11ba71e680
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 16:55:15 2010 -0300
+
+    liana_ssl: Added liana_ssl_close() to properly send the alert close to the client
+
+commit ac4377588a26da9bdc40d580b78a523af2476cc2
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 16:16:34 2010 -0300
+
+    liana_ssl: Fix typo
+
+commit 00ccdcb1b9d4ee309d81d17c75824f4e0c6e2399
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 13:31:34 2010 -0300
+
+    If function accept4 isn't defined we use accept and set the socket to O_NONBLOCK using fcntl
+
+commit 484f5ed099bf683e414b96bad2cdd3ab57dbbf9d
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 13:30:37 2010 -0300
+
+    If SOCK_NONBLOCK isn't defined we defined as 00004000
+
+commit dca54fd7164e2327086ea3eb933c7ce9adc03371
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 13:10:19 2010 -0300
+
+    If the user selected android as target platform we disable by default the plugins cheetah, palm and logger
+
+commit 0bc2c79153593489c4fa65a860ee450ff9087b99
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 26 11:49:52 2010 -0300
+
+    Support platform in configuration: generic and android
+
+commit 76bf7c5041c24126ada9ef5993b91354edc00d8c
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 10:34:09 2010 -0300
+
+    If theres' noe EPOLLRDHUP defined we defined. Added pthread.h to scheduler.h and memory.h to clock.h
+
+commit 8db02c6e94a9285f4bd281367d24b0c7fba0bf66
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Oct 26 10:28:30 2010 -0300
+
+    Use the definition of offsetof in stddef.h if it's not there we define our own
+
+commit 401798351fd73b094aa659b6ef565b5312566868
+Author: Felipe Ortega <felipe@tezeract.org>
+Date:   Tue Oct 26 08:12:23 2010 -0300
+
+    [PATCH] Small typo correction in the configure script
+
+commit 87e1a2eecb4846c4a5250b1a3df4960b4778ffd0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 25 15:20:56 2010 -0300
+
+    Fix mandril plugin
+
+commit a32057fea602d7c0040604f90ea87ed1e1f7584b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 25 14:51:36 2010 -0300
+
+    Add validation to epoll_create
+
+commit 3de27b641628a21e177469753a9c2a98d1f4bf71
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 25 12:49:36 2010 -0300
+
+    Remove unnecessary sysctl.h
+
+commit f092a617f29c47d4c9decc7cbff2649f72e0f1fa
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Oct 25 00:08:57 2010 -0300
+
+    liana_ssl: many changes to the way to handle and store data in buffers. We need work to pass the ab test
+
+commit 91a17b9f1699fb62ba5038566adbc07e001dec67
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 24 23:39:19 2010 -0300
+
+    Fix rules for Cheetah and Liana_ssl
+
+commit 3e7a8c498696d0ff8076d37802fb5c040bcc8309
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Oct 21 16:45:48 2010 -0300
+
+    Dirlisting: use socket api instead of direct calls
+
+commit 801cb1a239ad5785d7d2922712715bcc154123df
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 20 21:16:43 2010 -0300
+
+    Move Security plugin to Mandril
+
+commit f01a287741a8001e13cfd3117bcff976ff0c6b3b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 18 12:56:13 2010 -0300
+
+    Fix help space
+
+commit e4a20da91e96db0b2415b42713d462596acbcf9e
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Oct 18 12:53:32 2010 -0300
+
+    Changed the way to separate the enabled/disable plugins list in the configure command
+
+commit 78e6426e5f484eacb405c7757ebcda0b0feb30be
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 18 12:33:29 2010 -0300
+
+    Improve configure script printing detailed messages
+
+commit 48943420222466391255937a9690c5aa12271c09
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Oct 16 23:40:59 2010 -0300
+
+    Improve KeepAlive checker
+    Palm plugin: rewrite hook _mkp_event_read
+
+commit 231ed4d077526128754f7550dd9f7b141ff0d577
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 15 06:52:48 2010 -0300
+
+    Move plugin event list to mk_list
+
+commit 7dfae55e5c3bfcab4c4840f31aa7bf77d47d19f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 15 06:26:54 2010 -0300
+
+    Code cleanup and extra validations for plugins
+
+commit 548fdc06f2444cacb13527a6d49e7fee873c6afc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Oct 14 22:16:44 2010 -0300
+
+    Palm plugin improvements
+
+commit 025b9d3fdb3a3a2ebde31238f0a189e5b94bb6e5
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 14 16:33:34 2010 -0300
+
+    Replaced the use of mk_list_foreach for mk_list_foreach_safe
+
+commit 0d2e7512aa0174a9fc707e9ec32f2a171024f234
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 13 17:25:15 2010 -0300
+
+    Plugin and palm fixes
+
+commit 4b9c99d2a1e5412297e301e05af8d5fc49382bbf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 12 19:37:12 2010 -0300
+
+    Re-enable event_read by plugins in protocol layer
+
+commit 23d180b1953b6c79f5ff105f2bbca1338ddcf43b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 11 14:01:32 2010 -0300
+
+    Remove palm server from monkey sources
+
+commit 612cb2a0bc67a07681980d473819aad9498ba7d6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 10 14:37:11 2010 -0300
+
+    Rename main program
+
+commit ff47bded862c070e8580a5559468880534264672
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 10 14:36:40 2010 -0300
+
+    Palm server: add license
+
+commit 20cb347f3f40b95536c16ebbabea9c31684d5738
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 10 14:34:52 2010 -0300
+
+    new API sched_remove_client()
+
+commit a7d7dc93656f1ff69a260728dcbc293df28a6d9a
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 7 12:23:33 2010 -0400
+
+    liana_ssl: Fixed the return values for _mkp_event_read() to proper follow the new event api
+
+commit 01c2ec2f7da8478977dcbcf74e00d009130ca55b
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 7 12:00:34 2010 -0400
+
+    liana_ssl: Fix _mkp_network_io_writev() to put all the strings inside mk_iov struct and just do one write to the peer
+
+commit 4f2f59b9c78182ea1cd21e4c40ae73ff6388d546
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Oct 6 21:42:43 2010 -0400
+
+    liana_ssl: Fixed _mkp_network_io_send_file() and _mkp_network_io_write() to properly send a binary file
+
+commit 388be7c3f1bef91b4b4ee15cc249f7a674eedc10
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 4 17:16:58 2010 -0400
+
+    Move core errors to mk_error()
+
+commit e2693b182f6610c181fa078c2c54e7613fd4e91e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 4 16:58:32 2010 -0400
+
+    Config error to mk_error()
+
+commit 83a171882f3d4f9484ad2f8c2511cc0823b1182a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 4 16:52:04 2010 -0400
+
+    New error function mk_error()
+
+commit 4503b8c5f52c4f73ca0c4858d68ca5738b9123cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 19:56:02 2010 -0400
+
+    Complete API events/hook interface
+
+commit a150fe18f23fa45ca0f9384f3434aa4081d867b5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 18:03:12 2010 -0400
+
+    Read events: fix cascade return values
+
+commit 793199a6cc1c8e5d64809382e54ac3dec50c4a85
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 16:57:45 2010 -0400
+
+    New plugin event return types
+
+commit 02319e815dfb980cd2cebabac29f6ce935b2ee58
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 15:03:27 2010 -0400
+
+    Fix configure help to 80cols
+
+commit 81d20ec7654ddbfc5faecbcf9b0c97c815d3d601
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Oct 1 14:56:39 2010 -0400
+
+    Added the options --enable-plugins and --disable-plugins to the help of configure. Indent description string to be in the same column in the help of configure
+
+commit b179acfe173fddddfa65de87b0f8e3c1c52ad03f
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Oct 1 13:47:49 2010 -0400
+
+    Added options --enable-plugins and --disable-plugins to the configure script
+
+commit 277fe8f72277230cbac91c9b096a84c8ef39c788
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Oct 1 13:19:10 2010 -0400
+
+    liana_ssl: Added info on how to enable the liana_ssl plugin and test it
+
+commit 3e9b351c331a5646323bbb34464f0970de6cbc68
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Oct 1 12:22:23 2010 -0400
+
+    liana_ssl: Added a check to the cert and key files to know if they exists
+
+commit 278661975f024193309af4ac04a8ce1243428afe
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 11:00:25 2010 -0400
+
+    Remove STAGE_15
+
+commit adb65d1381b0b086cf7d3918f1826ec64ca56b8c
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Sep 30 12:14:46 2010 -0400
+
+    Run indent comment to indent the code as it should be
+
+commit 4892adb00ff82d33808f51e316511622b131c3bc
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Sep 30 11:08:43 2010 -0400
+
+    Added some error checks and a better way to send files for _mkp_network_io_send_file()
+
+commit 27b0a613b499617adc4009f8aa30e5b391b441d1
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 15:39:09 2010 -0400
+
+    Fixed the way to send the mk_iov, now it use _idx to send all the content inside the mk_iov. It should build just one string in the future
+
+commit 454daebb195bbd171466c81f3cc345f6fd8f99d1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Sep 29 15:25:55 2010 -0400
+
+    Safe node removal
+
+commit 9ca1f7eee796458840d1d306cd7c93a4c311deca
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 15:21:43 2010 -0400
+
+    [PATCH] Added mk_list_foreach_safe to list.h and used it at request.c
+
+commit b702e19e90e2b2298a96f54179802a0c7f1fe5a1
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 15:10:54 2010 -0400
+
+    Added mk_list_foreach_safe to list.h and used it at request.c
+
+commit 896f3cb0c5211ae79cba71561af000a3603437ee
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 14:20:12 2010 -0400
+
+    Latest fixed to work with ssl
+
+commit 8304c2535d0d0d8860bf6d66f41ddfb47f62b296
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 11:47:06 2010 -0400
+
+    Move the handshake to the _mkp_event_read() if the socket it's already in our ssl list we presume that there were a handhskae before
+
+commit 9945151bb204976fc0326ebad9dedc007c675a29
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 10:46:01 2010 -0400
+
+    Move the pthread_setspecific to the thread context and create a function to handle the read event
+
+commit f51207b8537a0bf3dad74056d16029801636e6d2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Sep 28 22:55:36 2010 -0400
+
+    Experiment new event hooks model
+
+commit 1c030b3becba91ace8c7a85cd7a19c2c9f8772a9
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Sep 28 14:20:17 2010 -0400
+
+    Added a pre-capability to send files
+
+commit 3e876511a542c8496eb4f188fd417d186d274c82
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Sep 28 12:49:11 2010 -0400
+
+    Fix SIGTERM and remove unnecessary check
+
+commit 0b5f326747d4f65e3f9db98c022d409891b2e872
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Sep 27 23:27:13 2010 -0400
+
+    Palm Server: fix POST length limitation
+
+commit 6bb7846fc4c6dadcbb62d513fc9053b913f1c955
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sun Sep 26 11:04:50 2010 -0400
+
+    Changed send for write at handshake process added some trace functions
+
+commit 6049fc715188683ddcf23f6a2e825c6121a7d1f2
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sun Sep 26 11:03:32 2010 -0400
+
+    Fix local path of liana_ssl certificates
+
+commit db55baee41673afca9f1d2027cc6bf2a5b626a3e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 25 13:59:21 2010 -0400
+
+    Fix palm plugin request list init
+
+commit 8243f09f55406185dfeff6e1f27c99eb9fcd46ab
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 25 13:30:34 2010 -0400
+
+    fix cheetah conf
+
+commit 5f4120cc6583a2d80c1cce2f52f2a66c4cc671b6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 25 13:18:34 2010 -0400
+
+    Use network plugin when writting response headers
+
+commit 29a17dfa94a64537d0fce46dabdc5c3d75e27981
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 25 13:08:21 2010 -0400
+
+    New STAGE_15
+
+commit ab674dde6ef93176cb0b18659715f3d720e166bf
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Sep 23 23:17:51 2010 -0400
+
+    Added liana_conf() to read from the configuration file of the plugin the proper path for Cert and Key file
+
+commit 2a79c12f182f2d1bb435b8f562556d4b50aff410
+Author: Eduardo Silva <Eduardo Silva>
+Date:   Thu Sep 23 23:03:27 2010 -0400
+
+    Add cheetah conf
+
+commit 3d3b711d3c3dda0f262394dd3784d2e4ceb2f290
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Sep 21 16:50:52 2010 -0400
+
+    Added disabled file to start this plugin disabled and liana_ssl.h
+
+commit 0e5eda9cfc93a6d66faacff0d5442ab3651e9fb9
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Sep 20 18:45:47 2010 -0400
+
+    Fixed the handshake process
+
+commit b474a1c415ed3fffd1ebf0b12a31e05657dd0cd1
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Sep 20 18:44:26 2010 -0400
+
+    Fixed Makefile.in to properly compile with matrixssl 3.1
+
+commit 76ed8bc4ccf020b3cff692b9e1025c38d208fa50
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Sep 18 10:52:38 2010 -0400
+
+    Removed innecesary data from mk_liana_ssl. Start the work to support the new API for matrixssl 3.1
+
+commit 1a1acc3a008f98288e21636166b6777ce475196e
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Sep 18 10:51:33 2010 -0400
+
+    Fix makefile.in to fit with the current matrixssl 3.1 package
+
+commit bdbe5f8f541dcadff9c0082d0aa709996640cbc3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Sep 14 14:50:31 2010 -0400
+
+    Update RPM spec to 0.12.0
+
+commit 720777369255538b674344104afdc80fba1180f8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 4 10:00:38 2010 -0400
+
+    Adapt plugins to new string calls
+
+commit 61b5f28a50bbc1159d2f0b676a47122382ff325a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 4 09:52:17 2010 -0400
+
+    Refactor string functions
+
+commit 7377249a28a084a0ebe170fe37966a6321953b53
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Sep 3 19:33:43 2010 -0400
+
+    Adapt cheetah to new list implementation
+
+commit 379a79cb864fede7a08bf1c15d3d55448c6d60c9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Sep 3 19:20:53 2010 -0400
+
+    Plugin: use new monkey list interface
+
+commit 659b1509aea487f7b6614c0e970fe2bfb4c5868b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 20:33:24 2010 -0400
+
+    Palm Plugin: use new list implementation
+
+commit 4d4c98e05c640e53c8f319286c1764e82f9dcdd0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 16:19:51 2010 -0400
+
+    QA: fix post_test2.htt wait time
+
+commit e47aee64c80309e658b0795bcc7f2ed8065a0c7b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 16:15:13 2010 -0400
+
+    QA: new post_test03.htt - check post timeout/incomplete data
+
+commit 9250551a9b7552b6168f9c0672448d2768174409
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 11:18:21 2010 -0400
+
+    Alloc node for premature close
+
+commit 6795a43a53201a9bfd07f0a877a0dbad5e9259d4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:58:21 2010 -0400
+
+    Minor fixes
+
+commit ab9157ab5b087ab97f8a1faabd2881f25d8a465f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:47:38 2010 -0400
+
+    Remove validation message
+
+commit 48c1dda1d790479f745780bb038c527643306d08
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:45:50 2010 -0400
+
+    Security: use new CLIENT_SESSION and SESSION_REQUEST model
+
+commit 99cbb5daf09a903b5b0863930edb94de880ff3e7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:44:24 2010 -0400
+
+    Palm: use new CLIENT_SESSION and SESSION_REQUEST model
+
+commit 659aa55b801503c9597ced82df62d0efc1fd8111
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:37:14 2010 -0400
+
+    Logger: use new CLIENT_SESSION and SESSION_REQUEST model
+
+commit 258c1b20089c307f3f1fddda7e8c393e746faf33
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:36:08 2010 -0400
+
+    Dirlisting: use new CLIENT_SESSION and SESSION_REQUEST model
+
+commit c187696da6ff9e326f02fe6403463493f564cec2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 29 10:31:56 2010 -0400
+
+    Core: new CLIENT_SESSION and SESSION_REQUEST architecture
+
+commit e3c7b98a874b06b3bdf465141683754e46ac32df
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 28 09:19:09 2010 -0400
+
+    request.c: move to new list implementation
+
+commit 65f8675bb4e5fb8895ebfc4a517358f36dda8d66
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 20:22:26 2010 -0400
+
+    List: add list_entry_next call
+
+commit 5ae164cfb9b2a72ac2c2f37a4d09d8c757e37d54
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 19:42:04 2010 -0400
+
+    List: implement list_entry_first and list_entry_last
+
+commit eeb2a5df3a6589ead6def010efc7a335c7fa83c6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 19:35:04 2010 -0400
+
+    scheduler.c: move to new list implementation
+
+commit f0aee1b82ffecba256f178757475269fd3d5b652
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 17:12:34 2010 -0400
+
+    mimetype.c: move to new list implementation
+
+commit 0b54dbbf96c640880ef410f437bd47aca3c30581
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 16:18:37 2010 -0400
+
+    Cheetah: for server mode if monkey runs in background
+
+commit eb99074ea30525de97377639bf17504615cc3ed3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 16:11:41 2010 -0400
+
+    Define mk_plugin_exit_all func
+
+commit c20d8aefec8d96ffce03314d4bf37eb8a6088e2b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 16:09:38 2010 -0400
+
+    Add is_daemon variable to config struct
+
+commit 7bf032e9e5ec82e91400f87f95fac510d3b5ef5e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 16:05:21 2010 -0400
+
+    Cheetah: status command - print listen mode
+
+commit 2e1c526e240f5326db5ddc91a3a20558caf90633
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 27 15:44:17 2010 -0400
+
+    Cheetah: print all configuration in a vhost
+
+commit 3aeb58f78f6e901dcf3ae4b59702eb0143b5fb1c
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Aug 27 12:45:13 2010 -0400
+
+    gg
+
+commit 3194181081e9586f67ee8e7384b06effbec6e076
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Aug 25 11:58:23 2010 -0400
+
+    Deprecate AccessLog and Error log in vhost conf
+
+commit 2068e5b7d23b0e2f391d70753fc6c047b6d0c13a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Aug 25 11:22:35 2010 -0400
+
+    Cheetah: code cleanup
+
+commit 371e5de10a34090c4f3a7be8e0a09724a123bbb7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Aug 25 11:04:15 2010 -0400
+
+    Cheetah: fix fprintf() compiler warning
+
+commit 306317ef8dd435aa300c72cc01fccc771fdaf58e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Aug 25 10:58:44 2010 -0400
+
+    Cheetah: remove socket server when exit
+
+commit 78c98b44eaaa57a34f27278a7fe633f006a75598
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Aug 25 10:52:17 2010 -0400
+
+    Cheetah: New server mode through unix domain socket
+
+commit cc028143185a16300c11b774f41348763665fa5e
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Aug 24 10:31:10 2010 -0400
+
+    Added some trace and fix the compilation at the Makefile.in file
+
+commit a4f6726282bf9e3524c2f37f18524809310016ac
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Tue Aug 3 14:36:40 2010 -0400
+
+    First work on liana_ssl
+
+commit b130094bf7401d3d3cf3fee082405724cbe784c8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 31 14:54:18 2010 -0400
+
+    Cheetah Plugin: remove pipe when monkey exit
+
+commit 5c24b997703d85629da850dd4b41cb1c905ea213
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 31 12:05:07 2010 -0400
+
+    Plugins: invoke _mkp_exit() on SIGINT
+
+commit b9f4e1f51a51eeb87bec7546cd5bef46069bc756
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 31 11:45:15 2010 -0400
+
+    Cheetah Plugin: new conf and new PIPE communication support
+
+commit 9918ccce027eaaad5c88eb2dddd871cfa4b62fc5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 20:59:29 2010 -0400
+
+    Cheetah Plugin: new cutils.c file
+
+commit 5f4bd527e5e401085c93323aaa9a258024594f83
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 14:31:42 2010 -0400
+
+    Cheetah: move registration to top
+
+commit 102c6832589303c84b556dc51a1f5028221074a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 14:30:41 2010 -0400
+
+    Liana: move registration to top
+
+commit 293e0b51b7d1de195c41f9cfe5bd1ac63d9fbf81
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 14:30:14 2010 -0400
+
+    Fix MK_TRACE and move registration to top on each plugin
+
+commit c70bd21509a637eb2a7f5b4ff3d4ea6a20dc4397
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:23:30 2010 -0400
+
+    Temporal fix for PLUGIN_TRACE
+
+commit 8a76bdc444b6ad33b97701363b2384fc16782d15
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:14:57 2010 -0400
+
+    Plugin struct cleanup
+
+commit d2884679f8ebc79ef745f942f1c606f42490b8be
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:11:18 2010 -0400
+
+    Update version to 0.12.0-dev
+
+commit 30f21c8efed492e65800ecc9d94a303895c7886e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:10:56 2010 -0400
+
+    Security Plugin: Use new registration method
+
+commit 3eabae477e992dcbda6b43e90e9c07bd9887d3fc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:07:36 2010 -0400
+
+    Palm Plugin: Use new registration method
+
+commit 463fe33207670f2d969e5ad9dd0e18d7761c391e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 13:04:19 2010 -0400
+
+    Dirlisting: Use new registration method
+
+commit cc77514b0d91a7cb205ec1a75f7f2e71b0db9f04
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 12:43:43 2010 -0400
+
+    Liana: Use new registration method
+
+commit 2c92b058fd04d60045ad9f5ecf0f5c59f684afc3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jul 30 12:36:37 2010 -0400
+
+    New Plugin registration macro: MONKEY_PLUGIN()
+
+commit 6a70333667ae2a57652e0d10f060876e24348c97
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 19:56:06 2010 -0400
+
+    New plugin header file for plugins: MKPlugin.h
+
+commit 9c4738722e470e29b1be56d0d693bb7aaf3fa03d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 19:16:52 2010 -0400
+
+    Cheetah: refactoring code
+
+commit 62a441e8bddcd239ed9c3546b6c2cd8130fec6ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 18:29:33 2010 -0400
+
+    Cheetah: move constants to header file
+
+commit b97c56be2a6f57c04f376955cc1a9d20a517a022
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 29 17:59:50 2010 -0400
+
+    Monkey 0.11.1
+
 commit 5beb18fd6d45f3ff739f69dad62b9abb6b2ad096
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Jul 29 17:38:17 2010 -0400
