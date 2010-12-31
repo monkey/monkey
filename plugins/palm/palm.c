@@ -222,9 +222,9 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
     if (!pr) {
 #ifdef TRACE
-        PLUGIN_TRACE("return %i (MK_PLUGIN_RET_END)", MK_PLUGIN_RET_END);
+        PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CLOSE_CONX)", MK_PLUGIN_RET_CLOSE_CONX);
 #endif
-        return MK_PLUGIN_RET_END;
+        return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
     /* Register Palm instance */

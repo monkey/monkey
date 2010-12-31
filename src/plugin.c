@@ -584,6 +584,8 @@ int mk_plugin_stage_run(unsigned int hook,
                     return MK_PLUGIN_RET_CONTINUE;
                 case MK_PLUGIN_RET_END:
                     return MK_PLUGIN_RET_END;
+                case MK_PLUGIN_RET_CLOSE_CONX:
+                    return MK_PLUGIN_RET_CLOSE_CONX;
                 default:
                     mk_error(MK_ERROR_FATAL, 
                              "Plugin '%s' returns invalid value %i",

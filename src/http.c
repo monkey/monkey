@@ -245,7 +245,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
 #endif
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+        if (sr->headers && sr->headers->status > 0) {
+            mk_request_error(sr->headers->status, cs, sr);
+        }
+        else {
+            mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+        }
         return EXIT_ERROR;
     }
     else if (ret == MK_PLUGIN_RET_CONTINUE) {

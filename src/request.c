@@ -804,8 +804,9 @@ void mk_request_error(int http_status, struct client_session *cs,
     sr->headers->pconnections_left = 0;
     sr->headers->last_modified = -1;
 
-    if (aux_message)
+    if (aux_message) {
         mk_mem_free(aux_message);
+    }
 
     if (!page) {
         mk_pointer_reset(&sr->headers->content_type);
