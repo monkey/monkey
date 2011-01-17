@@ -50,7 +50,6 @@
 #include "file.h"
 #include "str.h"
 #include "config.h"
-#include "chars.h"
 #include "socket.h"
 #include "clock.h"
 #include "user.h"
