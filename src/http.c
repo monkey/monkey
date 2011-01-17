@@ -294,7 +294,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         time_t date_client;       /* Date sent by client */
         time_t date_file_server;  /* Date server file */
         
-        date_client = PutDate_unix(sr->if_modified_since.data);
+        date_client = mk_utils_gmt2utime(sr->if_modified_since.data);
         date_file_server = sr->file_info->last_modification;
 
         if ((date_file_server <= date_client) && (date_client > 0)) {

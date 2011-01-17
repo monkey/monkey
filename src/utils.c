@@ -147,7 +147,7 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
     return 0;
 }
 
-time_t PutDate_unix(char *date)
+time_t mk_utils_gmt2utime(char *date)
 {
     time_t new_unix_time;
     struct tm t_data;

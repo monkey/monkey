@@ -71,8 +71,9 @@ pthread_mutex_t mutex_trace;
 /* utils.c */
 int hex2int(char *pChars);
 
-int mk_utils_utime2gmt(mk_pointer **p, time_t date);
-time_t PutDate_unix(char *date);
+
+int    mk_utils_utime2gmt(mk_pointer **p, time_t date);
+time_t mk_utils_gmt2utime(char *date);
 
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
