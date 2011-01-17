@@ -239,7 +239,7 @@ int mk_utils_hex2int(char *hex, int len)
 char *mk_utils_hexuri_to_ascii(mk_pointer uri)
 {
 
-    int i, hex_result, aux_char;
+    int i, hex_result;
     int buf_idx = 0;
     char *buf;
     char hex[3];
@@ -262,17 +262,14 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
             strncpy(hex, uri.data + i + 1, 2);
             hex[2] = '\0';
 
-            if ((hex_result = mk_utils_hex2int(hex, 2)) <= 127) {
-                buf[buf_idx] = toascii(hex_result);
+            hex_result = mk_utils_hex2int(hex, 2);
+
+            if (hex_result != -1) {
+                buf[buf_idx] = hex_result;
             }
             else {
-                if ((aux_char = get_char(hex_result)) != -1) {
-                    buf[buf_idx] = aux_char;
-                }
-                else {
-                    mk_mem_free(buf);
-                    return NULL;
-                }
+                mk_mem_free(buf);
+                return NULL;
             }
             i += 2;
         }
