@@ -77,7 +77,7 @@ time_t PutDate_unix(char *date);
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
 int mk_utils_set_daemon();
-char *mk_utils_hexuri_to_ascii(mk_pointer req_uri);
+char *mk_utils_url_decode(mk_pointer req_uri);
 
 #ifdef TRACE
 void mk_utils_trace(const char *component, int color, const char *function, 

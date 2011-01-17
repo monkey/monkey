@@ -236,7 +236,7 @@ int mk_utils_hex2int(char *hex, int len)
 /* If the URI contains hexa format characters it will return 
  * convert the Hexa values to ASCII character 
  */
-char *mk_utils_hexuri_to_ascii(mk_pointer uri)
+char *mk_utils_url_decode(mk_pointer uri)
 {
 
     int i, hex_result;
@@ -249,7 +249,6 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
     }
 
     buf = mk_mem_malloc_z(uri.len);
-
 
     if (i > 0) {
         strncpy(buf, uri.data, i);
