@@ -1,3 +1,63 @@
+commit 6c94b1723349252929f4291d9cd0e6327657ae18
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:50:16 2011 -0300
+
+    Upgrade Copyrights to 2011
+
+commit e54d82e0dc952990a8e2ac5df061f7ccf0c7bdcf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:35:48 2011 -0300
+
+    Rename mk_utils_hexuri_to_ascii to mk_utils_url_decode
+
+commit 6bb7d1c384015bc161ef700722e8981173bb4475
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:30:22 2011 -0300
+
+    Deprecate silly chars.c
+
+commit 55970889521653578ce654406dafbd839bee5acb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:27:56 2011 -0300
+
+    Full UTF-8 support
+
+commit 2941363dea23c177f5003fa373ee4990d4c3dcb1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jan 16 23:37:35 2011 -0300
+
+    Dirlisting: Set charset to UTF-8 in Guineo theme
+
+commit 081092a4ce4f7e1dd2ec173e9bb42aca56d5a226
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jan 16 23:31:13 2011 -0300
+
+    Dirlisting: skip broken file entries
+
+commit c482e753a6a8376b3bb1eb089673741833cce516
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jan 16 23:26:38 2011 -0300
+
+    Rewrite hex2int: mk_utils_hex2int()
+
+commit e2f5347024a3deac20cc93ac2d223857eb84421b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 6 19:53:13 2011 -0300
+
+    0.12.1-dev begins
+
+commit 2aad66df741aee2e88981dc080f7e38f6d4a2f89
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Dec 31 17:44:31 2010 -0300
+
+    Monkey 0.12.0
+
+commit 7e64c73db27368778778f3918abe0bcc7fcb2e50
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Dec 31 17:41:18 2010 -0300
+
+    Monkey 0.12.0
+
 commit 62156adb40ec8853b61d3b40a263dc737d36033e
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Dec 31 11:21:59 2010 -0300
