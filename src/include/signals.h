@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2010, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
  *  Copyright (C) 2010 Davidlohr Bueso <dave@gnu.org>
  *
  *  This program is free software; you can redistribute it and/or modify
