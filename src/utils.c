@@ -201,6 +201,38 @@ int mk_utils_set_daemon()
     return 0;
 }
 
+/* Convert hexadecimal to int */
+int mk_utils_hex2int(char *hex, int len)
+{
+    int i = 0;
+    int res = 0;
+    char c;
+
+    while ((c = *hex++) && i < len) {
+        res *= 0x10;
+
+        if (c >= 'a' && c <= 'f') {
+            res += (c - 0x57);
+        }
+        else if (c >= 'A' && c <= 'F') {
+            res += (c - 0x37);
+        }
+        else if (c >= '0' && c <= '9') {
+            res += (c - 0x30);
+        }
+        else {
+            return -1;
+        }
+        i++;
+    }
+
+    if (res < 0) {
+        return -1;
+    }
+
+    return res;
+}
+
 /* If the URI contains hexa format characters it will return 
  * convert the Hexa values to ASCII character 
  */
@@ -230,7 +262,7 @@ char *mk_utils_hexuri_to_ascii(mk_pointer uri)
             strncpy(hex, uri.data + i + 1, 2);
             hex[2] = '\0';
 
-            if ((hex_result = hex2int(hex)) <= 127) {
+            if ((hex_result = mk_utils_hex2int(hex, 2)) <= 127) {
                 buf[buf_idx] = toascii(hex_result);
             }
             else {

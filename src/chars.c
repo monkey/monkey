@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2010, Eduardo Silva P. <edsiper@gmail.com>
@@ -220,34 +222,3 @@ int get_char(int code)
     return -1;
 }
 
-/* Convert hexadecimal to int */
-int hex2int(char *pChars)
-{
-    int Hi;
-    int Lo;
-    int Result;
-
-    Hi = pChars[0];
-    if ('0' <= Hi && Hi <= '9') {
-        Hi -= '0';
-    }
-    else if ('a' <= Hi && Hi <= 'f') {
-        Hi -= ('a' - 10);
-    }
-    else if ('A' <= Hi && Hi <= 'F') {
-        Hi -= ('A' - 10);
-    }
-    Lo = pChars[1];
-    if ('0' <= Lo && Lo <= '9') {
-        Lo -= '0';
-    }
-    else if ('a' <= Lo && Lo <= 'f') {
-        Lo -= ('a' - 10);
-    }
-    else if ('A' <= Lo && Lo <= 'F') {
-        Lo -= ('A' - 10);
-    }
-    Result = Lo + (16 * Hi);
-
-    return (Result);
-}
