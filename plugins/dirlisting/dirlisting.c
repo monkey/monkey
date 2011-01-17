@@ -106,6 +106,10 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
 
     entry_info = mk_api->file_get_info(full_path);
 
+    if (!entry_info) {
+        return NULL;
+    }
+
     entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
     entry->name = file;
     entry->type = type;
