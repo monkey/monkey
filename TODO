@@ -1,0 +1,11 @@
+TODO
+====
+Here is a little list of features that we would like to have in a 
+near feature, if you are looking to contribute to Monkey Project, consider
+to review the following:
+
+ - Plugin : FastCGI
+ - Plugin : Customize error HTML messages
+ - Plugin : Provide basic authentication (Basic Auth)
+ - QA     : Framework to launch Monkey instances with different
+            configurations and perform different tests.
