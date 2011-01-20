@@ -32,13 +32,14 @@
 struct plugin_api *mk_api;
 
 mk_plugin_key_t _mkp_data;
+char *_shortname;
 
 #define MONKEY_PLUGIN(a, b, c, d) \
     struct plugin_info _plugin_info = {a, b, c, d}
 
 #ifdef TRACE
 #define PLUGIN_TRACE(...) \
-    mk_api->trace(_plugin_info.shortname,     \
+    mk_api->trace(_shortname,                 \
                   MK_TRACE_PLUGIN,            \
                   __FUNCTION__,               \
                   __FILE__,                   \
