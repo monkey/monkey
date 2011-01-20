@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#include "plugin.h"
+#include "MKPlugin.h"
 #include "patas.h"
 
 struct mk_patas_conx *mk_patas_connection_create(int socket_remote, int socket_node,
