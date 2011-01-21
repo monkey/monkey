@@ -192,13 +192,6 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     p->net_io.server = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_server");
 
-    /* Network IP hooks */
-    p->net_ip.addr = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_network_ip_addr");
-
-    p->net_ip.maxlen = (int (*)())
-        mk_plugin_load_symbol(handler, "_mkp_network_ip_maxlen");
-
     /* Thread key */
     p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler, 
                                                             "_mkp_data");
@@ -281,31 +274,6 @@ create socket : %p\nbind : %p\nserver : %p",
         }
     }
 
-    /* NETWORK_IP Plugin */
-    if (p->hooks & MK_PLUGIN_NETWORK_IP) {
-        /* Validate mandatory calls */
-        if (!p->net_ip.addr || !p->net_ip.maxlen) {
-#ifdef TRACE
-            MK_TRACE("Networking IP plugin incomplete: %s", p->path);
-            MK_TRACE("Mapped Functions\naddr   :%p\nmaxlen :%p",
-                     p->net_ip.addr,
-                     p->net_ip.maxlen);
-#endif
-            mk_plugin_free(p);
-            return NULL;
-        }
-
-        /* Restrict to one NETWORK_IP plugin */
-        if (!plg_netipmap) {
-            plg_netipmap = &p->net_ip;
-        }
-        else {
-            mk_error(MK_ERROR_FATAL, 
-                     "Error: Loading more than one Network IP Plugin: %s",
-                     p->path);
-        }
-    }
-
     /* Add Plugin to the end of the list */
     mk_list_add(&p->_head, config->plugins);
 
@@ -343,7 +311,6 @@ void mk_plugin_init()
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
     plg_netiomap = NULL;
-    plg_netipmap = NULL;
 
     /* Setup and connections list */
     api->config = config;

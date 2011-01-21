@@ -137,7 +137,6 @@ struct plugin
     struct plugin_core core;
     struct plugin_stage stage;
     struct plugin_network_io net_io;
-    struct plugin_network_ip net_ip;
 
     /* Epoll Events */
     int (*event_read) (int);
@@ -178,7 +177,6 @@ struct plugin_stagemap *plg_stagemap;
 
 /* Network map calls */
 struct plugin_network_io *plg_netiomap;
-struct plugin_network_ip *plg_netipmap;
 
 /* API functions exported to plugins */
 struct plugin_api
