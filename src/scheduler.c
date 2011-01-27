@@ -68,6 +68,10 @@ int mk_sched_register_thread(pthread_t tid, int efd)
 
         /* Alloc and init list */
         sched_list = mk_mem_malloc(sizeof(struct mk_list));
+        if (!sched_list) {
+            mk_error(MK_ERROR_FATAL, "Could not initilize Scheduler list. Aborting");
+        }
+
         mk_list_init(sched_list);
 
         mk_list_add(&sl->_head, sched_list);
