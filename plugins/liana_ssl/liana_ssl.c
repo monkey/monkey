@@ -89,6 +89,33 @@ int liana_ssl_error(int ret, unsigned char *error, struct mk_liana_ssl *conn) {
     return MK_LIANA_SSL_NO_ERROR;
 }
 
+int _mkp_network_io_close(int socket_fd)
+{
+    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
+    struct mk_list *curr, *temp;
+    struct mk_liana_ssl *conn = NULL;
+
+#ifdef TRACE
+    PLUGIN_TRACE("Locating socket on ssl connections list to close");
+#endif
+
+    mk_list_foreach_safe(curr, temp, list_head) {
+        if (curr == NULL) break;
+        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
+        if (conn->socket_fd == socket_fd) {
+            close(socket_fd);
+            return 0;
+        }
+        conn = NULL;
+    }
+
+    if (conn == NULL)
+        return -1;
+
+    return 0;
+}
+
+
 int liana_conf(char *confdir)
 {
     int ret = 0;
@@ -487,31 +514,6 @@ int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
     return bytes_sent;
 }
 
-int _mkp_network_io_close(int socket_fd)
-{
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr, *temp;
-    struct mk_liana_ssl *conn = NULL;
-
-#ifdef TRACE
-    PLUGIN_TRACE("Locating socket on ssl connections list to close");
-#endif
-
-    mk_list_foreach_safe(curr, temp, list_head) {
-        if (curr == NULL) break;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
-        if (conn->socket_fd == socket_fd) {
-            close(socket_fd);
-            return 0;
-        }
-        conn = NULL;
-    }
-
-    if (conn == NULL)
-        return -1;
-
-    return 0;
-}
 
 int _mkp_network_io_connect(int socket_fd, char *host, int port)
 {
@@ -558,8 +560,6 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
     ssize_t bytes_written = -1;
     char *buffer_send_file = (char *) pthread_getspecific(_mkp_buffer_send_file);
     ssize_t len;
-    ssize_t bytes_left;
-    ssize_t bytes_read;
 
 #ifdef TRACE
     PLUGIN_TRACE("Send file");
