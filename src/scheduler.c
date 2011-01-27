@@ -61,6 +61,10 @@ int mk_sched_register_thread(pthread_t tid, int efd)
         /* Pre alloc IPv4 memory buffer */
 	sl->queue[i].ipv4.data = mk_mem_malloc_z(16);
         sl->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
+
+        if (!sl->queue[i].ipv4.data) {
+          mk_error(MK_ERROR_FATAL, "Could not initialize memory for IP cache queue. Aborting");
+        }
     }
 
     if (!sched_list) {
@@ -69,7 +73,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
         /* Alloc and init list */
         sched_list = mk_mem_malloc(sizeof(struct mk_list));
         if (!sched_list) {
-            mk_error(MK_ERROR_FATAL, "Could not initilize Scheduler list. Aborting");
+            mk_error(MK_ERROR_FATAL, "Could not initialize memory for Scheduler list. Aborting");
         }
 
         mk_list_init(sched_list);
