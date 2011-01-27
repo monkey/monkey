@@ -141,6 +141,7 @@ main()
         echo -e "PLATFORM\t= $platform"
         echo -e "COMPILER\t= $CC"
         echo -e "CFLAGS\t\t= $CFLAGS"
+        echo -e "LDFLAGS\t\t= $LDFLAGS"
 
 	if [ "$DEFS" != "" ]; then
             echo -e "DEFS\t\t= $DEFS"
@@ -339,14 +340,13 @@ DEFS    = $DEFS
 INCDIR  = ./include
 LDFLAGS	= $LDFLAGS
 DESTDIR	= ../bin/monkey
-LIBS	= -ldl $libs $mod_libs $MORE_LIBS
+LIBS	= -ldl $libs
 OBJ	= monkey.o method.o mimetype.o request.o \\
 	header.o config.o signals.o \\
 	user.o utils.o epoll.o scheduler.o \\
 	str.o memory.o connection.o iov.o http.o \\
 	file.o socket.o clock.o cache.o \\
-	server.o plugin.o \\
-        $add_obj_mod
+	server.o plugin.o 
 
 all: ../bin/monkey
 
@@ -439,7 +439,7 @@ EOF
         done
 
         echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
-        sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+        sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         if test -e $plugin_dir/ABOUT ; then
             cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
