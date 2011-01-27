@@ -1,10 +1,11 @@
 CC 	= $CC
 CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c liana.c
-	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-liana.so liana.o -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c liana.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-liana.so liana.o -lc
 clean:
 	rm -rf *.o *~ *.*so*

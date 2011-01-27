@@ -1,11 +1,13 @@
 CC 	= $CC
 CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 
+
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c dirlisting.c
-	$(CC) $(CFLAGS) $(DEFS) -shared -Wl -o monkey-dirlisting.so dirlisting.o -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c dirlisting.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o monkey-dirlisting.so dirlisting.o -lc
 clean:
 	rm -rf *.o
 	rm -rf *.*so*

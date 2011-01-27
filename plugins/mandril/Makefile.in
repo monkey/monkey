@@ -1,11 +1,12 @@
 CC 	= $CC
 CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c mandril.c
-	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-mandril.so mandril.o -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c mandril.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-mandril.so mandril.o -lc
 clean:
 	rm -rf *.o
 	rm -rf *.*so*

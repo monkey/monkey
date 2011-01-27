@@ -1,13 +1,14 @@
 CC 	= $CC
 CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 SOURCES = palm.c protocol.c cgi.c request.c
 OBJECTS = palm.o protocol.o cgi.o request.o
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
-	$(CC) $(CFLAGS) $(DEFS) -shared -o monkey-palm.so $(OBJECTS) -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-palm.so $(OBJECTS) -lc
 clean:
 	rm -rf *.o *~
 	rm -rf *.*so*

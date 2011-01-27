@@ -1,13 +1,14 @@
 CC 	= $CC
 CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 OBJECTS = cheetah.o loop.o cmd.o cutils.o
 SOURCES = cheetah.c loop.c cmd.c cutils.c
 
 all:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
-	$(CC) $(CFLAGS) $(DEFS) -shared -Wl -o monkey-cheetah.so $(OBJECTS) -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o monkey-cheetah.so $(OBJECTS) -lc
 clean:
 	rm -rf *.o *~
 	rm -rf *.*so*
