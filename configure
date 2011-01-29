@@ -86,7 +86,6 @@ main()
         echo
 	echo -e "\033[1mChecking dependencies\033[0m"
         echo -e "\033[1m=====================\033[0m"
-        echo
 
         # Check for accept4()
         echo -n "+ Checking for accept4() function... "
@@ -104,21 +103,20 @@ main()
         fi
 
         echo
+        echo -e "\033[1mPlugins to be compiled\033[0m"
+        echo -e "\033[1m======================\033[0m"
+
+        find plugins/ -name Makefile -exec rm {} \;
+        create_makefile_plugins $plugdir
+
+        echo
         echo -e "\033[1mCreating Makefiles and scripts\033[0m"
         echo -e "\033[1m==============================\033[0m"
-        echo
 
 	echo "+ Creating conf/monkey.conf"
 	create_conf prefix bindir cgibin sysconfdir datadir logdir
 
 	make_conf  $lang
-
-	echo "+ Creating Makefile"
-	if [ "$dir" = 0 ]; then
-		create_makefile1 bindir
-	else
-		create_makefile1_install prefix bindir cgibin sysconfdir datadir logdir
-	fi
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform
@@ -126,14 +124,15 @@ main()
         echo "+ Creating src/include/info.h"
 	create_info sysconfdir SYSNAME VERSION
 
-	echo "+ Creating banana script"
+	echo "+ Creating bin/banana script"
 	create_banana_script bindir logdir
 
-        echo
-        echo -e "\033[1mPlugins to be compiled\033[0m"
-        echo -e "\033[1m======================\033[0m"
-        echo
-        create_makefile_plugins $plugdir
+	echo -e "+ Creating Makefile"
+	if [ "$dir" = 0 ]; then
+		create_makefile1 bindir
+	else
+		create_makefile1_install prefix bindir cgibin sysconfdir datadir logdir
+	fi
 
         echo
         echo -e "\033[1mMonkey Configuration\033[0m"
@@ -161,13 +160,13 @@ main()
 
         echo
         echo "--"
-	echo -n "Monkey configuration is done, just type 'make' to build or 'make help"
+	echo -en "\033[1m\033[32mMonkey\033[0m configuration is \033[1m\033[33mdone!\033[0m, type 'make' to build or 'make help"
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
 	else
 		echo "' "
 	fi
-	echo "Have fun! ;)"
+	echo -n "Have fun! ;)"
         echo
 
 	echo "#define CC \"${CC}\"" > src/include/env.h
@@ -251,21 +250,25 @@ EOF
 create_makefile1_install()
 {
 # Look for plugins and create list
+touch plugins.list
 for entry in plugins/*
 do
-        if [ -d $entry ]; then
-	    echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
-        fi
+    if [ -d $entry ] && [ -f "$entry/Makefile" ] ; then
+        plugin_name=${entry##*/}
+	echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
+    fi
 done;
 plglist=`cat plugins.list`
 rm -rf plugins.list
 
 # Look for plugins configuration
+touch plugins.conf
 for entry in conf/plugins/*
 do
-	if [ -d $entry ]; then
-	    echo -e "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
-	fi
+    basename=${entry##*/}
+    if [ -d $entry ] && [ -f "plugins/$basename/Makefile" ] ; then
+	echo -e "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
+    fi
 done;
 plgconf=`cat plugins.conf`
 rm -rf plugins.conf
@@ -367,7 +370,8 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/sites/* include/info.h ../logs/*\\
+	../conf/sites/* include/info.h ../logs/*
+	find ../plugins -name Makefile -exec rm {} \;
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
@@ -407,7 +411,6 @@ EOF
 
         disabled=`echo $disabled_plugins | grep -w $plugin_dir`
         disabled=$?
-
 
         comment="    "
 	if test -e $plugin_dir/DISABLED || [ $disabled -eq 0 ] ; then
