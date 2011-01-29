@@ -1,3 +1,129 @@
+commit a1140e918c6f5346cf34ef41550dcdec0a0bbfc6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 29 14:14:26 2011 -0300
+
+    Configure: when creating Makefile install rutine, do not install
+    or copy content of plugins which have not been selected
+
+commit a412c1e2799677fd849dde72225d1c341e4eefb3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 27 19:03:30 2011 -0300
+
+    Scheduler: validate memory allocation for IP cache queue
+
+commit c713caa0e8b19d9b9189582768af80fb4742507e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 27 18:51:26 2011 -0300
+
+    Scheduler: validate first list node allocation
+
+commit d70642846f7c3939422e0fdd9cdb3c875844be54
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Jan 27 15:18:51 2011 -0300
+
+    liana_ssl: Moved _mkp_network_io_close before any other function so we don't need to declare anything
+
+commit a3dedd64c1f42527fa45d6426083611fa7302a08
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 27 14:42:54 2011 -0300
+
+    Configure: pass LDFLAGS value to plugins Makefile
+
+commit de363659be3922075afe87ee6b21719b825228d3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 27 14:19:19 2011 -0300
+
+    Add LDFLAGS to plugins Makefile.in files
+
+commit 1b92c08bf11079ea29f6c403ccd67958ff632379
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 27 14:04:25 2011 -0300
+
+    Configure: fix LDFLAGS
+
+commit 9c0bb27d68799fa15fdf328ad4c757f14e49c66b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jan 26 11:09:18 2011 -0300
+
+    cleanup
+
+commit 8f024a32f56d5062bf4d3bb2755ed44a813755ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 21 14:08:55 2011 -0300
+
+    API: deprecate unused NETIP plugin type
+
+commit 48234c1e323ba546f0fd2aa5b7658aade2564890
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 21 13:59:30 2011 -0300
+
+    API: Fix PLUGIN_TRACE() issue
+
+commit e42da8d756f051fc77b582327a295e7ab5a702cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 20 15:15:28 2011 -0300
+
+    API: revert change
+
+commit dfee6484d5312543bdd2fb027f2a75958220aba0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 20 13:35:55 2011 -0300
+
+    Patas Plugin: include MKPlugin.h instead of old plugin.h
+
+commit 58328f25a07535184ce45bc098aefa66514826ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 20 13:32:18 2011 -0300
+
+    API: Fix problem with bad reference in plugin context when some
+    non-principal .c file invokes PLUGIN_TRACE macro.
+
+commit 9a13bcab886b0832ad8279fba27421683e4d496d
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Jan 20 12:43:08 2011 -0300
+
+    [PATCH 2/2] Update the README file to reflect a more general plugin subsystem instead of naming specific ones.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 87d2df94be8d90b6bd2340fd39ff562bc5f68b8a
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Jan 20 12:42:25 2011 -0300
+
+    [PATCH 1/2] update TODO file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 50b0f09f1e7a54d497db514be3235a4cf5798a80
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 20 12:23:24 2011 -0300
+
+    Add TODO file
+
+commit 8c88f8619bee05339146259dab2db5a932670c66
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 13:45:41 2011 -0300
+
+    Remove old chars.h
+
+commit d33369751ac67c709cb5875d2d1ce680eb6b4ff7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 13:45:04 2011 -0300
+
+    Monkey 0.12.2-dev begins
+
+commit 8665ac9882df36e91fbcb25e6ce8b7b78eed8714
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 13:44:34 2011 -0300
+
+    Rename PutDateUnix to mk_utils_gmt2utime
+
+commit 4f104cf525720684c52870d7aa64be0628ed28ac
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:57:59 2011 -0300
+
+    Monkey 0.12.1
+
 commit 6c94b1723349252929f4291d9cd0e6327657ae18
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Jan 17 00:50:16 2011 -0300
