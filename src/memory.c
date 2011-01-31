@@ -34,7 +34,7 @@
 #include "iov.h"
 #include "user.h"
 
-inline __attribute__((alloc_size(1)))
+inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc(const size_t size)
 {
     void *aux = malloc(size);
@@ -47,7 +47,7 @@ void *mk_mem_malloc(const size_t size)
     return aux;
 }
 
-inline __attribute__((alloc_size(1)))
+inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc_z(const size_t size)
 {
     void *buf = mk_mem_malloc(size);
@@ -59,7 +59,7 @@ void *mk_mem_malloc_z(const size_t size)
     return buf;
 }
 
-inline __attribute__((alloc_size(1,2)))
+inline ALLOCSZ_ATTR(1,2)
 void *mk_mem_realloc(void *ptr, const size_t size)
 {
     void *aux = realloc(ptr, size);
