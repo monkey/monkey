@@ -98,9 +98,6 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
 
-    pthread_mutex_lock(&mutex_wait_register);
-    pthread_mutex_unlock(&mutex_wait_register);
-
     fds_timeout = log_current_utime + config->timeout;
     events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
 
