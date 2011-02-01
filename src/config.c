@@ -326,7 +326,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
             case MK_CONFIG_VAL_STR:
                 return (void *) entry->val;
             case MK_CONFIG_VAL_NUM:
-                return (void *) (size_t) atoi(entry->val);
+                return (void *) (size_t) strtol(entry->val, (char **) NULL, 10);
             case MK_CONFIG_VAL_BOOL:
                 on = strcasecmp(entry->val, VALUE_ON);
                 off = strcasecmp(entry->val, VALUE_OFF);

@@ -267,7 +267,7 @@ static int mk_request_header_process(struct session_request *sr)
             sr->host_port = host;
 
             port = mk_string_copy_substr(host.data, pos_sep + 1, host.len);
-            sr->port = atoi(port);
+            sr->port = strtol(port, (char **) NULL, 10);
             mk_mem_free(port);
         }
         else {

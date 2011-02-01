@@ -73,13 +73,13 @@ long int mk_method_post_content_length(char *body)
 
         str_cl = mk_string_copy_substr(body + pos_header + mk_rh_content_length.len + 1,
                                        0, pos_header + pos_crlf);
-        len = atoi(str_cl);
+        len = strtol(str_cl, (char **) NULL, 10);
         mk_mem_free(str_cl);
 
         return len;
     }
 
-    len = atoi(tmp.data);
+    len = strtol(tmp.data, (char **) NULL, 10);
 
     return len;
 }

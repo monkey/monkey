@@ -379,17 +379,17 @@ int mk_utils_get_somaxconn()
      * In order to avoid that problem, this function will check the proc filesystem,
      * if it still fails, we will use the default value defined for somaxconn for years...
      */
-    int somaxconn = 128;
+    long somaxconn = 128;
     char buf[16];
     FILE *f;
 
     f = fopen("/proc/sys/net/core/somaxconn", "r");
     if(f && fgets(buf, 16, f)) {
-        somaxconn = atoi(buf);
+        somaxconn = strtol(buf, (char **) NULL, 10);
         fclose(f);
     }
 
-    return somaxconn;
+    return (int) somaxconn;
 }
 
 /* Write Monkey's PID */

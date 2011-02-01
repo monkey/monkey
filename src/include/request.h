@@ -197,7 +197,7 @@ struct session_request
     int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
     
     /*-Connection-*/
-    int port;
+    long port;
     /*------------*/
     
     /* file descriptors */
