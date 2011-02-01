@@ -47,7 +47,7 @@ void *mk_mem_malloc(const size_t size);
 void *mk_mem_malloc_z(const size_t size);
 void *mk_mem_realloc(void *ptr, const size_t size);
 void mk_mem_free(void *ptr);
-void mk_mem_pointers_init();
+void mk_mem_pointers_init(void);
 
 /* mk_pointer_* */
 mk_pointer mk_pointer_create(char *buf, long init, long end);

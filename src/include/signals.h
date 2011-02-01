@@ -21,7 +21,7 @@
 #ifndef MK_SIG_H
 #define MK_SIG_H
 
-void mk_signal_init();
-void mk_signal_thread_sigpipe_safe();
+void mk_signal_init(void);
+void mk_signal_thread_sigpipe_safe(void);
 
 #endif

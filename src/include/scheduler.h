@@ -67,15 +67,15 @@ pthread_key_t epoll_fd;
 int mk_sched_register_thread(pthread_t tid, int epoll_fd);
 int mk_sched_launch_thread(int max_events);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
-struct sched_list_node *mk_sched_get_handler_owner();
+struct sched_list_node *mk_sched_get_handler_owner(void);
 
-struct mk_list *mk_sched_get_request_list();
+struct mk_list *mk_sched_get_request_list(void);
 void mk_sched_set_request_list(struct mk_list *list);
 
-int mk_sched_get_thread_poll();
+int mk_sched_get_thread_poll(void);
 void mk_sched_set_thread_poll(int epoll);
 
-struct sched_list_node *mk_sched_get_thread_conf();
+struct sched_list_node *mk_sched_get_thread_conf(void);
 void mk_sched_update_thread_status(struct sched_list_node *sched,
                                    int active, int closed);
 

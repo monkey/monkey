@@ -79,7 +79,7 @@ void _mk_iov_set_free(struct mk_iov *mk_io, char *buf);
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
                      int free, int idx);
 
-void mk_iov_separators_init();
+void mk_iov_separators_init(void);
 void mk_iov_free_marked(struct mk_iov *mk_io);
 void mk_iov_print(struct mk_iov *mk_io);
 

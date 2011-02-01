@@ -255,7 +255,7 @@ struct client_session *mk_session_create(int socket);
 struct client_session *mk_session_get(int socket);
 void mk_session_remove(int socket);
 
-void mk_request_init_error_msgs();
+void mk_request_init_error_msgs(void);
 
 int mk_handler_read(int socket, struct client_session *cs);
 int mk_handler_write(int socket, struct client_session *cs);

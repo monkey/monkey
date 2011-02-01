@@ -44,5 +44,5 @@ struct mimetype
 struct mk_list *mimetype_list;
 
 struct mimetype *mimetype_default;
-void mk_mimetype_read_config();
+void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_pointer * filename);

@@ -77,7 +77,7 @@ time_t mk_utils_gmt2utime(char *date);
 
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
 
-int mk_utils_set_daemon();
+int mk_utils_set_daemon(void);
 char *mk_utils_url_decode(mk_pointer req_uri);
 
 #ifdef TRACE
@@ -86,9 +86,9 @@ void mk_utils_trace(const char *component, int color, const char *function,
 int mk_utils_print_errno(int errno);
 #endif
 
-int mk_utils_get_somaxconn();
-int mk_utils_register_pid();
-int mk_utils_remove_pid();
+int mk_utils_get_somaxconn(void);
+int mk_utils_register_pid(void);
+int mk_utils_remove_pid(void);
 
 void mk_error(int type, const char *format, ...);
 
