@@ -5,6 +5,7 @@ near feature, if you are looking to contribute to Monkey Project, consider
 to review the following:
 
  - General: fix memory leaks
+ - General: create a manpage
  - Plugin : FastCGI
  - Plugin : Customize error HTML messages
  - Plugin : Provide basic authentication (Basic Auth)
