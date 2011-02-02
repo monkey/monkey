@@ -26,23 +26,18 @@
 #include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+#include <err.h>
 #include <limits.h>
-
 #include <ctype.h>
-#include <stdio.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <time.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-
-#include <unistd.h>
-#include <signal.h>
 #include <sys/sendfile.h>
-
-#include <time.h>
 
 #include "monkey.h"
 #include "memory.h"
@@ -184,14 +179,18 @@ int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
 /* Run current process in background mode (daemon, evil Monkey >:) */
 int mk_utils_set_daemon()
 {
-    switch (fork()) {
-    case 0:
-        break;
-    case -1:
+    pid_t pid;
+
+    umask(0); /* clear file creation mask */
+
+    if ((pid = fork()) < 0)
+        err(EXIT_FAILURE, "pid");
+
+    if (pid != 0) /* parent */
         exit(EXIT_FAILURE);
-    default:
-        exit(EXIT_SUCCESS);
-    };
+
+    if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
+        err(EXIT_FAILURE, "chdir");
 
     setsid();                   /* Create new session */
     fclose(stderr);
