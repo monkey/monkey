@@ -89,11 +89,13 @@ void mk_version()
 void mk_help()
 {
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
-    printf("Available options:\n");
-    printf("  -c directory\tspecify configuration files directory\n");
-    printf("  -D\t\trun Monkey as daemon\n");
-    printf("  -v\t\tshow version number\n");
-    printf("  -h\t\tprint this help\n\n");
+    printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
+    printf("  -D, --daemon\t\trun Monkey as daemon\n");
+    printf("  -v, --version\t\tshow version number\n");
+    printf("  -h, --help\t\tprint this help\n\n");
+    printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("  http://www.monkey-project.com/documentation\n\n");
     exit(EXIT_SUCCESS);
 }
 
