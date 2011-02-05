@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <resolv.h>
+#include <getopt.h>
 
 #include "monkey.h"
 #include "socket.h"
@@ -101,12 +102,21 @@ int main(int argc, char **argv)
 {
     int opt;
 
+    static const struct option long_opts[] = {
+        { "configdir", required_argument, NULL, 'c' },
+		{ "daemon",	   no_argument,       NULL, 'D' },
+        { "version",   no_argument,       NULL, 'v' },
+		{ "help",	   no_argument,       NULL, 'h' },
+		{ NULL, 0, NULL, 0 }
+	};
+
+
     config = mk_mem_malloc(sizeof(struct server_config));
     config->file_config = 0;
     config->is_daemon = VAR_OFF;
 
     opterr = 0;
-    while ((opt = getopt(argc, argv, "DSvhc:")) != -1) {
+    while ((opt = getopt_long(argc, argv, "DSvhc:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'v':
             mk_version();
