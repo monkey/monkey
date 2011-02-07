@@ -48,18 +48,18 @@ MONKEY_PLUGIN("logger", /* shortname */
 
 char *mk_logger_match_by_fd(int fd)
 {
-    struct log_target *aux;
+    struct mk_list *head;
+    struct log_target *entry;
 
-    aux = lt;
+    mk_list_foreach(head, &targets_list) {
+        entry = mk_list_entry(head, struct log_target, _head);
 
-    while (aux) {
-        if (aux->fd_access[0] == fd) {
-            return aux->file_access;
+        if (entry->fd_access[0] == fd) {
+            return entry->file_access;
         }
-        if (aux->fd_error[0] == fd) {
-            return aux->file_error;
+        if (entry->fd_error[0] == fd) {
+            return entry->file_error;
         }
-        aux = aux->next;
     }
 
     return NULL;
@@ -67,14 +67,14 @@ char *mk_logger_match_by_fd(int fd)
 
 struct log_target *mk_logger_match_by_host(struct host *host)
 {
-    struct log_target *target;
+    struct mk_list *head;
+    struct log_target *entry;
 
-    target = lt;
-    while (target) {
-        if (target->host == host) {
-            return target;
+    mk_list_foreach(head, &targets_list) {
+        entry = mk_list_entry(head, struct log_target, _head);
+        if (entry->host == host) {
+            return entry;
         }
-        target = target->next;
     }
 
     return NULL;
@@ -94,7 +94,8 @@ void *mk_logger_worker_init(void *args)
     int timeout;
     int clk;
     char *target;
-    struct log_target *lt_aux;
+    struct mk_list *head;
+    struct log_target *entry;
 
     /* pipe_size:
      * ---------- 
@@ -122,21 +123,23 @@ void *mk_logger_worker_init(void *args)
     /* Creating poll */
     efd = mk_api->epoll_create(max_events);
 
-    lt_aux = lt;
-    while (lt_aux) {
+    /* Registering targets for virtualhosts */
+    mk_list_foreach(head, &targets_list) {
+        entry = mk_list_entry(head, struct log_target, _head);
+
         /* Add access log file */
-        if (lt_aux->fd_access[0] > 0) {
-            mk_api->epoll_add(efd, lt_aux->fd_access[0], 
+        if (entry->fd_access[0] > 0) {
+            mk_api->epoll_add(efd, entry->fd_access[0], 
                               MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
         }
         /* Add error log file */
-        if (lt_aux->fd_error[0] > 0) {
-            mk_api->epoll_add(efd, lt_aux->fd_error[0], 
+        if (entry->fd_error[0] > 0) {
+            mk_api->epoll_add(efd, entry->fd_error[0], 
                               MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
         }
-        lt_aux = lt_aux->next;
     }
-    
+
+    /* Set initial timeout */
     timeout = time(NULL) + mk_logger_timeout;
 
     /* Reading pipe buffer */
@@ -181,6 +184,9 @@ void *mk_logger_worker_init(void *args)
                 if (slen == -1) {
                     perror("splice");
                 }
+#ifdef TRACE
+                PLUGIN_TRACE("written %i bytes", bytes);
+#endif
                 close(flog);
             }
         }
@@ -248,6 +254,8 @@ void _mkp_core_prctx()
     PLUGIN_TRACE("Reading virtual hosts");
 #endif
 
+    mk_list_init(&targets_list);
+
     host = mk_api->config->hosts;
     while (host) {
         /* Read logger section from virtual host configuration */
@@ -281,21 +289,7 @@ void _mkp_core_prctx()
                 }
 
                 new->host = host;
-                new->next = NULL;
-
-                /* Link node to main list */
-                if (!lt) {
-                    lt = new;
-                }
-                else {
-                    struct log_target *aux;
-                    aux = lt;
-                    while (aux->next) {
-                        aux = aux->next;
-                    }
-                    aux->next = new;
-                }
-                
+                mk_list_add(&new->_head, &targets_list);
             }
         }
         host = host->next;

@@ -28,7 +28,8 @@
 
 int mk_logger_timeout;
 
-#include "pthread.h"
+#include "MKPlugin.h"
+
 pthread_key_t timer;
 pthread_key_t cache_content_length;
 pthread_key_t cache_status;
@@ -44,10 +45,12 @@ struct log_target
     char *file_error;
 
     struct host *host;
-    struct log_target *next;
+    struct mk_list _head;
 };
 
-struct log_target *lt;
+struct mk_list targets_list;
+
+//struct log_target *lt;
 
 /* Global Monkey core API */
 struct plugin_api *mk_api;

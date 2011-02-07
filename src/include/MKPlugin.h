@@ -24,6 +24,7 @@
 
 /* Monkey Headers */
 #include "plugin.h"
+#include "list.h"
 #include "http.h"
 #include "file.h"
 #include "socket.h"
