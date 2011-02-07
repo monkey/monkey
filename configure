@@ -60,28 +60,32 @@ main()
 	actual_path=`pwd`
 
 	if [ "$prefix" != "$actual_path" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$cgibin" != "$actual_path/cgi-bin" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-		dir=1
+	    dir=1
 	fi
+
+        if [ "$mandir" != "$actual_path/man" ]; then
+            dir=1
+        fi
 
         echo
 	echo -e "\033[1mChecking dependencies\033[0m"
@@ -114,7 +118,7 @@ main()
         echo -e "\033[1m==============================\033[0m"
 
 	echo "+ Creating conf/monkey.conf"
-	create_conf prefix bindir cgibin sysconfdir datadir logdir
+	create_conf prefix bindir mandir cgibin sysconfdir datadir logdir
 
 	make_conf  $lang
 
@@ -131,7 +135,7 @@ main()
 	if [ "$dir" = 0 ]; then
 		create_makefile1 bindir
 	else
-		create_makefile1_install prefix bindir cgibin sysconfdir datadir logdir
+		create_makefile1_install prefix bindir mandir cgibin sysconfdir datadir logdir
 	fi
 
         echo
@@ -152,6 +156,7 @@ main()
         echo -e "CGIBIN\t\t= $cgibin"
         echo -e "SYSCONFDIR\t= $sysconfdir"
         echo -e "DATADIR\t\t= $datadir"
+        echo -e "MANDIR\t\t= $mandir"
         echo -e "LOGDIR\t\t= $logdir"
 
 	if [ "$plugdir" != "" ]; then
@@ -278,6 +283,7 @@ cat > Makefile <<EOF
 # ============================
 PREFIX=\$(DESTDIR)${prefix}
 BINDIR=\$(DESTDIR)${bindir}
+MANDIR=\$(DESTDIR)${mandir}
 CGIBIN=\$(DESTDIR)${cgibin}
 SYSCONFDIR=\$(DESTDIR)${sysconfdir}
 DATADIR=\$(DESTDIR)${datadir}
@@ -294,6 +300,7 @@ distclean:
 install:
 	\$(MAKE) -C src all
 	install -d \$(BINDIR)
+	install -d \$(MANDIR)
 	install -d \$(CGIBIN)
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
@@ -310,6 +317,7 @@ install:
 $plgconf
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 $plglist
+	install -m 644 ./man/* \$(MANDIR)
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
 	$STRIP \$(BINDIR)/monkey
@@ -608,6 +616,7 @@ aux=`pwd`
 
 prefix="$aux"
 bindir="$aux/bin"
+mandir="$aux/man"
 cgibin="$aux/cgi-bin"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
@@ -627,6 +636,7 @@ for arg in $*; do
 		--prefix*)
 			prefix=$optarg
 			bindir="$optarg/bin"
+                        mandir="$optarg/man"
 			cgibin="$optarg/cgi-bin"
 			sysconfdir="$optarg/conf"
 			datadir="$optarg/htdocs"
@@ -636,6 +646,9 @@ for arg in $*; do
 		--bindir*)
 			bindir=$optarg
 			;;
+                --mandir*)
+                        mandir=$optarg
+                        ;;
 		--cgibin*)
 			cgibin=$optarg
 			;;
@@ -689,8 +702,9 @@ for arg in $*; do
 			echo
 			echo "  --prefix=PREFIX	  Install Monkey under PREFIX directory"
 			echo "  --bindir=BINDIR	  Install Monkey binaries under BINDIR directory"
-			echo "  --sysconfdir=SYSCONFDIR Install Monkey conf files under SYSCONFDIR dir"
+			echo "  --sysconfdir=SYSCONFDIR Install Monkey conf files under SYSCONFDIR directory"
 			echo "  --datadir=DATADIR       Install Monkey data dir files under DATADIR directory"
+                        echo "  --mandir=MANDIR         Install Monkey manpages under MANDIR directory"
 			echo "  --logdir=LOGDIR         Install Monkey log files under LOGDIR directory"
 			echo "  --plugdir=PLUGDIR       Target directory for Monkey plugins"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
@@ -751,5 +765,5 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 fi
 
 # Starting main function
-main prefix lang bindir cgibin sysconfdir datadir logdir plugdir platform SYSNAME VERSION
+main prefix lang bindir mandir cgibin sysconfdir datadir logdir plugdir platform SYSNAME VERSION
 exit 0
