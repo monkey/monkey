@@ -34,7 +34,7 @@
 
 MONKEY_PLUGIN("palm",              /* shortname */
               "Palm Client",       /* name */
-              "0.12.0",            /* version */
+              VERSION,            /* version */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hooks */
 
 /* Read database configuration parameters */

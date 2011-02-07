@@ -42,7 +42,7 @@
 
 MONKEY_PLUGIN("logger", /* shortname */
               "Logger", /* name */
-              "0.12.0", /* version */
+              VERSION, /* version */
               /* hooks */
               MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);
 

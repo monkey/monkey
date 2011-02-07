@@ -34,7 +34,7 @@
 
 MONKEY_PLUGIN("liana",         /* shortname */
               "Liana Network", /* name */
-              "0.12.0",        /* version */
+              VERSION,        /* version */
               MK_PLUGIN_NETWORK_IO); /* hooks */
 
 struct mk_config *conf;

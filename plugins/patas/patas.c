@@ -42,7 +42,7 @@
 
 MONKEY_PLUGIN("patas",               /* shortname */
               "Patas Monkey",        /* name */ 
-              "0.12.0",              /* version */
+              VERSION,              /* version */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hook for thread context call */
 
 /* get thread connections list */

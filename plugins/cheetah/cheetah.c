@@ -34,7 +34,7 @@
 
 MONKEY_PLUGIN("cheetah",              /* shortname */
               "Cheetah! Shell",       /* name */
-              "0.12.0",               /* version */
+              VERSION,               /* version */
               MK_PLUGIN_CORE_PRCTX);  /* hooks */
 
 void mk_cheetah_welcome_msg()

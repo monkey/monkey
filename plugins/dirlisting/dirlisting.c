@@ -46,7 +46,7 @@
 
 MONKEY_PLUGIN("dirlisting",          /* shortname */
               "Directory Listing",   /* name */
-              "0.12.0",              /* version */
+              VERSION,              /* version */
               MK_PLUGIN_STAGE_30);   /* hooks */
 
 /* DIR_HTML logic:

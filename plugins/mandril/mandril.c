@@ -30,7 +30,7 @@
 
 MONKEY_PLUGIN("mandril",  /* shortname */
               "Mandril",  /* name */ 
-              "0.12.0",    /* version */
+              VERSION,    /* version */
               MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
 
 struct mk_config *conf;
