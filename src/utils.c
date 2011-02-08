@@ -395,16 +395,18 @@ int mk_utils_get_somaxconn()
 int mk_utils_register_pid()
 {
     FILE *pid_file;
+    unsigned long len = 0;
+    char *filepath = NULL;
 
-    remove(config->pid_file_path);
-    config->pid_status = VAR_OFF;
+    mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
 
-    if ((pid_file = fopen(config->pid_file_path, "w")) == NULL) {
+    if ((pid_file = fopen(filepath, "w")) == NULL) {
         mk_error(MK_ERROR_FATAL, "Error: I can't log pid of monkey");
     }
 
     fprintf(pid_file, "%i", getpid());
     fclose(pid_file);
+    mk_mem_free(filepath);
     config->pid_status = VAR_ON;
 
     return 0;
@@ -413,10 +415,17 @@ int mk_utils_register_pid()
 /* Remove PID file */
 int mk_utils_remove_pid()
 {
-    char *pidfile = config->pid_file_path;
-  
+    unsigned long len = 0;
+    char *filepath = NULL;
+    int ret;
+    
+    mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
+
     mk_user_undo_uidgid();
-    return unlink(pidfile);
+    ret = unlink(filepath);
+    mk_mem_free(filepath);
+    config->pid_status = VAR_OFF;
+    return ret;
 }
 
 void mk_error(int type, const char *format, ...)
