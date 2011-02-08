@@ -74,8 +74,6 @@ struct server_config
 {
     int is_daemon;
 
-    mk_pointer port;
-
     char *serverconf;           /* path to configuration files */
 
     char *listen_addr;

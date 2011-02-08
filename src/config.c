@@ -393,11 +393,6 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     if (!config->serverport >= 1 && !config->serverport <= 65535) {
         mk_config_print_error_msg("Port", path);
     }
-    /* Set connection port to mk_pointer */
-    config->port.data = mk_mem_malloc(6);
-    mk_string_itop(config->serverport, &config->port);
-    config->port.len = config->port.len - 2;
-
 
     /* Number of thread workers */
     config->workers = (size_t) mk_config_section_getval(section,
