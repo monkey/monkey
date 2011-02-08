@@ -86,7 +86,7 @@ void mk_version()
     fflush(stdout);
 }
 
-void mk_help()
+void mk_help(int rc)
 {
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
@@ -96,7 +96,8 @@ void mk_help()
     printf("  -h, --help\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  http://www.monkey-project.com/documentation\n\n");
-    exit(EXIT_SUCCESS);
+
+    exit(rc);
 }
 
 /* MAIN */
@@ -123,10 +124,8 @@ int main(int argc, char **argv)
         case 'v':
             mk_version();
             exit(EXIT_SUCCESS);
-            break;
         case 'h':
-            mk_help();
-            break;
+            mk_help(EXIT_SUCCESS);
         case 'D':
             config->is_daemon = VAR_ON;
             break;
@@ -137,8 +136,7 @@ int main(int argc, char **argv)
             }
         case '?':
             printf("Monkey: Invalid option or option needs an argument.\n");
-            mk_help();
-            break;
+            mk_help(EXIT_FAILURE);
         }
     }
 
