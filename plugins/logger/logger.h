@@ -23,12 +23,17 @@
 #ifndef MK_LOGGER_H
 #define MK_LOGGER_H
 
+#include "MKPlugin.h"
+#include <stdio.h>
+
 #define MK_LOGGER_PIPE_LIMIT 0.75
 #define MK_LOGGER_TIMEOUT_DEFAULT 3
 
 int mk_logger_timeout;
 
-#include "MKPlugin.h"
+/* MasterLog variables */
+char *mk_logger_master_path;
+FILE *mk_logger_master_file;
 
 pthread_key_t timer;
 pthread_key_t cache_content_length;

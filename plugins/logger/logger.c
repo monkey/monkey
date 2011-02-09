@@ -155,8 +155,7 @@ void *mk_logger_worker_init(void *args)
             target = mk_logger_match_by_fd(events[i].data.fd);
 
             if (!target) {
-                printf("\nERROR matching host/epoll_fd");
-                fflush(stdout);
+                mk_api->error(MK_ERROR_WARNING, "Could not match host/epoll_fd");
                 continue;
             }
 
@@ -173,8 +172,7 @@ void *mk_logger_worker_init(void *args)
                 flog = open(target, O_WRONLY | O_CREAT, 0644);
 
                 if (flog == -1) {
-                    printf("\n* error: check your logfile file permission");
-                    perror("open");
+                    mk_api->error(MK_ERROR_WARNING, "Could not open logfile '%s'", target);
                     continue;
                 }
 
@@ -182,7 +180,7 @@ void *mk_logger_worker_init(void *args)
                 slen = splice(events[i].data.fd, NULL, flog,
                               NULL, bytes, SPLICE_F_MOVE);
                 if (slen == -1) {
-                    perror("splice");
+                    mk_api->error(MK_ERROR_WARNING, "splice failed with %i", slen);
                 }
 #ifdef TRACE
                 PLUGIN_TRACE("written %i bytes", bytes);
@@ -205,15 +203,27 @@ int mk_logger_read_config(char *path)
     conf = mk_api->config_create(default_file);
     section = mk_api->config_section_get(conf, "LOGGER");
     if (section) {
+
+        /* FlushTimeout */
         timeout = (size_t) mk_api->config_section_getval(section,
-                                                      "FlushTimeout",
-                                                      MK_CONFIG_VAL_NUM);
+                                                         "FlushTimeout",
+                                                         MK_CONFIG_VAL_NUM);
         if (timeout <= 0) {
-            fprintf(stderr, 
-                    "\nError: FlushTimeout does not have a proper value\n\n");
-            exit(EXIT_FAILURE);
+            mk_api->error(MK_ERROR_FATAL, "FlushTimeout does not have a proper value");
         }
         mk_logger_timeout = timeout;
+#ifdef TRACE
+        PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
+#endif
+
+        /* MasterLog */
+        mk_logger_master_path = mk_api->config_section_getval(section,
+                                                              "MasterLog",
+                                                              MK_CONFIG_VAL_STR);
+#ifdef TRACE
+        PLUGIN_TRACE("MasterLog '%s'", mk_logger_master_path);
+#endif
+
     }
 
     mk_api->mem_free(default_file);
@@ -221,8 +231,29 @@ int mk_logger_read_config(char *path)
     return 0;
 }
 
+void mk_logger_print_details(void)
+{
+    time_t now;
+    struct tm *current;
+
+    now = time(NULL);
+    current = localtime(&now);
+    printf("[%i/%02i/%02i %02i:%02i:%02i] Monkey Started\n", 
+           current->tm_year + 1900,
+           current->tm_mon,
+           current->tm_mday,
+           current->tm_hour,
+           current->tm_min,
+           current->tm_sec);
+    printf("   version          : %s\n", VERSION);
+    printf("   server port      : %i\n", mk_api->config->serverport);
+    printf("   number of workers: %i\n", mk_api->config->workers);
+    fflush(stdout);
+}
+
 int _mkp_init(void **api, char *confdir)
 {
+    int fd;
     mk_api = *api;
 
     /* Specific thread key */
@@ -231,7 +262,21 @@ int _mkp_init(void **api, char *confdir)
 
     /* Global configuration */
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
+    mk_logger_master_path = NULL;
     mk_logger_read_config(confdir);
+    
+    /* Check masterlog */
+    if (mk_logger_master_path) {
+        fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
+        if (fd == -1) {
+            mk_api->error(MK_ERROR_WARNING, "Could not open/create master logfile %s", mk_logger_master_path);
+            mk_logger_master_path = NULL;
+        }
+        else {
+            /* Close test FD for MasterLog */
+            close(fd);
+        }
+    }
 
     /* Init mk_pointers */
     mk_logger_init_pointers();
@@ -249,6 +294,12 @@ void _mkp_core_prctx()
     struct host *host;
     struct mk_config_section *section;
     struct mk_config_entry *access_entry, *error_entry;
+
+    /* Restore STDOUT if we are in background mode */
+    if (mk_logger_master_path != NULL && mk_api->config->is_daemon == VAR_ON) {
+        mk_logger_master_file = freopen(mk_logger_master_path, "a+", stdout);
+        mk_logger_print_details();
+    }
 
 #ifdef TRACE
     PLUGIN_TRACE("Reading virtual hosts");
@@ -272,8 +323,7 @@ void _mkp_core_prctx()
                 /* Set access pipe */
                 if (access_entry) {
                     if (pipe(new->fd_access) < 0) {
-                        perror("pipe");
-                        exit(EXIT_FAILURE);
+                        mk_api->error(MK_ERROR_FATAL, "Could not create pipe");
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
                     new->file_access = (char *) access_entry;
@@ -281,8 +331,7 @@ void _mkp_core_prctx()
                 /* Set error pipe */
                 if (error_entry) {
                     if (pipe(new->fd_error) < 0) {
-                        perror("pipe");
-                        exit(EXIT_FAILURE);
+                        mk_api->error(MK_ERROR_FATAL, "Could not create pipe");
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
                     new->file_error = (char *) error_entry;
