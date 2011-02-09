@@ -56,7 +56,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-void mk_thread_keys_init()
+static void mk_thread_keys_init(void)
 {
     /* Create thread keys */
     pthread_key_create(&request_list, NULL);
@@ -67,7 +67,7 @@ void mk_thread_keys_init()
     pthread_key_create(&mk_plugin_event_k, NULL);
 }
 
-void mk_details()
+static void mk_details(void)
 {
     printf("* Process ID is %i", getpid());
     printf("\n* Server socket listening on Port %i", config->serverport);
@@ -77,7 +77,7 @@ void mk_details()
     fflush(stdout);
 }
 
-void mk_version()
+static void mk_version(void)
 {
     printf("Monkey HTTP Daemon %s\n", VERSION);
     printf("Built : %s (%s %i.%i.%i)\n", 
@@ -86,7 +86,7 @@ void mk_version()
     fflush(stdout);
 }
 
-void mk_help(int rc)
+static void mk_help(int rc)
 {
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
@@ -103,7 +103,8 @@ void mk_help(int rc)
 /* MAIN */
 int main(int argc, char **argv)
 {
-    int opt;
+    int opt, run_daemon = 0;
+    char *file_config = NULL;
 
     static const struct option long_opts[] = {
         { "configdir", required_argument, NULL, 'c' },
@@ -113,12 +114,6 @@ int main(int argc, char **argv)
 		{ NULL, 0, NULL, 0 }
 	};
 
-
-    config = mk_mem_malloc(sizeof(struct server_config));
-    config->file_config = 0;
-    config->is_daemon = VAR_OFF;
-
-    opterr = 0;
     while ((opt = getopt_long(argc, argv, "DSvhc:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'v':
@@ -127,22 +122,29 @@ int main(int argc, char **argv)
         case 'h':
             mk_help(EXIT_SUCCESS);
         case 'D':
-            config->is_daemon = VAR_ON;
+            run_daemon = 1;
             break;
         case 'c':
-            if (strlen(optarg) != 0) {
-                config->file_config = optarg;
-                break;
-            }
+            file_config = optarg;
+            break;
         case '?':
             printf("Monkey: Invalid option or option needs an argument.\n");
             mk_help(EXIT_FAILURE);
         }
     }
 
-    if (!config->file_config) {
+    /* setup basic configurations */
+    config = mk_mem_malloc(sizeof(struct server_config));
+
+    if (!file_config)
         config->file_config = MONKEY_PATH_CONF;
-    }
+    else
+        config->file_config = file_config;
+
+    if (run_daemon)
+        config->is_daemon = VAR_ON;
+    else
+        config->is_daemon = VAR_OFF;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);
@@ -193,5 +195,6 @@ int main(int argc, char **argv)
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(server_fd);
 
+    mk_mem_free(config);
     return 0;
 }
