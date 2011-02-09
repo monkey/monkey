@@ -1,7 +1,7 @@
  Monkey HTTP Daemon - Install
  ============================
 
- For optimum functioning, i recommend that Monkey be compiled with GCC >= 
+ For optimum performance, I recommend that Monkey be compiled with GCC >= 
  2.95.3 and be running on a Linux OS with kernel >= 2.6.28.
 
  Like every source program we must run 'configure' script and later
@@ -10,9 +10,8 @@
  #./configure
  # make 
  
- Optionally, you have the option of 'make install',which will copy the main
- directory of monkey where it has been specificated in the script
- configure.
+ Optionally, you have the option of 'make install', which will copy the main
+ directory of monkey where it has been specified in the configure script.
 
  Running Monkey
  ==============
@@ -23,7 +22,7 @@
 
 	bin/monkey -D (to run monkey in background mode)
 	
- Optionally, you can specificate the directory whe the configuration files
+ Optionally, you can specify the directory where the configuration files
  are found, this can be done the following way: 
 
 	bin/monkey -D -c conf/
@@ -37,8 +36,8 @@
  Testing Monkey
  ==============
  
- To see that Monkey is running, make a requisite from your lynx or
- netscape:
+To see that Monkey is running, make a request from a browser, like lynx
+or netscape:
  
  	# lynx 127.0.0.1:2001
  	
