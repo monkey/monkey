@@ -427,7 +427,7 @@ void mk_plugin_init()
 
             p = mk_plugin_alloc(handle, entry->val);
             if (!p) {
-                fprintf(stderr, "Plugin error: %s\n", entry->val);
+                mk_error(MK_ERROR_WARNING, "Plugin error: %s\n", entry->val);
                 dlclose(handle);
             }
 

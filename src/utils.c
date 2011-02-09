@@ -318,15 +318,16 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
     va_start( args, format );
 
-    fprintf(stderr, "~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
-            ANSI_CYAN, (int) (tv.tv_sec - monkey_init_time), (int) tv.tv_usec, ANSI_RESET,
-            ANSI_MAGENTA, ANSI_BOLD, 
-            ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file,
-            line, ANSI_MAGENTA, 
-            color_function, function, ANSI_RED);
-    vfprintf( stderr, format, args );
-    va_end( args );
-    fprintf( stderr, "%s\n", ANSI_RESET);
+    printf("~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
+           ANSI_CYAN, (int) (tv.tv_sec - monkey_init_time), (int) tv.tv_usec, ANSI_RESET,
+           ANSI_MAGENTA, ANSI_BOLD, 
+           ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file,
+           line, ANSI_MAGENTA, 
+           color_function, function, ANSI_RED);
+    vprintf(format, args );
+    va_end(args);
+    printf("%s\n", ANSI_RESET);
+    fflush(stdout);
 
     /* Mutex unlock */
     pthread_mutex_unlock(&mutex_trace);
@@ -442,15 +443,15 @@ void mk_error(int type, const char *format, ...)
         error_header = "Fatal";
     }
 
-    fprintf(stderr, "\n%s[%s%s%s]%s ", 
-            ANSI_BOLD, ANSI_RED, error_header, ANSI_WHITE, ANSI_RESET);
+    printf("\n%s[%s%s%s]%s ", 
+           ANSI_BOLD, ANSI_RED, error_header, ANSI_WHITE, ANSI_RESET);
 
-    vfprintf(stderr, format, args);
+    vprintf(format, args);
     va_end(args);
-    fprintf(stderr, "%s", ANSI_RESET);
+    printf("%s", ANSI_RESET);
     
     if (type == MK_ERROR_FATAL) {
-        fprintf(stderr, "\n");
+        printf("\n");
         exit(EXIT_FAILURE);
     }
 }
