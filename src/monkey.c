@@ -91,7 +91,7 @@ static void mk_help(int rc)
     printf("Usage : monkey [-c directory] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
-    printf("  -D, --daemon\t\trun Monkey as daemon\n");
+    printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
     printf("  -v, --version\t\tshow version number\n");
     printf("  -h, --help\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
