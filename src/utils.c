@@ -431,29 +431,42 @@ int mk_utils_remove_pid()
 
 void mk_error(int type, const char *format, ...)
 {
-    char *error_header;
+    time_t now;
+    struct tm *current;
+
+    char *header_color;
+    char *header_title;
     va_list args;
 
     va_start(args, format);
 
     if (type == MK_ERROR_WARNING) {
-        error_header = "WARNING";
+        header_title = "Warning";
+        header_color = ANSI_YELLOW;
     }
     else {
-        error_header = "Fatal";
+        header_title = "Fatal";
+        header_color = ANSI_RED;
     }
 
-    printf("\n%s[%s%s%s]%s ", 
-           ANSI_BOLD, ANSI_RED, error_header, ANSI_WHITE, ANSI_RESET);
+    now = time(NULL);
+    current = localtime(&now);
+    printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ", 
+           ANSI_BOLD, ANSI_RESET,
+           current->tm_year + 1900,
+           current->tm_mon,
+           current->tm_mday,
+           current->tm_hour,
+           current->tm_min,
+           current->tm_sec,
+           ANSI_BOLD, ANSI_RESET);
+
+    printf("%s[%s%7s%s]%s ", 
+           ANSI_BOLD, header_color, header_title, ANSI_WHITE, ANSI_RESET);
 
     vprintf(format, args);
     va_end(args);
-    printf("%s", ANSI_RESET);
-    
-    if (type == MK_ERROR_FATAL) {
-        printf("\n");
-        exit(EXIT_FAILURE);
-    }
+    printf("%s\n", ANSI_RESET);
 }
 
 pthread_t mk_utils_worker_spawn(void (*func) (void *))
