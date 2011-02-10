@@ -44,6 +44,7 @@ cat > conf/monkey.conf <<EOF
     # PidFile:
     # --------
     # File where the server guards the process number when starting.
+    # Note that the filename will have the port number appended to it.
 
     PidFile $logdir/monkey.pid
 
