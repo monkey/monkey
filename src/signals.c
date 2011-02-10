@@ -32,6 +32,7 @@
 #include "signals.h"
 #include "clock.h"
 #include "plugin.h"
+#include "macros.h"
 
 /* when we catch a signal and want to exit we call this function
    to do it gracefully */
@@ -44,6 +45,7 @@ void mk_signal_exit()
 
     mk_utils_remove_pid();
     mk_plugin_exit_all();    
+    mk_info("Exiting... >:(");
     _exit(EXIT_SUCCESS);
 }
 
@@ -76,8 +78,8 @@ void mk_signal_handler(int signo, siginfo_t *si, void *context)
         break;
     case SIGBUS:
     case SIGSEGV:
-        printf("Caught %s (%d), code = %d\n", sys_siglist[signo], signo, si->si_code);
-        printf("Fault addr = %p \n",si->si_addr);
+        mk_err("%s (%d), code=%d, addr=%p", 
+               sys_siglist[signo], signo, si->si_code, si->si_addr);
         pthread_exit(NULL);
     default:
         /* let the kernel handle it */
