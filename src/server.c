@@ -34,6 +34,7 @@
 #include "socket.h"
 #include "plugin.h"
 #include "utils.h"
+#include "macros.h"
 
 /* Return the number of clients that can be attended
  * at the same time per worker thread
@@ -80,6 +81,8 @@ void mk_server_loop(int server_fd)
 {
     int remote_fd;
     struct sockaddr_in sockaddr;
+
+    mk_info("HTTP Server started");
 
     while (1) {
         remote_fd = mk_socket_accept(server_fd, sockaddr);
