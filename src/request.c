@@ -33,8 +33,6 @@
 #include <signal.h>
 #include <errno.h>
 
-#include <string.h>
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -48,7 +46,6 @@
 #include "config.h"
 #include "scheduler.h"
 #include "epoll.h"
-#include "socket.h"
 #include "utils.h"
 #include "header.h"
 #include "user.h"
@@ -57,7 +54,6 @@
 #include "socket.h"
 #include "cache.h"
 #include "clock.h"
-#include "utils.h"
 #include "plugin.h"
 #include "macros.h"
 
