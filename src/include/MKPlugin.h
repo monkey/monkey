@@ -28,6 +28,7 @@
 #include "http.h"
 #include "file.h"
 #include "socket.h"
+#include "macros.h"
 
 /* global vars */
 struct plugin_api *mk_api;

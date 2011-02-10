@@ -38,6 +38,7 @@
 #include "scheduler.h"
 #include "epoll.h"
 #include "utils.h"
+#include "macros.h"
 
 mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*write) (int),
@@ -65,22 +66,22 @@ int mk_epoll_create(int max_events)
     if (efd == -1) {
         switch(errno) {
         case EINVAL:
-            mk_error(MK_ERROR_WARNING, "epoll_create() = EINVAL");
+            mk_warn("epoll_create() = EINVAL");
             break;
         case EMFILE:
-            mk_error(MK_ERROR_WARNING, "epoll_create() = EMFILE");
+            mk_warn("epoll_create() = EMFILE");
             break;
         case ENFILE:
-            mk_error(MK_ERROR_WARNING, "epoll_create() = ENFILE");
+            mk_warn("epoll_create() = ENFILE");
             break;
         case ENOMEM:
-            mk_error(MK_ERROR_WARNING, "epoll_create() = ENOMEM");
+            mk_warn("epoll_create() = ENOMEM");
             break;
         default:
-            mk_error(MK_ERROR_WARNING, "epoll_create() = UNKNOWN");
+            mk_warn("epoll_create() = UNKNOWN");
             break;
         }
-        mk_error(MK_ERROR_FATAL, "epoll_create() failed");
+        mk_err("epoll_create() failed");
     }
 
     return efd;
@@ -170,8 +171,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0) {
-        mk_error(MK_ERROR_WARNING, "[FD %i] epoll_ctl()");
-        perror("epoll_ctl");
+        mk_warn("[FD %i] epoll_ctl()");
     }
     return ret;
 }

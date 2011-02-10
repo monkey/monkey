@@ -36,6 +36,7 @@
 #include "request.h"
 #include "monkey.h"
 #include "list.h"
+#include "macros.h"
 
 /* Match mime type for requested resource */
 static struct mimetype *mk_mimetype_cmp(char *name)
@@ -99,7 +100,7 @@ void mk_mimetype_read_config()
     /* Get MimeTypes tag */
     section = mk_config_section_get(cnf, "MIMETYPES");
     if (!section) {
-        mk_error(MK_ERROR_FATAL, "Error: Invalid mime type file");
+        mk_err("Error: Invalid mime type file");
     }
 
     /* Alloc and init mk_list header */

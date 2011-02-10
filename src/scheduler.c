@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
@@ -41,6 +40,7 @@
 #include "signals.h"
 #include "plugin.h"
 #include "utils.h"
+#include "macros.h"
 
 /* Register thread information */
 int mk_sched_register_thread(pthread_t tid, int efd)
@@ -63,7 +63,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
         sl->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
 
         if (!sl->queue[i].ipv4.data) {
-          mk_error(MK_ERROR_FATAL, "Could not initialize memory for IP cache queue. Aborting");
+          mk_err("Could not initialize memory for IP cache queue. Aborting");
         }
     }
 
@@ -73,7 +73,7 @@ int mk_sched_register_thread(pthread_t tid, int efd)
         /* Alloc and init list */
         sched_list = mk_mem_malloc(sizeof(struct mk_list));
         if (!sched_list) {
-            mk_error(MK_ERROR_FATAL, "Could not initialize memory for Scheduler list. Aborting");
+            mk_err("Could not initialize memory for Scheduler list. Aborting");
         }
 
         mk_list_init(sched_list);

@@ -40,18 +40,19 @@
 #include "memory.h"
 #include "server.h"
 #include "plugin.h"
+#include "macros.h"
 
 /* Imprime error de configuracion y cierra */
 static void mk_config_print_error_msg(char *variable, char *path)
 {
-    mk_error(MK_ERROR_FATAL, "Error in %s variable under %s, has an invalid value",
-             variable, path);
+    mk_err("Error in %s variable under %s, has an invalid value",
+           variable, path);
 }
 
 /* Raise a configuration error */
 void mk_config_error(const char *path, int line, const char *msg)
 {
-    mk_error(MK_ERROR_FATAL, "Reading %s\nError in line %i: %s", path, line, msg);
+    mk_err("Reading %s\nError in line %i: %s", path, line, msg);
 }
 
 /* Returns a configuration section by [section name] */
@@ -105,7 +106,7 @@ void mk_config_entry_add(struct mk_config *conf,
     struct mk_config_entry *aux_entry, *new_entry;
 
     if (!conf->section) {
-        mk_error(MK_ERROR_FATAL, "Error: there are not sections available!");
+        mk_err("Error: there are not sections available!");
     }
 
     /* Go to last section */
@@ -149,7 +150,7 @@ struct mk_config *mk_config_create(const char *path)
 
     /* Open configuration file */
     if ((f = fopen(path, "r")) == NULL) {
-        mk_error(MK_ERROR_FATAL, "Config Error: I can't open %s file", path);
+        mk_err("Config Error: I can't open %s file", path);
     }
 
     /* Alloc configuration node */
@@ -364,7 +365,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->workers = MK_WORKERS_DEFAULT;
 
     if (stat(config->serverconf, &checkdir) == -1) {
-        mk_error(MK_ERROR_FATAL, "ERROR: Cannot find/open '%s'", config->serverconf);
+        mk_err("ERROR: Cannot find/open '%s'", config->serverconf);
     }
 
     mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
@@ -373,7 +374,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     section = mk_config_section_get(cnf, "SERVER");
 
     if (!section) {
-        mk_error(MK_ERROR_FATAL, "ERROR: No 'SERVER' section defined");
+        mk_err("ERROR: No 'SERVER' section defined");
     }
 
     /* Map source configuration */
@@ -504,12 +505,12 @@ void mk_config_read_hosts(char *path)
     mk_mem_free(buf);
 
     if (!config->hosts) {
-        mk_error(MK_ERROR_FATAL, "Error parsing main configuration file 'default'");
+        mk_err("Error parsing main configuration file 'default'");
     }
 
     mk_string_build(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf))) {
-        mk_error(MK_ERROR_FATAL, "Could not open %s", buf);
+        mk_err("Could not open %s", buf);
     }
 
     p_host = config->hosts;
@@ -583,12 +584,10 @@ struct host *mk_config_get_host(char *path)
 
     /* validate document root configured */
     if (stat(host->documentroot.data, &checkdir) == -1) {
-        mk_error(MK_ERROR_FATAL, "Invalid path to DocumentRoot in %s", path);
+        mk_err("Invalid path to DocumentRoot in %s", path);
     }
     else if (!(checkdir.st_mode & S_IFDIR)) {
-        mk_error(MK_ERROR_FATAL, 
-                 "DocumentRoot variable in %s has an invalid directory path",
-                 path);
+        mk_err("DocumentRoot variable in %s has an invalid directory path", path);
     }
 
     if (mk_list_is_empty(&host->server_names) == 0) {

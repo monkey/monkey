@@ -32,6 +32,7 @@
 #include "http.h"
 #include "clock.h"
 #include "plugin.h"
+#include "macros.h"
 
 static int mk_plugin_event_set_list(struct mk_list *list)
 {
@@ -49,7 +50,7 @@ void *mk_plugin_load(char *path)
 
     handle = dlopen(path, RTLD_LAZY);
     if (!handle) {
-        mk_error(MK_ERROR_FATAL, "Error during dlopen(): %s", dlerror());
+        mk_err("Error during dlopen(): %s", dlerror());
     }
 
     return handle;
@@ -124,7 +125,7 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
 
     if (!info) {
-        mk_error(MK_ERROR_FATAL, "Plugin Error: '%s'\nis not registering properly", path);
+        mk_err("Plugin Error: '%s'\nis not registering properly", path);
     }
 
     p->shortname = (char *) (*info).shortname;
@@ -268,9 +269,7 @@ create socket : %p\nbind : %p\nserver : %p",
             plg_netiomap = &p->net_io;
         }
         else {
-            mk_error(MK_ERROR_FATAL, 
-                     "Error: Loading more than one Network IO Plugin: %s",
-                     p->path);
+            mk_err("Error: Loading more than one Network IO Plugin: %s", p->path);
         }
     }
 
@@ -319,7 +318,7 @@ void mk_plugin_init()
     /* API plugins funcions */
 
     /* Error helper */
-    api->error = (void *) mk_error;
+    api->error = (void *) mk_print;
 
     /* HTTP callbacks */
     api->http_request_end = (void *) mk_plugin_http_request_end;
@@ -412,7 +411,7 @@ void mk_plugin_init()
     cnf = mk_config_create(path);
     
     if (!cnf) {
-        mk_error(MK_ERROR_FATAL, "Error: Plugins configuration file could not be readed");
+        mk_err("Error: Plugins configuration file could not be readed");
         mk_mem_free(path);
     }
 
@@ -427,7 +426,7 @@ void mk_plugin_init()
 
             p = mk_plugin_alloc(handle, entry->val);
             if (!p) {
-                mk_error(MK_ERROR_WARNING, "Plugin error: %s\n", entry->val);
+                mk_err("Plugin error: %s\n", entry->val);
                 dlclose(handle);
             }
 
@@ -460,7 +459,7 @@ void mk_plugin_init()
     }
 
     if (!plg_netiomap) {
-        mk_error(MK_ERROR_FATAL, "Error: no Network plugin loaded >:|");
+        mk_err("Error: no Network plugin loaded >:|");
     }
 
     api->plugins = config->plugins;
@@ -554,9 +553,8 @@ int mk_plugin_stage_run(unsigned int hook,
                 case MK_PLUGIN_RET_CLOSE_CONX:
                     return MK_PLUGIN_RET_CLOSE_CONX;
                 default:
-                    mk_error(MK_ERROR_FATAL, 
-                             "Plugin '%s' returns invalid value %i",
-                             stm->p->shortname, ret);
+                    mk_err("Plugin '%s' returns invalid value %i",
+                           stm->p->shortname, ret);
                 }
                 
                 stm = stm->next;
@@ -673,9 +671,8 @@ void mk_plugin_preworker_calls()
 #endif
             ret = pthread_key_create(node->thread_key, NULL);
             if (ret != 0) {
-                mk_error(MK_ERROR_FATAL, 
-                         "Plugin Error: could not create key for %s",
-                         node->shortname);
+                mk_err("Plugin Error: could not create key for %s",
+                       node->shortname);
             }
         }
     }
@@ -826,7 +823,7 @@ void mk_plugin_event_init_list()
 
 void mk_plugin_event_bad_return(const char *hook, int ret)
 {
-    mk_error(MK_ERROR_FATAL, "[%s] Not allowed return value %i", hook, ret);
+    mk_err("[%s] Not allowed return value %i", hook, ret);
 }
 
 int mk_plugin_event_check_return(const char *hook, int ret)

@@ -59,6 +59,7 @@
 #include "clock.h"
 #include "utils.h"
 #include "plugin.h"
+#include "macros.h"
 
 /* Create a memory allocation in order to handle the request data */
 static struct session_request *mk_request_alloc()
@@ -855,7 +856,7 @@ struct client_session *mk_session_create(int socket)
 #ifdef TRACE
         MK_TRACE("FAILED SOCKET: %i", socket);
 #endif
-        mk_error(MK_ERROR_WARNING, "Sched connection not found");
+        mk_warn("Sched connection not found");
         return NULL;
     }
 

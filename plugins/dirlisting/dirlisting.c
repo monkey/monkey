@@ -228,7 +228,7 @@ int mk_dirhtml_read_config(char *path)
     section = mk_api->config_section_get(conf, "DIRLISTING");
 
     if (!section) {
-        mk_api->error(MK_ERROR_FATAL, "Error, could not find DIRLISTING tag");
+        mk_api->error(MK_ERROR, "Error, could not find DIRLISTING tag");
     }
 
     /* alloc dirhtml config struct */

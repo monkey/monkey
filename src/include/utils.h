@@ -24,12 +24,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define MK_ERROR_WARNING 0
-#define MK_ERROR_FATAL 1
-
-#define TRUE 1
-#define FALSE 0
-
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
 
@@ -38,19 +32,6 @@
 #include "request.h"
 #include "memory.h"
 #include "list.h"
-
-#define INTSIZE sizeof(int)
-
-/* ANSI Colors */
-#define ANSI_BOLD "\033[1m"
-#define ANSI_CYAN "\033[36m" 
-#define ANSI_MAGENTA "\033[35m"
-#define ANSI_RED "\033[31m"
-#define ANSI_YELLOW "\033[33m"
-#define ANSI_BLUE "\033[34m"
-#define ANSI_GREEN "\033[32m"
-#define ANSI_WHITE "\033[37m"
-#define ANSI_RESET "\033[0m"
 
 /* Trace definitions */
 #ifdef TRACE
@@ -90,7 +71,7 @@ int mk_utils_get_somaxconn(void);
 int mk_utils_register_pid(void);
 int mk_utils_remove_pid(void);
 
-void mk_error(int type, const char *format, ...);
+void mk_print(int type, const char *format, ...);
 
 pthread_t mk_utils_worker_spawn(void (*func) (void *));
 

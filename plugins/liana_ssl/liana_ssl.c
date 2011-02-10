@@ -664,7 +664,7 @@ int _mkp_core_prctx(struct server_config *config)
     config->safe_event_write = VAR_ON;
 
     if (matrixSslOpen() < 0) {
-        mk_api->error (MK_ERROR_FATAL, "Can't start matrixSsl");
+        mk_api->error(MK_ERROR, "Can't start matrixSsl");
     }
 
 #ifdef TRACE
@@ -672,22 +672,22 @@ int _mkp_core_prctx(struct server_config *config)
 #endif
 
     if (matrixSslNewKeys(&keys) < 0) {
-        mk_api->error (MK_ERROR_FATAL, "MatrixSSL couldn't init the keys");
+        mk_api->error (MK_ERROR, "MatrixSSL couldn't init the keys");
     }
 
     ssl_file_info = mk_api->file_get_info(cert_file);
     if(ssl_file_info == NULL) {
-        mk_api->error(MK_ERROR_FATAL, "Cannot read certificate file '%s'", cert_file);
+        mk_api->error(MK_ERROR, "Cannot read certificate file '%s'", cert_file);
     }
 
     ssl_file_info = mk_api->file_get_info(key_file);
     if(ssl_file_info == NULL) {
-        mk_api->error (MK_ERROR_FATAL, "Cannot read key file '%s'", key_file);
+        mk_api->error (MK_ERROR, "Cannot read key file '%s'", key_file);
     }
 
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
-        mk_api->error (MK_ERROR_FATAL, "MatrixSsl couldn't read the certificates");
+        mk_api->error (MK_ERROR, "MatrixSsl couldn't read the certificates");
     }
 
 #ifdef TRACE

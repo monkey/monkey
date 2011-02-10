@@ -37,6 +37,7 @@
 #include "str.h"
 #include "utils.h"
 #include "config.h"
+#include "macros.h"
 
 int mk_user_init(struct client_session *cs, struct session_request *sr)
 {
@@ -111,22 +112,22 @@ int mk_user_set_uidgid()
 
         /* Check if user exists  */
         if ((usr = getpwnam(config->user)) == NULL) {
-            mk_error(MK_ERROR_FATAL, "Error: Invalid user '%s'", config->user);
+            mk_err("Error: Invalid user '%s'", config->user);
         }
 
 
         if (initgroups(config->user, usr->pw_gid) != 0) {
-            mk_error(MK_ERROR_FATAL, "Error: initgroups() failed");
+            mk_err("Error: initgroups() failed");
         }
 
         /* Change process UID and GID */
         if (setgid(usr->pw_gid) == -1) {
-            mk_error(MK_ERROR_FATAL, "Error: I can't change the GID to %u", usr->pw_gid);
+            mk_err("Error: I can't change the GID to %u", usr->pw_gid);
         }
 
 
         if (setuid(usr->pw_uid) == -1) {
-            mk_error(MK_ERROR_FATAL, "Error: I can't change the UID to %u", usr->pw_uid);
+            mk_err("Error: I can't change the UID to %u", usr->pw_uid);
         }
 
         EUID = geteuid();

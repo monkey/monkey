@@ -262,7 +262,7 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                        palm->server_port);
 
     if (ret < 0) {
-        mk_api->error(MK_ERROR_WARNING, "Palm: Could not connect to %s:%i",
+        mk_api->error(MK_WARNING, "Palm: Could not connect to %s:%i",
                       palm->server_addr, palm->server_port);
         mk_api->header_set_http_status(sr, M_SERVER_INTERNAL_ERROR);
         return NULL;

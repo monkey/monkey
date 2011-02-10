@@ -49,6 +49,7 @@
 #include "clock.h"
 #include "user.h"
 #include "cache.h"
+#include "macros.h"
 
 /* Date helpers */
 static const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -402,7 +403,7 @@ int mk_utils_register_pid()
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
 
     if ((pid_file = fopen(filepath, "w")) == NULL) {
-        mk_error(MK_ERROR_FATAL, "Error: I can't log pid of monkey");
+        mk_err("Error: I can't log pid of monkey");
     }
 
     fprintf(pid_file, "%i", getpid());
@@ -429,24 +430,30 @@ int mk_utils_remove_pid()
     return ret;
 }
 
-void mk_error(int type, const char *format, ...)
+void mk_print(int type, const char *format, ...)
 {
     time_t now;
     struct tm *current;
 
-    char *header_color;
-    char *header_title;
+    char *header_color = NULL;
+    char *header_title = NULL;
     va_list args;
 
     va_start(args, format);
 
-    if (type == MK_ERROR_WARNING) {
+    switch (type) {
+    case MK_INFO:
+        header_title = "Info";
+        header_color = ANSI_GREEN;
+        break;
+    case MK_ERROR:
+        header_title = "Error";
+        header_color = ANSI_RED;
+        break;
+    case MK_WARNING:
         header_title = "Warning";
         header_color = ANSI_YELLOW;
-    }
-    else {
-        header_title = "Fatal";
-        header_color = ANSI_RED;
+        break;
     }
 
     now = time(NULL);

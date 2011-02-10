@@ -19,35 +19,20 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <stdio.h>
-#include <sys/types.h>
-
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <resolv.h>
 #include <getopt.h>
 
 #include "monkey.h"
 #include "socket.h"
-#include <sys/time.h>
-
-#include <string.h>
-
-#include "epoll.h"
-#include "scheduler.h"
 #include "user.h"
-#include "info.h"
-#include "utils.h"
 #include "signals.h"
-#include "config.h"
-#include "memory.h"
 #include "clock.h"
 #include "cache.h"
 #include "server.h"
 #include "plugin.h"
+#include "macros.h"
 #include "env.h"
 
 #if defined(__DATE__) && defined(__TIME__)
