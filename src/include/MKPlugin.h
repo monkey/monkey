@@ -47,6 +47,8 @@ mk_plugin_key_t _mkp_data;
                   __FILE__,                   \
                   __LINE__,                   \
                   __VA_ARGS__)
+#else
+#define PLUGIN_TRACE(...) do {} while(0)
 #endif
 
 #endif
