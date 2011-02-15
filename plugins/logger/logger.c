@@ -182,9 +182,8 @@ void *mk_logger_worker_init(void *args)
                 if (slen == -1) {
                     mk_api->error(MK_WARNING, "splice failed with %i", slen);
                 }
-#ifdef TRACE
+
                 PLUGIN_TRACE("written %i bytes", bytes);
-#endif
                 close(flog);
             }
         }
@@ -212,18 +211,13 @@ int mk_logger_read_config(char *path)
             mk_api->error(MK_ERROR, "FlushTimeout does not have a proper value");
         }
         mk_logger_timeout = timeout;
-#ifdef TRACE
         PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
-#endif
 
         /* MasterLog */
         mk_logger_master_path = mk_api->config_section_getval(section,
                                                               "MasterLog",
                                                               MK_CONFIG_VAL_STR);
-#ifdef TRACE
         PLUGIN_TRACE("MasterLog '%s'", mk_logger_master_path);
-#endif
-
     }
 
     mk_api->mem_free(default_file);
@@ -302,9 +296,7 @@ void _mkp_core_prctx()
         mk_logger_print_details();
     }
 
-#ifdef TRACE
     PLUGIN_TRACE("Reading virtual hosts");
-#endif
 
     mk_list_init(&targets_list);
 
@@ -354,9 +346,7 @@ void _mkp_core_thctx()
     mk_pointer *content_length;
     mk_pointer *status;
 
-#ifdef TRACE
     PLUGIN_TRACE("Creating thread cache");
-#endif
     
     /* Cache iov log struct */
     iov_log = mk_api->iov_create(15, 0);
@@ -389,9 +379,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     /* Look for target log file */
     target = mk_logger_match_by_host(sr->host_conf);
     if (!target) {
-#ifdef TRACE
         PLUGIN_TRACE("No target found");
-#endif
         return 0;
     }
 
