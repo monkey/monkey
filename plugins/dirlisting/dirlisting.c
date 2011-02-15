@@ -838,10 +838,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
         return MK_PLUGIN_RET_NOT_ME;
     }
     
-#ifdef TRACE
     PLUGIN_TRACE("Dirlisting attending socket %i", cs->socket);
-#endif
-    
     mk_dirhtml_init(cs, sr);
     return MK_PLUGIN_RET_END;
 }
