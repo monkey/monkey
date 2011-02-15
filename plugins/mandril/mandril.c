@@ -173,9 +173,7 @@ void _mkp_exit()
 int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
     if (mk_security_check_ip(conx->ipv4.data) != 0) {
-#ifdef TRACE
         PLUGIN_TRACE("Close connection FD %i", socket);
-#endif
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
@@ -185,9 +183,7 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
     if (mk_security_check_url(sr->uri) < 0) {
-#ifdef TRACE
         PLUGIN_TRACE("Close connection FD %i", cs->socket);
-#endif
         mk_api->header_set_http_status(sr, M_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
