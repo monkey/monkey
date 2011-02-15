@@ -170,9 +170,8 @@ int mk_patas_conf(char *confdir)
             node->sockaddr->sin_port = htons(node->port);
                 
             /* add node to list */
-#ifdef TRACE
             PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
-#endif
+
             mk_list_add(&node->_head, mk_patas_nodes_list);
             mk_patas_n_nodes++;
         }
@@ -227,16 +226,12 @@ static int mk_patas_write_pending_to_remote(int socket, struct mk_patas_conx *co
     }
     
     if (conx->buf_pending_node > 0) {
-#ifdef TRACE
         PLUGIN_TRACE("PENDING: %i", conx->buf_pending_node);
-#endif
         bytes = write(conx->socket_remote, 
                       conx->buf_node + (conx->buf_len_node - conx->buf_pending_node),
                       conx->buf_pending_node);
 
-#ifdef TRACE
         PLUGIN_TRACE("  written: %i", bytes);
-#endif
 
         if (bytes >= 0) {
             conx->buf_pending_node -= bytes;
@@ -244,9 +239,7 @@ static int mk_patas_write_pending_to_remote(int socket, struct mk_patas_conx *co
         else {
             switch(errno) {
             case EAGAIN:
-#ifdef TRACE
                 PLUGIN_TRACE("EAGAIN");
-#endif
                 return MK_PLUGIN_RET_EVENT_OWNED;
             default:
                 return MK_PLUGIN_RET_EVENT_CLOSE;
@@ -262,15 +255,11 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
     int bytes = -1;
     int read_limit = 0;
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] Reading from NODE", socket);
-#endif
 
     /* Process pending data */
     if (conx->buf_pending_node > 0) {
-#ifdef TRACE
         PLUGIN_TRACE("     Pending %i bytes", conx->buf_pending_node);
-#endif
         return mk_patas_write_pending_to_remote(socket, conx);
     }
 
@@ -288,9 +277,7 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
 
     bytes = read(conx->socket_node, conx->buf_node, read_limit);
     if (bytes <= 0) {
-#ifdef TRACE
         PLUGIN_TRACE("[FD %i] Node END", conx->socket_node);
-#endif
         close(conx->socket_node);
         conx->socket_node = -1;
         return MK_PLUGIN_RET_EVENT_OWNED;
@@ -299,34 +286,26 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
         conx->buf_len_node = bytes;
     }
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] read %i bytes", socket, bytes);
-#endif
 
     /* Write node data to remote client */
     bytes = write(conx->socket_remote, conx->buf_node, conx->buf_len_node);
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] written %i/%i bytes ", 
                  conx->socket_remote, bytes, conx->buf_len_node);
-#endif
 
     if (bytes == 0) {
         return MK_PLUGIN_RET_EVENT_CLOSE;
     }
     else if (bytes < 0) {
-#ifdef TRACE
         mk_api->errno_print(errno);
-#endif        
         switch(errno) {
         case EAGAIN:
             /* 
              * Could not write because can block on socket, 
              * let's set as pending 
              */
-#ifdef TRACE
             PLUGIN_TRACE("EAGAIN");
-#endif
             conx->buf_pending_node += conx->buf_len_node;
             return MK_PLUGIN_RET_EVENT_OWNED;
         case EPIPE:
@@ -349,10 +328,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] STAGE 30", cs->socket);
-#endif
-
     return MK_PLUGIN_RET_CONTINUE;
 }
 /*
@@ -385,15 +361,11 @@ int _mkp_event_read(int socket)
     /* Check amount of data available */
     ret = ioctl(socket, FIONREAD, &av_bytes);
     if (ret == -1) {
-#ifdef TRACE
         PLUGIN_TRACE("[FD %i] ERROR ioctl(FIONREAD)", socket);
-#endif
         return MK_PLUGIN_RET_EVENT_OWNED;
     }
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] available bytes: %i", socket, av_bytes);
-#endif
 
     /* Map right handler */
     if (!conx || conx->socket_remote == socket) {
@@ -421,31 +393,20 @@ int hangup(int socket)
 int _mkp_event_close(int socket)
 {
 
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] close", socket);
-#endif
-
     return hangup(socket);
 }
 
 
 int _mkp_event_error(int socket)
 {
-
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] error", socket);
-#endif
-
     return hangup(socket);
 }
 
 int _mkp_event_timeout(int socket)
 {
-
-#ifdef TRACE
     PLUGIN_TRACE("[FD %i] timeout", socket);
-#endif
-
     return hangup(socket);
 }
 
@@ -470,9 +431,7 @@ struct mk_patas_node *mk_patas_node_next_target()
     /* Mutex unlock */
     pthread_mutex_unlock(&mutex_patas_target);
 
-#ifdef TRACE
-    PLUGIN_TRACE("next target node: %s:%i", node->host, node->port);
-#endif
 
+    PLUGIN_TRACE("next target node: %s:%i", node->host, node->port);
     return node;
 }
