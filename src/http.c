@@ -132,9 +132,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     char *uri_data = NULL;
     int uri_len = 0;
 
-#ifdef TRACE
     MK_TRACE("HTTP Protocol Init");
-#endif
 
     /* Normal request default site */
     if ((strcmp(sr->uri_processed, "/")) == 0) {
@@ -161,9 +159,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                             uri_len);
         
         if (ret < 0) {
-#ifdef TRACE
             MK_TRACE("Error composing real path");
-#endif
             return EXIT_ERROR;
         }
     }
@@ -183,9 +179,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         /* if the resource requested doesn't exists, let's 
          * check if some plugin would like to handle it
          */
-#ifdef TRACE
         MK_TRACE("No file, look for handler plugin");
-#endif
+
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
@@ -206,9 +201,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
         /* Send redirect header if end slash is not found */
         if (mk_http_directory_redirect_check(cs, sr) == -1) {
-#ifdef TRACE
             MK_TRACE("Directory Redirect");
-#endif
+
             /* Redirect has been sent */
             return -1;
         }
@@ -241,9 +235,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Plugin Stage 30: look for handlers for this request */
     ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cs, sr);
-#ifdef TRACE
     MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
-#endif
+
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         if (sr->headers && sr->headers->status > 0) {
             mk_request_error(sr->headers->status, cs, sr);
@@ -334,9 +327,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->file_info->size > 0) {
         sr->fd_file = open(sr->real_path.data, config->open_flags);
         if (sr->fd_file == -1) {
-#ifdef TRACE
             MK_TRACE("open() failed");
-#endif
             mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
         }
@@ -623,10 +614,7 @@ int mk_http_pending_request(struct client_session *cs)
             content_length = mk_method_post_content_length(cs->body);
             current = cs->body_length - cs->body_pos_end - mk_endblock.len;
 
-#ifdef TRACE
             MK_TRACE("HTTP POST DATA %i/%i", current, content_length);
-#endif
-
             if (content_length >= config->max_request_size) {
                 return 0;
             }
@@ -741,16 +729,12 @@ int mk_http_request_end(int socket)
     cs = mk_session_get(socket);
     
     if (!cs) {
-#ifdef TRACE
         MK_TRACE("[FD %i] Not found", socket);
-#endif 
         return -1;
     }
 
     if (!sched) {
-#ifdef TRACE
         MK_TRACE("Could not find sched list node :/");
-#endif
         return -1;
     }
 
@@ -762,9 +746,7 @@ int mk_http_request_end(int socket)
     mk_request_free_list(cs);
 
     if (ka < 0) {
-#ifdef TRACE
         MK_TRACE("[FD %i] No KeepAlive mode, remove", cs->socket);
-#endif
         mk_session_remove(socket);
     }
     else {

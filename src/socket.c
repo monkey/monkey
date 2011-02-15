@@ -43,9 +43,7 @@ static void mk_socket_safe_event_write(int socket)
 
     if (config->safe_event_write == VAR_ON) {
         sched = mk_sched_get_thread_conf();
-#ifdef TRACE
         MK_TRACE("[FD %i] Safe event write ON", socket);
-#endif
         mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_WRITE);
     }
 }
@@ -57,9 +55,7 @@ static void mk_socket_safe_event_write(int socket)
 int mk_socket_set_cork_flag(int fd, int state)
 {
 
-#ifdef TRACE
     MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
-#endif
 
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
 }
@@ -67,9 +63,7 @@ int mk_socket_set_cork_flag(int fd, int state)
 int mk_socket_set_nonblocking(int sockfd)
 {
 
-#ifdef TRACE
     MK_TRACE("Socket, set FD %i to non-blocking", sockfd);
-#endif
 
     if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK) == -1) {
         perror("fcntl");

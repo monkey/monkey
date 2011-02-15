@@ -110,10 +110,8 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
     if (to == MK_IOV_SEND_TO_SOCKET) {
         n = writev(fd, mk_io->io, mk_io->iov_idx);
         if( n < 0 ) {
-#ifdef TRACE
             MK_TRACE( "writev() error on FD %i", fd);
             perror("writev");
-#endif
         }
     }
     else if (to == MK_IOV_SEND_TO_PIPE) {
@@ -132,10 +130,8 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
         n = writev(fd, mk_io->io, mk_io->iov_idx);
 
         if (n < 0) {
-#ifdef TRACE
             MK_TRACE("writev() error on FD %i", fd);
             perror("writev");
-#endif
         }
     }
 

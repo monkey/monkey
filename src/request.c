@@ -190,9 +190,7 @@ static int mk_request_header_process(struct session_request *sr)
     uri_end = mk_string_char_search_r(sr->body.data, ' ', fh_limit) - 1;
 
     if (uri_end <= 0) {
-#ifdef TRACE
         MK_TRACE("Error, first header bad formed");
-#endif
         return -1;
     }
     
@@ -526,19 +524,14 @@ static int mk_request_process(struct client_session *cs, struct session_request 
                               cs, sr);
     
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-#ifdef TRACE
         MK_TRACE("STAGE 20 requested close conexion");
-#endif
         return EXIT_ABORT;
     }
 
     /* Normal HTTP process */
     status = mk_http_init(cs, sr);
 
-#ifdef TRACE
     MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
-#endif
-
     return status;
 }
 
@@ -827,9 +820,7 @@ void mk_request_free_list(struct client_session *cs)
     struct mk_list *sr_head, *temp;
 
     /* sr = last node */
-#ifdef TRACE
     MK_TRACE("[FD %i] Free struct client_session", cs->socket);
-#endif
 
     mk_list_foreach_safe(sr_head, temp, &cs->request_list) {
         sr_node = mk_list_entry(sr_head, struct session_request, _head);
@@ -849,9 +840,7 @@ struct client_session *mk_session_create(int socket)
 
     sc = mk_sched_get_connection(NULL, socket);
     if (!sc) {
-#ifdef TRACE
         MK_TRACE("FAILED SOCKET: %i", socket);
-#endif
         mk_warn("Sched connection not found");
         return NULL;
     }

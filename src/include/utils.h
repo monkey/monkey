@@ -40,19 +40,19 @@
 #define MK_TRACE_PLUGIN 1
 #define MK_TRACE_COMP_CORE "core"
 
-#define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, \
+                                     __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
 
 #include "plugin.h"
 
 char *envtrace;
 pthread_mutex_t mutex_trace;
 
+#else
+#define MK_TRACE(...) do {} while (0) 
 #endif
 
 /* utils.c */
-int hex2int(char *pChars);
-
-
 int    mk_utils_utime2gmt(mk_pointer **p, time_t date);
 time_t mk_utils_gmt2utime(char *date);
 

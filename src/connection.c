@@ -29,9 +29,7 @@ int mk_conn_read(int socket)
     struct client_session *cs;
     struct sched_list_node *sched;
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler / read", socket);
-#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
@@ -85,9 +83,7 @@ int mk_conn_write(int socket)
     struct client_session *cs;
     struct sched_list_node *sched;
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler / write", socket);
-#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);
@@ -100,9 +96,7 @@ int mk_conn_write(int socket)
         break; /* just return controller to invoker */
     }
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Normal connection write handling", socket);
-#endif
 
     sched = mk_sched_get_thread_conf();
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
@@ -152,9 +146,7 @@ int mk_conn_error(int socket)
     struct client_session *cs;
     struct sched_list_node *sched;
 
-#ifdef TRACE
     MK_TRACE("Connection Handler, error on FD %i", socket);
-#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_error(socket);
@@ -182,9 +174,7 @@ int mk_conn_close(int socket)
     int ret = -1;
     struct sched_list_node *sched;
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
-#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_close(socket);
@@ -207,9 +197,7 @@ int mk_conn_timeout(int socket)
     int ret = -1;
     struct sched_list_node *sched;
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler, timeout", socket);
-#endif
 
     /* Plugin hook */
     ret = mk_plugin_event_timeout(socket);

@@ -248,15 +248,12 @@ int mk_sched_add_client(int remote_fd)
       }
     }
 
-#ifdef TRACE
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
-#endif
 
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
-#ifdef TRACE
             MK_TRACE("[FD %i] Add", remote_fd);
-#endif
+
             /* Set IP */
             mk_socket_get_ip(remote_fd, sched->queue[i].ipv4.data);
             mk_pointer_set(&sched->queue[i].ipv4, sched->queue[i].ipv4.data);
@@ -293,9 +290,8 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
-#ifdef TRACE
         MK_TRACE("[FD %i] Scheduler remove", remote_fd);
-#endif
+
         /* Close socket and change status */
         close(remote_fd);
 
@@ -308,11 +304,9 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         sc->socket = -1;
         return 0;
     }
-#ifdef TRACE
     else {
         MK_TRACE("[FD %i] Not found", remote_fd);
     }
-#endif
     return -1;
 }
 
@@ -324,9 +318,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
     if (!sched) {
         sched = mk_sched_get_thread_conf();
         if (!sched) {
-#ifdef TRACE
             MK_TRACE("[FD %i] No scheduler information", remote_fd);
-#endif 
             close(remote_fd);
             return NULL;
         }
@@ -338,10 +330,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
         }
     }
 
-#ifdef TRACE
     MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
-#endif
-
     return NULL;
 }
 
@@ -358,10 +347,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
             /* Check timeout */
             if (client_timeout <= log_current_utime) {
-#ifdef TRACE
-                MK_TRACE("Scheduler, closing fd %i due TIMEOUT", 
-                         sched->queue[i].socket);
-#endif
+                MK_TRACE("Scheduler, closing fd %i due TIMEOUT", sched->queue[i].socket);
                 mk_sched_remove_client(sched, sched->queue[i].socket);
             }
         }
@@ -383,10 +369,9 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
             /* Check timeout */
             if (client_timeout <= log_current_utime) {
-#ifdef TRACE
                 MK_TRACE("[FD %i] Scheduler, closing due to timeout (incomplete)",
                          cs_node->socket);
-#endif
+
                 close(cs_node->socket);
                 mk_sched_remove_client(sched, cs_node->socket);
                 mk_session_remove(cs_node->socket);
