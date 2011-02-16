@@ -33,6 +33,7 @@
 #define MK_INFO     0x1000
 #define MK_ERROR    0X1001
 #define MK_WARNING  0x1002
+#define MK_BUG      0x1003
 
 #define mk_info(...)  mk_print(MK_INFO, __VA_ARGS__)
 #define mk_err(...)   mk_print(MK_ERROR, __VA_ARGS__)
@@ -48,5 +49,31 @@
 #define ANSI_GREEN "\033[32m"
 #define ANSI_WHITE "\033[37m"
 #define ANSI_RESET "\033[0m"
+
+/* 
+ * Validation macros
+ * -----------------
+ * Based on article http://lwn.net/Articles/13183/
+ *
+ * ---
+ * ChangeSet 1.803, 2002/10/18 16:28:57-07:00, torvalds@home.transmeta.com
+ *
+ *	Make a polite version of BUG_ON() - WARN_ON() which doesn't
+ *	kill the machine.
+ *	
+ *	Damn I hate people who kill the machine for no good reason. 
+ * ---
+ *
+ */
+
+#define unlikely(x) __builtin_expect((x),0)
+
+#define mk_bug(condition) do {                  \
+        if (unlikely((condition)!=0)) {         \
+            mk_print(MK_BUG, "Bug found in %s() at %s:%d",             \
+                     __FUNCTION__, __FILE__, __LINE__);                 \
+            abort();                                                    \
+        }                                                               \
+} while(0)
 
 #endif
