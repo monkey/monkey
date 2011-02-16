@@ -720,6 +720,8 @@ void mk_request_error(int http_status, struct client_session *cs,
     mk_pointer message, *page = 0;
     long n;
 
+    mk_pointer_reset(&message);
+
     switch (http_status) {
     case M_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",
