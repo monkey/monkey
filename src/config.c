@@ -150,7 +150,7 @@ struct mk_config *mk_config_create(const char *path)
 
     /* Open configuration file */
     if ((f = fopen(path, "r")) == NULL) {
-        mk_warn("Config Error: I can't open %s file", path);
+        mk_warn("Config: I cannot open %s file", path);
         return NULL;
     }
 
@@ -372,6 +372,11 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
 
     cnf = mk_config_create(path);
+    if (!cnf) {
+        mk_err("Could not read %s", path);
+        exit(EXIT_FAILURE);
+    }
+
     section = mk_config_section_get(cnf, "SERVER");
 
     if (!section) {
