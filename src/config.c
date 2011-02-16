@@ -150,7 +150,8 @@ struct mk_config *mk_config_create(const char *path)
 
     /* Open configuration file */
     if ((f = fopen(path, "r")) == NULL) {
-        mk_err("Config Error: I can't open %s file", path);
+        mk_warn("Config Error: I can't open %s file", path);
+        return NULL;
     }
 
     /* Alloc configuration node */
