@@ -315,13 +315,13 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
 {
     int i;
 
+    /* Validate sched node */
+    mk_bug(!sched);
+
     if (!sched) {
-        sched = mk_sched_get_thread_conf();
-        if (!sched) {
-            MK_TRACE("[FD %i] No scheduler information", remote_fd);
-            close(remote_fd);
-            return NULL;
-        }
+        MK_TRACE("[FD %i] No scheduler information", remote_fd);
+        close(remote_fd);
+        return NULL;
     }
 
     for (i = 0; i < config->worker_capacity; i++) {
