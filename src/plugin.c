@@ -50,7 +50,7 @@ void *mk_plugin_load(char *path)
 
     handle = dlopen(path, RTLD_LAZY);
     if (!handle) {
-        mk_err("Error during dlopen(): %s", dlerror());
+        mk_warn("dlopen() %s", dlerror());
     }
 
     return handle;
@@ -125,7 +125,8 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
 
     if (!info) {
-        mk_err("Plugin Error: '%s'\nis not registering properly", path);
+        mk_warn("Plugin '%s' is not registering properly", path);
+        return NULL;
     }
 
     p->shortname = (char *) (*info).shortname;
@@ -407,8 +408,9 @@ void mk_plugin_init()
     cnf = mk_config_create(path);
     
     if (!cnf) {
-        mk_err("Error: Plugins configuration file could not be readed");
+        mk_err("Plugins configuration file could not be readed");
         mk_mem_free(path);
+        exit(EXIT_FAILURE);
     }
 
     /* Read section 'PLUGINS' */
@@ -420,10 +422,17 @@ void mk_plugin_init()
         if (strcasecmp(entry->key, "Load") == 0) {
             handle = mk_plugin_load(entry->val);
 
+            if (!handle) {
+                mk_warn("Invalid plugin '%s'", entry->val);
+                entry = entry->next;
+                continue;
+            }
+
             p = mk_plugin_alloc(handle, entry->val);
             if (!p) {
-                mk_err("Plugin error: %s\n", entry->val);
+                mk_warn("Plugin error: %s\n", entry->val);
                 dlclose(handle);
+                entry = entry->next;
             }
 
             /* Build plugin configuration path */
@@ -455,7 +464,8 @@ void mk_plugin_init()
     }
 
     if (!plg_netiomap) {
-        mk_err("Error: no Network plugin loaded >:|");
+        mk_err("No network plugin loaded >:|");
+        exit(EXIT_FAILURE);
     }
 
     api->plugins = config->plugins;
