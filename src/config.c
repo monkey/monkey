@@ -373,7 +373,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     cnf = mk_config_create(path);
     if (!cnf) {
-        mk_err("Could not read %s", path);
+        mk_err("Cannot read 'monkey.conf'");
         exit(EXIT_FAILURE);
     }
 

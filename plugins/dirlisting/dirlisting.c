@@ -71,7 +71,7 @@ MONKEY_PLUGIN("dirlisting",          /* shortname */
 char *mk_dirhtml_human_readable_size(off_t size)
 {
     unsigned long u = 1024, i, len;
-    char *buf;
+    char *buf = NULL;
     static const char *__units[] = { "b", "K", "M", "G",
         "T", "P", "E", "Z", "Y", NULL
     };
@@ -139,7 +139,7 @@ struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
                                          unsigned long *list_len)
 {
     unsigned long len;
-    char *full_path = 0;
+    char *full_path = NULL;
     struct dirent *ent;
     struct mk_f_list *list = 0, *entry = 0, *last = 0;
 
@@ -171,11 +171,11 @@ struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
 
 
         mk_api->str_build(&full_path, &len, "%s%s", path, ent->d_name);
-
         entry = mk_dirhtml_create_element(ent->d_name,
                                           ent->d_type, full_path, list_len);
 
         mk_api->mem_free(full_path);
+        full_path = NULL;
 
         if (!entry) {
             continue;
@@ -198,7 +198,7 @@ int mk_dirhtml_conf(char *confdir)
 {
     int ret = 0;
     unsigned long len;
-    char *conf_file;
+    char *conf_file = NULL;
 
     mk_api->str_build(&conf_file, &len, "%s", confdir);
     ret = mk_dirhtml_read_config(conf_file);
@@ -219,7 +219,7 @@ int mk_dirhtml_conf(char *confdir)
 int mk_dirhtml_read_config(char *path)
 {
     unsigned long len;
-    char *default_file;
+    char *default_file = NULL;
     struct mk_config *conf;
     struct mk_config_section *section;
 
@@ -235,6 +235,8 @@ int mk_dirhtml_read_config(char *path)
     dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
     dirhtml_conf->theme = mk_api->config_section_getval(section, "Theme", 
                                                         MK_CONFIG_VAL_STR);
+    dirhtml_conf->theme_path = NULL;
+
     mk_api->str_build(&dirhtml_conf->theme_path, &len,
                       "%sthemes/%s/", path, dirhtml_conf->theme);
 

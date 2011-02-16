@@ -689,7 +689,7 @@ int mk_handler_write(int socket, struct client_session *cs)
 mk_pointer mk_request_index(char *pathfile)
 {
     unsigned long len;
-    char *file_aux = 0;
+    char *file_aux = NULL;
     mk_pointer f;
     struct mk_string_line *aux_index;
 
@@ -707,6 +707,8 @@ mk_pointer mk_request_index(char *pathfile)
             return f;
         }
         mk_mem_free(file_aux);
+        file_aux = NULL;
+
         aux_index = aux_index->next;
     }
 
