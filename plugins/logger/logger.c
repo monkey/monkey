@@ -194,7 +194,7 @@ int mk_logger_read_config(char *path)
 {
     int timeout;
     unsigned long len;
-    char *default_file;
+    char *default_file = NULL;
     struct mk_config *conf;
     struct mk_config_section *section;
 

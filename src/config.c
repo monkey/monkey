@@ -503,6 +503,7 @@ void mk_config_read_hosts(char *path)
     config->hosts = mk_config_get_host(buf);
     config->nhosts++;
     mk_mem_free(buf);
+    buf = NULL;
 
     if (!config->hosts) {
         mk_err("Error parsing main configuration file 'default'");

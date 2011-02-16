@@ -445,6 +445,9 @@ void mk_plugin_init()
                 continue;
             }
 
+            mk_mem_free(plugin_confdir);
+            plugin_confdir = NULL;
+
             /* If everything worked, register plugin */
             mk_plugin_register(p);
         }

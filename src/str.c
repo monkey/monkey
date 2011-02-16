@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "macros.h"
 #include "request.h"
 #include "utils.h"
 #include "memory.h"
@@ -235,6 +236,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
     size_t alloc = 0;
 
     /* *buffer *must* be an empty/NULL buffer */
+    mk_bug(*buffer);
 
     *buffer = (char *) mk_mem_malloc(_mem_alloc);
     if (!*buffer) {
