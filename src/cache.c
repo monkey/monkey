@@ -31,10 +31,11 @@
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {
-    struct mk_iov *cache_iov_header;
     mk_pointer *cache_header_lm; 
     mk_pointer *cache_header_cl;
-
+    struct tm *cache_utils_gmtime;
+    struct mk_iov *cache_iov_header;
+    
     /* Cache header request -> last modified */
     cache_header_lm = mk_mem_malloc_z(sizeof(mk_pointer));
     cache_header_lm->data = mk_mem_malloc_z(32);
@@ -50,6 +51,10 @@ void mk_cache_thread_init()
     /* Cache iov header struct */
     cache_iov_header = mk_iov_create(32, 0);
     pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
+
+    /* Cache gmtime buffer */
+    cache_utils_gmtime = mk_mem_malloc(sizeof(struct tm));
+    pthread_setspecific(mk_cache_utils_gmtime, (void *) cache_utils_gmtime);
 }
 
 void *mk_cache_get(pthread_key_t key)

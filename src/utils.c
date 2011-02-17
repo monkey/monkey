@@ -76,7 +76,8 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
     }
 
     /* Convert unix time to struct tm */
-    gtm = (struct tm *) gmtime(&date);
+    gtm = mk_cache_get(mk_cache_utils_gmtime);
+    gtm = gmtime_r(&date, gtm);
     if (!gtm) {
         return -1;
     }
