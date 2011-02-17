@@ -51,4 +51,26 @@ mk_plugin_key_t _mkp_data;
 #define PLUGIN_TRACE(...) do {} while(0)
 #endif
 
+/* 
+ * Redefine messages macros 
+ */
+
+#undef  mk_info
+#define mk_inf(...) mk_api->error(MK_INF, __VA_ARGS__)
+
+#undef  mk_err
+#define mk_err(...) mk_api->error(MK_ERR, __VA_ARGS__)
+
+#undef  mk_warn
+#define mk_warn(...) mk_api->error(MK_WARN, __VA_ARGS__)
+
+#undef  mk_bug
+#define mk_bug(condition) do {                  \
+        if (unlikely((condition)!=0)) {         \
+            mk_api->error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
+                          _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
+            abort();                                                    \
+        }                                                               \
+    } while(0)
+
 #endif

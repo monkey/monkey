@@ -456,7 +456,7 @@ void mk_print(int type, const char *format, ...)
         header_color = ANSI_YELLOW;
         break;
     case MK_BUG:
-        header_title = "  BUG ! ";
+        header_title = " BUG !";
         header_color = ANSI_BOLD ANSI_RED;
     }
 

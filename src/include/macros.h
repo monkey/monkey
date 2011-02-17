@@ -22,6 +22,8 @@
 #ifndef MK_MACROS_H
 #define MK_MACROS_H
 
+#include <stdlib.h>
+
 /* Boolean */
 #define MK_TRUE   1
 #define MK_FALSE  0
