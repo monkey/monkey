@@ -110,7 +110,10 @@ char *mk_pointer_to_buf(mk_pointer p)
 {
     char *buf;
 
-    buf = strndup(p.data, p.len);
+    buf = mk_mem_malloc(p.len + 1);
+    memcpy(buf, p.data, p.len);
+    buf[p.len] = '\0';
+
     return (char *) buf;
 }
 
