@@ -1,0 +1,11 @@
+# Monkey logfile example:
+# 127.0.0.1 - [21/Mar/2010 10:01:38 -0400] HEAD / HTTP/1.1 200 0
+
+[access]
+ip = 127.0.0.1
+method = HEAD
+uri = /
+protocol = HTTP/1.1
+status = 200
+size = -
+

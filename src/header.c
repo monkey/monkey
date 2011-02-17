@@ -256,7 +256,7 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     /* Content-Length */
-    if (sh->content_length >= 0 && sr->method != HTTP_METHOD_HEAD) {
+    if (sh->content_length >= 0) {
         /* Map content length to MK_POINTER */
         mk_pointer *cl;
         cl = mk_cache_get(mk_cache_header_cl);
