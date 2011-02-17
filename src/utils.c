@@ -404,6 +404,7 @@ int mk_utils_register_pid()
 
     if ((pid_file = fopen(filepath, "w")) == NULL) {
         mk_err("Error: I can't log pid of monkey");
+        exit(EXIT_FAILURE);
     }
 
     fprintf(pid_file, "%i", getpid());
