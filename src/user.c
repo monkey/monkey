@@ -107,26 +107,28 @@ int mk_user_set_uidgid()
 
         /* Just if i'm superuser */
         rl.rlim_cur = rl.rlim_max;
-        setrlimit(RLIMIT_NOFILE, &rl);
+        if (setrlimit(RLIMIT_NOFILE, &rl) != 0) {
+            mk_warn("setrlimit(RLIMIT_NOFILE) failed");
+        }
 
         /* Check if user exists  */
         if ((usr = getpwnam(config->user)) == NULL) {
-            mk_err("Error: Invalid user '%s'", config->user);
+            mk_err("Invalid user '%s'", config->user);
         }
 
 
         if (initgroups(config->user, usr->pw_gid) != 0) {
-            mk_err("Error: initgroups() failed");
+            mk_err("Initgroups() failed");
         }
 
         /* Change process UID and GID */
         if (setgid(usr->pw_gid) == -1) {
-            mk_err("Error: I can't change the GID to %u", usr->pw_gid);
+            mk_err("I cannot change the GID to %u", usr->pw_gid);
         }
 
 
         if (setuid(usr->pw_uid) == -1) {
-            mk_err("Error: I can't change the UID to %u", usr->pw_uid);
+            mk_err("I cannot change the UID to %u", usr->pw_uid);
         }
 
         EUID = geteuid();
