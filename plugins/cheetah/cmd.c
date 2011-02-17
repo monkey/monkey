@@ -354,7 +354,7 @@ void mk_cheetah_cmd_config()
     }
     
     CHEETAH_WRITE("\nHideVersion     : ");
-    if (mk_api->config->hideversion == VAR_ON) {
+    if (mk_api->config->hideversion == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
     else {
@@ -362,7 +362,7 @@ void mk_cheetah_cmd_config()
     }
 
     CHEETAH_WRITE("\nResume          : ");
-    if (mk_api->config->resume == VAR_ON) {
+    if (mk_api->config->resume == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
     else {
@@ -373,7 +373,7 @@ void mk_cheetah_cmd_config()
     CHEETAH_WRITE("\n\nAdvanced configuration");
     CHEETAH_WRITE("\n----------------------");
     CHEETAH_WRITE("\nKeepAlive           : ");
-    if (mk_api->config->keep_alive == VAR_ON) {
+    if (mk_api->config->keep_alive == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
     else {
@@ -385,7 +385,7 @@ void mk_cheetah_cmd_config()
     CHEETAH_WRITE("\nMaxRequestSize      : %i KB", 
            mk_api->config->max_request_size/1024);
     CHEETAH_WRITE("\nSymLink             : ");
-    if (mk_api->config->symlink == VAR_ON) {
+    if (mk_api->config->symlink == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
     else {

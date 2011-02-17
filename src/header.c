@@ -36,6 +36,7 @@
 #include "cache.h"
 #include "http.h"
 #include "str.h"
+#include "macros.h"
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
@@ -272,9 +273,8 @@ int mk_header_send(int fd, struct client_session *cs,
         
     }
 
-    if ((sh->content_length != 0 && 
-         (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
-        config->resume == VAR_ON) {
+    if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
+        config->resume == MK_TRUE) {
         buffer = 0;
 
         /* yyy- */

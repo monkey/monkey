@@ -410,7 +410,7 @@ int mk_utils_register_pid()
     fprintf(pid_file, "%i", getpid());
     fclose(pid_file);
     mk_mem_free(filepath);
-    config->pid_status = VAR_ON;
+    config->pid_status = MK_TRUE;
 
     return 0;
 }
@@ -427,7 +427,7 @@ int mk_utils_remove_pid()
     mk_user_undo_uidgid();
     ret = unlink(filepath);
     mk_mem_free(filepath);
-    config->pid_status = VAR_OFF;
+    config->pid_status = MK_FALSE;
     return ret;
 }
 
@@ -443,15 +443,15 @@ void mk_print(int type, const char *format, ...)
     va_start(args, format);
 
     switch (type) {
-    case MK_INFO:
+    case MK_INF:
         header_title = "Info";
         header_color = ANSI_GREEN;
         break;
-    case MK_ERROR:
+    case MK_ERR:
         header_title = "Error";
         header_color = ANSI_RED;
         break;
-    case MK_WARNING:
+    case MK_WARN:
         header_title = "Warning";
         header_color = ANSI_YELLOW;
         break;

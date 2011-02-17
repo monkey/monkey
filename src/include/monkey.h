@@ -33,11 +33,6 @@ int server_fd;
 #define SH_NOCGI 0
 #define SH_CGI 1
 
-#define VAR_ERR -2
-#define VAR_NOTSET -1
-#define VAR_ON 0
-#define VAR_OFF 1
-
 
 /* Thread mutexes */
 pthread_mutex_t mutex_wait_register;

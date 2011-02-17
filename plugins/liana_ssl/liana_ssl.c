@@ -578,7 +578,7 @@ int _mkp_core_prctx(struct server_config *config)
     struct file_info *ssl_file_info = NULL;
 
     /* Enable server safe event write */
-    config->safe_event_write = VAR_ON;
+    config->safe_event_write = MK_TRUE;
 
     if (matrixSslOpen() < 0) {
         mk_api->error(MK_ERROR, "Can't start matrixSsl");

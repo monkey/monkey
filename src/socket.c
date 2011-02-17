@@ -36,12 +36,13 @@
 #include "utils.h"
 #include "plugin.h"
 #include "monkey.h"
+#include "macros.h"
 
 static void mk_socket_safe_event_write(int socket)
 {
     struct sched_list_node *sched;
 
-    if (config->safe_event_write == VAR_ON) {
+    if (config->safe_event_write == MK_TRUE) {
         sched = mk_sched_get_thread_conf();
         MK_TRACE("[FD %i] Safe event write ON", socket);
         mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_WRITE);

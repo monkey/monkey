@@ -128,9 +128,9 @@ int main(int argc, char **argv)
         config->file_config = file_config;
 
     if (run_daemon)
-        config->is_daemon = VAR_ON;
+        config->is_daemon = MK_TRUE;
     else
-        config->is_daemon = VAR_OFF;
+        config->is_daemon = MK_FALSE;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     server_fd = mk_socket_server(config->serverport, config->listen_addr);
 
     /* Running Monkey as daemon */
-    if (config->is_daemon == VAR_ON) {
+    if (config->is_daemon == MK_TRUE) {
         mk_utils_set_daemon();
     }
 

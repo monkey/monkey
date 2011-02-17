@@ -81,7 +81,7 @@ int mk_patas_validate_node(const char *host, int port)
     node = gethostbyname(host);
 
     if (!node) {
-        mk_api->error(MK_WARNING, "Could not determinate hostname");
+        mk_api->error(MK_WARN, "Could not determinate hostname");
         return -1;
     }
 
@@ -95,7 +95,7 @@ int mk_patas_validate_node(const char *host, int port)
             inet_ntop(PF_INET, node->h_addr_list[j], node_addr, 16);
 
             if (strcmp(local_addr, node_addr) == 0 && mk_api->config->serverport == port) {
-                mk_api->error(MK_WARNING, "Node %s:%i = localhost:%i, skip node\n",
+                mk_api->error(MK_WARN, "Node %s:%i = localhost:%i, skip node\n",
                               host, port, port);
                 return -1;
             }
@@ -157,12 +157,12 @@ int mk_patas_conf(char *confdir)
             res = inet_pton(AF_INET, node->host, 
                             (void *) (&(node->sockaddr->sin_addr.s_addr)));
             if (res < 0) {
-                mk_api->error(MK_WARNING, "Can't set remote->sin_addr.s_addr");
+                mk_api->error(MK_WARN, "Can't set remote->sin_addr.s_addr");
                 mk_api->mem_free(node->sockaddr);
                 return -1;
             }
             else if (res == 0) {
-                mk_api->error(MK_WARNING, "Invalid IP address");
+                mk_api->error(MK_WARN, "Invalid IP address");
                 mk_api->mem_free(node->sockaddr);
                 return -1;
             }

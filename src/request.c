@@ -63,16 +63,16 @@ static struct session_request *mk_request_alloc()
     struct session_request *request = 0;
 
     request = mk_mem_malloc(sizeof(struct session_request));
-    request->status = VAR_OFF;  /* Request not processed yet */
-    request->close_now = VAR_OFF;
+    request->status = MK_FALSE;  /* Request not processed yet */
+    request->close_now = MK_FALSE;
 
     mk_pointer_reset(&request->body);
-    request->status = VAR_ON;
+    request->status = MK_TRUE;
     request->method = METHOD_NOT_FOUND;
 
     mk_pointer_reset(&request->uri);
     request->uri_processed = NULL;
-    request->uri_twin = VAR_OFF;
+    request->uri_twin = MK_FALSE;
 
     request->content_length = 0;
     request->content_type.data = NULL;
@@ -135,7 +135,7 @@ static void mk_request_free(struct session_request *sr)
     mk_pointer_reset(&sr->body);
     mk_pointer_reset(&sr->uri);
 
-    if (sr->uri_twin == VAR_ON) {
+    if (sr->uri_twin == MK_TRUE) {
         mk_mem_free(sr->uri_processed);
     }
 
@@ -241,7 +241,7 @@ static int mk_request_header_process(struct session_request *sr)
     
     if (!sr->uri_processed) {
         sr->uri_processed = mk_pointer_to_buf(sr->uri);
-        sr->uri_twin = VAR_ON;
+        sr->uri_twin = MK_TRUE;
     }
 
     /* Creating Table of Content (index) for HTTP headers */
@@ -296,22 +296,22 @@ static int mk_request_header_process(struct session_request *sr)
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {
-        sr->keep_alive = VAR_OFF;
-        sr->close_now = VAR_ON;
+        sr->keep_alive = MK_FALSE;
+        sr->close_now = MK_TRUE;
     }
     else if(sr->protocol == HTTP_PROTOCOL_11) {
-        sr->keep_alive = VAR_ON;
-        sr->close_now = VAR_OFF;
+        sr->keep_alive = MK_TRUE;
+        sr->close_now = MK_FALSE;
     }
 
     if (sr->connection.data) {
         if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
-            sr->keep_alive = VAR_ON;
-            sr->close_now = VAR_OFF;
+            sr->keep_alive = MK_TRUE;
+            sr->close_now = MK_FALSE;
         }
         else if(mk_string_casestr(sr->connection.data, "Close")) {
-            sr->keep_alive = VAR_OFF;
-            sr->close_now = VAR_ON;
+            sr->keep_alive = MK_FALSE;
+            sr->close_now = MK_TRUE;
         }
         else {
             /* Set as a non-valid connection header value */
@@ -400,7 +400,7 @@ static int mk_request_parse(struct client_session *cs)
             }
         }
 
-        cs->pipelined = TRUE;
+        cs->pipelined = MK_TRUE;
     }
 
     return 0;
@@ -458,7 +458,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         return EXIT_NORMAL;
     }
 
-    sr->user_home = VAR_OFF;
+    sr->user_home = MK_FALSE;
 
     /* Valid request URI? */
     if (sr->uri_processed == NULL) {
@@ -669,7 +669,7 @@ int mk_handler_write(int socket, struct client_session *cs)
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
-                 if (sr_node->close_now == VAR_ON) {
+                 if (sr_node->close_now == MK_TRUE) {
                     return -1;
                 }
                 break;
@@ -857,7 +857,7 @@ struct client_session *mk_session_create(int socket)
     /* IPv4 Address */
     cs->ipv4 = &sc->ipv4;
 
-    cs->pipelined = FALSE;
+    cs->pipelined = MK_FALSE;
     cs->counter_connections = 0;
     cs->socket = socket;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;

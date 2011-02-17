@@ -337,10 +337,10 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
                     return (void *) -1;
                 }
                 else if (on >= 0) {
-                    return (void *) VAR_ON;
+                    return (void *) MK_TRUE;
                 }
                 else {
-                    return (void *) VAR_OFF;
+                    return (void *) MK_FALSE;
                 }
             case MK_CONFIG_VAL_LIST:
                 return mk_string_split_line(entry->val);
@@ -422,7 +422,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->keep_alive = (size_t) mk_config_section_getval(section,
                                                         "KeepAlive",
                                                         MK_CONFIG_VAL_BOOL);
-    if (config->keep_alive == VAR_ERR) {
+    if (config->keep_alive == MK_ERROR) {
         mk_config_print_error_msg("KeepAlive", path);
     }
 
@@ -460,7 +460,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->hideversion = (size_t) mk_config_section_getval(section,
                                                          "HideVersion",
                                                          MK_CONFIG_VAL_BOOL);
-    if (config->hideversion == VAR_ERR) {
+    if (config->hideversion == MK_ERROR) {
         mk_config_print_error_msg("HideVersion", path);
     }
 
@@ -470,7 +470,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     /* Resume */
     config->resume = (size_t) mk_config_section_getval(section,
                                                     "Resume", MK_CONFIG_VAL_BOOL);
-    if (config->resume == VAR_ERR) {
+    if (config->resume == MK_ERROR) {
         mk_config_print_error_msg("Resume", path);
     }
 
@@ -488,10 +488,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     /* Symbolic Links */
     config->symlink = (size_t) mk_config_section_getval(section,
                                                      "SymLink", MK_CONFIG_VAL_BOOL);
-    if (config->symlink == VAR_ERR) {
+    if (config->symlink == MK_ERROR) {
         mk_config_print_error_msg("SymLink", path);
     }
-    
+
     mk_mem_free(path);
     mk_config_read_hosts(path_conf);
 }
@@ -603,7 +603,7 @@ struct host *mk_config_get_host(char *path)
     }
 
     /* Server Signature */
-    if (config->hideversion == VAR_OFF) {
+    if (config->hideversion == MK_FALSE) {
         mk_string_build(&host->host_signature, &len,
                         "Monkey/%s", VERSION);
     }
@@ -622,15 +622,15 @@ void mk_config_set_init_values(void)
 {
     /* Init values */
     config->timeout = 15;
-    config->hideversion = VAR_OFF;
-    config->keep_alive = VAR_ON;
+    config->hideversion = MK_FALSE;
+    config->keep_alive = MK_TRUE;
     config->keep_alive_timeout = 15;
     config->max_keep_alive_request = 50;
-    config->resume = VAR_ON;
+    config->resume = MK_TRUE;
     config->standard_port = 80;
     config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
     config->serverport = 2001;
-    config->symlink = VAR_OFF;
+    config->symlink = MK_FALSE;
     config->nhosts = 0;
     config->user = NULL;
     config->open_flags = O_RDONLY | O_NONBLOCK;
@@ -645,7 +645,7 @@ void mk_config_set_init_values(void)
     config->plugins = mk_mem_malloc(sizeof(struct mk_list));
 
     /* Internals */
-    config->safe_event_write = VAR_OFF;
+    config->safe_event_write = MK_FALSE;
 
     /* Init plugin list */
     mk_list_init(config->plugins);
@@ -663,7 +663,7 @@ void mk_config_start_configure(void)
     mk_mimetype_read_config();
 
     /* Basic server information */
-    if (config->hideversion == VAR_OFF) {
+    if (config->hideversion == MK_FALSE) {
         mk_string_build(&config->server_software.data,
                         &len, "Monkey/%s (%s)", VERSION, OS);
         config->server_software.len = len;

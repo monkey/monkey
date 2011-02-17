@@ -41,6 +41,7 @@
 #include "header.h"
 #include "epoll.h"
 #include "plugin.h"
+#include "macros.h"
 
 int mk_http_method_check(mk_pointer method)
 {
@@ -151,7 +152,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Compose real path */
-    if (sr->user_home == VAR_OFF) {
+    if (sr->user_home == MK_FALSE) {
         ret = mk_buffer_cat(&sr->real_path, 
                             sr->host_conf->documentroot.data,
                             sr->host_conf->documentroot.len,
@@ -222,7 +223,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Check symbolic link file */
     if (sr->file_info->is_link == MK_FILE_TRUE) {
-        if (config->symlink == VAR_OFF) {
+        if (config->symlink == MK_FALSE) {
             mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
         }
@@ -308,7 +309,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         sr->headers->content_type = mime->type;
         /* Range */
-        if (sr->range.data != NULL && config->resume == VAR_ON) {
+        if (sr->range.data != NULL && config->resume == MK_TRUE) {
             if (mk_http_range_parse(sr) < 0) {
                 mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
                 return EXIT_ERROR;
@@ -441,7 +442,7 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
 
     sr_head = &cs->request_list;
     sr_node = mk_list_entry_last(sr_head, struct session_request, _head);
-    if (config->keep_alive == VAR_OFF || sr_node->keep_alive == VAR_OFF) {
+    if (config->keep_alive == MK_FALSE || sr_node->keep_alive == MK_FALSE) {
         return -1;
     }
 
@@ -456,7 +457,7 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
     }
 
     /* Connection was forced to close */
-    if (sr_node->close_now == VAR_ON) {
+    if (sr_node->close_now == MK_TRUE) {
         return -1;
     }
 
@@ -475,7 +476,7 @@ int mk_http_range_set(struct session_request *sr, long file_size)
     sr->bytes_to_send = file_size;
     sr->bytes_offset = 0;
 
-    if (config->resume == VAR_ON && sr->range.data) {
+    if (config->resume == MK_TRUE && sr->range.data) {
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             sr->bytes_offset = sh->ranges[0];

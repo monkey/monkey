@@ -23,21 +23,22 @@
 #define MK_MACROS_H
 
 /* Boolean */
-#define TRUE  1
-#define FALSE 0
+#define MK_TRUE   1
+#define MK_FALSE  0
+#define MK_ERROR -1
 
 /* Architecture */
 #define INTSIZE sizeof(int)
 
 /* Print macros */
-#define MK_INFO     0x1000
-#define MK_ERROR    0X1001
-#define MK_WARNING  0x1002
+#define MK_INF      0x1000
+#define MK_ERR      0X1001
+#define MK_WARN     0x1002
 #define MK_BUG      0x1003
 
-#define mk_info(...)  mk_print(MK_INFO, __VA_ARGS__)
-#define mk_err(...)   mk_print(MK_ERROR, __VA_ARGS__)
-#define mk_warn(...)  mk_print(MK_WARNING, __VA_ARGS__)
+#define mk_info(...)  mk_print(MK_INF, __VA_ARGS__)
+#define mk_err(...)   mk_print(MK_ERR, __VA_ARGS__)
+#define mk_warn(...)  mk_print(MK_WARN, __VA_ARGS__)
 
 /* ANSI Colors */
 #define ANSI_BOLD "\033[1m"

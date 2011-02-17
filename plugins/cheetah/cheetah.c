@@ -90,7 +90,7 @@ void mk_cheetah_config(char *path)
     }
 
     /* Cheetah cannot work in STDIN mode if Monkey is working in background */
-    if (listen_mode == LISTEN_STDIN && mk_api->config->is_daemon == VAR_ON) {
+    if (listen_mode == LISTEN_STDIN && mk_api->config->is_daemon == MK_TRUE) {
         printf("\nCheetah!: Forcing SERVER mode as Monkey is running in background\n");
         fflush(stdout);
         listen_mode = LISTEN_SERVER;

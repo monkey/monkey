@@ -155,7 +155,7 @@ void *mk_logger_worker_init(void *args)
             target = mk_logger_match_by_fd(events[i].data.fd);
 
             if (!target) {
-                mk_api->error(MK_WARNING, "Could not match host/epoll_fd");
+                mk_api->error(MK_WARN, "Could not match host/epoll_fd");
                 continue;
             }
 
@@ -172,7 +172,7 @@ void *mk_logger_worker_init(void *args)
                 flog = open(target, O_WRONLY | O_CREAT, 0644);
 
                 if (flog == -1) {
-                    mk_api->error(MK_WARNING, "Could not open logfile '%s'", target);
+                    mk_api->error(MK_WARN, "Could not open logfile '%s'", target);
                     continue;
                 }
 
@@ -180,7 +180,7 @@ void *mk_logger_worker_init(void *args)
                 slen = splice(events[i].data.fd, NULL, flog,
                               NULL, bytes, SPLICE_F_MOVE);
                 if (slen == -1) {
-                    mk_api->error(MK_WARNING, "splice failed with %i", slen);
+                    mk_api->error(MK_WARN, "splice failed with %i", slen);
                 }
 
                 PLUGIN_TRACE("written %i bytes", bytes);
@@ -263,7 +263,7 @@ int _mkp_init(void **api, char *confdir)
     if (mk_logger_master_path) {
         fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
         if (fd == -1) {
-            mk_api->error(MK_WARNING, 
+            mk_api->error(MK_WARN, 
                           "Could not open/create master logfile %s", mk_logger_master_path);
             mk_logger_master_path = NULL;
         }
@@ -291,7 +291,7 @@ void _mkp_core_prctx()
     struct mk_config_entry *access_entry, *error_entry;
 
     /* Restore STDOUT if we are in background mode */
-    if (mk_logger_master_path != NULL && mk_api->config->is_daemon == VAR_ON) {
+    if (mk_logger_master_path != NULL && mk_api->config->is_daemon == MK_TRUE) {
         mk_logger_master_file = freopen(mk_logger_master_path, "a+", stdout);
         mk_logger_print_details();
     }
