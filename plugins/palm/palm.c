@@ -244,8 +244,7 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
                                        palm->server_port);
 
     if (ret < 0) {
-        mk_api->error(MK_WARNING, "Palm: Could not connect to %s:%i",
-                      palm->server_addr, palm->server_port);
+        mk_warn("Palm: Could not connect to %s:%i", palm->server_addr, palm->server_port);
         mk_api->header_set_http_status(sr, M_SERVER_INTERNAL_ERROR);
         return NULL;
     }
@@ -533,7 +532,6 @@ int _mkp_event_close(int sockfd)
 
 int _mkp_event_error(int sockfd)
 {
-
     PLUGIN_TRACE("[FD %i] event error", sockfd);
     return hangup(sockfd);
 }

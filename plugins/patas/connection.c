@@ -135,12 +135,7 @@ int mk_patas_connect(struct mk_patas_node *node)
 
     if (connect(socket, (struct sockaddr *) node->sockaddr, sizeof(struct sockaddr)) == -1) {
         close(socket);
-
-#ifdef TRACE
-        mk_api->error(MK_ERROR_WARNING, "Could not connect to node: %s:%i\n", 
-                      node->host, node->port);
-#endif
-
+        mk_warn("Could not connect to node: %s:%i\n", node->host, node->port);
         return -1;
     }
 

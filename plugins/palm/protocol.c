@@ -47,7 +47,8 @@ int _iov_fill_empty(struct mk_iov *iov, mk_pointer data, int idx)
     
     /* FIXME: Validate empty space, should we do this ?
     if (iov->io[idx].iov_len != 0) {
-        mk_api->error(MK_ERROR_FATAL, "idx %i is NOT empty", idx);
+        mk_err("idx %i is NOT empty", idx);
+        exit(EXIT_FAILURE);
     }
     */
     mk_api->iov_set_entry(iov, data.data, data.len, MK_IOV_NOT_FREE_BUF, idx);

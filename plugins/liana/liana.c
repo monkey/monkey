@@ -59,7 +59,8 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
                        &socket_size);
 
     if (fcntl(server_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
-        mk_api->error(MK_ERROR_FATAL, "Can't set to non-blocking the socket");
+        mk_err("Can't set to non-blocking the socket");
+        mk_err("Can't set to non-blocking the socket");
     }
 #else
     remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
@@ -114,12 +115,12 @@ int _mkp_network_io_connect(int socket_fd, char *host, int port)
     res = inet_pton(AF_INET, host, (void *) (&(remote->sin_addr.s_addr)));
 
     if (res < 0) {
-        mk_api->error(MK_WARN, "Can't set remote->sin_addr.s_addr");
+        mk_warn("Cannot set remote->sin_addr.s_addr");
         mk_api->mem_free(remote);
         return -1;
     }
     else if (res == 0) {
-        mk_api->error(MK_WARN, "Invalid IP address");
+        mk_warn("Invalid IP address");
         mk_api->mem_free(remote);
         return -1;
     }
@@ -128,7 +129,7 @@ int _mkp_network_io_connect(int socket_fd, char *host, int port)
     if (connect(socket_fd,
                 (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
         close(socket_fd);
-        mk_api->error(MK_WARN, "connect");
+        mk_err("connect");
         return -1;
     }
 
@@ -145,7 +146,7 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
     bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
     if (bytes_written == -1) {
-        perror( "error from sendfile" );
+        mk_warn("error from sendfile()");
         return -1;
     }
 
@@ -168,14 +169,14 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     ret = bind(socket_fd, addr, addrlen);
 
     if( ret == -1 ) {
-        mk_api->error(MK_WARN, "Error binding socket");
+        mk_warn("Error binding socket");
         return ret;
     }
 
     ret = listen(socket_fd, backlog);
 
     if(ret == -1 ) {
-        perror("Error setting up the listener");
+        mk_warn("Error setting up the listener");
         return -1;
     }
 
@@ -190,7 +191,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     socket_fd = _mkp_network_io_create_socket(PF_INET, SOCK_STREAM, 0);
     if( socket_fd == -1) {
-        mk_api->error(MK_WARN, "Error creating server socket");
+        mk_warn("Error creating server socket");
         return -1;
     }
     mk_api->socket_set_tcp_nodelay(socket_fd);
@@ -206,7 +207,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
                                sizeof(struct sockaddr), mk_api->sys_get_somaxconn());
 
     if(ret == -1) {
-        mk_api->error(MK_ERROR, "Port %i cannot be used\n", port);
+        mk_err("Port %i cannot be used\n", port);
         return -1;
     }
 

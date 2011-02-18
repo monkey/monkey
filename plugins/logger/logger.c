@@ -155,7 +155,7 @@ void *mk_logger_worker_init(void *args)
             target = mk_logger_match_by_fd(events[i].data.fd);
 
             if (!target) {
-                mk_api->error(MK_WARN, "Could not match host/epoll_fd");
+                mk_warn("Could not match host/epoll_fd");
                 continue;
             }
 
@@ -172,7 +172,7 @@ void *mk_logger_worker_init(void *args)
                 flog = open(target, O_WRONLY | O_CREAT, 0644);
 
                 if (flog == -1) {
-                    mk_api->error(MK_WARN, "Could not open logfile '%s'", target);
+                    mk_warn("Could not open logfile '%s'", target);
                     continue;
                 }
 
@@ -180,7 +180,7 @@ void *mk_logger_worker_init(void *args)
                 slen = splice(events[i].data.fd, NULL, flog,
                               NULL, bytes, SPLICE_F_MOVE);
                 if (slen == -1) {
-                    mk_api->error(MK_WARN, "splice failed with %i", slen);
+                    mk_warn("splice failed with %i", slen);
                 }
 
                 PLUGIN_TRACE("written %i bytes", bytes);
@@ -208,7 +208,8 @@ int mk_logger_read_config(char *path)
                                                          "FlushTimeout",
                                                          MK_CONFIG_VAL_NUM);
         if (timeout <= 0) {
-            mk_api->error(MK_ERROR, "FlushTimeout does not have a proper value");
+            mk_err("FlushTimeout does not have a proper value");
+            exit(EXIT_FAILURE);
         }
         mk_logger_timeout = timeout;
         PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
@@ -263,8 +264,7 @@ int _mkp_init(void **api, char *confdir)
     if (mk_logger_master_path) {
         fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
         if (fd == -1) {
-            mk_api->error(MK_WARN, 
-                          "Could not open/create master logfile %s", mk_logger_master_path);
+            mk_warn("Could not open/create master logfile %s", mk_logger_master_path);
             mk_logger_master_path = NULL;
         }
         else {
@@ -316,7 +316,8 @@ void _mkp_core_prctx()
                 /* Set access pipe */
                 if (access_entry) {
                     if (pipe(new->fd_access) < 0) {
-                        mk_api->error(MK_ERROR, "Could not create pipe");
+                        mk_err("Could not create pipe");
+                        exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
                     new->file_access = (char *) access_entry;
@@ -324,7 +325,8 @@ void _mkp_core_prctx()
                 /* Set error pipe */
                 if (error_entry) {
                     if (pipe(new->fd_error) < 0) {
-                        mk_api->error(MK_ERROR, "Could not create pipe");
+                        mk_err("Could not create pipe");
+                        exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
                     new->file_error = (char *) error_entry;

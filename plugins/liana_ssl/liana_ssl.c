@@ -581,18 +581,21 @@ int _mkp_core_prctx(struct server_config *config)
     config->safe_event_write = MK_TRUE;
 
     if (matrixSslOpen() < 0) {
-        mk_api->error(MK_ERROR, "Can't start matrixSsl");
+        mk_err("Can't start matrixSsl");
+        exit(EXIT_FAILURE);
     }
 
     PLUGIN_TRACE("MatrixSsl Started");
 
     if (matrixSslNewKeys(&keys) < 0) {
-        mk_api->error (MK_ERROR, "MatrixSSL couldn't init the keys");
+        mk_err("MatrixSSL couldn't init the keys");
+        exit(EXIT_FAILURE);
     }
 
     ssl_file_info = mk_api->file_get_info(cert_file);
     if(ssl_file_info == NULL) {
-        mk_api->error(MK_ERROR, "Cannot read certificate file '%s'", cert_file);
+        mk_err("Cannot read certificate file '%s'", cert_file);
+        exit(EXIT_FAILURE);
     }
 
     ssl_file_info = mk_api->file_get_info(key_file);
