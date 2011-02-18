@@ -315,7 +315,7 @@ void mk_plugin_init()
     /* API plugins funcions */
 
     /* Error helper */
-    api->error = (void *) mk_print;
+    api->_error = (void *) mk_print;
 
     /* HTTP callbacks */
     api->http_request_end = (void *) mk_plugin_http_request_end;

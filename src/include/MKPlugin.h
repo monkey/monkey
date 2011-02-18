@@ -56,19 +56,19 @@ mk_plugin_key_t _mkp_data;
  */
 
 #undef  mk_info
-#define mk_inf(...) mk_api->error(MK_INF, __VA_ARGS__)
+#define mk_inf(...) mk_api->_error(MK_INF, __VA_ARGS__)
 
 #undef  mk_err
-#define mk_err(...) mk_api->error(MK_ERR, __VA_ARGS__)
+#define mk_err(...) mk_api->_error(MK_ERR, __VA_ARGS__)
 
 #undef  mk_warn
-#define mk_warn(...) mk_api->error(MK_WARN, __VA_ARGS__)
+#define mk_warn(...) mk_api->_error(MK_WARN, __VA_ARGS__)
 
 #undef  mk_bug
 #define mk_bug(condition) do {                  \
         if (unlikely((condition)!=0)) {         \
-            mk_api->error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
-                          _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
+            mk_api->_error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
+                           _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
             abort();                                                    \
         }                                                               \
     } while(0)
