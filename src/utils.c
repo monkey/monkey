@@ -443,7 +443,7 @@ void mk_print(int type, const char *format, ...)
     va_start(args, format);
 
     switch (type) {
-    case MK_INF:
+    case MK_INFO:
         header_title = "Info";
         header_color = ANSI_GREEN;
         break;

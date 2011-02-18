@@ -444,17 +444,17 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     status = mk_request_header_process(sr);
     if (status < 0) {
-        mk_header_set_http_status(sr, M_CLIENT_BAD_REQUEST);
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_header_set_http_status(sr, MK_CLIENT_BAD_REQUEST);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_ABORT;
     }
 
     switch (sr->method) {
     case METHOD_NOT_ALLOWED:
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
         return EXIT_NORMAL;
     case METHOD_NOT_FOUND:
-        mk_request_error(M_SERVER_NOT_IMPLEMENTED, cs, sr);
+        mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
         return EXIT_NORMAL;
     }
 
@@ -462,29 +462,29 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* Valid request URI? */
     if (sr->uri_processed == NULL) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
     if (sr->uri_processed[0] != '/') {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
 
     /* HTTP/1.1 needs Host header */
     if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
 
     /* Method not allowed ? */
     if (sr->method == METHOD_NOT_ALLOWED) {
-        mk_request_error(M_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
         return EXIT_NORMAL;
     }
 
     /* Validating protocol version */
     if (sr->protocol == HTTP_PROTOCOL_UNKNOWN) {
-        mk_request_error(M_SERVER_HTTP_VERSION_UNSUP, cs, sr);
+        mk_request_error(MK_SERVER_HTTP_VERSION_UNSUP, cs, sr);
         return EXIT_ABORT;
     }
 
@@ -565,7 +565,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     /* Check amount of data reported */
     ret = ioctl(socket, FIONREAD, &pending);
     if (ret == -1) {
-        mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
+        mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
         return -1;
     }
 
@@ -581,7 +581,7 @@ int mk_handler_read(int socket, struct client_session *cs)
         }
 
         if (new_size > config->max_request_size) {
-            mk_request_premature_close(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
+            mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
             return -1;
         }
 
@@ -591,7 +591,7 @@ int mk_handler_read(int socket, struct client_session *cs)
             cs->body_size = new_size;
         }
         else {
-            mk_request_premature_close(M_SERVER_INTERNAL_ERROR, cs);
+            mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
             return -1;
         }
     }
@@ -725,19 +725,19 @@ void mk_request_error(int http_status, struct client_session *cs,
     mk_pointer_reset(&message);
 
     switch (http_status) {
-    case M_CLIENT_BAD_REQUEST:
+    case MK_CLIENT_BAD_REQUEST:
         page = mk_request_set_default_page("Bad Request",
                                            sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
-    case M_CLIENT_FORBIDDEN:
+    case MK_CLIENT_FORBIDDEN:
         page = mk_request_set_default_page("Forbidden",
                                            sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
-    case M_CLIENT_NOT_FOUND:
+    case MK_CLIENT_NOT_FOUND:
         mk_string_build(&message.data, &message.len,
                         "The requested URL was not found on this server.");
         page = mk_request_set_default_page("Not Found",
@@ -746,7 +746,7 @@ void mk_request_error(int http_status, struct client_session *cs,
         mk_pointer_free(&message);
         break;
 
-    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+    case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
         mk_string_build(&message.data, &message.len,
                         "The request entity is too large.");
         page = mk_request_set_default_page("Entity too large",
@@ -755,29 +755,29 @@ void mk_request_error(int http_status, struct client_session *cs,
         mk_pointer_free(&message);
         break;
 
-    case M_CLIENT_METHOD_NOT_ALLOWED:
+    case MK_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_request_set_default_page("Method Not Allowed",
                                            sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
-    case M_CLIENT_REQUEST_TIMEOUT:
-    case M_CLIENT_LENGTH_REQUIRED:
+    case MK_CLIENT_REQUEST_TIMEOUT:
+    case MK_CLIENT_LENGTH_REQUIRED:
         break;
 
-    case M_SERVER_NOT_IMPLEMENTED:
+    case MK_SERVER_NOT_IMPLEMENTED:
         page = mk_request_set_default_page("Method Not Implemented",
                                            sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
-    case M_SERVER_INTERNAL_ERROR:
+    case MK_SERVER_INTERNAL_ERROR:
         page = mk_request_set_default_page("Internal Server Error",
                                            sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
-    case M_SERVER_HTTP_VERSION_UNSUP:
+    case MK_SERVER_HTTP_VERSION_UNSUP:
         mk_pointer_reset(&message);
         page = mk_request_set_default_page("HTTP Version Not Supported",
                                            message,

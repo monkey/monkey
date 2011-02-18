@@ -194,24 +194,25 @@ struct plugin_api
     /* memory functions */
     void *(*mem_alloc) (int);
     void *(*mem_alloc_z) (int);
-    void (*mem_free) (void *);
-    void (*pointer_set) (mk_pointer *, char *);
-    void (*pointer_print) (mk_pointer);
+    void  (*mem_free) (void *);
+    void  (*pointer_set) (mk_pointer *, char *);
+    void  (*pointer_print) (mk_pointer);
 
     /* string functions */
+    int   (*str_itop) (int, mk_pointer *);
+    int   (*str_search) (const char *, const char *, int);
+    int   (*str_search_n) (const char *, const char *, int, int);
     char *(*str_build) (char **, unsigned long *, const char *, ...);
     char *(*str_dup) (const char *);
-    int (*str_search) (const char *, const char *, int);
-    int (*str_search_n) (const char *, const char *, int, int);
     char *(*str_copy_substr) (const char *, int, int);
-    int (*str_itop) (int, mk_pointer *);
     struct mk_string_line *(*str_split_line) (const char *);
 
     /* file functions */
     char *(*file_to_buffer) (char *);
     struct file_info *(*file_get_info) (char *);
-    int (*header_send) (int,
-                          struct client_session *, struct session_request *);
+
+    /* header */
+    int  (*header_send) (int, struct client_session *, struct session_request *);
     void (*header_set_http_status) (struct session_request *, int);
 
     /* iov functions */
@@ -226,11 +227,11 @@ struct plugin_api
     void *(*plugin_load_symbol) (void *, char *);
 
     /* epoll functions */
-    int (*epoll_create) (int);
     void *(*epoll_init) (int, mk_epoll_handlers *, int);
-    int (*epoll_add) (int, int, int, int);
-    int (*epoll_del) (int, int);
-    int (*epoll_change_mode) (int, int, int);
+    int   (*epoll_create) (int);
+    int   (*epoll_add) (int, int, int, int);
+    int   (*epoll_del) (int, int);
+    int   (*epoll_change_mode) (int, int, int);
 
     /* socket functions */
     int (*socket_cork_flag) (int, int);

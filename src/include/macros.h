@@ -33,12 +33,12 @@
 #define INTSIZE sizeof(int)
 
 /* Print macros */
-#define MK_INF      0x1000
+#define MK_INFO     0x1000
 #define MK_ERR      0X1001
 #define MK_WARN     0x1002
 #define MK_BUG      0x1003
 
-#define mk_info(...)  mk_print(MK_INF, __VA_ARGS__)
+#define mk_info(...)  mk_print(MK_INFO, __VA_ARGS__)
 #define mk_err(...)   mk_print(MK_ERR, __VA_ARGS__)
 #define mk_warn(...)  mk_print(MK_WARN, __VA_ARGS__)
 

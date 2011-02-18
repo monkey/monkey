@@ -94,25 +94,25 @@ int mk_method_post(struct client_session *cs, struct session_request *sr)
 
     /* Length Required */
     if (content_length_post == -1) {
-        mk_request_error(M_CLIENT_LENGTH_REQUIRED, cs, sr);
+        mk_request_error(MK_CLIENT_LENGTH_REQUIRED, cs, sr);
         return -1;
     }
 
     /* Bad request */
     if (content_length_post <= 0) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return -1;
     }
 
     /* Content length too large */
     if (content_length_post >= cs->body_size) {
-        mk_request_error(M_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
+        mk_request_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
         return -1;
     }
 
     tmp = mk_request_header_find(sr->headers_toc, sr->body.data, mk_rh_content_type);
     if (!tmp.data) {
-        mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return -1;
     }
     sr->content_type = tmp;

@@ -73,7 +73,7 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
 
     if ((s_user = getpwnam(user)) == NULL) {
         mk_mem_free(user);
-        mk_request_error(M_CLIENT_NOT_FOUND, cs, sr);
+        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return -1;
     }
     mk_mem_free(user);

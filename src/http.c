@@ -170,7 +170,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                            HTTP_DIRECTORY_BACKWARD,
                            MK_STR_SENSITIVE,
                            uri_len) >= 0) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
 
@@ -184,7 +184,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
@@ -194,7 +194,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             return EXIT_NORMAL;
         }
 
-        mk_request_error(M_CLIENT_NOT_FOUND, cs, sr);
+        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return -1;
     }
 
@@ -224,7 +224,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Check symbolic link file */
     if (sr->file_info->is_link == MK_FILE_TRUE) {
         if (config->symlink == MK_FALSE) {
-            mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
         }
         else {
@@ -243,7 +243,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             mk_request_error(sr->headers->status, cs, sr);
         }
         else {
-            mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         return EXIT_ERROR;
     }
@@ -256,7 +256,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* read permissions and check file */
     if (sr->file_info->read_access == MK_FILE_FALSE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
 
@@ -267,13 +267,13 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     if (sr->file_info->is_directory == MK_FILE_TRUE) {
-        mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
 
     /* get file size */
     if (sr->file_info->size < 0) {
-        mk_request_error(M_CLIENT_NOT_FOUND, cs, sr);
+        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return EXIT_ERROR;
     }
 
@@ -292,12 +292,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         date_file_server = sr->file_info->last_modification;
 
         if ((date_file_server <= date_client) && (date_client > 0)) {
-            mk_header_set_http_status(sr, M_NOT_MODIFIED);
+            mk_header_set_http_status(sr, MK_NOT_MODIFIED);
             mk_header_send(cs->socket, cs, sr);
             return EXIT_NORMAL;
         }
     }
-    mk_header_set_http_status(sr, M_HTTP_OK);
+    mk_header_set_http_status(sr, MK_HTTP_OK);
     sr->headers->cgi = SH_NOCGI;
     sr->headers->location = NULL;
 
@@ -311,11 +311,11 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         /* Range */
         if (sr->range.data != NULL && config->resume == MK_TRUE) {
             if (mk_http_range_parse(sr) < 0) {
-                mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+                mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
                 return EXIT_ERROR;
             }
             if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0) {
-                mk_header_set_http_status(sr, M_HTTP_PARTIAL);
+                mk_header_set_http_status(sr, MK_HTTP_PARTIAL);
             }
         }
     }
@@ -329,7 +329,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         sr->fd_file = open(sr->real_path.data, config->open_flags);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
-            mk_request_error(M_CLIENT_FORBIDDEN, cs, sr);
+            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
         }
     }
@@ -345,7 +345,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info->size) != 0) {
-            mk_request_error(M_CLIENT_BAD_REQUEST, cs, sr);
+            mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
             return EXIT_ERROR;
         }
 
@@ -406,7 +406,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
 
     mk_mem_free(host);
 
-    mk_header_set_http_status(sr, M_REDIR_MOVED);
+    mk_header_set_http_status(sr, MK_REDIR_MOVED);
     sr->headers->content_length = 0;
     
     mk_pointer_reset(&sr->headers->content_type);

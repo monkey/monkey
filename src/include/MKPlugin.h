@@ -56,7 +56,7 @@ mk_plugin_key_t _mkp_data;
  */
 
 #undef  mk_info
-#define mk_inf(...) mk_api->_error(MK_INF, __VA_ARGS__)
+#define mk_info(...) mk_api->_error(MK_INFO, __VA_ARGS__)
 
 #undef  mk_err
 #define mk_err(...) mk_api->_error(MK_ERR, __VA_ARGS__)

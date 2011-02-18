@@ -70,77 +70,77 @@ int mk_header_send(int fd, struct client_session *cs,
 
     /* Status Code */
     switch (sh->status) {
-    case M_HTTP_OK:
+    case MK_HTTP_OK:
         mk_header_iov_add_entry(iov, mk_hr_http_ok,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_HTTP_PARTIAL:
+    case MK_HTTP_PARTIAL:
         mk_header_iov_add_entry(iov, mk_hr_http_partial,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_REDIR_MOVED:
+    case MK_REDIR_MOVED:
         mk_header_iov_add_entry(iov, mk_hr_redir_moved,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_REDIR_MOVED_T:
+    case MK_REDIR_MOVED_T:
         mk_header_iov_add_entry(iov, mk_hr_redir_moved_t,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_NOT_MODIFIED:
+    case MK_NOT_MODIFIED:
         mk_header_iov_add_entry(iov, mk_hr_not_modified,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_BAD_REQUEST:
+    case MK_CLIENT_BAD_REQUEST:
         mk_header_iov_add_entry(iov, mk_hr_client_bad_request,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_FORBIDDEN:
+    case MK_CLIENT_FORBIDDEN:
         mk_header_iov_add_entry(iov, mk_hr_client_forbidden,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_NOT_FOUND:
+    case MK_CLIENT_NOT_FOUND:
         mk_header_iov_add_entry(iov, mk_hr_client_not_found,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_METHOD_NOT_ALLOWED:
+    case MK_CLIENT_METHOD_NOT_ALLOWED:
         mk_header_iov_add_entry(iov, mk_hr_client_method_not_allowed,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_REQUEST_TIMEOUT:
+    case MK_CLIENT_REQUEST_TIMEOUT:
         mk_header_iov_add_entry(iov, mk_hr_client_session_timeout,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_LENGTH_REQUIRED:
+    case MK_CLIENT_LENGTH_REQUIRED:
         mk_header_iov_add_entry(iov, mk_hr_client_length_required,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+    case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
         mk_header_iov_add_entry(iov, mk_hr_client_session_entity_too_large,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_SERVER_NOT_IMPLEMENTED:
+    case MK_SERVER_NOT_IMPLEMENTED:
         mk_header_iov_add_entry(iov, mk_hr_server_not_implemented,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_SERVER_INTERNAL_ERROR:
+    case MK_SERVER_INTERNAL_ERROR:
         mk_header_iov_add_entry(iov, mk_hr_server_internal_error,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
         break;
 
-    case M_SERVER_HTTP_VERSION_UNSUP:
+    case MK_SERVER_HTTP_VERSION_UNSUP:
         mk_header_iov_add_entry(iov,
                                 mk_hr_server_http_version_unsup,
                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
@@ -235,7 +235,7 @@ int mk_header_send(int fd, struct client_session *cs,
     /* Transfer Encoding: the transfer encoding header is just sent when
      * the response has some content defined by the HTTP status response 
      */
-    if ((sh->status < M_REDIR_MULTIPLE) || (sh->status > M_REDIR_USE_PROXY)) {
+    if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
         switch (sh->transfer_encoding) {
         case MK_HEADER_TE_TYPE_CHUNKED:
             mk_iov_add_entry(iov,
