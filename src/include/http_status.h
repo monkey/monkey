@@ -17,8 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* http status - jci@tux.cl */
-
+/* HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl> */
 
 /* Informational status */
 
