@@ -119,7 +119,7 @@ mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
-struct header_values *mk_header_create(void);
+struct response_headers *mk_header_create(void);
 void mk_header_set_http_status(struct session_request *sr, int status);
 void mk_header_set_content_length(struct session_request *sr, long len);
 

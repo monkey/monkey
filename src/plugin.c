@@ -343,6 +343,7 @@ void mk_plugin_init()
 
     /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
+    api->header_add_row = mk_plugin_header_add_row;
     api->header_set_http_status = (void *) mk_header_set_http_status;
 
     /* IOV callbacks */
@@ -1062,4 +1063,20 @@ int mk_plugin_sched_remove_client(int socket)
 
     node = mk_sched_get_thread_conf();
     return mk_sched_remove_client(node, socket);
+}
+
+int mk_plugin_header_add_row(struct session_request *sr, char *row, int len)
+{
+    mk_bug(!sr);
+    mk_bug(!sr->headers);
+
+    if (!sr->headers->_extra_rows) {
+        /* We allocate space for 8 extra headers + 8 entries for CRLF */
+        sr->headers->_extra_rows = mk_iov_create(16, 0);
+        mk_bug(!sr->headers->_extra_rows);
+    }
+
+    mk_iov_add_entry(sr->headers->_extra_rows, row, len, 
+                     mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+    return 0;
 }

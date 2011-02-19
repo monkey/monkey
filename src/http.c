@@ -297,7 +297,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         }
     }
     mk_header_set_http_status(sr, MK_HTTP_OK);
-    sr->headers->cgi = SH_NOCGI;
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
@@ -470,7 +469,7 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
 
 int mk_http_range_set(struct session_request *sr, long file_size)
 {
-    struct header_values *sh = sr->headers;
+    struct response_headers *sh = sr->headers;
 
     sr->bytes_to_send = file_size;
     sr->bytes_offset = 0;
@@ -509,7 +508,7 @@ int mk_http_range_parse(struct session_request *sr)
 {
     int eq_pos, sep_pos, len;
     char *buffer = 0;
-    struct header_values *sh;
+    struct response_headers *sh;
 
     if (!sr->range.data)
         return -1;

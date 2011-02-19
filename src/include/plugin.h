@@ -213,8 +213,9 @@ struct plugin_api
 
     /* header */
     int  (*header_send) (int, struct client_session *, struct session_request *);
+    int  (*header_add_row) (struct session_request *, char *row, int len);
     void (*header_set_http_status) (struct session_request *, int);
-
+    
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
     void (*iov_free) (struct mk_iov *);
@@ -355,5 +356,6 @@ int mk_plugin_time_now_unix();
 mk_pointer *mk_plugin_time_now_human();
 
 int mk_plugin_sched_remove_client(int socket);
+int mk_plugin_header_add_row(struct session_request *sr, char *row, int len);
 
 #endif

@@ -205,7 +205,7 @@ struct session_request
 
     struct file_info *file_info;
     struct host *host_conf;
-    struct header_values *headers;      /* headers response */
+    struct response_headers *headers;      /* headers response */
 
     long loop;
     long bytes_to_send;
@@ -217,7 +217,7 @@ struct session_request
     struct mk_list _head;
 };
 
-struct header_values
+struct response_headers
 {
     int status;
 
@@ -237,6 +237,12 @@ struct header_values
     mk_pointer content_type;
     mk_pointer content_encoding;
     char *location;
+
+    /* 
+     * This field allow plugins to add their own response
+     * headers
+     */
+    struct mk_iov *_extra_rows;
 };
 
 mk_pointer mk_request_index(char *pathfile);
