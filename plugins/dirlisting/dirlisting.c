@@ -696,7 +696,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     file_list = mk_dirhtml_create_list(dir, sr->real_path.data, &list_len);
 
     /* Building headers */
-    mk_api->header_set_http_status(sr, M_HTTP_OK);
+    mk_api->header_set_http_status(sr, MK_HTTP_OK);
     sr->headers->cgi = SH_CGI;
     sr->headers->breakline = MK_HEADER_BREAKLINE;
     sr->headers->content_type = mk_dirhtml_default_mime;

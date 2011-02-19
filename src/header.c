@@ -38,6 +38,155 @@
 #include "str.h"
 #include "macros.h"
 
+static struct header_status_response status_response[] = {
+    /* Informational */
+    {MK_INFO_CONTINUE,
+     MK_RH_INFO_CONTINUE,
+     sizeof(MK_RH_INFO_CONTINUE) - 1
+    },
+    {MK_INFO_SWITCH_PROTOCOL,
+     MK_RH_INFO_SWITCH_PROTOCOL,
+     sizeof(MK_RH_INFO_SWITCH_PROTOCOL) - 1
+    },
+
+    /* Successful */
+    {MK_HTTP_OK,
+     MK_RH_HTTP_OK, sizeof(MK_RH_HTTP_OK) - 1},
+    {MK_HTTP_CREATED,
+     MK_RH_HTTP_CREATED, sizeof(MK_RH_HTTP_CREATED) - 1},
+    {MK_HTTP_ACCEPTED,
+     MK_RH_HTTP_ACCEPTED, sizeof(MK_RH_HTTP_ACCEPTED) - 1},
+    {MK_HTTP_NON_AUTH_INFO,
+     MK_RH_HTTP_NON_AUTH_INFO, sizeof(MK_RH_HTTP_NON_AUTH_INFO) - 1},
+    {MK_HTTP_NOCONTENT,
+     MK_RH_HTTP_NOCONTENT, sizeof(MK_RH_HTTP_NOCONTENT) - 1},
+    {MK_HTTP_RESET,
+     MK_RH_HTTP_RESET, sizeof(MK_RH_HTTP_RESET) - 1},
+    {MK_HTTP_PARTIAL,
+     MK_RH_HTTP_PARTIAL, sizeof(MK_RH_HTTP_PARTIAL) - 1},
+
+    /* Redirections */
+    {MK_REDIR_MULTIPLE,
+     MK_RH_REDIR_MULTIPLE,
+     sizeof(MK_RH_REDIR_MULTIPLE) - 1
+    },
+    {MK_REDIR_MOVED,
+     MK_RH_REDIR_MOVED,
+     sizeof(MK_RH_REDIR_MOVED) - 1
+    },
+    {MK_REDIR_MOVED_T,
+     MK_RH_REDIR_MOVED_T,
+     sizeof(MK_RH_REDIR_MOVED_T) - 1
+    },
+    {MK_REDIR_SEE_OTHER,
+     MK_RH_REDIR_SEE_OTHER,
+     sizeof(MK_RH_REDIR_SEE_OTHER) - 1
+    },
+    {MK_NOT_MODIFIED,
+     MK_RH_NOT_MODIFIED,
+     sizeof(MK_RH_NOT_MODIFIED) - 1
+    },
+    {MK_REDIR_USE_PROXY,
+     MK_RH_REDIR_USE_PROXY,
+     sizeof(MK_RH_REDIR_USE_PROXY) - 1
+    },
+
+    /* Client side errors */
+    {MK_CLIENT_BAD_REQUEST, 
+     MK_RH_CLIENT_BAD_REQUEST, 
+     sizeof(MK_RH_CLIENT_BAD_REQUEST) - 1
+    },
+    {MK_CLIENT_UNAUTH,
+     MK_RH_CLIENT_UNAUTH,
+     sizeof(MK_RH_CLIENT_UNAUTH) - 1
+    },
+    {MK_CLIENT_PAYMENT_REQ,
+     MK_RH_CLIENT_PAYMENT_REQ,
+     sizeof(MK_RH_CLIENT_PAYMENT_REQ) - 1
+    },
+    {MK_CLIENT_FORBIDDEN, 
+     MK_RH_CLIENT_FORBIDDEN,
+     sizeof(MK_RH_CLIENT_FORBIDDEN) -1
+    },
+    {MK_CLIENT_NOT_FOUND, 
+     MK_RH_CLIENT_NOT_FOUND,
+     sizeof(MK_RH_CLIENT_NOT_FOUND) -1
+    },
+    {MK_CLIENT_METHOD_NOT_ALLOWED,
+     MK_RH_CLIENT_METHOD_NOT_ALLOWED,
+     sizeof(MK_RH_CLIENT_METHOD_NOT_ALLOWED) - 1
+    },
+    {MK_CLIENT_NOT_ACCEPTABLE,
+     MK_RH_CLIENT_NOT_ACCEPTABLE,
+     sizeof(MK_RH_CLIENT_NOT_ACCEPTABLE) - 1
+    },
+    {MK_CLIENT_PROXY_AUTH,
+     MK_RH_CLIENT_PROXY_AUTH,
+     sizeof(MK_RH_CLIENT_PROXY_AUTH) - 1
+    },
+    {MK_CLIENT_REQUEST_TIMEOUT,
+     MK_RH_CLIENT_REQUEST_TIMEOUT,
+     sizeof(MK_RH_CLIENT_REQUEST_TIMEOUT) - 1
+    },
+    {MK_CLIENT_CONFLICT,
+     MK_RH_CLIENT_CONFLICT,
+     sizeof(MK_RH_CLIENT_CONFLICT) - 1
+    },
+    {MK_CLIENT_GONE,
+     MK_RH_CLIENT_GONE,
+     sizeof(MK_RH_CLIENT_GONE) - 1
+    },
+    {MK_CLIENT_LENGTH_REQUIRED, 
+     MK_RH_CLIENT_LENGTH_REQUIRED,
+     sizeof(MK_RH_CLIENT_LENGTH_REQUIRED) - 1
+    },
+    {MK_CLIENT_PRECOND_FAILED,
+     MK_RH_CLIENT_PRECOND_FAILED,
+     sizeof(MK_RH_CLIENT_PRECOND_FAILED) - 1
+    },
+    {MK_CLIENT_REQUEST_ENTITY_TOO_LARGE,
+     MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE,
+     sizeof(MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE) - 1
+    },
+    {MK_CLIENT_REQUEST_URI_TOO_LONG,
+     MK_RH_CLIENT_REQUEST_URI_TOO_LONG,
+     sizeof(MK_RH_CLIENT_REQUEST_URI_TOO_LONG) - 1
+    },
+    {MK_CLIENT_UNSUPPORTED_MEDIA,
+     MK_RH_CLIENT_UNSUPPORTED_MEDIA,
+     sizeof(MK_RH_CLIENT_UNSUPPORTED_MEDIA) - 1
+    },
+
+    /* Server side errors */
+    {MK_SERVER_INTERNAL_ERROR, 
+     MK_RH_SERVER_INTERNAL_ERROR,
+     sizeof(MK_RH_SERVER_INTERNAL_ERROR) - 1
+    },
+    {MK_SERVER_NOT_IMPLEMENTED,
+     MK_RH_SERVER_NOT_IMPLEMENTED,
+     sizeof(MK_RH_SERVER_NOT_IMPLEMENTED) - 1
+    },
+    {MK_SERVER_BAD_GATEWAY,
+     MK_RH_SERVER_BAD_GATEWAY,
+     sizeof(MK_RH_SERVER_BAD_GATEWAY) - 1
+    },
+    {MK_SERVER_SERVICE_UNAV,
+     MK_RH_SERVER_SERVICE_UNAV,
+     sizeof(MK_RH_SERVER_SERVICE_UNAV) - 1
+    },
+    {MK_SERVER_GATEWAY_TIMEOUT,
+     MK_RH_SERVER_GATEWAY_TIMEOUT,
+     sizeof(MK_RH_SERVER_GATEWAY_TIMEOUT) - 1
+    },
+    {MK_SERVER_HTTP_VERSION_UNSUP,
+     MK_RH_SERVER_HTTP_VERSION_UNSUP,
+     sizeof(MK_RH_SERVER_HTTP_VERSION_UNSUP)
+    }
+};
+
+static int status_response_len = 
+    (sizeof(status_response)/(sizeof(status_response[0])));
+
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
 {
@@ -58,9 +207,10 @@ void mk_header_iov_free(struct mk_iov *iov)
 int mk_header_send(int fd, struct client_session *cs,
                    struct session_request *sr)
 {
-    int fd_status = 0;
+    int i, fd_status = 0;
     unsigned long len = 0;
     char *buffer = 0;
+    mk_pointer response;
     struct header_values *sh;
     struct mk_iov *iov;
 
@@ -69,85 +219,17 @@ int mk_header_send(int fd, struct client_session *cs,
     iov = mk_header_iov_get();
 
     /* Status Code */
-    switch (sh->status) {
-    case MK_HTTP_OK:
-        mk_header_iov_add_entry(iov, mk_hr_http_ok,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
+    for (i=0; i < status_response_len; i++) {
+        if (status_response[i].status == sh->status) {
+            response.data = status_response[i].response;
+            response.len  = status_response[i].length;
+            mk_header_iov_add_entry(iov, response, 
+                                    mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            break;
+        }
+    }
 
-    case MK_HTTP_PARTIAL:
-        mk_header_iov_add_entry(iov, mk_hr_http_partial,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_REDIR_MOVED:
-        mk_header_iov_add_entry(iov, mk_hr_redir_moved,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_REDIR_MOVED_T:
-        mk_header_iov_add_entry(iov, mk_hr_redir_moved_t,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_NOT_MODIFIED:
-        mk_header_iov_add_entry(iov, mk_hr_not_modified,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_BAD_REQUEST:
-        mk_header_iov_add_entry(iov, mk_hr_client_bad_request,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_FORBIDDEN:
-        mk_header_iov_add_entry(iov, mk_hr_client_forbidden,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_NOT_FOUND:
-        mk_header_iov_add_entry(iov, mk_hr_client_not_found,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_METHOD_NOT_ALLOWED:
-        mk_header_iov_add_entry(iov, mk_hr_client_method_not_allowed,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_REQUEST_TIMEOUT:
-        mk_header_iov_add_entry(iov, mk_hr_client_session_timeout,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_LENGTH_REQUIRED:
-        mk_header_iov_add_entry(iov, mk_hr_client_length_required,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
-        mk_header_iov_add_entry(iov, mk_hr_client_session_entity_too_large,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_SERVER_NOT_IMPLEMENTED:
-        mk_header_iov_add_entry(iov, mk_hr_server_not_implemented,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_SERVER_INTERNAL_ERROR:
-        mk_header_iov_add_entry(iov, mk_hr_server_internal_error,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-
-    case MK_SERVER_HTTP_VERSION_UNSUP:
-        mk_header_iov_add_entry(iov,
-                                mk_hr_server_http_version_unsup,
-                                mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        break;
-    default:
-        return -1;
-    };
+    mk_info("matched: %i", i);
 
     if (fd_status < 0) {
         mk_header_iov_free(iov);

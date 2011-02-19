@@ -164,29 +164,6 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_rh_range, RH_RANGE);
     mk_pointer_set(&mk_rh_user_agent, RH_USER_AGENT);
 
-    /* Server response first header */
-    mk_pointer_set(&mk_hr_http_ok, MK_HR_HTTP_OK);
-    mk_pointer_set(&mk_hr_http_partial, MK_HR_HTTP_PARTIAL);
-    mk_pointer_set(&mk_hr_redir_moved, MK_HR_REDIR_MOVED);
-    mk_pointer_set(&mk_hr_redir_moved_t, MK_HR_REDIR_MOVED_T);
-    mk_pointer_set(&mk_hr_not_modified, MK_HR_NOT_MODIFIED);
-    mk_pointer_set(&mk_hr_client_bad_request, MK_HR_CLIENT_BAD_REQUEST);
-    mk_pointer_set(&mk_hr_client_forbidden, MK_HR_CLIENT_FORBIDDEN);
-    mk_pointer_set(&mk_hr_client_not_found, MK_HR_CLIENT_NOT_FOUND);
-    mk_pointer_set(&mk_hr_client_method_not_allowed,
-                   MK_HR_CLIENT_METHOD_NOT_ALLOWED);
-    mk_pointer_set(&mk_hr_client_session_timeout,
-                   MK_HR_CLIENT_REQUEST_TIMEOUT);
-    mk_pointer_set(&mk_hr_client_length_required,
-                   MK_HR_CLIENT_LENGTH_REQUIRED);
-    mk_pointer_set(&mk_hr_client_session_entity_too_large,
-                   MK_HR_CLIENT_REQUEST_ENTITY_TOO_LARGE);
-    mk_pointer_set(&mk_hr_server_internal_error, MK_HR_SERVER_INTERNAL_ERROR);
-    mk_pointer_set(&mk_hr_server_not_implemented,
-                   MK_HR_SERVER_NOT_IMPLEMENTED);
-    mk_pointer_set(&mk_hr_server_http_version_unsup,
-                   MK_HR_SERVER_HTTP_VERSION_UNSUP);
-
     /* Server response normal headers */
     mk_pointer_set(&mk_header_conn_ka, MK_HEADER_CONN_KA);
     mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);

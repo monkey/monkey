@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
@@ -18,6 +20,7 @@
  */
 
 #include "request.h"
+#include "http_status.h"
 
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
@@ -29,39 +32,59 @@
  * to save some process time when building the response header.
  */
 
-#define MK_HR_HTTP_OK "HTTP/1.1 200 OK" MK_CRLF
-#define MK_HR_HTTP_PARTIAL "HTTP/1.1 206 Partial Content" MK_CRLF
-#define MK_HR_REDIR_MOVED "HTTP/1.1 301 Moved Permanently" MK_CRLF
-#define MK_HR_REDIR_MOVED_T "HTTP/1.1 302 Found" MK_CRLF
-#define MK_HR_NOT_MODIFIED "HTTP/1.1 304 Not Modified" MK_CRLF
-#define MK_HR_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request" MK_CRLF
-#define MK_HR_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden" MK_CRLF
-#define MK_HR_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found" MK_CRLF
-#define MK_HR_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed" MK_CRLF
-#define MK_HR_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout" MK_CRLF
-#define MK_HR_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required" MK_CRLF
-#define MK_HR_CLIENT_REQUEST_ENTITY_TOO_LARGE \
-  "HTTP/1.1 413 Request Entity Too Large" MK_CRLF
-#define MK_HR_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error" MK_CRLF
-#define MK_HR_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented" MK_CRLF
-#define MK_HR_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported" MK_CRLF
+/* Informational */
+#define MK_RH_INFO_CONTINUE "HTTP/1.1 100 Continue\r\n"
+#define MK_RH_INFO_SWITCH_PROTOCOL "HTTP/1.1 101 Switching Protocols\r\n"
 
-/* mk pointer for header responses */
-mk_pointer mk_hr_http_ok;
-mk_pointer mk_hr_http_partial;
-mk_pointer mk_hr_redir_moved;
-mk_pointer mk_hr_redir_moved_t;
-mk_pointer mk_hr_not_modified;
-mk_pointer mk_hr_client_bad_request;
-mk_pointer mk_hr_client_forbidden;
-mk_pointer mk_hr_client_not_found;
-mk_pointer mk_hr_client_method_not_allowed;
-mk_pointer mk_hr_client_session_timeout;
-mk_pointer mk_hr_client_length_required;
-mk_pointer mk_hr_client_session_entity_too_large;
-mk_pointer mk_hr_server_internal_error;
-mk_pointer mk_hr_server_not_implemented;
-mk_pointer mk_hr_server_http_version_unsup;
+/* Successfull */
+#define MK_RH_HTTP_OK "HTTP/1.1 200 OK\r\n"
+#define MK_RH_HTTP_CREATED "HTTP/1.1 201 Created\r\n"
+#define MK_RH_HTTP_ACCEPTED "HTTP/1.1 202 Accepted\r\n"
+#define MK_RH_HTTP_NON_AUTH_INFO "HTTP/1.1 203 Non-Authoritative Information\r\n"
+#define MK_RH_HTTP_NOCONTENT "HTTP/1.1 204 No Content\r\n"
+#define MK_RH_HTTP_RESET "HTTP/1.1 205 Reset Content\r\n"
+#define MK_RH_HTTP_PARTIAL "HTTP/1.1 206 Partial Content\r\n"
+
+/* Redirections */
+#define MK_RH_REDIR_MULTIPLE "HTTP/1.1 300 Multiple Choices\r\n"
+#define MK_RH_REDIR_MOVED "HTTP/1.1 301 Moved Permanently\r\n"
+#define MK_RH_REDIR_MOVED_T "HTTP/1.1 302 Found\r\n"
+#define	MK_RH_REDIR_SEE_OTHER "HTTP/1.1 303 See Other\r\n"
+#define MK_RH_NOT_MODIFIED "HTTP/1.1 304 Not Modified\r\n"
+#define MK_RH_REDIR_USE_PROXY "HTTP/1.1 305 Use Proxy\r\n"
+
+/* Client side errors */
+#define MK_RH_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request\r\n"
+#define MK_RH_CLIENT_UNAUTH "HTTP/1.1 401 Unauthorized"
+#define MK_RH_CLIENT_PAYMENT_REQ "HTTP/1.1 402 Payment Required\r\n"
+#define MK_RH_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden\r\n"
+#define MK_RH_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found\r\n"
+#define MK_RH_CLIENT_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed\r\n"
+#define MK_RH_CLIENT_NOT_ACCEPTABLE "HTTP/1.1 406 Not Acceptable\r\n"
+#define MK_RH_CLIENT_PROXY_AUTH "HTTP/1.1 407 Proxy Authentication Required\r\n"
+#define MK_RH_CLIENT_REQUEST_TIMEOUT "HTTP/1.1 408 Request Timeout\r\n"
+#define MK_RH_CLIENT_CONFLICT "HTTP/1.1 409 Conflict\r\n"
+#define MK_RH_CLIENT_GONE "HTTP/1.1 410 Gone\r\n"
+#define MK_RH_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required\r\n"
+#define MK_RH_CLIENT_PRECOND_FAILED "HTTP/1.1 412 Precondition Failed\r\n"
+#define MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE \
+  "HTTP/1.1 413 Request Entity Too Large\r\n"
+#define MK_RH_CLIENT_REQUEST_URI_TOO_LONG "HTTP/1.1 414 Request-URI Too Long\r\n"
+#define MK_RH_CLIENT_UNSUPPORTED_MEDIA  "HTTP/1.1 415 Unsupported Media Type\r\n"
+
+/* Server side errors */
+#define MK_RH_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error\r\n"
+#define MK_RH_SERVER_NOT_IMPLEMENTED "HTTP/1.1 501 Not Implemented\r\n"
+#define MK_RH_SERVER_BAD_GATEWAY "HTTP/1.1 502 Bad Gateway\r\n"
+#define MK_RH_SERVER_SERVICE_UNAV "HTTP/1.1 503 Service Unavailable\r\n"
+#define MK_RH_SERVER_GATEWAY_TIMEOUT "HTTP/1.1 504 Gateway Timeout\r\n"
+#define MK_RH_SERVER_HTTP_VERSION_UNSUP "HTTP/1.1 505 HTTP Version Not Supported\r\n"
+
+struct header_status_response {
+    int   status;
+    char *response;
+    int   length;
+};
 
 /* Short header values */
 #define MK_HEADER_SHORT_DATE "Date: "

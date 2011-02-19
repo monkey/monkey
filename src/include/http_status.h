@@ -34,7 +34,6 @@
 #define MK_HTTP_PARTIAL				206
 
 /* Redirections */
-
 #define MK_REDIR_MULTIPLE			300
 #define MK_REDIR_MOVED				301
 #define MK_REDIR_MOVED_T			302
@@ -45,7 +44,7 @@
 /* Client Errors */
 #define MK_CLIENT_BAD_REQUEST			400
 #define MK_CLIENT_UNAUTH			401
-#define MK_CLIENT_PAYMENT_NEEDED		402     /* Wtf?! :-) */
+#define MK_CLIENT_PAYMENT_REQ   		402     /* Wtf?! :-) */
 #define MK_CLIENT_FORBIDDEN			403
 #define MK_CLIENT_NOT_FOUND			404
 #define MK_CLIENT_METHOD_NOT_ALLOWED		405
@@ -57,7 +56,7 @@
 #define MK_CLIENT_LENGTH_REQUIRED		411
 #define MK_CLIENT_PRECOND_FAILED		412
 #define MK_CLIENT_REQUEST_ENTITY_TOO_LARGE	413
-#define MK_CLIENT_REQUEST_URI_TOO_LARGE		414
+#define MK_CLIENT_REQUEST_URI_TOO_LONG		414
 #define MK_CLIENT_UNSUPPORTED_MEDIA		415
 
 /* Server Errors */

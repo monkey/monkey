@@ -454,13 +454,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             return 0;
         }
         switch (http_status) {
-        case M_CLIENT_BAD_REQUEST:
+        case MK_CLIENT_BAD_REQUEST:
             mk_api->iov_add_entry(iov,
                                   error_msg_400.data,
                                   error_msg_400.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_FORBIDDEN:
+        case MK_CLIENT_FORBIDDEN:
             mk_api->iov_add_entry(iov,
                                   error_msg_403.data,
                                   error_msg_403.len,
@@ -470,7 +470,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                                   sr->uri.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_NOT_FOUND:
+        case MK_CLIENT_NOT_FOUND:
             mk_api->iov_add_entry(iov,
                                   error_msg_404.data,
                                   error_msg_404.len,
@@ -480,7 +480,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                                   sr->uri.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_METHOD_NOT_ALLOWED:
+        case MK_CLIENT_METHOD_NOT_ALLOWED:
             mk_api->iov_add_entry(iov,
                                   error_msg_405.data,
                                   error_msg_405.len,
@@ -490,25 +490,25 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                                   sr->method_p.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_REQUEST_TIMEOUT:
+        case MK_CLIENT_REQUEST_TIMEOUT:
             mk_api->iov_add_entry(iov,
                                   error_msg_408.data,
                                   error_msg_408.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_LENGTH_REQUIRED:
+        case MK_CLIENT_LENGTH_REQUIRED:
             mk_api->iov_add_entry(iov,
                                   error_msg_411.data,
                                   error_msg_411.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_CLIENT_REQUEST_ENTITY_TOO_LARGE:
+        case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
             mk_api->iov_add_entry(iov,
                                   error_msg_413.data,
                                   error_msg_413.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_SERVER_NOT_IMPLEMENTED:
+        case MK_SERVER_NOT_IMPLEMENTED:
             mk_api->iov_add_entry(iov,
                                   error_msg_501.data,
                                   error_msg_501.len,
@@ -519,13 +519,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                                   sr->method_p.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_SERVER_INTERNAL_ERROR:
+        case MK_SERVER_INTERNAL_ERROR:
             mk_api->iov_add_entry(iov,
                                   error_msg_500.data,
                                   error_msg_500.len,
                                   mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
             break;
-        case M_SERVER_HTTP_VERSION_UNSUP:
+        case MK_SERVER_HTTP_VERSION_UNSUP:
             mk_api->iov_add_entry(iov,
                                   error_msg_505.data,
                                   error_msg_505.len,

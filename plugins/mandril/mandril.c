@@ -184,7 +184,7 @@ int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
     if (mk_security_check_url(sr->uri) < 0) {
         PLUGIN_TRACE("Close connection FD %i", cs->socket);
-        mk_api->header_set_http_status(sr, M_CLIENT_FORBIDDEN);
+        mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
