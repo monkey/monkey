@@ -424,8 +424,7 @@ struct header_values *mk_header_create()
 {
     struct header_values *headers;
 
-    headers =
-        (struct header_values *) mk_mem_malloc(sizeof(struct header_values));
+    headers = mk_mem_malloc(sizeof(struct header_values));
     headers->status = 0;
     headers->ranges[0] = -1;
     headers->ranges[1] = -1;

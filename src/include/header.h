@@ -55,7 +55,7 @@
 
 /* Client side errors */
 #define MK_RH_CLIENT_BAD_REQUEST "HTTP/1.1 400 Bad Request\r\n"
-#define MK_RH_CLIENT_UNAUTH "HTTP/1.1 401 Unauthorized"
+#define MK_RH_CLIENT_UNAUTH "HTTP/1.1 401 Unauthorized\r\n"
 #define MK_RH_CLIENT_PAYMENT_REQ "HTTP/1.1 402 Payment Required\r\n"
 #define MK_RH_CLIENT_FORBIDDEN "HTTP/1.1 403 Forbidden\r\n"
 #define MK_RH_CLIENT_NOT_FOUND "HTTP/1.1 404 Not Found\r\n"

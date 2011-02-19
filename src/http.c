@@ -175,13 +175,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     sr->file_info = mk_file_get_info(sr->real_path.data);
-
+    
     if (!sr->file_info) {
         /* if the resource requested doesn't exists, let's 
          * check if some plugin would like to handle it
          */
         MK_TRACE("No file, look for handler plugin");
-
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
@@ -235,7 +234,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Plugin Stage 30: look for handlers for this request */
-    ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, 0, NULL, cs, sr);
+    ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
     MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
 
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
