@@ -229,7 +229,8 @@ int mk_header_send(int fd, struct client_session *cs,
         }
     }
 
-    mk_info("matched: %i", i);
+    /* Invalid status set */
+    mk_bug(i == status_response_len);
 
     if (fd_status < 0) {
         mk_header_iov_free(iov);
@@ -417,6 +418,7 @@ char *mk_header_chunked_line(int len)
 
 void mk_header_set_http_status(struct session_request *sr, int status)
 {
+    mk_bug(!sr || !sr->headers);
     sr->headers->status = status;
 }
 
