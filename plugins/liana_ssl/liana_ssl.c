@@ -116,7 +116,7 @@ int liana_conf(char *confdir)
 {
     int ret = 0;
     unsigned long len;
-    char *conf_path;
+    char *conf_path = NULL;
     struct mk_config_section *section;
     struct mk_config *conf;
 
@@ -435,19 +435,23 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
 
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
+    int i;
+    int count = 0;
     ssize_t bytes_sent = -1;
     char *buffer_write = (char *) pthread_getspecific(_mkp_buffer_write);
-    unsigned long len = 0;
-    int i;
 
     PLUGIN_TRACE("WriteV");
 
+    /* Move iov array data to string buffer */
     for (i = 0; i < mk_io->iov_idx; i++) {
-        mk_api->str_build(&buffer_write,
-                          &len,
-                          "%s%s", buffer_write, mk_io->io[i].iov_base);
+        strncpy(buffer_write + count, mk_io->io[i].iov_base, mk_io->io[i].iov_len);
+        count += mk_io->io[i].iov_len;
     }
-    bytes_sent = _mkp_network_io_write(socket_fd, buffer_write, len);
+    buffer_write[count] = '\0';
+
+    PLUGIN_TRACE("preparing buffer of %i bytes", count);
+    bytes_sent = _mkp_network_io_write(socket_fd, buffer_write, count);
+    PLUGIN_TRACE("written %i bytes", bytes_sent);
 
     return bytes_sent;
 }
@@ -600,12 +604,14 @@ int _mkp_core_prctx(struct server_config *config)
 
     ssl_file_info = mk_api->file_get_info(key_file);
     if(ssl_file_info == NULL) {
-        mk_api->error (MK_ERROR, "Cannot read key file '%s'", key_file);
+        mk_err("Cannot read key file '%s'", key_file);
+        exit(EXIT_FAILURE);
     }
 
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
-        mk_api->error (MK_ERROR, "MatrixSsl couldn't read the certificates");
+        mk_err("MatrixSsl couldn't read the certificates");
+        exit(EXIT_FAILURE);
     }
 
     PLUGIN_TRACE("MatrixSsl just read the certificates, ready to go!");
