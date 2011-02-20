@@ -449,7 +449,10 @@ int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
     }
     buffer_write[count] = '\0';
 
+    /* Debug */
     PLUGIN_TRACE("preparing buffer of %i bytes", count);
+
+    /* Write data */
     bytes_sent = _mkp_network_io_write(socket_fd, buffer_write, count);
     PLUGIN_TRACE("written %i bytes", bytes_sent);
 
@@ -568,8 +571,8 @@ int _mkp_network_io_server(int port, char *listen_addr)
                                mk_api->sys_get_somaxconn());
 
     if (ret == -1) {
-        PLUGIN_TRACE("Error: Port %i cannot be used", port);
-        return -1;
+        mk_err("Port %i cannot be used", port);
+        exit(EXIT_FAILURE);
     }
 
 
