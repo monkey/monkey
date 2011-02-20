@@ -267,6 +267,7 @@ create socket : %p\nbind : %p\nserver : %p",
         }
         else {
             mk_err("Error: Loading more than one Network IO Plugin: %s", p->path);
+            exit(EXIT_FAILURE);
         }
     }
 
