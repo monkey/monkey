@@ -53,6 +53,10 @@
 #define ANSI_WHITE "\033[37m"
 #define ANSI_RESET "\033[0m"
 
+/* Transport type */
+#define MK_TRANSPORT_HTTP  "http"
+#define MK_TRANSPORT_HTTPS "https"
+
 /* 
  * Validation macros
  * -----------------

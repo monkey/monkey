@@ -124,6 +124,9 @@ struct server_config
     /* Safe EPOLLOUT event */
     int safe_event_write;
 
+    /* Transport type: HTTP or HTTPS, useful for redirections */
+    char *transport;
+
     /* source configuration */
     struct mk_config *config;
 };

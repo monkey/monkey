@@ -182,6 +182,8 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn)
             matrixSslReceivedData(conn->ssl, bytes_read,
                                   (unsigned char **) &buf, (uint32 *) & len);
 
+        PLUGIN_TRACE("LOOP ret=%i", ret);
+
         if (ret == MATRIXSSL_REQUEST_RECV)
             continue;
 

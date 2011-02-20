@@ -391,11 +391,12 @@ int mk_http_directory_redirect_check(struct client_session *cs,
 
     mk_string_build(&location, &len, "%s/", sr->uri_processed);
     if (config->serverport == config->standard_port) {
-        mk_string_build(&real_location, &len, "http://%s%s", host, location);
+        mk_string_build(&real_location, &len, "%s://%s%s", 
+                        config->transport, host, location);
     }
     else {
-        mk_string_build(&real_location, &len, "http://%s:%i%s",
-                        host, config->serverport, location);
+        mk_string_build(&real_location, &len, "%s://%s:%i%s",
+                        config->transport, host, config->serverport, location);
     }
 
 #ifdef TRACE

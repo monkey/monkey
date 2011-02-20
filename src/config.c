@@ -647,6 +647,16 @@ void mk_config_set_init_values(void)
     /* Internals */
     config->safe_event_write = MK_FALSE;
 
+    /* 
+     * Transport type: useful to build redirection headers, values:
+     *
+     *   MK_TRANSPORT_HTTP
+     *   MK_TRANSPORT_HTTPS
+     *
+     * we set default to 'http'
+     */
+    config->transport = MK_TRANSPORT_HTTP;
+
     /* Init plugin list */
     mk_list_init(config->plugins);
 }
