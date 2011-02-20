@@ -343,9 +343,10 @@ void mk_plugin_init()
 
     /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
+    api->header_find = (void *) mk_request_header_find;
     api->header_add_row = mk_plugin_header_add_row;
     api->header_set_http_status = (void *) mk_header_set_http_status;
-
+    
     /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;
     api->iov_free = (void *) mk_iov_free;
@@ -1071,8 +1072,15 @@ int mk_plugin_header_add_row(struct session_request *sr, char *row, int len)
     mk_bug(!sr->headers);
 
     if (!sr->headers->_extra_rows) {
-        /* We allocate space for 8 extra headers + 8 entries for CRLF */
-        sr->headers->_extra_rows = mk_iov_create(16, 0);
+        /* 
+         * We allocate space for:
+         *   + 8 slots extra headers
+         *   + 8 slots to be used with CRLF for every extra header
+         *   + 2 slots for the ending CRLF
+         * -------------------------------------------------------
+         *    18 iov slots
+         */
+        sr->headers->_extra_rows = mk_iov_create(18, 0);
         mk_bug(!sr->headers->_extra_rows);
     }
 

@@ -39,6 +39,21 @@
 #include "macros.h"
 
 static struct header_status_response status_response[] = {
+
+    /* 
+     * The most used first:
+     *
+     *  - HTTP/1.1 200 OK
+     *  - HTTP/1.1 404 Not Found
+     */
+    {MK_HTTP_OK,
+     MK_RH_HTTP_OK,
+     sizeof(MK_RH_HTTP_OK) - 1},
+    {MK_CLIENT_NOT_FOUND, 
+     MK_RH_CLIENT_NOT_FOUND,
+     sizeof(MK_RH_CLIENT_NOT_FOUND) -1
+    },
+
     /* Informational */
     {MK_INFO_CONTINUE,
      MK_RH_INFO_CONTINUE,
@@ -50,20 +65,24 @@ static struct header_status_response status_response[] = {
     },
 
     /* Successful */
-    {MK_HTTP_OK,
-     MK_RH_HTTP_OK, sizeof(MK_RH_HTTP_OK) - 1},
     {MK_HTTP_CREATED,
-     MK_RH_HTTP_CREATED, sizeof(MK_RH_HTTP_CREATED) - 1},
+     MK_RH_HTTP_CREATED,
+     sizeof(MK_RH_HTTP_CREATED) - 1},
     {MK_HTTP_ACCEPTED,
-     MK_RH_HTTP_ACCEPTED, sizeof(MK_RH_HTTP_ACCEPTED) - 1},
+     MK_RH_HTTP_ACCEPTED,
+     sizeof(MK_RH_HTTP_ACCEPTED) - 1},
     {MK_HTTP_NON_AUTH_INFO,
-     MK_RH_HTTP_NON_AUTH_INFO, sizeof(MK_RH_HTTP_NON_AUTH_INFO) - 1},
+     MK_RH_HTTP_NON_AUTH_INFO,
+     sizeof(MK_RH_HTTP_NON_AUTH_INFO) - 1},
     {MK_HTTP_NOCONTENT,
-     MK_RH_HTTP_NOCONTENT, sizeof(MK_RH_HTTP_NOCONTENT) - 1},
+     MK_RH_HTTP_NOCONTENT,
+     sizeof(MK_RH_HTTP_NOCONTENT) - 1},
     {MK_HTTP_RESET,
-     MK_RH_HTTP_RESET, sizeof(MK_RH_HTTP_RESET) - 1},
+     MK_RH_HTTP_RESET,
+     sizeof(MK_RH_HTTP_RESET) - 1},
     {MK_HTTP_PARTIAL,
-     MK_RH_HTTP_PARTIAL, sizeof(MK_RH_HTTP_PARTIAL) - 1},
+     MK_RH_HTTP_PARTIAL,
+     sizeof(MK_RH_HTTP_PARTIAL) - 1},
 
     /* Redirections */
     {MK_REDIR_MULTIPLE,
@@ -107,10 +126,6 @@ static struct header_status_response status_response[] = {
     {MK_CLIENT_FORBIDDEN, 
      MK_RH_CLIENT_FORBIDDEN,
      sizeof(MK_RH_CLIENT_FORBIDDEN) -1
-    },
-    {MK_CLIENT_NOT_FOUND, 
-     MK_RH_CLIENT_NOT_FOUND,
-     sizeof(MK_RH_CLIENT_NOT_FOUND) -1
     },
     {MK_CLIENT_METHOD_NOT_ALLOWED,
      MK_RH_CLIENT_METHOD_NOT_ALLOWED,
