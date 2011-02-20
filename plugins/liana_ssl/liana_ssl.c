@@ -263,6 +263,7 @@ int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
 
+    mk_api->config->transport = MK_TRANSPORT_HTTPS;
     liana_conf(confdir);
 
     return 0;
