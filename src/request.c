@@ -250,7 +250,7 @@ static int mk_request_header_process(struct session_request *sr)
     mk_request_header_toc_parse(sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
-    host = mk_request_header_find(sr->headers_toc, headers, mk_rh_host);
+    host = mk_request_header_get(sr->headers_toc, mk_rh_host);
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
@@ -275,24 +275,19 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Looking for headers that ONLY Monkey uses */
-    sr->connection = mk_request_header_find(sr->headers_toc, headers, mk_rh_connection);
-    sr->range = mk_request_header_find(sr->headers_toc, headers, mk_rh_range);
-    sr->if_modified_since = mk_request_header_find(sr->headers_toc, headers,
-                                                   mk_rh_if_modified_since);
-
+    sr->connection = mk_request_header_get(sr->headers_toc, mk_rh_connection);
+    sr->range = mk_request_header_get(sr->headers_toc, mk_rh_range);
+    sr->if_modified_since = mk_request_header_get(sr->headers_toc, mk_rh_if_modified_since);
 
     /* FIXME: this headers pointers should not be here, just keeping the reference
      * to avoid problems with Palm plugin
      */
-    sr->accept = mk_request_header_find(sr->headers_toc, headers, mk_rh_accept);
-    sr->accept_charset = mk_request_header_find(sr->headers_toc, headers,
-                                                mk_rh_accept_charset);
-    sr->accept_encoding = mk_request_header_find(sr->headers_toc, headers,
-                                                 mk_rh_accept_encoding);
+    sr->accept = mk_request_header_get(sr->headers_toc, mk_rh_accept);
+    sr->accept_charset = mk_request_header_get(sr->headers_toc, mk_rh_accept_charset);
+    sr->accept_encoding = mk_request_header_get(sr->headers_toc, mk_rh_accept_encoding);
 
-    sr->accept_language = mk_request_header_find(sr->headers_toc, headers,
-                                                 mk_rh_accept_language);
-    sr->cookies = mk_request_header_find(sr->headers_toc, headers, mk_rh_cookie);
+    sr->accept_language = mk_request_header_get(sr->headers_toc, mk_rh_accept_language);
+    sr->cookies = mk_request_header_get(sr->headers_toc, mk_rh_cookie);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {
@@ -943,8 +938,7 @@ void mk_request_header_toc_init(struct header_toc *toc)
 }
 
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_body, 
-                                  mk_pointer header)
+mk_pointer mk_request_header_get(struct header_toc *toc, mk_pointer header)
 {
     int i;
     mk_pointer var;

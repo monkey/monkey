@@ -344,8 +344,8 @@ void mk_plugin_init()
 
     /* HTTP Callbacks */
     api->header_send = (void *) mk_header_send;
-    api->header_find = (void *) mk_request_header_find;
-    api->header_add_row = mk_plugin_header_add_row;
+    api->header_add = mk_plugin_header_add;
+    api->header_get = mk_request_header_get;
     api->header_set_http_status = (void *) mk_header_set_http_status;
     
     /* IOV callbacks */
@@ -1067,7 +1067,7 @@ int mk_plugin_sched_remove_client(int socket)
     return mk_sched_remove_client(node, socket);
 }
 
-int mk_plugin_header_add_row(struct session_request *sr, char *row, int len)
+int mk_plugin_header_add(struct session_request *sr, char *row, int len)
 {
     mk_bug(!sr);
     mk_bug(!sr->headers);

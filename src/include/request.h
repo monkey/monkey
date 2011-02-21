@@ -245,11 +245,7 @@ struct response_headers
 };
 
 mk_pointer mk_request_index(char *pathfile);
-
-
-/* Custom HTML Page for errors */
-mk_pointer mk_request_header_find(struct header_toc *toc, const char *request_body, 
-                                  mk_pointer header);
+mk_pointer mk_request_header_get(struct header_toc *toc, mk_pointer header);
 
 void mk_request_error(int http_status, struct client_session *cs, 
                       struct session_request *sr);
