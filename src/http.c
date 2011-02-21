@@ -246,9 +246,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         }
         return EXIT_ERROR;
     }
-    else if (ret == MK_PLUGIN_RET_CONTINUE) {
-        return MK_PLUGIN_RET_CONTINUE;
-    } 
     else if (ret == MK_PLUGIN_RET_END) {
         return EXIT_NORMAL;
     }

@@ -548,8 +548,6 @@ int mk_plugin_stage_run(unsigned int hook,
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
-                case MK_PLUGIN_RET_CONTINUE:
-                    return MK_PLUGIN_RET_CONTINUE;
                 case MK_PLUGIN_RET_END:
                     return MK_PLUGIN_RET_END;
                 case MK_PLUGIN_RET_CLOSE_CONX:
@@ -557,6 +555,7 @@ int mk_plugin_stage_run(unsigned int hook,
                 default:
                     mk_err("Plugin '%s' returns invalid value %i",
                            stm->p->shortname, ret);
+                    exit(EXIT_FAILURE);
                 }
                 
                 stm = stm->next;
