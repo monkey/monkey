@@ -1,13 +1,20 @@
 [MIMETYPES]
+    # This is the top 10 list of mostly used MIMEs
     html text/html
-
-    bmp image/bmp
-    gif image/gif
-    ief image/ief
-    jpeg image/jpeg
     jpg image/jpeg
-    jpe image/jpeg
     png image/png
+    js application/x-javascript    
+    css text/css
+    xml text/xml
+    gif image/gif
+    flv video/x-flv
+    jpe image/jpeg
+
+    # Other not so used types
+    jpeg image/jpeg
+    htm text/html
+    bmp image/bmp
+    ief image/ief
     tiff image/tiff
     tif image/tiff
     wbmp image/vnd.wap.wbmp
@@ -57,7 +64,6 @@
     gtar application/x-gtar
     gz application/x-gzip
     hdf application/x-hdf
-    js application/x-javascript
     skp application/x-koan
     skd application/x-koan
     skt application/x-koan
@@ -114,8 +120,6 @@
     wrl model/vrml
     vmrl model/vrml
 
-    css text/css
-    htm text/html
     asc text/plain
     txt text/plain
     rtx text/richtext
@@ -126,7 +130,6 @@
     wml text/vnd.wap.wml
     wmls text/vnd.wap.wmlscript
     etx text/x-setext
-    xml text/xml
     xsl text/xml
 
     mpeg video/mpeg
@@ -137,5 +140,4 @@
     avi video/x-msvideo
     movie video/x-sgi-movie
 
-    ice x-conference/x-cooltalk
     ice x-conference/x-cooltalk
