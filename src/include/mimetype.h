@@ -19,9 +19,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* mimetype.c */
-
-/* MIME Structs variables*/
 #include "memory.h"
 #include "list.h"
 
@@ -36,12 +33,7 @@ struct mimetype
 {
     char *name;
     mk_pointer type;
-
-    struct mk_list _head;
-
 };
-
-struct mk_list *mimetype_list;
 
 struct mimetype *mimetype_default;
 void mk_mimetype_read_config(void);

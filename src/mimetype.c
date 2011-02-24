@@ -3,6 +3,7 @@
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2011 Davidlohr Bueso <dave@gnu.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,9 +21,6 @@
  */
 
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -38,57 +36,77 @@
 #include "list.h"
 #include "macros.h"
 
-/* Match mime type for requested resource */
-static struct mimetype *mk_mimetype_cmp(char *name)
-{
-    struct mk_list *list_node;
-    struct mimetype *aux;
+/* amount of the top used mime types */
+#define MIME_COMMON 10
 
-    mk_list_foreach(list_node, mimetype_list) {
-        aux = mk_list_entry(list_node, struct mimetype, _head);
-        if (strcasecmp(aux->name, name) == 0) {
-            return aux;
+static struct mimetype *mimecommon = NULL; /* old top used mime types */
+static struct mimetype *mimearr = NULL; /* old the rest of the mime types */
+static int nitem = 0; /* amount of available mime types */
+
+/* add an item to the mimecommon or mimearr variables */
+#define add_mime(item, m) ({                                            \
+    m = (nitem==0) ? mk_mem_malloc(sizeof(struct mimetype)) :           \
+        mk_mem_realloc(m, (nitem + 1) * (sizeof(struct mimetype)));     \
+    m[nitem++] = item;                                                  \
+})
+
+static int mime_cmp(const void *m1, const void *m2)
+{
+    struct mimetype *mi1 = (struct mimetype *) m1;
+    struct mimetype *mi2 = (struct mimetype *) m2;
+
+    return strcmp(mi1->name, mi2->name);
+}
+
+/* Match mime type for requested resource */
+static inline struct mimetype *mk_mimetype_lookup(char *name)
+{
+    int i;
+    struct mimetype tmp;
+
+    /*
+     * Simple heuristic to guess which mime type to load,
+     * based on the type, let's face it, most of the time you
+     * are requesting html/css/ or images!
+     *
+     * First apply lineal search to the 10 most used mimes,
+     * otherwise apply a binary search
+     */
+    for (i = 0; i < MIME_COMMON; i++) {
+        if (!strcasecmp(name, mimecommon[i].name)) {
+            return &mimecommon[i];
         }
     }
 
-    return NULL;
+    tmp.name = name;
+    return bsearch(&tmp, mimearr, nitem, sizeof(struct mimetype), mime_cmp);
 }
 
-static int mk_mimetype_add(char *name, char *type)
+static int mk_mimetype_add(char *name, char *type, int common)
 {
-    int len;
-    struct mimetype *new_mime;
+    int len = strlen(type) + 3;
+    struct mimetype new_mime;
 
-    new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
+    new_mime.name = name;
 
-    new_mime->name = name;
+    new_mime.type.data = mk_mem_malloc(len);
+    new_mime.type.len = len - 1;
+    strcpy(new_mime.type.data, type);
+    strcat(new_mime.type.data, MK_CRLF);
+    new_mime.type.data[len-1] = '\0';
 
-    /* Alloc space */
-    len = strlen(type) + 3;
-    new_mime->type.data = mk_mem_malloc(len);
-    new_mime->type.len = len - 1;
+    /* add the newly created item to the end of the array */
+    common ? add_mime(new_mime, mimecommon) : add_mime(new_mime, mimearr);
 
-    /* Copy mime type and add CRLF */
-    strcpy(new_mime->type.data, type);
-    strcat(new_mime->type.data, MK_CRLF);
-    new_mime->type.data[len-1] = '\0';
-
-    /* Free incoming type, 'name' is not freed as it's used in 
-     * the main mimetype list
-     */
     mk_mem_free(type);
-
-    /* Add node to main list */
-    mk_list_add(&new_mime->_head, mimetype_list);
-
     return 0;
 }
 
-/* Load mimetypes */
+/* Load the two mime arrays into memory */
 void mk_mimetype_read_config()
 {
     char path[MAX_PATH];
-
+    int i = 0;
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
@@ -103,17 +121,28 @@ void mk_mimetype_read_config()
         mk_err("Error: Invalid mime type file");
     }
 
-    /* Alloc and init mk_list header */
-    mimetype_list = mk_mem_malloc(sizeof(struct mk_list));
-    mk_list_init(mimetype_list);
-
     entry = section->entry;
     while (entry) {
-        if (mk_mimetype_add(entry->key, entry->val) != 0) {
-            puts("Error loading Mime Types");
+        if (i < MIME_COMMON) {
+            if (mk_mimetype_add(entry->key, entry->val, 1) != 0) {
+                mk_err("Error loading Mime Types");
+            }
+        }
+        else {
+            if (i == MIME_COMMON) {
+                nitem = 0; /* reset counter */
+            }
+            if (mk_mimetype_add(entry->key, entry->val, 0) != 0) {
+                mk_err("Error loading Mime Types");
+            }
         }
         entry = entry->next;
+        i++;
     }
+
+
+    /* sort ascendingly for later binary search */
+    qsort(mimearr, nitem, sizeof(struct mimetype), mime_cmp);
 
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
@@ -135,5 +164,5 @@ struct mimetype *mk_mimetype_find(mk_pointer * filename)
         return NULL;
     }
 
-    return mk_mimetype_cmp(filename->data + j + 1);
+    return mk_mimetype_lookup(filename->data + j + 1);
 }
