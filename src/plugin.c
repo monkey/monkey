@@ -436,6 +436,7 @@ void mk_plugin_init()
                 mk_warn("Plugin error: %s\n", entry->val);
                 dlclose(handle);
                 entry = entry->next;
+                continue;
             }
 
             /* Build plugin configuration path */
