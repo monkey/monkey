@@ -150,7 +150,7 @@ int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
     return plg_netiomap->accept(server_fd, sock_addr);
 }
 
-int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io, int to)
+int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
 {
     int bytes;
     bytes = plg_netiomap->writev(socket_fd, mk_io);

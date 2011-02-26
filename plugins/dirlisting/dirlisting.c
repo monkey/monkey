@@ -644,7 +644,7 @@ int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
         /* Add chunked information */
         mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
     }
-    n = (int) mk_api->socket_sendv(fd, data, MK_IOV_SEND_TO_SOCKET);
+    n = (int) mk_api->socket_sendv(fd, data);
     return n;
 }
 

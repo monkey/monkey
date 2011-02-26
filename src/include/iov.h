@@ -38,8 +38,6 @@
 #define MK_IOV_NONE ""
 #define MK_IOV_EQUAL "="
 
-#define MK_IOV_SEND_TO_SOCKET 0
-
 #include "memory.h"
 
 mk_pointer mk_iov_crlf;

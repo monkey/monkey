@@ -422,9 +422,9 @@ int mk_header_send(int fd, struct client_session *cs,
         }
     }
 
-    mk_socket_sendv(fd, iov, MK_IOV_SEND_TO_SOCKET);
+    mk_socket_sendv(fd, iov);
     if (sr->headers->_extra_rows) {
-        mk_socket_sendv(fd, sr->headers->_extra_rows, MK_IOV_SEND_TO_SOCKET);
+        mk_socket_sendv(fd, sr->headers->_extra_rows);
     }
 
     mk_header_iov_free(iov);

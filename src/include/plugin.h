@@ -243,7 +243,7 @@ struct plugin_api
     int (*socket_set_nonblocking) (int);
     int (*socket_create) ();
     int (*socket_close) (int);
-    int (*socket_sendv) (int, struct mk_iov *, int);
+    int (*socket_sendv) (int, struct mk_iov *);
     int (*socket_send) (int, const void *, size_t);
     int (*socket_read) (int, void *, int);
     int (*socket_send_file) (int, int, off_t, size_t);
