@@ -39,7 +39,6 @@
 #define MK_IOV_EQUAL "="
 
 #define MK_IOV_SEND_TO_SOCKET 0
-#define MK_IOV_SEND_TO_PIPE 1
 
 #include "memory.h"
 
