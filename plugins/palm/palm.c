@@ -271,9 +271,7 @@ void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
             iov = mk_palm_protocol_request_new(cs, sr);
 
             /* Write request to palm server */
-            bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, 
-                                                   iov, 
-                                                   MK_IOV_SEND_TO_SOCKET);
+            bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov);
 
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;

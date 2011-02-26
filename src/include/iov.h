@@ -67,7 +67,7 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf,
 
 int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
 
-ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to);
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
 
 void mk_iov_free(struct mk_iov *mk_io);
 

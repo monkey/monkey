@@ -103,36 +103,14 @@ void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
     mk_io->buf_idx++;
 }
 
-ssize_t mk_iov_send(int fd, struct mk_iov *mk_io, int to)
+ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 {
     ssize_t n = -1;
 
-    if (to == MK_IOV_SEND_TO_SOCKET) {
-        n = writev(fd, mk_io->io, mk_io->iov_idx);
-        if( n < 0 ) {
-            MK_TRACE( "writev() error on FD %i", fd);
-            perror("writev");
-        }
-    }
-    else if (to == MK_IOV_SEND_TO_PIPE) {
-        /* for some reason, vmsplice is not working as expected for us, 
-         * maybe we need to fix something here, at the moment
-         * we will keep using writev to push the iovec struct to the pipe
-         *
-         *
-         * n = vmsplice(fd, 
-         *            (const struct iovec *) mk_io->io, 
-         *            mk_io->iov_idx, 
-         *            SPLICE_F_GIFT);
-         * return n;
-         */
-
-        n = writev(fd, mk_io->io, mk_io->iov_idx);
-
-        if (n < 0) {
-            MK_TRACE("writev() error on FD %i", fd);
-            perror("writev");
-        }
+    n = writev(fd, mk_io->io, mk_io->iov_idx);
+    if( n < 0 ) {
+        MK_TRACE( "writev() error on FD %i", fd);
+        perror("writev");
     }
 
     return n;
