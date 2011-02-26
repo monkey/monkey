@@ -37,7 +37,7 @@ struct list_sint
 
 typedef struct list_sint mk_list_sint_t;
 
-#if ((__GNUC__ * 100 + __GNUC__MINOR__) > 300)  /* gcc version > 3.0 */
+#if ((__GNUC__ * 100 + __GNUC__MINOR__) > 430)  /* gcc version > 4.3 */
 # define ALLOCSZ_ATTR(x,...) __attribute__ ((alloc_size(x, ##__VA_ARGS__)))
 #else
 # define ALLOCSZ_ATTR(x,...)
