@@ -26,7 +26,8 @@ INCDIR="src/include/"
 # Create configuration files under 'conf/'
 make_conf()
 {
-cat $INCDIR/config.path lang/"$*"/mconf lang/"$*"/sites/default > makeconf.sh
+cat $INCDIR/config.path lang/$lang/mconf lang/$lang/sites/default > makeconf.sh
+sed -i "s/#PORT#/$default_port/g" makeconf.sh
 chmod 755 makeconf.sh
 ./makeconf.sh
 rm makeconf.sh
@@ -120,7 +121,7 @@ main()
 	echo "+ Creating conf/monkey.conf"
 	create_conf prefix bindir mandir cgibin sysconfdir datadir logdir
 
-	make_conf  $lang
+	make_conf  $lang $default_port
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform
@@ -624,6 +625,8 @@ logdir="$aux/logs"
 plugdir=""
 platform="generic"
 
+default_port="2001"
+
 for arg in $*; do
 
 	case "$arg" in
@@ -679,6 +682,9 @@ for arg in $*; do
                 --platform*)
                         platform=$optarg
                         ;;
+                --default-port*)
+                        default_port=$optarg
+                        ;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
@@ -709,7 +715,9 @@ for arg in $*; do
 			echo "  --plugdir=PLUGDIR       Target directory for Monkey plugins"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
                         echo "  --disable-plugins=a,b   Disable the listed plugins"
-                        echo "  --platform=PLATFORM     Target platform: generic or android (default generic)"
+                        echo 
+                        echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
+                        echo "  --default-port=PORT     Override default TCP port (default: 2001)"
 			echo
 			exit 1
 			;;

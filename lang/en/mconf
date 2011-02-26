@@ -13,7 +13,7 @@ cat > conf/monkey.conf <<EOF
     # 65535. If the specified number is less than or equal to 1024, only root 
     # superuser's owned process will be able to be established as a connection.
 
-    Port 2001
+    Port #PORT#
 
     # Listen:
     # -------
