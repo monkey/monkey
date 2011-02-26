@@ -259,9 +259,8 @@ function calls:
                     int free,                          |
                     int idx)                           |
 -------------------------------------------------------+---------------------------------------------------------
-  ssize_t iov_send(int fd,                             | Send iov structure to a socket or pipe
-                   struct mk_iov *mk_io,               |
-                   int to)                             |
+  ssize_t iov_send(int fd,                             | Send iov structure
+                   struct mk_iov *mk_io)               |
 -------------------------------------------------------+---------------------------------------------------------
   void iov_print(struct mk_iov *mk_io)                 | Print iov structure content
 -------------------------------------------------------+---------------------------------------------------------
