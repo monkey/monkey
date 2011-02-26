@@ -24,5 +24,6 @@ __Connection: close
 __
 _EXPECT . "HTTP/1.1 200 OK"
 _EXPECT . "Content-Length"
+_EXPECT . "Content-Type"
 _WAIT 0
 END
