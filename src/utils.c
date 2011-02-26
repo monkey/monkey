@@ -193,7 +193,12 @@ int mk_utils_set_daemon()
     if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
         err(EXIT_FAILURE, "chdir");
 
-    setsid();                   /* Create new session */
+    /* Create new session */
+    setsid();
+
+    /* Our last STDOUT message */
+    mk_info("Background mode ON");
+
     fclose(stderr);
     fclose(stdout);
 
