@@ -301,7 +301,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     sr->headers->real_length = sr->file_info->size;
 
     /* Process methods */
-    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
+    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
         sr->headers->content_type = mime->type;
         /* Range */
         if (sr->range.data != NULL && config->resume == MK_TRUE) {
