@@ -1,3 +1,771 @@
+commit d70563a95e641964b8692cac241a46620b98c741
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 17:34:49 2011 -0300
+
+    New macros for versioning: __MONKEY__, __MONKEY_MINOR__ and __MONKEY_PATCHLEVEL__
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 52cc10c2ff7579f27c9c0365b9bb35ca8b1fd7ab
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 13:13:58 2011 -0300
+
+    User directory: new parser and code cleanup
+    
+    The user's directory feature has been improved with a new parser,
+    also some unnecesary session request fields has been dropped.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5277ae186f80c695f4b0ebd227a25037fa6b609c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 11:20:23 2011 -0300
+
+    Core: sr->uri_processed to mk_pointer
+    
+    The session request field 'uri_processed' now is converted to a
+    mk_pointer. Monkey used to calc the string length multiple times
+    along every request cycle, with this little change we avoid that
+    and gain better performance.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit be02800bc2afc8a4179eedc2d70dd8907f05f689
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 02:32:06 2011 -0300
+
+    Logger: Improve performance
+    
+    Do not use str_itop() to convert integer HTTP status codes,
+    instead use the new static map table for that.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 79bf0282df4d210d00d7214c696e9a615a71668d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 01:44:22 2011 -0300
+
+    Configure: improve help command output
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 87441011f08ba0e1287c6ecba227f21699f8b8f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 01:28:54 2011 -0300
+
+    Configure: new option --default-user to override default web user
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d61422efae9a866e9b20ced4fff82ba515526ccb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 26 20:20:49 2011 -0300
+
+    Configure: new option --default-port to override default TCP port
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e6d45f69f1339505e9e21110a42a228c3b1385a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 26 18:19:57 2011 -0300
+
+    Print message when Monkey goes into background mode
+
+commit f8e688073bace892d03f94a4c5c65fdd9aefb0bb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 26 17:09:43 2011 -0300
+
+    QA: Add keepalive header checker
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c3a2dbbf6e24ca3ec52b475837a96bafd64df477
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 26 16:28:31 2011 -0300
+
+    QA: head_02 test, expect Content-Type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4c76f0b46d794932240b8b682063467f379fea42
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 26 16:27:04 2011 -0300
+
+    Fix HTTP Method conditional
+
+commit 16cb3fc16306e37ad0ed9332525cca3864cff220
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 26 15:28:52 2011 -0300
+
+    Fix the GCC version for which the alloc_size attribute was introduced.
+    
+    Reference: http://gcc.gnu.org/gcc-4.3/changes.html
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit fc51aec45ab286f3d029e516265c4b592812f4a5
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 26 14:48:59 2011 -0300
+
+    Remove the 'to' parameter from the mk_socket_sendv function, it is
+    not needed, so we can simplify this.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 9c6c74a38ec33e2d875fb821835437a6ccd0f5f8
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 26 14:05:20 2011 -0300
+
+    Remove MK_SEND_IOV_TO_PIPE constant, no longer used.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 3deb3d26990167728374bae05f09dcd9a4dd8249
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 26 13:44:21 2011 -0300
+
+    Simplify the mk_iov_send function.
+    
+    This patch removes the socket or pipe differentiation that existed
+    in order to use writev(2) or vmsplice(2), which is not implementable
+    because of buffer alignment.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 28db1c3aafd4cd0d1f6606e119afb8439fe938ca
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 26 13:43:40 2011 -0300
+
+    Update Plugins iov_send  API function to reflect changes.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 2f352f382b46a2f2c28d5095cc3dd4609d927d24
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Feb 24 16:46:14 2011 -0300
+
+    Improve MIME performance lookup
+    
+    Currently when searching for MIME types to service, a sequencial search is made, wasting time and calls,
+    specially for the most commonly used types.
+    
+    This patch introduces a heuristic which allows two mime lists to exist, one with the most commonly used
+    types (like HTML, CSS, images, etc.), and another with the rest. When servicing a type that is very used, it
+    will continue to do a sequencial search, otherwise we do a binary one.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit bb17de3fbd73511239741fe9466405bfbaee7795
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Feb 24 16:44:42 2011 -0300
+
+    monkey.mime: Change entry order
+    
+    This list is read when the application is started, and there is an immediate performance improvement
+    when leaving the most used MIMEs on top. This patch also removes a duplicate entry.
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit deac1d969592c4f365a836d1195e7748635dbc72
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 24 15:02:27 2011 -0300
+
+    Plugin: continue on error
+
+commit c5ea58289641b09c33650e33b17f5efa6abe7bac
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 21 17:23:45 2011 -0300
+
+    API: deprecate MK_PLUGIN_RET_CONTINUE for STAGE_30
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 55223c532a1644c6e54e4cff240e741c8146b43f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 21 16:55:54 2011 -0300
+
+    API: export header_get()
+
+commit 6774a28f84ddaa8f0d2af4f35a9dcd66ee266826
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 18:01:31 2011 -0300
+
+    Add some CSS to error pages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6df397e7c4d1d92a703e96b47dc8e6b4fd3d7e73
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 17:08:05 2011 -0300
+
+    Liana_SSL: Update docs
+
+commit 1bd1f58fb8816a4f8f29fa50b0a056f9d3bb2683
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 16:33:32 2011 -0300
+
+    Liana_SSL: Set transport type to MK_TRANSPORT_HTTPS
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73296caf0ffff8b87414a374c7ae95f72736c158
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 16:30:36 2011 -0300
+
+    Add 'transport' field to configuratrion struct.
+    
+    This new field defines if the server is working in http or
+    https mode, on that way we can send safe full redirection
+    headers. Values added to macros are:
+    
+     MK_TRANSPORT HTTP
+     MK_TRANSPORT HTTPS
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6cb7e8bf6eeeae4ff6b9fc8616ecc85861c3d31c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 14:28:23 2011 -0300
+
+    Liana_SSL: Exit with failure when cannot bind the port
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d45b9c1c7e3d187e03b309a1c96bcdda815ef5ad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 14:19:23 2011 -0300
+
+    Exit when networking plugin fails
+
+commit 46c24d65d41be1208dd2a1d2a674b919fc9b35c7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 14:17:16 2011 -0300
+
+    Liana_SSL: Fix memory leak
+    Liana_SSL: Exit with failure on error
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit aec4f06fa994484a3f299b6c76d07d46e019e52a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 20 13:45:21 2011 -0300
+
+    Sort headers
+    API: Testing new header_find() function
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3c7d3bd7420a8cca04a440573e756894258eed69
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 19 15:21:18 2011 -0300
+
+    API: new interface to add extra response header rows api->header_add_row
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0e5e7894a3200e3b239184b2a5afb60cebf70631
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 19 09:33:05 2011 -0300
+
+    Add some validations to response status set
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 93565e73564066ddf581a0dadd09e0b370cd2a20
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 19 08:49:58 2011 -0300
+
+    Fix CRLF for 401 response
+
+commit 57c18be8adc6ebd0973f25498a832bbc1754e140
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 19 08:20:28 2011 -0300
+
+    Add support for all HTTP response headers
+    
+    Monkey used to support just the common HTTP response
+    headers, in order to provide a more flexible mechanism for
+    the plugins interface, all HTTP possible responses has been
+    added.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7a9e1151a87b877e51a25448c95bde78ee82ee05
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 18 10:49:38 2011 -0300
+
+    Update JCI email address
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1352faecd7cbcdc1199cc02547fd200a710aba52
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 18 10:46:09 2011 -0300
+
+    Rename HTTP status macros names
+    Rename MK_INF to MK_INFO
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8f5c55071495fcf0e0f2aaeb0b4997153a23eb9d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 23:53:18 2011 -0300
+
+    API: do api->error private = api->_error
+
+commit 004c20fb80206643db2c03d714abc30eb10f8a4a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 23:48:09 2011 -0300
+
+    Adapt plugins to new message macros
+
+commit c9db5ac9793ccab2b202fe5bc24a00cab81bef53
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 17:35:39 2011 -0300
+
+    API: Export direct message macros to plugins
+
+commit 55d5758653395aab195c35e79088e0d89e47da33
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 17:06:57 2011 -0300
+
+    Deprecate VAR_ON and VAR_OFF, unify MK_TRUE and MK_FALSE
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ed026d083d1e3e716b108cc9ce3f45813fbe002c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 14:35:45 2011 -0300
+
+    Improve performance of mk_pointer_to_buf()
+
+commit bd9a6964fda9130c21de2db34ceb7f054bca9291
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 14:17:45 2011 -0300
+
+    Exit when cannot log PID of Monkey
+
+commit 8935b95279c46930d3ebc87db2e360a1a7db81ec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 14:08:13 2011 -0300
+
+    Improve setrlimit() messages
+
+commit 6872eaa7ebcf24edc8e98345c78f253b4d79091f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 09:44:43 2011 -0300
+
+    Replace gmtime() by reentrant version gmtime_r() and use thread key for cache
+
+commit 9260c8fe69310e9c46ee667912f7d4ac83901174
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 17 09:14:00 2011 -0300
+
+    Fix: send Content-Length header for HEAD method requests
+    QA: Add script to check that content-length header is sent when the HEAD
+    method is used
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4170b0e4ead37b020fb993d9740be5e92ff1fd4c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 17:36:11 2011 -0300
+
+    Dirlisting: pass NULL pointers when creating string buffers
+
+commit 365426b678902bc969d18591405892a1a43fbfdb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 16:49:01 2011 -0300
+
+    Exit with error if monkey.conf cannot be loaded
+
+commit eaab8459086ee2c2f9b383f1e380b6d1fef3ba4e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 16:45:02 2011 -0300
+
+    Exit with error if plugins.load cannot be loaded
+
+commit a40cbe8280567d7c49903e747fbc8ecc34033516
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 16:40:24 2011 -0300
+
+    Plugin core: more error checks
+
+commit ea3f0a6c7035a24c205168ada4e7e7c736d64337
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 16:04:47 2011 -0300
+
+    Reset mk_pointer variable for mk_string_build()
+
+commit c6fa207751639d9b20c3b9f7dfc22ad37b84b087
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 15:41:17 2011 -0300
+
+    mk_sched_get_connection: do not accept sched = NULL
+
+commit ab3bb3d826bb65ebf6b9838152fe71e86d7354ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 14:56:30 2011 -0300
+
+    Validate mk_string_build() with mk_bug() and fix some guilties
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8da2050e6d21cb8937d9933e56a3ec86efdf4132
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 16 14:10:44 2011 -0300
+
+    New mk_bug() macro (Kernel BUG_ON macro style)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b89bb6ae6fcc1aabd1ce518436d4e4e38cad09a0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:56:15 2011 -0300
+
+    Patas: replace wrong call to MK_ERROR_WARNING
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 629983194c8c20a17137842017990c02b2e782cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:54:59 2011 -0300
+
+    Patas: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dd009a1605eca149eac7860fb56892f50f8eda6c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:53:01 2011 -0300
+
+    Palm: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ade3e8a34b05a2a41bc433be0228b7e61904380d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:49:21 2011 -0300
+
+    Mandril: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e29132d10a7f1d6e7f3294ae820c811357e28d9e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:48:38 2011 -0300
+
+    Logger: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e65bb91cebe33b22d733de60f548c82e36861158
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:47:26 2011 -0300
+
+    Dirlisting: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 77b56b599d761af15d7f4cfb31bf5af154ae171e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:46:12 2011 -0300
+
+    Liana_SSL: remove #ifdef TRACE conditionals
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cca07d5c1d46fc0c65f79684beb4df59e015e372
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 15 13:32:08 2011 -0300
+
+    Create empty MK_TRACE macro when TRACE is not defined in configure
+    
+    If TRACE is not defined, now MK_TRACE is set to do {} while(0) , on
+    that way all core code can invoke MK_TRACE() no matters if really
+    exists or not.
+    
+    Most of the #ifdef TRACE conditional statements have been removed.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 818f58973349edba7a834cbf5d6460f8902da12b
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Feb 10 17:01:08 2011 -0300
+
+    [PATCH] Update the mconf to reflect pidfile changes, and the TODO file as well
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b2186d54a8c7507e7124531a695bc306e4e16ee6
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Feb 10 11:18:41 2011 -0300
+
+    [PATCH] Remove duplicate headers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0e5d4f6357b93906e68480734a14e1283be9d8b8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 10 07:51:37 2011 -0300
+
+    Make up signal errors
+
+commit 31e16255147fdb9024f60a06144ee76b09d9d945
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 10 01:47:24 2011 -0300
+
+    Print 'started' info message when running in console
+
+commit 3d47933fee07b15547f3e5888dca9d3703729cea
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 10 01:36:37 2011 -0300
+
+    New macros.h
+
+commit ae20fb91ebf003e854e2e346fd1240daf07a7c8f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 10 01:30:10 2011 -0300
+
+    New macros for messages: mk_err(), mk_warn() and mk_info()
+    
+    The new macros works over new mk_print() function (old mk_error).
+
+commit dce25c403ccb56b8862324af3a1cc6383062be57
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 16:42:37 2011 -0300
+
+    Little fix in help text
+
+commit 66037324e3fb12439e30a8f0016be7a83fe10ef2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 16:04:34 2011 -0300
+
+    Add date and time to error messages
+
+commit a7cfb8f6952aa1373d257fc49806e2d546c65d6c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 13:00:14 2011 -0300
+
+    Dirlisting: replace fprintf by mk_error
+
+commit 3b7e05c78ea0d0a552fd9103619fce4a6708c8c0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 12:58:34 2011 -0300
+
+    Remove fprintf() calls, replaced by mk_error()
+
+commit 1c7ac52c3c0293d7d44a66648ce798718f81da30
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Feb 9 11:13:45 2011 -0300
+
+    [PATCH 2/2] Fix English for better reading
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 26a816c84c5428c1acb84c7bf0fcf83959f3b774
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Feb 9 11:12:31 2011 -0300
+
+    [PATCH 1/2] Fix English better reading
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1717a363e125fab1f5251a88cc47a5040fff22e7
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Feb 9 11:10:32 2011 -0300
+
+    [PATCH] Add banana manual page
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2eaa47df83c387483ad6a8aa27209599ad22645d
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Feb 9 11:06:28 2011 -0300
+
+    [PATCH] This patch does a few things:
+    
+    - Adds static (and void argument) to the definition of locally used functions, like mk_details()
+    - Allocates the config global structure after parsing the command line arguments, this avoids an unnecesary mem leak
+      and overall makes things a bit cleaner and more UNIX-style standard.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 15bcbb43e8ec76eb935a4fc023aefbaab816c482
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 11:04:24 2011 -0300
+
+    Logger: Comment masterlog conf
+
+commit 60ac2357a70324f820a058830f4faed4d507f688
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 9 10:29:36 2011 -0300
+
+    Logger Plugin: Add new support for MasterLog file
+    
+    Now when Monkey runs in daemon mode and per configuration in file
+    logger.conf the key 'MasterLog' is defined, all Monkey STDOUT will
+    be redirected to that file.
+
+commit 143a083101856a797b54ce015204a9f823dbb0f6
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 8 11:13:00 2011 -0300
+
+    [PATCH] When passing an invalid option to monkey we should be returning an EXIT_FAILURE code indicating the wrong status
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5e42facb3d88c0429c751644b4d538d955606d2b
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 8 11:02:41 2011 -0300
+
+    [PATCH] There is currently a race condition with Monkey's pidfile.
+    
+    If two instances of the webserver are started, the pidfile of the
+    first instance will be replaced by the second one.
+    
+    This presents an issue, can be avoided having a pidfile for each instance
+    differenciating by port.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d1d8ea61a8463bfdcdaf57cd217e55631932c07e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 8 09:41:25 2011 -0300
+
+    Remove unused config->port
+
+commit 0707bdc15b10fb0440ea145fc204d75742f1b0b1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 7 19:33:07 2011 -0300
+
+    Logger: use mk_list implementation
+
+commit bac9183d6decf4efff701718352334531b038f5d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 7 14:38:50 2011 -0300
+
+    Base plugins now uses VERSION macro when registering
+
+commit b86892c82a2a268ab10a45733ccf77529200f55e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 7 14:27:43 2011 -0300
+
+    Logger: fix default configuration flushtime
+
+commit a9a45f3391d82fc5d106bf5258c8bcc84c2ec85e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 7 12:51:58 2011 -0300
+
+    Configure: add --mandir option
+
+commit 7de7c25c8ee6272e10e264d4b9913fcf567ee57a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 5 14:20:14 2011 -0300
+
+    Update man page and move it to man/ directory
+
+commit 71ee362fc6b3e04ce83be8689dabb639686f477b
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 5 14:12:58 2011 -0300
+
+    [PATCH] Add manual page
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4fcf7f84ffa1315e75c6b17c3cc21ba0026c150f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 5 13:59:37 2011 -0300
+
+    Add new options to help list and add documentation url
+
+commit 37372df32ab3e44578f909378961998744ba113f
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 5 13:50:42 2011 -0300
+
+    [PATCH] Add support for long options
+    With this patch we can now use --version, --configdir, etc (you get the idea).
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 481129e76dbcab7f325f4ac8fb8a58b03afbf440
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Feb 2 13:52:01 2011 -0300
+
+    [PATCH] make the deaminization function more robust
+    
+    Good deamon processes follow certain basic coding rules when being created.
+    This patch attempts to make mk_utils_set_daemon() more robust, making this chimp a bit more evil >:)
+    
+        * Call umask: If the deamon process wants to create files it might want to set specific permissions, otherwise
+        the file creation mode (mask) might deny certain permissions.
+    
+        * Change the current working directory to "/" (root), which allows the previous working directory to be unmounted.
+    
+    All syscalls are exit-error validated, since there is absolutely no point in going on with the program if the deamonization is not well done.
+    This patch also removes some duplicate included headers.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d044f4ead262e22c6345dcbe0e195b3555dfd42c
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 1 14:25:20 2011 -0300
+
+    Declare non-argument functions with void
+    
+    It is best practises to declare functions that do not accept parameters with void:
+    
+    "int foo(void);" instead of "int foo();"
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c695177d39cf5ee461a52a776cad33805a38bca7
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 1 14:23:51 2011 -0300
+
+    [PATCH 4/6] TODO: add manpage creation
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7f74e4493b12c22af8bebbac1db05930c6817853
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 1 14:20:50 2011 -0300
+
+    The atoi(3) function is deprecated: The ahttp://www.gnu.org/software/libc/manual/html_mono/libc.html#index-atoi-2567
+    It is recommended to replace it with strtol(3), which detects errors, as opposed to the former. Since strtol returns long,
+    this also modifies the data types of some variables. This however is not a problem, because a long integer fits anywhere an int does.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 711b0e81a258245537f611dbaec76b072fbe7483
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Feb 1 14:17:55 2011 -0300
+
+    The mutex_wait_register mutex is being locked and immediatelly afterwards unlocked, without protecting any code, it can be removed.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0e9022db6ea698f13c93ee1aad5f009769376735
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Mon Jan 31 16:44:31 2011 -0300
+
+    When using an older version of GCC (3.0), the alloc_size attribute,
+    used in memory, does not exist, producing multiple warnings:
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8db1a7b59d615a7c123f5bf8b97d403314b71c35
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 31 16:43:51 2011 -0300
+
+    0.12.3-dev begins
+
+commit c2f58c1c8d89a452ccf20c60005873cc09ffcbac
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 29 15:08:51 2011 -0300
+
+    Monkey 0.12.2
+
 commit a1140e918c6f5346cf34ef41550dcdec0a0bbfc6
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Jan 29 14:14:26 2011 -0300
