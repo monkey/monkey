@@ -48,18 +48,19 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
 
     sr->user_home = MK_TRUE;
 
-    user = mk_mem_malloc(strlen(sr->uri_processed) + 1);
-    limit = mk_string_char_search(sr->uri_processed + offset, '/', -1);
+    user = mk_mem_malloc(sr->uri_processed.len + 1);
+    limit = mk_string_char_search(sr->uri_processed.data + offset, '/', -1);
 
-    if (limit == -1)
-        limit = strlen(sr->uri_processed) - offset;
+    if (limit == -1) {
+        limit = (int) (sr->uri_processed.data - offset);
+    }
 
-    strncpy(user, sr->uri_processed + offset, limit);
+    strncpy(user, sr->uri_processed.data + offset, limit);
     user[limit] = '\0';
 
     if (sr->uri.data[offset + limit] == '/') {
         mk_string_build(&sr->uri.data, &sr->uri.len,
-                        "%s", sr->uri_processed + offset + limit);
+                        "%s", sr->uri_processed.data + offset + limit);
 
         /* Extract URI portion after /~user */
         sr->user_uri = (char *) mk_mem_malloc_z(sr->uri.len + 1);

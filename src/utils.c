@@ -242,7 +242,6 @@ int mk_utils_hex2int(char *hex, int len)
  */
 char *mk_utils_url_decode(mk_pointer uri)
 {
-
     int i, hex_result;
     int buf_idx = 0;
     char *buf;

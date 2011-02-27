@@ -197,6 +197,7 @@ struct plugin_api
     void  (*mem_free) (void *);
     void  (*pointer_set) (mk_pointer *, char *);
     void  (*pointer_print) (mk_pointer);
+    char *(*pointer_to_buf) (mk_pointer);
 
     /* string functions */
     int   (*str_itop) (int, mk_pointer *);

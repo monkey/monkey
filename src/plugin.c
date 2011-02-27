@@ -324,6 +324,7 @@ void mk_plugin_init()
     /* Memory callbacks */
     api->pointer_set = (void *) mk_pointer_set;
     api->pointer_print = (void *) mk_pointer_print;
+    api->pointer_to_buf = (void *) mk_pointer_to_buf;
     api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
     api->mem_alloc = (void *) mk_mem_malloc;
     api->mem_alloc_z = (void *) mk_mem_malloc_z;

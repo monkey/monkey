@@ -71,8 +71,7 @@ static struct session_request *mk_request_alloc()
     request->method = METHOD_NOT_FOUND;
 
     mk_pointer_reset(&request->uri);
-    request->uri_processed = NULL;
-    request->uri_twin = MK_FALSE;
+    request->uri_processed.data = NULL;
 
     request->content_length = 0;
     request->content_type.data = NULL;
@@ -132,12 +131,12 @@ static void mk_request_free(struct session_request *sr)
         mk_mem_free(sr->headers);
     }
 
+    if (sr->uri_processed.data != sr->uri.data) {
+        mk_pointer_free(&sr->uri_processed);
+    }
+
     mk_pointer_reset(&sr->body);
     mk_pointer_reset(&sr->uri);
-
-    if (sr->uri_twin == MK_TRUE) {
-        mk_mem_free(sr->uri_processed);
-    }
 
     mk_mem_free(sr->user_uri);
     mk_pointer_reset(&sr->query_string);
@@ -178,6 +177,7 @@ static int mk_request_header_process(struct session_request *sr)
     int fh_limit;
     char *port = 0;
     char *headers;
+    char *temp = 0;
     mk_pointer host;
 
     /* Method */
@@ -236,12 +236,19 @@ static int mk_request_header_process(struct session_request *sr)
 
     headers = sr->body.data + prot_end + mk_crlf.len;
 
-    /* URI processed */
-    sr->uri_processed = mk_utils_url_decode(sr->uri);
-    
-    if (!sr->uri_processed) {
-        sr->uri_processed = mk_pointer_to_buf(sr->uri);
-        sr->uri_twin = MK_TRUE;
+    /* 
+     * Process URI, if it contains ASCII encoded strings like '%20', 
+     * it will return a new memory buffer with the decoded string, otherwise
+     * it returns NULL
+     */
+    temp = mk_utils_url_decode(sr->uri);
+    if (temp) {
+        sr->uri_processed.data = temp;
+        sr->uri_processed.len  = strlen(temp);
+    }
+    else {
+        sr->uri_processed.data = sr->uri.data;
+        sr->uri_processed.len  = sr->uri.len;
     }
 
     /* Creating Table of Content (index) for HTTP headers */
@@ -456,11 +463,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     sr->user_home = MK_FALSE;
 
     /* Valid request URI? */
-    if (sr->uri_processed == NULL) {
-        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
-    }
-    if (sr->uri_processed[0] != '/') {
+    if (sr->uri_processed.data[0] != '/') {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
@@ -498,7 +501,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* is requesting an user home directory ? */
     if (config->user_dir) {
-        if (strncmp(sr->uri_processed,
+        if (strncmp(sr->uri_processed.data,
                     mk_user_home.data, mk_user_home.len) == 0) {
             if (mk_user_init(cs, sr) != 0) {
                 return EXIT_NORMAL;

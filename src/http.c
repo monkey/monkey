@@ -130,25 +130,13 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int ret;
     int bytes = 0;
     struct mimetype *mime;
-    char *uri_data = NULL;
-    int uri_len = 0;
 
     MK_TRACE("HTTP Protocol Init");
 
-    /* Normal request default site */
-    if ((strcmp(sr->uri_processed, "/")) == 0) {
-        sr->real_path.data = mk_string_dup(sr->host_conf->documentroot.data);
+    /* Normal request, default site */
+    if (sr->uri_processed.len == 1 && sr->uri_processed.data[0] == '/') {
+        sr->real_path.data = sr->host_conf->documentroot.data;
         sr->real_path.len = sr->host_conf->documentroot.len;
-    }
-
-    /* Map URI */
-    if (sr->uri_processed) {
-        uri_data = sr->uri_processed;
-        uri_len = strlen(sr->uri_processed);
-    }
-    else{
-        uri_data = sr->uri.data;
-        uri_len = sr->uri.len;
     }
 
     /* Compose real path */
@@ -156,8 +144,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         ret = mk_buffer_cat(&sr->real_path, 
                             sr->host_conf->documentroot.data,
                             sr->host_conf->documentroot.len,
-                            uri_data,
-                            uri_len);
+                            sr->uri_processed.data,
+                            sr->uri_processed.len);
         
         if (ret < 0) {
             MK_TRACE("Error composing real path");
@@ -166,14 +154,14 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Check backward directory request */
-    if (mk_string_search_n(uri_data, 
+    if (mk_string_search_n(sr->uri_processed.data,
                            HTTP_DIRECTORY_BACKWARD,
                            MK_STR_SENSITIVE,
-                           uri_len) >= 0) {
+                           sr->uri_processed.len) >= 0) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
-
+    
     sr->file_info = mk_file_get_info(sr->real_path.data);
     
     if (!sr->file_info) {
@@ -380,13 +368,20 @@ int mk_http_directory_redirect_check(struct client_session *cs,
      * We have to check if exist an slash to the end of
      * this string, if doesn't exist we send a redirection header
      */
-    if (sr->uri_processed[strlen(sr->uri_processed) - 1] == '/') {
+    if (sr->uri_processed.data[sr->uri_processed.len - 1] == '/') {
         return 0;
     }
 
     host = mk_pointer_to_buf(sr->host);
 
-    mk_string_build(&location, &len, "%s/", sr->uri_processed);
+    /*
+     * Add ending slash to the location string
+     */
+    location = mk_mem_malloc(sr->uri_processed.len + 2);
+    memcpy(location, sr->uri_processed.data, sr->uri_processed.len);
+    location[sr->uri_processed.len]     = '/';
+    location[sr->uri_processed.len + 1] = '\0';
+
     if (config->serverport == config->standard_port) {
         mk_string_build(&real_location, &len, "%s://%s%s", 
                         config->transport, host, location);

@@ -635,6 +635,7 @@ void mk_config_set_init_values(void)
     config->user = NULL;
     config->open_flags = O_RDONLY | O_NONBLOCK;
     config->index_files = NULL;
+    config->user_dir = NULL;
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),

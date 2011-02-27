@@ -679,6 +679,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 {
     DIR *dir;
     int i = 0, n;
+    char *title = 0;
     mk_pointer sep;
 
     /* file info */
@@ -711,8 +712,9 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 
     /* Creating response template */
     /* Set %_html_title_% */
+    title = mk_api->pointer_to_buf(sr->uri_processed);
     values_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
-                                          sr->uri_processed,
+                                          title,
                                           (char **) _tags_global);
 
     /* Set %_theme_path_% */
@@ -741,13 +743,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     n = mk_dirhtml_send(cs->socket, sr, iov_header);
 
     if (n < 0) {
-        closedir(dir);
-
-        mk_dirhtml_tag_free_list(&values_global);
-        mk_api->iov_free(iov_header);
-        mk_api->iov_free(iov_footer);
-        mk_dirhtml_free_list(toc, list_len);
-        return 0;
+        goto exit;
     }
 
     /* sending TOC */
@@ -808,8 +804,10 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
         mk_dirhtml_send_chunked_end(cs->socket);
     }
 
+ exit:
     closedir(dir);
 
+    mk_api->mem_free(title);
     mk_dirhtml_tag_free_list(&values_global);
     mk_api->iov_free(iov_header);
     mk_api->iov_free(iov_footer);

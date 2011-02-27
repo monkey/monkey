@@ -145,9 +145,8 @@ struct session_request
     /*----First header of client request--*/
     int method;
     mk_pointer method_p;
-    mk_pointer uri;             /* original request */
-    char *uri_processed;        /* processed request */
-    int uri_twin;
+    mk_pointer uri;                  /* original request */
+    mk_pointer uri_processed;        /* processed request (decoded) */
 
     int protocol;
     mk_pointer protocol_p;
