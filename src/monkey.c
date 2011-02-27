@@ -65,7 +65,8 @@ static void mk_details(void)
 
 static void mk_version(void)
 {
-    printf("Monkey HTTP Daemon %s\n", VERSION);
+    printf("Monkey HTTP Daemon %i.%i.%i\n", 
+           __MONKEY__, __MONKEY_MINOR__, __MONKEY_PATCHLEVEL__);
     printf("Built : %s (%s %i.%i.%i)\n", 
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     printf("Home  : http://www.monkey-project.com\n");

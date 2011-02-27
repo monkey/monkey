@@ -18,7 +18,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-VERSION="0.12.3-dev"
+__MONKEY__="0"
+__MONKEY_MINOR__="12"
+__MONKEY_PATCHLEVEL__="3"
+
+VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 INCDIR="src/include/"
@@ -128,7 +132,7 @@ main()
 	create_makefile2 mod_libs mod_obj make_script platform
 
         echo "+ Creating src/include/info.h"
-	create_info sysconfdir SYSNAME VERSION
+	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__
 
 	echo "+ Creating bin/banana script"
 	create_banana_script bindir logdir
@@ -488,9 +492,22 @@ fi
 create_info()
 {
 cat > $INCDIR/info.h <<EOF
+#ifndef MK_INFO_H
+#define MK_INFO_H
+
 #define OS "$SYSNAME"
-#define VERSION "$VERSION" /* Version de Monkey */
+
+#define __MONKEY__            $__MONKEY__
+#define __MONKEY_MINOR__      $__MONKEY_MINOR__
+#define __MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__
+
+#define MONKEY_VERSION (__MONKEY__ * 10000 \\
+                                __MONKEY_MINOR__ * 100 \\
+                                __MONKEY_PATCHLEVEL__)
+#define VERSION "$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 #define MONKEY_PATH_CONF "$sysconfdir"
+
+#endif
 EOF
 }
 
