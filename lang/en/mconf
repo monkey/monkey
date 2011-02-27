@@ -82,7 +82,7 @@ cat > conf/monkey.conf <<EOF
     # to execute Monkey with root privileges. If it's started by a user that
     # that doesn't have root privileges, this variable will be omitted.
 
-    User nobody
+    User #USER#
 
     # -----------------
     #  ADVANCED CONFIG
