@@ -46,6 +46,30 @@ MONKEY_PLUGIN("logger", /* shortname */
               /* hooks */
               MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);
 
+
+struct status_response {
+    int   i_status;
+    char *s_status;
+};
+
+static struct status_response response_codes[] = {
+    /* Common matches first */
+    {200, "200"}, {404, "404"},
+
+    {100, "100"}, {101, "101"},
+    {201, "201"}, {202, "202"}, {203, "203"}, {204, "204"}, 
+    {205, "205"}, {206, "206"},    
+    {300, "300"}, {301, "301"}, {302, "302"}, {303, "303"}, {304, "304"},
+    {305, "305"},
+    {400, "400"}, {401, "401"}, {402, "402"}, {403, "403"},
+    {405, "405"}, {406, "406"}, {407, "407"}, {408, "408"}, {409, "409"},
+    {410, "410"}, {411, "411"}, {412, "412"}, {413, "413"}, {414, "414"},
+    {415, "415"},
+    {500, "500"}, {501, "501"}, {502, "502"}, {503, "503"}, {504, "504"},
+    {505, "505"}, 
+};
+
+
 char *mk_logger_match_by_fd(int fd)
 {
     struct mk_list *head;
@@ -369,12 +393,13 @@ void _mkp_core_thctx()
 
 int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
-    int http_status;
+    int i, http_status;
+    int array_len = sizeof(response_codes)/sizeof(struct status_response);
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
     mk_pointer *content_length;
-    mk_pointer *status;
+    mk_pointer status;
 
     http_status = sr->headers->status;
 
@@ -422,11 +447,23 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* HTTP Status code response */
-        status = pthread_getspecific(cache_status);
-        mk_api->str_itop(http_status, status);
+        for (i=0; i < array_len; i++) {
+            if (response_codes[i].i_status == http_status) {
+                break;
+            }
+        }
+
+        if (array_len == i) {
+            mk_api->str_itop(http_status, &status);
+            status.len -= 2;
+        }
+        else {
+            status.data = response_codes[i].s_status;
+            status.len  = 3;
+        }
         mk_api->iov_add_entry(iov, 
-                              status->data,
-                              status->len - 2,
+                              status.data,
+                              status.len,
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* Content Length */
