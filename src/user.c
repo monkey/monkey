@@ -41,56 +41,58 @@
 int mk_user_init(struct client_session *cs, struct session_request *sr)
 {
     int limit;
-    int offset = mk_user_home.len;
-    char *user = 0, *user_server_root = 0;
+    int offset = 2; /* The user is defined after the '/~' string, so offset = 2 */
+    int user_len = 255;
+    char user[user_len], *user_uri;
     struct passwd *s_user;
-    unsigned long len;
 
-    sr->user_home = MK_TRUE;
+    if (sr->uri_processed.len <= 2) {
+        return -1;
+    }
 
-    user = mk_mem_malloc(sr->uri_processed.len + 1);
-    limit = mk_string_char_search(sr->uri_processed.data + offset, '/', -1);
+    limit = mk_string_char_search(sr->uri_processed.data + offset, '/',
+                                  sr->uri_processed.len);
 
     if (limit == -1) {
-        limit = (int) (sr->uri_processed.data - offset);
+        limit = (sr->uri_processed.len) - offset;
+    }
+
+    if (limit + offset >= (user_len)) {
+        return -1;
     }
 
     strncpy(user, sr->uri_processed.data + offset, limit);
     user[limit] = '\0';
 
-    if (sr->uri.data[offset + limit] == '/') {
-        mk_string_build(&sr->uri.data, &sr->uri.len,
-                        "%s", sr->uri_processed.data + offset + limit);
+    MK_TRACE("user: '%s'", user);
 
-        /* Extract URI portion after /~user */
-        sr->user_uri = (char *) mk_mem_malloc_z(sr->uri.len + 1);
-        char *src = sr->uri.data;
-        char *dst = sr->user_uri;
-
-        while (*src != ' ' && src < (sr->uri.data + sr->uri.len)) {
-            *dst++ = *src++;
-        }
-    }
-
+    /* Check system user */
     if ((s_user = getpwnam(user)) == NULL) {
-        mk_mem_free(user);
         mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return -1;
     }
-    mk_mem_free(user);
 
-    mk_string_build(&user_server_root, &len, "%s/%s", s_user->pw_dir,
-                    config->user_dir);
+    if (sr->uri_processed.len > (offset+limit)) {
+        user_uri = mk_mem_malloc(sr->uri_processed.len);
+        if (!user_uri) {
+            return -1;
+        }
 
-    if (sr->user_uri != NULL) {
-        mk_string_build(&sr->real_path.data, &sr->real_path.len, "%s%s",
-                        user_server_root, sr->user_uri);
+        strncpy(user_uri, 
+                sr->uri_processed.data + (offset + limit),
+                sr->uri_processed.len - offset - limit);
+        user_uri[sr->uri_processed.len - offset - limit] = '\0';
+
+        mk_string_build(&sr->real_path.data, &sr->real_path.len, 
+                        "%s/%s%s", s_user->pw_dir, config->user_dir, user_uri);
+        mk_mem_free(user_uri);
     }
     else {
-        mk_string_build(&sr->real_path.data, &sr->real_path.len, "%s",
-                        user_server_root);
+        mk_string_build(&sr->real_path.data, &sr->real_path.len, 
+                        "%s/%s", s_user->pw_dir, config->user_dir);
     }
-    mk_mem_free(user_server_root);
+
+    sr->user_home = MK_TRUE;
     return 0;
 }
 

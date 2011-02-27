@@ -186,7 +186,6 @@ struct session_request
 
     /*-Internal-*/
     mk_pointer real_path;       /* Absolute real path */
-    char *user_uri;             /* ~user/...path */
     mk_pointer query_string;    /* ?... */
 
     char *virtual_user;         /* Virtualhost user */

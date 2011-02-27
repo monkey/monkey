@@ -23,9 +23,7 @@
 #include "request.h"
 
 /* User home string */
-#define MK_USER_HOME "/~"
-
-mk_pointer mk_user_home;
+#define MK_USER_HOME '~'
 
 gid_t egid;
 uid_t euid;

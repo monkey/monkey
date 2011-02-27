@@ -133,7 +133,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     MK_TRACE("HTTP Protocol Init");
 
-    /* Normal request, default site */
+    /* Request to root path of the virtualhost in question */
     if (sr->uri_processed.len == 1 && sr->uri_processed.data[0] == '/') {
         sr->real_path.data = sr->host_conf->documentroot.data;
         sr->real_path.len = sr->host_conf->documentroot.len;

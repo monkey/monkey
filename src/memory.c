@@ -190,6 +190,4 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_http_protocol_11_p, HTTP_PROTOCOL_11_STR);
     mk_pointer_reset(&mk_http_protocol_null_p);
 
-    /* User Home */
-    mk_pointer_set(&mk_user_home, MK_USER_HOME);
 }

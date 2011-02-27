@@ -82,8 +82,6 @@ static struct session_request *mk_request_alloc()
     request->range.data = NULL;
 
     request->post_variables.data = NULL;
-
-    request->user_uri = NULL;
     mk_pointer_reset(&request->query_string);
 
     request->file_info = NULL;
@@ -137,8 +135,6 @@ static void mk_request_free(struct session_request *sr)
 
     mk_pointer_reset(&sr->body);
     mk_pointer_reset(&sr->uri);
-
-    mk_mem_free(sr->user_uri);
     mk_pointer_reset(&sr->query_string);
 
     mk_mem_free(sr->file_info);
@@ -499,13 +495,14 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         sr->host_conf = config->hosts;
     }
 
-    /* is requesting an user home directory ? */
-    if (config->user_dir) {
-        if (strncmp(sr->uri_processed.data,
-                    mk_user_home.data, mk_user_home.len) == 0) {
-            if (mk_user_init(cs, sr) != 0) {
-                return EXIT_NORMAL;
-            }
+    /* Is requesting an user home directory ? */
+    if (config->user_dir && 
+        sr->uri_processed.len > 2 &&
+        sr->uri_processed.data[1] == MK_USER_HOME) {
+
+        if (mk_user_init(cs, sr) != 0) {
+            mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
+            return EXIT_ABORT;
         }
     }
 
