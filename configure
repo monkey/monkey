@@ -135,7 +135,7 @@ main()
 	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__
 
 	echo "+ Creating bin/banana script"
-	create_banana_script bindir logdir
+	create_banana_script bindir logdir default_port
 
 	echo -e "+ Creating Makefile"
 	if [ "$dir" = 0 ]; then
@@ -545,7 +545,7 @@ cat > bin/banana << EOF
 #	stop	->	stop monkey if this is running
 #	help	->	what do u think ?
 
-PIDFILE="$logdir/monkey.pid"
+PIDFILE="$logdir/monkey.pid.$default_port"
 BINMONKEY="$bindir/monkey"
 
 for arg in \$*; do
