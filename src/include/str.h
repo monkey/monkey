@@ -52,7 +52,6 @@ int mk_string_search_n(const char *haystack, const char *needle, int sensitive, 
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
-int mk_string_array_count(char *arr[]);
 struct mk_string_line *mk_string_split_line(char *line);
 int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len, 

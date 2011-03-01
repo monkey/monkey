@@ -159,15 +159,6 @@ char *mk_string_dup(const char *s)
     return strdup(s);
 }
 
-int mk_string_array_count(char *arr[])
-{
-    int i = 0;
-
-    for (i = 0; arr[i]; i++) {
-    }
-    return i;
-}
-
 struct mk_string_line *mk_string_split_line(char *line)
 {
     unsigned int i = 0, len, val_len;
