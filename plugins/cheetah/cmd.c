@@ -187,15 +187,6 @@ void mk_cheetah_cmd_plugins_print_network(struct mk_list *list)
         }
     }
 
-    CHEETAH_WRITE("\n\n%s[NETWORK IP]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
-    mk_list_foreach(head, list) {
-        p = mk_list_entry(head, struct plugin, _head);
-        if (p->hooks & MK_PLUGIN_NETWORK_IP) {
-            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                          p->shortname, p->name, p->version, p->path);
-        }
-    }
-
     CHEETAH_WRITE("\n");
 }
 
@@ -337,7 +328,9 @@ void mk_cheetah_cmd_config()
     }
     CHEETAH_WRITE("\nWorkers         : %i threads", mk_api->config->workers);
     CHEETAH_WRITE("\nTimeout         : %i seconds", mk_api->config->timeout);
-    CHEETAH_WRITE("\nPidFile         : %s", mk_api->config->pid_file_path);
+    CHEETAH_WRITE("\nPidFile         : %s.%i", 
+                  mk_api->config->pid_file_path,
+                  mk_api->config->serverport);
     CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
 
     line = mk_api->config->index_files;
