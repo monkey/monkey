@@ -22,7 +22,7 @@ __GET / $HTTPVER10
 __Connection: Keep-Alive
 __
 _EXPECT . "HTTP/1.1 200 OK"
-_EXPECT . "Keep-Alive: timeout=15, max=20"
+_EXPECT . "Keep-Alive: timeout=5, max=120"
 _EXPECT . "Connection: Keep-Alive"
 _WAIT
 END

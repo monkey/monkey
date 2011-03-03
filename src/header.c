@@ -261,11 +261,8 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_iov_add_entry(iov,
                      mk_header_short_date.data,
                      mk_header_short_date.len,
-                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
-    mk_iov_add_entry(iov,
-                     header_current_time.data,
-                     header_current_time.len,
-                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                     header_current_time,
+                     MK_IOV_NOT_FREE_BUF);
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
@@ -275,9 +272,7 @@ int mk_header_send(int fd, struct client_session *cs,
 
         mk_iov_add_entry(iov, mk_header_last_modified.data,
                          mk_header_last_modified.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        mk_iov_add_entry(iov, lm->data, lm->len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                         *lm, MK_IOV_NOT_FREE_BUF);
     }
 
     /* Connection */
@@ -291,11 +286,9 @@ int mk_header_send(int fd, struct client_session *cs,
                             (config->max_keep_alive_request -
                              cs->counter_connections)
                             );
-            mk_iov_add_entry(iov, buffer, len, mk_iov_none, MK_IOV_FREE_BUF);
-            mk_iov_add_entry(iov,
-                             mk_header_conn_ka.data,
-                             mk_header_conn_ka.len,
-                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+
+            mk_iov_add_entry(iov, buffer, len, 
+                             mk_header_conn_ka, MK_IOV_FREE_BUF);
         }
     }
     else {
@@ -322,12 +315,7 @@ int mk_header_send(int fd, struct client_session *cs,
         mk_iov_add_entry(iov,
                          mk_header_short_ct.data,
                          mk_header_short_ct.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
-        mk_iov_add_entry(iov,
-                         sh->content_type.data,
-                         sh->content_type.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                         sh->content_type, MK_IOV_NOT_FREE_BUF);
     }
 
     /* Transfer Encoding: the transfer encoding header is just sent when
@@ -364,11 +352,7 @@ int mk_header_send(int fd, struct client_session *cs,
         /* Set headers */
         mk_iov_add_entry(iov, mk_header_content_length.data,
                          mk_header_content_length.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        
-        mk_iov_add_entry(iov, cl->data, cl->len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        
+                         *cl, MK_IOV_NOT_FREE_BUF);
     }
 
     if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
