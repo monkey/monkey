@@ -95,18 +95,18 @@ cat > conf/monkey.conf <<EOF
 
     KeepAlive on
 
-    # MaxKeepAliveRequest
-    # -------------------
-    # Maximum number of requests per connection. (value > 0)
-
-    MaxKeepAliveRequest 20
-
     # KeepAliveTimeout
     # ----------------
     # Number of seconds to wait for the next request in a persistent
     # connection (value > 0).
 
-    KeepAliveTimeout 15 
+    KeepAliveTimeout 5 
+
+    # MaxKeepAliveRequest
+    # -------------------
+    # Maximum number of requests per connection. (value > 0)
+
+    MaxKeepAliveRequest 120
 
     # MaxRequestSize
     # ----------------
