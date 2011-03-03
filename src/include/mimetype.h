@@ -25,10 +25,6 @@
 #define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
 #define MIMETYPE_DEFAULT_NAME "default"
 
-#define MAX_MIMETYPES_NOMBRE 15
-#define MAX_MIMETYPES_TIPO 55
-#define MAX_SCRIPT_BIN_PATH 255
-
 struct mimetype
 {
     char *name;
