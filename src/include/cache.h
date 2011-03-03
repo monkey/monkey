@@ -29,6 +29,8 @@ pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_toc;
 pthread_key_t mk_cache_header_lm;
 pthread_key_t mk_cache_header_cl;
+pthread_key_t mk_cache_header_ka;
+pthread_key_t mk_cache_header_ka_max;
 pthread_key_t mk_cache_utils_gmtime;
 
 struct mk_cache_date_t
@@ -41,6 +43,11 @@ struct mk_cache_date_t
 
 struct mk_cache_date_t *mk_cache_file_date;
 
+/* 
+ * This variable specify where the 'max=' field for the header
+ * response 'Keep-Alive: timeout=N, max=Y' is located.
+ */
+int mk_header_ka_max;
 
 void mk_cache_thread_init(void);
 void *mk_cache_get(pthread_key_t key);

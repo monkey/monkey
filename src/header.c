@@ -278,17 +278,24 @@ int mk_header_send(int fd, struct client_session *cs,
     /* Connection */
     if (mk_http_keepalive_check(fd, cs) == 0) {
         if (sr->connection.len > 0) {
-            mk_string_build(&buffer,
-                            &len,
-                            "Keep-Alive: timeout=%i, max=%i"
-                            MK_CRLF,
-                            config->keep_alive_timeout,
-                            (config->max_keep_alive_request -
-                             cs->counter_connections)
-                            );
+            char *p, *m;
+            mk_pointer *ka, *ka_max;
 
-            mk_iov_add_entry(iov, buffer, len, 
-                             mk_header_conn_ka, MK_IOV_FREE_BUF);
+            /* Get cache buffers and compose new 'max' value */
+            ka     = mk_cache_get(mk_cache_header_ka);
+            ka_max = mk_cache_get(mk_cache_header_ka_max);
+            mk_string_itop((config->max_keep_alive_request - cs->counter_connections),
+                           ka_max);
+
+            /* Replace original KA header 'max' field with the new value */
+            p = ka->data + mk_header_ka_max;
+            m = ka_max->data;
+            while (*m) {
+                *p++ = *m++;
+            }
+
+            mk_iov_add_entry(iov, ka->data, (mk_header_ka_max + ka_max->len),
+                             mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
         }
     }
     else {

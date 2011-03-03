@@ -23,6 +23,9 @@
 #include "iov.h"
 #include "cache.h"
 #include "request.h"
+#include "str.h"
+#include "config.h"
+#include "macros.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +36,9 @@ void mk_cache_thread_init()
 {
     mk_pointer *cache_header_lm; 
     mk_pointer *cache_header_cl;
+    mk_pointer *cache_header_ka;
+    mk_pointer *cache_header_ka_max = NULL;
+
     struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
     
@@ -47,6 +53,30 @@ void mk_cache_thread_init()
     cache_header_cl->data = mk_mem_malloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     cache_header_cl->len = -1;
     pthread_setspecific(mk_cache_header_cl, (void *) cache_header_cl);
+
+    /* Cache header response -> keep-alive */
+    cache_header_ka = mk_mem_malloc_z(sizeof(mk_pointer));
+    mk_string_build(&cache_header_ka->data, &cache_header_ka->len,
+                    "Keep-Alive: timeout=%i, max=%i%s",
+                    config->keep_alive_timeout,
+                    config->max_keep_alive_request,
+                    MK_CRLF);
+    pthread_setspecific(mk_cache_header_ka, (void *) cache_header_ka);
+
+    /* Cache header response -> keep-alive -> 'max' field */
+    cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_pointer));
+    mk_string_build(&cache_header_ka_max->data, &cache_header_ka_max->len,
+                    "%i", config->max_keep_alive_request);
+    pthread_setspecific(mk_cache_header_ka_max, (void *) cache_header_ka_max);
+
+    /* 
+     * This is a position indicator defined in src/include/header.h, which points
+     * to the 'max=' field
+     */
+    mk_header_ka_max = mk_string_search(cache_header_ka->data,
+                                        ", max=", MK_STR_INSENSITIVE);
+    mk_bug(mk_header_ka_max <= 0);
+    mk_header_ka_max += 6; /* length of ', max=' */
 
     /* Cache iov header struct */
     cache_iov_header = mk_iov_create(32, 0);
