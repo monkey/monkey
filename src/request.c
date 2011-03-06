@@ -168,7 +168,7 @@ and all static headers defined here sent in request */
 static int mk_request_header_process(struct session_request *sr)
 {
     int uri_init = 0, uri_end = 0;
-    char *query_init = 0;
+    int query_init = 0;
     int prot_init = 0, prot_end = 0, pos_sep = 0;
     int fh_limit;
     char *port = 0;
@@ -197,11 +197,11 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Query String */
-    query_init = index(sr->body.data + uri_init, '?');
-    if (query_init) {
+    query_init = mk_string_char_search(sr->body.data + uri_init, '?', fh_limit);
+    if (query_init > 0) {
         int init, end;
 
-        init = (int) (query_init - (sr->body.data + uri_init)) + uri_init;
+        init = query_init + uri_init;
         if (init <= uri_end) {
             end = uri_end;
             uri_end = init - 1;

@@ -106,7 +106,7 @@ cat > conf/monkey.conf <<EOF
     # -------------------
     # Maximum number of requests per connection. (value > 0)
 
-    MaxKeepAliveRequest 120
+    MaxKeepAliveRequest 1000
 
     # MaxRequestSize
     # ----------------
