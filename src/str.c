@@ -314,46 +314,29 @@ int mk_string_trim(char **str)
     return 0;
 }
 
-int mk_string_itop(int n, mk_pointer *p)
+int mk_string_itop(int value, mk_pointer *p)
 {
-    /*
-      Code taken from some forum...
-    */
-    int i = 0;
-    int length = 0;
-    int temp = 0;
-    char *str;
+    char aux;
+    char *wstr = p->data;
+    char *begin, *end;
+    unsigned int uvalue = (value < 0) ? -value : value;
 
-    str = p->data;
+    do *wstr++ = (char)(48 + (uvalue % 10)); while(uvalue /= 10);
+    if (value < 0) *wstr++ = '-';
+    *wstr='\0';
 
-    if (!str) {
-        return -1;
+    begin = p->data;
+    end = wstr - 1;
+
+    while (end > begin) {
+        aux = *end, *end-- = *begin, *begin++ = aux;
     }
 
-    /* Generate digit characters in reverse order */
-    do {
-        str[i++] = ('0' + (n % 10));
-        n /= 10;
-    } while (n>0);
-    
-    /* Add CRLF and NULL byte */
-    str[i] = '\0';
+    *wstr++ = '\r';
+    *wstr++ = '\n';
+    *wstr++ = '\0';
 
-    p->len = length = i;
-    
-    for (i=0; i < (length/2); i++) {
-        temp = str[i];
-        str[i] = str[length-i-1];
-        str[length-i-1] = temp;
-    }
-
-    i = length;
-    str[i++] = '\r';
-    str[i++] = '\n';
-    str[i++] = '\0';
-
-    p->len+=2;
-
+    p->len = (wstr - p->data - 1);
     return 0;
 }
 
