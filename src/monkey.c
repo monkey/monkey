@@ -47,10 +47,10 @@ static void mk_thread_keys_init(void)
     pthread_key_create(&request_list, NULL);
     pthread_key_create(&epoll_fd, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
-    pthread_key_create(&mk_cache_header_ka, NULL);
-    pthread_key_create(&mk_cache_header_ka_max, NULL);
     pthread_key_create(&mk_cache_header_lm, NULL);
     pthread_key_create(&mk_cache_header_cl, NULL);
+    pthread_key_create(&mk_cache_header_ka, NULL);
+    pthread_key_create(&mk_cache_header_ka_max, NULL);
     pthread_key_create(&mk_cache_utils_gmtime, NULL);
     pthread_key_create(&mk_plugin_event_k, NULL);
 }

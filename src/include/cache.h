@@ -43,12 +43,6 @@ struct mk_cache_date_t
 
 struct mk_cache_date_t *mk_cache_file_date;
 
-/* 
- * This variable specify where the 'max=' field for the header
- * response 'Keep-Alive: timeout=N, max=Y' is located.
- */
-int mk_header_ka_max;
-
 void mk_cache_thread_init(void);
 void *mk_cache_get(pthread_key_t key);
 char *mk_cache_file_date_get(time_t time);

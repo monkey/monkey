@@ -217,7 +217,7 @@ struct mk_string_line *mk_string_split_line(char *line)
     return sl;
 }
 
-char *mk_string_build(char **buffer, unsigned long *len, 
+inline char *mk_string_build(char **buffer, unsigned long *len, 
                       const char *format, ...)
 {
     va_list ap;
@@ -228,8 +228,8 @@ char *mk_string_build(char **buffer, unsigned long *len,
 
     /* *buffer *must* be an empty/NULL buffer */
     mk_bug(*buffer);
-
     *buffer = (char *) mk_mem_malloc(_mem_alloc);
+
     if (!*buffer) {
         return NULL;
     }

@@ -278,23 +278,15 @@ int mk_header_send(int fd, struct client_session *cs,
     /* Connection */
     if (mk_http_keepalive_check(fd, cs) == 0) {
         if (sr->connection.len > 0) {
-            char *p, *m;
-            mk_pointer *ka, *ka_max;
+            /* Get cached mk_pointers */
+            mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
+            mk_pointer *ka_header = mk_cache_get(mk_cache_header_ka_max);
 
-            /* Get cache buffers and compose new 'max' value */
-            ka     = mk_cache_get(mk_cache_header_ka);
-            ka_max = mk_cache_get(mk_cache_header_ka_max);
-            mk_string_itop((config->max_keep_alive_request - cs->counter_connections),
-                           ka_max);
-
-            /* Replace original KA header 'max' field with the new value */
-            p = ka->data + mk_header_ka_max;
-            m = ka_max->data;
-            while (*m) {
-                *p++ = *m++;
-            }
-
-            mk_iov_add_entry(iov, ka->data, (mk_header_ka_max + ka_max->len),
+            /* Compose header and add entries to iov */
+            mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);            
+            mk_iov_add_entry(iov, ka_format->data, ka_format->len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_iov_add_entry(iov, ka_header->data, ka_header->len,
                              mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
         }
     }

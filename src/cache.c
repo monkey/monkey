@@ -37,7 +37,7 @@ void mk_cache_thread_init()
     mk_pointer *cache_header_lm; 
     mk_pointer *cache_header_cl;
     mk_pointer *cache_header_ka;
-    mk_pointer *cache_header_ka_max = NULL;
+    mk_pointer *cache_header_ka_max;
 
     struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
@@ -57,26 +57,15 @@ void mk_cache_thread_init()
     /* Cache header response -> keep-alive */
     cache_header_ka = mk_mem_malloc_z(sizeof(mk_pointer));
     mk_string_build(&cache_header_ka->data, &cache_header_ka->len,
-                    "Keep-Alive: timeout=%i, max=%i%s",
-                    config->keep_alive_timeout,
-                    config->max_keep_alive_request,
-                    MK_CRLF);
+                    "Keep-Alive: timeout=%i, max=",
+                    config->keep_alive_timeout);
     pthread_setspecific(mk_cache_header_ka, (void *) cache_header_ka);
 
-    /* Cache header response -> keep-alive -> 'max' field */
+    /* Cache header response -> max=%i */
     cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_pointer));
-    mk_string_build(&cache_header_ka_max->data, &cache_header_ka_max->len,
-                    "%i", config->max_keep_alive_request);
+    cache_header_ka_max->data = mk_mem_malloc_z(64);
+    cache_header_ka_max->len  = 0;
     pthread_setspecific(mk_cache_header_ka_max, (void *) cache_header_ka_max);
-
-    /* 
-     * This is a position indicator defined in src/include/header.h, which points
-     * to the 'max=' field
-     */
-    mk_header_ka_max = mk_string_search(cache_header_ka->data,
-                                        ", max=", MK_STR_INSENSITIVE);
-    mk_bug(mk_header_ka_max <= 0);
-    mk_header_ka_max += 6; /* length of ', max=' */
 
     /* Cache iov header struct */
     cache_iov_header = mk_iov_create(32, 0);

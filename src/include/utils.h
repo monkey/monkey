@@ -52,7 +52,6 @@ pthread_mutex_t mutex_trace;
 #define MK_TRACE(...) do {} while (0) 
 #endif
 
-/* utils.c */
 int    mk_utils_utime2gmt(mk_pointer **p, time_t date);
 time_t mk_utils_gmt2utime(char *date);
 
