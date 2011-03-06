@@ -367,7 +367,7 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
     if (size <= 2)
         size = 4;
 
-    buffer = malloc(size);
+    buffer = mk_mem_malloc(size);
 
     if (!buffer) {
         return NULL;

@@ -367,6 +367,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     if (stat(config->serverconf, &checkdir) == -1) {
         mk_err("ERROR: Cannot find/open '%s'", config->serverconf);
+        exit(EXIT_FAILURE);
     }
 
     mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
