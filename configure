@@ -94,8 +94,7 @@ main()
         fi
 
         echo
-	echo -e "\033[1mChecking dependencies\033[0m"
-        echo -e "\033[1m=====================\033[0m"
+	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
         # Check for accept4()
         echo -n "+ Checking for accept4() function... "
@@ -113,19 +112,16 @@ main()
         fi
 
         echo
-        echo -e "\033[1mPlugins to be compiled\033[0m"
-        echo -e "\033[1m======================\033[0m"
+        echo -e "\033[1m=== Plugins included ===\033[0m"
 
         find plugins/ -name Makefile -exec rm {} \;
-        create_makefile_plugins $plugdir
+        create_makefile_plugins $plugdir $prefix $bindir $mandir $cgibin $sysconfdir $datadir $logdir $cgibin $sysconfdir $datadir $logdir $mandir
 
         echo
-        echo -e "\033[1mCreating Makefiles and scripts\033[0m"
-        echo -e "\033[1m==============================\033[0m"
+        echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
 	echo "+ Creating conf/monkey.conf"
-	create_conf prefix bindir mandir cgibin sysconfdir datadir logdir
-
+	create_conf prefix
 	make_conf  $lang $default_port $default_user
 
 	echo "+ Creating src/Makefile"
@@ -145,8 +141,7 @@ main()
 	fi
 
         echo
-        echo -e "\033[1mMonkey Configuration\033[0m"
-        echo -e "\033[1m====================\033[0m"
+        echo -e "\033[1m=== Monkey Configuration ===\033[0m"
         echo -e "PLATFORM\t= $platform"
         echo -e "COMPILER\t= $CC"
         echo -e "CFLAGS\t\t= $CFLAGS"
@@ -455,9 +450,11 @@ EOF
             echo -e "+ ${name}${i:1}";
         done
 
+        # Create Makefile
         echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
         sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
+        # Add details to plugins.load using ABOUT file
         if test -e $plugin_dir/ABOUT ; then
             cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
 	    echo "    #" >> ../conf/plugins.load
@@ -472,6 +469,23 @@ EOF
 	fi
 
 	echo "" >> ../conf/plugins.load
+
+        # Copy specific plugin configuration files
+        if test -e $plugin_dir/conf ; then
+           target="../conf/plugins/$plugin_dir/"
+           mkdir -p $target
+           cp -r $plugin_dir/conf/* $target/
+
+           # Replace configuration variables:
+           find $target/* -type f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
+           find $target/* -type f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
+           find $target/* -type f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
+           find $target/* -type f -exec sed -i "s,#CGIBIN#,$cgibin," {} ';'           
+           find $target/* -type f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
+           find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+           find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
+           find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+        fi
     done
 
 # Add 'install' option to Makefile if plugdir was specified
