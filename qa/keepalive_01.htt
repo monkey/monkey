@@ -27,7 +27,7 @@ __Connection: Keep-Alive
 __
 _EXPECT . "HTTP/1.1 200 OK"
 _EXPECT . "!Connection: Closed"
-_EXPECT . "Keep-Alive: timeout=5, max=120"
+_EXPECT . "Keep-Alive: timeout=5, max=1000"
 _EXPECT . "Connection: Keep-Alive"
 _WAIT
 END

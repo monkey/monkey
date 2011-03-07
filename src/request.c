@@ -197,7 +197,7 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Query String */
-    query_init = mk_string_char_search(sr->body.data + uri_init, '?', fh_limit);
+    query_init = mk_string_char_search(sr->body.data + uri_init, '?', prot_init);
     if (query_init > 0) {
         int init, end;
 
@@ -213,7 +213,6 @@ static int mk_request_header_process(struct session_request *sr)
     
     /* Request URI Part 2 */
     sr->uri = mk_pointer_create(sr->body.data, uri_init, uri_end + 1);
-
     if (sr->uri.len < 1) {
         return -1;
     }
@@ -303,11 +302,13 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     if (sr->connection.data) {
-        if (mk_string_casestr(sr->connection.data, "Keep-Alive")) {
+        if (mk_string_search_n(sr->connection.data, "Keep-Alive",
+                               MK_STR_INSENSITIVE, sr->connection.len) >= 0) {
             sr->keep_alive = MK_TRUE;
             sr->close_now = MK_FALSE;
         }
-        else if(mk_string_casestr(sr->connection.data, "Close")) {
+        else if(mk_string_search_n(sr->connection.data, "Close",
+                                   MK_STR_INSENSITIVE, sr->connection.len) >= 0) {
             sr->keep_alive = MK_FALSE;
             sr->close_now = MK_TRUE;
         }

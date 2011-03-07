@@ -67,15 +67,15 @@ int _mk_string_search(const char *string, const char *search, int sensitive, int
 /* Lookup char into string, return position */
 int mk_string_char_search(const char *string, int c, int len)
 {
-    int i;
+    char *p;
 
     if (len < 0) {
         len = strlen(string);
     }
 
-    for (i = 0; i < len; i++) {
-        if (string[i] == c)
-            return i;
+    p = memchr(string, c, len);
+    if (p) {
+        return (p - string);
     }
 
     return -1;
@@ -84,19 +84,15 @@ int mk_string_char_search(const char *string, int c, int len)
 /* Find char into string searching in reverse order, returns position */
 int mk_string_char_search_r(const char *string, int c, int len)
 {
-    int i, j;
+    char *p;
 
-    if (len >= 0) {
-        j = len;
-    }
-    else {
-        j = strlen(string);
+    if (len <= 0) {
+        len = strlen(string);
     }
 
-    for (i = j; i >= 0; i--) {
-        if (string[i] == c) {
-            return i;
-        }
+    p = memrchr(string, c, len);
+    if (p) {
+        return (p - string);
     }
 
     return -1;
@@ -217,7 +213,7 @@ struct mk_string_line *mk_string_split_line(char *line)
     return sl;
 }
 
-inline char *mk_string_build(char **buffer, unsigned long *len, 
+char *mk_string_build(char **buffer, unsigned long *len, 
                       const char *format, ...)
 {
     va_list ap;
