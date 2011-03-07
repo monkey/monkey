@@ -1,3 +1,127 @@
+commit 5fa744d3e6302465b8b741b15dd3f9effd38d11c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 6 21:43:18 2011 -0300
+
+    Improve some string search with memchr family
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 991d192c72a3669eb3497dcac78af5ee119354a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 6 19:41:14 2011 -0300
+
+    Query string parser: better performance, restrict lookup to first header
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e249fe85d975c95c1b8ed90d92b1cd1bcd22dd82
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 6 19:28:30 2011 -0300
+
+    Keepalive: split buffer and add to iov
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 19bc524081a4712fc3ffe607df1c79fafb51e61e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 6 15:23:25 2011 -0300
+
+    Faster string_itop(), code based in stringencoders-3.10.3
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d9c22249f77bc2f02743cbee2df85c6ad4167de8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 5 23:47:12 2011 -0300
+
+    Ticket #33: add conf directory to plugins, it also supports all configuration keys
+
+commit 64c946ea5c0c32ce9c6c0a471fdaca77631b7b46
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Mar 5 01:17:14 2011 -0300
+
+    Exit the program if cannot find (invalid) the server configuration entry
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 04b07981db9c95cac29f49e1b8109ab581b2d782
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 3 10:55:37 2011 -0300
+
+    KeepAlive improve
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 33d307efc7a62f8a7ac88adb4a114f09c8dda2ca
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Mar 3 01:39:18 2011 -0300
+
+    Use mk_mem_malloc() when allocating memory in mk_string_copy_substr
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 17563671709103f7917491db40e767bd22ee8dd4
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Mar 3 01:33:43 2011 -0300
+
+    Remove unused MIME constants: MAX_MIMETYPES_NOMBRE, MAX_MIMETYPES_TIPO, MAX_SCRIPT_BIN_PATH
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit 0d086eaddf62c49372fd0d7a899906d3b10cca77
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 3 00:36:42 2011 -0300
+
+    Reduce number of calls to iov_add_entry when sending response headers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ff99a92eb161231b59c1b42f99be76e3d2fce3c0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 2 23:55:51 2011 -0300
+
+    Change default MaxKeepAliveRequest to 120 and KeepAliveTimeout to 5
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 038834fc7f309ae64472d7100ed3f709e076360c
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Mar 1 01:14:17 2011 -0300
+
+    Get rid of unused mk_string_array_count
+    
+    Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit e7b9bc2484b1d3f0d0a656b0bc8804ff9fee70f0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 28 23:15:37 2011 -0300
+
+    Cheetah: minor fix in config command
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3b1d75b22997c6fb3a9a2bde68187bf6e7476b5d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 28 15:04:57 2011 -0300
+
+    Configure: generate banana script to use right pidfile
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c66ff0c78b12682d261a1001473f507cae0555cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 28 15:01:50 2011 -0300
+
+    Monkey v0.13.1 begins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 05895a3c92214450a040fcb594e8e5154db4251b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 27 20:15:16 2011 -0300
+
+    Monkey 0.13.0
+
 commit d70563a95e641964b8692cac241a46620b98c741
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sun Feb 27 17:34:49 2011 -0300

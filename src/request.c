@@ -690,7 +690,6 @@ mk_pointer mk_request_index(char *pathfile)
     struct mk_string_line *aux_index;
 
     mk_pointer_reset(&f);
-
     aux_index = config->index_files;
 
     while (aux_index) {

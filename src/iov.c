@@ -59,7 +59,7 @@ int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
         mk_io->iov_idx++;
         mk_io->total_len += len;
     }
-
+    
 #ifdef DEBUG_IOV
     if (mk_io->iov_idx > mk_io->size) {
         printf("\nDEBUG IOV :: ERROR, Broken array size in:");
