@@ -225,6 +225,7 @@ int mk_dirhtml_read_config(char *path)
     char *default_file = NULL;
     struct mk_config *conf;
     struct mk_config_section *section;
+    struct file_info *finfo;
 
     mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
     conf = mk_api->config_create(default_file);
@@ -245,6 +246,14 @@ int mk_dirhtml_read_config(char *path)
                       "%sthemes/%s/", path, dirhtml_conf->theme);
 
     mk_api->mem_free(default_file);
+
+    finfo = mk_api->file_get_info(dirhtml_conf->theme_path);
+    if (!finfo) {
+        mk_warn("Dirlisting: cannot load theme from '%s'", dirhtml_conf->theme_path);
+        mk_warn("Dirlisting: unloading plugin");
+        return -1;
+    }
+
     return 0;
 }
 
