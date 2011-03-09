@@ -253,6 +253,7 @@ int mk_dirhtml_read_config(char *path)
         mk_warn("Dirlisting: unloading plugin");
         return -1;
     }
+    mk_api->mem_free(finfo);
 
     return 0;
 }
