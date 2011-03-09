@@ -27,6 +27,12 @@ SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 INCDIR="src/include/"
 
+END_COLOR="\033[0m"
+GREEN="\033[0;32m"
+YELLOW="\033[1;33m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+
 # Create configuration files under 'conf/'
 make_conf()
 {
@@ -100,9 +106,9 @@ main()
         echo -n "+ Checking for accept4() function... "
         check_accept4_func result
         if [ $result == 0 ]; then
-            echo "Yes"
+            echo -en $GREEN"Yes"$END_COLOR"\n"
         else
-            echo "No"
+            echo -en $RED"No"$END_COLOR"\n"
             DEFS="$DEFS -DACCEPT_GENERIC"
         fi
 
@@ -166,7 +172,7 @@ main()
 
         echo
         echo "--"
-	echo -en "\033[1m\033[32mMonkey\033[0m configuration is \033[1m\033[33mdone!\033[0m, type 'make' to build or 'make help"
+	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, type 'make' to build or 'make help"
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
 	else
@@ -186,8 +192,8 @@ cat > check.c <<EOF
 #include <sys/socket.h>
 
 int main()
-{ 
-   accept4(0, 0, 0, 0); 
+{
+   accept4(0, 0, 0, 0);
    return 0;
 }
 EOF
@@ -213,11 +219,11 @@ EOF
 libtest=`$CC check.c -lpthread &>configure.log`
 libstatus=`cat configure.log`
 if  test -n "$libstatus"  ; then
-	echo "No"
+	echo -en $GREEN"No"$END_COLOR"\n"
 	rm -fr check* configure.log
 	exit 1
 fi
-echo "Yes"
+echo -en $GREEN"Yes"$END_COLOR"\n"
 rm -fr check* configure.log a.out
 }
 
@@ -358,7 +364,7 @@ OBJ	= monkey.o method.o mimetype.o request.o \\
 	user.o utils.o epoll.o scheduler.o \\
 	str.o memory.o connection.o iov.o http.o \\
 	file.o socket.o clock.o cache.o \\
-	server.o plugin.o 
+	server.o plugin.o
 
 all: ../bin/monkey
 
@@ -480,7 +486,7 @@ EOF
            find $target/* -type f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
            find $target/* -type f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
            find $target/* -type f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-           find $target/* -type f -exec sed -i "s,#CGIBIN#,$cgibin," {} ';'           
+           find $target/* -type f -exec sed -i "s,#CGIBIN#,$cgibin," {} ';'
            find $target/* -type f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
            find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
            find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
@@ -737,7 +743,7 @@ for arg in $*; do
 			echo "Optional Commands: "
 			echo "  --help        Display this help and exit"
 			echo "  --version     Display version information and exit"
-                        echo 
+                        echo
                         echo "Compiler and debug Features:"
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
@@ -753,7 +759,7 @@ for arg in $*; do
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
                         echo "  --disable-plugins=a,b   Disable the listed plugins"
-                        echo 
+                        echo
                         echo "Override Server Configuration:"
                         echo "  --default-port=PORT     Override default TCP port (default: 2001)"
                         echo "  --default-user=USER     Override default web user (default: nobody)"
@@ -763,20 +769,20 @@ for arg in $*; do
 	esac
 done
 
-echo "********************************************"
-echo "        Monkey HTTP Daemon v$VERSION        "
-echo "*         www.monkey-project.com           *"
-echo "* ---------------------------------------- *"
-echo "*  We need beta testers, developers and    *"
-echo "* translators!, if you want to contribute  *"
-echo "* to this wonderful project, contact us !  *"
-echo "*                                          *"
-echo "*        irc.freenode.net #monkeyd         *"
-echo "*                                          *"
-echo "*        Thanks for using Monkey!!!        *"
-echo "*                                          *"
-echo "********************************************"
-echo "System   : $SYSINFO"
+echo -en $RED"********************************************\n"
+echo -en $YELLOW"        Monkey HTTP Daemon v$VERSION        \n"
+echo -en $RED"*"$YELLOW"         www.monkey-project.com           "$RED"*\n"
+echo -en "*"$BLUE" ---------------------------------------- "$RED"*\n"
+echo -en "*"$YELLOW"  We need beta testers, developers and    "$RED"*\n"
+echo -en "*"$YELLOW" translators!, if you want to contribute  "$RED"*\n"
+echo -en "*"$YELLOW" to this wonderful project, contact us !  "$RED"*\n"
+echo -en "*"$YELLOW"                                          "$RED"*\n"
+echo -en "*"$YELLOW"        irc.freenode.net #monkeyd         "$RED"*\n"
+echo -en "*"$YELLOW"                                          "$RED"*\n"
+echo -en "*"$YELLOW"        Thanks for using Monkey!!!        "$RED"*\n"
+echo -en "*"$YELLOW"                                          "$RED"*\n"
+echo -en "********************************************"$END_COLOR"\n"
+echo -en "System   : "$YELLOW"$SYSINFO"$END_COLOR
 
 lang="en"
 
