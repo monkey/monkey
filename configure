@@ -27,6 +27,7 @@ SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 INCDIR="src/include/"
 
+BOLD="\033[1m"
 END_COLOR="\033[0m"
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
@@ -106,9 +107,9 @@ main()
         echo -n "+ Checking for accept4() function... "
         check_accept4_func result
         if [ $result == 0 ]; then
-            echo -en $GREEN"Yes"$END_COLOR"\n"
+            echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
         else
-            echo -en $RED"No"$END_COLOR"\n"
+            echo -en $RED$BOLD"No"$END_COLOR"\n"
             DEFS="$DEFS -DACCEPT_GENERIC"
         fi
 
@@ -219,11 +220,11 @@ EOF
 libtest=`$CC check.c -lpthread &>configure.log`
 libstatus=`cat configure.log`
 if  test -n "$libstatus"  ; then
-	echo -en $GREEN"No"$END_COLOR"\n"
+	echo -en $GREEN$BOLD"No"$END_COLOR"\n"
 	rm -fr check* configure.log
 	exit 1
 fi
-echo -en $GREEN"Yes"$END_COLOR"\n"
+echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
 rm -fr check* configure.log a.out
 }
 
@@ -770,7 +771,7 @@ for arg in $*; do
 done
 
 echo -en $RED"********************************************\n"
-echo -en $YELLOW"        Monkey HTTP Daemon v$VERSION        \n"
+echo -en $GREEN$BOLD"        Monkey HTTP Daemon v$VERSION        \n"
 echo -en $RED"*"$YELLOW"         www.monkey-project.com           "$RED"*\n"
 echo -en "*"$BLUE" ---------------------------------------- "$RED"*\n"
 echo -en "*"$YELLOW"  We need beta testers, developers and    "$RED"*\n"
