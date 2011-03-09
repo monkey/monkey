@@ -455,6 +455,8 @@ void mk_plugin_init()
                 MK_TRACE("Unregister plugin '%s'", p->shortname);
 
                 mk_plugin_free(p);
+                mk_mem_free(plugin_confdir);
+                plugin_confdir  = NULL;
                 entry = entry->next;
                 continue;
             }
