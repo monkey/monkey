@@ -201,15 +201,18 @@ int mk_dirhtml_conf(char *confdir)
     char *conf_file = NULL;
 
     mk_api->str_build(&conf_file, &len, "%s", confdir);
-    ret = mk_dirhtml_read_config(conf_file);
-
-    /* This function will load the default theme 
-     * setted in dirhtml_conf struct 
-     */
-    ret = mk_dirhtml_theme_load();
     mk_api->pointer_set(&mk_dirhtml_default_mime, MK_DIRHTML_DEFAULT_MIME);
 
-    return ret;
+    /* Read configuration */
+    ret = mk_dirhtml_read_config(conf_file);
+    if (ret < 0) {
+        return -1;
+    }
+
+    /* 
+     * This function will load the default theme setted in dirhtml_conf struct
+     */
+    return mk_dirhtml_theme_load();
 }
 
 /* 
@@ -816,10 +819,10 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     return 0;
 }
 
-void _mkp_init(void **api, char *confdir)
+int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
-    mk_dirhtml_conf(confdir);
+    return mk_dirhtml_conf(confdir);
 }
 
 void _mkp_exit()
