@@ -3,9 +3,15 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
+LIANA_OBJECTS = liana.o
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c liana.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-liana.so liana.o -lc
+all: monkey-liana.so
+
+monkey-liana.so: $(LIANA_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
 clean:
 	rm -rf *.o *~ *.*so*

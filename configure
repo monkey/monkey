@@ -235,8 +235,10 @@ create_makefile1()
 cat > Makefile << EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
-default:
+
+all:
 	@(cd src; \$(MAKE) all)
+	@(cd plugins; \$(MAKE) all)
 
 plugins:
 	@(cd plugins; \$(MAKE) all)
@@ -255,6 +257,7 @@ help:
 
 clean:
 	@(cd src; \$(MAKE) clean)
+	@(cd plugins; \$(MAKE) clean)
 distclean:
 	@(cd src; \$(MAKE) distclean)
 EOF
@@ -298,10 +301,17 @@ DATADIR=\$(DESTDIR)${datadir}
 LOGDIR=\$(DESTDIR)${logdir}
 PLUGINDIR=\$(DESTDIR)${plugdir}
 
-default:
+all:
+	@echo "Compiling Monkey"
+	@echo "================"
 	@(cd src; \$(MAKE) all)
+	@echo
+	@echo "Compiling Monkey Plugins"
+	@echo "================"
+	@(cd plugins; \$(MAKE) all)
 clean:
 	@(cd src; \$(MAKE) clean)
+	@(cd plugins; \$(MAKE) clean)
 distclean:
 	@(cd src; \$(MAKE) distclean)
 
@@ -374,10 +384,6 @@ all: ../bin/monkey
 	@echo "Compiling Monkey"
 	@echo "================"
 	\$(CC) \$(CFLAGS) \$(DEFS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
-	@echo
-	@echo "Compiling Plugins"
-	@echo "================="
-	@(cd ../plugins && \$(MAKE) all && cd ..)
 
 clean:
 	rm -rf *.o
@@ -397,9 +403,7 @@ EOF
 create_makefile_plugins()
 {
     cd plugins
-    cat > Makefile <<EOF
-all:
-EOF
+
     dir=`pwd`
     plugins_load="../conf/plugins.load"
     echo -n > $plugins_load
@@ -458,7 +462,9 @@ EOF
         done
 
         # Create Makefile
-        echo "	@(cd $plugin_dir && \$(MAKE) && cd ..)" >> Makefile;
+        MAKE_ALL="${MAKE_ALL}\t@(cd $plugin_dir && \$(MAKE) && cd ..)\n"
+        MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $plugin_dir && \$(MAKE) clean && cd ..)\n"
+
         sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
 
         # Add details to plugins.load using ABOUT file
@@ -495,10 +501,17 @@ EOF
         fi
     done
 
+echo "all:" > Makefile
+echo -e $MAKE_ALL >> Makefile
+echo "" >> Makefile
+echo "clean:" >> Makefile
+echo -e $MAKE_CLEAN >> Makefile
+
 # Add 'install' option to Makefile if plugdir was specified
 if [ "$plugdir" != "" ]; then
     echo -e "\ninstall:" >> Makefile
     echo -e "\tinstall -d $plugdir" >> Makefile
+
 
     list=`echo */ "" | sed "s/\/ /\n/g"`
     for i in $list;

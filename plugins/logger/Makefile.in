@@ -3,11 +3,15 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
+LOGGER_OBJECTS = pointers.o logger.o
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c pointers.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c logger.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-logger.so logger.o pointers.o -lc
+all: monkey-logger.so
+
+monkey-logger.so: $(LOGGER_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
 clean:
 	rm -rf *.o *~
 	rm -rf *.*so*

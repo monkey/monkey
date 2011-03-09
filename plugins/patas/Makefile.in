@@ -3,11 +3,14 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
-SOURCES = patas.c connection.c
-OBJECTS = patas.o connection.o
+PATAS_OBJECTS = patas.o connection.o
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-patas.so $(OBJECTS) -lc
+all: monkey-patas.so
+
+monkey-patas.so: $(PATAS_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
 clean:
 	rm -rf *.o *~ *.*so*

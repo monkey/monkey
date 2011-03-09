@@ -3,11 +3,15 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
+DIRLISTING_OBJECTS = dirlisting.o
 
+all: monkey-dirlisting.so
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c dirlisting.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o monkey-dirlisting.so dirlisting.o -lc
+monkey-dirlisting.so: $(DIRLISTING_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
 clean:
-	rm -rf *.o
-	rm -rf *.*so*
+	rm -rf *.o *~ *.*so*
