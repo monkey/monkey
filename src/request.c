@@ -101,7 +101,7 @@ static struct session_request *mk_request_alloc()
     /* Plugin handler */
     request->handled_by = NULL;
 
-    /* 
+    /*
      * FIXME: these fields will be dropped once plugins
      * uses the new headers ToC interface
      */
@@ -189,7 +189,7 @@ static int mk_request_header_process(struct session_request *sr)
         MK_TRACE("Error, first header bad formed");
         return -1;
     }
-    
+
     prot_init = uri_end + 2;
 
     if (uri_end < uri_init) {
@@ -210,7 +210,7 @@ static int mk_request_header_process(struct session_request *sr)
                                                  init + 1, end + 1);
         }
     }
-    
+
     /* Request URI Part 2 */
     sr->uri = mk_pointer_create(sr->body.data, uri_init, uri_end + 1);
     if (sr->uri.len < 1) {
@@ -222,7 +222,7 @@ static int mk_request_header_process(struct session_request *sr)
     if (prot_init == prot_end) {
         return  -1;
     }
-    
+
     if (prot_end != prot_init && prot_end > 0) {
         sr->protocol = mk_http_protocol_check(sr->body.data + prot_init,
                                               prot_end - prot_init);
@@ -231,8 +231,8 @@ static int mk_request_header_process(struct session_request *sr)
 
     headers = sr->body.data + prot_end + mk_crlf.len;
 
-    /* 
-     * Process URI, if it contains ASCII encoded strings like '%20', 
+    /*
+     * Process URI, if it contains ASCII encoded strings like '%20',
      * it will return a new memory buffer with the decoded string, otherwise
      * it returns NULL
      */
@@ -483,21 +483,17 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         return EXIT_ABORT;
     }
 
+    sr->host_conf = config->hosts;
+
     if (sr->host.data) {
         host = mk_config_host_find(sr->host);
         if (host) {
             sr->host_conf = host;
         }
-        else {
-            sr->host_conf = config->hosts;
-        }
-    }
-    else {
-        sr->host_conf = config->hosts;
     }
 
     /* Is requesting an user home directory ? */
-    if (config->user_dir && 
+    if (config->user_dir &&
         sr->uri_processed.len > 2 &&
         sr->uri_processed.data[1] == MK_USER_HOME) {
 
@@ -516,9 +512,9 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* Plugins Stage 20 */
     int ret;
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cs->socket, NULL, 
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cs->socket, NULL,
                               cs, sr);
-    
+
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
         return EXIT_ABORT;
@@ -572,7 +568,7 @@ int mk_handler_read(int socket, struct client_session *cs)
         if (pending < available) {
             new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
         }
-        else {    
+        else {
             new_size = cs->body_size + pending + 1;
         }
 
@@ -593,7 +589,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     }
 
     /* Read content */
-    bytes = mk_socket_read(socket, cs->body + cs->body_length, 
+    bytes = mk_socket_read(socket, cs->body + cs->body_length,
                            (cs->body_size - cs->body_length) );
 
     if (bytes < 0) {
@@ -711,7 +707,7 @@ mk_pointer mk_request_index(char *pathfile)
 }
 
 /* Send error responses */
-void mk_request_error(int http_status, struct client_session *cs, 
+void mk_request_error(int http_status, struct client_session *cs,
                       struct session_request *sr) {
     char *aux_message = 0;
     mk_pointer message, *page = 0;
@@ -912,7 +908,7 @@ void mk_session_remove(int socket)
     struct mk_list *cs_list, *cs_head, *temp;
 
     cs_list = mk_sched_get_request_list();
-    
+
     mk_list_foreach_safe(cs_head, temp, cs_list) {
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
         if (cs_node->socket == socket) {
