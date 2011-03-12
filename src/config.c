@@ -275,7 +275,6 @@ void mk_config_free(struct mk_config *conf)
             prev = section;
             section = section->next;
         }
-
         /* Free section entries */
         mk_config_free_entries(section);
 

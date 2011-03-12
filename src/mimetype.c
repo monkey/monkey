@@ -87,8 +87,7 @@ static int mk_mimetype_add(char *name, char *type, int common)
     int len = strlen(type) + 3;
     struct mimetype new_mime;
 
-    new_mime.name = name;
-
+    new_mime.name = mk_string_dup(name);
     new_mime.type.data = mk_mem_malloc(len);
     new_mime.type.len = len - 1;
     strcpy(new_mime.type.data, type);
@@ -98,7 +97,6 @@ static int mk_mimetype_add(char *name, char *type, int common)
     /* add the newly created item to the end of the array */
     common ? add_mime(new_mime, mimecommon) : add_mime(new_mime, mimearr);
 
-    mk_mem_free(type);
     return 0;
 }
 
@@ -148,6 +146,8 @@ void mk_mimetype_read_config()
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_NAME;
     mk_pointer_set(&mimetype_default->type, MIMETYPE_DEFAULT_TYPE);
+
+    mk_config_free(cnf);
 }
 
 struct mimetype *mk_mimetype_find(mk_pointer * filename)
