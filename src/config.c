@@ -505,6 +505,7 @@ void mk_config_read_hosts(char *path)
     struct host *p_host, *new_host;     /* debug */
     struct dirent *ent;
 
+    /* Read default virtual host file */
     mk_string_build(&buf, &len, "%s/sites/default", path);
     config->hosts = mk_config_get_host(buf);
     config->nhosts++;
@@ -515,10 +516,12 @@ void mk_config_read_hosts(char *path)
         mk_err("Error parsing main configuration file 'default'");
     }
 
+    /* Read all virtual hosts defined in sites/ */
     mk_string_build(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf))) {
         mk_err("Could not open %s", buf);
     }
+    mk_mem_free(buf);
 
     p_host = config->hosts;
 
