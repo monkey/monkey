@@ -200,17 +200,23 @@ struct session_request
     /* file descriptors */
     int fd_file;
 
-    struct file_info *file_info;
-    struct host *host_conf;
-    struct response_headers *headers;      /* headers response */
-
+    /* Static file information */
     long loop;
     long bytes_to_send;
     off_t bytes_offset;
+    struct file_info  *file_info;
+
+    /* Vhost */
+    struct host       *host_conf;     /* root vhost config */ 
+    struct host_alias *host_alias;    /* specific vhost matched */
+
+    /* Response headers */
+    struct response_headers *headers;
 
     /* Plugin handlers */
     struct plugin *handled_by;
 
+    /* mk_list head node */
     struct mk_list _head;
 };
 

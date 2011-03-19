@@ -688,7 +688,7 @@ void mk_config_start_configure(void)
     }
 }
 
-struct host *mk_config_host_find(mk_pointer host)
+int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias **alias)
 {
     struct host_alias *entry;
     struct mk_list *head;
@@ -700,14 +700,15 @@ struct host *mk_config_host_find(mk_pointer host)
             entry = mk_list_entry(head, struct host_alias, _head);
             if (entry->len == host.len &&
                 strncasecmp(entry->name, host.data, host.len) == 0) {
-
-                return aux_host;
+                *vhost = aux_host;
+                *alias = entry;
+                return 0;
             }
         }
         aux_host = aux_host->next;
     }
 
-    return NULL;
+    return -1;
 }
 
 void mk_config_sanity_check()

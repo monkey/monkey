@@ -439,7 +439,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
 static int mk_request_process(struct client_session *cs, struct session_request *sr)
 {
     int status = 0;
-    struct host *host;
+    struct mk_list *alias;
 
     status = mk_request_header_process(sr);
     if (status < 0) {
@@ -483,13 +483,14 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         return EXIT_ABORT;
     }
 
+    /* Always assign the first node 'default vhost' */
     sr->host_conf = config->hosts;
-
+    alias = &sr->host_conf->server_names;
+    sr->host_alias = mk_list_entry_first(alias,
+                                         struct host_alias, _head);
+    
     if (sr->host.data) {
-        host = mk_config_host_find(sr->host);
-        if (host) {
-            sr->host_conf = host;
-        }
+        mk_config_host_find(sr->host, &sr->host_conf, &sr->host_alias);
     }
 
     /* Is requesting an user home directory ? */
