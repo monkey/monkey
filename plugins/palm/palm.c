@@ -130,7 +130,7 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
     int n;
 
     if (sr->headers->status == 0) {
-        sr->headers->status = M_HTTP_OK;
+        sr->headers->status = MK_HTTP_OK;
     }
 
     sr->headers->cgi = SH_CGI;
@@ -245,7 +245,7 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
 
     if (ret < 0) {
         mk_warn("Palm: Could not connect to %s:%i", palm->server_addr, palm->server_port);
-        mk_api->header_set_http_status(sr, M_SERVER_INTERNAL_ERROR);
+        mk_api->header_set_http_status(sr, MK_SERVER_INTERNAL_ERROR);
         return NULL;
     }
 
@@ -416,7 +416,7 @@ int _mkp_event_read(int sockfd)
     pr->buffer_len += n;
 
     /* If response headers + PHP headers has NOT been sent back to client... */
-    if (pr->headers_sent == VAR_OFF) {
+    if (pr->headers_sent == MK_FALSE) {
         PLUGIN_TRACE("No headers sent, searching CRLFCRLF...");
 
         headers_end = mk_api->str_search(pr->buffer,
@@ -454,7 +454,7 @@ int _mkp_event_read(int sockfd)
         }
         
         /* Enable headers flag */
-        pr->headers_sent = VAR_ON;
+        pr->headers_sent = MK_TRUE;
         pr->buffer_offset = n + offset;
         read_offset = headers_end;
     }

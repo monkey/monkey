@@ -80,7 +80,7 @@ void mk_palm_protocol_thread_init()
                           mk_iov_crlf.data, mk_iov_crlf.len, 
                           MK_IOV_NOT_FREE_BUF, 1);
 
-    _iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
+    //_iov_add_header(iov, mk_cgi_server_port, mk_api->config->port);
     _iov_add_header(iov, mk_cgi_server_protocol, mk_monkey_protocol);
     _iov_add_header(iov, mk_cgi_server_software,
                     mk_api->config->server_software);

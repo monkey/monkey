@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#include "plugin.h"
+#include "MKPlugin.h"
 #include "palm.h"
 
 struct mk_palm_request *mk_palm_request_create(int client_fd,
@@ -37,7 +37,7 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
     new->client_fd = client_fd;
     new->palm_fd = palm_fd;
     new->palm = palm;
-    new->headers_sent = VAR_OFF;
+    new->headers_sent = MK_FALSE;
     new->cs = cs;
     new->sr = sr;
 
