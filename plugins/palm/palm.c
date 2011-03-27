@@ -394,7 +394,7 @@ int _mkp_event_read(int sockfd)
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i | CLIENT_FD %i | PALM_FD %i]", sockfd, pr->client_fd, pr->palm_fd);
     PLUGIN_TRACE(" just readed  : %i", n);
-    if (pr->headers_sent == VAR_ON) {
+    if (pr->headers_sent == MK_TRUE) {
         PLUGIN_TRACE(" headers sent : YES", pr->headers_sent);
     }
     else {

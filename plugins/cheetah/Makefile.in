@@ -3,17 +3,14 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
-
 CHEETAH_OBJECTS = cheetah.o loop.o cmd.o cutils.o
 
+all: monkey-cheetah.so
 
-all:
-
-monkey-cheetah:	$(CHEETAH_OBJECTS)
+monkey-cheetah.so: $(CHEETAH_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
 clean:
-	rm -rf *.o *~
-	rm -rf *.*so*
+	rm -rf *.o *~ *.*so*
