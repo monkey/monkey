@@ -58,8 +58,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr,
                        &socket_size);
 
-    if (fcntl(server_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
-        mk_err("Can't set to non-blocking the socket");
+    if (fcntl(remote_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
         mk_err("Can't set to non-blocking the socket");
     }
 #else
