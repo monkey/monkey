@@ -272,9 +272,6 @@ struct plugin_api
 
     int (*event_socket_change_mode) (int, int);
 
-    /* system specific functions */
-    int (*sys_get_somaxconn)();
-
     /* Time utils functions */
     int (*time_unix)();
     mk_pointer *(*time_human)();

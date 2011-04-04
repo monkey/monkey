@@ -32,6 +32,9 @@
 /* Architecture */
 #define INTSIZE sizeof(int)
 
+/* Networking */
+#define MK_SOMAXCONN 128
+
 /* Print macros */
 #define MK_INFO     0x1000
 #define MK_ERR      0X1001

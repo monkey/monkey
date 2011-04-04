@@ -394,9 +394,6 @@ void mk_plugin_init()
     /* Worker functions */
     api->worker_spawn = (void *) mk_utils_worker_spawn;
 
-    /* Some useful functions =) */
-    api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
-
     /* Time functions */
     api->time_unix = (void *) mk_plugin_time_now_unix;
     api->time_human = (void *) mk_plugin_time_now_human;

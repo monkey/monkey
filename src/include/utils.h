@@ -27,8 +27,6 @@
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
 
-#define MK_UTILS_SOMAXCONN_DEFAULT 1024   /* Default for SOMAXCONN value */
-
 #include "request.h"
 #include "memory.h"
 #include "list.h"
@@ -66,7 +64,6 @@ void mk_utils_trace(const char *component, int color, const char *function,
 int mk_utils_print_errno(int errno);
 #endif
 
-int mk_utils_get_somaxconn(void);
 int mk_utils_register_pid(void);
 int mk_utils_remove_pid(void);
 
