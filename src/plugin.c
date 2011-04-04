@@ -548,14 +548,13 @@ int mk_plugin_stage_run(unsigned int hook,
                 /* Call stage */
                 MK_TRACE("[%s] STAGE 30", stm->p->shortname);
                 ret = stm->p->stage.s30(stm->p, cs, sr);
-
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_END:
-                    return MK_PLUGIN_RET_END;
                 case MK_PLUGIN_RET_CLOSE_CONX:
-                    return MK_PLUGIN_RET_CLOSE_CONX;
+                case MK_PLUGIN_RET_CONTINUE:
+                    return ret;
                 default:
                     mk_err("Plugin '%s' returns invalid value %i",
                            stm->p->shortname, ret);

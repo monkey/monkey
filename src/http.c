@@ -224,8 +224,10 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Plugin Stage 30: look for handlers for this request */
     ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
     MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
-
-    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+    switch (ret) {
+    case MK_PLUGIN_RET_CONTINUE:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_CLOSE_CONX:
         if (sr->headers && sr->headers->status > 0) {
             mk_request_error(sr->headers->status, cs, sr);
         }
@@ -233,8 +235,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         return EXIT_ERROR;
-    }
-    else if (ret == MK_PLUGIN_RET_END) {
+    case MK_PLUGIN_RET_END:
         return EXIT_NORMAL;
     }
 
