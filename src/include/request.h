@@ -24,6 +24,7 @@
 #include "file.h"
 #include "memory.h"
 #include "scheduler.h"
+#include "limits.h"
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
@@ -192,7 +193,7 @@ struct session_request
      * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
      * it will be stored here and real_path will point this buffer
      */
-    char real_path_static[MAX_PATH_BASE]; 
+    char real_path_static[MK_PATH_BASE]; 
 
     /* Query string: ?.... */
     mk_pointer query_string;
