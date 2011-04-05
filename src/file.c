@@ -31,17 +31,16 @@
 #include "memory.h"
 #include "utils.h"
 
-struct file_info *mk_file_get_info(char *path)
+int mk_file_get_info(char *path, struct file_info *f_info)
 {
-    struct file_info *f_info;
+    //struct file_info *f_info;
     struct stat f, target;
 
     /* Stat right resource */
     if (lstat(path, &f) == -1) {
-        return NULL;
+        return -1;
     }
 
-    f_info = mk_mem_malloc(sizeof(struct file_info));
     f_info->is_link = MK_FILE_FALSE;
     f_info->is_directory = MK_FILE_FALSE;
     f_info->exec_access = MK_FILE_FALSE;
@@ -50,7 +49,7 @@ struct file_info *mk_file_get_info(char *path)
     if (S_ISLNK(f.st_mode)) {
         f_info->is_link = MK_FILE_TRUE;
         if (stat(path, &target) == -1) {
-            return NULL;
+            return -1;
         }
     }
     else {
@@ -89,7 +88,7 @@ struct file_info *mk_file_get_info(char *path)
     }
 #endif
 
-    return f_info;
+    return 0;
 }
 
 /* Read file content to a memory buffer,
@@ -100,9 +99,9 @@ char *mk_file_to_buffer(char *path)
     FILE *fp;
     char *buffer;
     long bytes;
-    struct file_info *finfo;
+    struct file_info finfo;
 
-    if (!(finfo = mk_file_get_info(path))) {
+    if (mk_file_get_info(path, &finfo) != 0) {
         return NULL;
     }
 
@@ -110,13 +109,13 @@ char *mk_file_to_buffer(char *path)
         return NULL;
     }
 
-    buffer = calloc(finfo->size + 1, sizeof(char));
+    buffer = calloc(finfo.size + 1, sizeof(char));
     if (!buffer) {
         fclose(fp);
         return NULL;
     }
 
-    bytes = fread(buffer, finfo->size, 1, fp);
+    bytes = fread(buffer, finfo.size, 1, fp);
 
     if (bytes < 1) {
         mk_mem_free(buffer);

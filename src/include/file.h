@@ -17,6 +17,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_FILE_H
+#define MK_FILE_H
+
 #define MK_FILE_TRUE 1
 #define MK_FILE_FALSE 0
 
@@ -30,5 +33,7 @@ struct file_info
     time_t last_modification;
 };
 
-struct file_info *mk_file_get_info(char *path);
+int mk_file_get_info(char *path, struct file_info *f_info);
 char *mk_file_to_buffer(char *path);
+
+#endif

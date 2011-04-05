@@ -210,7 +210,7 @@ struct plugin_api
 
     /* file functions */
     char *(*file_to_buffer) (char *);
-    struct file_info *(*file_get_info) (char *);
+    int  (*file_get_info) (char *, struct file_info *);
 
     /* header */
     int  (*header_send) (int, struct client_session *, struct session_request *);

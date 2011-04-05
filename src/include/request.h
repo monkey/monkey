@@ -21,6 +21,7 @@
 
 /* request.c */
 
+#include "file.h"
 #include "memory.h"
 #include "scheduler.h"
 
@@ -204,7 +205,7 @@ struct session_request
     long loop;
     long bytes_to_send;
     off_t bytes_offset;
-    struct file_info  *file_info;
+    struct file_info file_info;
 
     /* Vhost */
     struct host       *host_conf;     /* root vhost config */ 

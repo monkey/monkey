@@ -64,7 +64,7 @@ struct mk_f_list
     char *size;
     char *ft_modif;
     unsigned char type;
-    struct file_info *info;
+    struct file_info info;
     struct mk_f_list *next;
 };
 

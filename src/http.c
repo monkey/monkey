@@ -162,9 +162,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return EXIT_ERROR;
     }
     
-    sr->file_info = mk_file_get_info(sr->real_path.data);
-    
-    if (!sr->file_info) {
+    if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
         /* if the resource requested doesn't exists, let's 
          * check if some plugin would like to handle it
          */
@@ -186,7 +184,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* is it a valid directory ? */
-    if (sr->file_info->is_directory == MK_FILE_TRUE) {
+    if (sr->file_info.is_directory == MK_FILE_TRUE) {
         /* Send redirect header if end slash is not found */
         if (mk_http_directory_redirect_check(cs, sr) == -1) {
             MK_TRACE("Directory Redirect");
@@ -200,16 +198,15 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         index_file = mk_request_index(sr->real_path.data);
 
         if (index_file.data) {
-            mk_mem_free(sr->file_info);
             mk_pointer_free(&sr->real_path);
 
             sr->real_path = index_file;
-            sr->file_info = mk_file_get_info(sr->real_path.data);
+            mk_file_get_info(sr->real_path.data, &sr->file_info);
         }
     }
 
     /* Check symbolic link file */
-    if (sr->file_info->is_link == MK_FILE_TRUE) {
+    if (sr->file_info.is_link == MK_FILE_TRUE) {
         if (config->symlink == MK_FALSE) {
             mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
@@ -240,7 +237,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* read permissions and check file */
-    if (sr->file_info->read_access == MK_FILE_FALSE) {
+    if (sr->file_info.read_access == MK_FILE_FALSE) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
@@ -251,13 +248,13 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         mime = mimetype_default;
     }
 
-    if (sr->file_info->is_directory == MK_FILE_TRUE) {
+    if (sr->file_info.is_directory == MK_FILE_TRUE) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
 
     /* get file size */
-    if (sr->file_info->size < 0) {
+    if (sr->file_info.size < 0) {
         mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return EXIT_ERROR;
     }
@@ -267,14 +264,14 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         (config->max_keep_alive_request - cs->counter_connections);
 
 
-    sr->headers->last_modified = sr->file_info->last_modification;
+    sr->headers->last_modified = sr->file_info.last_modification;
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
         time_t date_file_server;  /* Date server file */
         
         date_client = mk_utils_gmt2utime(sr->if_modified_since.data);
-        date_file_server = sr->file_info->last_modification;
+        date_file_server = sr->file_info.last_modification;
 
         if ((date_file_server <= date_client) && (date_client > 0)) {
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
@@ -286,8 +283,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     sr->headers->location = NULL;
 
     /* Object size for log and response headers */
-    sr->headers->content_length = sr->file_info->size;
-    sr->headers->real_length = sr->file_info->size;
+    sr->headers->content_length = sr->file_info.size;
+    sr->headers->real_length = sr->file_info.size;
 
     /* Process methods */
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
@@ -309,7 +306,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
  
     /* Open file */
-    if (sr->file_info->size > 0) {
+    if (sr->file_info.size > 0) {
         sr->fd_file = open(sr->real_path.data, config->open_flags);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
@@ -328,7 +325,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Send file content*/
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
-        if (mk_http_range_set(sr, sr->file_info->size) != 0) {
+        if (mk_http_range_set(sr, sr->file_info.size) != 0) {
             mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
             return EXIT_ERROR;
         }

@@ -84,7 +84,7 @@ static struct session_request *mk_request_alloc()
     request->post_variables.data = NULL;
     mk_pointer_reset(&request->query_string);
 
-    request->file_info = NULL;
+    request->file_info.size = -1;
     request->virtual_user = NULL;
 
     mk_pointer_reset(&request->real_path);
@@ -137,7 +137,6 @@ static void mk_request_free(struct session_request *sr)
     mk_pointer_reset(&sr->uri);
     mk_pointer_reset(&sr->query_string);
 
-    mk_mem_free(sr->file_info);
     mk_mem_free(sr->virtual_user);
 
     mk_pointer_free(&sr->real_path);
