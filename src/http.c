@@ -141,15 +141,31 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Compose real path */
     if (sr->user_home == MK_FALSE) {
-        ret = mk_buffer_cat(&sr->real_path, 
-                            sr->host_conf->documentroot.data,
-                            sr->host_conf->documentroot.len,
-                            sr->uri_processed.data,
-                            sr->uri_processed.len);
+        int len;
+
+        len = sr->host_conf->documentroot.len + sr->uri_processed.len;
+        if (len < MK_PATH_BASE) {
+            memcpy(sr->real_path_static, 
+                   sr->host_conf->documentroot.data,
+                   sr->host_conf->documentroot.len);
+            memcpy(sr->real_path_static + sr->host_conf->documentroot.len,
+                   sr->uri_processed.data,
+                   sr->uri_processed.len);
+            sr->real_path_static[len] = '\0';
+            sr->real_path.data = sr->real_path_static;
+            sr->real_path.len = len;
+        }
+        else {
+            ret = mk_buffer_cat(&sr->real_path, 
+                                sr->host_conf->documentroot.data,
+                                sr->host_conf->documentroot.len,
+                                sr->uri_processed.data,
+                                sr->uri_processed.len);
         
-        if (ret < 0) {
-            MK_TRACE("Error composing real path");
-            return EXIT_ERROR;
+            if (ret < 0) {
+                MK_TRACE("Error composing real path");
+                return EXIT_ERROR;
+            }
         }
     }
 
@@ -198,7 +214,9 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         index_file = mk_request_index(sr->real_path.data);
 
         if (index_file.data) {
-            mk_pointer_free(&sr->real_path);
+            if (sr->real_path.data != sr->real_path_static) {
+                mk_pointer_free(&sr->real_path);
+            }
 
             sr->real_path = index_file;
             mk_file_get_info(sr->real_path.data, &sr->file_info);

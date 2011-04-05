@@ -31,9 +31,8 @@
 #include "memory.h"
 #include "utils.h"
 
-int mk_file_get_info(char *path, struct file_info *f_info)
+int mk_file_get_info(const char *path, struct file_info *f_info)
 {
-    //struct file_info *f_info;
     struct stat f, target;
 
     /* Stat right resource */
@@ -94,7 +93,7 @@ int mk_file_get_info(char *path, struct file_info *f_info)
 /* Read file content to a memory buffer,
  * Use this function just for really SMALL files
  */
-char *mk_file_to_buffer(char *path)
+char *mk_file_to_buffer(const char *path)
 {
     FILE *fp;
     char *buffer;

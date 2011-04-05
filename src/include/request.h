@@ -186,8 +186,10 @@ struct session_request
     /*-----------------*/
 
     /*-Internal-*/
-    mk_pointer real_path;       /* Absolute real path */
-    mk_pointer query_string;    /* ?... */
+    mk_pointer real_path;        /* Absolute real path */
+    char real_path_static[1024]; /* If a full URL length is less than 1024B, it will be
+                                  * stored here and real_path will point this buffer*/
+    mk_pointer query_string;     /* ?... */
 
     char *virtual_user;         /* Virtualhost user */
 

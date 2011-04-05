@@ -139,7 +139,9 @@ static void mk_request_free(struct session_request *sr)
 
     mk_mem_free(sr->virtual_user);
 
-    mk_pointer_free(&sr->real_path);
+    if (sr->real_path.data != sr->real_path_static) {
+        mk_pointer_free(&sr->real_path);
+    }
     mk_mem_free(sr);
 }
 

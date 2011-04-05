@@ -23,6 +23,7 @@
 #define MK_MACROS_H
 
 #include <stdlib.h>
+#include "limits.h"
 
 /* Boolean */
 #define MK_TRUE   1
@@ -31,9 +32,6 @@
 
 /* Architecture */
 #define INTSIZE sizeof(int)
-
-/* Networking */
-#define MK_SOMAXCONN 128
 
 /* Print macros */
 #define MK_INFO     0x1000
