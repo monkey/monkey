@@ -108,36 +108,6 @@ int mk_string_search_n(const char *haystack, const char *needle, int sensitive, 
     return _mk_string_search(haystack, needle, sensitive, len);
 }
 
-char *mk_string_remove_space(char *buf)
-{
-    size_t bufsize;
-    int new_i = 0, i, len, spaces = 0;
-    char *new_buf = 0;
-
-    len = strlen(buf);
-    for (i = 0; i < len; i++) {
-        if (buf[i] == ' ') {
-            spaces++;
-        }
-    }
-
-    bufsize = len + 1 - spaces;
-    if (bufsize <= 1) {
-        return NULL;
-    }
-
-    new_buf = mk_mem_malloc(bufsize);
-
-    for (i = 0; i < len; i++) {
-        if (buf[i] != ' ') {
-            new_buf[new_i] = buf[i];
-            new_i++;
-        }
-    }
-
-    return new_buf;
-}
-
 char *mk_string_casestr(char *heystack, char *needle)
 {
     if (!heystack || !needle) {
