@@ -187,14 +187,24 @@ struct session_request
 
     /*-Internal-*/
     mk_pointer real_path;        /* Absolute real path */
-    char real_path_static[1024]; /* If a full URL length is less than 1024B, it will be
-                                  * stored here and real_path will point this buffer*/
-    mk_pointer query_string;     /* ?... */
 
-    char *virtual_user;         /* Virtualhost user */
+    /* 
+     * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
+     * it will be stored here and real_path will point this buffer
+     */
+    char real_path_static[MAX_PATH_BASE]; 
 
+    /* Query string: ?.... */
+    mk_pointer query_string;
+
+    /* virtual user */
+    char *virtual_user;
+
+    /* is keep-alive request ? */
     int keep_alive;
-    int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
+
+    /* is it serving a user's home directory ? */
+    int user_home;
     
     /*-Connection-*/
     long port;
