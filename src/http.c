@@ -746,7 +746,8 @@ int mk_http_request_end(int socket)
         return -1;
     }
 
-    /* We need to ask to http_keepalive if this 
+    /* 
+     * We need to ask to http_keepalive if this 
      * connection can continue working or we must 
      * close it.
      */

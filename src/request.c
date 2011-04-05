@@ -330,10 +330,21 @@ static int mk_request_parse(struct client_session *cs)
     struct mk_list *sr_list, *sr_head;
 
     for (i = 0; i <= cs->body_pos_end; i++) {
-        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
-         * request can be involved.
+        /*
+         * Pipelining can just exists in a persistent connection or 
+         * well known as KeepAlive, so if we are in keepalive mode
+         * we should check if we have multiple request in our body buffer
          */
-        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+        if (cs->counter_connections > 0) {
+            /* 
+             * Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
+             * request can be involved.
+             */
+            end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+        }
+        else {
+            end = cs->body_pos_end;
+        }
 
         if (end <  0) {
             return -1;
