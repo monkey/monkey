@@ -64,23 +64,7 @@ int mk_epoll_create(int max_events)
 
     efd = epoll_create(max_events);
     if (efd == -1) {
-        switch(errno) {
-        case EINVAL:
-            mk_warn("epoll_create() = EINVAL");
-            break;
-        case EMFILE:
-            mk_warn("epoll_create() = EMFILE");
-            break;
-        case ENFILE:
-            mk_warn("epoll_create() = ENFILE");
-            break;
-        case ENOMEM:
-            mk_warn("epoll_create() = ENOMEM");
-            break;
-        default:
-            mk_warn("epoll_create() = UNKNOWN");
-            break;
-        }
+        perror("epoll_create");
         mk_err("epoll_create() failed");
     }
 
