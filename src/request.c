@@ -388,14 +388,14 @@ static int mk_request_parse(struct client_session *cs)
 
 
     /* DEBUG BLOCKS
-    cr_search = cs->request;
-    while(cr_search){
-        printf("\n");
-        MK_TRACE("BLOCK INIT");
-        mk_pointer_print(cr_search->body);
-        MK_TRACE("BLOCK_END");
+    struct mk_list *head;
+    struct session_request *entry;
 
-        cr_search = cr_search->next;
+    printf("\n*******************\n");
+    mk_list_foreach(head, &cs->request_list) {
+        entry = mk_list_entry(head, struct session_request, _head);
+        mk_pointer_print(entry->body);
+        fflush(stdout);
     }
     */
 
