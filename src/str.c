@@ -38,30 +38,40 @@
  * Base function for search routines, it accept modifiers to enable/disable
  * the case sensitive feature and also allow to specify a haystack len 
  * Get position of a substring.
- * Original version taken from google, modified in order
- * to send the position instead the substring.
  */
-int _mk_string_search(const char *string, const char *search, int sensitive, int len)
+static int _mk_string_search(const char *string, const char *search, int sensitive, int len)
 {
-    char *np = 0;
-    int res;
-
-    if (sensitive == MK_STR_INSENSITIVE) {
-        np = strcasestr(string, search);
-    }
-    else if (sensitive == MK_STR_SENSITIVE) {
-        np = strstr(string, search);
-    }
-
-    if (!np) {
-        return -1;
-    }
-
-    res = np - string;
-    if (res > len && len >= 0) {
-        return -1;
-    }
-    return (np - string);
+    int i = 0;
+    char *p = NULL, *q = NULL;
+    char *s = NULL;
+    
+    p = (char *) string;
+    do {
+        q = p;
+        s = (char *) search;
+        if (sensitive == MK_STR_SENSITIVE) {
+            while (*s && (*s == *q)) {
+                q++, s++;
+            }
+        }
+        else if (sensitive == MK_STR_INSENSITIVE) {
+            while (*s && (toupper(*q) == toupper(*s))) {
+                q++, s++;
+            }
+        }
+        
+        /* match */        
+        if (*s == 0) {
+            return (p - string);
+        }
+        
+        i++;
+        if (len > 0 && i >= len) {
+            break;
+        }
+    } while (*p++);
+    
+    return -1;
 }
 
 /* Lookup char into string, return position */

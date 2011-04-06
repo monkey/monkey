@@ -176,7 +176,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                            sr->uri_processed.len) >= 0) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
-    }
+        }
     
     if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
         /* if the resource requested doesn't exists, let's 
