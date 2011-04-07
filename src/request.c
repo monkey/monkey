@@ -172,7 +172,6 @@ static int mk_request_header_process(struct session_request *sr)
     int query_init = 0;
     int prot_init = 0, prot_end = 0, pos_sep = 0;
     int fh_limit;
-    char *port = 0;
     char *headers;
     char *temp = 0;
     mk_pointer host;
@@ -257,6 +256,9 @@ static int mk_request_header_process(struct session_request *sr)
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
+            /* TCP port should not be higher than 65535 */
+            char _port[6];
+
             /* just the host */
             sr->host.data = host.data;
             sr->host.len = pos_sep;
@@ -264,9 +266,8 @@ static int mk_request_header_process(struct session_request *sr)
             /* including the port */
             sr->host_port = host;
 
-            port = mk_string_copy_substr(host.data, pos_sep + 1, host.len);
-            sr->port = strtol(port, (char **) NULL, 10);
-            mk_mem_free(port);
+            memcpy(_port, host.data + pos_sep + 1, host.len);
+            sr->port = strtol(_port, (char **) NULL, 10);
         }
         else {
             sr->host = host;    /* maybe null */
