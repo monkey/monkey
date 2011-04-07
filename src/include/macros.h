@@ -44,7 +44,7 @@
 
 /* ANSI Colors */
 #define ANSI_BOLD "\033[1m"
-#define ANSI_CYAN "\033[36m" 
+#define ANSI_CYAN "\033[36m"
 #define ANSI_MAGENTA "\033[35m"
 #define ANSI_RED "\033[31m"
 #define ANSI_YELLOW "\033[33m"
@@ -57,7 +57,7 @@
 #define MK_TRANSPORT_HTTP  "http"
 #define MK_TRANSPORT_HTTPS "https"
 
-/* 
+/*
  * Validation macros
  * -----------------
  * Based on article http://lwn.net/Articles/13183/
@@ -67,8 +67,8 @@
  *
  *	Make a polite version of BUG_ON() - WARN_ON() which doesn't
  *	kill the machine.
- *	
- *	Damn I hate people who kill the machine for no good reason. 
+ *
+ *	Damn I hate people who kill the machine for no good reason.
  * ---
  *
  */
@@ -82,5 +82,17 @@
             abort();                                                    \
         }                                                               \
 } while(0)
+
+/*
+ * Macros to calculate sub-net data using ip address and sub-net prefix
+ */
+
+#define MK_NET_IP_OCTECT(addr,pos) (addr >> (8 * pos) & 255)
+#define MK_NET_NETMASK(addr,net) htonl((0xffffffff << (32 - net)))
+#define MK_NET_BROADCAST(addr,net) (addr | ~MK_NET_NETMASK(addr,net))
+#define MK_NET_NETWORK(addr,net) (addr & MK_NET_NETMASK(addr,net))
+#define MK_NET_WILDCARD(addr,net) (MK_NET_BROADCAST(addr,net) ^ MK_NET_NETWORK(addr,net))
+#define MK_NET_HOSTMIN(addr,net) net == 31 ? MK_NET_NETWORK(addr,net) : (MK_NET_NETWORK(addr,net) + 0x01000000)
+#define MK_NET_HOSTMAX(addr,net) net == 31 ? MK_NET_BROADCAST(addr,net) : (MK_NET_BROADCAST(addr,net) - 0x01000000);
 
 #endif
