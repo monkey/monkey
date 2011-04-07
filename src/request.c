@@ -249,7 +249,7 @@ static int mk_request_header_process(struct session_request *sr)
             /* including the port */
             sr->host_port = host;
 
-            memcpy(_port, host.data + pos_sep + 1, host.len);
+            memcpy(_port, host.data + pos_sep + 1, host.len - pos_sep);
             sr->port = strtol(_port, (char **) NULL, 10);
         }
         else {
