@@ -133,10 +133,6 @@ static void mk_request_free(struct session_request *sr)
         mk_pointer_free(&sr->uri_processed);
     }
 
-    mk_pointer_reset(&sr->body);
-    mk_pointer_reset(&sr->uri);
-    mk_pointer_reset(&sr->query_string);
-
     mk_mem_free(sr->virtual_user);
 
     if (sr->real_path.data != sr->real_path_static) {
