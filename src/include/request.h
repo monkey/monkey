@@ -20,7 +20,7 @@
  */
 
 /* request.c */
-
+#include "header.h"
 #include "file.h"
 #include "memory.h"
 #include "scheduler.h"
@@ -28,7 +28,6 @@
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
-
 
 /* Request buffer chunks = 4KB */
 #define MK_REQUEST_CHUNK (int) 4096
@@ -137,6 +136,34 @@ struct handler
     struct handler *next;
 };
 
+struct response_headers
+{
+    int status;
+
+    /* Length of the content to send */
+    long content_length;
+
+    /* Private value, real length of the file requested */
+    long real_length;
+
+    int cgi;
+    int pconnections_left;
+    int ranges[2];
+    int transfer_encoding;
+    int breakline;
+
+    time_t last_modified;
+    mk_pointer content_type;
+    mk_pointer content_encoding;
+    char *location;
+
+    /* 
+     * This field allow plugins to add their own response
+     * headers
+     */
+    struct mk_iov *_extra_rows;
+};
+
 struct session_request
 {
     int status;
@@ -221,41 +248,13 @@ struct session_request
     struct host_alias *host_alias;    /* specific vhost matched */
 
     /* Response headers */
-    struct response_headers *headers;
+    struct response_headers headers;
 
     /* Plugin handlers */
     struct plugin *handled_by;
 
     /* mk_list head node */
     struct mk_list _head;
-};
-
-struct response_headers
-{
-    int status;
-
-    /* Length of the content to send */
-    long content_length;
-
-    /* Private value, real length of the file requested */
-    long real_length;
-
-    int cgi;
-    int pconnections_left;
-    int ranges[2];
-    int transfer_encoding;
-    int breakline;
-
-    time_t last_modified;
-    mk_pointer content_type;
-    mk_pointer content_encoding;
-    char *location;
-
-    /* 
-     * This field allow plugins to add their own response
-     * headers
-     */
-    struct mk_iov *_extra_rows;
 };
 
 mk_pointer mk_request_index(char *pathfile);

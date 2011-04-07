@@ -17,6 +17,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "memory.h"
+
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
@@ -32,8 +34,6 @@
 #define HTTP_METHOD_GET_STR "GET"
 #define HTTP_METHOD_POST_STR "POST"
 #define HTTP_METHOD_HEAD_STR "HEAD"
-
-#include "memory.h"
 
 mk_pointer mk_http_method_get_p;
 mk_pointer mk_http_method_post_p;

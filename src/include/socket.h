@@ -25,7 +25,6 @@
 #include <sys/socket.h>
 
 #include "iov.h"
-#include "request.h"
 
 #ifndef SOCK_NONBLOCK
 #define SOCK_NONBLOCK 04000

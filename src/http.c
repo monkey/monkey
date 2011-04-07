@@ -243,8 +243,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     case MK_PLUGIN_RET_CONTINUE:
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_CLOSE_CONX:
-        if (sr->headers && sr->headers->status > 0) {
-            mk_request_error(sr->headers->status, cs, sr);
+        if (sr->headers.status > 0) {
+            mk_request_error(sr->headers.status, cs, sr);
         }
         else {
             mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
@@ -278,11 +278,11 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* counter connections */
-    sr->headers->pconnections_left = (int)
+    sr->headers.pconnections_left = (int)
         (config->max_keep_alive_request - cs->counter_connections);
 
 
-    sr->headers->last_modified = sr->file_info.last_modification;
+    sr->headers.last_modified = sr->file_info.last_modification;
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
@@ -298,29 +298,29 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         }
     }
     mk_header_set_http_status(sr, MK_HTTP_OK);
-    sr->headers->location = NULL;
+    sr->headers.location = NULL;
 
     /* Object size for log and response headers */
-    sr->headers->content_length = sr->file_info.size;
-    sr->headers->real_length = sr->file_info.size;
+    sr->headers.content_length = sr->file_info.size;
+    sr->headers.real_length = sr->file_info.size;
 
     /* Process methods */
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
-        sr->headers->content_type = mime->type;
+        sr->headers.content_type = mime->type;
         /* Range */
         if (sr->range.data != NULL && config->resume == MK_TRUE) {
             if (mk_http_range_parse(sr) < 0) {
                 mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
                 return EXIT_ERROR;
             }
-            if (sr->headers->ranges[0] >= 0 || sr->headers->ranges[1] >= 0) {
+            if (sr->headers.ranges[0] >= 0 || sr->headers.ranges[1] >= 0) {
                 mk_header_set_http_status(sr, MK_HTTP_PARTIAL);
             }
         }
     }
     else {                      
         /* without content-type */
-        mk_pointer_reset(&sr->headers->content_type);
+        mk_pointer_reset(&sr->headers.content_type);
     }
  
     /* Open file */
@@ -336,7 +336,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Send headers */
     mk_header_send(cs->socket, cs, sr);
 
-    if (sr->headers->content_length == 0) {
+    if (sr->headers.content_length == 0) {
         return 0;
     }
 
@@ -414,12 +414,12 @@ int mk_http_directory_redirect_check(struct client_session *cs,
     mk_mem_free(host);
 
     mk_header_set_http_status(sr, MK_REDIR_MOVED);
-    sr->headers->content_length = 0;
+    sr->headers.content_length = 0;
     
-    mk_pointer_reset(&sr->headers->content_type);
-    sr->headers->location = real_location;
-    sr->headers->cgi = SH_NOCGI;
-    sr->headers->pconnections_left =
+    mk_pointer_reset(&sr->headers.content_type);
+    sr->headers.location = real_location;
+    sr->headers.cgi = SH_NOCGI;
+    sr->headers.pconnections_left =
         (config->max_keep_alive_request - cs->counter_connections);
 
     mk_header_send(cs->socket, cs, sr);
@@ -430,7 +430,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
      *  as it's freed by iov 
      */
     mk_mem_free(location);
-    sr->headers->location = NULL;
+    sr->headers.location = NULL;
     return -1;
 }
 
@@ -459,7 +459,7 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
     }
 
     /* Old client and content length to send is unknown */
-    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->headers->content_length <= 0) {
+    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->headers.content_length <= 0) {
         return -1;
     }
 
@@ -478,7 +478,7 @@ int mk_http_keepalive_check(int socket, struct client_session *cs)
 
 int mk_http_range_set(struct session_request *sr, long file_size)
 {
-    struct response_headers *sh = sr->headers;
+    struct response_headers *sh = &sr->headers;
 
     sr->bytes_to_send = file_size;
     sr->bytes_offset = 0;
@@ -532,7 +532,7 @@ int mk_http_range_parse(struct session_request *sr)
         return -1;
 
     len = sr->range.len;
-    sh = sr->headers;
+    sh = &sr->headers;
 
     /* =-xxx */
     if (eq_pos + 1 == sep_pos) {
@@ -567,7 +567,7 @@ int mk_http_range_parse(struct session_request *sr)
     /* =yyy- */
     if ((eq_pos + 1 != sep_pos) && (len == sep_pos + 1)) {
         buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, len);
-        sr->headers->ranges[0] = (unsigned long) atol(buffer);
+        sr->headers.ranges[0] = (unsigned long) atol(buffer);
         mk_mem_free(buffer);
 
         sh->content_length = (sh->content_length - sh->ranges[0]);

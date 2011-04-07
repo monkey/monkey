@@ -401,7 +401,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     mk_pointer *content_length;
     mk_pointer status;
 
-    http_status = sr->headers->status;
+    http_status = sr->headers.status;
 
     /* Look for target log file */
     target = mk_logger_match_by_host(sr->host_conf);
@@ -470,7 +470,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
         if (sr->method != HTTP_METHOD_HEAD) {
             /* Int to mk_pointer */
             content_length = pthread_getspecific(cache_content_length);
-            mk_api->str_itop(sr->headers->content_length, content_length);
+            mk_api->str_itop(sr->headers.content_length, content_length);
 
             mk_api->iov_add_entry(iov,
                                   content_length->data, content_length->len - 2, 

@@ -17,10 +17,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "request.h"
+
 #ifndef MK_USER_H
 #define MK_USER_H
-
-#include "request.h"
 
 /* User home string */
 #define MK_USER_HOME '~'

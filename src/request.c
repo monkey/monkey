@@ -96,7 +96,7 @@ static struct session_request *mk_request_alloc()
     request->fd_file = -1;
 
     /* Response Headers */
-    request->headers = mk_header_create();
+    mk_header_response_reset(&request->headers);
 
     /* Plugin handler */
     request->handled_by = NULL;
@@ -111,9 +111,8 @@ static void mk_request_free(struct session_request *sr)
         close(sr->fd_file);
     }
 
-    if (sr->headers) {
-        mk_mem_free(sr->headers->location);
-        mk_mem_free(sr->headers);
+    if (sr->headers.location) {
+        mk_mem_free(sr->headers.location);
     }
 
     if (sr->uri_processed.data != sr->uri.data) {
@@ -776,23 +775,23 @@ void mk_request_error(int http_status, struct client_session *cs,
 
     mk_header_set_http_status(sr, http_status);
     if (page) {
-        sr->headers->content_length = page->len;
+        sr->headers.content_length = page->len;
     }
 
-    sr->headers->location = NULL;
-    sr->headers->cgi = SH_NOCGI;
-    sr->headers->pconnections_left = 0;
-    sr->headers->last_modified = -1;
+    sr->headers.location = NULL;
+    sr->headers.cgi = SH_NOCGI;
+    sr->headers.pconnections_left = 0;
+    sr->headers.last_modified = -1;
 
     if (aux_message) {
         mk_mem_free(aux_message);
     }
 
     if (!page) {
-        mk_pointer_reset(&sr->headers->content_type);
+        mk_pointer_reset(&sr->headers.content_type);
     }
     else {
-        mk_pointer_set(&sr->headers->content_type, "text/html\r\n");
+        mk_pointer_set(&sr->headers.content_type, "text/html\r\n");
     }
 
     mk_header_send(cs->socket, cs, sr);
