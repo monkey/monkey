@@ -564,14 +564,25 @@ int mk_handler_read(int socket, struct client_session *cs)
             return -1;
         }
 
-        tmp = mk_mem_realloc(cs->body, new_size);
-        if (tmp) {
-            cs->body = tmp;
-            cs->body_size = new_size;
+        /* 
+         * Check if the body field still points to the initial body_fixed, if so, 
+         * allow the new space required in body, otherwise perform a realloc over
+         * body.
+         */
+        if (cs->body == cs->body_fixed) {
+            cs->body = mk_mem_malloc(new_size);
+            memcpy(cs->body, cs->body_fixed, cs->body_length);
         }
         else {
-            mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
-            return -1;
+            tmp = mk_mem_realloc(cs->body, new_size);
+            if (tmp) {
+                cs->body = tmp;
+                cs->body_size = new_size;
+            }
+            else {
+                mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
+                return -1;
+            }
         }
     }
 
@@ -842,7 +853,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->init_time = sc->arrive_time;
 
     /* alloc space for body content */
-    cs->body = mk_mem_malloc(MK_REQUEST_CHUNK);
+    cs->body = cs->body_fixed;
 
     /* Buffer size based in Chunk bytes */
     cs->body_size = MK_REQUEST_CHUNK;
@@ -898,7 +909,9 @@ void mk_session_remove(int socket)
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
         if (cs_node->socket == socket) {
             mk_list_del(cs_head);
-            mk_mem_free(cs_node->body);
+            if (cs_node->body != cs_node->body_fixed) {
+                mk_mem_free(cs_node->body);
+            }
             mk_mem_free(cs_node);
             break;
         }

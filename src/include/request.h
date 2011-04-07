@@ -98,7 +98,12 @@ struct client_session
     int socket;
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
-    char *body;                 /* Original request sent */
+
+    /* request body buffer */
+    char *body;              
+
+    /* Initial fixed size buffer for small requests */
+    char body_fixed[MK_REQUEST_CHUNK];
 
     mk_pointer *ipv4;
 
