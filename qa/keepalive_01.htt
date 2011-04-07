@@ -30,4 +30,27 @@ _EXPECT . "!Connection: Closed"
 _EXPECT . "Keep-Alive: timeout=5, max=1000"
 _EXPECT . "Connection: Keep-Alive"
 _WAIT
+
+_REQ $HOST $PORT
+__GET / $HTTPVER
+__Host: $HOST
+__Connection: Keep-Alive
+__
+_EXPECT . "HTTP/1.1 200 OK"
+_EXPECT . "!Connection: Closed"
+_EXPECT . "Keep-Alive: timeout=5, max=999"
+_EXPECT . "Connection: Keep-Alive"
+_WAIT
+
+_REQ $HOST $PORT
+__GET / $HTTPVER
+__Host: $HOST
+__Connection: Keep-Alive
+__
+_EXPECT . "HTTP/1.1 200 OK"
+_EXPECT . "!Connection: Closed"
+_EXPECT . "Keep-Alive: timeout=5, max=998"
+_EXPECT . "Connection: Keep-Alive"
+_WAIT
+
 END

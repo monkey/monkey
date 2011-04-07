@@ -83,7 +83,7 @@ void mk_server_loop(int server_fd)
     struct sockaddr_in sockaddr;
 
     mk_info("HTTP Server started");
-
+    
     while (1) {
         remote_fd = mk_socket_accept(server_fd, sockaddr);
 

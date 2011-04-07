@@ -1,3 +1,139 @@
+commit a1b29ab0129b41d9e53772bcd26d0009a30c3e04
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 30 17:22:38 2011 -0400
+
+    Fix #51: Can't set to non-blocking the socket when compiled with ACCEPT_GENERIC
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d75580bccce6a401d76994532b1ead52524b3473
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 27 14:51:08 2011 -0400
+
+    Mandril: fix bad usage of str_build()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cc0d64f7b6f646c88b9a6fe56eb2fb246d47d68a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 27 14:19:40 2011 -0400
+
+    Cheetah: fix broken Makefile.in
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f3a8aef0da43d53382c39bef4a72bca72052e96b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 27 12:42:31 2011 -0400
+
+    Palm: pass NULL pointer to str_build()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 23d5aa1ba011dba8ee3ba48442664d81a2cc5a0d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 27 12:39:43 2011 -0400
+
+    Palm: deprecate old macros and adapt to new structs
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fc83d7eb7b09cd8b08a02845003bd22faf0c22e2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 19 12:13:51 2011 -0400
+
+    New host_alias field in session_request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a2ec116fca488fc289052e22754d5b7adf99424f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 12 14:24:48 2011 -0300
+
+    Config: fix minor leak when composing vhost path
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 33085320c8c681271a4e840bd35d51fdda1fc3a7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 12 14:17:07 2011 -0300
+
+    Mimetype: safe configuration free
+
+commit afe26a2fe8bd6c9ed4e54595e423dda85dd662aa
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Mar 10 12:52:58 2011 -0300
+
+    Replace some repetitive code
+
+commit daee575882cbe5f05fdca9597d2804ff8b999ea0
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Mar 9 14:43:07 2011 -0300
+
+    Fix configure script and Makefile.in in all the plugins direcotory to not re-compile every time that we run make command
+
+commit 5058f2355358944db455254c556c618f4ac9f3e1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 11:40:24 2011 -0300
+
+    Dirlisting: free finfo check
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dd15d6df77a29811fe4e033301176736abe01a05
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 11:17:53 2011 -0300
+
+    Configure: bold some text
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 421bbe8ff00fd328d7ce9dab3353e949ad58984a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 11:09:11 2011 -0300
+
+    Dirlisting: validate theme path and print error if required
+
+commit d57cf54fc559601239661f4ab3cf718fe171dbde
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 10:46:50 2011 -0300
+
+    Plugin: if the plugin fails by it own rules, free configuration memory
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a0823c3b9033b5161eb7719a35547db089c6be51
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 10:38:09 2011 -0300
+
+    Dirlisting: fix return values when loading plugin
+
+commit 6cb1b5447a131be54eb16adebff33e23d0951bc0
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Mar 7 15:47:22 2011 -0300
+
+    Added more colors to the configure script. Deleted trailling whitespaces
+
+commit 2d6b5244e6a639a30d7d0233ed01b6524df21b2b
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Mar 7 11:39:39 2011 -0300
+
+    Added a /certs/ directory to the conf directory so it will store the cert in a "secure" place
+
+commit 152cf1139b77f25266b7e67488d5ec88d98b07cb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 7 10:52:17 2011 -0300
+
+    0.13.2 begins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 606a99d93b90a359f904cbdaafb880f7ca0a55a5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 7 10:04:44 2011 -0300
+
+    Monkey 0.13.1
+
 commit 5fa744d3e6302465b8b741b15dd3f9effd38d11c
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sun Mar 6 21:43:18 2011 -0300

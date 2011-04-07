@@ -40,7 +40,7 @@ int mk_security_conf(char *confdir)
 {
     int ret = 0;
     unsigned long len;
-    char *conf_path;
+    char *conf_path = NULL;
     struct mk_security *new, *r;
     struct mk_config_section *section;
     struct mk_config_entry *entry;

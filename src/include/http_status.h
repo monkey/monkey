@@ -17,6 +17,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_HTTP_STATUS_H
+#define MK_HTTP_STATUS_H
+
+#include "memory.h"
+
 /* HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl> */
 
 /* Informational status */
@@ -71,3 +76,5 @@
 #define M_HTTP_OK_TXT				"HTTP/1.1 200 OK\r\n"
 
 mk_list_sint_t *mk_http_status_list;
+
+#endif

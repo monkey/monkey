@@ -102,26 +102,24 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
     int n;
     struct tm *st_time;
     struct mk_f_list *entry;
-    struct file_info *entry_info;
 
-    entry_info = mk_api->file_get_info(full_path);
+    entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
 
-    if (!entry_info) {
+    if (mk_api->file_get_info(full_path, &entry->info) != 0) {
+        mk_mem_free(entry);
         return NULL;
     }
 
-    entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
     entry->name = file;
     entry->type = type;
-    entry->info = entry_info;
     entry->next = NULL;
 
-    st_time = localtime((time_t *) & entry_info->last_modification);
+    st_time = localtime((time_t *) & entry->info.last_modification);
 
     entry->ft_modif = mk_api->mem_alloc_z(50);
     n = strftime(entry->ft_modif, 50, "%d-%b-%G %H:%M", st_time);
 
-    size = entry->info->size;
+    size = entry->info.size;
 
     if (type != DT_DIR) {
         entry->size = mk_dirhtml_human_readable_size(size);
@@ -225,7 +223,7 @@ int mk_dirhtml_read_config(char *path)
     char *default_file = NULL;
     struct mk_config *conf;
     struct mk_config_section *section;
-    struct file_info *finfo;
+    struct file_info finfo;
 
     mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
     conf = mk_api->config_create(default_file);
@@ -247,13 +245,11 @@ int mk_dirhtml_read_config(char *path)
 
     mk_api->mem_free(default_file);
 
-    finfo = mk_api->file_get_info(dirhtml_conf->theme_path);
-    if (!finfo) {
+    if (mk_api->file_get_info(dirhtml_conf->theme_path, &finfo) != 0) {
         mk_warn("Dirlisting: cannot load theme from '%s'", dirhtml_conf->theme_path);
         mk_warn("Dirlisting: unloading plugin");
         return -1;
     }
-    mk_api->mem_free(finfo);
 
     return 0;
 }
@@ -681,7 +677,6 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
             mk_api->mem_free(entry->size);
         }
         mk_api->mem_free(entry->ft_modif);
-        mk_api->mem_free(entry->info);
         mk_api->mem_free(entry);
     }
 
@@ -711,13 +706,13 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 
     /* Building headers */
     mk_api->header_set_http_status(sr, MK_HTTP_OK);
-    sr->headers->cgi = SH_CGI;
-    sr->headers->breakline = MK_HEADER_BREAKLINE;
-    sr->headers->content_type = mk_dirhtml_default_mime;
-    sr->headers->content_length = -1;
+    sr->headers.cgi = SH_CGI;
+    sr->headers.breakline = MK_HEADER_BREAKLINE;
+    sr->headers.content_type = mk_dirhtml_default_mime;
+    sr->headers.content_length = -1;
 
     if (sr->protocol >= HTTP_PROTOCOL_11) {
-        sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
     }
 
     /* Sending headers */
@@ -842,13 +837,13 @@ void _mkp_exit()
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
                   struct session_request *sr)
 {
-    /* Validate file/directory */
-    if (!sr->file_info) {
+    /* validate file_info */
+    if (sr->file_info.size < 0) {
         return MK_PLUGIN_RET_NOT_ME;
     }
 
     /* This plugin just handle directories */
-    if (sr->file_info->is_directory == MK_FILE_FALSE) {
+    if (sr->file_info.is_directory == MK_FILE_FALSE) {
         return MK_PLUGIN_RET_NOT_ME;
     }
     

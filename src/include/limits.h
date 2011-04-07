@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
@@ -17,23 +19,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_FILE_H
-#define MK_FILE_H
+/* Configuration */
+#define MK_HOSTNAME_LEN 64
 
-#define MK_FILE_TRUE 1
-#define MK_FILE_FALSE 0
+/* Networking */
+#define MK_SOMAXCONN 128
 
-struct file_info
-{
-    off_t size;
-    short int is_link;
-    short int is_directory;
-    short int exec_access;
-    short int read_access;
-    time_t last_modification;
-};
-
-int mk_file_get_info(const char *path, struct file_info *f_info);
-char *mk_file_to_buffer(const char *path);
-
-#endif
+/* File system */
+#define MK_PATH_BASE 128

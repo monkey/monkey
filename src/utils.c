@@ -373,30 +373,6 @@ int mk_utils_print_errno(int errno)
 
 #endif
 
-/* Get SOMAXCONN value. Based on sysctl manpage */
-int mk_utils_get_somaxconn()
-{
-    /* sysctl() is deprecated in some systems, you can notice that with some system 
-     * messages as: 
-     * 
-     * '(warning: process `monkey' used the deprecated sysctl system call...'
-     *
-     * In order to avoid that problem, this function will check the proc filesystem,
-     * if it still fails, we will use the default value defined for somaxconn for years...
-     */
-    long somaxconn = 128;
-    char buf[16];
-    FILE *f;
-
-    f = fopen("/proc/sys/net/core/somaxconn", "r");
-    if(f && fgets(buf, 16, f)) {
-        somaxconn = strtol(buf, (char **) NULL, 10);
-        fclose(f);
-    }
-
-    return (int) somaxconn;
-}
-
 /* Write Monkey's PID */
 int mk_utils_register_pid()
 {

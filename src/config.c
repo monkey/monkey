@@ -553,6 +553,7 @@ void mk_config_read_hosts(char *path)
 struct host *mk_config_get_host(char *path)
 {
     unsigned long len = 0;
+    char *host_low;
     struct stat checkdir;
     struct host *host;
     struct host_alias *new_alias;
@@ -574,17 +575,33 @@ struct host *mk_config_get_host(char *path)
     /* Alloc list for host name aliases */
     mk_list_init(&host->server_names); 
 
+    host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
     line_p = line = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
     while (line_p) {
+        if (line_p->len > MK_HOSTNAME_LEN - 1) {
+            line_p = line_p->next;
+            continue;
+        }
+
+        /* Hostname to lowercase */
+        char *p, *h = host_low;
+        p = line_p->val;
+        while (*p) {
+            *h = tolower(*p);
+            p++, h++;
+        }
+        *h = '\0';
+
         /* Alloc node */
         new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
-        new_alias->name = line_p->val;
+        new_alias->name = host_low;
         new_alias->len = line_p->len;
 
         mk_list_add(&new_alias->_head, &host->server_names);
 
         line_p = line_p->next;
     }
+    mk_mem_free(host_low);
 
     /* document root handled by a mk_pointer */
     host->documentroot.data = mk_config_section_getval(section,
@@ -699,7 +716,7 @@ int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias 
         mk_list_foreach(head, &aux_host->server_names) {
             entry = mk_list_entry(head, struct host_alias, _head);
             if (entry->len == host.len &&
-                strncasecmp(entry->name, host.data, host.len) == 0) {
+                strncmp(entry->name, host.data, host.len) == 0) {
                 *vhost = aux_host;
                 *alias = entry;
                 return 0;

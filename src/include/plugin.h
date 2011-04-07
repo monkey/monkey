@@ -210,7 +210,7 @@ struct plugin_api
 
     /* file functions */
     char *(*file_to_buffer) (char *);
-    struct file_info *(*file_get_info) (char *);
+    int  (*file_get_info) (char *, struct file_info *);
 
     /* header */
     int  (*header_send) (int, struct client_session *, struct session_request *);
@@ -271,9 +271,6 @@ struct plugin_api
     int (*event_del) (int);
 
     int (*event_socket_change_mode) (int, int);
-
-    /* system specific functions */
-    int (*sys_get_somaxconn)();
 
     /* Time utils functions */
     int (*time_unix)();

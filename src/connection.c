@@ -44,14 +44,13 @@ int mk_conn_read(int socket)
     }
 
     sched = mk_sched_get_thread_conf();
-
     cs = mk_session_get(socket);
     if (!cs) {
         /* Note: Linux don't set TCP_NODELAY socket flag by default */
         mk_socket_set_tcp_nodelay(socket);
 
         /* Create client */
-        cs = mk_session_create(socket);
+        cs = mk_session_create(socket, sched);
         if (!cs) {
             return -1;
         }

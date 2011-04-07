@@ -84,7 +84,7 @@ static struct session_request *mk_request_alloc()
     request->post_variables.data = NULL;
     mk_pointer_reset(&request->query_string);
 
-    request->file_info = NULL;
+    request->file_info.size = -1;
     request->virtual_user = NULL;
 
     mk_pointer_reset(&request->real_path);
@@ -96,23 +96,10 @@ static struct session_request *mk_request_alloc()
     request->fd_file = -1;
 
     /* Response Headers */
-    request->headers = mk_header_create();
+    mk_header_response_reset(&request->headers);
 
     /* Plugin handler */
     request->handled_by = NULL;
-
-    /*
-     * FIXME: these fields will be dropped once plugins
-     * uses the new headers ToC interface
-     */
-    request->accept.data = NULL;
-    request->accept_language.data = NULL;
-    request->accept_encoding.data = NULL;
-    request->accept_charset.data = NULL;
-    request->cookies.data = NULL;
-    request->referer.data = NULL;
-    request->resume.data = NULL;
-    request->user_agent.data = NULL;
 
     return request;
 }
@@ -124,23 +111,19 @@ static void mk_request_free(struct session_request *sr)
         close(sr->fd_file);
     }
 
-    if (sr->headers) {
-        mk_mem_free(sr->headers->location);
-        mk_mem_free(sr->headers);
+    if (sr->headers.location) {
+        mk_mem_free(sr->headers.location);
     }
 
     if (sr->uri_processed.data != sr->uri.data) {
         mk_pointer_free(&sr->uri_processed);
     }
 
-    mk_pointer_reset(&sr->body);
-    mk_pointer_reset(&sr->uri);
-    mk_pointer_reset(&sr->query_string);
-
-    mk_mem_free(sr->file_info);
     mk_mem_free(sr->virtual_user);
 
-    mk_pointer_free(&sr->real_path);
+    if (sr->real_path.data != sr->real_path_static) {
+        mk_pointer_free(&sr->real_path);
+    }
     mk_mem_free(sr);
 }
 
@@ -171,7 +154,6 @@ static int mk_request_header_process(struct session_request *sr)
     int query_init = 0;
     int prot_init = 0, prot_end = 0, pos_sep = 0;
     int fh_limit;
-    char *port = 0;
     char *headers;
     char *temp = 0;
     mk_pointer host;
@@ -256,6 +238,9 @@ static int mk_request_header_process(struct session_request *sr)
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
+            /* TCP port should not be higher than 65535 */
+            char _port[6];
+
             /* just the host */
             sr->host.data = host.data;
             sr->host.len = pos_sep;
@@ -263,9 +248,8 @@ static int mk_request_header_process(struct session_request *sr)
             /* including the port */
             sr->host_port = host;
 
-            port = mk_string_copy_substr(host.data, pos_sep + 1, host.len);
-            sr->port = strtol(port, (char **) NULL, 10);
-            mk_mem_free(port);
+            memcpy(_port, host.data + pos_sep + 1, host.len - pos_sep);
+            sr->port = strtol(_port, (char **) NULL, 10);
         }
         else {
             sr->host = host;    /* maybe null */
@@ -280,16 +264,6 @@ static int mk_request_header_process(struct session_request *sr)
     sr->connection = mk_request_header_get(sr->headers_toc, mk_rh_connection);
     sr->range = mk_request_header_get(sr->headers_toc, mk_rh_range);
     sr->if_modified_since = mk_request_header_get(sr->headers_toc, mk_rh_if_modified_since);
-
-    /* FIXME: this headers pointers should not be here, just keeping the reference
-     * to avoid problems with Palm plugin
-     */
-    sr->accept = mk_request_header_get(sr->headers_toc, mk_rh_accept);
-    sr->accept_charset = mk_request_header_get(sr->headers_toc, mk_rh_accept_charset);
-    sr->accept_encoding = mk_request_header_get(sr->headers_toc, mk_rh_accept_encoding);
-
-    sr->accept_language = mk_request_header_get(sr->headers_toc, mk_rh_accept_language);
-    sr->cookies = mk_request_header_get(sr->headers_toc, mk_rh_cookie);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {
@@ -329,10 +303,21 @@ static int mk_request_parse(struct client_session *cs)
     struct mk_list *sr_list, *sr_head;
 
     for (i = 0; i <= cs->body_pos_end; i++) {
-        /* Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
-         * request can be involved.
+        /*
+         * Pipelining can just exists in a persistent connection or 
+         * well known as KeepAlive, so if we are in keepalive mode
+         * we should check if we have multiple request in our body buffer
          */
-        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+        if (cs->counter_connections > 0) {
+            /* 
+             * Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
+             * request can be involved.
+             */
+            end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
+        }
+        else {
+            end = cs->body_pos_end;
+        }
 
         if (end <  0) {
             return -1;
@@ -376,14 +361,14 @@ static int mk_request_parse(struct client_session *cs)
 
 
     /* DEBUG BLOCKS
-    cr_search = cs->request;
-    while(cr_search){
-        printf("\n");
-        MK_TRACE("BLOCK INIT");
-        mk_pointer_print(cr_search->body);
-        MK_TRACE("BLOCK_END");
+    struct mk_list *head;
+    struct session_request *entry;
 
-        cr_search = cr_search->next;
+    printf("\n*******************\n");
+    mk_list_foreach(head, &cs->request_list) {
+        entry = mk_list_entry(head, struct session_request, _head);
+        mk_pointer_print(entry->body);
+        fflush(stdout);
     }
     */
 
@@ -578,14 +563,25 @@ int mk_handler_read(int socket, struct client_session *cs)
             return -1;
         }
 
-        tmp = mk_mem_realloc(cs->body, new_size);
-        if (tmp) {
-            cs->body = tmp;
-            cs->body_size = new_size;
+        /* 
+         * Check if the body field still points to the initial body_fixed, if so, 
+         * allow the new space required in body, otherwise perform a realloc over
+         * body.
+         */
+        if (cs->body == cs->body_fixed) {
+            cs->body = mk_mem_malloc(new_size);
+            memcpy(cs->body, cs->body_fixed, cs->body_length);
         }
         else {
-            mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
-            return -1;
+            tmp = mk_mem_realloc(cs->body, new_size);
+            if (tmp) {
+                cs->body = tmp;
+                cs->body_size = new_size;
+            }
+            else {
+                mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
+                return -1;
+            }
         }
     }
 
@@ -779,23 +775,23 @@ void mk_request_error(int http_status, struct client_session *cs,
 
     mk_header_set_http_status(sr, http_status);
     if (page) {
-        sr->headers->content_length = page->len;
+        sr->headers.content_length = page->len;
     }
 
-    sr->headers->location = NULL;
-    sr->headers->cgi = SH_NOCGI;
-    sr->headers->pconnections_left = 0;
-    sr->headers->last_modified = -1;
+    sr->headers.location = NULL;
+    sr->headers.cgi = SH_NOCGI;
+    sr->headers.pconnections_left = 0;
+    sr->headers.last_modified = -1;
 
     if (aux_message) {
         mk_mem_free(aux_message);
     }
 
     if (!page) {
-        mk_pointer_reset(&sr->headers->content_type);
+        mk_pointer_reset(&sr->headers.content_type);
     }
     else {
-        mk_pointer_set(&sr->headers->content_type, "text/html\r\n");
+        mk_pointer_set(&sr->headers.content_type, "text/html\r\n");
     }
 
     mk_header_send(cs->socket, cs, sr);
@@ -828,14 +824,12 @@ void mk_request_free_list(struct client_session *cs)
 /* Create a client request struct and put it on the
  * main list
  */
-struct client_session *mk_session_create(int socket)
+struct client_session *mk_session_create(int socket, struct sched_list_node *sched)
 {
     struct client_session *cs;
     struct sched_connection *sc;
-    struct sched_list_node *sched;
     struct mk_list *cs_list;
 
-    sched= mk_sched_get_thread_conf();
     sc = mk_sched_get_connection(sched, socket);
     if (!sc) {
         MK_TRACE("FAILED SOCKET: %i", socket);
@@ -858,7 +852,7 @@ struct client_session *mk_session_create(int socket)
     cs->init_time = sc->arrive_time;
 
     /* alloc space for body content */
-    cs->body = mk_mem_malloc(MK_REQUEST_CHUNK);
+    cs->body = cs->body_fixed;
 
     /* Buffer size based in Chunk bytes */
     cs->body_size = MK_REQUEST_CHUNK;
@@ -914,7 +908,9 @@ void mk_session_remove(int socket)
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
         if (cs_node->socket == socket) {
             mk_list_del(cs_head);
-            mk_mem_free(cs_node->body);
+            if (cs_node->body != cs_node->body_fixed) {
+                mk_mem_free(cs_node->body);
+            }
             mk_mem_free(cs_node);
             break;
         }

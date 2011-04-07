@@ -19,11 +19,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "request.h"
-#include "http_status.h"
-
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
+
+#include "request.h"
+#include "http_status.h"
 
 #define MK_HEADER_BREAKLINE 1
 
@@ -119,7 +119,7 @@ mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
-struct response_headers *mk_header_create(void);
+void mk_header_response_reset(struct response_headers *header);
 void mk_header_set_http_status(struct session_request *sr, int status);
 void mk_header_set_content_length(struct session_request *sr, long len);
 

@@ -229,7 +229,7 @@ int mk_header_send(int fd, struct client_session *cs,
     struct response_headers *sh;
     struct mk_iov *iov;
 
-    sh = sr->headers;
+    sh = &sr->headers;
 
     iov = mk_header_iov_get();
 
@@ -395,19 +395,19 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_socket_set_cork_flag(fd, TCP_CORK_ON);
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
-        if (!sr->headers->_extra_rows) {
+        if (!sr->headers._extra_rows) {
             mk_iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
         else {
-            mk_iov_add_entry(sr->headers->_extra_rows, mk_iov_crlf.data, 
+            mk_iov_add_entry(sr->headers._extra_rows, mk_iov_crlf.data, 
                              mk_iov_crlf.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
     }
 
     mk_socket_sendv(fd, iov);
-    if (sr->headers->_extra_rows) {
-        mk_socket_sendv(fd, sr->headers->_extra_rows);
+    if (sr->headers._extra_rows) {
+        mk_socket_sendv(fd, sr->headers._extra_rows);
     }
 
     mk_header_iov_free(iov);
@@ -426,27 +426,21 @@ char *mk_header_chunked_line(int len)
 
 void mk_header_set_http_status(struct session_request *sr, int status)
 {
-    mk_bug(!sr || !sr->headers);
-    sr->headers->status = status;
+    mk_bug(!sr);
+    sr->headers.status = status;
 }
 
-struct response_headers *mk_header_create()
+void mk_header_response_reset(struct response_headers *header)
 {
-    struct response_headers *headers;
-
-    headers = mk_mem_malloc(sizeof(struct response_headers));
-    headers->status = 0;
-    headers->ranges[0] = -1;
-    headers->ranges[1] = -1;
-    headers->content_length = -1;
-    headers->transfer_encoding = -1;
-    headers->last_modified = -1;
-    headers->cgi = SH_NOCGI;
-    mk_pointer_reset(&headers->content_type);
-    mk_pointer_reset(&headers->content_encoding);
-    headers->location = NULL;
-
-    headers->_extra_rows = NULL;
-
-    return headers;
+    header->status = 0;
+    header->ranges[0] = -1;
+    header->ranges[1] = -1;
+    header->content_length = -1;
+    header->transfer_encoding = -1;
+    header->last_modified = -1;
+    header->cgi = SH_NOCGI;
+    mk_pointer_reset(&header->content_type);
+    mk_pointer_reset(&header->content_encoding);
+    header->location = NULL;
+    header->_extra_rows = NULL;
 }

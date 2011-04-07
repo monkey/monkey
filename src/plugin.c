@@ -394,9 +394,6 @@ void mk_plugin_init()
     /* Worker functions */
     api->worker_spawn = (void *) mk_utils_worker_spawn;
 
-    /* Some useful functions =) */
-    api->sys_get_somaxconn = (void *) mk_utils_get_somaxconn;
-
     /* Time functions */
     api->time_unix = (void *) mk_plugin_time_now_unix;
     api->time_human = (void *) mk_plugin_time_now_human;
@@ -548,14 +545,13 @@ int mk_plugin_stage_run(unsigned int hook,
                 /* Call stage */
                 MK_TRACE("[%s] STAGE 30", stm->p->shortname);
                 ret = stm->p->stage.s30(stm->p, cs, sr);
-
                 switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_END:
-                    return MK_PLUGIN_RET_END;
                 case MK_PLUGIN_RET_CLOSE_CONX:
-                    return MK_PLUGIN_RET_CLOSE_CONX;
+                case MK_PLUGIN_RET_CONTINUE:
+                    return ret;
                 default:
                     mk_err("Plugin '%s' returns invalid value %i",
                            stm->p->shortname, ret);
@@ -1073,9 +1069,8 @@ int mk_plugin_sched_remove_client(int socket)
 int mk_plugin_header_add(struct session_request *sr, char *row, int len)
 {
     mk_bug(!sr);
-    mk_bug(!sr->headers);
 
-    if (!sr->headers->_extra_rows) {
+    if (!sr->headers._extra_rows) {
         /* 
          * We allocate space for:
          *   + 8 slots extra headers
@@ -1084,11 +1079,11 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
          * -------------------------------------------------------
          *    18 iov slots
          */
-        sr->headers->_extra_rows = mk_iov_create(18, 0);
-        mk_bug(!sr->headers->_extra_rows);
+        sr->headers._extra_rows = mk_iov_create(18, 0);
+        mk_bug(!sr->headers._extra_rows);
     }
 
-    mk_iov_add_entry(sr->headers->_extra_rows, row, len, 
+    mk_iov_add_entry(sr->headers._extra_rows, row, len, 
                      mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     return 0;
 }

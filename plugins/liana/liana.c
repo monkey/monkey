@@ -58,8 +58,7 @@ int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
     remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr,
                        &socket_size);
 
-    if (fcntl(server_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
-        mk_err("Can't set to non-blocking the socket");
+    if (fcntl(remote_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
         mk_err("Can't set to non-blocking the socket");
     }
 #else
@@ -204,7 +203,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
     mk_api->socket_reset(socket_fd);
 
     ret = _mkp_network_io_bind(socket_fd, (struct sockaddr *) &local_sockaddr_in,
-                               sizeof(struct sockaddr), mk_api->sys_get_somaxconn());
+                               sizeof(struct sockaddr), MK_SOMAXCONN);
 
     if(ret == -1) {
         mk_err("Port %i cannot be used\n", port);

@@ -20,13 +20,14 @@
  */
 
 /* request.c */
-
+#include "header.h"
+#include "file.h"
 #include "memory.h"
 #include "scheduler.h"
+#include "limits.h"
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
-
 
 /* Request buffer chunks = 4KB */
 #define MK_REQUEST_CHUNK (int) 4096
@@ -96,7 +97,12 @@ struct client_session
     int socket;
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
-    char *body;                 /* Original request sent */
+
+    /* request body buffer */
+    char *body;              
+
+    /* Initial fixed size buffer for small requests */
+    char body_fixed[MK_REQUEST_CHUNK];
 
     mk_pointer *ipv4;
 
@@ -130,6 +136,34 @@ struct handler
     struct handler *next;
 };
 
+struct response_headers
+{
+    int status;
+
+    /* Length of the content to send */
+    long content_length;
+
+    /* Private value, real length of the file requested */
+    long real_length;
+
+    int cgi;
+    int pconnections_left;
+    int ranges[2];
+    int transfer_encoding;
+    int breakline;
+
+    time_t last_modified;
+    mk_pointer content_type;
+    mk_pointer content_encoding;
+    char *location;
+
+    /* 
+     * This field allow plugins to add their own response
+     * headers
+     */
+    struct mk_iov *_extra_rows;
+};
+
 struct session_request
 {
     int status;
@@ -160,23 +194,14 @@ struct session_request
     /*---Request headers--*/
     int content_length;
 
-    mk_pointer accept;
-    mk_pointer accept_language;
-    mk_pointer accept_encoding;
-    mk_pointer accept_charset;
-
     mk_pointer content_type;
     mk_pointer connection;
-    mk_pointer cookies;
 
     mk_pointer host;
     mk_pointer host_port;
     mk_pointer if_modified_since;
     mk_pointer last_modified_since;
     mk_pointer range;
-    mk_pointer referer;
-    mk_pointer resume;
-    mk_pointer user_agent;
 
     /*---------------------*/
     
@@ -185,13 +210,25 @@ struct session_request
     /*-----------------*/
 
     /*-Internal-*/
-    mk_pointer real_path;       /* Absolute real path */
-    mk_pointer query_string;    /* ?... */
+    mk_pointer real_path;        /* Absolute real path */
 
-    char *virtual_user;         /* Virtualhost user */
+    /* 
+     * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
+     * it will be stored here and real_path will point this buffer
+     */
+    char real_path_static[MK_PATH_BASE]; 
 
+    /* Query string: ?.... */
+    mk_pointer query_string;
+
+    /* virtual user */
+    char *virtual_user;
+
+    /* is keep-alive request ? */
     int keep_alive;
-    int user_home;              /* user_home request(VAR_ON/VAR_OFF) */
+
+    /* is it serving a user's home directory ? */
+    int user_home;
     
     /*-Connection-*/
     long port;
@@ -204,48 +241,20 @@ struct session_request
     long loop;
     long bytes_to_send;
     off_t bytes_offset;
-    struct file_info  *file_info;
+    struct file_info file_info;
 
     /* Vhost */
     struct host       *host_conf;     /* root vhost config */ 
     struct host_alias *host_alias;    /* specific vhost matched */
 
     /* Response headers */
-    struct response_headers *headers;
+    struct response_headers headers;
 
     /* Plugin handlers */
     struct plugin *handled_by;
 
     /* mk_list head node */
     struct mk_list _head;
-};
-
-struct response_headers
-{
-    int status;
-
-    /* Length of the content to send */
-    long content_length;
-
-    /* Private value, real length of the file requested */
-    long real_length;
-
-    int cgi;
-    int pconnections_left;
-    int ranges[2];
-    int transfer_encoding;
-    int breakline;
-
-    time_t last_modified;
-    mk_pointer content_type;
-    mk_pointer content_encoding;
-    char *location;
-
-    /* 
-     * This field allow plugins to add their own response
-     * headers
-     */
-    struct mk_iov *_extra_rows;
 };
 
 mk_pointer mk_request_index(char *pathfile);
@@ -256,7 +265,7 @@ void mk_request_error(int http_status, struct client_session *cs,
 
 void mk_request_free_list(struct client_session *cs);
 
-struct client_session *mk_session_create(int socket);
+struct client_session *mk_session_create(int socket, struct sched_list_node *sched);
 struct client_session *mk_session_get(int socket);
 void mk_session_remove(int socket);
 

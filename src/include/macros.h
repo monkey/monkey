@@ -23,6 +23,7 @@
 #define MK_MACROS_H
 
 #include <stdlib.h>
+#include "limits.h"
 
 /* Boolean */
 #define MK_TRUE   1

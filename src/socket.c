@@ -42,11 +42,9 @@ static void mk_socket_safe_event_write(int socket)
 {
     struct sched_list_node *sched;
 
-    if (config->safe_event_write == MK_TRUE) {
-        sched = mk_sched_get_thread_conf();
-        MK_TRACE("[FD %i] Safe event write ON", socket);
-        mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_WRITE);
-    }
+    sched = mk_sched_get_thread_conf();
+    MK_TRACE("[FD %i] Safe event write ON", socket);
+    mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_WRITE);
 }
 
 /*
@@ -155,7 +153,9 @@ int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
     int bytes;
     bytes = plg_netiomap->writev(socket_fd, mk_io);
 
-    mk_socket_safe_event_write(socket_fd);
+    if (config->safe_event_write == MK_TRUE) {
+        mk_socket_safe_event_write(socket_fd);
+    }
     return bytes;
 }
 
@@ -164,7 +164,9 @@ int mk_socket_send(int socket_fd, const void *buf, size_t count)
     int bytes;
     bytes = plg_netiomap->write(socket_fd, buf, count);
 
-    mk_socket_safe_event_write(socket_fd);
+    if (config->safe_event_write == MK_TRUE) {
+        mk_socket_safe_event_write(socket_fd);
+    }
     return bytes;
 }
 
@@ -181,6 +183,8 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
     bytes = plg_netiomap->send_file(socket_fd, file_fd,
                                     file_offset, file_count);
 
-    mk_socket_safe_event_write(socket_fd);
+    if (config->safe_event_write == MK_TRUE) {
+        mk_socket_safe_event_write(socket_fd);
+    }
     return bytes;
 }

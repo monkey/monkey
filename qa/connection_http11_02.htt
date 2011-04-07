@@ -6,10 +6,10 @@
 #	Eduardo Silva	<edsiper@gmail.com>
 #
 # DATE
-#	March 17 2010
+#	March 17 2011
 #
 # COMMENTS
-#	Do not Expect 'Connection:' from server
+#	Do Expect 'Connection:' from server
 ###############################################################################
 
 
