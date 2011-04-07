@@ -175,11 +175,6 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     //mk_palm_iov_add_header(iov, mk_cgi_server_signature, sr->host_conf->host_signature);
 
     idx = _iov_fill_empty(iov, sr->host, idx);
-    idx = _iov_fill_empty(iov, sr->user_agent, idx);
-    idx = _iov_fill_empty(iov, sr->accept, idx);
-    idx = _iov_fill_empty(iov, sr->accept_charset, idx);
-    idx = _iov_fill_empty(iov, sr->accept_encoding, idx);
-    idx = _iov_fill_empty(iov, sr->accept_language, idx);
 
     if (sr->port != mk_api->config->standard_port) {
         idx = _iov_fill_empty(iov, sr->host_port, idx);
@@ -187,9 +182,6 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     else {
         idx = _iov_fill_empty(iov, sr->host, idx);
     }
-
-    idx = _iov_fill_empty(iov, sr->cookies, idx);
-    idx = _iov_fill_empty(iov, sr->referer, idx);
 
     idx = _iov_fill_empty(iov, *cs->ipv4, idx);
     idx = _iov_fill_empty(iov, sr->uri, idx);

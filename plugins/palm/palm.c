@@ -129,15 +129,15 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 {
     int n;
 
-    if (sr->headers->status == 0) {
-        sr->headers->status = MK_HTTP_OK;
+    if (sr->headers.status == 0) {
+        sr->headers.status = MK_HTTP_OK;
     }
 
-    sr->headers->cgi = SH_CGI;
+    sr->headers.cgi = SH_CGI;
 
     /* Chunked transfer encoding */
     if (sr->protocol >= HTTP_PROTOCOL_11) {
-        sr->headers->transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
     }
 
     /* Send just headers from buffer */
@@ -201,7 +201,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     PLUGIN_TRACE("PALM STAGE 30, requesting '%s'", sr->real_path.data);
 
     palm = mk_palm_get_handler(&sr->real_path);
-    if (!palm || !sr->file_info) {
+    if (!palm || sr->file_info.size == -1) {
         PLUGIN_TRACE("[FD %i] Not handled by me", cs->socket);
         return MK_PLUGIN_RET_NOT_ME;
     }
@@ -366,7 +366,7 @@ int mk_palm_cgi_status(char *data, struct session_request *sr)
             }
         }
 
-        sr->headers->status = status;
+        sr->headers.status = status;
         return offset;
     }
     
