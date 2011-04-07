@@ -101,19 +101,6 @@ static struct session_request *mk_request_alloc()
     /* Plugin handler */
     request->handled_by = NULL;
 
-    /*
-     * FIXME: these fields will be dropped once plugins
-     * uses the new headers ToC interface
-     */
-    request->accept.data = NULL;
-    request->accept_language.data = NULL;
-    request->accept_encoding.data = NULL;
-    request->accept_charset.data = NULL;
-    request->cookies.data = NULL;
-    request->referer.data = NULL;
-    request->resume.data = NULL;
-    request->user_agent.data = NULL;
-
     return request;
 }
 
@@ -278,16 +265,6 @@ static int mk_request_header_process(struct session_request *sr)
     sr->connection = mk_request_header_get(sr->headers_toc, mk_rh_connection);
     sr->range = mk_request_header_get(sr->headers_toc, mk_rh_range);
     sr->if_modified_since = mk_request_header_get(sr->headers_toc, mk_rh_if_modified_since);
-
-    /* FIXME: this headers pointers should not be here, just keeping the reference
-     * to avoid problems with Palm plugin
-     */
-    sr->accept = mk_request_header_get(sr->headers_toc, mk_rh_accept);
-    sr->accept_charset = mk_request_header_get(sr->headers_toc, mk_rh_accept_charset);
-    sr->accept_encoding = mk_request_header_get(sr->headers_toc, mk_rh_accept_encoding);
-
-    sr->accept_language = mk_request_header_get(sr->headers_toc, mk_rh_accept_language);
-    sr->cookies = mk_request_header_get(sr->headers_toc, mk_rh_cookie);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {

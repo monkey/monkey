@@ -162,23 +162,14 @@ struct session_request
     /*---Request headers--*/
     int content_length;
 
-    mk_pointer accept;
-    mk_pointer accept_language;
-    mk_pointer accept_encoding;
-    mk_pointer accept_charset;
-
     mk_pointer content_type;
     mk_pointer connection;
-    mk_pointer cookies;
 
     mk_pointer host;
     mk_pointer host_port;
     mk_pointer if_modified_since;
     mk_pointer last_modified_since;
     mk_pointer range;
-    mk_pointer referer;
-    mk_pointer resume;
-    mk_pointer user_agent;
 
     /*---------------------*/
     
