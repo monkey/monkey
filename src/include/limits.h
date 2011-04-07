@@ -19,6 +19,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* Configuration */
+#define MK_HOSTNAME_LEN 64
 
 /* Networking */
 #define MK_SOMAXCONN 128

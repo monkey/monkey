@@ -575,9 +575,14 @@ struct host *mk_config_get_host(char *path)
     /* Alloc list for host name aliases */
     mk_list_init(&host->server_names); 
 
-    host_low = mk_mem_malloc(128);
+    host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
     line_p = line = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
     while (line_p) {
+        if (line_p->len > MK_HOSTNAME_LEN - 1) {
+            line_p = line_p->next;
+            continue;
+        }
+
         /* Hostname to lowercase */
         char *p, *h = host_low;
         p = line_p->val;
@@ -589,7 +594,7 @@ struct host *mk_config_get_host(char *path)
 
         /* Alloc node */
         new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
-        new_alias->name = line_p->val;
+        new_alias->name = host_low;
         new_alias->len = line_p->len;
 
         mk_list_add(&new_alias->_head, &host->server_names);
