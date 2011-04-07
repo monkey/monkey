@@ -814,14 +814,12 @@ void mk_request_free_list(struct client_session *cs)
 /* Create a client request struct and put it on the
  * main list
  */
-struct client_session *mk_session_create(int socket)
+struct client_session *mk_session_create(int socket, struct sched_list_node *sched)
 {
     struct client_session *cs;
     struct sched_connection *sc;
-    struct sched_list_node *sched;
     struct mk_list *cs_list;
 
-    sched= mk_sched_get_thread_conf();
     sc = mk_sched_get_connection(sched, socket);
     if (!sc) {
         MK_TRACE("FAILED SOCKET: %i", socket);

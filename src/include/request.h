@@ -261,7 +261,7 @@ void mk_request_error(int http_status, struct client_session *cs,
 
 void mk_request_free_list(struct client_session *cs);
 
-struct client_session *mk_session_create(int socket);
+struct client_session *mk_session_create(int socket, struct sched_list_node *sched);
 struct client_session *mk_session_get(int socket);
 void mk_session_remove(int socket);
 
