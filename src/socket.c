@@ -78,6 +78,13 @@ int mk_socket_set_tcp_nodelay(int sockfd)
     return setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 }
 
+int mk_socket_set_tcp_defer_accept(int sockfd)
+{
+    int timeout = 0;
+
+    return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
+}
+
 int mk_socket_get_ip(int socket, char *ipv4)
 {
     int ipv4_len = 16;
