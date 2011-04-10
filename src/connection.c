@@ -22,6 +22,7 @@
 #include "monkey.h"
 #include "http.h"
 #include "plugin.h"
+#include "macros.h"
 
 int mk_conn_read(int socket)
 {
@@ -47,7 +48,9 @@ int mk_conn_read(int socket)
     cs = mk_session_get(socket);
     if (!cs) {
         /* Note: Linux don't set TCP_NODELAY socket flag by default */
-        mk_socket_set_tcp_nodelay(socket);
+        if (mk_socket_set_tcp_nodelay(socket) != 0) {
+            mk_warn("TCP_NODELAY failed");
+        }
 
         /* Create client */
         cs = mk_session_create(socket, sched);

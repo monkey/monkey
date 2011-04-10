@@ -84,7 +84,7 @@ void mk_server_loop(int server_fd)
 
     /* Activate TCP_DEFER_ACCEPT */
     if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
-        mk_warn("TCP_DEFER_ACCEPT failed");
+            mk_warn("TCP_DEFER_ACCEPT failed");
     }
 
     mk_info("HTTP Server started");
