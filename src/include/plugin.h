@@ -183,7 +183,7 @@ struct plugin_api
 {
     struct server_config *config;
     struct mk_list *plugins;
-    struct mk_list **sched_list;
+    struct sched_list_node *sched_list;
 
     /* Error helper */
     int *(*_error) (int, const char *, ...);

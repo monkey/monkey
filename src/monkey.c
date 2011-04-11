@@ -145,6 +145,7 @@ int main(int argc, char **argv)
     mk_version();
     mk_signal_init();
     mk_config_start_configure();
+    mk_sched_init();
     mk_plugin_init();
 
     server_fd = mk_socket_server(config->serverport, config->listen_addr);

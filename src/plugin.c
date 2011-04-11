@@ -311,7 +311,7 @@ void mk_plugin_init()
 
     /* Setup and connections list */
     api->config = config;
-    api->sched_list = &sched_list;
+    api->sched_list = sched_list;
 
     /* API plugins funcions */
 
