@@ -71,8 +71,8 @@ inline int mk_sched_add_client(int remote_fd)
             MK_TRACE("[FD %i] Add", remote_fd);
 
             /* Set IP */
-            mk_socket_get_ip(remote_fd, sched.queue[i].ipv4.data);
-            mk_pointer_set(&sched.queue[i].ipv4, sched.queue[i].ipv4.data);
+            sched.queue[i].ipv4.len = mk_socket_get_ip(remote_fd, 
+                                                       sched.queue[i].ipv4.data);
 
             /* Before to continue, we need to run plugin stage 10 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,

@@ -87,15 +87,17 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
 
 int mk_socket_get_ip(int socket, char *ipv4)
 {
-    int ipv4_len = 16;
-    socklen_t len;
+    short int ipv4_len = 16;
+    socklen_t len = sizeof(struct sockaddr_in);
     struct sockaddr_in m_addr;
+    struct in_addr *addr;
+    const u_int8_t *ip;
 
-    len = sizeof(m_addr);
     getpeername(socket, (struct sockaddr *) &m_addr, &len);
-    inet_ntop(PF_INET, &m_addr.sin_addr, ipv4, ipv4_len);
+    addr = &m_addr.sin_addr;
+    ip = (const u_int8_t *) &addr->s_addr;
 
-    return 0;
+    return snprintf(ipv4, ipv4_len, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
 }
 
 int mk_socket_close(int socket)
