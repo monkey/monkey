@@ -120,12 +120,17 @@ struct client_session
 
 pthread_key_t request_list;
 
-struct header_toc
+struct header_toc_row
 {
     char *init;
     char *end;
     int status;                 /* 0: not found, 1: found = skip! */
-    struct header_toc *next;
+};
+
+struct headers_toc
+{
+    int length;
+    struct header_toc_row rows[MK_HEADERS_TOC_LEN];
 };
 
 /* Request plugin Handler, each request can be handled by 
@@ -172,7 +177,8 @@ struct session_request
     mk_pointer body;
 
     /* HTTP Headers Table of Content */ 
-    struct header_toc headers_toc[MK_HEADERS_TOC_LEN];
+    struct headers_toc headers_toc[MK_HEADERS_TOC_LEN];
+
     int headers_len;
     
 
@@ -257,8 +263,10 @@ struct session_request
     struct mk_list _head;
 };
 
+int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len);
 mk_pointer mk_request_index(char *pathfile);
-mk_pointer mk_request_header_get(struct header_toc *toc, mk_pointer header);
+mk_pointer mk_request_header_get(struct headers_toc *toc,
+                                 mk_pointer header);
 
 void mk_request_error(int http_status, struct client_session *cs, 
                       struct session_request *sr);
@@ -273,8 +281,6 @@ void mk_request_init_error_msgs(void);
 
 int mk_handler_read(int socket, struct client_session *cs);
 int mk_handler_write(int socket, struct client_session *cs);
-
-void mk_request_header_toc_init(struct header_toc *toc);
 
 void mk_request_ka_next(struct client_session *cs);
 #endif

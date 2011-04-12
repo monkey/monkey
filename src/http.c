@@ -619,8 +619,8 @@ int mk_http_pending_request(struct client_session *cs)
             int content_length;
             int current;
 
-            content_length = mk_method_post_content_length(cs->body);
             current = cs->body_length - cs->body_pos_end - mk_endblock.len;
+            content_length = mk_method_post_content_length(cs->body, current);
 
             MK_TRACE("HTTP POST DATA %i/%i", current, content_length);
             if (content_length >= config->max_request_size) {

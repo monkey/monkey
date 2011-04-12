@@ -101,9 +101,11 @@ static struct session_request *mk_request_alloc()
     /* Plugin handler */
     request->handled_by = NULL;
 
+    /* Headers TOC */
+    request->headers_toc->length = 0;
+
     return request;
 }
-
 
 static void mk_request_free(struct session_request *sr)
 {
@@ -127,23 +129,28 @@ static void mk_request_free(struct session_request *sr)
     mk_mem_free(sr);
 }
 
-static void mk_request_header_toc_parse(struct header_toc *toc, const char *data, int len)
+int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len)
 {
-    char *p, *l = 0;
     int i;
+    char *p = (char *) data;
+    char *l = 0;
 
-    p = (char *)data;
-    for (i = 0; i < MK_HEADERS_TOC_LEN && p && l < data + len; i++) {
+    toc->length = 0;
+    for (i = 0; l < (data + len) && p && i < MK_HEADERS_TOC_LEN; i++) {
         l = strstr(p, MK_CRLF);
         if (l) {
-            toc[i].init = p;
-            toc[i].end = l;
-            p = l + mk_crlf.len;
+            toc->rows[i].init = p;
+            toc->rows[i].end = l;
+            toc->rows[i].status = 0;
+            p = (l + mk_crlf.len);
+            toc->length++;
         }
         else {
             break;
         }
     }
+
+    return toc->length;
 }
 
 /* Return a struct with method, URI , protocol version
@@ -230,7 +237,6 @@ static int mk_request_header_process(struct session_request *sr)
 
     /* Creating Table of Content (index) for HTTP headers */
     sr->headers_len = sr->body.len - (prot_end + mk_crlf.len);
-    mk_request_header_toc_init(sr->headers_toc);
     mk_request_header_toc_parse(sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
@@ -920,18 +926,8 @@ void mk_session_remove(int socket)
     mk_sched_set_request_list(cs_list);
 }
 
-void mk_request_header_toc_init(struct header_toc *toc)
-{
-    int i;
-    for (i=0; i < MK_HEADERS_TOC_LEN; i++) {
-        toc[i].init = NULL;
-        toc[i].end = NULL;
-        toc[i].status = 0;
-    }
-}
-
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_get(struct header_toc *toc, mk_pointer header)
+mk_pointer mk_request_header_get(struct headers_toc *toc, mk_pointer header)
 {
     int i;
     mk_pointer var;
@@ -939,24 +935,20 @@ mk_pointer mk_request_header_get(struct header_toc *toc, mk_pointer header)
     var.data = NULL;
     var.len = 0;
 
-    if (toc) {
-        for (i = 0; i < MK_HEADERS_TOC_LEN; i++) {
-            /* status = 1 means that the toc entry was already
-             * checked by Monkey
-             */
-            if (toc[i].status == 1) {
-                continue;
-            }
-
-            if (!toc[i].init)
-                break;
-
-            if (strncasecmp(toc[i].init, header.data, header.len) == 0) {
-                var.data = toc[i].init + header.len + 1;
-                var.len = toc[i].end - var.data;
-                toc[i].status = 1;
-                return var;
-            }
+    for (i = 0; i < toc->length; i++) {
+        /* 
+         * status = 1 means that the toc entry was already
+         * checked by Monkey
+         */
+        if (toc->rows[i].status == 1) {
+            continue;
+        }
+        
+        if (strncasecmp(toc->rows[i].init, header.data, header.len) == 0) {
+            var.data = toc->rows[i].init + header.len + 1;
+            var.len = toc->rows[i].end - var.data;
+            toc->rows[i].status = 1;
+            break;
         }
     }
 

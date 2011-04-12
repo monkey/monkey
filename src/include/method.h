@@ -20,4 +20,4 @@
 /* method.c */
 int mk_method_post(struct client_session *cs, struct session_request *sr);
 mk_pointer mk_method_post_get_vars(void *data, int size);
-long int mk_method_post_content_length(char *body);
+long int mk_method_post_content_length(const char *body, int body_len);

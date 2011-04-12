@@ -41,19 +41,21 @@
 #include "utils.h"
 #include "file.h"
 #include "cache.h"
+#include "request.h"
 
-long int mk_method_post_content_length(char *body)
+long int mk_method_post_content_length(const char *body, int body_len)
 {
-    struct header_toc *toc = NULL;
+    struct headers_toc toc;
     long int len;
     mk_pointer tmp;
 
-    /* obs: Table of Content (toc) is created when the full
+    /* 
+     * obs: Table of Content (toc) is created when the full
      * request has arrived, this function cannot be used from
      * mk_http_pending_request().
      */
-    toc = mk_cache_get(mk_cache_header_toc);
-    tmp = mk_request_header_get(toc, mk_rh_content_length);
+    mk_request_header_toc_parse(&toc, body, body_len);
+    tmp = mk_request_header_get(&toc, mk_rh_content_length);
 
     if (!tmp.data) {
         int pos_header;
@@ -90,7 +92,7 @@ int mk_method_post(struct client_session *cs, struct session_request *sr)
     mk_pointer tmp;
     long content_length_post = 0;
 
-    content_length_post = mk_method_post_content_length(cs->body);
+    content_length_post = mk_method_post_content_length(cs->body, cs->body_length);
 
     /* Length Required */
     if (content_length_post == -1) {
