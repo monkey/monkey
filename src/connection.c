@@ -99,7 +99,7 @@ int mk_conn_write(int socket)
     }
 
     MK_TRACE("[FD %i] Normal connection write handling", socket);
-
+    
     sched = mk_sched_get_thread_conf();
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
 

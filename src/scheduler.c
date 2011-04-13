@@ -372,11 +372,11 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
         return -1;
     }
     
-    for (i = 0; i < config->workers; i++) {
+    for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].socket == remote_fd) {
             sched->queue[i].status = status;
             return 0;
         }
     }
-    return 0;
+    return -1;
 }
