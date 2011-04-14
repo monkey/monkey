@@ -44,6 +44,7 @@ static const char MONKEY_BUILT[] = "Unknown";
 static void mk_thread_keys_init(void)
 {
     /* Create thread keys */
+    pthread_key_create(&worker_sched_node, NULL);
     pthread_key_create(&request_list, NULL);
     pthread_key_create(&epoll_fd, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);

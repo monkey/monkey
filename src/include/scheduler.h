@@ -63,6 +63,7 @@ typedef struct
 } sched_thread_conf;
 
 pthread_key_t epoll_fd;
+pthread_key_t worker_sched_node;
 
 void mk_sched_init();
 int mk_sched_register_thread(int wid, pthread_t tid, int epoll_fd);

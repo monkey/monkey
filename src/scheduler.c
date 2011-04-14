@@ -42,6 +42,10 @@
 #include "utils.h"
 #include "macros.h"
 
+/* 
+ * Returns the worker id which should take a new incomming connection,
+ * it returns the worker id with less active connections
+ */
 static inline int _next_target()
 {
     int i;
@@ -55,6 +59,10 @@ static inline int _next_target()
     return target;
 }
 
+/*
+ * Assign a new incomming connection to a specific worker thread, it also
+ * cares about to update the scheduler information
+ */
 inline int mk_sched_add_client(int remote_fd)
 {
     int t=0;
@@ -98,6 +106,84 @@ inline int mk_sched_add_client(int remote_fd)
     }
 
     return -1;
+}
+
+static void mk_sched_thread_lists_init()
+{
+    struct mk_list *cs_list;
+
+    /* client_session mk_list */
+    cs_list = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(cs_list);
+    mk_sched_set_request_list(cs_list);
+}
+
+/* created thread, all this calls are in the thread context */
+static void *mk_sched_launch_worker_loop(void *thread_conf)
+{
+    int i;
+    pthread_t current;
+    struct sched_list_node *thinfo = NULL;
+    mk_epoll_handlers *handler;
+    sched_thread_conf *thconf = thread_conf;
+
+    /* Avoid SIGPIPE signals */
+    mk_signal_thread_sigpipe_safe();
+
+    /* Init specific thread cache */
+    mk_sched_thread_lists_init();
+    mk_cache_thread_init();
+
+    /* Plugin thread context calls */
+    mk_plugin_event_init_list();
+    mk_plugin_core_thread();
+
+    /* Epoll event handlers */
+    handler = mk_epoll_set_handlers((void *) mk_conn_read,
+                                    (void *) mk_conn_write,
+                                    (void *) mk_conn_error,
+                                    (void *) mk_conn_close,
+                                    (void *) mk_conn_timeout);
+
+
+    /* 
+     * Identify what's the corresponding scheduler node, as we are 
+     * in the thread context we do not know who we are. It tries
+     * to match the thread ID with sched_list[N].tid
+     */
+    current = pthread_self();
+    for (i=0; i < config->workers; i++) {
+        if (pthread_equal(sched_list[i].tid, current) != 0) {
+            thinfo = &sched_list[i];
+            break;
+        }
+    }
+
+    /* 
+     * Under Linux does not exists the difference between process and
+     * threads, everything is a thread in the kernel task struct, and each 
+     * one has it's own numerical identificator: PID .
+     *
+     * Here we want to know what's the PID associated to this running
+     * task (which is different from parent Monkey PID), it can be 
+     * retrieved with gettid() but Glibc does not export to userspace
+     * the syscall, we need to call it directly through syscall(2).
+     */
+    thinfo->pid = syscall(__NR_gettid);
+
+    /*
+     * Export epoll filedescriptor to the thread context using a 
+     * thread_key.
+     */
+    mk_sched_set_thread_poll(thconf->epoll_fd);
+
+    /* Export known scheduler node to context thread */
+    pthread_setspecific(worker_sched_node, (void *) thinfo);
+
+    /* Init epoll_wait() loop */
+    mk_epoll_init(thconf->epoll_fd, handler, thconf->epoll_max_events);
+
+    return 0;
 }
 
 /* Register thread information */
@@ -157,7 +243,7 @@ int mk_sched_launch_thread(int wid, int max_events)
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    if (pthread_create(&tid, &attr, mk_sched_launch_epoll_loop,
+    if (pthread_create(&tid, &attr, mk_sched_launch_worker_loop,
                        (void *) thconf) != 0) {
         perror("pthread_create");
         return -1;
@@ -170,63 +256,15 @@ int mk_sched_launch_thread(int wid, int max_events)
     return 0;
 }
 
+/*
+ * The scheduler nodes are an array of struct sched_list_node type,
+ * each worker thread belongs to a scheduler node, on this function we
+ * allocate a scheduler node per number of workers defined.
+ */
 void mk_sched_init()
 {
     sched_list = mk_mem_malloc_z(sizeof(struct sched_list_node) * 
                                  config->workers);
-}
-
-void mk_sched_thread_lists_init()
-{
-    struct mk_list *cs_list;
-
-    /* client_session mk_list */
-    cs_list = mk_mem_malloc(sizeof(struct mk_list));
-    mk_list_init(cs_list);
-    mk_sched_set_request_list(cs_list);
-}
-
-/* created thread, all this calls are in the thread context */
-void *mk_sched_launch_epoll_loop(void *thread_conf)
-{
-    sched_thread_conf *thconf;
-    struct sched_list_node *thinfo;
-    mk_epoll_handlers *handler;
-
-    /* Avoid SIGPIPE signals */
-    mk_signal_thread_sigpipe_safe();
-
-    thconf = thread_conf;
-
-    /* Init specific thread cache */
-    mk_sched_thread_lists_init();
-    mk_cache_thread_init();
-
-    /* Plugin thread context calls */
-    mk_plugin_event_init_list();
-    mk_plugin_core_thread();
-
-    /* Epoll event handlers */
-    handler = mk_epoll_set_handlers((void *) mk_conn_read,
-                                    (void *) mk_conn_write,
-                                    (void *) mk_conn_error,
-                                    (void *) mk_conn_close,
-                                    (void *) mk_conn_timeout);
-
-    /* Nasty way to export task id */
-    usleep(1000);
-    thinfo = mk_sched_get_thread_conf();
-    while (!thinfo) {
-        thinfo = mk_sched_get_thread_conf();
-    }
-
-    /* Glibc doesn't export to user space the gettid() syscall */
-    thinfo->pid = syscall(__NR_gettid);
-
-    mk_sched_set_thread_poll(thconf->epoll_fd);
-    mk_epoll_init(thconf->epoll_fd, handler, thconf->epoll_max_events);
-
-    return 0;
 }
 
 struct mk_list *mk_sched_get_request_list()
@@ -251,18 +289,7 @@ int mk_sched_get_thread_poll()
 
 struct sched_list_node *mk_sched_get_thread_conf()
 {
-    int i;
-    pthread_t current;
-
-    current = pthread_self();
-
-    for (i=0; i < config->workers; i++) {
-        if (pthread_equal(sched_list[i].tid, current) != 0) {
-            return &sched_list[i];
-        }
-    }
-
-    return NULL;
+    return pthread_getspecific(worker_sched_node);
 }
 
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
