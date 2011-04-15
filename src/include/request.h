@@ -91,56 +91,6 @@ parametros de una peticion */
 
 #define MK_HEADERS_TOC_LEN 32
 
-struct client_session
-{
-    int pipelined;              /* Pipelined request */
-    int socket;
-    int counter_connections;    /* Count persistent connections */
-    int status;                 /* Request status */
-
-    /* request body buffer */
-    char *body;              
-
-    /* Initial fixed size buffer for small requests */
-    char body_fixed[MK_REQUEST_CHUNK];
-
-    mk_pointer *ipv4;
-
-    int body_size;
-    int body_length;
-
-    int body_pos_end;
-    int first_method;
-
-    time_t init_time;
-
-    struct mk_list request_list;
-    struct mk_list _head;
-};
-
-pthread_key_t request_list;
-
-struct header_toc_row
-{
-    char *init;
-    char *end;
-    int status;                 /* 0: not found, 1: found = skip! */
-};
-
-struct headers_toc
-{
-    int length;
-    struct header_toc_row rows[MK_HEADERS_TOC_LEN];
-};
-
-/* Request plugin Handler, each request can be handled by 
- * several plugins, we handle list in a simple list */
-struct handler
-{
-    struct plugin *p;
-    struct handler *next;
-};
-
 struct response_headers
 {
     int status;
@@ -167,6 +117,19 @@ struct response_headers
      * headers
      */
     struct mk_iov *_extra_rows;
+};
+
+struct header_toc_row
+{
+    char *init;
+    char *end;
+    int status;                 /* 0: not found, 1: found = skip! */
+};
+
+struct headers_toc
+{
+    int length;
+    struct header_toc_row rows[MK_HEADERS_TOC_LEN];
 };
 
 struct session_request
@@ -261,6 +224,44 @@ struct session_request
 
     /* mk_list head node */
     struct mk_list _head;
+};
+
+struct client_session
+{
+    int pipelined;              /* Pipelined request */
+    int socket;
+    int counter_connections;    /* Count persistent connections */
+    int status;                 /* Request status */
+
+    /* request body buffer */
+    char *body;              
+
+    /* Initial fixed size buffer for small requests */
+    char body_fixed[MK_REQUEST_CHUNK];
+
+    mk_pointer *ipv4;
+
+    int body_size;
+    int body_length;
+
+    int body_pos_end;
+    int first_method;
+
+    time_t init_time;
+
+    struct session_request sr_fixed;
+    struct mk_list request_list;
+    struct mk_list _head;
+};
+
+pthread_key_t request_list;
+
+/* Request plugin Handler, each request can be handled by 
+ * several plugins, we handle list in a simple list */
+struct handler
+{
+    struct plugin *p;
+    struct handler *next;
 };
 
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len);

@@ -58,11 +58,8 @@
 #include "macros.h"
 
 /* Create a memory allocation in order to handle the request data */
-static struct session_request *mk_request_alloc()
+static void mk_request_init(struct session_request *request)
 {
-    struct session_request *request = 0;
-
-    request = mk_mem_malloc(sizeof(struct session_request));
     request->status = MK_FALSE;  /* Request not processed yet */
     request->close_now = MK_FALSE;
 
@@ -103,8 +100,6 @@ static struct session_request *mk_request_alloc()
 
     /* Headers TOC */
     request->headers_toc->length = 0;
-
-    return request;
 }
 
 static void mk_request_free(struct session_request *sr)
@@ -126,7 +121,6 @@ static void mk_request_free(struct session_request *sr)
     if (sr->real_path.data != sr->real_path_static) {
         mk_pointer_free(&sr->real_path);
     }
-    mk_mem_free(sr);
 }
 
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len)
@@ -330,7 +324,13 @@ static int mk_request_parse(struct client_session *cs)
         }
 
         /* Allocating request block */
-        sr_node = mk_request_alloc();
+        if (blocks == 0) {
+            sr_node = &cs->sr_fixed;
+        }
+        else {
+            sr_node = mk_mem_malloc(sizeof(struct session_request));
+        }
+        mk_request_init(sr_node);
 
         /* We point the block with a mk_pointer */
         sr_node->body.data = cs->body + i;
@@ -406,7 +406,8 @@ static void mk_request_premature_close(int http_status, struct client_session *c
     struct mk_list *sr_list = &cs->request_list;
 
     if (mk_list_is_empty(sr_list) == 0) {
-        sr = mk_request_alloc();
+        sr = mk_mem_malloc(sizeof(struct session_request));
+        mk_request_init(sr);
         mk_list_add(&sr->_head, &cs->request_list);
     }
     else {
@@ -816,7 +817,11 @@ void mk_request_free_list(struct client_session *cs)
     mk_list_foreach_safe(sr_head, temp, &cs->request_list) {
         sr_node = mk_list_entry(sr_head, struct session_request, _head);
         mk_list_del(sr_head);
+
         mk_request_free(sr_node);
+        if (sr_node != &cs->sr_fixed) {
+            mk_mem_free(sr_node);
+        }
     }
 }
 
