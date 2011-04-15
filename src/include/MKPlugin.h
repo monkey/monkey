@@ -22,6 +22,9 @@
 #ifndef MONKEY_PLUGIN_H
 #define MONKEY_PLUGIN_H
 
+/* General Headers */
+#include "errno.h"
+
 /* Monkey Headers */
 #include "plugin.h"
 #include "list.h"

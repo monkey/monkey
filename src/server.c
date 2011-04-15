@@ -99,13 +99,13 @@ void mk_server_loop(int server_fd)
 #ifdef TRACE
         MK_TRACE("New connection arrived: FD %i", remote_fd);
 
-        struct mk_list *sched_head;
+        int i;
         struct sched_list_node *node;
-
-        MK_TRACE("Worker Status");
-        mk_list_foreach(sched_head, sched_list) {
-            node = mk_list_entry(sched_head, struct sched_list_node, _head);
-            MK_TRACE(" WID %i / conx = %i", node->idx, node->active_connections);
+        
+        node = sched_list;
+        for (i=0; i < config->workers; i++) {
+            MK_TRACE("Worker Status");
+            MK_TRACE(" WID %i / conx = %i", node[i].idx, node[i].active_connections);
         }
 #endif
 

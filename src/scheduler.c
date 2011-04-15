@@ -72,7 +72,7 @@ inline int mk_sched_add_client(int remote_fd)
     t = _next_target();
     sched = sched_list[t];
 
-    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
+    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched.idx);
 
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched.queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {

@@ -204,7 +204,7 @@ void *mk_logger_worker_init(void *args)
                 slen = splice(events[i].data.fd, NULL, flog,
                               NULL, bytes, SPLICE_F_MOVE);
                 if (slen == -1) {
-                    mk_warn("splice failed with %i", slen);
+                    mk_warn("Could not write to log file: splice() = %i", slen);
                 }
 
                 PLUGIN_TRACE("written %i bytes", bytes);
