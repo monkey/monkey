@@ -369,7 +369,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     }
 
     sr->loop++;
-    return sr->bytes_to_send;    
+    return sr->bytes_to_send;
 }
 
 int mk_http_directory_redirect_check(struct client_session *cs,

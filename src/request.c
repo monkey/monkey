@@ -619,17 +619,9 @@ int mk_handler_read(int socket, struct client_session *cs)
 
 int mk_handler_write(int socket, struct client_session *cs)
 {
-    int bytes, final_status = 0;
+    int final_status = 0;
     struct session_request *sr_node;
     struct mk_list *sr_list, *sr_head;
-
-    /*
-     * Get node from schedule list node which contains
-     * the information regarding to the current thread
-     */
-    if (!cs) {
-        return -1;
-    }
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
         if (mk_request_parse(cs) != 0) {
@@ -642,12 +634,12 @@ int mk_handler_write(int socket, struct client_session *cs)
         sr_node = mk_list_entry(sr_head, struct session_request, _head);
 
         /* Request not processed also no plugin has take some action */
-        if (sr_node->bytes_to_send < 0 && !sr_node->handled_by) {
-            final_status = mk_request_process(cs, sr_node);
-        }
         /* Request with data to send by static file sender */
-        else if (sr_node->bytes_to_send > 0 && !sr_node->handled_by) {
-            final_status = bytes = mk_http_send_file(cs, sr_node);
+        if (sr_node->bytes_to_send > 0 && !sr_node->handled_by) {
+            final_status = mk_http_send_file(cs, sr_node);
+        }
+        else if (sr_node->bytes_to_send < 0 && !sr_node->handled_by) {
+            final_status = mk_request_process(cs, sr_node);
         }
 
         /*
@@ -674,7 +666,8 @@ int mk_handler_write(int socket, struct client_session *cs)
         }
     }
 
-    /* If we are here, is because all pipelined request were
+    /* 
+     * If we are here, is because all pipelined request were
      * processed successfully, let's return 0;
      */
     return 0;
@@ -957,7 +950,6 @@ mk_pointer mk_request_header_get(struct headers_toc *toc, mk_pointer header)
 
 void mk_request_ka_next(struct client_session *cs)
 {
-    memset(cs->body, '\0', sizeof(cs->body));
     cs->first_method = -1;
     cs->body_pos_end = -1;
     cs->body_length = 0;
