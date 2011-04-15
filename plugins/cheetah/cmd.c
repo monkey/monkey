@@ -261,14 +261,14 @@ void mk_cheetah_cmd_vhosts()
 
 void mk_cheetah_cmd_workers()
 {
+    int i;
     struct sched_list_node *node;
-    struct mk_list *head;
 
-    mk_list_foreach(head, *mk_api->sched_list) {
-        node = mk_list_entry(head, struct sched_list_node, _head);
+    node = mk_api->sched_list;
+    for (i=0; i < mk_api->config->workers; i++) {
 
-        CHEETAH_WRITE("* Worker %i\n", node->idx);
-        CHEETAH_WRITE("      - Task ID           : %i\n", node->pid);
+        CHEETAH_WRITE("* Worker %i\n", node[i].idx + 1);
+        CHEETAH_WRITE("      - Task ID           : %i\n", node[i].pid);
 
         /* Memory Usage 
         CHEETAH_WRITE("      - Memory usage      : ");
@@ -389,12 +389,7 @@ void mk_cheetah_cmd_config()
 
 void mk_cheetah_cmd_status()
 {
-    int nthreads = 0;
-    struct mk_list *head;
-
-    mk_list_foreach(head, *mk_api->sched_list) {
-        nthreads++;
-    }
+    int nthreads = mk_api->config->workers;
 
     /* FIXME */
     //CHEETAH_WRITE("Cheetah Plugin v%s\n\n", _plugin_info->version);
