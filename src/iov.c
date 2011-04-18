@@ -35,6 +35,39 @@
 #include "utils.h"
 #include "iov.h"
 
+inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
+                            mk_pointer sep, int free)
+{
+    if (buf) {
+        mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
+        mk_io->io[mk_io->iov_idx].iov_len = len;
+        mk_io->iov_idx++;
+        mk_io->total_len += len;
+    }
+
+#ifdef DEBUG_IOV
+    if (mk_io->iov_idx > mk_io->size) {
+        printf("\nDEBUG IOV :: ERROR, Broken array size in:");
+        printf("\n          '''%s'''", buf);
+        fflush(stdout);
+    }
+#endif
+    
+    /* Add separator */
+    if (sep.len > 0) {
+        mk_io->io[mk_io->iov_idx].iov_base = sep.data;
+        mk_io->io[mk_io->iov_idx].iov_len = sep.len;
+        mk_io->iov_idx++;
+        mk_io->total_len += sep.len;
+    }
+    
+    if (free == MK_IOV_FREE_BUF) {
+        _mk_iov_set_free(mk_io, buf);
+    }
+    
+    return mk_io->iov_idx;
+}
+
 struct mk_iov *mk_iov_create(int n, int offset)
 {
     struct mk_iov *iov;
@@ -48,39 +81,6 @@ struct mk_iov *mk_iov_create(int n, int offset)
     iov->size = n;
 
     return iov;
-}
-
-int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
-                     mk_pointer sep, int free)
-{
-    if (buf) {
-        mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
-        mk_io->io[mk_io->iov_idx].iov_len = len;
-        mk_io->iov_idx++;
-        mk_io->total_len += len;
-    }
-    
-#ifdef DEBUG_IOV
-    if (mk_io->iov_idx > mk_io->size) {
-        printf("\nDEBUG IOV :: ERROR, Broken array size in:");
-        printf("\n          '''%s'''", buf);
-        fflush(stdout);
-    }
-#endif
-
-    /* Add separator */
-    if (sep.len > 0) {
-        mk_io->io[mk_io->iov_idx].iov_base = sep.data;
-        mk_io->io[mk_io->iov_idx].iov_len = sep.len;
-        mk_io->iov_idx++;
-        mk_io->total_len += sep.len;
-    }
-
-    if (free == MK_IOV_FREE_BUF) {
-        _mk_iov_set_free(mk_io, buf);
-    }
-
-    return mk_io->iov_idx;
 }
 
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
