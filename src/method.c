@@ -112,7 +112,7 @@ int mk_method_post(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
-    tmp = mk_request_header_get(sr->headers_toc, mk_rh_content_type);
+    tmp = mk_request_header_get(&sr->headers_toc, mk_rh_content_type);
     if (!tmp.data) {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return -1;

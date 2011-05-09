@@ -99,7 +99,7 @@ static void mk_request_init(struct session_request *request)
     request->handled_by = NULL;
 
     /* Headers TOC */
-    request->headers_toc->length = 0;
+    request->headers_toc.length = 0;
 }
 
 static void mk_request_free(struct session_request *sr)
@@ -231,10 +231,10 @@ static int mk_request_header_process(struct session_request *sr)
 
     /* Creating Table of Content (index) for HTTP headers */
     sr->headers_len = sr->body.len - (prot_end + mk_crlf.len);
-    mk_request_header_toc_parse(sr->headers_toc, headers, sr->headers_len);
+    mk_request_header_toc_parse(&sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
-    host = mk_request_header_get(sr->headers_toc, mk_rh_host);
+    host = mk_request_header_get(&sr->headers_toc, mk_rh_host);
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
@@ -261,9 +261,9 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Looking for headers that ONLY Monkey uses */
-    sr->connection = mk_request_header_get(sr->headers_toc, mk_rh_connection);
-    sr->range = mk_request_header_get(sr->headers_toc, mk_rh_range);
-    sr->if_modified_since = mk_request_header_get(sr->headers_toc, mk_rh_if_modified_since);
+    sr->connection = mk_request_header_get(&sr->headers_toc, mk_rh_connection);
+    sr->range = mk_request_header_get(&sr->headers_toc, mk_rh_range);
+    sr->if_modified_since = mk_request_header_get(&sr->headers_toc, mk_rh_if_modified_since);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {

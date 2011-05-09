@@ -140,7 +140,7 @@ struct session_request
     mk_pointer body;
 
     /* HTTP Headers Table of Content */ 
-    struct headers_toc headers_toc[MK_HEADERS_TOC_LEN];
+    struct headers_toc headers_toc;
 
     int headers_len;
     
