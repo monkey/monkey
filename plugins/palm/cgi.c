@@ -28,7 +28,8 @@
 
 void mk_cgi_env()
 {
-
+    
+    /* Document Root */
     mk_api->pointer_set(&mk_cgi_document_root, MK_CGI_DOCUMENT_ROOT);
 
     /* CONTENT_ */

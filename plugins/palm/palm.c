@@ -145,7 +145,8 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 
     n = (int) mk_api->header_send(cs->socket, cs, sr);
 
-    /* Monkey core send_headers set TCP_CORK_ON, we need to get
+    /*
+     * Monkey core send_headers set TCP_CORK_ON, we need to get
      * back the status to OFF
      */
     mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
@@ -173,7 +174,10 @@ int _mkp_init(void **api, char *confdir)
     pthread_key_create(&iov_protocol_request_idx, NULL);
 
     /* set pointers */
-    mk_api->pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
+    mk_api->pointer_set(&mk_server_protocol, HTTP_PROTOCOL_11_STR);
+
+    mk_server_port.data = mk_api->mem_alloc(6);
+    mk_api->str_itop(mk_api->config->serverport, &mk_server_port);
     mk_api->pointer_set(&mk_iov_empty, MK_IOV_NONE);
     mk_api->pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
     mk_api->pointer_set(&mk_iov_crlfcrlf, MK_IOV_CRLFCRLF);

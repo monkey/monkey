@@ -45,7 +45,9 @@ struct mk_config *conf;
 
 #include "iov.h"
 
-mk_pointer mk_monkey_protocol;
+mk_pointer mk_server_protocol;
+mk_pointer mk_server_port;
+
 mk_pointer mk_iov_empty;
 mk_pointer mk_iov_crlf;
 mk_pointer mk_iov_crlfcrlf;

@@ -88,7 +88,7 @@ mk_pointer mk_cgi_remote_port;
 mk_pointer mk_cgi_query_string;
 mk_pointer mk_cgi_post_vars;
 
-#define MK_CGI_VERSION "1.1"
+#define MK_CGI_VERSION "CGI/1.1"
 mk_pointer mk_cgi_version;
 
 struct mk_cgi_environment
