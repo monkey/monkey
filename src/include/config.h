@@ -72,8 +72,10 @@ struct mk_config_entry
 /* Base struct of server */
 struct server_config
 {
-    short int workers;          /* number of worker threads */
+    int server_fd;              /* server socket file descriptor */
     int worker_capacity;        /* how many clients per thread... */
+    short int workers;          /* number of worker threads */
+
 
     int is_daemon;
     char *serverconf;           /* path to configuration files */
