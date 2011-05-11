@@ -58,11 +58,12 @@ static int prot_header2cgi(const char *buf, int len, char **dest)
     char *p;
     const char *prefix = "HTTP_";
     
-    strncpy(*dest, prefix, offset);
+    memcpy(*dest, prefix, offset);
     p = *dest + offset;
 
     for (i=0; i < len; i++) {
         if (buf[i] == ':') {
+            *p++ = '\0';
             break;
         }
 
@@ -74,9 +75,8 @@ static int prot_header2cgi(const char *buf, int len, char **dest)
         }
     }
 
-    dest[i] = '\0';
-
-    return i-1;
+    i += offset;
+    return i;
 }
 
 /*
@@ -91,7 +91,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
     mk_pointer iov_temp;
     struct mk_iov *iov;
-    struct header_toc_row *rows;
+    struct header_toc_row *row;
 
     /* Use cached iov_request */
     iov = prot_template();
@@ -110,31 +110,67 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
         prot_add_header(iov, mk_cgi_content_type, sr->headers.content_type);
     }
 
-    /* SERVER_XYZ */
-    prot_add_header(iov, mk_cgi_server_addr, mk_api->config->server_addr);
+    /* SERVER_ADDR */
+    prot_add_header(iov, mk_cgi_server_addr, mk_server_address);
+
+    /* SERVER_PORT */
     prot_add_header(iov, mk_cgi_server_port, mk_server_port);
-    prot_add_header(iov, mk_cgi_server_name, mk_api->config->server_addr);
-    prot_add_header(iov, mk_cgi_server_protocol, mk_server_protocol);
-    prot_add_header(iov, mk_cgi_server_signature, sr->host_conf->header_host_signature);
 
     /* 
-     * HTTP_XYZ
+     * SERVER_NAME
+     * -----------
      *
-     * Here we will add all HTTP headers sent by the client to our iov array
+     * Server name belongs to the value specified in the conf/sites/XYZ vhost file
+     * under key 'ServerName'. 
+     */
+    iov_temp.data = sr->host_alias->name;
+    iov_temp.len = sr->host_alias->len;
+    prot_add_header(iov, mk_cgi_server_name, iov_temp);
+
+    /* SERVER_PROTOCOL */
+    prot_add_header(iov, mk_cgi_server_protocol, mk_server_protocol);
+
+    /* 
+     * SERVER_SIGNATURE 
+     * ----------------
+     * we use an offset of 8 bytes as each host signature is composed in 
+     * the following way:
+     *
+     *   server: Monkey/x.y.x
+     *
+     * so the 8 bytes do the offset for 'server: ' which is not useful for
+     * the CGI environment variable.
+     */
+    iov_temp.data = sr->host_conf->header_host_signature.data + 8;
+    iov_temp.len = sr->host_conf->header_host_signature.len - 8;
+    prot_add_header(iov, mk_cgi_server_signature, iov_temp);
+
+    /* 
+     * HTTP_*
+     * --------
+     *
+     * CGI spec specify that incomming HTTP headers by the client must be 
+     * converted to uppercase, replace '-' by '_' and prefix the 'HTTP_' 
+     * string. e.g:
+     *
+     *   Accept-Encoding: -> HTTP_ACCEPT_ENCODING
      */
     short int len;
-    rows = sr->headers_toc.rows;
-    for (i=0; i < sr->headers_len; i++) {
+    short int offset = 5;
+
+    for (i=0; i < sr->headers_toc.length; i++) {
+        row = &sr->headers_toc.rows[i];
         /* let's match common CGI HTTP_ headers */
-        len = rows[i].end - rows[i].init;
+        len = row->end - row->init;
         row_buf = mk_api->mem_alloc(len + 1);
-        row_len = prot_header2cgi(rows[i].init, len, &row_buf);
+        row_len = prot_header2cgi(row->init, len, &row_buf);
 
         /* Row key */
         mk_api->iov_add_entry(iov, row_buf, row_len,
                               mk_iov_equal, MK_IOV_FREE_BUF);
         /* Row value */
-        mk_api->iov_add_entry(iov, rows[i].init + row_len, len - row_len,
+        mk_api->iov_add_entry(iov, row->init + (row_len - offset) + 2,
+                              len - (row_len - offset) - 2,
                               mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     }
 
@@ -152,8 +188,24 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
      * prot_add_header(iov, mk_cgi_remote_port, 
      */
 
-    prot_add_header(iov, mk_cgi_query_string, sr->query_string);
-    prot_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+    /* QUERY_STRING */
+    if (sr->query_string.len > 0) {
+        prot_add_header(iov, mk_cgi_query_string, sr->query_string);
+    }
+
+    /* 
+     * POST_VARIABLES
+     * --------------
+     * non-standard field of CGI, it just used by Palm protocol 
+     */
+    if (sr->content_length > 0 && sr->post_variables.len > 0) {
+        prot_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+    }
+
+#ifdef TRACE
+    PLUGIN_TRACE("Palm protocol request\n");
+    mk_api->iov_send(0, iov);
+#endif
 
     return iov;
 }

@@ -47,6 +47,7 @@ struct mk_config *conf;
 
 mk_pointer mk_server_protocol;
 mk_pointer mk_server_port;
+mk_pointer mk_server_address;
 
 mk_pointer mk_iov_empty;
 mk_pointer mk_iov_crlf;

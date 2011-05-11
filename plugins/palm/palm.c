@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 
 #include "MKPlugin.h"
@@ -155,6 +157,36 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
     return n;
 }
 
+void _mkp_core_prctx(struct server_config *config)
+{
+    /* 
+     * Server Address Lookup
+     * ---------------------
+     *
+     * this variable specify the server IP address ,this lookup needs to be 
+     * performed in the process context hook as is at this point where the
+     * server socket is already binded. We do not trust in the Listen configuration
+     * key so we do our own lookup.
+     */
+    int len;
+	struct sockaddr_in sin;
+	struct in_addr in;
+
+	len = sizeof(sin);
+	if (getsockname(mk_api->config->server_fd,
+                    (struct sockaddr *)&sin, (socklen_t *)&len) == -1) {
+        mk_err("Palm: Could not determinate local address");
+        exit(EXIT_FAILURE);
+    }
+	memset(&in,0,sizeof(in));
+	in.s_addr = sin.sin_addr.s_addr;
+
+    mk_server_address.data = inet_ntoa(in);
+    mk_server_address.len = strlen(mk_server_address.data);
+
+    PLUGIN_TRACE("Server Address Lookup '%s'", mk_server_address.data);
+}
+
 void _mkp_core_thctx()
 {
     /* Init request list */
@@ -176,8 +208,12 @@ int _mkp_init(void **api, char *confdir)
     /* set pointers */
     mk_api->pointer_set(&mk_server_protocol, HTTP_PROTOCOL_11_STR);
 
+    /* server port */
     mk_server_port.data = mk_api->mem_alloc(6);
     mk_api->str_itop(mk_api->config->serverport, &mk_server_port);
+    mk_server_port.len -= 2;
+
+    /* iov separators */
     mk_api->pointer_set(&mk_iov_empty, MK_IOV_NONE);
     mk_api->pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
     mk_api->pointer_set(&mk_iov_crlfcrlf, MK_IOV_CRLFCRLF);
