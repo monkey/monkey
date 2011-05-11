@@ -584,8 +584,9 @@ struct host *mk_config_get_host(char *path)
         }
 
         /* Hostname to lowercase */
-        char *p, *h = host_low;
-        p = line_p->val;
+        char *h = host_low;
+        char *p = line_p->val;
+
         while (*p) {
             *h = tolower(*p);
             p++, h++;
@@ -594,7 +595,9 @@ struct host *mk_config_get_host(char *path)
 
         /* Alloc node */
         new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
-        new_alias->name = host_low;
+        new_alias->name = mk_mem_malloc_z(line_p->len + 1);
+        strncpy(new_alias->name, host_low, line_p->len);
+
         new_alias->len = line_p->len;
 
         mk_list_add(&new_alias->_head, &host->server_names);
