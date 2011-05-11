@@ -75,8 +75,18 @@ static int prot_header2cgi(const char *buf, int len, char **dest)
         }
     }
 
+    /* Return the new buffer length */
     i += offset;
     return i;
+}
+
+static int get_port_by_socket(int fd)
+{
+    socklen_t len = sizeof(struct sockaddr_in);
+    struct sockaddr_in m_addr;
+
+    getpeername(fd, (struct sockaddr *) &m_addr, &len);
+    return (int) m_addr.sin_port;
 }
 
 /*
@@ -174,9 +184,20 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
                               mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     }
 
+    /* REMOTE_ADDR */
+    prot_add_header(iov, mk_cgi_remote_addr, *cs->ipv4);
+
+    /* REMOTE_PORT */
+    iov_temp.data = mk_api->mem_alloc(8);
+    mk_api->str_itop(get_port_by_socket(cs->socket), &iov_temp);
+    iov_temp.len -=2;
+    mk_api->iov_add_entry(iov, mk_cgi_remote_port.data, mk_cgi_remote_port.len,
+                          mk_iov_equal, MK_IOV_NOT_FREE_BUF);
+    mk_api->iov_add_entry(iov, iov_temp.data, iov_temp.len,
+                          mk_iov_crlf, MK_IOV_FREE_BUF);
+
     /* Miscellaneus CGI headers */
     prot_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
-    prot_add_header(iov, mk_cgi_remote_addr, *cs->ipv4);
     prot_add_header(iov, mk_cgi_request_uri, sr->uri);
     prot_add_header(iov, mk_cgi_request_method, sr->method_p);
     prot_add_header(iov, mk_cgi_script_name, sr->uri);
@@ -202,6 +223,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
         prot_add_header(iov, mk_cgi_post_vars, sr->post_variables);
     }
 
+    
 #ifdef TRACE
     PLUGIN_TRACE("Palm protocol request\n");
     mk_api->iov_send(0, iov);
