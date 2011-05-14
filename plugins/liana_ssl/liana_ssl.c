@@ -585,7 +585,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
 int _mkp_core_prctx(struct server_config *config)
 {
-    struct file_info *ssl_file_info = NULL;
+    struct file_info ssl_file_info;
 
     /* Enable server safe event write */
     config->safe_event_write = MK_TRUE;
@@ -602,18 +602,15 @@ int _mkp_core_prctx(struct server_config *config)
         exit(EXIT_FAILURE);
     }
 
-    ssl_file_info = mk_api->file_get_info(cert_file);
-    if(ssl_file_info == NULL) {
+    if (mk_api->file_get_info(cert_file, &ssl_file_info) == -1) {
         mk_err("Cannot read certificate file '%s'", cert_file);
         exit(EXIT_FAILURE);
     }
 
-    ssl_file_info = mk_api->file_get_info(key_file);
-    if(ssl_file_info == NULL) {
+    if (mk_api->file_get_info(key_file, &ssl_file_info) == -1) {
         mk_err("Cannot read key file '%s'", key_file);
         exit(EXIT_FAILURE);
     }
-
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
         mk_err("MatrixSsl couldn't read the certificates");
