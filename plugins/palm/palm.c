@@ -309,14 +309,17 @@ void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 
             /* Palm environment vars */
             iov = mk_palm_protocol_request_new(cs, sr);
+            mk_info("palm_fd: %i", pr->palm_fd);
 
             /* Write request to palm server */
             bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov);
+            mk_warn("written: %i", bytes_iov);
 
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
                 n = (long) bytes_iov;
             }
+
         }
     }
 

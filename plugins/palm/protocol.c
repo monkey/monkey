@@ -203,12 +203,6 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     prot_add_header(iov, mk_cgi_script_name, sr->uri);
     prot_add_header(iov, mk_cgi_script_filename, sr->real_path);
 
-    /* 
-     * FIXME: Need to add remote port 
-     *
-     * prot_add_header(iov, mk_cgi_remote_port, 
-     */
-
     /* QUERY_STRING */
     if (sr->query_string.len > 0) {
         prot_add_header(iov, mk_cgi_query_string, sr->query_string);
@@ -225,7 +219,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
     
 #ifdef TRACE
-    PLUGIN_TRACE("Palm protocol request\n");
+    PLUGIN_TRACE("Palm protocol request");
     mk_api->iov_send(0, iov);
 #endif
 
