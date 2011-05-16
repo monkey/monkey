@@ -113,7 +113,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     //mk_api->pointer_reset(&iov_temp);
     if (sr->method == HTTP_METHOD_POST && sr->content_length >= 0) {
         iov_temp.data = mk_api->mem_alloc(32);
-        mk_string_itop(sr->content_length, &iov_temp);
+        mk_api->str_itop(sr->content_length, &iov_temp);
         prot_add_header(iov, mk_cgi_content_length, iov_temp);
     }
     if (sr->headers.content_type.len > 0) {
@@ -198,7 +198,23 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
     /* Miscellaneus CGI headers */
     prot_add_header(iov, mk_cgi_gateway_interface, mk_cgi_version);
-    prot_add_header(iov, mk_cgi_request_uri, sr->uri);
+
+    /*
+     * REQUEST_URI
+     *
+     * if the request URI contains a query string, we must re-compose the full
+     * string as Monkey splits URI from query string
+     */
+    iov_temp.data = sr->uri.data;
+    if (sr->query_string.len > 0) {
+        iov_temp.len = sr->uri.len + sr->query_string.len;
+    }
+    else {
+        iov_temp.len = sr->uri.len;
+    }
+    prot_add_header(iov, mk_cgi_request_uri, iov_temp);
+
+    /* REQUEST_METHOD */
     prot_add_header(iov, mk_cgi_request_method, sr->method_p);
     prot_add_header(iov, mk_cgi_script_name, sr->uri);
     prot_add_header(iov, mk_cgi_script_filename, sr->real_path);
@@ -217,7 +233,10 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
         prot_add_header(iov, mk_cgi_post_vars, sr->post_variables);
     }
 
-    
+    /* Ending CRLFCRLF (\r\n\r\n) */
+    mk_api->iov_add_entry(iov, 
+                          mk_iov_crlfcrlf.data, mk_iov_crlfcrlf.len,
+                          mk_iov_none, MK_IOV_NOT_FREE_BUF);
 #ifdef TRACE
     PLUGIN_TRACE("Palm protocol request");
     mk_api->iov_send(0, iov);
