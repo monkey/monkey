@@ -352,6 +352,7 @@ void mk_plugin_init()
     /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;
     api->iov_free = (void *) mk_iov_free;
+    api->iov_free_marked = (void  *) mk_iov_free_marked;
     api->iov_add_entry = (void *) mk_iov_add_entry;
     api->iov_set_entry = (void *) mk_iov_set_entry;
     api->iov_send = (void *) mk_iov_send;

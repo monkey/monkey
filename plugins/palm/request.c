@@ -25,6 +25,7 @@
 #include "MKPlugin.h"
 #include "palm.h"
 
+/* Create a palm_request node */
 struct mk_palm_request *mk_palm_request_create(int client_fd,
                                                int palm_fd,
                                                struct client_session *cs,
@@ -62,7 +63,8 @@ void mk_palm_request_add(struct mk_palm_request *pr)
     pthread_setspecific(_mkp_data, pr_list);
 }
 
-/* It register the request and connection data, if it doesn't
+/* 
+ * It register the request and connection data, if it doesn't
  * exists it will be create it, otherwise will return the pointer
  * to the mk_palm_request struct node
  */
@@ -89,6 +91,10 @@ struct mk_palm_request *mk_palm_request_get(int palm_fd)
     return NULL;
 }
 
+/*
+ * Return a palm_request using as search criteria the socket
+ * connected to the client (user/browser)
+ */
 struct mk_palm_request *mk_palm_request_get_by_http(int socket)
 {
     struct mk_palm_request *pr_node;
@@ -137,14 +143,20 @@ void mk_palm_request_update(int socket, struct mk_palm_request  *pr)
     }
 }
 
-void mk_palm_request_delete(int socket)
+/* 
+ * Remove a palm_request from the main list, return 0 on success or -1
+ * when for some reason the request was not found
+ */
+int mk_palm_request_delete(int socket)
 {
     struct mk_palm_request *pr_node;
     struct mk_list *pr_list, *pr_temp, *pr_head;
 
+    PLUGIN_TRACE("[FD %i] remove request from list", socket);
+
     pr_list = pthread_getspecific(_mkp_data);
     if (mk_list_is_empty(pr_list) == 0) {
-        return;
+        return -1;
     }
 
     mk_list_foreach_safe(pr_head, pr_temp, pr_list) {
@@ -154,11 +166,17 @@ void mk_palm_request_delete(int socket)
             mk_list_del(pr_head);
             mk_api->mem_free(pr_node);
             pthread_setspecific(_mkp_data, pr_list);
-            return;
+            return 0;
         }
     }
+
+    return -1;
 }
 
+/*
+ * Initialize the index list for palm_request and then set the
+ * list HEAD to the thread key _mkp_data.
+ */
 void mk_palm_request_init()
 {
     struct mk_list *palm_request_list;

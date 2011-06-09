@@ -221,6 +221,7 @@ struct plugin_api
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
     void (*iov_free) (struct mk_iov *);
+    void (*iov_free_marked) (struct mk_iov *);
     int (*iov_add_entry) (struct mk_iov *, char *, int, mk_pointer, int);
     int (*iov_set_entry) (struct mk_iov *, char *, int, int, int);
     ssize_t (*iov_send) (int, struct mk_iov *);

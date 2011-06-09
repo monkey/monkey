@@ -43,6 +43,13 @@ struct mk_iov *prot_template()
 
     /* Use cached iov_request */
     iov = pthread_getspecific(iov_protocol_request);
+
+    /* Remove any previous data used */
+    mk_api->iov_free_marked(iov);
+    iov->iov_idx = 0;
+    iov->buf_idx = 0;
+    iov->total_len = 0;
+
     return iov;
 }
 
@@ -54,13 +61,27 @@ struct mk_iov *prot_template()
 static int prot_header2cgi(const char *buf, int len, char **dest)
 {
     int i;
-    int offset = 5;
+    int offset = 0;
+    int prefix_len = 5;
     char *p;
     const char *prefix = "HTTP_";
-    
-    memcpy(*dest, prefix, offset);
-    p = *dest + offset;
 
+    /* 
+     * There're two exception when the prefix HTTP_ must not
+     * be added: Content-Type and Content-Length headers, 
+     * i cannot find the reason for that so this belongs to a 
+     * stupid way to work.
+     */
+    if (strncasecmp(buf, "Content-", 8) == 0 || 
+        strncasecmp(buf, "Cookie-", 7) == 0) {
+        offset = 0;
+    }
+    else {
+        memcpy(*dest, prefix, prefix_len);
+        offset = prefix_len;
+    }
+
+    p = *dest + offset;
     for (i=0; i < len; i++) {
         if (buf[i] == ':') {
             *p++ = '\0';
@@ -105,6 +126,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
     /* Use cached iov_request */
     iov = prot_template();
+    iov->iov_idx = 0;
 
     /* DOCUMENT_ROOT */
     prot_add_header(iov, mk_cgi_document_root, sr->host_conf->documentroot);
@@ -114,6 +136,8 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     if (sr->method == HTTP_METHOD_POST && sr->content_length >= 0) {
         iov_temp.data = mk_api->mem_alloc(32);
         mk_api->str_itop(sr->content_length, &iov_temp);
+
+        iov_temp.len -= 2;
         prot_add_header(iov, mk_cgi_content_length, iov_temp);
     }
     if (sr->headers.content_type.len > 0) {
@@ -121,7 +145,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     }
 
     /* SERVER_ADDR */
-    prot_add_header(iov, mk_cgi_server_addr, mk_server_address);
+    //prot_add_header(iov, mk_cgi_server_addr, mk_server_address);
 
     /* SERVER_PORT */
     prot_add_header(iov, mk_cgi_server_port, mk_server_port);
@@ -166,7 +190,8 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
      *   Accept-Encoding: -> HTTP_ACCEPT_ENCODING
      */
     short int len;
-    short int offset = 5;
+    short int offset;
+    short int prefix_len = 5;
 
     for (i=0; i < sr->headers_toc.length; i++) {
         row = &sr->headers_toc.rows[i];
@@ -178,6 +203,15 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
         /* Row key */
         mk_api->iov_add_entry(iov, row_buf, row_len,
                               mk_iov_equal, MK_IOV_FREE_BUF);
+
+        /* Just prefixed HEADERS requires the offset */
+        if (strncmp(row_buf, "HTTP_", 5) == 0) {
+            offset = prefix_len;
+        }
+        else {
+            offset = 0;
+        }
+
         /* Row value */
         mk_api->iov_add_entry(iov, row->init + (row_len - offset) + 2,
                               len - (row_len - offset) - 2,
@@ -207,7 +241,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
      */
     iov_temp.data = sr->uri.data;
     if (sr->query_string.len > 0) {
-        iov_temp.len = sr->uri.len + sr->query_string.len;
+        iov_temp.len = sr->uri.len + sr->query_string.len + 1;
     }
     else {
         iov_temp.len = sr->uri.len;

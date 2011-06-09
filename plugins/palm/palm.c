@@ -232,6 +232,10 @@ void _mkp_exit()
 {
 }
 
+/* 
+ * Request handler: when the request arrives, this hook is invoked so Palm plugin
+ * start it's job checking if it should handle or not this request
+ */
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
                   struct session_request *sr)
 {
@@ -240,28 +244,35 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
     PLUGIN_TRACE("PALM STAGE 30, requesting '%s'", sr->real_path.data);
 
+    /* Get Palm handler */
     palm = mk_palm_get_handler(&sr->real_path);
     if (!palm || sr->file_info.size == -1) {
         PLUGIN_TRACE("[FD %i] Not handled by me", cs->socket);
         return MK_PLUGIN_RET_NOT_ME;
     }
 
-    /* Connect to server */
-    pr = mk_palm_do_instance(palm, cs, sr);
-
+    /* Connect to Palm server */
+    pr = mk_palm_connect(palm, cs, sr);
     if (!pr) {
         PLUGIN_TRACE("return %i (MK_PLUGIN_RET_CLOSE_CONX)", MK_PLUGIN_RET_CLOSE_CONX);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
-    /* Register Palm instance */
+    /* Register palm_request object with the thread list */
     mk_palm_request_add(pr);
 
-    /* Register socket with thread Epoll interface */
+    /* 
+     * Register socket with thread Epoll interface 
+     * -------------------------------------------
+     * For each Monkey worker thread exists a epoll() loop used to handle
+     * events on sockets, plugins can use the same epoll loop and register 
+     * events. Here we register the connected FD to palm server and wait for
+     * such events.
+     */
     mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cs, sr);
     PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
 
-    /* Send request */
+    /* Send request to Palm server*/
     mk_palm_send_request(cs, sr);
 
     PLUGIN_TRACE("[PALM_FD %i] return %i (MK_PLUGIN_RET_CONTINUE)", 
@@ -269,10 +280,12 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-
-struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
-                                            struct client_session *cs,
-                                            struct session_request *sr)
+/*
+ * Establish a TCP connection to the Palm Server
+ */
+struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
+                                        struct client_session *cs,
+                                        struct session_request *sr)
 {
     int ret;
     int palm_socket;
@@ -295,7 +308,7 @@ struct mk_palm_request *mk_palm_do_instance(struct mk_palm *palm,
 
 void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 {
-    int n;
+    long n;
     ssize_t bytes_iov=-1;
     struct mk_iov *iov;
     struct mk_palm_request *pr;
@@ -304,22 +317,22 @@ void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 
     pr = mk_palm_request_get_by_http(cs->socket);
     if (pr) {
+        PLUGIN_TRACE("palm_fd: %i", pr->palm_fd);
+
         if (pr->bytes_sent == 0) {
             PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
 
-            /* Palm environment vars */
+            /* Create protocol request  */
             iov = mk_palm_protocol_request_new(cs, sr);
-            mk_info("palm_fd: %i", pr->palm_fd);
 
-            /* Write request to palm server */
-            bytes_iov = (ssize_t )mk_api->iov_send(pr->palm_fd, iov);
-            mk_warn("written: %i", bytes_iov);
+            /* Write protocol request to palm server */
+            bytes_iov = (ssize_t ) mk_api->iov_send(pr->palm_fd, iov);
+            PLUGIN_TRACE("written: %i", bytes_iov);
 
             if (bytes_iov >= 0){
                 pr->bytes_sent += bytes_iov;
-                n = (long) bytes_iov;
+                n = bytes_iov;
             }
-
         }
     }
 
@@ -415,6 +428,49 @@ int mk_palm_cgi_status(char *data, struct session_request *sr)
     
     return 0;
 }
+
+/* sockfd = palm_fd */
+int hangup(int sockfd)
+{
+    struct mk_palm_request *pr;
+
+    PLUGIN_TRACE("[FD %i] hangup", sockfd);
+
+    /* Detect who owns this FD, client or palm */
+    pr = mk_palm_request_get(sockfd);
+    if (pr) { /* palm */
+        PLUGIN_TRACE(" cleaning up palm node | request_end (%i)", pr->client_fd);
+
+        mk_api->event_del(pr->palm_fd);
+
+        /* 
+         * We must be careful when invoking http_request_end(), as this
+         * function can raise an event close and this same function 
+         * hangup() can be invoked before continue, in the second loop
+         * can get into the client condition (else {..}) so the palm_request
+         * object can not be longer valid.
+         */
+        mk_api->http_request_end(pr->client_fd);
+
+        mk_api->socket_close(sockfd);
+        mk_palm_request_delete(sockfd);
+    }
+    else { /* client */
+        PLUGIN_TRACE("[FD %i] this FD is not a Palm Request", sockfd);
+
+        /* Check if the FD belongs to the client */
+        pr = mk_palm_request_get_by_http(sockfd);
+        if (pr) {
+            PLUGIN_TRACE("[FD %i] but the client is associated to FD %i",
+                         sockfd, pr->palm_fd);
+            mk_api->socket_close(pr->palm_fd);
+            mk_palm_request_delete(pr->palm_fd);
+        }
+    }
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
+}
+
+/* _MKP_EVENTs */
 int _mkp_event_read(int sockfd)
 {
     int n;
@@ -531,38 +587,6 @@ int _mkp_event_read(int sockfd)
     mk_palm_request_update(sockfd, pr);
 
     return MK_PLUGIN_RET_EVENT_OWNED;
-}
-
-/* sockfd = palm_fd */
-int hangup(int sockfd)
-{
-    struct mk_palm_request *pr;
-
-    PLUGIN_TRACE("[FD %i] hangup", sockfd);
-
-    pr = mk_palm_request_get(sockfd)     ;
-    if (!pr) {
-        PLUGIN_TRACE("[FD %i] this FD is not a Palm Request", sockfd);
-
-        pr = mk_palm_request_get_by_http(sockfd);
-        if (pr) {
-            PLUGIN_TRACE("[FD %i] but the client is associated to FD %i",
-                         sockfd, pr->palm_fd);
-            mk_api->socket_close(pr->palm_fd);
-            mk_palm_request_delete(pr->palm_fd);
-        }
-
-        return MK_PLUGIN_RET_EVENT_CONTINUE;
-    }
-
-    PLUGIN_TRACE(" cleaning up palm node | request_end(%i)", pr->client_fd);
-
-    mk_api->event_del(pr->palm_fd);
-    mk_api->http_request_end(pr->client_fd);
-    mk_api->socket_close(pr->palm_fd);
-    mk_palm_request_delete(pr->palm_fd);
-    
-    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
 int _mkp_event_close(int sockfd)
