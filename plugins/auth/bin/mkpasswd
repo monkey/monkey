@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+#
+# Monkey HTTP Daemon - user/password file management tool
+# -------------------------------------------------------
+# Adapted script to manage Monkey HTTP Daemon users/password file, 
+# original code taken from  Trac project.
+#
+# It was originally written to replace htpasswd by Eli Carter
+#
+
+import os
+import sys
+import base64
+import hashlib
+import random
+from optparse import OptionParser
+
+class HtpasswdFile:
+    """A class for manipulating htpasswd files."""
+
+    def __init__(self, filename, create=False):
+        self.entries = []
+        self.filename = filename
+        if not create:
+            if os.path.exists(self.filename):
+                self.load()
+            else:
+                raise Exception("%s does not exist" % self.filename)
+
+    def load(self):
+        """Read the htpasswd file into memory."""
+        lines = open(self.filename, 'r').readlines()
+        self.entries = []
+        for line in lines:
+            if line[0] == '#':
+                continue
+            username, pwhash = line.split(':')
+
+            # if password starts with '{SHA1}'
+            if pwhash[:6] == '{SHA1}':
+                pwhash = base64.b64decode(pwhash[6:])
+
+            entry = [username, pwhash.rstrip()]
+            self.entries.append(entry)
+
+    def save(self):
+        """Write the htpasswd file to disk"""
+        open(self.filename, 'w').writelines(["%s:{SHA1}%s\n" % (entry[0], entry[1])
+                                             for entry in self.entries])
+
+    def update(self, username, password):
+        """Replace the entry for the given user, or add it if new."""
+
+        # SHA1 stuff
+        sha1 = hashlib.sha1()
+        sha1.update(password)
+        sha1_digest = sha1.digest()
+
+        # Encoding to Base64
+        pwhash = base64.b64encode(sha1_digest)
+        matching_entries = [entry for entry in self.entries
+                            if entry[0] == username]
+        if matching_entries:
+            matching_entries[0][1] = pwhash
+        else:
+            self.entries.append([username, pwhash])
+
+    def delete(self, username):
+        """Remove the entry for the given user."""
+        self.entries = [entry for entry in self.entries
+                        if entry[0] != username]
+
+
+def main():
+    """%prog [-c] -b filename username password
+    Create or update an mkpasswd file"""
+    # For now, we only care about the use cases that affect tests/functional.py
+    parser = OptionParser(usage=main.__doc__)
+    parser.add_option('-b', action='store_true', dest='batch', default=False,
+        help='Batch mode; password is passed on the command line IN THE CLEAR.'
+        )
+    parser.add_option('-c', action='store_true', dest='create', default=False,
+        help='Create a new mkpasswd file, overwriting any existing file.')
+    parser.add_option('-D', action='store_true', dest='delete_user',
+        default=False, help='Remove the given user from the password file.')
+
+    options, args = parser.parse_args()
+
+    def syntax_error(msg):
+        """Utility function for displaying fatal error messages with usage
+        help.
+        """
+        sys.stderr.write("Syntax error: " + msg)
+        sys.stderr.write(parser.get_usage())
+        sys.exit(1)
+
+    if not options.batch:
+        syntax_error("Only batch mode is supported\n")
+
+    # Non-option arguments
+    if len(args) < 2:
+        syntax_error("Insufficient number of arguments.\n")
+    filename, username = args[:2]
+    if options.delete_user:
+        if len(args) != 2:
+            syntax_error("Incorrect number of arguments.\n")
+        password = None
+    else:
+        if len(args) != 3:
+            syntax_error("Incorrect number of arguments.\n")
+        password = args[2]
+
+    passwdfile = HtpasswdFile(filename, create=options.create)
+
+    if options.delete_user:
+        passwdfile.delete(username)
+    else:
+        passwdfile.update(username, password)
+
+    passwdfile.save()
+
+
+if __name__ == '__main__':
+    main()
