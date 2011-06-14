@@ -19,6 +19,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_AUTH_H
+#define MK_AUTH_H
+
 #include "MKPlugin.h"
 
 /* Header stuff */
@@ -45,10 +48,13 @@
  *
  */
 
+/* List of virtual hosts to handle locations */
+struct mk_list vhosts_list;
+
 /* main index for locations under a virtualhost */
 struct vhost {
     struct host *host;
-    struct mk_list location;
+    struct mk_list locations;
     struct mk_list _head;
 };
 
@@ -60,15 +66,29 @@ struct location {
     char *path;
     char *title;
 
-    struct mk_list users;
+    struct users_file *users;
     struct mk_list _head;
+};
+
+/* Head index for user files list */
+struct mk_list users_file_list;
+
+/* 
+ * Represents a users file, each entry represents a physical
+ * file and belongs to a node of the users_file_list list
+ */
+struct users_file {
+    time_t last_updated;   /* last time this entry was modified */
+    char *path;            /* file path */
+    struct mk_list _users; /* list of users */
+    struct mk_list _head;  /* head for main mk_list users_file_list */
 };
 
 /* 
  * a list of users, this list belongs to a  
  * struct location 
  */
-struct users {
+struct user {
     char user[128];
     char passwd_raw[256];
     unsigned char *passwd_decoded;
@@ -76,11 +96,12 @@ struct users {
     struct mk_list _head;
 };
 
-struct mk_list users_list;
-
+struct mk_list users_file_list;
 
 /* Thread key */
 mk_pointer auth_header_request;
 mk_pointer auth_header_basic;
 
 #define SHA1_DIGEST_LEN 20
+
+#endif

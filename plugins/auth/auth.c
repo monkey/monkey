@@ -27,48 +27,53 @@
 #include "MKPlugin.h"
 
 #include "auth.h"
+#include "conf.h"
 #include "sha1/sha1.h"
 #include "base64/base64.h"
 
-MONKEY_PLUGIN("Auth",              /* shortname */
+MONKEY_PLUGIN("auth",              /* shortname */
               "Authentication",    /* name */ 
               VERSION,             /* version */
               MK_PLUGIN_STAGE_30); /* hooks */
 
 struct mk_config *conf;
 
-int mk_auth_load_users(char *path)
+struct users_file *mk_auth_load_users(char *path)
 {
     int i, sep, len;
     int offset = 0;
     size_t decoded_len;
     char *buf;
-    struct users *cred;
+    struct user *cred;
+    struct users_file  *uf;
     struct file_info *finfo=NULL;
 
     mk_api->file_get_info(path, finfo);
     if (!finfo) {
         mk_warn("Cannot open users file '%s'", path);
-        return -1;
+        return NULL;
     }
 
     if (finfo->is_directory == MK_TRUE || finfo->read_access == MK_FALSE) {
         mk_warn("Cannot read users file '%s'", path);
-        return -1;
+        return NULL;
     }
 
     buf = mk_api->file_to_buffer(path);
     if (!buf) {
         mk_warn("Cannot read users file '%s'", path);
-        return -1;
+        return NULL;
     }
+
+    uf = mk_api->mem_alloc(sizeof(struct users_file));
+    mk_list_init(&uf->_head);
 
     /* Read users list buffer lines */
     len = strlen(buf);
     for (i = 0; i < len; i++) {
         if (buf[i] == '\n' || (i) == len -1) {
             sep = mk_api->str_search(buf + offset, ":", 1);
-            cred = mk_api->mem_alloc(sizeof(struct users));
+            cred = mk_api->mem_alloc(sizeof(struct user));
 
             /* Copy username */
             strncpy(cred->user, buf + offset, offset + sep);
@@ -91,23 +96,27 @@ int mk_auth_load_users(char *path)
                     cred->user, cred->passwd_raw);
             offset = i + 1;
 
-            mk_list_add(&cred->_head, &users_list);
+            mk_list_add(&cred->_head, &uf->_head);
         }
     }
 
-    return 0;
+    mk_api->mem_free(buf);
+    return uf;
 }
 
-int mk_auth_validate_user(const char *credentials, unsigned int len)
+int mk_auth_validate_user(struct session_request *sr,
+                          const char *credentials, unsigned int len)
 {
     int sep;
     size_t auth_len;
     size_t decoded_len;
-    unsigned char *a;
+    unsigned char *decoded;
     unsigned char digest[SHA1_DIGEST_LEN];
     struct mk_list *head;
     struct users *entry;
-    SHA_CTX sha; /* Type defined in sha1/sha1.h */
+    struct vhost *vh_entry;
+
+    SHA_CTX sha; /* defined in sha1/sha1.h */
 
     /* Validate value length */
     if (len <= auth_header_basic.len + 1) {
@@ -121,39 +130,52 @@ int mk_auth_validate_user(const char *credentials, unsigned int len)
     }
 
     /* Decode credentials */
-    a = base64_decode((unsigned char *) credentials + auth_header_basic.len,
-                      len - auth_header_basic.len,
-                      &auth_len);
-    a[auth_len] = '\0';
+    decoded = base64_decode((unsigned char *) credentials + auth_header_basic.len,
+                            len - auth_header_basic.len,
+                            &auth_len);
+    decoded[auth_len] = '\0';
 
     if (auth_len <= 3) {
         return -1;
     }
 
-    mk_info("Decoded: '%s' len=%i", a, auth_len);
+    mk_info("Decoded: '%s' len=%i", decoded, auth_len);
 
-    sep = mk_api->str_search_n((char *) a, ":", 1, auth_len);
+    sep = mk_api->str_search_n((char *) decoded, ":", 1, auth_len);
     if (sep == -1 || sep == 0  || sep == auth_len - 1) {
         return -1;
     }
+    
+    /* Match sr->vhost with auth_vhost */
+    mk_list_foreach(head, &vhosts_list) {
+        vh_entry = mk_list_entry(head, struct vhost, _head);
+        if (vh_entry->host == sr->host_conf) {
+            break;
+        }
+    }
 
-    if (strncmp((char *) a, "eduardo", sep - 1) != 0) {
+    return -1;
+
+    /*
+    if (strncmp((char *) decoded, "eduardo", sep - 1) != 0) {
         mk_warn("invalid user");
         return -1;
     }
 
-    if (strncmp((char *) a + sep + 1, "pass", 4) != 0) {
+    if (strncmp((char *) decoded + sep + 1, "pass", 4) != 0) {
         mk_warn("invalid pass");
         return -1;
     }
+    */
 
     /* Get SHA1 hash */
     SHA1_Init(&sha);
-    SHA1_Update(&sha, (unsigned char *) a + sep + 1, 4);
+    SHA1_Update(&sha, (unsigned char *) decoded + sep + 1, 4);
     SHA1_Final(digest, &sha);
 
     mk_info("\nrebase64: '%s'", base64_encode((unsigned char *) digest, 20, &decoded_len));
 
+    /*
     mk_list_foreach(head, &users_list) {
         entry = mk_list_entry(head, struct users, _head);
         if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
@@ -162,8 +184,8 @@ int mk_auth_validate_user(const char *credentials, unsigned int len)
         printf("\n->entry: '%s'", entry->user);
         fflush(stdout);
     }
+    */
 
-    mk_info("See you soon in Monkey 0.13 ;)");
     return 0;
 }
 
@@ -172,8 +194,10 @@ int _mkp_init(void **api, char *confdir)
     mk_api = *api;
 
     /* Init and load global users list */
-    mk_list_init(&users_list);
-    mk_auth_load_users("");
+    mk_list_init(&vhosts_list);
+    mk_list_init(&users_file_list);
+    mk_auth_conf_init_users_list();
+    //mk_auth_load_users("");
   
     /* Set HTTP headers key */
     auth_header_request.data = MK_AUTH_HEADER_REQUEST;
@@ -210,22 +234,19 @@ int _mkp_stage_30(struct plugin *plugin,
     res = mk_api->header_get(&sr->headers_toc, auth_header_request);
     if (res.data && res.len > 0) {
         /* Validate user */
-        val = mk_auth_validate_user(res.data, res.len);
-        if (val != 0) {
-            goto failed;
+        val = mk_auth_validate_user(sr, res.data, res.len);
+        if (val == 0) {
+            /* user validated, success */
+            return MK_PLUGIN_RET_NOT_ME;
         }
-
-        /* user validated, success */
-        return MK_PLUGIN_RET_NOT_ME;
     }
 
- failed:
+    /* Restrict access: failed user */
     sr->headers.content_length = 0;
     mk_api->header_set_http_status(sr, MK_CLIENT_UNAUTH);
     mk_api->header_add(sr,
                        "WWW-Authenticate: Basic realm=\"Monkey Auth Plugin\"",
                        50);
-
     mk_api->header_send(cs->socket, cs, sr);
 
     return MK_PLUGIN_RET_END;

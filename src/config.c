@@ -225,7 +225,12 @@ struct mk_config *mk_config_create(const char *path)
                 continue;
             }
 
-            /* get line key and value */
+            /* 
+             * FIXME: get line key and value 
+             *
+             * this routine should split the key/val line in a simple way
+             * using for() and strncpy().
+             */
             key = strtok_r(buf + indent_len, "\"\t ", &last);
             val = strtok_r(NULL, "\"\t", &last); 
 
