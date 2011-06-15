@@ -187,8 +187,8 @@ int mk_utils_set_daemon()
     if ((pid = fork()) < 0)
         err(EXIT_FAILURE, "pid");
 
-    if (pid != 0) /* parent */
-        exit(EXIT_FAILURE);
+    if (pid > 0) /* parent */
+        exit(EXIT_SUCCESS);
 
     if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
         err(EXIT_FAILURE, "chdir");
