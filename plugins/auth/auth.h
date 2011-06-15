@@ -27,6 +27,7 @@
 /* Header stuff */
 #define MK_AUTH_HEADER_REQUEST   "Authorization:"
 #define MK_AUTH_HEADER_BASIC     "Basic "
+#define MK_AUTH_HEADER_TITLE     "WWW-Authenticate: Basic realm=\"%s\""
 
 /* Credentials length */
 #define MK_AUTH_CREDENTIALS_LEN 256
@@ -63,8 +64,9 @@ struct vhost {
  * of allowed users
  */
 struct location {
-    char *path;
-    char *title;
+    mk_pointer path;
+    mk_pointer title;
+    mk_pointer auth_http_header;
 
     struct users_file *users;
     struct mk_list _head;

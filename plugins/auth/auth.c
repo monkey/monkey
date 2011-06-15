@@ -38,83 +38,15 @@ MONKEY_PLUGIN("auth",              /* shortname */
 
 struct mk_config *conf;
 
-struct users_file *mk_auth_load_users(char *path)
-{
-    int i, sep, len;
-    int offset = 0;
-    size_t decoded_len;
-    char *buf;
-    struct user *cred;
-    struct users_file  *uf;
-    struct file_info *finfo=NULL;
-
-    mk_api->file_get_info(path, finfo);
-    if (!finfo) {
-        mk_warn("Cannot open users file '%s'", path);
-        return NULL;
-    }
-
-    if (finfo->is_directory == MK_TRUE || finfo->read_access == MK_FALSE) {
-        mk_warn("Cannot read users file '%s'", path);
-        return NULL;
-    }
-
-    buf = mk_api->file_to_buffer(path);
-    if (!buf) {
-        mk_warn("Cannot read users file '%s'", path);
-        return NULL;
-    }
-
-    uf = mk_api->mem_alloc(sizeof(struct users_file));
-    mk_list_init(&uf->_head);
-
-    /* Read users list buffer lines */
-    len = strlen(buf);
-    for (i = 0; i < len; i++) {
-        if (buf[i] == '\n' || (i) == len -1) {
-            sep = mk_api->str_search(buf + offset, ":", 1);
-            cred = mk_api->mem_alloc(sizeof(struct user));
-
-            /* Copy username */
-            strncpy(cred->user, buf + offset, offset + sep);
-            cred->user[sep] = '\0';
-
-            /* Copy raw password */
-            offset += sep + 1 + 5;
-            strncpy(cred->passwd_raw,
-                    buf + offset,
-                    i - (offset));
-            cred->passwd_raw[i - offset] = '\0';
-
-            /* Decode raw password */
-            cred->passwd_decoded = base64_decode((unsigned char *)(cred->passwd_raw),
-                                                 strlen(cred->passwd_raw),
-                                                 &decoded_len);
-            //cred->passwd_decoded[decoded_len] = '\0';
-            
-            mk_info("**\n   user     : '%s'\n   p_raw    : '%s'", 
-                    cred->user, cred->passwd_raw);
-            offset = i + 1;
-
-            mk_list_add(&cred->_head, &uf->_head);
-        }
-    }
-
-    mk_api->mem_free(buf);
-    return uf;
-}
-
-int mk_auth_validate_user(struct session_request *sr,
+int mk_auth_validate_user(struct users_file *users,
                           const char *credentials, unsigned int len)
 {
     int sep;
     size_t auth_len;
-    size_t decoded_len;
     unsigned char *decoded;
     unsigned char digest[SHA1_DIGEST_LEN];
     struct mk_list *head;
-    struct users *entry;
-    struct vhost *vh_entry;
+    struct user *entry;
 
     SHA_CTX sha; /* defined in sha1/sha1.h */
 
@@ -129,7 +61,7 @@ int mk_auth_validate_user(struct session_request *sr,
         return -1;
     }
 
-    /* Decode credentials */
+    /* Decode credentials: incoming credentials comes in base64 encode */
     decoded = base64_decode((unsigned char *) credentials + auth_header_basic.len,
                             len - auth_header_basic.len,
                             &auth_len);
@@ -139,54 +71,30 @@ int mk_auth_validate_user(struct session_request *sr,
         return -1;
     }
 
-    mk_info("Decoded: '%s' len=%i", decoded, auth_len);
-
     sep = mk_api->str_search_n((char *) decoded, ":", 1, auth_len);
     if (sep == -1 || sep == 0  || sep == auth_len - 1) {
         return -1;
     }
     
-    /* Match sr->vhost with auth_vhost */
-    mk_list_foreach(head, &vhosts_list) {
-        vh_entry = mk_list_entry(head, struct vhost, _head);
-        if (vh_entry->host == sr->host_conf) {
-            break;
+    /* Get SHA1 hash */
+    SHA1_Init(&sha);
+    SHA1_Update(&sha, (unsigned char *) decoded + sep + 1, auth_len - (sep + 1));
+    SHA1_Final(digest, &sha);
+
+    mk_list_foreach(head, &users->_users) {
+        entry = mk_list_entry(head, struct user, _head);
+        /* match user */
+        if (strncmp(entry->user, (char *) decoded, sep) != 0) {
+            continue;
+        }
+
+        /* match password */
+        if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
+            return 0;
         }
     }
 
     return -1;
-
-    /*
-    if (strncmp((char *) decoded, "eduardo", sep - 1) != 0) {
-        mk_warn("invalid user");
-        return -1;
-    }
-
-    if (strncmp((char *) decoded + sep + 1, "pass", 4) != 0) {
-        mk_warn("invalid pass");
-        return -1;
-    }
-    */
-
-    /* Get SHA1 hash */
-    SHA1_Init(&sha);
-    SHA1_Update(&sha, (unsigned char *) decoded + sep + 1, 4);
-    SHA1_Final(digest, &sha);
-
-    mk_info("\nrebase64: '%s'", base64_encode((unsigned char *) digest, 20, &decoded_len));
-
-    /*
-    mk_list_foreach(head, &users_list) {
-        entry = mk_list_entry(head, struct users, _head);
-        if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
-            mk_warn("not equal");
-        }
-        printf("\n->entry: '%s'", entry->user);
-        fflush(stdout);
-    }
-    */
-
-    return 0;
 }
 
 int _mkp_init(void **api, char *confdir)
@@ -228,25 +136,56 @@ int _mkp_stage_30(struct plugin *plugin,
                   struct session_request *sr)
 {
     int val;
+    short int is_restricted = MK_FALSE;
     mk_pointer res;
+    struct mk_list *vh_head;
+    struct mk_list *loc_head;
+    struct vhost *vh_entry;
+    struct location *loc_entry;
+    
+    /* Match auth_vhost with global vhost */
+    mk_list_foreach(vh_head, &vhosts_list) {
+        vh_entry = mk_list_entry(vh_head, struct vhost, _head);
+        if (vh_entry->host == sr->host_conf) {
+            break;
+        }
+    }
+
+    /* Check vhost locations */
+    mk_list_foreach(loc_head, &vh_entry->locations) {
+        loc_entry = mk_list_entry(loc_head, struct location, _head);
+        if (sr->uri_processed.len < loc_entry->path.len) {
+            continue;
+        }
+        if (strncmp(sr->uri_processed.data, 
+                    loc_entry->path.data, loc_entry->path.len) == 0) {
+            is_restricted = MK_TRUE;
+            break;
+        }
+    }
+
+    /* For non-restricted location do not take any action, just returns */
+    if (is_restricted == MK_FALSE) {
+        return MK_PLUGIN_RET_NOT_ME;
+    }
 
     /* Check authorization header */
     res = mk_api->header_get(&sr->headers_toc, auth_header_request);
     if (res.data && res.len > 0) {
         /* Validate user */
-        val = mk_auth_validate_user(sr, res.data, res.len);
+        val = mk_auth_validate_user(loc_entry->users, res.data, res.len);
         if (val == 0) {
             /* user validated, success */
             return MK_PLUGIN_RET_NOT_ME;
         }
     }
 
-    /* Restrict access: failed user */
+    /* Restricted access: requires auth */
     sr->headers.content_length = 0;
     mk_api->header_set_http_status(sr, MK_CLIENT_UNAUTH);
     mk_api->header_add(sr,
-                       "WWW-Authenticate: Basic realm=\"Monkey Auth Plugin\"",
-                       50);
+                       loc_entry->auth_http_header.data,
+                       loc_entry->auth_http_header.len);
     mk_api->header_send(cs->socket, cs, sr);
 
     return MK_PLUGIN_RET_END;

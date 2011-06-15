@@ -21,7 +21,8 @@
 
 #include <string.h>
 #include "MKPlugin.h"
-
+#include "sha1/sha1.h"
+#include "base64/base64.h"
 #include "auth.h"
 
 /*
@@ -35,6 +36,11 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
     struct file_info finfo;
     struct mk_list *head;
     struct users_file *entry;
+    struct user *cred;
+    int i, sep, len;
+    int offset = 0;
+    size_t decoded_len;
+    char *buf;
 
     mk_list_foreach(head, &users_file_list) {
         entry = mk_list_entry(head, struct users_file, _head);
@@ -48,6 +54,11 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
         return NULL;
     }
 
+    if (finfo.is_directory == MK_FILE_TRUE) {
+        mk_warn("Auth: Not a credentials file '%s'", users_path);
+        return NULL;
+    }
+
     if (finfo.read_access == MK_FILE_FALSE) {
         mk_warn("Auth: Could not read file '%s'", users_path);
         return NULL;
@@ -57,7 +68,52 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
     entry  = mk_api->mem_alloc(sizeof(struct users_file));
     entry->last_updated = finfo.last_modification;
     entry->path = users_path;
+
+    /* Read file and add users to the list */
     mk_list_init(&entry->_users);
+
+    /* Read credentials file */
+    buf = mk_api->file_to_buffer(users_path);
+    if (!buf) {
+        mk_warn("Auth: Cannot read users file '%s'", users_path);
+        return NULL;
+    }
+
+    /* Read users list buffer lines */
+    len = strlen(buf);
+    for (i = 0; i < len; i++) {
+        if (buf[i] == '\n' || (i) == len -1) {
+            sep = mk_api->str_search(buf + offset, ":", 1);
+            cred = mk_api->mem_alloc(sizeof(struct user));
+
+            /* Copy username */
+            strncpy(cred->user, buf + offset, offset + sep);
+            cred->user[sep] = '\0';
+
+            /* Copy raw password */
+            offset += sep + 1 + 5;
+            strncpy(cred->passwd_raw,
+                    buf + offset,
+                    i - (offset));
+            cred->passwd_raw[i - offset] = '\0';
+
+            /* Decode raw password */
+            cred->passwd_decoded = base64_decode((unsigned char *)(cred->passwd_raw),
+                                                 strlen(cred->passwd_raw),
+                                                 &decoded_len);
+
+            offset = i + 1;
+
+            if (!cred->passwd_decoded) {
+                mk_warn("Auth: invalid user '%s' in '%s'",
+                        cred->user, users_path);
+                mk_api->mem_free(cred);
+                continue;
+            }
+            mk_list_add(&cred->_head, &entry->_users);
+        }
+    }
+    mk_api->mem_free(buf);
 
     /* Link node to global list */
     mk_list_add(&entry->_head, &users_file_list);
@@ -123,13 +179,20 @@ int mk_auth_conf_init_users_list()
                 /* get or create users file entry */
                 uf = mk_auth_conf_add_users(users_path);
                 if (!uf) {
+                    section = section->next;
                     continue;
                 }
 
                 /* Location node */
                 loc = mk_api->mem_alloc(sizeof(struct location));
-                loc->path  = location;
-                loc->title = title;
+                mk_api->pointer_set(&loc->path, location);
+                mk_api->pointer_set(&loc->title, title);
+
+                loc->auth_http_header.data = NULL;
+                mk_api->str_build(&loc->auth_http_header.data,
+                                  &loc->auth_http_header.len,
+                                  MK_AUTH_HEADER_TITLE, title);
+
                 loc->users = uf;
 
                 /* Add new location to auth_vhost node */
@@ -162,7 +225,6 @@ int mk_auth_conf_init_users_list()
             PLUGIN_TRACE(" users   : %s", loc_entry->users->path);
         }
     }
-
 #endif
 
     return 0;
