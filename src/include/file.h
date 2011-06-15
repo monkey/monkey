@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
@@ -26,6 +28,8 @@
 struct file_info
 {
     off_t size;
+    
+    short int is_file;
     short int is_link;
     short int is_directory;
     short int exec_access;

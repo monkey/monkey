@@ -105,7 +105,6 @@ int _mkp_init(void **api, char *confdir)
     mk_list_init(&vhosts_list);
     mk_list_init(&users_file_list);
     mk_auth_conf_init_users_list();
-    //mk_auth_load_users("");
   
     /* Set HTTP headers key */
     auth_header_request.data = MK_AUTH_HEADER_REQUEST;

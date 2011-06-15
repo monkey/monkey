@@ -40,6 +40,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
         return -1;
     }
 
+    f_info->is_file = MK_FILE_TRUE;
     f_info->is_link = MK_FILE_FALSE;
     f_info->is_directory = MK_FILE_FALSE;
     f_info->exec_access = MK_FILE_FALSE;
@@ -47,6 +48,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
 
     if (S_ISLNK(f.st_mode)) {
         f_info->is_link = MK_FILE_TRUE;
+        f_info->is_file = MK_FILE_FALSE;
         if (stat(path, &target) == -1) {
             return -1;
         }
@@ -60,6 +62,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
 
     if (S_ISDIR(target.st_mode)) {
         f_info->is_directory = MK_FILE_TRUE;
+        f_info->is_file = MK_FILE_FALSE;
     }
 
     /* Checking read access */
