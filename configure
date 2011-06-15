@@ -329,7 +329,7 @@ install:
 	install -d \${DATADIR}/docs
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
-	install -m 755 bin/monkey \$(BINDIR)
+	install -s -m 755 bin/monkey \$(BINDIR)
 	install -m 755 bin/banana \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
@@ -338,8 +338,6 @@ $plglist
 	install -m 644 ./man/* \$(MANDIR)
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
-	$STRIP \$(BINDIR)/monkey
-	$STRIP \${PLUGINDIR}/*
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"

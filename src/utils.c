@@ -403,7 +403,6 @@ int mk_utils_remove_pid()
     int ret;
     
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
-
     mk_user_undo_uidgid();
     ret = unlink(filepath);
     mk_mem_free(filepath);
