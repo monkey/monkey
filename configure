@@ -19,8 +19,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 __MONKEY__="0"
-__MONKEY_MINOR__="14"
-__MONKEY_PATCHLEVEL__="0"
+__MONKEY_MINOR__="13"
+__MONKEY_PATCHLEVEL__="2"
 
 VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 SYSNAME=`uname -s`
@@ -73,34 +73,34 @@ main()
 	actual_path=`pwd`
 
 	if [ "$prefix" != "$actual_path" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$cgibin" != "$actual_path/cgi-bin" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-	    dir=1
+		dir=1
 	fi
 
-        if [ "$mandir" != "$actual_path/man" ]; then
-            dir=1
-        fi
+	if [ "$mandir" != "$actual_path/man" ]; then
+		dir=1
+	fi
 
-        echo
+	echo
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
         # Check for accept4()
@@ -329,7 +329,7 @@ install:
 	install -d \${DATADIR}/docs
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
-	install -s -m 755 bin/monkey \$(BINDIR)
+	install -m 755 bin/monkey \$(BINDIR)
 	install -m 755 bin/banana \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
@@ -338,6 +338,8 @@ $plglist
 	install -m 644 ./man/* \$(MANDIR)
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
+	$STRIP \$(BINDIR)/monkey
+	$STRIP \${PLUGINDIR}/*
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
@@ -575,18 +577,23 @@ cat > bin/banana << EOF
 #	start	->	start monkey
 #	restart	->	restart monkey
 #	stop	->	stop monkey if this is running
+#	status	->	check if monkey is running
 #	help	->	what do u think ?
 
-PIDFILE="$logdir/monkey.pid.$default_port"
+CONFDIR="$sysconfdir"
 BINMONKEY="$bindir/monkey"
+
+PORT=\$(sed -n '/^[ \t]*Port/s/^.* //p' "\$CONFDIR/monkey.conf")
+PIDFILE=\$(sed -n '/^[ \t]*PidFile/s/^.* //p' "\$CONFDIR/monkey.conf")."\$PORT"
+
 
 for arg in \$*; do
 	case "\$arg" in
 		-*=*) optarg=\`echo "\$arg" | sed 's/[-_a-zA-Z0-9]*=//'\` ;;
-		   *) optarg= ;;
+		*) optarg= ;;
 	esac
 
-	if  ! test -f \$PIDFILE ; then
+	if ! test -f \$PIDFILE ; then
 		STATUS="no"
 	else
 		PIDMONKEY=\`cat \$PIDFILE\`
@@ -613,8 +620,9 @@ for arg in \$*; do
 				fi
 			fi
 		;;
+
 		stop)
-			if  [ "\$STATUS" = "no" ]; then
+			if [ "\$STATUS" = "no" ]; then
 				echo "Monkey is not running."
 				exit 1
 			fi
@@ -622,11 +630,12 @@ for arg in \$*; do
 			rm -rf \$PIDFILE > /dev/null
 			echo "Monkey stopped (\$PIDMONKEY)"
 			exit 0
-			;;
+		;;
+
 		restart)
 			if  [ "\$STATUS" = "yes" ]; then
 				if ! kill \$PIDMONKEY  > /dev/null ; then
-					killall -9 monkey
+					killall -KILL monkey
 				else
 					echo -n "Stopping Monkey... "
 				fi
@@ -641,14 +650,25 @@ for arg in \$*; do
 				echo "Restarting -> OK"
 				exit 0
 			fi
-			;;
+		;;
+
+		status)
+			if  [ "\$STATUS" = "yes" ]; then
+				echo "Monkey is running."
+			else
+				echo "Monkey is not running."
+			fi
+			exit 0
+		;;
+
 		*)
-			echo "Use : banana [start|stop|restart|help]"
+			echo "Use : banana [start|stop|restart|status|help]"
 			exit 1
 		;;
+
 	esac
 done
-echo "Use : banana [start|stop|restart|help]"
+echo "Use : banana [start|stop|restart|status|help]"
 
 exit 0
 EOF
