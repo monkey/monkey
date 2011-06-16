@@ -649,6 +649,7 @@ struct host *mk_config_get_host(char *path)
 void mk_config_set_init_values(void)
 {
     /* Init values */
+    config->is_seteuid = MK_FALSE;
     config->timeout = 15;
     config->hideversion = MK_FALSE;
     config->keep_alive = MK_TRUE;

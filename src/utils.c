@@ -182,19 +182,20 @@ int mk_utils_set_daemon()
 {
     pid_t pid;
 
-    umask(0); /* clear file creation mask */
-
     if ((pid = fork()) < 0)
         err(EXIT_FAILURE, "pid");
 
     if (pid > 0) /* parent */
         exit(EXIT_SUCCESS);
 
-    if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
-        err(EXIT_FAILURE, "chdir");
+    /* set files mask */
+    umask(0);
 
     /* Create new session */
     setsid();
+
+    if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
+        err(EXIT_FAILURE, "chdir");
 
     /* Our last STDOUT message */
     mk_info("Background mode ON");

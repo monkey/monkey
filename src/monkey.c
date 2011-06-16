@@ -158,11 +158,11 @@ int main(int argc, char **argv)
         mk_utils_set_daemon();
     }
 
-    /* Workers: logger and clock */
-    mk_utils_worker_spawn((void *) mk_clock_worker_init);
-
     /* Register PID of Monkey */
     mk_utils_register_pid();
+
+    /* Workers: logger and clock */
+    mk_utils_worker_spawn((void *) mk_clock_worker_init);
 
     /* Init mk pointers */
     mk_mem_pointers_init();

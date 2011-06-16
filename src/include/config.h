@@ -78,6 +78,7 @@ struct server_config
 
 
     int is_daemon;
+    int is_seteuid;
     char *serverconf;           /* path to configuration files */
 
     char *listen_addr;

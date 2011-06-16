@@ -101,8 +101,8 @@ int mk_user_set_uidgid()
 {
     struct passwd *usr;
 
-    EGID = (gid_t) getegid();
     EUID = (gid_t) geteuid();
+    EGID = (gid_t) getegid();
 
     /* Launched by root ? */
     if (geteuid() == 0 && config->user) {
@@ -119,7 +119,6 @@ int mk_user_set_uidgid()
             mk_err("Invalid user '%s'", config->user);
         }
 
-
         if (initgroups(config->user, usr->pw_gid) != 0) {
             mk_err("Initgroups() failed");
         }
@@ -129,13 +128,14 @@ int mk_user_set_uidgid()
             mk_err("I cannot change the GID to %u", usr->pw_gid);
         }
 
-
         if (setuid(usr->pw_uid) == -1) {
             mk_err("I cannot change the UID to %u", usr->pw_uid);
         }
 
         EUID = geteuid();
         EGID = getegid();
+
+        config->is_seteuid = MK_TRUE;
     }
     return 0;
 }
@@ -143,9 +143,9 @@ int mk_user_set_uidgid()
 /* Return process to the original user */
 int mk_user_undo_uidgid()
 {
-    if (EUID == 0) {
-        setegid(EGID);
-        seteuid(EUID);
+    if (config->is_seteuid == MK_TRUE) { 
+        setegid(0);
+        seteuid(0);
     }
     return 0;
 }
