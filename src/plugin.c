@@ -236,6 +236,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
 
     /* NETWORK_IO Plugin */
     if (p->hooks & MK_PLUGIN_NETWORK_IO) {
+#ifdef TRACE
         /* Validate mandatory calls */
         if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
             !p->net_io.writev || !p->net_io.close || !p->net_io.connect ||
@@ -260,7 +261,7 @@ create socket : %p\nbind : %p\nserver : %p",
             mk_plugin_free(p);
             return NULL;
         }
-
+#endif
         /* Restrict to one NETWORK_IO plugin */
         if (!plg_netiomap) {
             plg_netiomap = &p->net_io;
