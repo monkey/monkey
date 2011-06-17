@@ -6,9 +6,13 @@ INCDIR  = ../../src/include
 SOURCES = palm.c protocol.c cgi.c request.c
 OBJECTS = palm.o protocol.o cgi.o request.o
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $(SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-palm.so $(OBJECTS) -lc
+all: monkey-palm.so
+
+monkey-palm.so: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
 clean:
-	rm -rf *.o *~
-	rm -rf *.*so*
+	rm -rf *.o *.*~ *.*so*
