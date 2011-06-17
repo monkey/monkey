@@ -42,17 +42,20 @@
 #include "plugin.h"
 #include "macros.h"
 
-/* Imprime error de configuracion y cierra */
+/* Print a specific error */
 static void mk_config_print_error_msg(char *variable, char *path)
 {
     mk_err("Error in %s variable under %s, has an invalid value",
            variable, path);
+    exit(EXIT_FAILURE);
 }
 
-/* Raise a configuration error */
+/* Raise a configuration schema error */
 void mk_config_error(const char *path, int line, const char *msg)
 {
-    mk_err("Reading %s\nError in line %i: %s", path, line, msg);
+    mk_err("File %s", path);
+    mk_err("Error in line %i: %s", line, msg);
+    exit(EXIT_FAILURE);
 }
 
 /* Returns a configuration section by [section name] */
@@ -138,13 +141,14 @@ void mk_config_entry_add(struct mk_config *conf,
 
 struct mk_config *mk_config_create(const char *path)
 {
+    int i;
     int len;
     int line = 0;
     int indent_len = -1;
     char buf[255];
     char *section = 0;
     char *indent = 0;
-    char *key, *val, *last;
+    char *key, *val;
     struct mk_config *conf = 0;
     FILE *f;
 
@@ -202,7 +206,7 @@ struct mk_config *mk_config_create(const char *path)
         else {
             /* No separator defined */
             if (!indent) {
-                int i = 0;
+                i = 0;
 
                 do { i++; } while (i < len && isblank(buf[i]));
 
@@ -225,16 +229,12 @@ struct mk_config *mk_config_create(const char *path)
                 continue;
             }
 
-            /* 
-             * FIXME: get line key and value 
-             *
-             * this routine should split the key/val line in a simple way
-             * using for() and strncpy().
-             */
-            key = strtok_r(buf + indent_len, "\"\t ", &last);
-            val = strtok_r(NULL, "\"\t", &last); 
+            /* Get key and val */
+            i = mk_string_char_search(buf + indent_len, ' ', len - indent_len);
+            key = mk_string_copy_substr(buf + indent_len, 0, i);
+            val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len);
 
-            if (!key || !val) {
+            if (!key || !val || i < 0) {
                 mk_config_error(path, line, "Each key must have a value");
                 continue;
             }
@@ -243,8 +243,12 @@ struct mk_config *mk_config_create(const char *path)
             mk_string_trim(&key);
             mk_string_trim(&val);
 
-            /* Register entry */
+            /* Register entry: key and val are copied as duplicated */
             mk_config_entry_add(conf, key, val);
+
+            /* Free temporal key and val */
+            mk_mem_free(key);
+            mk_mem_free(val);
         }
     }
 
@@ -402,7 +406,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->serverport = (size_t) mk_config_section_getval(section,
                                                         "Port", 
                                                         MK_CONFIG_VAL_NUM);
-    if (!config->serverport >= 1 && !config->serverport <= 65535) {
+    if (config->serverport <= 1 || config->serverport >= 65535) {
         mk_config_print_error_msg("Port", path);
     }
 
