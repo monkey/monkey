@@ -4,11 +4,14 @@ LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
 OBJECTS = sha1.o base64.o conf.o auth.o
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -fPIC -c sha1/sha1.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -fPIC -c base64/base64.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c conf.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c auth.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-auth.so $(OBJECTS) -lc
+
+all: monkey-auth.so
+
+monkey-auth.so: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
 clean:
 	rm -rf *.o *.*~ *.*so*

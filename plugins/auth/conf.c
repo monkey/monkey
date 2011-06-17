@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+ /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
  *  ------------------
@@ -21,8 +21,8 @@
 
 #include <string.h>
 #include "MKPlugin.h"
-#include "sha1/sha1.h"
-#include "base64/base64.h"
+#include "sha1.h"
+#include "base64.h"
 #include "auth.h"
 
 /*

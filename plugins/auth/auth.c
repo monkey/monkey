@@ -28,8 +28,8 @@
 
 #include "auth.h"
 #include "conf.h"
-#include "sha1/sha1.h"
-#include "base64/base64.h"
+#include "sha1.h"
+#include "base64.h"
 
 MONKEY_PLUGIN("auth",              /* shortname */
               "Authentication",    /* name */ 
@@ -139,7 +139,7 @@ int _mkp_stage_30(struct plugin *plugin,
     mk_pointer res;
     struct mk_list *vh_head;
     struct mk_list *loc_head;
-    struct vhost *vh_entry;
+    struct vhost *vh_entry = NULL;
     struct location *loc_entry;
     
     /* Match auth_vhost with global vhost */
