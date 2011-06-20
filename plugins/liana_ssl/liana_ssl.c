@@ -3,6 +3,7 @@
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2010-2011, Jonathan Gonzalez V. <zeus@gnu.org>
+ *  Copyright (C)      2011, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +22,6 @@
 
 #define _GNU_SOURCE
 
-
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -32,14 +32,12 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "config.h"
-#include "plugin.h"
 #include "MKPlugin.h"
 
-#include "matrixssl/matrixsslApi.h"
+#include "liana_ssl.h"
 
 /* Plugin data for register */
-MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.1",
+MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.2",
               MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_NETWORK_IO);
 
 struct plugin_api *mk_api;
@@ -48,13 +46,6 @@ struct plugin_api *mk_api;
 #define MK_LIANA_SSL_FATAL -2
 #define MK_LIANA_SSL_WARNING -1
 #define MK_LIANA_SSL_NO_ERROR 0
-
-struct mk_liana_ssl
-{
-    ssl_t *ssl;
-    int socket_fd;
-    struct mk_list cons;
-};
 
 sslKeys_t *keys;
 char *cert_file;
@@ -240,7 +231,8 @@ int liana_ssl_handshake(struct mk_liana_ssl *conn)
     return 0;
 }
 
-int liana_ssl_close(struct mk_liana_ssl *conn) {
+int liana_ssl_close(struct mk_liana_ssl *conn)
+{
     int len;
     int ret;
     unsigned char *buf_close;
@@ -259,9 +251,31 @@ int liana_ssl_close(struct mk_liana_ssl *conn) {
     return 0;
 }
 
+static void liana_ssl_version_error()
+{
+    mk_err("Liana_SSL requires MatrixSSL >= %i.%i.%i",
+           MATRIXSSL_VERSION_MAJOR,
+           MATRIXSSL_VERSION_MINOR,
+           MATRIXSSL_VERSION_PATCH);
+}
+
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+
+    /* Validate MatrixSSL linked version */
+    if (MK_MATRIX_REQUIRE_MAJOR > MATRIXSSL_VERSION_MAJOR) {
+        liana_ssl_version_error();
+        return -1;
+    }
+    if (MK_MATRIX_REQUIRE_MINOR > MATRIXSSL_VERSION_MINOR) {
+        liana_ssl_version_error();
+        return -1;
+    }
+    if (MK_MATRIX_REQUIRE_PATCH > MATRIXSSL_VERSION_PATCH) {
+        liana_ssl_version_error();
+        return -1;
+    }
 
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
     liana_conf(confdir);
@@ -591,7 +605,7 @@ int _mkp_core_prctx(struct server_config *config)
     config->safe_event_write = MK_TRUE;
 
     if (matrixSslOpen() < 0) {
-        mk_err("Can't start matrixSsl");
+        mk_err("Liana_SSL: Can't start matrixSsl");
         exit(EXIT_FAILURE);
     }
 
@@ -602,18 +616,23 @@ int _mkp_core_prctx(struct server_config *config)
         exit(EXIT_FAILURE);
     }
 
+    if (!cert_file) {
+        mk_err("Liana_SSL: No certificate defined");
+        exit(EXIT_FAILURE);
+    }
+
     if (mk_api->file_get_info(cert_file, &ssl_file_info) == -1) {
-        mk_err("Cannot read certificate file '%s'", cert_file);
+        mk_err("Liana_SSL: Cannot read certificate file '%s'", cert_file);
         exit(EXIT_FAILURE);
     }
 
     if (mk_api->file_get_info(key_file, &ssl_file_info) == -1) {
-        mk_err("Cannot read key file '%s'", key_file);
+        mk_err("Liana_SSL: Cannot read key file '%s'", key_file);
         exit(EXIT_FAILURE);
     }
 
     if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
-        mk_err("MatrixSsl couldn't read the certificates");
+        mk_err("Liana_SSL: MatrixSsl couldn't read the certificates");
         exit(EXIT_FAILURE);
     }
 

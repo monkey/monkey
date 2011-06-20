@@ -23,6 +23,7 @@
 #define LIANA_SSL_H_
 
 #include <matrixssl/matrixsslApi.h>
+#include <matrixssl/version.h>
 
 struct mk_liana_ssl
 {
@@ -31,6 +32,9 @@ struct mk_liana_ssl
     struct mk_list cons;
 };
 
+#define MK_MATRIX_REQUIRE_MAJOR 3
+#define MK_MATRIX_REQUIRE_MINOR 2
+#define MK_MATRIX_REQUIRE_PATCH 0
 
 int liana_ssl_handshake(struct mk_liana_ssl *conn);
 
