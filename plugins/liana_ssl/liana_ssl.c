@@ -36,7 +36,7 @@
 #include "plugin.h"
 #include "MKPlugin.h"
 
-#include <matrixssl/matrixsslApi.h>
+#include "matrixssl/matrixsslApi.h"
 
 /* Plugin data for register */
 MONKEY_PLUGIN("liana_ssl", "Liana SSL Network", "0.1",

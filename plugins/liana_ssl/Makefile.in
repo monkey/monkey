@@ -3,9 +3,15 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
+OBJECTS = liana_ssl.o
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -I/usr/include/matrixssl -DLINUX -fPIC -c liana_ssl.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o monkey-liana_ssl.so liana_ssl.o -lmatrixssl
+all: monkey-liana_ssl.so
+
+monkey-liana_ssl.so: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
 clean:
-	rm -rf *.o *~ *.*so*
+	rm -rf *.o *.*~ *.*so*
