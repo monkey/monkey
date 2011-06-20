@@ -69,7 +69,7 @@ mk_plugin_key_t _mkp_data;
 
 #undef  mk_bug
 #define mk_bug(condition) do {                  \
-        if (unlikely((condition)!=0)) {         \
+        if (mk_unlikely((condition)!=0)) {         \
             mk_api->_error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
                            _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
             abort();                                                    \

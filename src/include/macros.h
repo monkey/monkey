@@ -74,15 +74,15 @@
  *
  */
 
-#define unlikely(x) __builtin_expect((x),0)
+#define mk_unlikely(x) __builtin_expect((x),0)
 
 #define mk_bug(condition) do {                  \
-        if (unlikely((condition)!=0)) {         \
-            mk_print(MK_BUG, "Bug found in %s() at %s:%d",             \
+        if (mk_unlikely((condition)!=0)) {         \
+            mk_print(MK_BUG, "Bug found in %s() at %s:%d",              \
                      __FUNCTION__, __FILE__, __LINE__);                 \
             abort();                                                    \
         }                                                               \
-} while(0)
+    } while(0)
 
 /*
  * Macros to calculate sub-net data using ip address and sub-net prefix
