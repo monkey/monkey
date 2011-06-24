@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
@@ -23,16 +24,29 @@
 #ifndef MK_SECURITY_H
 #define MK_SECURITY_H
 
-#define MK_SECURITY_TYPE_IP 0
-#define MK_SECURITY_TYPE_URL 1
-
-struct mk_security
+struct mk_secure_ip_t
 {
-    int type;
-    char *value;
-    struct mk_security *next;
+    struct in_addr ip;
+
+    /* if subnet is true, next fields are populated */
+    int is_subnet;
+
+    int network;
+    int netmask;
+    unsigned int hostmin;
+    unsigned int hostmax;
+
+    /* list head linker */
+    struct mk_list _head;
 };
 
-struct mk_security *rules;
+struct mk_secure_url_t
+{
+    char *criteria;
+    struct mk_list _head;
+};
+
+struct mk_list mk_secure_ip;
+struct mk_list mk_secure_url;
 
 #endif
