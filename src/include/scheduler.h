@@ -29,12 +29,17 @@
 #define MK_SCHEDULER_CONN_PENDING 0
 #define MK_SCHEDULER_CONN_PROCESS 1
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
 struct sched_connection
 {
     int status;
     int socket;
 
-    mk_pointer ipv4;
+    struct in_addr  ipv4;
     time_t arrive_time;
 };
 

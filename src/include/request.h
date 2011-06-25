@@ -239,7 +239,7 @@ struct client_session
     /* Initial fixed size buffer for small requests */
     char body_fixed[MK_REQUEST_CHUNK];
 
-    mk_pointer *ipv4;
+    struct in_addr *ipv4;
 
     int body_size;
     int body_length;

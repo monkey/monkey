@@ -85,18 +85,12 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
     return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
 }
 
-int mk_socket_get_ip(int socket, char *ipv4)
+int mk_socket_get_ip(char *ipv4, struct in_addr *addr)
 {
     short int ipv4_len = 16;
-    socklen_t len = sizeof(struct sockaddr_in);
-    struct sockaddr_in m_addr;
-    struct in_addr *addr;
     const u_int8_t *ip;
 
-    getpeername(socket, (struct sockaddr *) &m_addr, &len);
-    addr = &m_addr.sin_addr;
     ip = (const u_int8_t *) &addr->s_addr;
-
     return snprintf(ipv4, ipv4_len, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
 }
 

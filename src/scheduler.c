@@ -68,6 +68,11 @@ inline int mk_sched_add_client(int remote_fd)
     int t=0;
     unsigned int i, ret;
     struct sched_list_node *sched;
+    struct sched_connection *queue;
+
+    /* socket info */
+    struct sockaddr_in m_addr;
+    socklen_t sock_len = sizeof(struct sockaddr_in);
 
     t = _next_target();
     sched = &sched_list[t];
@@ -78,9 +83,10 @@ inline int mk_sched_add_client(int remote_fd)
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             MK_TRACE("[FD %i] Add", remote_fd);
 
-            /* Set IP */
-            sched->queue[i].ipv4.len = mk_socket_get_ip(remote_fd, 
-                                                       sched->queue[i].ipv4.data);
+            /* Set IP address in struct in_addr format */
+            queue = &sched->queue[i];
+            getpeername(remote_fd, (struct sockaddr *) &m_addr, &sock_len);
+            queue->ipv4 = m_addr.sin_addr;
 
             /* Before to continue, we need to run plugin stage 10 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
@@ -195,13 +201,7 @@ int mk_sched_register_thread(int efd)
     sl->request_handler = NULL;
 
     for (i = 0; i < config->worker_capacity; i++) {
-        /* Pre alloc IPv4 memory buffer */
-        sl->queue[i].ipv4.data = mk_mem_malloc_z(16);
         sl->queue[i].status = MK_SCHEDULER_CONN_AVAILABLE;
-        
-        if (!sl->queue[i].ipv4.data) {
-            mk_err("Could not initialize memory for IP cache queue. Aborting");
-        }
     }
     return sl->idx;
 }
