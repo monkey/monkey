@@ -394,13 +394,17 @@ void _mkp_core_thctx()
 int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
     int i, http_status;
+    int ip_len;
     int array_len = sizeof(response_codes)/sizeof(struct status_response);
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
     mk_pointer *content_length;
     mk_pointer status;
+    char ip_buf[16];
 
+
+    /* Set response status */
     http_status = sr->headers.status;
 
     /* Look for target log file */
@@ -416,9 +420,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     iov->buf_idx = 0;
     iov->total_len = 0;
 
-    /* IP */
-    mk_api->iov_add_entry(iov, cs->ipv4->data, cs->ipv4->len,
-                          mk_logger_iov_dash, MK_IOV_NOT_FREE_BUF);
+    /* Format IP string */
+    const u_int8_t *ip;
+    ip = (const u_int8_t  *) &cs->ipv4->s_addr;
+    ip_len  = snprintf(ip_buf, 16, "%i.%i.%i.%i - ", ip[0], ip[1], ip[2], ip[3]);
+
+    /* Add IP to IOV */
+    mk_api->iov_add_entry(iov, ip_buf, ip_len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     /* Date/time when object was requested */
     date = mk_api->time_human();
