@@ -306,9 +306,12 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
 {
     int i;
 
-    /* Validate sched node */
-    mk_bug(!sched);
-
+    /*
+     * In some cases the sched node can be NULL when is a premature close,
+     * an example of this situation is when the function mk_sched_add_client()
+     * close an incoming connection when invoking the MK_PLUGIN_STAGE_10 stage plugin,
+     * so no thread context exists.
+     */
     if (!sched) {
         MK_TRACE("[FD %i] No scheduler information", remote_fd);
         close(remote_fd);
