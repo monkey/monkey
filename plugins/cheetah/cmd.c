@@ -269,15 +269,7 @@ void mk_cheetah_cmd_workers()
 
         CHEETAH_WRITE("* Worker %i\n", node[i].idx + 1);
         CHEETAH_WRITE("      - Task ID           : %i\n", node[i].pid);
-
-        /* Memory Usage 
-        CHEETAH_WRITE("      - Memory usage      : ");
-        mk_cheetah_print_worker_memory_usage(sl->pid);
-
-        
-        CHEETAH_WRITE("      - Active Requests   : %i\n", sl->active_requests);
-        CHEETAH_WRITE("      - Closed Requests   : %i\n", sl->closed_requests);
-        */
+        CHEETAH_WRITE("      - Active Connections: %i\n", node[i].active_connections);
     }
 
     CHEETAH_WRITE("\n");
