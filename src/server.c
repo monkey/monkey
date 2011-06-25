@@ -73,7 +73,7 @@ void mk_server_launch_workers()
 
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(i, config->worker_capacity);
+        mk_sched_launch_thread(config->worker_capacity);
     }
 }
 

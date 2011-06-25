@@ -66,8 +66,8 @@ pthread_key_t epoll_fd;
 pthread_key_t worker_sched_node;
 
 void mk_sched_init();
-int mk_sched_register_thread(int wid, pthread_t tid, int epoll_fd);
-int mk_sched_launch_thread(int wid, int max_events);
+int mk_sched_register_thread(int epoll_fd);
+int mk_sched_launch_thread(int max_events);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 

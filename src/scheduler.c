@@ -121,11 +121,10 @@ static void mk_sched_thread_lists_init()
 /* created thread, all this calls are in the thread context */
 static void *mk_sched_launch_worker_loop(void *thread_conf)
 {
-    int i;
-    pthread_t current;
+    sched_thread_conf *thconf = thread_conf;
+    int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     mk_epoll_handlers *handler;
-    sched_thread_conf *thconf = thread_conf;
 
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
@@ -133,6 +132,10 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
     mk_cache_thread_init();
+
+    /* Register working thread */
+    wid = mk_sched_register_thread(thconf->epoll_fd);
+    mk_mem_free(thread_conf);
 
     /* Plugin thread context calls */
     mk_plugin_event_init_list();
@@ -145,58 +148,47 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
                                     (void *) mk_conn_close,
                                     (void *) mk_conn_timeout);
 
-
-    /* 
-     * Identify what's the corresponding scheduler node, as we are 
-     * in the thread context we do not know who we are. It tries
-     * to match the thread ID with sched_list[N].tid
-     */
-    current = pthread_self();
-    for (i=0; i < config->workers; i++) {
-        if (pthread_equal(sched_list[i].tid, current) != 0) {
-            thinfo = &sched_list[i];
-            break;
-        }
-    }
-
-    /* 
-     * Under Linux does not exists the difference between process and
-     * threads, everything is a thread in the kernel task struct, and each 
-     * one has it's own numerical identificator: PID .
-     *
-     * Here we want to know what's the PID associated to this running
-     * task (which is different from parent Monkey PID), it can be 
-     * retrieved with gettid() but Glibc does not export to userspace
-     * the syscall, we need to call it directly through syscall(2).
-     */
-    thinfo->pid = syscall(__NR_gettid);
+    thinfo = &sched_list[wid];
 
     /*
      * Export epoll filedescriptor to the thread context using a 
      * thread_key.
      */
-    mk_sched_set_thread_poll(thconf->epoll_fd);
+    mk_sched_set_thread_poll(thinfo->epoll_fd);
 
     /* Export known scheduler node to context thread */
     pthread_setspecific(worker_sched_node, (void *) thinfo);
 
     /* Init epoll_wait() loop */
-    mk_epoll_init(thconf->epoll_fd, handler, thconf->epoll_max_events);
-
+    mk_epoll_init(thinfo->epoll_fd, handler, epoll_max_events);
+ 
     return 0;
 }
 
-/* Register thread information */
-int mk_sched_register_thread(int wid, pthread_t tid, int efd)
+/* Register thread information. The caller thread is the thread information's owner */
+int mk_sched_register_thread(int efd)
 {
     int i;
     struct sched_list_node *sl;
+    static int wid = 0;
 
     sl = &sched_list[wid];
     sl->active_connections = 0;
-    sl->idx = wid;
-    sl->tid = tid;
-    sl->pid = -1;
+    sl->idx = wid++;
+    sl->tid = pthread_self();
+
+    /*
+     * Under Linux does not exists the difference between process and
+     * threads, everything is a thread in the kernel task struct, and each
+     * one has it's own numerical identificator: PID .
+     *
+     * Here we want to know what's the PID associated to this running
+     * task (which is different from parent Monkey PID), it can be
+     * retrieved with gettid() but Glibc does not export to userspace
+     * the syscall, we need to call it directly through syscall(2).
+     */
+    sl->pid = syscall(__NR_gettid);
+
     sl->epoll_fd = efd;
     sl->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
                                 config->worker_capacity);
@@ -211,30 +203,25 @@ int mk_sched_register_thread(int wid, pthread_t tid, int efd)
             mk_err("Could not initialize memory for IP cache queue. Aborting");
         }
     }
-    return 0;
+    return sl->idx;
 }
 
 /*
  * Create thread which will be listening 
  * for incomings file descriptors
  */
-int mk_sched_launch_thread(int wid, int max_events)
+int mk_sched_launch_thread(int max_events)
 {
     int efd;
     pthread_t tid;
     pthread_attr_t attr;
     sched_thread_conf *thconf;
-    pthread_mutex_t mutex_wait_register;
 
     /* Creating epoll file descriptor */
     efd = mk_epoll_create(max_events);
     if (efd < 1) {
         return -1;
     }
-
-    /* Thread stuff */
-    pthread_mutex_init(&mutex_wait_register, (pthread_mutexattr_t *) NULL);
-    pthread_mutex_lock(&mutex_wait_register);
 
     thconf = mk_mem_malloc(sizeof(sched_thread_conf));
     thconf->epoll_fd = efd;
@@ -248,10 +235,6 @@ int mk_sched_launch_thread(int wid, int max_events)
         perror("pthread_create");
         return -1;
     }
-
-    /* Register working thread */
-    mk_sched_register_thread(wid, tid, efd);
-    pthread_mutex_unlock(&mutex_wait_register);
 
     return 0;
 }
