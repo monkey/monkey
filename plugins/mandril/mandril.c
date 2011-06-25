@@ -150,12 +150,13 @@ int mk_security_conf(char *confdir)
     return ret;
 }
 
-int mk_security_check_ip(struct in_addr *addr)
+int mk_security_check_ip(int socket, struct in_addr *addr)
 {
     int network;
     struct mk_secure_ip_t *entry;
     struct mk_list *head;
 
+    PLUGIN_TRACE("[FD %i] Mandril validating IP address", socket);
     mk_list_foreach(head, &mk_secure_ip) {
         entry = mk_list_entry(head, struct mk_secure_ip_t, _head);
 
@@ -168,11 +169,13 @@ int mk_security_check_ip(struct in_addr *addr)
 
             /* Validate host range */
             if (addr->s_addr <= entry->hostmax && addr->s_addr >= entry->hostmin) {
+                PLUGIN_TRACE("[FD %i] Mandril closing by rule in ranges", socket);
                 return -1;
             }
         }
         else {
             if (addr->s_addr == entry->ip.s_addr) {
+                PLUGIN_TRACE("[FD %i] Mandril closing by rule in IP match", socket);
                 return -1;
             }
         }
@@ -181,16 +184,18 @@ int mk_security_check_ip(struct in_addr *addr)
 }
 
 /* Check if the incoming URL is restricted for some rule */
-int mk_security_check_url(mk_pointer url)
+int mk_security_check_url(int socket, mk_pointer url)
 {
     int n;
     struct mk_list *head;
     struct mk_secure_url_t *entry;
 
+    PLUGIN_TRACE("[FD %i] Mandril validating URL", socket);
     mk_list_foreach(head, &mk_secure_url) {
         entry = mk_list_entry(head, struct mk_secure_url_t, _head);        
         n = mk_api->str_search_n(url.data, entry->criteria, MK_STR_INSENSITIVE, url.len);
         if (n >= 0) {
+            PLUGIN_TRACE("[FD %i] Mandril closing by rule in URL match", socket);
             return -1;
         }
     }
@@ -217,23 +222,17 @@ void _mkp_exit()
 
 int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
-    /* 
-     * FIXME: the validation must pass network address instead of 
-     * the human readable ip string.
-     *
-     * this requires a Monkey core modification.
-     
-    if (mk_security_check_ip(conx->ipv4.data) != 0) {
-        PLUGIN_TRACE("Close connection FD %i", socket);
+    /* Validate ip address with Mandril rules */
+    if (mk_security_check_ip(socket, &conx->ipv4) != 0) {
+        PLUGIN_TRACE("[FD %i] Mandril close connection", socket);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
-    */
     return MK_PLUGIN_RET_CONTINUE;
 }
 
 int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
-    if (mk_security_check_url(sr->uri) < 0) {
+    if (mk_security_check_url(cs->socket, sr->uri) < 0) {
         PLUGIN_TRACE("Close connection FD %i", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
