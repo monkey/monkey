@@ -67,25 +67,25 @@ inline int mk_sched_add_client(int remote_fd)
 {
     int t=0;
     unsigned int i, ret;
-    struct sched_list_node sched;
+    struct sched_list_node *sched;
 
     t = _next_target();
-    sched = sched_list[t];
+    sched = &sched_list[t];
 
-    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched.idx);
+    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
     for (i = 0; i < config->worker_capacity; i++) {
-        if (sched.queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
+        if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             MK_TRACE("[FD %i] Add", remote_fd);
 
             /* Set IP */
-            sched.queue[i].ipv4.len = mk_socket_get_ip(remote_fd, 
-                                                       sched.queue[i].ipv4.data);
+            sched->queue[i].ipv4.len = mk_socket_get_ip(remote_fd, 
+                                                       sched->queue[i].ipv4.data);
 
             /* Before to continue, we need to run plugin stage 10 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
                                       remote_fd,
-                                      &sched.queue[i], NULL, NULL);
+                                      &sched->queue[i], NULL, NULL);
 
             /* Close connection, otherwise continue */
             if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
@@ -94,12 +94,12 @@ inline int mk_sched_add_client(int remote_fd)
             }
 
             /* Socket and status */
-            sched.active_connections += 1;
-            sched.queue[i].socket = remote_fd;
-            sched.queue[i].status = MK_SCHEDULER_CONN_PENDING;
-            sched.queue[i].arrive_time = log_current_utime;
+            sched->active_connections += 1;
+            sched->queue[i].socket = remote_fd;
+            sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
+            sched->queue[i].arrive_time = log_current_utime;
 
-            mk_epoll_add(sched.epoll_fd, remote_fd, MK_EPOLL_READ,
+            mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
                          MK_EPOLL_BEHAVIOR_TRIGGERED);
             return 0;
         }
