@@ -262,7 +262,7 @@ static void liana_ssl_version_error()
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
-    config_dir = confdir;
+    config_dir = mk_api->str_dup(confdir);
 
     /* Validate MatrixSSL linked version */
     if (MK_MATRIX_REQUIRE_MAJOR > MATRIXSSL_VERSION_MAJOR) {
