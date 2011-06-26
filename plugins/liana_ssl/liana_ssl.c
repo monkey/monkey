@@ -603,7 +603,7 @@ int _mkp_core_prctx(struct server_config *config)
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
 
     /* load configuration */
-    liana_conf(confdir);
+    liana_conf(config_dir);
 
     /* Enable server safe event write */
     config->safe_event_write = MK_TRUE;
