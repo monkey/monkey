@@ -60,9 +60,12 @@ static void mk_details(void)
 {
     printf("* Process ID is %i", getpid());
     printf("\n* Server socket listening on Port %i", config->serverport);
-    printf("\n* %i threads, %i client connections per thread, total %i\n",
+    printf("\n* %i threads, %i client connections per thread, total %i",
            config->workers, config->worker_capacity,
            config->workers * config->worker_capacity);
+    printf("\n* Transport layer by %s in %s mode\n",
+           config->transport_layer_plugin->shortname,
+           config->transport);
     fflush(stdout);
 }
 

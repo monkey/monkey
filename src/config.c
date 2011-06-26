@@ -501,6 +501,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         mk_config_print_error_msg("SymLink", path);
     }
 
+    /* Transport Layer plugin */
+    config->transport_layer = mk_config_section_getval(section,
+                                                       "TransportLayer",
+                                                       MK_CONFIG_VAL_STR);
     mk_mem_free(path);
     mk_config_read_hosts(path_conf);
 }

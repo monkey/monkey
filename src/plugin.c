@@ -262,13 +262,10 @@ create socket : %p\nbind : %p\nserver : %p",
             return NULL;
         }
 #endif
-        /* Restrict to one NETWORK_IO plugin */
-        if (!plg_netiomap) {
+        /* Just link the transport layer defined in monkey.conf > TransportLayer */
+        if (strcmp(config->transport_layer, p->shortname) == 0) {
             plg_netiomap = &p->net_io;
-        }
-        else {
-            mk_err("Error: Loading more than one Network IO Plugin: %s", p->path);
-            exit(EXIT_FAILURE);
+            config->transport_layer_plugin = p;
         }
     }
 
@@ -470,7 +467,12 @@ void mk_plugin_init()
     }
 
     if (!plg_netiomap) {
-        mk_err("No network plugin loaded >:|");
+        if (!config->transport_layer) {
+            mk_err("TransportLayer not defined in configuration");
+        }
+        else {
+            mk_err("TransportLayer '%s' not found", config->transport_layer);
+        }
         exit(EXIT_FAILURE);
     }
 

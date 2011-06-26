@@ -126,4 +126,15 @@ cat > conf/monkey.conf <<EOF
 
     SymLink Off
 
+    # TransportLayer
+    # --------------
+    # Define which network I/O plugin provides the transport layer. The
+    # value of the key belongs to the shortname of the plugin. Make sure
+    # the plugin is loaded by 'plugins.load' file.
+    #
+    #    HTTP  is provided by liana
+    #    HTTPS is provided by liana_ssl
+
+    TransportLayer liana
+
 EOF

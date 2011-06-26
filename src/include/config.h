@@ -129,6 +129,10 @@ struct server_config
     /* Transport type: HTTP or HTTPS, useful for redirections */
     char *transport;
 
+    /* Define the plugin who provides the transport layer */
+    char *transport_layer;
+    struct plugin *transport_layer_plugin;
+
     /* source configuration */
     struct mk_config *config;
 };
