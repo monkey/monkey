@@ -262,6 +262,7 @@ static void liana_ssl_version_error()
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+    config_dir = confdir;
 
     /* Validate MatrixSSL linked version */
     if (MK_MATRIX_REQUIRE_MAJOR > MATRIXSSL_VERSION_MAJOR) {
@@ -276,9 +277,6 @@ int _mkp_init(void **api, char *confdir)
         liana_ssl_version_error();
         return -1;
     }
-
-    mk_api->config->transport = MK_TRANSPORT_HTTPS;
-    liana_conf(confdir);
 
     return 0;
 }
@@ -600,6 +598,12 @@ int _mkp_network_io_server(int port, char *listen_addr)
 int _mkp_core_prctx(struct server_config *config)
 {
     struct file_info ssl_file_info;
+
+    /* set Monkey transport layer type */
+    mk_api->config->transport = MK_TRANSPORT_HTTPS;
+
+    /* load configuration */
+    liana_conf(confdir);
 
     /* Enable server safe event write */
     config->safe_event_write = MK_TRUE;

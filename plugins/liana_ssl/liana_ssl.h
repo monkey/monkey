@@ -38,4 +38,6 @@ struct mk_liana_ssl
 
 int liana_ssl_handshake(struct mk_liana_ssl *conn);
 
+char *config_dir;
+
 #endif /* !LIANA_SSL_H_ */
