@@ -263,7 +263,8 @@ create socket : %p\nbind : %p\nserver : %p",
         }
 #endif
         /* Just link the transport layer defined in monkey.conf > TransportLayer */
-        if (strcmp(config->transport_layer, p->shortname) == 0) {
+        if (config->transport_layer && 
+            strcmp(config->transport_layer, p->shortname) == 0) {
             plg_netiomap = &p->net_io;
             config->transport_layer_plugin = p;
         }

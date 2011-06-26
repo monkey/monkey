@@ -694,6 +694,7 @@ void mk_config_set_init_values(void)
      * we set default to 'http'
      */
     config->transport = MK_TRANSPORT_HTTP;
+    config->transport_layer = NULL;
 
     /* Init plugin list */
     mk_list_init(config->plugins);
