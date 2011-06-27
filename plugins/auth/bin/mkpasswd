@@ -2,12 +2,13 @@
 #
 # Monkey HTTP Daemon - user/password file management tool
 # -------------------------------------------------------
+# http://www.monkey-project.com
+#
 # Adapted script to manage Monkey HTTP Daemon users/password file, 
 # original code taken from  Trac project.
 #
 # It was originally written to replace htpasswd by Eli Carter
 #
-
 import os
 import sys
 import base64
@@ -38,15 +39,17 @@ class HtpasswdFile:
 
             # if password starts with '{SHA1}'
             if pwhash[:6] == '{SHA1}':
-                pwhash = base64.b64decode(pwhash[6:])
+                pwhash = pwhash[6:]
 
             entry = [username, pwhash.rstrip()]
             self.entries.append(entry)
 
     def save(self):
         """Write the htpasswd file to disk"""
-        open(self.filename, 'w').writelines(["%s:{SHA1}%s\n" % (entry[0], entry[1])
-                                             for entry in self.entries])
+        f = open(self.filename, 'w')
+
+        for entry in self.entries:
+            f.write("%s:{SHA1}%s\n" % (entry[0], entry[1]))
 
     def update(self, username, password):
         """Replace the entry for the given user, or add it if new."""
@@ -61,8 +64,10 @@ class HtpasswdFile:
         matching_entries = [entry for entry in self.entries
                             if entry[0] == username]
         if matching_entries:
+            print "[+] Password changed for", username
             matching_entries[0][1] = pwhash
         else:
+            print "[+] Adding user", username
             self.entries.append([username, pwhash])
 
     def delete(self, username):

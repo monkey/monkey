@@ -87,11 +87,16 @@ int mk_auth_validate_user(struct users_file *users,
         if (strncmp(entry->user, (char *) decoded, sep) != 0) {
             continue;
         }
+        
+        PLUGIN_TRACE("User match '%s'", entry->user);
 
         /* match password */
         if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
+            PLUGIN_TRACE("User '%s' matched password");
             return 0;
         }
+        PLUGIN_TRACE("Invalid password");
+        break;
     }
 
     return -1;
