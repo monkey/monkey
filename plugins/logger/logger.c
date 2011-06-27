@@ -154,12 +154,12 @@ void *mk_logger_worker_init(void *args)
         /* Add access log file */
         if (entry->fd_access[0] > 0) {
             mk_api->epoll_add(efd, entry->fd_access[0], 
-                              MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
+                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         }
         /* Add error log file */
         if (entry->fd_error[0] > 0) {
             mk_api->epoll_add(efd, entry->fd_error[0], 
-                              MK_EPOLL_READ, MK_EPOLL_BEHAVIOR_DEFAULT);
+                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         }
     }
 

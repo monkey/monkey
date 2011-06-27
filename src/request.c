@@ -540,31 +540,16 @@ static mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
 int mk_handler_read(int socket, struct client_session *cs)
 {
     int bytes;
-    int pending = 0;
     int available = 0;
-    int ret;
     int new_size;
     char *tmp = 0;
 
-    /* Check amount of data reported */
-    ret = ioctl(socket, FIONREAD, &pending);
-    if (ret == -1) {
-        mk_request_premature_close(MK_SERVER_INTERNAL_ERROR, cs);
-        return -1;
-    }
-
-    /* Reallocate buffer size if pending data does not have space */
-    if (pending > 0 && (pending >= (cs->body_size - (cs->body_length - 1)))) {
-        /* check available space */
-        available = (cs->body_size - cs->body_length) + MK_REQUEST_CHUNK;
-        if (pending < available) {
-            new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
-        }
-        else {
-            new_size = cs->body_size + pending + 1;
-        }
-
+    available = cs->body_size - cs->body_length;
+    if (available <= 1) {
+        /* Reallocate buffer size if pending data does not have space */
+        new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
         if (new_size > config->max_request_size) {
+            MK_TRACE("Requested size is > config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
             return -1;
         }
@@ -576,6 +561,7 @@ int mk_handler_read(int socket, struct client_session *cs)
          */
         if (cs->body == cs->body_fixed) {
             cs->body = mk_mem_malloc(new_size);
+            cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
         }
         else {
@@ -593,7 +579,7 @@ int mk_handler_read(int socket, struct client_session *cs)
 
     /* Read content */
     bytes = mk_socket_read(socket, cs->body + cs->body_length,
-                           (cs->body_size - cs->body_length) );
+                           (cs->body_size - cs->body_length));
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
@@ -609,7 +595,7 @@ int mk_handler_read(int socket, struct client_session *cs)
         return -1;
     }
 
-    if (bytes >= 0) {
+    if (bytes > 0) {
         cs->body_length += bytes;
         cs->body[cs->body_length] = '\0';
     }

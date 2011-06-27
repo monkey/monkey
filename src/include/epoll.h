@@ -32,8 +32,8 @@
 /* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000
 
-#define MK_EPOLL_BEHAVIOR_DEFAULT 2
-#define MK_EPOLL_BEHAVIOR_TRIGGERED 3
+#define MK_EPOLL_LEVEL_TRIGGERED 2  /* default */
+#define MK_EPOLL_EDGE_TRIGGERED 3
 
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP 0x2000

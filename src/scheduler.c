@@ -106,7 +106,7 @@ inline int mk_sched_add_client(int remote_fd)
             sched->queue[i].arrive_time = log_current_utime;
 
             mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                         MK_EPOLL_BEHAVIOR_TRIGGERED);
+                         MK_EPOLL_LEVEL_TRIGGERED);
             return 0;
         }
     }
