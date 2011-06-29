@@ -204,6 +204,7 @@ int _mkp_init(void **api, char *confdir)
     /* init thread keys */
     pthread_key_create(&iov_protocol_request, NULL);
     pthread_key_create(&iov_protocol_request_idx, NULL);
+    pthread_key_create(&cache_ipv4, NULL);
 
     /* set pointers */
     mk_api->pointer_set(&mk_server_protocol, HTTP_PROTOCOL_11_STR);

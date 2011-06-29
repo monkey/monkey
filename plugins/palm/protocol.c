@@ -118,6 +118,7 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 {
     int i;
     int row_len;
+    char *ipv4;
     char *row_buf;
 
     mk_pointer iov_temp;
@@ -219,7 +220,13 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     }
 
     /* REMOTE_ADDR */
-    prot_add_header(iov, mk_cgi_remote_addr, *cs->ipv4);
+    const u_int8_t *ip;
+    ip = (const u_int8_t  *) &cs->ipv4->s_addr;
+    ipv4 = pthread_getspecific(cache_ipv4);
+    iov_temp.len  = snprintf(ipv4, 16, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
+    iov_temp.data = ipv4;
+
+    prot_add_header(iov, mk_cgi_remote_addr, iov_temp);
 
     /* REMOTE_PORT */
     iov_temp.data = mk_api->mem_alloc(8);
@@ -281,8 +288,12 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
 void mk_palm_protocol_thread_init()
 {
+    char *ipv4;
     struct mk_iov *iov;
 
     iov = mk_api->iov_create(128,0);
     pthread_setspecific(iov_protocol_request, iov);
+
+    ipv4 = mk_api->mem_alloc(16);
+    pthread_setspecific(cache_ipv4, ipv4);
 }

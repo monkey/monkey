@@ -39,6 +39,7 @@ struct mk_palm
 };
 
 pthread_key_t _mkp_data;
+pthread_key_t cache_ipv4;
 
 struct plugin_api *mk_api;
 struct mk_config *conf;
