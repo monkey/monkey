@@ -571,8 +571,11 @@ cat > bin/banana << EOF
 #	status  ->	check if monkey is running
 #	help	->	what do u think ?
 
-PIDFILE="$logdir/monkey.pid.$default_port"
+CONFDIR="$sysconfdir"
 BINMONKEY="$bindir/monkey"
+
+PORT=\$(sed -n '/^[ \t]*Port/s/^.* //p' "\$CONFDIR/monkey.conf")
+PIDFILE=\$(sed -n '/^[ \t]*PidFile/s/^.* //p' "\$CONFDIR/monkey.conf")."\$PORT"
 
 for arg in \$*; do
 	case "\$arg" in
