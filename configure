@@ -639,6 +639,14 @@ for arg in \$*; do
 				exit 0
 			fi
 			;;
+		status)
+                        if  [ "\$STATUS" = "yes" ]; then
+				echo "Monkey is running... (PID=\$PIDMONKEY)"
+			else
+                                echo "Monkey is not running... "
+                        fi
+			exit 0
+			;;
 		*)
 			echo "Use : banana [start|stop|restart|status|help]"
 			exit 1
