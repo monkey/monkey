@@ -73,34 +73,30 @@ main()
 	actual_path=`pwd`
 
 	if [ "$prefix" != "$actual_path" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-		dir=1
-	fi
-
-	if [ "$cgibin" != "$actual_path/cgi-bin" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-		dir=1
+	    dir=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-		dir=1
+	    dir=1
 	fi
 
-	if [ "$mandir" != "$actual_path/man" ]; then
-		dir=1
-	fi
+        if [ "$mandir" != "$actual_path/man" ]; then
+            dir=1
+        fi
 
-	echo
+        echo
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
         # Check for accept4()
@@ -122,7 +118,7 @@ main()
         echo -e "\033[1m=== Plugins included ===\033[0m"
 
         find plugins/ -name Makefile -exec rm {} \;
-        create_makefile_plugins $plugdir $prefix $bindir $mandir $cgibin $sysconfdir $datadir $logdir $cgibin $sysconfdir $datadir $logdir $mandir
+        create_makefile_plugins $plugdir $prefix $bindir $mandir $sysconfdir $datadir $logdir $sysconfdir $datadir $logdir $mandir
 
         echo
         echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
@@ -144,7 +140,7 @@ main()
 	if [ "$dir" = 0 ]; then
 		create_makefile1 bindir
 	else
-		create_makefile1_install prefix bindir mandir cgibin sysconfdir datadir logdir
+		create_makefile1_install prefix bindir mandir sysconfdir datadir logdir
 	fi
 
         echo
@@ -161,7 +157,6 @@ main()
         echo
         echo -e "PREFIX\t\t= $prefix"
         echo -e "BINDIR\t\t= $bindir"
-        echo -e "CGIBIN\t\t= $cgibin"
         echo -e "SYSCONFDIR\t= $sysconfdir"
         echo -e "DATADIR\t\t= $datadir"
         echo -e "MANDIR\t\t= $mandir"
@@ -295,7 +290,6 @@ cat > Makefile <<EOF
 PREFIX=\$(DESTDIR)${prefix}
 BINDIR=\$(DESTDIR)${bindir}
 MANDIR=\$(DESTDIR)${mandir}
-CGIBIN=\$(DESTDIR)${cgibin}
 SYSCONFDIR=\$(DESTDIR)${sysconfdir}
 DATADIR=\$(DESTDIR)${datadir}
 LOGDIR=\$(DESTDIR)${logdir}
@@ -319,7 +313,6 @@ install:
 	\$(MAKE) -C src all
 	install -d \$(BINDIR)
 	install -d \$(MANDIR)
-	install -d \$(CGIBIN)
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
@@ -493,7 +486,6 @@ create_makefile_plugins()
            find $target/* -type f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
            find $target/* -type f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
            find $target/* -type f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-           find $target/* -type f -exec sed -i "s,#CGIBIN#,$cgibin," {} ';'
            find $target/* -type f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
            find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
            find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
@@ -551,7 +543,6 @@ cat > $INCDIR/config.path <<EOF
 #!/bin/sh
 prefix=$prefix
 bindir=$bindir
-cgibin=$cgibin
 sysconfdir=$sysconfdir
 datadir=$datadir
 logdir=$logdir
@@ -577,23 +568,19 @@ cat > bin/banana << EOF
 #	start	->	start monkey
 #	restart	->	restart monkey
 #	stop	->	stop monkey if this is running
-#	status	->	check if monkey is running
+#	status  ->	check if monkey is running
 #	help	->	what do u think ?
 
-CONFDIR="$sysconfdir"
+PIDFILE="$logdir/monkey.pid.$default_port"
 BINMONKEY="$bindir/monkey"
-
-PORT=\$(sed -n '/^[ \t]*Port/s/^.* //p' "\$CONFDIR/monkey.conf")
-PIDFILE=\$(sed -n '/^[ \t]*PidFile/s/^.* //p' "\$CONFDIR/monkey.conf")."\$PORT"
-
 
 for arg in \$*; do
 	case "\$arg" in
 		-*=*) optarg=\`echo "\$arg" | sed 's/[-_a-zA-Z0-9]*=//'\` ;;
-		*) optarg= ;;
+		   *) optarg= ;;
 	esac
 
-	if ! test -f \$PIDFILE ; then
+	if  ! test -f \$PIDFILE ; then
 		STATUS="no"
 	else
 		PIDMONKEY=\`cat \$PIDFILE\`
@@ -620,9 +607,8 @@ for arg in \$*; do
 				fi
 			fi
 		;;
-
 		stop)
-			if [ "\$STATUS" = "no" ]; then
+			if  [ "\$STATUS" = "no" ]; then
 				echo "Monkey is not running."
 				exit 1
 			fi
@@ -630,12 +616,11 @@ for arg in \$*; do
 			rm -rf \$PIDFILE > /dev/null
 			echo "Monkey stopped (\$PIDMONKEY)"
 			exit 0
-		;;
-
+			;;
 		restart)
 			if  [ "\$STATUS" = "yes" ]; then
 				if ! kill \$PIDMONKEY  > /dev/null ; then
-					killall -KILL monkey
+					killall -9 monkey
 				else
 					echo -n "Stopping Monkey... "
 				fi
@@ -650,25 +635,14 @@ for arg in \$*; do
 				echo "Restarting -> OK"
 				exit 0
 			fi
-		;;
-
-		status)
-			if  [ "\$STATUS" = "yes" ]; then
-				echo "Monkey is running."
-			else
-				echo "Monkey is not running."
-			fi
-			exit 0
-		;;
-
+			;;
 		*)
 			echo "Use : banana [start|stop|restart|status|help]"
 			exit 1
 		;;
-
 	esac
 done
-echo "Use : banana [start|stop|restart|status|help]"
+echo "Use : banana [start|stop|restart|help]"
 
 exit 0
 EOF
@@ -688,7 +662,6 @@ aux=`pwd`
 prefix="$aux"
 bindir="$aux/bin"
 mandir="$aux/man"
-cgibin="$aux/cgi-bin"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
@@ -712,7 +685,6 @@ for arg in $*; do
 			prefix=$optarg
 			bindir="$optarg/bin"
                         mandir="$optarg/man"
-			cgibin="$optarg/cgi-bin"
 			sysconfdir="$optarg/conf"
 			datadir="$optarg/htdocs"
 			logdir="$optarg/logs"
@@ -724,9 +696,6 @@ for arg in $*; do
                 --mandir*)
                         mandir=$optarg
                         ;;
-		--cgibin*)
-			cgibin=$optarg
-			;;
 		--sysconfdir*)
 			sysconfdir=$optarg
 			;;
@@ -850,5 +819,5 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 fi
 
 # Starting main function
-main prefix lang bindir mandir cgibin sysconfdir datadir logdir plugdir platform SYSNAME VERSION
+main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform SYSNAME VERSION
 exit 0
