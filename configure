@@ -653,7 +653,7 @@ for arg in \$*; do
 		;;
 	esac
 done
-echo "Use : banana [start|stop|restart|help]"
+echo "Use : banana [start|stop|restart|status|help]"
 
 exit 0
 EOF
