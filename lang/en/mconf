@@ -58,8 +58,7 @@ cat > conf/monkey.conf <<EOF
     # -----------
     # Number of the initial file of aperture when calling a directory.
 
-    Indexfile index.html index.htm
-    
+    Indexfile index.html index.htm index.php
     
     # HideVersion :
     # ------------- 
