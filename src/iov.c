@@ -26,7 +26,6 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <stdio.h>
-#include <limits.h>
 
 #include "monkey.h"
 
