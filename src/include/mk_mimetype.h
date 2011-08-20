@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2011, Eduardo Silva P. <edsiper@gmail.com>
@@ -17,30 +19,19 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_MONKEY_H
-#define MK_MONKEY_H
-
-#include <pthread.h>
-#include <netinet/in.h>
 #include "mk_memory.h"
+#include "mk_list.h"
 
-int server_fd;
+#define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
+#define MIMETYPE_DEFAULT_NAME "default"
 
-/* Max Path lenth */
-#define MAX_PATH 1024
+struct mimetype
+{
+    char *name;
+    mk_pointer type;
+};
 
-/* Send_Header(...,int cgi) */
-#define SH_NOCGI 0
-#define SH_CGI 1
+struct mimetype *mimetype_default;
 
-
-/* Thread mutexes */
-pthread_mutex_t mutex_wait_register;
-mk_pointer mk_monkey_protocol;
-mk_pointer mk_monkey_port;
-
-/* Process UID/GID */
-gid_t EGID;
-gid_t EUID;
-
-#endif
+void mk_mimetype_read_config(void);
+struct mimetype *mk_mimetype_find(mk_pointer * filename);

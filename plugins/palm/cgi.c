@@ -23,8 +23,8 @@
 #include <stdlib.h>
 
 #include "palm.h"
-#include "plugin.h"
 #include "cgi.h"
+#include "mk_plugin.h"
 
 void mk_cgi_env()
 {

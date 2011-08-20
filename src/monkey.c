@@ -25,15 +25,15 @@
 #include <getopt.h>
 
 #include "monkey.h"
-#include "socket.h"
-#include "user.h"
-#include "signals.h"
-#include "clock.h"
-#include "cache.h"
-#include "server.h"
-#include "plugin.h"
-#include "macros.h"
-#include "env.h"
+#include "mk_socket.h"
+#include "mk_user.h"
+#include "mk_signals.h"
+#include "mk_clock.h"
+#include "mk_cache.h"
+#include "mk_server.h"
+#include "mk_plugin.h"
+#include "mk_macros.h"
+#include "mk_env.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;

@@ -130,7 +130,7 @@ main()
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform
 
-        echo "+ Creating src/include/info.h"
+        echo "+ Creating src/include/mk_info.h"
 	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__
 
 	echo "+ Creating bin/banana script"
@@ -177,7 +177,7 @@ main()
 	echo -n "Have fun! ;)"
         echo
 
-	echo "#define CC \"${CC}\"" > src/include/env.h
+	echo "#define CC \"${CC}\"" > src/include/mk_env.h
 }
 
 # Check accept4() function
@@ -363,12 +363,12 @@ INCDIR  = ./include
 LDFLAGS	= $LDFLAGS
 DESTDIR	= ../bin/monkey
 LIBS	= -ldl $libs
-OBJ	= monkey.o method.o mimetype.o request.o \\
-	header.o config.o signals.o \\
-	user.o utils.o epoll.o scheduler.o \\
-	str.o memory.o connection.o iov.o http.o \\
-	file.o socket.o clock.o cache.o \\
-	server.o plugin.o
+OBJ	= monkey.o mk_method.o mk_mimetype.o mk_request.o \\
+	mk_header.o mk_config.o mk_signals.o \\
+	mk_user.o mk_utils.o mk_epoll.o mk_scheduler.o \\
+	mk_string.o mk_memory.o mk_connection.o mk_iov.o mk_http.o \\
+	mk_file.o mk_socket.o mk_clock.o mk_cache.o \\
+	mk_server.o mk_plugin.o
 
 all: ../bin/monkey
 
@@ -385,7 +385,7 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/sites/* include/info.h ../logs/*
+	../conf/sites/* include/mk_info.h ../logs/*
 	find ../plugins -name Makefile -exec rm {} \;
 
 .c.o:
@@ -514,10 +514,10 @@ fi
     cd ..
 }
 
-# Creando include/info.h
+# Creando include/mk_info.h
 create_info()
 {
-cat > $INCDIR/info.h <<EOF
+cat > $INCDIR/mk_info.h <<EOF
 #ifndef MK_INFO_H
 #define MK_INFO_H
 

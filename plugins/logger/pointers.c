@@ -20,8 +20,8 @@
  */
 
 #include "logger.h"
-#include "plugin.h"
 #include "pointers.h"
+#include "mk_plugin.h"
 
 void mk_logger_init_pointers()
 {

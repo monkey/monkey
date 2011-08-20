@@ -17,30 +17,20 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_MONKEY_H
-#define MK_MONKEY_H
+#include "mk_request.h"
 
-#include <pthread.h>
-#include <netinet/in.h>
-#include "mk_memory.h"
+#ifndef MK_USER_H
+#define MK_USER_H
 
-int server_fd;
+/* User home string */
+#define MK_USER_HOME '~'
 
-/* Max Path lenth */
-#define MAX_PATH 1024
+gid_t egid;
+uid_t euid;
 
-/* Send_Header(...,int cgi) */
-#define SH_NOCGI 0
-#define SH_CGI 1
-
-
-/* Thread mutexes */
-pthread_mutex_t mutex_wait_register;
-mk_pointer mk_monkey_protocol;
-mk_pointer mk_monkey_port;
-
-/* Process UID/GID */
-gid_t EGID;
-gid_t EUID;
+/* user.c */
+int mk_user_init(struct client_session *cs, struct session_request *sr);
+int mk_user_set_uidgid(void);
+int mk_user_undo_uidgid(void);
 
 #endif

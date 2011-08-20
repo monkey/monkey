@@ -23,15 +23,15 @@
 #define MONKEY_PLUGIN_H
 
 /* General Headers */
-#include "errno.h"
+#include <errno.h>
 
 /* Monkey Headers */
-#include "plugin.h"
-#include "list.h"
-#include "http.h"
-#include "file.h"
-#include "socket.h"
-#include "macros.h"
+#include "mk_plugin.h"
+#include "mk_list.h"
+#include "mk_http.h"
+#include "mk_file.h"
+#include "mk_socket.h"
+#include "mk_macros.h"
 
 /* global vars */
 struct plugin_api *mk_api;
