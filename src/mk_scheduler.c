@@ -290,12 +290,16 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
     struct sched_connection *sc;
 
+    /* 
+     * Close socket and change status: we do not invoke mk_epoll_del()
+     * because when the socket is closed is cleaned from the queue by 
+     * the Kernel.
+     */
+    close(remote_fd);
+
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
         MK_TRACE("[FD %i] Scheduler remove", remote_fd);
-
-        /* Close socket and change status */
-        close(remote_fd);
 
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
@@ -307,7 +311,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         return 0;
     }
     else {
-        MK_TRACE("[FD %i] Not found", remote_fd);
+        MK_TRACE("[FD %i] Not found", remote_fd);        
     }
     return -1;
 }

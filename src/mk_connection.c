@@ -68,7 +68,8 @@ int mk_conn_read(int socket)
                                  socket, MK_EPOLL_WRITE);
         }
         else if (cs->body_length + 1 >= config->max_request_size) {
-            /* Request is incomplete and our buffer is full,
+            /* 
+             * Request is incomplete and our buffer is full,
              * close connection
              */
             mk_session_remove(socket);

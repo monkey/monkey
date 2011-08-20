@@ -19,6 +19,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_PLUGIN_H
+#define MK_PLUGIN_H
+
 #include "monkey.h"
 #include "mk_config.h"
 #include "mk_request.h"
@@ -32,9 +35,6 @@
 #include "mk_string.h"
 #include "mk_list.h"
 #include "mk_info.h"
-
-#ifndef MK_PLUGIN_H
-#define MK_PLUGIN_H
 
 #define MK_PLUGIN_LOAD "plugins.load"
 

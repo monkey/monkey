@@ -74,8 +74,7 @@ mk_pointer mk_rh_referer;
 mk_pointer mk_rh_range;
 mk_pointer mk_rh_user_agent;
 
-/* Aqui se registran temporalmente los 
-parametros de una peticion */
+/* String limits */
 #define MAX_REQUEST_METHOD 10
 #define MAX_REQUEST_URI 1025
 #define MAX_REQUEST_PROTOCOL 10

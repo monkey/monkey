@@ -317,7 +317,8 @@ int mk_header_send(int fd, struct client_session *cs,
                          sh->content_type, MK_IOV_NOT_FREE_BUF);
     }
 
-    /* Transfer Encoding: the transfer encoding header is just sent when
+    /* 
+     * Transfer Encoding: the transfer encoding header is just sent when
      * the response has some content defined by the HTTP status response 
      */
     if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
