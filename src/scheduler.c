@@ -60,28 +60,42 @@ static inline int _next_target()
 }
 
 /*
- * Assign a new incomming connection to a specific worker thread, it also
- * cares about to update the scheduler information
+ * Assign a new incomming connection to a specific worker thread, this call comes
+ * from the main monkey process.
  */
 inline int mk_sched_add_client(int remote_fd)
 {
     int t=0;
-    unsigned int i, ret;
     struct sched_list_node *sched;
+
+    /* Next worker target */
+    t = _next_target();
+    sched = &sched_list[t];
+
+    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
+
+    mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
+                 MK_EPOLL_LEVEL_TRIGGERED);
+
+    return 0;
+}
+
+/*
+ * Register a new client connection into the scheduler, this call takes place
+ * inside the worker/thread context.
+ */
+int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
+{
+    unsigned int i, ret;
     struct sched_connection *queue;
 
     /* socket info */
     struct sockaddr_in m_addr;
     socklen_t sock_len = sizeof(struct sockaddr_in);
 
-    t = _next_target();
-    sched = &sched_list[t];
-
-    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
-
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
-            MK_TRACE("[FD %i] Add", remote_fd);
+            MK_TRACE("[FD %i] Add in slot %i", remote_fd, i);
 
             /* Set IP address in struct in_addr format */
             queue = &sched->queue[i];
@@ -104,9 +118,6 @@ inline int mk_sched_add_client(int remote_fd)
             sched->queue[i].socket = remote_fd;
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
-
-            mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                         MK_EPOLL_LEVEL_TRIGGERED);
             return 0;
         }
     }
