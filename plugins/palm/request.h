@@ -42,6 +42,7 @@ struct mk_palm_request
     unsigned long bytes_sent;
     unsigned long bytes_read;
     int headers_sent;
+    int is_te_chunked;
 
     struct mk_palm *palm;
 

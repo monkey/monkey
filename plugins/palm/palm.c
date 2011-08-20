@@ -127,9 +127,11 @@ struct mk_palm *mk_palm_get_handler(mk_pointer * file)
     return NULL;
 }
 
-int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
+int mk_palm_send_headers(struct mk_palm_request *pr)
 {
     int n;
+    struct client_session *cs = pr->cs;
+    struct session_request *sr = pr->sr;
 
     if (sr->headers.status == 0) {
         sr->headers.status = MK_HTTP_OK;
@@ -137,10 +139,17 @@ int mk_palm_send_headers(struct client_session *cs, struct session_request *sr)
 
     sr->headers.cgi = SH_CGI;
 
-    /* Chunked transfer encoding */
-    if (sr->protocol >= HTTP_PROTOCOL_11) {
-        sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
-    }
+    /* 
+     * Chunked transfer encoding: just on HTTP/1.1 and when there's no 
+     * redirection 
+     */
+    if (sr->protocol >= HTTP_PROTOCOL_11 && 
+        (sr->headers.status < MK_REDIR_MULTIPLE ||
+         sr->headers.status > MK_REDIR_USE_PROXY))
+        {
+            sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+            pr->is_te_chunked = MK_TRUE;
+        }
 
     /* Send just headers from buffer */
     PLUGIN_TRACE("[CLIENT_FD %i] Sending headers", cs->socket);
@@ -372,11 +381,13 @@ int mk_palm_send_chunk(int socket, char *buffer, int len)
     return n;
 }
 
-int mk_palm_send_end_chunk(int socket)
+int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
 {
     int n;
 
-    n = mk_api->socket_send(socket, "0\r\n\r\n", 5);
+    if (pr->is_te_chunked == MK_TRUE) {
+        n = mk_api->socket_send(socket, "0\r\n\r\n", 5);
+    }
     return n;
 }
 
@@ -506,7 +517,7 @@ int _mkp_event_read(int sockfd)
         PLUGIN_TRACE(" ending connection: read() = %i", n);
 
         if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
-            n = mk_palm_send_end_chunk(pr->client_fd);
+            n = mk_palm_send_end_chunk(pr->client_fd, pr);
         }
 
         return MK_PLUGIN_RET_EVENT_CLOSE;
@@ -542,7 +553,7 @@ int _mkp_event_read(int sockfd)
         offset = mk_palm_cgi_status(pr->buffer, pr->sr);
         
         /* Send headers */
-        mk_palm_send_headers(pr->cs, pr->sr);
+        mk_palm_send_headers(pr);
         n = mk_api->socket_send(pr->client_fd, 
                                 pr->buffer + offset, 
                                 headers_end - offset);
@@ -601,4 +612,3 @@ int _mkp_event_error(int sockfd)
     PLUGIN_TRACE("[FD %i] event error", sockfd);
     return hangup(sockfd);
 }
-
