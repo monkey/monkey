@@ -733,8 +733,10 @@ int mk_plugin_event_add(int socket, int mode,
         mk_plugin_event_set_list(list);
     }
 
-    /* The thread event info has been registered, now we need
-       to register the socket involved to the thread epoll array */
+    /* 
+     * The thread event info has been registered, now we need
+     *  to register the socket involved to the thread epoll array
+     */
     mk_epoll_add(sched->epoll_fd, socket,
                  mode, MK_EPOLL_LEVEL_TRIGGERED);
     return 0;

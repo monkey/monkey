@@ -549,7 +549,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     available = cs->body_size - cs->body_length;
     if (available <= 0) {
         /* Reallocate buffer size if pending data does not have space */
-        new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
+        new_size = cs->body_size + MK_REQUEST_CHUNK;
         if (new_size >= config->max_request_size) {
             MK_TRACE("Requested size is > config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
@@ -585,7 +585,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     /* Read content */
     bytes = mk_socket_read(socket, cs->body + cs->body_length,
                            (cs->body_size - cs->body_length));
-
+    
     MK_TRACE("[FD %i] read %i", socket, bytes);
     if (bytes < 0) {
         if (errno == EAGAIN) {

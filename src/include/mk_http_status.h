@@ -20,7 +20,7 @@
 #ifndef MK_HTTP_STATUS_H
 #define MK_HTTP_STATUS_H
 
-#include "memory.h"
+#include "mk_memory.h"
 
 /* HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl> */
 

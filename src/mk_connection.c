@@ -75,6 +75,9 @@ int mk_conn_read(int socket)
             mk_session_remove(socket);
             return -1;
         }
+        else {
+            MK_TRACE("[FD %i] waiting for pending data", socket);
+        }
     }
 
     return ret;

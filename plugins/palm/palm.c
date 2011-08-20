@@ -383,7 +383,7 @@ int mk_palm_send_chunk(int socket, char *buffer, int len)
 
 int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
 {
-    int n;
+    int n=0;
 
     if (pr->is_te_chunked == MK_TRUE) {
         n = mk_api->socket_send(socket, "0\r\n\r\n", 5);
