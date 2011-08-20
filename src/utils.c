@@ -26,7 +26,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <err.h>
-#include <limits.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>

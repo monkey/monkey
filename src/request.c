@@ -544,11 +544,13 @@ int mk_handler_read(int socket, struct client_session *cs)
     int new_size;
     char *tmp = 0;
 
+    MK_TRACE("MAX REQUEST SIZE: %i", config->max_request_size);
+
     available = cs->body_size - cs->body_length;
-    if (available <= 1) {
+    if (available <= 0) {
         /* Reallocate buffer size if pending data does not have space */
         new_size = cs->body_size + MK_REQUEST_CHUNK + 1;
-        if (new_size > config->max_request_size) {
+        if (new_size >= config->max_request_size) {
             MK_TRACE("Requested size is > config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
             return -1;
@@ -560,11 +562,14 @@ int mk_handler_read(int socket, struct client_session *cs)
          * body.
          */
         if (cs->body == cs->body_fixed) {
+            MK_TRACE("Fixed to dynamic");
             cs->body = mk_mem_malloc(new_size);
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
+            MK_TRACE("Size: %i, Length: %i", new_size, cs->body_length);
         }
         else {
+            MK_TRACE("Realloc from %i to %i", cs->body_size, new_size);
             tmp = mk_mem_realloc(cs->body, new_size);
             if (tmp) {
                 cs->body = tmp;
@@ -581,6 +586,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     bytes = mk_socket_read(socket, cs->body + cs->body_length,
                            (cs->body_size - cs->body_length));
 
+    MK_TRACE("[FD %i] read %i", socket, bytes);
     if (bytes < 0) {
         if (errno == EAGAIN) {
             return 1;

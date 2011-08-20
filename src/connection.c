@@ -53,6 +53,7 @@ int mk_conn_read(int socket)
         }
 
         /* Create client */
+        MK_TRACE("[FD %i] Create session", socket);
         cs = mk_session_create(socket, sched);
         if (!cs) {
             return -1;
@@ -61,7 +62,6 @@ int mk_conn_read(int socket)
 
     /* Read incomming data */
     ret = mk_handler_read(socket, cs);
-
     if (ret > 0) {
         if (mk_http_pending_request(cs) == 0) {
             mk_epoll_change_mode(sched->epoll_fd,
@@ -84,6 +84,7 @@ int mk_conn_write(int socket)
     int ret = -1;
     struct client_session *cs;
     struct sched_list_node *sched;
+    struct sched_connection *conx;
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
@@ -101,13 +102,22 @@ int mk_conn_write(int socket)
     MK_TRACE("[FD %i] Normal connection write handling", socket);
     
     sched = mk_sched_get_thread_conf();
+
+    /* Check if this is a new connection */
+    conx = mk_sched_get_connection(sched, socket);
+    if (!conx) { 
+        MK_TRACE("[FD %i] Registering new connection");
+        mk_sched_register_client(socket, sched);
+        mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_READ);
+        return 0;
+    }
+
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
 
     /* Get node from schedule list node which contains
      * the information regarding to the current client/socket
      */
     cs = mk_session_get(socket);
-
     if (!cs) {
         return -1;
     }

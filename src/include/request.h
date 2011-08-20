@@ -24,7 +24,7 @@
 #include "file.h"
 #include "memory.h"
 #include "scheduler.h"
-#include "limits.h"
+#include "mk_limits.h"
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
