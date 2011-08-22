@@ -4,11 +4,12 @@ LDFLAGS = $LDFLAGS
 DEFS    = $DEFS -DPOSIX
 INCDIR  = -I../../src/include
 OBJECTS = liana_ssl.o
+MATRIX_HEADERS = /usr/include/matrixssl/
 
 all: monkey-liana_ssl.so
 
 monkey-liana_ssl.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -L$(MATRIX_LIBS) -lmatrixssl
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lmatrixssl
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) $(INCDIR) -I$(MATRIX_HEADERS) -fPIC -c $<
