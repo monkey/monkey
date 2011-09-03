@@ -54,12 +54,12 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
         return NULL;
     }
 
-    if (finfo.is_directory == MK_FILE_TRUE) {
+    if (finfo.is_directory == MK_TRUE) {
         mk_warn("Auth: Not a credentials file '%s'", users_path);
         return NULL;
     }
 
-    if (finfo.read_access == MK_FILE_FALSE) {
+    if (finfo.read_access == MK_FALSE) {
         mk_warn("Auth: Could not read file '%s'", users_path);
         return NULL;
     }

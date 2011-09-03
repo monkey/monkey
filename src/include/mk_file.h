@@ -22,13 +22,10 @@
 #ifndef MK_FILE_H
 #define MK_FILE_H
 
-#define MK_FILE_TRUE 1
-#define MK_FILE_FALSE 0
-
 struct file_info
 {
     off_t size;
-    
+
     short int is_file;
     short int is_link;
     short int is_directory;

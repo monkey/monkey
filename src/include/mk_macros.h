@@ -26,8 +26,8 @@
 #include "mk_limits.h"
 
 /* Boolean */
-#define MK_TRUE   1
-#define MK_FALSE  0
+#define MK_FALSE 0
+#define MK_TRUE  !MK_FALSE
 #define MK_ERROR -1
 
 /* Architecture */
