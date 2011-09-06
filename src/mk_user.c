@@ -101,17 +101,18 @@ int mk_user_set_uidgid()
 {
     struct passwd *usr;
 
-    EUID = (gid_t) geteuid();
-    EGID = (gid_t) getegid();
-
     /* Launched by root ? */
     if (geteuid() == 0 && config->user) {
         struct rlimit rl;
 
+        if (getrlimit(RLIMIT_NOFILE, &rl)) {
+            mk_warn("cannot get resource limits");
+        }
+
         /* Just if i'm superuser */
         rl.rlim_cur = rl.rlim_max;
         if (setrlimit(RLIMIT_NOFILE, &rl) != 0) {
-            mk_warn("setrlimit(RLIMIT_NOFILE) failed");
+            mk_warn("cannot set resource limits");
         }
 
         /* Check if user exists  */
@@ -132,11 +133,12 @@ int mk_user_set_uidgid()
             mk_err("I cannot change the UID to %u", usr->pw_uid);
         }
 
-        EUID = geteuid();
-        EGID = getegid();
-
         config->is_seteuid = MK_TRUE;
     }
+
+    EUID = geteuid();
+    EGID = getegid();
+
     return 0;
 }
 
