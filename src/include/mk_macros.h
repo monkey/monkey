@@ -58,6 +58,9 @@
 #define MK_TRANSPORT_HTTP  "http"
 #define MK_TRANSPORT_HTTPS "https"
 
+#ifndef ARRAY_SIZE
+# define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
 /*
  * Validation macros
  * -----------------
