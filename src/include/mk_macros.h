@@ -26,8 +26,8 @@
 #include "mk_limits.h"
 
 /* Boolean */
-#define MK_TRUE   1
-#define MK_FALSE  0
+#define MK_FALSE 0
+#define MK_TRUE  !MK_FALSE
 #define MK_ERROR -1
 
 /* Architecture */
@@ -58,6 +58,9 @@
 #define MK_TRANSPORT_HTTP  "http"
 #define MK_TRANSPORT_HTTPS "https"
 
+#ifndef ARRAY_SIZE
+# define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
 /*
  * Validation macros
  * -----------------

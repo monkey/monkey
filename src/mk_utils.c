@@ -400,14 +400,15 @@ int mk_utils_remove_pid()
 {
     unsigned long len = 0;
     char *filepath = NULL;
-    int ret;
     
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
     mk_user_undo_uidgid();
-    ret = unlink(filepath);
+    if (unlink(filepath)) {
+        mk_warn("cannot delete pidfile\n");
+    }
     mk_mem_free(filepath);
     config->pid_status = MK_FALSE;
-    return ret;
+    return 0;
 }
 
 void mk_print(int type, const char *format, ...)
@@ -444,7 +445,7 @@ void mk_print(int type, const char *format, ...)
     printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ", 
            ANSI_BOLD, ANSI_RESET,
            current->tm_year + 1900,
-           current->tm_mon,
+           current->tm_mon + 1,
            current->tm_mday,
            current->tm_hour,
            current->tm_min,

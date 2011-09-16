@@ -395,14 +395,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
     int i, http_status;
     int ip_len;
-    int array_len = sizeof(response_codes)/sizeof(struct status_response);
+    int array_len = ARRAY_SIZE(response_codes);
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
     mk_pointer *content_length;
     mk_pointer status;
     char ip_buf[16];
-
 
     /* Set response status */
     http_status = sr->headers.status;

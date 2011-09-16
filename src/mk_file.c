@@ -30,6 +30,7 @@
 #include "mk_user.h"
 #include "mk_memory.h"
 #include "mk_utils.h"
+#include "mk_macros.h"
 
 int mk_file_get_info(const char *path, struct file_info *f_info)
 {
@@ -40,15 +41,15 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
         return -1;
     }
 
-    f_info->is_file = MK_FILE_TRUE;
-    f_info->is_link = MK_FILE_FALSE;
-    f_info->is_directory = MK_FILE_FALSE;
-    f_info->exec_access = MK_FILE_FALSE;
-    f_info->read_access = MK_FILE_FALSE;
+    f_info->is_file = MK_TRUE;
+    f_info->is_link = MK_FALSE;
+    f_info->is_directory = MK_FALSE;
+    f_info->exec_access = MK_FALSE;
+    f_info->read_access = MK_FALSE;
 
     if (S_ISLNK(f.st_mode)) {
-        f_info->is_link = MK_FILE_TRUE;
-        f_info->is_file = MK_FILE_FALSE;
+        f_info->is_link = MK_TRUE;
+        f_info->is_file = MK_FALSE;
         if (stat(path, &target) == -1) {
             return -1;
         }
@@ -61,15 +62,15 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
     f_info->last_modification = target.st_mtime;
 
     if (S_ISDIR(target.st_mode)) {
-        f_info->is_directory = MK_FILE_TRUE;
-        f_info->is_file = MK_FILE_FALSE;
+        f_info->is_directory = MK_TRUE;
+        f_info->is_file = MK_FALSE;
     }
 
     /* Checking read access */
     if (((target.st_mode & S_IRUSR) && target.st_uid == EUID) ||
         ((target.st_mode & S_IRGRP) && target.st_gid == EGID) ||
         (target.st_mode & S_IROTH)) {
-        f_info->read_access = MK_FILE_TRUE;
+        f_info->read_access = MK_TRUE;
     }
 #ifdef TRACE
     else {
@@ -81,7 +82,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
     if ((target.st_mode & S_IXUSR && target.st_uid == EUID) ||
         (target.st_mode & S_IXGRP && target.st_gid == EGID) ||
         (target.st_mode & S_IXOTH)) {
-        f_info->exec_access = MK_FILE_TRUE;
+        f_info->exec_access = MK_TRUE;
 
     }
 #ifdef TRACE

@@ -199,7 +199,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* is it a valid directory ? */
-    if (sr->file_info.is_directory == MK_FILE_TRUE) {
+    if (sr->file_info.is_directory == MK_TRUE) {
         /* Send redirect header if end slash is not found */
         if (mk_http_directory_redirect_check(cs, sr) == -1) {
             MK_TRACE("Directory Redirect");
@@ -223,7 +223,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Check symbolic link file */
-    if (sr->file_info.is_link == MK_FILE_TRUE) {
+    if (sr->file_info.is_link == MK_TRUE) {
         if (config->symlink == MK_FALSE) {
             mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             return EXIT_ERROR;
@@ -254,7 +254,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* read permissions and check file */
-    if (sr->file_info.read_access == MK_FILE_FALSE) {
+    if (sr->file_info.read_access == MK_FALSE) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
@@ -265,7 +265,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         mime = mimetype_default;
     }
 
-    if (sr->file_info.is_directory == MK_FILE_TRUE) {
+    if (sr->file_info.is_directory == MK_TRUE) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         return EXIT_ERROR;
     }
