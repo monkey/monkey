@@ -218,7 +218,7 @@ void mk_header_iov_free(struct mk_iov *iov)
     mk_iov_free_marked(iov);
 }
 
-/* Send_Header , envia las cabeceras principales */
+/* Send response headers */
 int mk_header_send(int fd, struct client_session *cs,
                    struct session_request *sr)
 {

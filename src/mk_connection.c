@@ -52,7 +52,7 @@ int mk_conn_read(int socket)
             mk_warn("TCP_NODELAY failed");
         }
 
-        /* Create client */
+        /* Create session for the client */
         MK_TRACE("[FD %i] Create session", socket);
         cs = mk_session_create(socket, sched);
         if (!cs) {
@@ -65,7 +65,7 @@ int mk_conn_read(int socket)
     if (ret > 0) {
         if (mk_http_pending_request(cs) == 0) {
             mk_epoll_change_mode(sched->epoll_fd,
-                                 socket, MK_EPOLL_WRITE);
+                                 socket, MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
         }
         else if (cs->body_length + 1 >= config->max_request_size) {
             /* 
@@ -112,7 +112,8 @@ int mk_conn_write(int socket)
     if (!conx) { 
         MK_TRACE("[FD %i] Registering new connection");
         mk_sched_register_client(socket, sched);
-        mk_epoll_change_mode(sched->epoll_fd, socket, MK_EPOLL_READ);
+        mk_epoll_change_mode(sched->epoll_fd, socket, 
+                             MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         return 0;
     }
 

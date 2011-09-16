@@ -60,7 +60,7 @@ struct mk_palm *palms;
 struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
                                         struct client_session *cs, 
                                         struct session_request *sr);
-void mk_palm_send_request(struct client_session *cs, struct session_request *sr);
+int mk_palm_send_request(struct client_session *cs, struct session_request *sr);
 int hangup(int sockfd);
 
 #endif

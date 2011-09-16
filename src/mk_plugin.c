@@ -538,7 +538,8 @@ int mk_plugin_stage_run(unsigned int hook,
         }
     }
 
-    /* The plugin acts like an Object handler, it will take care of the 
+    /* 
+     * The plugin acts like an Object handler, it will take care of the 
      * request, it decides what to do with the request 
      */
     if (hook & MK_PLUGIN_STAGE_30) {
@@ -710,7 +711,8 @@ int mk_plugin_event_del(int socket)
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
                         struct client_session *cs,
-                        struct session_request *sr)
+                        struct session_request *sr,
+                        int behavior)
 {
     struct sched_list_node *sched;
     struct plugin_event *event;
@@ -738,7 +740,7 @@ int mk_plugin_event_add(int socket, int mode,
      *  to register the socket involved to the thread epoll array
      */
     mk_epoll_add(sched->epoll_fd, socket,
-                 mode, MK_EPOLL_LEVEL_TRIGGERED);
+                 mode, behavior);
     return 0;
 }
 
@@ -758,7 +760,7 @@ int mk_plugin_http_request_end(int socket)
     return 0;
 }
 
-int mk_plugin_event_socket_change_mode(int socket, int mode)
+int mk_plugin_event_socket_change_mode(int socket, int mode, int behavior)
 {
     struct sched_list_node *sched;
 
@@ -768,7 +770,7 @@ int mk_plugin_event_socket_change_mode(int socket, int mode)
         return -1;
     }
 
-    return mk_epoll_change_mode(sched->epoll_fd, socket, mode);
+    return mk_epoll_change_mode(sched->epoll_fd, socket, mode, behavior);
 }
 
 struct plugin_event *mk_plugin_event_get(int socket)

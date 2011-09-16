@@ -919,24 +919,27 @@ void mk_session_remove(int socket)
 mk_pointer mk_request_header_get(struct headers_toc *toc, mk_pointer header)
 {
     int i;
+    struct header_toc_row *row;
     mk_pointer var;
 
     var.data = NULL;
     var.len = 0;
 
+    row = toc->rows;
     for (i = 0; i < toc->length; i++) {
+
         /* 
          * status = 1 means that the toc entry was already
          * checked by Monkey
          */
-        if (toc->rows[i].status == 1) {
+        if (row[i].status == 1) {
             continue;
         }
         
-        if (strncasecmp(toc->rows[i].init, header.data, header.len) == 0) {
-            var.data = toc->rows[i].init + header.len + 1;
-            var.len = toc->rows[i].end - var.data;
-            toc->rows[i].status = 1;
+        if (strncasecmp(row[i].init, header.data, header.len) == 0) {
+            var.data = row[i].init + header.len + 1;
+            var.len = row[i].end - var.data;
+            row[i].status = 1;
             break;
         }
     }

@@ -760,7 +760,7 @@ int mk_http_request_end(int socket)
     else {
         mk_request_ka_next(cs);
         mk_epoll_change_mode(sched->epoll_fd,
-                             socket, MK_EPOLL_READ);
+                             socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         return 0;
     }
 

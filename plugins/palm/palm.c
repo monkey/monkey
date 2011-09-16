@@ -252,6 +252,13 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     struct mk_palm *palm;
     struct mk_palm_request *pr;
 
+    /* Check if this connection already have a palm_request */
+    pr = mk_palm_request_get_by_http(cs->socket);
+    if (pr) {
+        PLUGIN_TRACE("[FD %i] Palm request already exists, RET_CONTINUE", cs->socket);
+        return MK_PLUGIN_RET_CONTINUE;
+    }
+
     PLUGIN_TRACE("PALM STAGE 30, requesting '%s'", sr->real_path.data);
 
     /* Get Palm handler */
@@ -279,14 +286,21 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
      * events. Here we register the connected FD to palm server and wait for
      * such events.
      */
-    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cs, sr);
-    PLUGIN_TRACE("Palm: Event registered for palm_socket=%i", pr->palm_fd);
+    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cs, sr, MK_EPOLL_LEVEL_TRIGGERED);
+    PLUGIN_TRACE("[PALM_FD %i] Socket registered in epoll events", pr->palm_fd);
 
-    /* Send request to Palm server*/
+    /* Send request to Palm server */
     mk_palm_send_request(cs, sr);
 
-    PLUGIN_TRACE("[PALM_FD %i] return %i (MK_PLUGIN_RET_CONTINUE)", 
+    PLUGIN_TRACE("[PALM_FD %i] return MK_PLUGIN_RET_CONTINUE (%i)", 
                  pr->palm_fd, MK_PLUGIN_RET_CONTINUE);
+
+    /* 
+     * We need to set the remote client socket event to READ, right now the socket
+     * is in write mode and it will be joining this function every time until some
+     * data is send.
+     */
+    mk_api->event_socket_change_mode(cs->socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
     return MK_PLUGIN_RET_CONTINUE;
 }
 
@@ -316,37 +330,34 @@ struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
     return mk_palm_request_create(cs->socket, palm_socket, cs, sr, palm);
 }
 
-void mk_palm_send_request(struct client_session *cs, struct session_request *sr)
+int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 {
     long n;
     ssize_t bytes_iov=-1;
     struct mk_iov *iov;
     struct mk_palm_request *pr;
 
-    PLUGIN_TRACE("Sending request to Palm Server");
-
     pr = mk_palm_request_get_by_http(cs->socket);
-    if (pr) {
-        PLUGIN_TRACE("palm_fd: %i", pr->palm_fd);
+    PLUGIN_TRACE("[FD %i] Sending request to Palm Server", pr->palm_fd);
 
-        if (pr->bytes_sent == 0) {
-            PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
-
-            /* Create protocol request  */
-            iov = mk_palm_protocol_request_new(cs, sr);
-
-            /* Write protocol request to palm server */
-            bytes_iov = (ssize_t ) mk_api->iov_send(pr->palm_fd, iov);
-            PLUGIN_TRACE("written: %i", bytes_iov);
-
-            if (bytes_iov >= 0){
-                pr->bytes_sent += bytes_iov;
-                n = bytes_iov;
-            }
+    if (pr && pr->bytes_sent == 0) {
+        PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
+        
+        /* Create protocol request  */
+        iov = mk_palm_protocol_request_new(cs, sr);
+        
+        /* Write protocol request to palm server */
+        bytes_iov = (ssize_t ) mk_api->iov_send(pr->palm_fd, iov);
+        PLUGIN_TRACE("[PALM_FD %i] written: %i", pr->palm_fd, bytes_iov);
+        
+        if (bytes_iov >= 0){
+            pr->bytes_sent += bytes_iov;
+            n = bytes_iov;
         }
     }
 
     PLUGIN_TRACE("Bytes sent to PALM SERVER: %i", pr->bytes_sent);
+    return pr->bytes_sent;
 }
 
 int mk_palm_send_chunk(int socket, char *buffer, int len)

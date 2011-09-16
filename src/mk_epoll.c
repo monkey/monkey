@@ -164,13 +164,17 @@ int mk_epoll_del(int efd, int fd)
     return ret;
 }
 
-int mk_epoll_change_mode(int efd, int fd, int mode)
+int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
 {
     int ret;
     struct epoll_event event;
 
-    event.events = EPOLLET | EPOLLERR | EPOLLHUP;
+    event.events = EPOLLERR | EPOLLHUP;
     event.data.fd = fd;
+
+    if (behavior == MK_EPOLL_EDGE_TRIGGERED) {
+        event.events |= EPOLLET;
+    }
 
     switch (mode) {
     case MK_EPOLL_READ:

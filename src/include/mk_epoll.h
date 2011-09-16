@@ -27,13 +27,12 @@
 #define MK_EPOLL_READ 0
 #define MK_EPOLL_WRITE 1
 #define MK_EPOLL_RW 2
-#define MK_EPOLL_
 
 /* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000
 
-#define MK_EPOLL_LEVEL_TRIGGERED 2  /* default */
-#define MK_EPOLL_EDGE_TRIGGERED 3
+#define MK_EPOLL_LEVEL_TRIGGERED 2        /* default */
+#define MK_EPOLL_EDGE_TRIGGERED  EPOLLET
 
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP 0x2000
@@ -59,6 +58,6 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
 
 int mk_epoll_add(int efd, int fd, int mode, int behavior);
 int mk_epoll_del(int efd, int fd); 
-int mk_epoll_change_mode(int efd, int fd, int mode);
+int mk_epoll_change_mode(int efd, int fd, int mode, int behavior);
 
 #endif

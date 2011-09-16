@@ -4,6 +4,8 @@ LDFLAGS = $LDFLAGS
 DEFS    = $DEFS -DPOSIX
 INCDIR  = -I../../src/include
 OBJECTS = liana_ssl.o
+MATRIX_LIBS = /usr/lib/matrixssl
+MATRIX_HEADERS = /usr/include/libmatrixssl
 
 all: monkey-liana_ssl.so
 

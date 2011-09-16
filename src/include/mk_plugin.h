@@ -235,7 +235,7 @@ struct plugin_api
     int   (*epoll_create) (int);
     int   (*epoll_add) (int, int, int, int);
     int   (*epoll_del) (int, int);
-    int   (*epoll_change_mode) (int, int, int);
+    int   (*epoll_change_mode) (int, int, int, int);
 
     /* socket functions */
     int (*socket_cork_flag) (int, int);
@@ -268,10 +268,10 @@ struct plugin_api
 
     /* event's functions */
     int (*event_add) (int, int, struct plugin *, struct client_session *, 
-                      struct session_request *);
+                      struct session_request *, int);
     int (*event_del) (int);
 
-    int (*event_socket_change_mode) (int, int);
+    int (*event_socket_change_mode) (int, int, int);
 
     /* Time utils functions */
     int (*time_unix)();
@@ -329,10 +329,11 @@ void mk_plugin_preworker_calls();
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
                         struct client_session *cs, 
-                        struct session_request *sr);
+                        struct session_request *sr,
+                        int behavior);
 int mk_plugin_event_del(int socket);
 
-int mk_plugin_event_socket_change_mode(int socket, int mode);
+int mk_plugin_event_socket_change_mode(int socket, int mode, int behavior);
 
 /* Plugins event handlers */
 int mk_plugin_event_read(int socket);
