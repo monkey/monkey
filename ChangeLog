@@ -1,3 +1,933 @@
+commit 05e5cb8fa4f1719d694c50c5f0af5c1bab954588
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Oct 1 01:32:39 2011 -0300
+
+    Palm: improve buffer proxy handler
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c0a466945b0601675b0eddf416a8563155166bed
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Sep 15 23:00:34 2011 -0300
+
+    Update favicon
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 10c3eb27f4f9719c030419fa7cef0b0d09815c0f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Sep 15 22:59:04 2011 -0300
+
+    Epoll: use level triggered mode
+    Palm : use epoll level triggered mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6fc7ae1e80a11417b3c8cf3c20578907113126b6
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sun Sep 11 16:40:26 2011 -0300
+
+    introduce ARRAY_SIZE macro
+    
+    Compute the amount of elements in an array with this.
+
+commit 08d915cdc61e44713ff4f0ccfbfe967632414d13
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Wed Sep 7 12:10:12 2011 -0300
+
+    unlink: check syscall return status
+    
+    This allows to unmask bugs.
+
+commit d63e174440d4a0252979c8addf373ab4909bec46
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Tue Sep 6 12:29:12 2011 -0300
+
+    fix use before init
+    
+    When changing the process' user, we are setting resource limits with unitialized values, thus producing an error when calling setrlimit(2).
+    We need to first get the limits, then reset them with the current = max value changes. This patch also does some trivial function refactoring.
+
+commit abe748dd12da0475c760ecf30c9208339af5186f
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Sep 3 13:02:41 2011 -0300
+
+    remove file boolean values
+    
+    There's absolutely no reason to have specific true/false values for file specific operations. Simply use those defined in mk_macros.
+
+commit 0e04224b855b24c5508d7378c174be1c195c5eff
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Sep 3 12:57:19 2011 -0300
+
+     correct time
+    
+     The month member of the tm structure (broken down by localtime()) uses the [0, 11] range. We need to add
+     one to this variable, otherwise incorrect dates will appear:
+    
+     dave@offbook:~/projects/monkey-dev$ date
+     Wed Aug 31 02:40:01 CLST 2011
+     dave@offbook:~/projects/monkey-dev$ bin/monkey
+     Monkey HTTP Daemon 0.20.0
+     Built : Aug 31 2011 00:05:39 (gcc 4.5.2)
+     Home  : http://www.monkey-project.com
+     * Process ID is 9900
+     * Server socket listening on Port 2001
+     * 5 threads, 101 client connections per thread, total 505
+     * Transport layer by liana in http mode
+     [2011/07/31 02:40:10] [   Info] HTTP Server started
+           ^^
+
+commit bbfe65f3e0fa6fdfda96d06b21963bb6910405ff
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Mon Aug 22 16:00:29 2011 -0300
+
+    Liana_ssl: Added MATRIX_HEADERS to the Makefile.in file, and removed MATRIX_LIBS from the objects line
+
+commit fb8e8b153fac54fca73dbcdfafc367354cf29ac0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 20 17:15:03 2011 -0400
+
+    Add missing headers: mk_socket, mk_signals, mk_server
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6759f328634c1eb20bcd619524798f0e1baa82ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 20 17:12:46 2011 -0400
+
+    Add missing mk_string.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8f03c0b52cc2aa9394b5fdd72997db56c3584af9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 20 17:12:17 2011 -0400
+
+    Fix chunk size
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 805aff2c3dc19f3f5b571bfb0e405ac1d214e655
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 20 15:50:05 2011 -0400
+
+    Palm: do not use chunked transfer encoding on redirection status
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0a73bb565e5861a3d16e590955c4c62ed849eff6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 20 15:27:01 2011 -0400
+
+    Epoll: always process EPOLLIN or EPOLLOUT before EPOLLERR/EPOLLHUP
+    Scheduler: on remove client, always close remote file descriptor
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1f3ae21ddecd675cd16c330d6e032781692e22e1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 19 21:46:52 2011 -0400
+
+    Fix inclusion header in mk_utils.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit df265fc456905e9dae15366307db60053863dcd5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 19 21:44:21 2011 -0400
+
+    Prefix source code files and headers with 'mk_'
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3a7a69bd940fd4432e0214edcb77e6a3205deaf6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 19 20:29:30 2011 -0400
+
+    rename limits.h to mk_limits.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 202e2077b4861deac779a9631f4f0778f3480ee0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 19 20:28:48 2011 -0400
+
+    New sched add event core
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0db9f4e6417ac2b0cdad307b21bc6c374b5a24ff
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jul 23 13:00:18 2011 -0400
+
+    Rename limits.h to mk_limits.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 49e73b5fc5406dc19ae3be3e16ad9bbb6f9a36b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 30 16:11:21 2011 -0400
+
+    New cycle: v0.20.0 - Maduro frito con queso
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a72f658121900f75fc8e948e6d57903a1dff0392
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 30 13:58:51 2011 -0400
+
+    mconf: add index.php to Indexfile by default
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bb23d5f67b2c6da2f214287b319260fb9d35e015
+Author: Christian Stankowic <info@stankowic-development.net>
+Date:   Thu Jun 30 08:56:24 2011 -0400
+
+    Banana: add missing 'status' command in help output
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8bdbcc5009c4ecda0ae60089943a5a233a83f6be
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 29 08:51:12 2011 -0400
+
+    Banana: add missing status command
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8042b2a807fec6771e1209b78c64a5ca832ea150
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 29 08:46:49 2011 -0400
+
+    Configure: add missing changes for banana script
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 34806c72b0e9a1ac310a0edd66e31829516b3714
+Author: Christian Stankowic <info@stankowic-development.net>
+Date:   Wed Jun 29 08:42:15 2011 -0400
+
+    Configure: deprecate old cgi-bin stuff
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit af6230e1c64b5250eb7a00211b6cd75b1e85f789
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 29 08:33:39 2011 -0400
+
+    Palm: use new IP mechanism
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d6fce0889a3158dc4ba412b642a25738d7dfd1d9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 27 12:15:48 2011 -0400
+
+    Core: use epoll LEVEL_TRIGGERED mode
+    
+    Monkey events handler was using the EDGE_TRIGGERED (EPOLLET) for the
+    sockets file descriptors, also doing an unnecessary ioctl() to FIONREAD,
+    this was causing an extra load which can be avoided with LEVEL_TRIGGERED
+    and doing some better handling of buffers to read() incoming data.
+    
+    This patch also fix an unset new_size counter when reallocating the read
+    buffer.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3dcf0ed8c84d0c4e2bc26ce01188d84b1f9498cf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 23:09:48 2011 -0400
+
+    Auth/mkpasswd: fix password store when adding new users
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 60bff1488422cfe843213f74c4c3afa2cdb249f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 13:10:18 2011 -0400
+
+    Exit properly when TransportLayer is not defined
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5f63717867ab301f47421492da575bf4aa2ba530
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 12:46:37 2011 -0400
+
+    Liana_SSL: memory copy of confdir parameter
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 177ff1a29afb90b234e9d5950b328167a7bf78ea
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 12:43:03 2011 -0400
+
+    Liana_SSL: fix liana_conf() parameter
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 297b2a7050e09aa0f7261d6f9b17ec74efc6d867
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 12:41:26 2011 -0400
+
+    Liana_SSL: main setup now is done in _mkp_core_prctx() hook
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 473b1db4542d351b6ed6af14c25230d9770ab57d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 26 12:03:07 2011 -0400
+
+    New TransportLayer directive in monkey.conf
+    
+    This new directive provides to each [SERVER] section the capability to
+    define which transport layer the core server will use. The value of the
+    key is the shortname of one of the network I/O plugin defined in the
+    configuration file plugins.load.
+    
+    Please check the following example for the file monkey.conf:
+    
+    To provide just HTTP use:
+    
+        TransportLayer liana
+    
+    To provide SSL over HTTP (https):
+    
+        TransportLayer liana_ssl
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 304e89e44c3a3505445ede1447cc56defd686bc5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 25 11:47:51 2011 -0400
+
+    Cheetah: add active connections to worker command
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fbdc9edf1cbeaa1a004001117a71eb57f620b031
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 25 09:28:43 2011 -0400
+
+    Logger: format IP address from network address in_addr
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 196e77cf51c8a05deefd65e6d822527700b997b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 25 09:16:02 2011 -0400
+
+    Scheduler: do not bug_on when sched_node is NULL (premature close)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 204e503dec5928b748e2c75184d7300b9b65d847
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 25 09:14:40 2011 -0400
+
+    Mandril: validate IP with new Monkey scheduler info 'in_addr' data
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f191d6502d1ea91fc9f08a1cb8e0f874069d5f32
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 24 23:44:20 2011 -0400
+
+    Scheduler: store in_addr info instead of IPv4 string
+    
+    When a connection arrives, the scheduler assign the new connection
+    to a sched node which hold information about the connection. Previous
+    this patch, it used to store the IP address in a common string, now
+    we just store the data in 'struct in_addr' format.
+    
+    This also reduce the memory used by Monkey as the previous model holds
+    in memory buffers for each possible incomming network address. The
+    memory usage is reduced in about 20KB.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 37d91ae6b85a8f37d94f6c08fca3215f2ac2363a
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Fri Jun 24 22:29:06 2011 -0400
+
+    [PATCH] mk_sched_add_client() does not increment active_connections. Issue solved
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4dc835695c2afc587082f7df24e14d958172b9de
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Fri Jun 24 21:36:00 2011 -0400
+
+    [PATCH] Useless mutex in mk_sched_launch_thread() deleted.
+    
+    A more convenient use for mk_sched_register_thread() to avoid search the thinfo structure in sched_list.
+    Memory leak in mk_sched_launch_thread() fixed.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 46b0505de7de3ecd2d873529f4af5c31675bc6c3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 24 12:26:51 2011 -0400
+
+    Mandril: new rules model
+    
+    Now mandril plugin restrict IP address by specific ip or through
+    a defined subnet, the new configuration model looks like:
+    
+    [RULES]
+        Deny_IP  10.20.1.27
+        Deny_IP  192.168.1.0/24
+        Deny_URL /imgs
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 133d40a60ab0368daff5213113d3c7c4b29f3ca4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 22 08:24:41 2011 -0400
+
+    Update TODO List
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 348ec85e1e0b027e8423957902962b66685c232f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 20 16:31:54 2011 -0400
+
+    Liana_SSL: New version 0.2, view full log for details
+    Liana_SSL: New Makefile macros MATRIX_LIBS and MATRIX_HEADERS
+    Liana_SSL: Validate MatrixSSL version, requires >= 3.2.0
+    Liana_SSL: Extra validation messages for certificate
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a59dd35394d168897f3456da1534fd4c2c6b6422
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 20 12:40:43 2011 -0400
+
+    Rename macro unlikely to mk_unlikely
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f72b9bda71acb7e3fa2e75e6200eecc15eddf76d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 20 10:42:16 2011 -0400
+
+    Liana_SSL: Fix Makefile.in to avoid recompile if objects have not changed
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d003ab6784bf455f1ab3a51a82ff05776c38120d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 17 14:46:54 2011 -0400
+
+    Palm: Fix Makefile.in to avoid recompile if objects have not changed
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f71044a942b560ff8665f68ce304cb9f86476f70
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 17 14:44:19 2011 -0400
+
+    Auth: Fix Makefile.in to avoid recompile if objects have not changed
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0aba529d1ec25a2d4d1d875625c400e0bd029125
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 17 09:51:10 2011 -0400
+
+    Config: deprecate strtok_*()
+    Config: EXIT_FAILURE on error
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 724a3215439fcc51d7a1fa005ed4fab97acc3cce
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 16 23:22:00 2011 -0400
+
+    Plugin: just validate network plugin in TRACE mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1696e4afa7b676a576ac088b70219182347424f2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 16 17:50:40 2011 -0400
+
+    Configure: fix patch level grr
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b2d28c4ca9140894767d0349b5650ba3f32a359
+Author: Jacques-D. Piguet <Jacques.Piguet@bluewin.ch>
+Date:   Thu Jun 16 17:48:03 2011 -0400
+
+    Banana: get port and pid file from the config file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f0a324df97edcc4ae78910a8b0ff2f8040ea5b09
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 15 22:41:50 2011 -0400
+
+    Daemon/Setuid: fix umask for files and seteuid undo routine
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 777624a0a9dedba70cbf9f80b10d425a52b86f4a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 15 17:27:21 2011 -0400
+
+    Configure: just 'install' command strip binaries
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 39a2a5763f381abb4b992725ec8f1c6803e27cd3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 15 08:27:23 2011 -0400
+
+    Fix Background mode: parent exit with EXIT_SUCCESS
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cacc5bf3b272dfbbcb1293d321b373c0fbd70250
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 14 22:31:25 2011 -0400
+
+    file_info: add boolean field is_file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0871673bfdf36ff0c68af786f004c5298c4eb020
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 14 22:27:14 2011 -0400
+
+    Auth: read users credentials and validate on-fly
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d46a7a41c18c53f5887a42a550249b5003f3ba98
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 13 22:50:57 2011 -0400
+
+    Auth: associate locations and users with virtual hosts
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2d8429351d019d8606dd6a0a0ae51cea62f03b8c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 12 22:39:55 2011 -0400
+
+    Auth: initial import
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1a714b5e99fdcad949ae4e9179b9aa3f1b21b84e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 12 13:01:05 2011 -0400
+
+    Palm: move plugin from EXPERIMENTAL to DISABLED
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 10f7def8eb52d80816d441daa24fd313310449b9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 8 23:45:06 2011 -0400
+
+    Palm: Fix CGI headers and better event management
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 35cebc67fe19d5436d5c03c0fa70f23989cb0604
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 16 14:14:02 2011 -0400
+
+    Palm: add ending CRLFCRLF to palm request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5e53b7014cff6d5c1d023b2c3bf1d4dae57d4acb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 14 08:51:55 2011 -0400
+
+    Liana_SSL: fix usage of api->file_get_info()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3b29ce2ffa807041c56e4eb3511f3e977d781649
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 14 08:31:03 2011 -0400
+
+    Minor messages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d41967a0e5abba26a95cb790bccae3bbbf608192
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 11 17:21:14 2011 -0400
+
+    Palm: add REMOTE_PORT CGI variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4b80c14f89dba7f2fd5f5befdd0e8c41c0a6c62d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 11 16:44:35 2011 -0400
+
+    Config: export server socket in config struct
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5a7589a8171e548e65c73370048e2f5ecd0b7082
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 11 16:43:38 2011 -0400
+
+    Palm: complete CGI headers for palm request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 284caee49b977dd932b1a63e2926728a29c9d5e8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 11 12:51:24 2011 -0400
+
+    Fix host_alias setup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a651b6b2aa519570bebef426feed2e4d6a1fc850
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 9 23:01:12 2011 -0400
+
+    Palm: new template request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2c071b07768ed75c53525e9a55d88c54f8e34c10
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 9 11:13:02 2011 -0400
+
+    Fix headers_toc size in session_request struct
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 35074388b8358119e0d565e2bbd18ecfd375161c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 18 14:13:20 2011 -0400
+
+    Do iov_add_entry() inline function
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a877cd3396e1298b80c2b864c77e1ef6c6432b58
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 15 14:11:53 2011 -0400
+
+    Fix some trace messages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e12a7f8f7951602bd36b1c38b2567ef77ccff9c3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 15 11:43:27 2011 -0400
+
+    Cheetah: fix workers command
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2707c427162cfe651c48490583dd62b2856b66e2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 15 11:33:46 2011 -0400
+
+    Request: reuse session_request on non-keepalive request
+    
+    A new static field has been added to client_session struct called
+    sr_fixed, which aims to provide an already allocated space for
+    normal and keep alive request. If the request is NOT pipelined,
+    we are not allocating new memory anymore under the same
+    client_session.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0f11f5b157ad8e0f8abe1ca43456d15ef87e928e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 15 09:18:13 2011 -0400
+
+    Little cleanup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4452b7bb44f492b8fead0a63ed821c2128f9e2f7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 14 08:12:07 2011 -0400
+
+    Scheduler: export sched node to worker scope through thread_key
+    
+    Inside a worker, they are multiple calls to the function
+    mk_sched_get_thread_conf() which returns the sched node associated
+    to the worker in question. Previously this function was matching
+    each scheduler node information with the thread ID, now the
+    function knows the sched node through a thread_key avoiding
+    'for' cycles and multiple comparissons.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5ddd71421893b317512fad69fe5af2904f95d183
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 13 11:14:05 2011 -0400
+
+    Fix mk_sched_update_conn_status(): search in the whole queue
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 674ff58696c101e9028867b1cee62a0a5e386b9a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 12 19:49:54 2011 -0400
+
+    Optimize headers TOC parser
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dc05977f9c1c766fd480c2ab0f0ba167a805b22a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 12 10:03:55 2011 -0400
+
+    mk_socket_get_ip() now returns ip string length
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e574070645d9206b942a022989fa232abc7aef57
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 11 06:43:12 2011 -0400
+
+    Scheduler optimization
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a1938b427dad13b90a432924d840349946edc73e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 9 23:55:52 2011 -0400
+
+    Validate return of setsockopt()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bddacdf81b5b36835e325594c07d4e6af8bf62aa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 9 23:38:22 2011 -0400
+
+    Server socket now use TCP_DEFER_ACCEPT socket option
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fb01bca5fe5384827a9b36276d46dc9af76dd7d2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 16:21:26 2011 -0400
+
+    Palm: remove unused headers by Monkey
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73b73026cbf380066063c079cc7d1900383fe135
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Apr 7 15:47:45 2011 -0300
+
+    Added macros to calculate sub-net,broadcast and network using the ip address on sock_addr
+
+commit 2d408ca9d59484661975be9aa332cafacd3fc139
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 11:54:14 2011 -0400
+
+    Limit hostname aliases length to 64 bytes
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f09a72dd06a031c5faf7e836ea843c582fe0276d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 11:46:30 2011 -0400
+
+    Force config hostnames to lowercase
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2fd9dfbfd7a9389d488da02b7a4df9151346e102
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 10:31:23 2011 -0400
+
+    Reponse headers now are static allocated inside session_request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 40bcb02f6dc5acc1abe8e261459e84bc7dc1fd4f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 09:04:02 2011 -0400
+
+    New client_session->body_fixed for common small requests
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ad8624255ed1696bab49c2b29d85701bf8705b2d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 08:51:37 2011 -0400
+
+    Pass sched node on mk_session_create
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 20c016d61defab73e049fbe520e0fa0f462fe5b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 08:05:19 2011 -0400
+
+    Fix recently introduced overflow when parsing Host header
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6cdca627e934ecb8e3e3b7643b2cf118f3b14be2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 07:37:36 2011 -0400
+
+    Just invoke mk_socket_safe_event_write when it has been specified by config
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b5f52730dc9b4b5a9dc539d4d412e72626e0d36d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 07:00:32 2011 -0400
+
+    Drop parsing for unused request headers, just keep TOC
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b2fd300fd27f26f0a0bf3ed5788b238f44c92d33
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 6 22:10:03 2011 -0400
+
+    Remove unnecessary calls to mk_pointer_reset
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8963afbaeac4dd10b297ff91e54f45b0d8e26464
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 6 21:52:04 2011 -0400
+
+    When parsing Host header, do not malloc on port field
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b008db1dab120d0011f652a70bcbeab286047ea
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 6 16:50:38 2011 -0400
+
+    Rewrite of _mk_string_search(): 57% performance gained
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73550a8535dad2fd9c621939b314ab56b41630af
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 6 11:57:37 2011 -0400
+
+    update debug request blocks
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9979882526b792c6b593bfa2264401ec9750738b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 6 09:51:16 2011 -0400
+
+    QA: Improve keepalive test
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b44e74fc4e5b289b711142a0e9769b0081ad9dda
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 5 12:11:43 2011 -0400
+
+    Do not allow pipelining requets in non-keepalive connections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 54823ff0c76b060126d2bdc620bf8fd4bff259e1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 5 08:20:47 2011 -0400
+
+    Fix MK_PATH_BASE
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d648dc88b960c3453e36dace0ebf5fb5a1665a75
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 5 08:17:44 2011 -0400
+
+    real_path_static now uses MK_PATH_BASE
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 137abdd187ed82b452c5c1c3bef436e572401f66
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 5 08:01:14 2011 -0400
+
+    session_request: new real_path_static field and new macro MAX_PATH_BASE
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ec9b5a0cb1e04851da1d81ea78e1b8ec9fed5b9a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 5 06:03:23 2011 -0400
+
+    mk_file_get_info() now accept two parameters and return int value.
+    
+    the new definition is as follow:
+    
+      int mk_file_get_into(const char *path, struct file_info *f_info);
+    
+    so the called needs to pass by reference an allocated struct for
+    f_info where the file information will be stored.
+    
+    At Monkey core level, this new method reduce one malloc/free in the
+    session_request structure, as the new file_info node is allocated
+    as static and not dynamic as it used to.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4f2fc9f8879bc3721875e78814ecee63bfa2c255
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 4 21:05:34 2011 -0400
+
+    Deprecate mk_string_remove_space()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5fcf77ecaa00ba4e3315d52f3c981cd82962eebe
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 4 14:56:59 2011 -0400
+
+    Liana_SSL: use MK_SOMAXCONN
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1993a7405eba5d44c137dfc9add8ac2cb8f44100
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 4 14:53:34 2011 -0400
+
+    Deprecate mk_utils_get_somaxconn, new macro MK_SOMAXCONN
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 001b55f596cd64957f434e3c96868a6299c5d2f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 3 21:21:58 2011 -0400
+
+    Re-enable return value MK_PLUGIN_RET_CONTINUE for STAGE_30
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d482f0d4b4cb75aeac24fbdcc97b1240dff5f318
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 31 04:47:56 2011 -0400
+
+    Monkey 0.13.2
+
 commit a1b29ab0129b41d9e53772bcd26d0009a30c3e04
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Mar 30 17:22:38 2011 -0400
