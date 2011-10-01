@@ -41,7 +41,6 @@
 #include "mk_request.h"
 #include "mk_http.h"
 #include "mk_http_status.h"
-/*#include "string.h"*/
 #include "mk_string.h"
 #include "mk_config.h"
 #include "mk_scheduler.h"

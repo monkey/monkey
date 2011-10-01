@@ -30,19 +30,35 @@ struct mk_palm_request
     int client_fd;
     int palm_fd;
 
-    char buffer[MK_PALM_BUFFER_SIZE];
-    int buffer_len;
-    int buffer_offset;
+    /* Incomming data from Palm Server */
+    char in_buffer[MK_PALM_BUFFER_SIZE];
 
-    int len_pending;
-    int len_read;
-    int offset_pending;
+    /* 
+     * Outgoing data, after write to the client from 
+     * in_buffer, any data that could not be sent on that
+     * write is copied to out_buffer, then in_buffer is set
+     * to zero
+     */
+    char out_buffer[MK_PALM_BUFFER_SIZE];
+
+    /* Data length in in_buffer */
+    int in_len;
+
+    /* Data length in out_buffer */
+    int out_len;
+
+    /* 
+     * Used to send remaining data from the firt amount received
+     * from Palm server, in case to add some headers...
+     */
+    int in_offset;
 
     /* Traffic bytes between plugin and Palm server */
     unsigned long bytes_sent;
     unsigned long bytes_read;
     int headers_sent;
     int is_te_chunked;
+    int pending_end_chunk;
 
     struct mk_palm *palm;
 

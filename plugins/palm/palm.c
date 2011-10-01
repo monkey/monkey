@@ -299,8 +299,9 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
      * We need to set the remote client socket event to READ, right now the socket
      * is in write mode and it will be joining this function every time until some
      * data is send.
-     */
+     
     mk_api->event_socket_change_mode(cs->socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+    */
     return MK_PLUGIN_RET_CONTINUE;
 }
 
@@ -360,35 +361,33 @@ int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
     return pr->bytes_sent;
 }
 
-int mk_palm_send_chunk(int socket, char *buffer, int len)
+int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
 {
     int n;
-    char *chunk_size=0;
-    unsigned long chunk_len=0;
+    int chunk_len;
+    int chunk_size = 16;
+    char chunk_header[chunk_size];
+    
+    if  (len <=0){
+        return 0;
+    }
 
-    mk_api->socket_cork_flag(socket, TCP_CORK_ON);
-    mk_api->str_build(&chunk_size, &chunk_len, "%x%s", len, MK_CRLF);
-    n = mk_api->socket_send(socket, chunk_size, chunk_len);
-    mk_api->mem_free(chunk_size);
 
-    if (n < 0) {
-        PLUGIN_TRACE("Error sending chunked header, socket_send() returned %i", n);
-        perror("socket_send");
-        return -1;
+    mk_bug(len <= 0);
+
+    if (is_chunked == MK_TRUE) {
+        mk_api->socket_cork_flag(socket, TCP_CORK_ON);
+        chunk_len = snprintf(chunk_header, chunk_size - 1, "%x%s", len, MK_CRLF);
+        n = mk_api->socket_send(socket, chunk_header, chunk_len);
     }
 
     n = mk_api->socket_send(socket, buffer, len);
 
-    PLUGIN_TRACE("SEND CHUNK: requested %i, sent %i", len, n);
-
-    if (n < 0) {
-        PLUGIN_TRACE("Error sending chunked body, socket_send() returned %i", n);
-        perror("socket_send");
-        return -1;
+    if (is_chunked == MK_TRUE) {
+        mk_api->socket_send(socket, MK_CRLF, 2);
+        mk_api->socket_cork_flag(socket, TCP_CORK_OFF);
     }
 
-    mk_api->socket_send(socket, MK_CRLF, 2);
-    mk_api->socket_cork_flag(socket, TCP_CORK_OFF);
     return n;
 }
 
@@ -494,12 +493,48 @@ int hangup(int sockfd)
 }
 
 /* _MKP_EVENTs */
+int _mkp_event_write(int sockfd)
+{
+    int n;
+    struct mk_palm_request *pr;
+
+    pr = mk_palm_request_get_by_http(sockfd);
+    if (!pr) {
+        PLUGIN_TRACE("[FD %i] Not an involved Palm event", sockfd);
+        return MK_PLUGIN_RET_EVENT_CONTINUE;
+    }
+
+    /* 
+     * Write when data exists and the plugin already processed the
+     * response HTTP headers
+     */
+    PLUGIN_TRACE("pr->in_len: %i", pr->in_len);
+
+    if (pr->in_len > 0 && pr->headers_sent == MK_TRUE) {
+        n = mk_palm_write(sockfd, pr->in_buffer + pr->in_offset,
+                          pr->in_len - pr->in_offset, pr->is_te_chunked);
+
+        PLUGIN_TRACE("WRITTEN TO CLIENT: %i/%i", n, pr->in_len);
+
+        if (n >= 0 && n < (pr->in_len - pr->in_offset)) {
+            PLUGIN_TRACE("SAVING TO OUT_BUFFER!!!!!!!!!!!!!!!!");
+            strncpy(pr->out_buffer, pr->in_buffer, pr->in_len - n);
+            pr->out_len = pr->in_len - n;
+        }
+        pr->in_len = 0;
+        pr->in_offset = 0;
+    }
+
+    PLUGIN_TRACE("EVENT WRITE!!!!!!!!!!!!!!!!!!!!");
+    return MK_PLUGIN_RET_EVENT_OWNED;
+}
+
+/* _MKP_EVENTs */
 int _mkp_event_read(int sockfd)
 {
     int n;
     int headers_end = -1;
     int offset;
-    int read_offset = 0;
     struct mk_palm_request *pr;
 
     pr = mk_palm_request_get(sockfd);
@@ -508,16 +543,16 @@ int _mkp_event_read(int sockfd)
         PLUGIN_TRACE("[FD %i] this FD is not a Palm Request", sockfd);
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
-    
+
     /* Read incoming data from Palm socket */
-    n = mk_api->socket_read(pr->palm_fd, pr->buffer + pr->buffer_len,
-                            (MK_PALM_BUFFER_SIZE - pr->buffer_len));
+    n = mk_api->socket_read(pr->palm_fd, pr->in_buffer + pr->in_len,
+                            (MK_PALM_BUFFER_SIZE - pr->in_len));
 
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i | CLIENT_FD %i | PALM_FD %i]", sockfd, pr->client_fd, pr->palm_fd);
     PLUGIN_TRACE(" just readed  : %i", n);
     if (pr->headers_sent == MK_TRUE) {
-        PLUGIN_TRACE(" headers sent : YES", pr->headers_sent);
+        PLUGIN_TRACE(" headers sent : YES");
     }
     else {
         PLUGIN_TRACE(" headers sent : NO");
@@ -528,24 +563,26 @@ int _mkp_event_read(int sockfd)
         PLUGIN_TRACE(" ending connection: read() = %i", n);
 
         if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
-            n = mk_palm_send_end_chunk(pr->client_fd, pr);
+            mk_palm_send_end_chunk(pr->client_fd, pr);
         }
 
         return MK_PLUGIN_RET_EVENT_CLOSE;
     }
 
     /* Increase buffer data length counter */
-    pr->buffer_len += n;
+    pr->in_len += n;
 
     /* If response headers + PHP headers has NOT been sent back to client... */
     if (pr->headers_sent == MK_FALSE) {
         PLUGIN_TRACE("No headers sent, searching CRLFCRLF...");
 
-        headers_end = mk_api->str_search(pr->buffer,
+        headers_end = mk_api->str_search(pr->in_buffer,
                                          MK_IOV_CRLFCRLF, MK_STR_SENSITIVE);
-        
+
+        //mk_info("headers_end: %i", headers_end);
+
         if (headers_end <= 0)  {
-            headers_end = mk_api->str_search(pr->buffer,
+            headers_end = mk_api->str_search(pr->in_buffer,
                                              MK_IOV_LFLFLFLF, MK_STR_SENSITIVE);
         }
 
@@ -556,55 +593,37 @@ int _mkp_event_read(int sockfd)
 
         PLUGIN_TRACE("Palm header ends in buffer pos %i", headers_end);
 
-        if (headers_end > 0) {
-            headers_end += 4;
-        }
+        /* Add bytes length for two break lines */
+        headers_end += 4;
         
-        /* Check if some 'Status:' field was sent in the first line */
-        offset = mk_palm_cgi_status(pr->buffer, pr->sr);
-        
-        /* Send headers */
+        /* 
+         * Check if some 'Status:' field was sent in the first line, update the
+         * response HTTP status and return the offset of the content
+         */
+        offset = mk_palm_cgi_status(pr->in_buffer, pr->sr);
+
+        /* Send HTTP response headers */
         mk_palm_send_headers(pr);
-        n = mk_api->socket_send(pr->client_fd, 
-                                pr->buffer + offset, 
-                                headers_end - offset);
-        
+
+        /* 
+         * Send remaining Palm HTTP headers, we cannot send all in the same block
+         * as the response body can need a chunked transfer encoding type for the 
+         * next reads from Palm server
+         */
+        n = mk_palm_write(pr->client_fd, pr->in_buffer + offset,
+                          headers_end - offset, MK_FALSE);
+
         PLUGIN_TRACE("[CLIENT_FD %i] Headers sent to HTTP client: %i", pr->client_fd, n);
 
         if (n < 0) {
             return MK_PLUGIN_RET_EVENT_CLOSE;
         }
-        
+
         /* Enable headers flag */
         pr->headers_sent = MK_TRUE;
-        pr->buffer_offset = n + offset;
-        read_offset = headers_end;
+        pr->in_offset = headers_end + offset;
+        //mk_info("off: %i, len: %i", pr->in_offset, pr->in_len);
     }
-
-    /* Send to client the palm data buffer in pending status */
-    while (pr->buffer_offset < pr->buffer_len) {
-            if (pr->sr->protocol >= HTTP_PROTOCOL_11) {
-                n = mk_palm_send_chunk(pr->client_fd,
-                                       pr->buffer + pr->buffer_offset,
-                                       (unsigned int)(pr->buffer_len - pr->buffer_offset));
-            }
-            else {
-                n = mk_api->socket_send(pr->client_fd,
-                                        pr->buffer + pr->buffer_offset,
-                                        (unsigned int) (pr->buffer_len - pr->buffer_offset));
-            }
-            
-            if (n <= 0) {
-                PLUGIN_TRACE("[CLIENT_FD %i] WRITE ERROR", pr->client_fd);
-                return MK_PLUGIN_RET_EVENT_CLOSE;
-            }
-
-            PLUGIN_TRACE("[CLIENT_FD %i] Bytes sent: %i", pr->client_fd, n);
-            pr->buffer_offset += n;
-    }
-    
-    pr->buffer_offset = 0;
-    pr->buffer_len = 0;
 
     /* Update thread node info */
     mk_palm_request_update(sockfd, pr);

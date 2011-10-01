@@ -43,9 +43,10 @@ struct mk_palm_request *mk_palm_request_create(int client_fd,
     new->cs = cs;
     new->sr = sr;
 
-    new->buffer_len = 0;
-    new->buffer_offset = 0;
-
+    new->in_len = 0;
+    new->in_offset = 0;
+    new->out_len = 0;
+    new->pending_end_chunk = MK_FALSE;
     return new;
 }
 

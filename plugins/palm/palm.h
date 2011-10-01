@@ -23,7 +23,7 @@
 #ifndef MK_PALM_H
 #define MK_PALM_H
 
-#define MK_PALM_BUFFER_SIZE 32768
+#define MK_PALM_BUFFER_SIZE 32768 /* 32KB */
 
 #include "request.h"
 
