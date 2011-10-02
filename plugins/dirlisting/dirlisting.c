@@ -106,7 +106,7 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
     entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
 
     if (mk_api->file_get_info(full_path, &entry->info) != 0) {
-        mk_mem_free(entry);
+        mk_api->mem_free(entry);
         return NULL;
     }
 
