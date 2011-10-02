@@ -339,9 +339,9 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
 }
 
-int mk_utils_print_errno(int errno)
+int mk_utils_print_errno(int n)
 {
-        switch(errno) {
+        switch(n) {
         case EAGAIN:
             MK_TRACE("EAGAIN");
             return -1;

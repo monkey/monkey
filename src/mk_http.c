@@ -130,7 +130,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int ret;
     int bytes = 0;
     struct mimetype *mime;
-
+    
     MK_TRACE("HTTP Protocol Init");
 
     /* Request to root path of the virtualhost in question */
@@ -368,6 +368,11 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     }
 
     sr->loop++;
+
+    if (nbytes < 0) {
+        return EXIT_ABORT;
+    }
+
     return sr->bytes_to_send;
 }
 

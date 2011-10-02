@@ -515,6 +515,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     status = mk_http_init(cs, sr);
 
     MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
+
     return status;
 }
 
