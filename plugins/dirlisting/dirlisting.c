@@ -22,7 +22,7 @@
 /*
  * Some history about this module
  * ------------------------------
- * 2008 - Rewrite module, suport dynamic themes by Eduardo
+ * 2008 - Rewrite module, suport dynamic themes by Eduardo Silva
  * 2008 - Felipe Astroza (max) provided the mk_dirhtml_human_readable_size_func()
  * 2007 - Add struct client_request support by Eduardo
  * 2002 - Original version written by Daniel R. Ome
@@ -166,7 +166,6 @@ struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
         if (!ent->d_name) {
             puts("mk_dirhtml :: buffer error");
         }
-
 
         mk_api->str_build(&full_path, &len, "%s%s", path, ent->d_name);
         entry = mk_dirhtml_create_element(ent->d_name,
@@ -458,11 +457,6 @@ struct dirhtml_template
     node->tags = tpl;
     node->next = NULL;
 
-    /*
-       if(tag_id >= 0){
-       printf("\n  -> %s", node->tags[node->tag_id]);
-       }
-     */
     if (!header) {
         return (struct dirhtml_template *) node;
     }
@@ -717,8 +711,15 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 
     /* Sending headers */
     n = (int) mk_api->header_send(cs->socket, cs, sr);
+    if (n < 0) {
+        /* FIXME: requires to free file_list */
+        return -1;
+    }
 
-    /* Creating response template */
+    /* 
+     * Creating response template
+     */
+
     /* Set %_html_title_% */
     title = mk_api->pointer_to_buf(sr->uri_processed);
     values_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,

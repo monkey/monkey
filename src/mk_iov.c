@@ -69,15 +69,27 @@ inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
 
 struct mk_iov *mk_iov_create(int n, int offset)
 {
+    int i;
     struct mk_iov *iov;
 
-    iov = mk_mem_malloc(sizeof(struct mk_iov));
+    iov = mk_mem_malloc_z(sizeof(struct mk_iov));
     iov->iov_idx = offset;
     iov->io = mk_mem_malloc(n * sizeof(struct iovec));
     iov->buf_to_free = mk_mem_malloc(n * sizeof(char *));
     iov->buf_idx = 0;
     iov->total_len = 0;
     iov->size = n;
+
+    /* 
+     * Make sure to set to zero initial entries when an offset
+     * is specified
+     */
+    if (offset > 0) {
+        for (i=0; i < offset; i++) {
+            iov->io[0].iov_base = NULL;
+            iov->io[0].iov_len = 0;
+        }
+    }
 
     return iov;
 }
@@ -108,6 +120,8 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 
     n = writev(fd, mk_io->io, mk_io->iov_idx);
     if( n < 0 ) {
+        perror("writev");
+        mk_iov_print(mk_io);
         MK_TRACE( "writev() error on FD %i", fd);
         return -1;
     }
@@ -151,6 +165,7 @@ void mk_iov_print(struct mk_iov *mk_io)
     for (i = 0; i < mk_io->iov_idx; i++) {
         printf("\n[index=%i len=%i]\n'", i, (int) mk_io->io[i].iov_len);
         fflush(stdout);
+        continue;
         for (j=0; j < mk_io->io[i].iov_len; j++) {
             c = mk_io->io[i].iov_base;
             printf("%c", c[j]);

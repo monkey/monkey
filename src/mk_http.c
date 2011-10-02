@@ -759,7 +759,7 @@ int mk_http_request_end(int socket)
     mk_request_free_list(cs);
 
     if (ka < 0) {
-        MK_TRACE("[FD %i] No KeepAlive mode, remove", cs->socket);
+        MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
         mk_session_remove(socket);
     }
     else {
