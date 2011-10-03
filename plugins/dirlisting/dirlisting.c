@@ -497,7 +497,8 @@ int mk_dirhtml_template_len(struct dirhtml_template *tpl)
 }
 
 struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
-                                        struct dirhtml_value *values)
+                                        struct dirhtml_value *values,
+                                        int is_chunked)
 {
     /*
      * template = struct { char buf ; int len, int tag }
@@ -513,7 +514,7 @@ struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
     tpl_len = mk_dirhtml_template_len(template);
 
     /* we duplicate the lenght in case we get separators */
-    iov = (struct mk_iov *) mk_api->iov_create(tpl_len * 2, 1);
+    iov = (struct mk_iov *) mk_api->iov_create(1 + tpl_len * 2, 1);
     tpl = template;
 
     while (tpl) {
@@ -531,7 +532,6 @@ struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
                 else {
                     val = val->next;
                 }
-
             }
         }
         /* static */
@@ -541,6 +541,11 @@ struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
         }
         tpl = tpl->next;
     }
+
+    if (is_chunked == MK_TRUE) {
+        mk_api->iov_add_entry(iov, "\r\n", 2, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
+
     return (struct mk_iov *) iov;
 }
 
@@ -642,7 +647,7 @@ int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
 
     if (sr->protocol >= HTTP_PROTOCOL_11) {
         /* Chunk header */
-        mk_api->str_build(&buf, &len, "%x%s", data->total_len - 1, MK_CRLF);
+        mk_api->str_build(&buf, &len, "%x\r\n", data->total_len - 2);
 
         /* Add chunked information */
         mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
@@ -681,6 +686,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 {
     DIR *dir;
     int i = 0, n;
+    int is_chunked = MK_FALSE;
     char *title = 0;
     mk_pointer sep;
 
@@ -707,6 +713,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 
     if (sr->protocol >= HTTP_PROTOCOL_11) {
         sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        is_chunked = MK_TRUE;
     }
 
     /* Sending headers */
@@ -732,11 +739,11 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 
     /* HTML Header */
     iov_header = mk_dirhtml_theme_compose(mk_dirhtml_tpl_header,
-                                          values_global);
+                                          values_global, is_chunked);
 
     /* HTML Footer */
     iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer,
-                                          values_global);
+                                          values_global, is_chunked);
 
     /* Creating table of contents and sorting */
     toc = mk_api->mem_alloc(sizeof(struct mk_f_list) * list_len);
@@ -787,7 +794,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
                               toc[i]->size, (char **) _tags_entry);
 
         iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
-                                             values_entry);
+                                             values_entry, is_chunked);
 
         /* send entry */
         n = mk_dirhtml_send(cs->socket, sr, iov_entry);
