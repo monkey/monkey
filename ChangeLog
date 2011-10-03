@@ -1,3 +1,62 @@
+commit e7822845c0eb2f4bb7276d21f95ad5bafc30c795
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 3 09:49:06 2011 -0300
+
+    Fix #75: Handle DT_UNKNOWN in struct dirent *ent->d_type. by Gatling
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bb0bf026cc2aecf99309fef0b25b8d1e440b7a05
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 2 23:49:10 2011 -0300
+
+    Fix #74: chunked encoding in dirlisting is broken
+    
+    When HTTP/1.1 was used, dirlisting was counting the ending CRLF as
+    part of the chunk length. This patch set's the proper chunk length
+    and add the ending CRLF after set the chunk data.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7a86a147021523d9c867c77f15b0467d93c8e699
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 2 15:16:32 2011 -0300
+
+    Dirlisting: use API mem_free instead of mk_mem_free()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5396125684ec6381ac53e2625b004e01d19867d8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 2 12:08:37 2011 -0300
+
+    Fix #76: dirlisting returns nothing for HTTP/1.0 request
+    
+    When creating an 'iov' with mk_iov_create() and using an offset,
+    the entries before the offset index were not set to len=0 and
+    buf=NULL. This patch fix that issue and makes the dirlisting
+    plugin work as expected.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c265bb057482e39eab74646c8259615430efd0ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 2 09:42:23 2011 -0300
+
+    Fix ticket #77: 100% CPU usage after having broken connection
+    
+    When sending a static file content fails due to a broken
+    connection, mk_http_send_file() now returns EXIT_ABORT to finalize
+    the client session.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5a3a09aa1660f0c34418ccba828c9199418f09b0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Oct 1 01:38:19 2011 -0300
+
+    Monkey 0.20.0
+
 commit 05e5cb8fa4f1719d694c50c5f0af5c1bab954588
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Oct 1 01:32:39 2011 -0300
