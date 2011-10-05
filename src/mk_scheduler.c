@@ -65,7 +65,7 @@ static inline int _next_target()
  */
 inline int mk_sched_add_client(int remote_fd)
 {
-    int t=0;
+    int r, t=0;
     struct sched_list_node *sched;
 
     /* Next worker target */
@@ -74,10 +74,18 @@ inline int mk_sched_add_client(int remote_fd)
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
-    mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
-                 MK_EPOLL_LEVEL_TRIGGERED);
+    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
+                      MK_EPOLL_LEVEL_TRIGGERED);
 
-    return 0;
+    /* 
+     * Increment the active connections counter for the scheduler node in
+     * question.
+     */
+    if (r == 0) {
+        sched->active_connections += 1;        
+    }
+
+    return r;
 }
 
 /*
@@ -114,7 +122,6 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
             }
 
             /* Socket and status */
-            sched->active_connections += 1;
             sched->queue[i].socket = remote_fd;
             sched->queue[i].status = MK_SCHEDULER_CONN_PENDING;
             sched->queue[i].arrive_time = log_current_utime;
