@@ -288,8 +288,9 @@ int _mkp_init(void **api, char *confdir)
     if (mk_logger_master_path) {
         fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
         if (fd == -1) {
-            mk_warn("Could not open/create master logfile %s", mk_logger_master_path);
-            mk_logger_master_path = NULL;
+            mk_err("Could not open/create master logfile %s", mk_logger_master_path);
+            exit(EXIT_FAILURE);
+
         }
         else {
             /* Close test FD for MasterLog */

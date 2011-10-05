@@ -458,6 +458,7 @@ void mk_print(int type, const char *format, ...)
     vprintf(format, args);
     va_end(args);
     printf("%s\n", ANSI_RESET);
+    fflush(stdout);
 }
 
 pthread_t mk_utils_worker_spawn(void (*func) (void *))
