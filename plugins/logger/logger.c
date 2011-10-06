@@ -202,15 +202,14 @@ void *mk_logger_worker_init(void *args)
                      * if our buffer is full and we cannot open the logfile,
                      * we should consume the information in some way :(
                      */
-                    if (bytes >= buffer_limit) {
-                        mk_warn("Logger buffer is full, fake consuming");
-                        char buf[255];
-                        do {
-                            slen = read(events[i].data.fd, buf, 255);
-                        } while (slen > 0);
-
-                        close(flog);
-                    }
+                    mk_warn("Logger buffer is full, fake consuming");
+                    int consumed = 0;
+                    char buf[255];
+                    do {
+                        slen = read(events[i].data.fd, buf, 255);
+                        if (slen > 0) { consumed += slen; }
+                        else { break; }
+                    } while (consumed < bytes);
                     continue;
                 }
 
