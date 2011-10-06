@@ -330,7 +330,8 @@ void _mkp_core_prctx()
 
     /* Restore STDOUT if we are in background mode */
     if (mk_logger_master_path != NULL && mk_api->config->is_daemon == MK_TRUE) {
-        mk_logger_master_file = freopen(mk_logger_master_path, "a+", stdout);
+        mk_logger_master_stdout = freopen(mk_logger_master_path, "a+", stdout);
+        mk_logger_master_stderr = freopen(mk_logger_master_path, "a+", stderr);
         mk_logger_print_details();
     }
 

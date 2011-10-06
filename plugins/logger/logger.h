@@ -33,7 +33,8 @@ int mk_logger_timeout;
 
 /* MasterLog variables */
 char *mk_logger_master_path;
-FILE *mk_logger_master_file;
+FILE *mk_logger_master_stdout;
+FILE *mk_logger_master_stderr;
 
 pthread_key_t timer;
 pthread_key_t cache_content_length;
