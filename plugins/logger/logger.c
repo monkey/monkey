@@ -114,9 +114,9 @@ void *mk_logger_worker_init(void *args)
     int efd, max_events = mk_api->config->nhosts;
     int i, bytes, err;
     int flog;
+    int clk;
     long slen;
     int timeout;
-    int clk;
     char *target;
     struct mk_list *head;
     struct log_target *entry;
@@ -172,7 +172,7 @@ void *mk_logger_worker_init(void *args)
 
         struct epoll_event events[max_events];
         int num_fds = epoll_wait(efd, events, max_events, -1);
-
+        
         clk = mk_api->time_unix();
 
         for (i = 0; i < num_fds; i++) {
@@ -193,10 +193,24 @@ void *mk_logger_worker_init(void *args)
             }
             else {
                 timeout = clk + mk_logger_timeout;
+        
                 flog = open(target, O_WRONLY | O_CREAT, 0644);
-
                 if (flog == -1) {
                     mk_warn("Could not open logfile '%s'", target);
+                    
+                    /*
+                     * if our buffer is full and we cannot open the logfile,
+                     * we should consume the information in some way :(
+                     */
+                    if (bytes >= buffer_limit) {
+                        mk_warn("Logger buffer is full, fake consuming");
+                        char buf[255];
+                        do {
+                            slen = read(events[i].data.fd, buf, 255);
+                        } while (slen > 0);
+
+                        close(flog);
+                    }
                     continue;
                 }
 
