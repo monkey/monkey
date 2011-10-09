@@ -115,9 +115,11 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
     entry->next = NULL;
 
     st_time = localtime((time_t *) & entry->info.last_modification);
-
-    entry->ft_modif = mk_api->mem_alloc_z(50);
-    n = strftime(entry->ft_modif, 50, "%d-%b-%G %H:%M", st_time);
+    n = strftime(entry->ft_modif, MK_DIRHTML_FMOD_LEN, "%d-%b-%G %H:%M", st_time);
+    if (n == 0) {
+        mk_mem_free(entry);
+        return NULL;
+    }
 
     size = entry->info.size;
 
@@ -439,9 +441,8 @@ struct dirhtml_template *mk_dirhtml_template_create(char *content)
     return st_tpl;
 }
 
-struct dirhtml_template
-    *mk_dirhtml_template_list_add(struct dirhtml_template **header,
-                                  char *buf, int len, char **tpl, int tag_id)
+struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **header,
+                                                      char *buf, int len, char **tpl, int tag_id)
 {
     struct dirhtml_template *node, *aux;
 
@@ -449,7 +450,6 @@ struct dirhtml_template
     if (!node) {
         return NULL;
     }
-
 
     node->buf = buf;
     node->len = len;
@@ -675,7 +675,6 @@ void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
         if (entry->type != DT_DIR) {
             mk_api->mem_free(entry->size);
         }
-        mk_api->mem_free(entry->ft_modif);
         mk_api->mem_free(entry);
     }
 
@@ -716,13 +715,6 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
         is_chunked = MK_TRUE;
     }
 
-    /* Sending headers */
-    n = (int) mk_api->header_send(cs->socket, cs, sr);
-    if (n < 0) {
-        /* FIXME: requires to free file_list */
-        return -1;
-    }
-
     /* 
      * Creating response template
      */
@@ -755,6 +747,12 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
         entry = entry->next;
     }
     qsort(toc, list_len, sizeof(*toc), mk_dirhtml_entry_cmp);
+
+    /* Sending headers */
+    n = mk_api->header_send(cs->socket, cs, sr);
+    if (n < 0) {
+        goto exit;
+    }
 
     n = mk_dirhtml_send(cs->socket, sr, iov_header);
 
