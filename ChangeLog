@@ -1,3 +1,76 @@
+commit 5d4d8f87ba456706aeb9b2bf3f801f84bd979299
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Oct 8 21:56:43 2011 -0300
+
+    Dirlisting: reduce one malloc and validate headers return
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9950abe71bce2750c41cb9e829b18a81a1e34f90
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Oct 6 10:02:22 2011 -0300
+
+    Logger: Redirect stderr to master log when going into background mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6ac8ca050490f2f427ae9ee5a4fcff452228cf3c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Oct 6 01:20:11 2011 -0300
+
+    Logger: improve fake consumer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ff70e0ce84f9b5add3bb7e4bcd961357bc027e1d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 5 21:25:44 2011 -0300
+
+    Logger: consume pipe end if cannot write to log file when the buffer is full
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 590725131767ff0160ec937c7a2d1df053379910
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 5 19:52:56 2011 -0300
+
+    Fix #80: Detect non-writable logfiles for logger plugin
+    
+    This patch does the following:
+    
+      - If master log file was defined and Monkey goes into background
+        mode, the target file *must* be writable. Otherwise Monkey will
+        exit.
+      - Master log now is enabled by default.
+      - Fix mk_print(), now it flush() the stdout.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f4b290f856eebfc27a6085504c9f5b7b3c559e6d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 5 19:10:37 2011 -0300
+
+    Update configure to v0.20.2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0dfdf9d5605cdd76ba7783413c97e165f912fb84
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 5 19:09:34 2011 -0300
+
+    Fi #78: Error in the balancing between workers
+    
+    This patch makes the scheduler to increment the sched node counter
+    after the socket is added to the thread worker through mk_epoll_add().
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e283a0a6616866c503c4654327a45c320fc319c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 3 09:55:57 2011 -0300
+
+    Monkey 0.20.1
+
 commit e7822845c0eb2f4bb7276d21f95ad5bafc30c795
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Oct 3 09:49:06 2011 -0300
