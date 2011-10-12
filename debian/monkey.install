@@ -1,0 +1,10 @@
+debian/tmp/usr/sbin/*
+debian/tmp/etc/monkey/*
+debian/tmp/usr/lib/monkey/monkey-auth.so
+debian/tmp/usr/lib/monkey/monkey-cheetah.so
+debian/tmp/usr/lib/monkey/monkey-logger.so
+debian/tmp/usr/lib/monkey/monkey-dirlisting.so
+debian/tmp/usr/lib/monkey/monkey-mandril.so
+debian/tmp/usr/lib/monkey/monkey-liana.so
+debian/tmp/usr/lib/monkey/monkey-palm.so
+

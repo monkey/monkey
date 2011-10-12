@@ -1,0 +1,5 @@
+monkey (0.20.2-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Eduardo Silva <edsiper@gmail.com>  Mon, 10 Oct 2011 22:33:20 -0300

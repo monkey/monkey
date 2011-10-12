@@ -1,0 +1,20 @@
+Source: monkey
+Section: httpd
+Priority: optional
+Maintainer: Eduardo Silva <edsiper@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev
+Standards-Version: 3.9.1
+Homepage: http://monkey-project.com
+Vcs-Git: git://git.monkey-project.com/monkey
+Vcs-Browser: http://git.monkey-project.com/?p=monkey
+
+Package: monkey
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: monkey-doc
+Architecture: all
+Description: documentation for monkey
+ <insert long description, indented with spaces>
