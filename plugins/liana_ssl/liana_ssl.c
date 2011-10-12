@@ -264,6 +264,12 @@ int _mkp_init(void **api, char *confdir)
     mk_api = *api;
     config_dir = mk_api->str_dup(confdir);
 
+    /* Just load the plugin if is being used as transport layer */
+    if (strcmp(mk_api->config->transport, "liana_ssl") != 0) {
+        mk_warn("Liana_SSL loaded but not used. Unloading.");
+        return -1;
+    }
+
     /* Validate MatrixSSL linked version */
     if (MK_MATRIX_REQUIRE_MAJOR > MATRIXSSL_VERSION_MAJOR) {
         liana_ssl_version_error();

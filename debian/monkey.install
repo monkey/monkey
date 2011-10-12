@@ -1,5 +1,5 @@
 # Binaries
-debian/tmp/usr/sbin/*
+debian/tmp/usr/sbin/monkey
 
 # Configuration
 debian/tmp/etc/monkey/monkey.conf
