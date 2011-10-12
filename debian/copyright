@@ -1,10 +1,12 @@
 Format: http://dep.debian.net/deps/dep5
 Upstream-Name: monkey
-Source: <url://example.com>
+Source: http://monkey-project.com
 
 Files: *
-Copyright: <years> <put author's name and email here>
-           <years> <likewise for another author>
+Copyright: 2001-2011 Eduardo Silva <edsiper@gmail.com>
+           2010-2011 Jonathan Gonzalez <zeus@gnu.org>
+           2009-2011 DavidLorh Bueso <dave@gnu.org>
+
 License: GPL-2.0+
 
 Files: debian/*
@@ -27,6 +29,3 @@ License: GPL-2.0+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
