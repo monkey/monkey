@@ -1,2 +1,2 @@
-shlibs:Depends=libc6 (>= 2.10)
+shlibs:Depends=libc6 (>= 2.10), libmatrixssl3.2
 misc:Depends=

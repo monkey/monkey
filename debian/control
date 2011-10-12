@@ -10,9 +10,11 @@ Vcs-Browser: http://git.monkey-project.com/?p=monkey
 
 Package: monkey
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmatrixssl3.2 (>= 3.2)
+Description: A Fast and Lightweight Web Server for Linux.
+ Monkey HTTP Daemon has been designed to be very scalable with low memory 
+ and CPU consumption, the perfect solution for embedded environments. It 
+ also provides a flexible API and plugins interface.
 
 Package: monkey-doc
 Architecture: all
