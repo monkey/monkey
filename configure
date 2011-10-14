@@ -20,7 +20,7 @@
 
 __MONKEY__="0"
 __MONKEY_MINOR__="20"
-__MONKEY_PATCHLEVEL__="3"
+__MONKEY_PATCHLEVEL__="4"
 
 VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 SYSNAME=`uname -s`
@@ -212,7 +212,7 @@ cat > check.c <<EOF
 int main(){ return 0;}
 EOF
 
-libtest=`$CC check.c -lpthread &>configure.log`
+libtest=`$CC check.c -pthread &>configure.log`
 libstatus=`cat configure.log`
 if  test -n "$libstatus"  ; then
 	echo -en $GREEN$BOLD"No"$END_COLOR"\n"
@@ -350,14 +350,14 @@ create_makefile2()
 {
 
 if [ $platform == "generic" ]; then
-    libs="-lpthread"
+    libs="-pthread"
 elif [ $platform == "android" ]; then
     libs=""
 fi
 
 cat > src/Makefile<<EOF
 CC	= $CC
-CFLAGS	= $CFLAGS
+CFLAGS	= $CFLAGS 
 DEFS    = $DEFS
 INCDIR  = ./include
 LDFLAGS	= $LDFLAGS
@@ -376,7 +376,7 @@ all: ../bin/monkey
 	@echo
 	@echo "Compiling Monkey"
 	@echo "================"
-	\$(CC) \$(CFLAGS) \$(DEFS) \$(LIBS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj
+	\$(CC) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS)
 
 clean:
 	rm -rf *.o

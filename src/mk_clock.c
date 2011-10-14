@@ -51,7 +51,7 @@ static void mk_clock_log_set_time()
 
 void mk_clock_header_set_time()
 {
-    int n, len = 32;
+    int len = 32;
     time_t date;
     struct tm *gmt_tm;
 
@@ -62,7 +62,7 @@ void mk_clock_header_set_time()
 
     date = time(NULL);
     gmt_tm = (struct tm *) gmtime(&date);
-    n = strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
+    strftime(header_current_time.data, len, GMT_DATEFORMAT, gmt_tm);
 }
 
 void *mk_clock_worker_init(void *args)
