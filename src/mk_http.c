@@ -232,6 +232,10 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             int n;
             char linked_file[MAX_PATH];
             n = readlink(sr->real_path.data, linked_file, MAX_PATH);
+            if (n < 0) {
+                mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
+                return EXIT_ERROR;
+            }
         }
     }
 

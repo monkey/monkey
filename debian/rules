@@ -21,6 +21,7 @@ build-stamp:
 	dh build --before auto_configure
 	./configure --prefix=/usr		\
 		--bindir=/usr/sbin		\
+		--mandir=/usr/share/man		\
 		--sysconfdir=/etc/monkey	\
 		--datadir=/var/www		\
 		--logdir=/var/log/monkey	\

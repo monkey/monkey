@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <pthread.h>
 
 #include "monkey.h"
 #include "mk_socket.h"

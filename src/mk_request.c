@@ -699,7 +699,6 @@ void mk_request_error(int http_status, struct client_session *cs,
                       struct session_request *sr) {
     char *aux_message = 0;
     mk_pointer message, *page = 0;
-    long n;
 
     mk_pointer_reset(&message);
 
@@ -788,7 +787,7 @@ void mk_request_error(int http_status, struct client_session *cs,
     mk_header_send(cs->socket, cs, sr);
 
     if (page && sr->method != HTTP_METHOD_HEAD) {
-        n = mk_socket_send(cs->socket, page->data, page->len);
+        mk_socket_send(cs->socket, page->data, page->len);
         mk_pointer_free(page);
         mk_mem_free(page);
     }

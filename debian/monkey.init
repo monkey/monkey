@@ -63,7 +63,7 @@ for arg in $*; do
 			echo "Monkey stopped ($PIDMONKEY)"
 			exit 0
 			;;
-		restart)
+		force-reload|restart)
 			if  [ "$STATUS" = "yes" ]; then
 				if ! kill $PIDMONKEY  > /dev/null ; then
 					killall -9 monkey

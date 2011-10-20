@@ -1,3 +1,75 @@
+commit 8014c83141c5cb9e6091b78571ab934473123bdc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 17:15:06 2011 -0300
+
+    Debian: Add manpage
+    Debian: Fix changelog
+    Debian: Fix copyright
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1862e52d967ceb173fa1915dac994836981da3c4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 14:52:52 2011 -0300
+
+    update to v0.20.3
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2026084af05646f8ffbad0795a6b354dc7395c75
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 14:47:32 2011 -0300
+
+    Debian: add monkey init script
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bc3831ae4bfa5f3157ef6d1f398a4d60ebff704f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 14:40:19 2011 -0300
+
+    Liana_SSL: auto-unload if the plugin is not being used as transport layer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d92ff319d01da216db2ad477d8370cc351166de0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 12:33:23 2011 -0300
+
+    Debian: add liana_ssl
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f938511e822140ee3887ba96e1edf99737bf7721
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 11 23:27:27 2011 -0300
+
+    Debian: cleanup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 94b3ddaab676ae8092295b24a1464863b8ccc606
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 11 23:26:14 2011 -0300
+
+    Debian: add debian build script
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7cb548202932581834a7ba1710652d30ae537e63
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 11 23:21:10 2011 -0300
+
+    Add Debian rules
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 511b95b91bb9ea65c9edb18972bf59d9e64adbf5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 10 20:48:26 2011 -0300
+
+    Monkey 0.20.2
+
 commit 5d4d8f87ba456706aeb9b2bf3f801f84bd979299
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Oct 8 21:56:43 2011 -0300
