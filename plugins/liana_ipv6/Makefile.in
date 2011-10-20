@@ -1,0 +1,17 @@
+CC 	= $CC
+CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../src/include
+LIANA_OBJECTS = liana_ipv6.o
+
+all: monkey-liana-ipv6.so
+
+monkey-liana-ipv6.so: $(LIANA_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
+clean:
+	rm -rf *.o *~ *.*so*
