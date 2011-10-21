@@ -333,7 +333,7 @@ struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
 
 int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 {
-    long n;
+
     ssize_t bytes_iov=-1;
     struct mk_iov *iov;
     struct mk_palm_request *pr;
@@ -353,7 +353,6 @@ int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
         
         if (bytes_iov >= 0){
             pr->bytes_sent += bytes_iov;
-            n = bytes_iov;
         }
     }
 

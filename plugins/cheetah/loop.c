@@ -56,7 +56,7 @@ void mk_cheetah_loop_stdin()
         cmd[len - 1] = '\0';
 
         mk_cheetah_cmd(cmd);
-        bzero(line, sizeof(line));
+        memset(line, '\0', sizeof(line));
     }
 }
 

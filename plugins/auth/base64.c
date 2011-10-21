@@ -106,7 +106,7 @@ unsigned char *base64_decode(const unsigned char *src, size_t len,
 {
     unsigned char dtable[256], *out, *pos, in[4], block[4], tmp;
     size_t i, count, olen;
-    
+
     memset(dtable, 0x80, 256);
     for (i = 0; i < sizeof(base64_table); i++)
         dtable[base64_table[i]] = i;

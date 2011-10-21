@@ -1,3 +1,29 @@
+commit 78b750df798539a31ef36685857d3f44c68e8744
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 20 20:26:06 2011 -0300
+
+    Liana_ipv6: Removed DISABLED since we don't need it but we want to aim users to use it
+
+commit 667fc70afcb8791db3876dda79a65903c7d1a4a2
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 20 20:17:55 2011 -0300
+
+    Liana_ipv6: New plugin to support IPv6, very experimental but it can be used!
+
+commit 9a0289d86d33a9684e871ca7f5b1ce84f2a3df5f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 14 08:37:38 2011 -0300
+
+    Fix compiling issues
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a72cea2c143de4fdb4c6d97e2676f0fa96104abf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 12 17:39:32 2011 -0300
+
+    Monkey 0.20.3
+
 commit 8014c83141c5cb9e6091b78571ab934473123bdc
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Oct 12 17:15:06 2011 -0300
