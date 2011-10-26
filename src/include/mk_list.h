@@ -91,8 +91,8 @@ static inline int mk_list_is_empty(struct mk_list *head)
 #define mk_list_entry_last(ptr, type, member) container_of(ptr->prev, type, member)
 
 /* Next node */
-#define mk_list_entry_next(ptr, type, member, head)  \
-    container_of(ptr->next, type, member); \
-    if (ptr->next == (head)->prev) ptr = head; else ptr = ptr->next;
+#define mk_list_entry_next(ptr, type, member, head)                     \
+    ptr->next == (head) ? container_of((head)->next, type, member) :    \
+        container_of(ptr->next, type, member);
 
 #endif /* !MK_LIST_H_ */
