@@ -43,7 +43,7 @@
 #include "mk_cache.h"
 #include "mk_request.h"
 
-long int mk_method_post_content_length(const char *body, int body_len)
+long int mk_method_validate_content_length(const char *body, int body_len)
 {
     struct headers_toc toc;
     long int len;
@@ -86,13 +86,13 @@ long int mk_method_post_content_length(const char *body, int body_len)
     return len;
 }
 
-/* POST METHOD */
-int mk_method_post(struct client_session *cs, struct session_request *sr)
+/* It parse data sent by POST or PUT methods */
+int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
 {
     mk_pointer tmp;
     long content_length_post = 0;
 
-    content_length_post = mk_method_post_content_length(cs->body, cs->body_length);
+    content_length_post = mk_method_validate_content_length(cs->body, cs->body_length);
 
     /* Length Required */
     if (content_length_post == -1) {
@@ -124,7 +124,7 @@ int mk_method_post(struct client_session *cs, struct session_request *sr)
 }
 
 /* Return POST variables sent in request */
-mk_pointer mk_method_post_get_vars(void *data, int size)
+mk_pointer mk_method_get_data(void *data, int size)
 {
     mk_pointer p;
 

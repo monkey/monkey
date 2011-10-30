@@ -77,7 +77,7 @@ static void mk_request_init(struct session_request *request)
     request->last_modified_since.data = NULL;
     request->range.data = NULL;
 
-    request->post_variables.data = NULL;
+    request->data.data = NULL;
     mk_pointer_reset(&request->query_string);
 
     request->file_info.size = -1;
@@ -347,10 +347,10 @@ static int mk_request_parse(struct client_session *cs)
         if (sr_node->method == HTTP_METHOD_POST) {
             int offset;
             offset = end + mk_endblock.len;
-            sr_node->post_variables = mk_method_post_get_vars(cs->body + offset,
-                                                              cs->body_length - offset);
-            if (sr_node->post_variables.len >= 0) {
-                i += sr_node->post_variables.len;
+            sr_node->data = mk_method_get_data(cs->body + offset,
+                                               cs->body_length - offset);
+            if (sr_node->data.len >= 0) {
+                i += sr_node->data.len;
             }
         }
 
@@ -495,8 +495,8 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     }
 
     /* Handling method requested */
-    if (sr->method == HTTP_METHOD_POST) {
-        if ((status = mk_method_post(cs, sr)) == -1) {
+    if (sr->method == HTTP_METHOD_POST || sr->method == HTTP_METHOD_PUT) {
+        if ((status = mk_method_parse_data(cs, sr)) == -1) {
             return status;
         }
     }

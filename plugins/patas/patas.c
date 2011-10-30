@@ -114,7 +114,7 @@ int mk_patas_conf(char *confdir)
     char *val_host;
     char *val_uri;
     unsigned long len;
-    char *conf_path;
+    char *conf_path=NULL;
 
     struct mk_config_section *section;
     struct mk_config_entry *entry;

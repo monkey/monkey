@@ -270,8 +270,8 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
      * --------------
      * non-standard field of CGI, it just used by Palm protocol 
      */
-    if (sr->content_length > 0 && sr->post_variables.len > 0) {
-        prot_add_header(iov, mk_cgi_post_vars, sr->post_variables);
+    if (sr->content_length > 0 && sr->data.len > 0) {
+        prot_add_header(iov, mk_cgi_post_vars, sr->data);
     }
 
     /* Ending CRLFCRLF (\r\n\r\n) */

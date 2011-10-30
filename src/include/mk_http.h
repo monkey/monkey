@@ -26,18 +26,24 @@
 #define HTTP_DIRECTORY_BACKWARD ".."
 
 /* Methods */
-#define HTTP_METHOD_UNKNOWN (-1)
-#define HTTP_METHOD_GET (0)
-#define HTTP_METHOD_POST (1)
-#define HTTP_METHOD_HEAD (2)
+#define HTTP_METHOD_UNKNOWN        -1
+#define HTTP_METHOD_GET             0
+#define HTTP_METHOD_POST            1
+#define HTTP_METHOD_HEAD            2
+#define HTTP_METHOD_PUT             3
+#define HTTP_METHOD_DELETE          4
 
-#define HTTP_METHOD_GET_STR "GET"
-#define HTTP_METHOD_POST_STR "POST"
-#define HTTP_METHOD_HEAD_STR "HEAD"
+#define HTTP_METHOD_GET_STR         "GET"
+#define HTTP_METHOD_POST_STR        "POST"
+#define HTTP_METHOD_HEAD_STR        "HEAD"
+#define HTTP_METHOD_PUT_STR         "PUT"
+#define HTTP_METHOD_DELETE_STR      "DELETE"
 
 mk_pointer mk_http_method_get_p;
 mk_pointer mk_http_method_post_p;
 mk_pointer mk_http_method_head_p;
+mk_pointer mk_http_method_put_p;
+mk_pointer mk_http_method_delete_p;
 mk_pointer mk_http_method_null_p;
 
 /* Method status */

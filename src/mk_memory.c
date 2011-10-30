@@ -183,6 +183,8 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_http_method_get_p, HTTP_METHOD_GET_STR);
     mk_pointer_set(&mk_http_method_post_p, HTTP_METHOD_POST_STR);
     mk_pointer_set(&mk_http_method_head_p, HTTP_METHOD_HEAD_STR);
+    mk_pointer_set(&mk_http_method_put_p, HTTP_METHOD_PUT_STR);
+    mk_pointer_set(&mk_http_method_delete_p, HTTP_METHOD_DELETE_STR);
     mk_pointer_reset(&mk_http_method_null_p);
 
     mk_pointer_set(&mk_http_protocol_09_p, HTTP_PROTOCOL_09_STR);

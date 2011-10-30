@@ -173,8 +173,8 @@ struct session_request
 
     /*---------------------*/
     
-    /* POST */
-    mk_pointer post_variables;
+    /* POST/PUT data */
+    mk_pointer data;
     /*-----------------*/
 
     /*-Internal-*/

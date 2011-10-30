@@ -57,6 +57,14 @@ int mk_http_method_check(mk_pointer method)
         return HTTP_METHOD_HEAD;
     }
 
+    if (strncmp(method.data, HTTP_METHOD_PUT_STR, method.len) == 0) {
+        return HTTP_METHOD_PUT;
+    }
+
+    if (strncmp(method.data, HTTP_METHOD_DELETE_STR, method.len) == 0) {
+        return HTTP_METHOD_DELETE;
+    }
+
     return METHOD_NOT_FOUND;
 }
 
@@ -71,6 +79,10 @@ mk_pointer mk_http_method_check_str(int method)
 
     case HTTP_METHOD_HEAD:
         return mk_http_method_head_p;
+    case HTTP_METHOD_PUT:
+        return mk_http_method_put_p;
+    case HTTP_METHOD_DELETE:
+        return mk_http_method_delete_p;
     }
     return mk_http_method_null_p;
 }
@@ -257,6 +269,17 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return EXIT_NORMAL;
     }
 
+    /*
+     * Monkey listen for PUT and DELETE methods in addition to GET, POST and 
+     * HEAD, but it does not care about them, so if any plugin did not worked 
+     * on it, Monkey will return an error.
+     */
+    if (sr->method == HTTP_METHOD_PUT || sr->method == HTTP_METHOD_DELETE ||
+        sr->method == HTTP_METHOD_UNKNOWN) {
+        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        return EXIT_ERROR;
+    }
+
     /* read permissions and check file */
     if (sr->file_info.read_access == MK_FALSE) {
         mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
@@ -325,6 +348,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         /* without content-type */
         mk_pointer_reset(&sr->headers.content_type);
     }
+
+    
  
     /* Open file */
     if (sr->file_info.size > 0) {
@@ -622,15 +647,16 @@ int mk_http_pending_request(struct client_session *cs)
         cs->first_method = mk_http_method_get(cs->body);
     }
 
-    if (cs->first_method == HTTP_METHOD_POST) {
+    if (cs->first_method == HTTP_METHOD_POST || cs->first_method == HTTP_METHOD_PUT) {
         if (cs->body_pos_end > 0) {
             int content_length;
             int current;
 
             current = cs->body_length - cs->body_pos_end - mk_endblock.len;
-            content_length = mk_method_post_content_length(cs->body, current);
+            content_length = mk_method_validate_content_length(cs->body, current);
 
-            MK_TRACE("HTTP POST DATA %i/%i", current, content_length);
+            MK_TRACE("HTTP DATA %i/%i", current, content_length);
+
             if (content_length >= config->max_request_size) {
                 return 0;
             }

@@ -303,9 +303,11 @@ all:
 	@echo "Compiling Monkey Plugins"
 	@echo "================"
 	@(cd plugins; \$(MAKE) all)
+
 clean:
 	@(cd src; \$(MAKE) clean)
 	@(cd plugins; \$(MAKE) clean)
+
 distclean:
 	@(cd src; \$(MAKE) distclean)
 
