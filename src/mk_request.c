@@ -64,7 +64,7 @@ static void mk_request_init(struct session_request *request)
 
     mk_pointer_reset(&request->body);
     request->status = MK_TRUE;
-    request->method = METHOD_NOT_FOUND;
+    request->method = HTTP_METHOD_UNKNOWN;
 
     mk_pointer_reset(&request->uri);
     request->uri_processed.data = NULL;
@@ -438,15 +438,6 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         return EXIT_ABORT;
     }
 
-    switch (sr->method) {
-    case METHOD_NOT_ALLOWED:
-        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
-        return EXIT_NORMAL;
-    case METHOD_NOT_FOUND:
-        mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
-        return EXIT_NORMAL;
-    }
-
     sr->user_home = MK_FALSE;
 
     /* Valid request URI? */
@@ -458,12 +449,6 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     /* HTTP/1.1 needs Host header */
     if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
-    }
-
-    /* Method not allowed ? */
-    if (sr->method == METHOD_NOT_ALLOWED) {
-        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
         return EXIT_NORMAL;
     }
 

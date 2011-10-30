@@ -46,11 +46,6 @@ mk_pointer mk_http_method_put_p;
 mk_pointer mk_http_method_delete_p;
 mk_pointer mk_http_method_null_p;
 
-/* Method status */
-#define METHOD_NOT_ALLOWED (-1)
-#define METHOD_NOT_FOUND (-2)
-#define METHOD_EMPTY (-3)
-
 #define HTTP_PROTOCOL_UNKNOWN (-1)
 #define HTTP_PROTOCOL_09 (9)
 #define HTTP_PROTOCOL_10 (10)

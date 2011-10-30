@@ -65,7 +65,7 @@ int mk_http_method_check(mk_pointer method)
         return HTTP_METHOD_DELETE;
     }
 
-    return METHOD_NOT_FOUND;
+    return HTTP_METHOD_UNKNOWN;
 }
 
 mk_pointer mk_http_method_check_str(int method)
@@ -90,13 +90,13 @@ mk_pointer mk_http_method_check_str(int method)
 int mk_http_method_get(char *body)
 {
     int int_method, pos = 0;
-    int max_len_method = 5;
+    int max_len_method = 7;
     mk_pointer method;
 
-    /* Max method length is 4 (POST/HEAD) */
-    pos = mk_string_char_search(body, ' ', 5);
+    /* Max method length is 6 (GET/POST/HEAD/PUT/DELETE) */
+    pos = mk_string_char_search(body, ' ', 7);
     if (pos <= 2 || pos >= max_len_method) {
-        return METHOD_NOT_FOUND;
+        return HTTP_METHOD_UNKNOWN;
     }
 
     method.data = body;
@@ -272,11 +272,11 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /*
      * Monkey listen for PUT and DELETE methods in addition to GET, POST and 
      * HEAD, but it does not care about them, so if any plugin did not worked 
-     * on it, Monkey will return an error.
+     * on it, Monkey will return error 501 (501 Not Implemented).
      */
     if (sr->method == HTTP_METHOD_PUT || sr->method == HTTP_METHOD_DELETE ||
         sr->method == HTTP_METHOD_UNKNOWN) {
-        mk_request_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+        mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
         return EXIT_ERROR;
     }
 
