@@ -22,10 +22,15 @@
 
 #include "mk_memory.h"
 
-/* HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl> */
+/* 
+ * - New macro names and structure by Monkey Dev Team
+ * - Initial HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl>
+ */
+
+/* Monkey allow plugins to set their customized status */ 
+#define MK_CUSTOM_STATUS                          7
 
 /* Informational status */
-
 #define MK_INFO_CONTINUE	                100
 #define MK_INFO_SWITCH_PROTOCOL	                101
 

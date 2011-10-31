@@ -222,7 +222,7 @@ void mk_header_iov_free(struct mk_iov *iov)
 int mk_header_send(int fd, struct client_session *cs,
                    struct session_request *sr)
 {
-    int i, fd_status = 0;
+    int i=0, fd_status = 0;
     unsigned long len = 0;
     char *buffer = 0;
     mk_pointer response;
@@ -233,16 +233,22 @@ int mk_header_send(int fd, struct client_session *cs,
 
     iov = mk_header_iov_get();
 
-    /* Status Code */
-    for (i=0; i < status_response_len; i++) {
-        if (status_response[i].status == sh->status) {
-            response.data = status_response[i].response;
-            response.len  = status_response[i].length;
-            mk_header_iov_add_entry(iov, response, 
-                                    mk_iov_none, MK_IOV_NOT_FREE_BUF);
-            break;
+    /* HTTP Status Code */
+    if (sh->status == MK_CUSTOM_STATUS) {
+        response.data = sh->custom_status.data;
+        response.len = sh->custom_status.len;
+    }
+    else {
+        for (i=0; i < status_response_len; i++) {
+            if (status_response[i].status == sh->status) {
+                response.data = status_response[i].response;
+                response.len  = status_response[i].length;
+                break;
+            }
         }
     }
+
+    mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     /* Invalid status set */
     mk_bug(i == status_response_len);

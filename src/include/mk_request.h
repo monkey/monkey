@@ -94,6 +94,12 @@ struct response_headers
 {
     int status;
 
+    /* 
+     * If some plugins wants to set a customized HTTP status, here 
+     * is the 'how and where' 
+     */
+    mk_pointer custom_status;
+
     /* Length of the content to send */
     long content_length;
 
