@@ -233,7 +233,9 @@ static int mk_request_header_process(struct session_request *sr)
     mk_request_header_toc_parse(&sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
-    host = mk_request_header_get(&sr->headers_toc, mk_rh_host);
+    host = mk_request_header_get(&sr->headers_toc, 
+                                 mk_rh_host.data,
+                                 mk_rh_host.len);
 
     if (host.data) {
         if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
@@ -260,9 +262,17 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Looking for headers that ONLY Monkey uses */
-    sr->connection = mk_request_header_get(&sr->headers_toc, mk_rh_connection);
-    sr->range = mk_request_header_get(&sr->headers_toc, mk_rh_range);
-    sr->if_modified_since = mk_request_header_get(&sr->headers_toc, mk_rh_if_modified_since);
+    sr->connection = mk_request_header_get(&sr->headers_toc, 
+                                           mk_rh_connection.data,
+                                           mk_rh_connection.len);
+
+    sr->range = mk_request_header_get(&sr->headers_toc, 
+                                      mk_rh_range.data,
+                                      mk_rh_range.len);
+
+    sr->if_modified_since = mk_request_header_get(&sr->headers_toc, 
+                                                  mk_rh_if_modified_since.data,
+                                                  mk_rh_if_modified_since.len);
 
     /* Default Keepalive is off */
     if (sr->protocol == HTTP_PROTOCOL_10) {
@@ -364,7 +374,7 @@ static int mk_request_parse(struct client_session *cs)
         blocks++;
     }
 
-    /* DEBUG BLOCKS 
+    /* DEBUG BLOCKS
     struct mk_list *head;
     struct session_request *entry;
 
@@ -900,7 +910,7 @@ void mk_session_remove(int socket)
 }
 
 /* Return value of some variable sent in request */
-mk_pointer mk_request_header_get(struct headers_toc *toc, mk_pointer header)
+mk_pointer mk_request_header_get(struct headers_toc *toc, const char *key_name, int key_len)
 {
     int i;
     struct header_toc_row *row;
@@ -920,8 +930,8 @@ mk_pointer mk_request_header_get(struct headers_toc *toc, mk_pointer header)
             continue;
         }
         
-        if (strncasecmp(row[i].init, header.data, header.len) == 0) {
-            var.data = row[i].init + header.len + 1;
+        if (strncasecmp(row[i].init, key_name, key_len) == 0) {
+            var.data = row[i].init + key_len + 1;
             var.len = row[i].end - var.data;
             row[i].status = 1;
             break;

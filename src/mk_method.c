@@ -55,7 +55,9 @@ long int mk_method_validate_content_length(const char *body, int body_len)
      * mk_http_pending_request().
      */
     mk_request_header_toc_parse(&toc, body, body_len);
-    tmp = mk_request_header_get(&toc, mk_rh_content_length);
+    tmp = mk_request_header_get(&toc, 
+                                mk_rh_content_length.data,
+                                mk_rh_content_length.len);
 
     if (!tmp.data) {
         int pos_header;
@@ -112,7 +114,9 @@ int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
-    tmp = mk_request_header_get(&sr->headers_toc, mk_rh_content_type);
+    tmp = mk_request_header_get(&sr->headers_toc, 
+                                mk_rh_content_type.data,
+                                mk_rh_content_type.len);
     if (!tmp.data) {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return -1;

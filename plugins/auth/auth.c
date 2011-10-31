@@ -174,7 +174,10 @@ int _mkp_stage_30(struct plugin *plugin,
     }
 
     /* Check authorization header */
-    res = mk_api->header_get(&sr->headers_toc, auth_header_request);
+    res = mk_api->header_get(&sr->headers_toc, 
+                             auth_header_request.data,
+                             auth_header_request.len);
+
     if (res.data && res.len > 0) {
         /* Validate user */
         val = mk_auth_validate_user(loc_entry->users, res.data, res.len);

@@ -272,7 +272,7 @@ struct handler
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len);
 mk_pointer mk_request_index(char *pathfile);
 mk_pointer mk_request_header_get(struct headers_toc *toc,
-                                 mk_pointer header);
+                                 const char *key_name, int key_len);
 
 void mk_request_error(int http_status, struct client_session *cs, 
                       struct session_request *sr);

@@ -129,7 +129,7 @@ void mk_pointer_print(mk_pointer p)
     fflush(stdout);
 }
 
-void mk_pointer_set(mk_pointer * p, char *data)
+void mk_pointer_set(mk_pointer *p, char *data)
 {
     p->data = data;
     p->len = strlen(data);

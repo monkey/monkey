@@ -347,7 +347,7 @@ void mk_plugin_init()
     api->header_add = mk_plugin_header_add;
     api->header_get = mk_request_header_get;
     api->header_set_http_status = (void *) mk_header_set_http_status;
-    
+
     /* IOV callbacks */
     api->iov_create = (void *) mk_iov_create;
     api->iov_free = (void *) mk_iov_free;
