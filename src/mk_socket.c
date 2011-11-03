@@ -86,15 +86,6 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
     return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
 }
 
-int mk_socket_get_ip(char *ipv4, struct in_addr *addr)
-{
-    short int ipv4_len = 16;
-    const u_int8_t *ip;
-
-    ip = (const u_int8_t *) &addr->s_addr;
-    return snprintf(ipv4, ipv4_len, "%i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
-}
-
 int mk_socket_close(int socket)
 {
     return close(socket);
@@ -104,7 +95,7 @@ int mk_socket_create()
 {
     int sockfd;
 
-    if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+    if ((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
         perror("client: socket");
         return -1;
     }
@@ -147,9 +138,9 @@ int mk_socket_server(int port, char *listen_addr)
 }
 
 /* NETWORK_IO plugin functions */
-int mk_socket_accept(int server_fd, struct sockaddr_in sock_addr)
+int mk_socket_accept(int server_fd)
 {
-    return plg_netiomap->accept(server_fd, sock_addr);
+    return plg_netiomap->accept(server_fd);
 }
 
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
@@ -191,4 +182,9 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
         mk_socket_safe_event_write(socket_fd);
     }
     return bytes;
+}
+
+char * mk_socket_ip_str(int socket_fd, int *size)
+{
+    return plg_netiomap->ip_str(socket_fd, size);
 }

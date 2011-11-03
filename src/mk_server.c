@@ -80,7 +80,6 @@ void mk_server_launch_workers()
 void mk_server_loop(int server_fd)
 {
     int remote_fd;
-    struct sockaddr_in sockaddr;
 
     /* Activate TCP_DEFER_ACCEPT */
     if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
@@ -90,7 +89,7 @@ void mk_server_loop(int server_fd)
     mk_info("HTTP Server started");
     
     while (1) {
-        remote_fd = mk_socket_accept(server_fd, sockaddr);
+        remote_fd = mk_socket_accept(server_fd);
 
         if (remote_fd == -1) {
             continue;

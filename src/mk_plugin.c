@@ -194,6 +194,9 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
     p->net_io.server = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_server");
 
+    p->net_io.ip_str = (char *(*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_ip_str");
+
     /* Thread key */
     p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler, 
                                                             "_mkp_data");
@@ -241,7 +244,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
         if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
             !p->net_io.writev || !p->net_io.close || !p->net_io.connect ||
             !p->net_io.send_file || !p->net_io.create_socket || !p->net_io.bind ||
-            !p->net_io.server ) {
+            !p->net_io.server || !p->net_io.ip_str) {
 
             MK_TRACE("Networking IO plugin incomplete: %s", p->path);
             MK_TRACE("Mapped Functions\naccept : %p\nread : %p\n\
@@ -256,7 +259,8 @@ create socket : %p\nbind : %p\nserver : %p",
                      p->net_io.send_file,
                      p->net_io.create_socket,
                      p->net_io.bind,
-                     p->net_io.server);
+                     p->net_io.server,
+                     p->net_io.ip_str);
 
             mk_plugin_free(p);
             return NULL;
@@ -376,6 +380,7 @@ void mk_plugin_init()
     api->socket_send = (void *) mk_socket_send;
     api->socket_read = (void *) mk_socket_read;
     api->socket_send_file = (void *) mk_socket_send_file;
+    api->socket_ip_str = (void *) mk_socket_ip_str;
 
     /* Config Callbacks */
     api->config_create = (void *) mk_config_create;

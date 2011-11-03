@@ -213,3 +213,27 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     return socket_fd;
 }
+
+char * _mkp_network_io_ip_str(int socket_fd, int *size)
+{
+    struct sockaddr_storage addr;
+    struct sockaddr_in *s;
+    socklen_t len = sizeof(struct sockaddr_in);
+    char *ip = (char *)mk_api->mem_alloc(INET_ADDRSTRLEN + 1);
+
+    *size = INET6_ADDRSTRLEN + 1;
+
+    if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
+        mk_err("Can't get addr for this socket");
+        return NULL;
+    }
+
+    s = (struct sockaddr_in *)&addr;
+
+    if(inet_ntop(AF_INET, &s->sin_addr, ip, INET_ADDRSTRLEN) == NULL) {
+        mk_err("Can't get the IP text form");
+        return NULL;
+    }
+
+    return ip;
+}
