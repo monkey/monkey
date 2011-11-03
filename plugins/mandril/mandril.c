@@ -150,11 +150,15 @@ int mk_security_conf(char *confdir)
     return ret;
 }
 
-int mk_security_check_ip(int socket, struct in_addr *addr)
+int mk_security_check_ip(int socket)
 {
     int network;
     struct mk_secure_ip_t *entry;
     struct mk_list *head;
+    struct in_addr *addr = NULL;
+    socklen_t len = sizeof(addr);
+
+    getpeername(socket, (struct sockaddr *)addr, &len);
 
     PLUGIN_TRACE("[FD %i] Mandril validating IP address", socket);
     mk_list_foreach(head, &mk_secure_ip) {
@@ -223,7 +227,7 @@ void _mkp_exit()
 int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
     /* Validate ip address with Mandril rules */
-    if (mk_security_check_ip(socket, &conx->ipv4) != 0) {
+    if (mk_security_check_ip(socket) != 0) {
         PLUGIN_TRACE("[FD %i] Mandril close connection", socket);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
