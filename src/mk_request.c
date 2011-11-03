@@ -829,9 +829,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     /* Alloc memory for node */
     cs = mk_mem_malloc(sizeof(struct client_session));
 
-    /* IPv4 Address */
-    cs->ipv4 = &sc->ipv4;
-
     cs->pipelined = MK_FALSE;
     cs->counter_connections = 0;
     cs->socket = socket;
