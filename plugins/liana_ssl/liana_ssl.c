@@ -265,7 +265,7 @@ int _mkp_init(void **api, char *confdir)
     config_dir = mk_api->str_dup(confdir);
 
     /* Just load the plugin if is being used as transport layer */
-    if (strcmp(mk_api->config->transport, "liana_ssl") != 0) {
+    if (strcmp(mk_api->config->transport_layer, "liana_ssl") != 0) {
         mk_warn("Liana_SSL loaded but not used. Unloading.");
         return -1;
     }
@@ -291,15 +291,16 @@ void _mkp_exit()
 {
 }
 
-int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
+int _mkp_network_io_accept(int server_fd)
 {
     int remote_fd;
+    struct sockaddr_in sock_addr;
     socklen_t socket_size = sizeof(struct sockaddr_in);
 
     PLUGIN_TRACE("Accepting Connection");
 
     remote_fd =
-        accept(server_fd, (struct sockaddr *) &sock_addr, &socket_size);
+        accept(server_fd, &sock_addr, &socket_size);
 
     if (remote_fd == -1) {
         PLUGIN_TRACE("Error accepting connection");
@@ -599,6 +600,30 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     PLUGIN_TRACE("Socket created, returned socket");
     return socket_fd;
+}
+
+char * _mkp_network_io_ip_str(int socket_fd, int *size)
+{
+    struct sockaddr_storage addr;
+    struct sockaddr_in *s;
+    socklen_t len = sizeof(struct sockaddr_in);
+    char *ip = (char *)mk_api->mem_alloc(INET_ADDRSTRLEN + 1);
+
+    *size = INET_ADDRSTRLEN + 1;
+
+    if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
+        mk_err("Can't get addr for this socket");
+        return NULL;
+    }
+
+    s = (struct sockaddr_in *)&addr;
+
+    if(inet_ntop(AF_INET, &s->sin_addr, ip, INET_ADDRSTRLEN) == NULL) {
+        mk_err("Can't get the IP text form");
+        return NULL;
+    }
+
+    return ip;
 }
 
 int _mkp_core_prctx(struct server_config *config)
