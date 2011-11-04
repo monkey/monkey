@@ -221,7 +221,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
     socklen_t len = sizeof(struct sockaddr_in);
     char *ip = (char *)mk_api->mem_alloc(INET_ADDRSTRLEN + 1);
 
-    *size = INET6_ADDRSTRLEN + 1;
+    *size = INET_ADDRSTRLEN + 1;
 
     if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
         mk_err("Can't get addr for this socket");
