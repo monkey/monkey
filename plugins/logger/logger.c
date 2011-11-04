@@ -409,14 +409,14 @@ void _mkp_core_thctx()
 int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
     int i, http_status;
-    int ip_len;
     int array_len = ARRAY_SIZE(response_codes);
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
     mk_pointer *content_length;
     mk_pointer status;
-    char ip_buf[16];
+    char *ip_str = NULL;
+    int len;
 
     /* Set response status */
     http_status = sr->headers.status;
@@ -435,13 +435,11 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     iov->total_len = 0;
 
     /* Format IP string */
-    const u_int8_t *ip;
-    ip = (const u_int8_t  *) &cs->ipv4->s_addr;
-    ip_len  = snprintf(ip_buf, 16, "%i.%i.%i.%i - ", ip[0], ip[1], ip[2], ip[3]);
+    ip_str = mk_api->socket_ip_str(cs->socket, &len);
 
     /* Add IP to IOV */
-    mk_api->iov_add_entry(iov, ip_buf, ip_len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
+    mk_api->iov_add_entry(iov, ip_str, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    mk_api->iov_add_entry(iov, " - ", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
     /* Date/time when object was requested */
     date = mk_api->time_human();
     mk_api->iov_add_entry(iov, date->data, date->len,

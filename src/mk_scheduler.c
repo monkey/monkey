@@ -42,7 +42,7 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
-/* 
+/*
  * Returns the worker id which should take a new incomming connection,
  * it returns the worker id with less active connections
  */
@@ -77,12 +77,12 @@ inline int mk_sched_add_client(int remote_fd)
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
-    /* 
+    /*
      * Increment the active connections counter for the scheduler node in
      * question.
      */
     if (r == 0) {
-        sched->active_connections += 1;        
+        sched->active_connections += 1;
     }
 
     return r;
@@ -95,20 +95,10 @@ inline int mk_sched_add_client(int remote_fd)
 int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 {
     unsigned int i, ret;
-    struct sched_connection *queue;
-
-    /* socket info */
-    struct sockaddr_in m_addr;
-    socklen_t sock_len = sizeof(struct sockaddr_in);
 
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].status == MK_SCHEDULER_CONN_AVAILABLE) {
             MK_TRACE("[FD %i] Add in slot %i", remote_fd, i);
-
-            /* Set IP address in struct in_addr format */
-            queue = &sched->queue[i];
-            getpeername(remote_fd, (struct sockaddr *) &m_addr, &sock_len);
-            queue->ipv4 = m_addr.sin_addr;
 
             /* Before to continue, we need to run plugin stage 10 */
             ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
@@ -175,7 +165,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     thinfo = &sched_list[wid];
 
     /*
-     * Export epoll filedescriptor to the thread context using a 
+     * Export epoll filedescriptor to the thread context using a
      * thread_key.
      */
     mk_sched_set_thread_poll(thinfo->epoll_fd);
@@ -185,7 +175,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Init epoll_wait() loop */
     mk_epoll_init(thinfo->epoll_fd, handler, epoll_max_events);
- 
+
     return 0;
 }
 
@@ -225,7 +215,7 @@ int mk_sched_register_thread(int efd)
 }
 
 /*
- * Create thread which will be listening 
+ * Create thread which will be listening
  * for incomings file descriptors
  */
 int mk_sched_launch_thread(int max_events)
@@ -264,7 +254,7 @@ int mk_sched_launch_thread(int max_events)
  */
 void mk_sched_init()
 {
-    sched_list = mk_mem_malloc_z(sizeof(struct sched_list_node) * 
+    sched_list = mk_mem_malloc_z(sizeof(struct sched_list_node) *
                                  config->workers);
 }
 
@@ -297,9 +287,9 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
     struct sched_connection *sc;
 
-    /* 
+    /*
      * Close socket and change status: we do not invoke mk_epoll_del()
-     * because when the socket is closed is cleaned from the queue by 
+     * because when the socket is closed is cleaned from the queue by
      * the Kernel.
      */
     close(remote_fd);
@@ -318,7 +308,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         return 0;
     }
     else {
-        MK_TRACE("[FD %i] Not found", remote_fd);        
+        MK_TRACE("[FD %i] Not found", remote_fd);
     }
     return -1;
 }
@@ -402,11 +392,11 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
                                 int remote_fd, int status)
 {
     int i;
-    
+
     if (!sched) {
         return -1;
     }
-    
+
     for (i = 0; i < config->worker_capacity; i++) {
         if (sched->queue[i].socket == remote_fd) {
             sched->queue[i].status = status;

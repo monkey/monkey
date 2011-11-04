@@ -50,21 +50,20 @@ void _mkp_exit()
 {
 }
 
-int _mkp_network_io_accept(int server_fd, struct sockaddr_in sock_addr)
+int _mkp_network_io_accept(int server_fd)
 {
     int remote_fd;
-    socklen_t socket_size = sizeof(struct sockaddr_in);
+    struct sockaddr sock_addr;
+    socklen_t socket_size = sizeof(struct sockaddr);
 
 #ifdef ACCEPT_GENERIC
-    remote_fd = accept(server_fd, (struct sockaddr *) &sock_addr,
-                       &socket_size);
+    remote_fd = accept(server_fd, &sock_addr, &socket_size);
 
     if (fcntl(remote_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
         mk_err("Can't set to non-blocking the socket");
     }
 #else
-    remote_fd = accept4(server_fd, (struct sockaddr *) &sock_addr,
-                        &socket_size, SOCK_NONBLOCK);
+    remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK);
 #endif
 
     return remote_fd;
@@ -198,8 +197,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     local_sockaddr_in.sin6_family = AF_INET6;
     local_sockaddr_in.sin6_port = htons(port);
-    inet_pton(AF_INET6, "::", &local_sockaddr_in.sin6_addr.s6_addr);
-    //9    memset(&(local_sockaddr_in.sin6_zero), '\0', 8);
+    inet_pton(AF_INET6, listen_addr, &local_sockaddr_in.sin6_addr.s6_addr);
 
     mk_api->socket_reset(socket_fd);
 
@@ -213,4 +211,28 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
 
     return socket_fd;
+}
+
+char * _mkp_network_io_ip_str(int socket_fd, int *size)
+{
+    struct sockaddr_storage addr;
+    struct sockaddr_in6 *s;
+    socklen_t len = sizeof(struct sockaddr_in6);
+    char *ip = (char *)mk_api->mem_alloc_z(INET6_ADDRSTRLEN + 1);
+
+    *size = INET6_ADDRSTRLEN + 1;
+
+    if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
+        mk_err("Can't get addr for this socket");
+        return NULL;
+    }
+
+    s = (struct sockaddr_in6 *)&addr;
+
+    if(inet_ntop(AF_INET6, &s->sin6_addr, ip, INET6_ADDRSTRLEN + 1) == NULL) {
+        mk_err("Can't get the IP text form");
+        return NULL;
+    }
+
+    return ip;
 }

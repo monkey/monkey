@@ -38,7 +38,6 @@ struct sched_connection
     int status;
     int socket;
 
-    struct in_addr  ipv4;
     time_t arrive_time;
 };
 
