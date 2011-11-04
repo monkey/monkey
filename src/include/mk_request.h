@@ -112,6 +112,9 @@ struct response_headers
     int transfer_encoding;
     int breakline;
 
+    /* Connection flag, if equal -1, the connection header is ommited */
+    int connection;
+
     time_t last_modified;
     mk_pointer content_type;
     mk_pointer content_encoding;

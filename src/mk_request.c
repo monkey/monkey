@@ -374,7 +374,7 @@ static int mk_request_parse(struct client_session *cs)
         blocks++;
     }
 
-    /* DEBUG BLOCKS
+    /* DEBUG BLOCKS 
     struct mk_list *head;
     struct session_request *entry;
 
@@ -582,6 +582,7 @@ int mk_handler_read(int socket, struct client_session *cs)
                            (cs->body_size - cs->body_length));
     
     MK_TRACE("[FD %i] read %i", socket, bytes);
+
     if (bytes < 0) {
         if (errno == EAGAIN) {
             return 1;
