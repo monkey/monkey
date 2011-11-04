@@ -282,25 +282,28 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     /* Connection */
-    if (mk_http_keepalive_check(fd, cs) == 0) {
-        if (sr->connection.len > 0) {
-            /* Get cached mk_pointers */
-            mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
-            mk_pointer *ka_header = mk_cache_get(mk_cache_header_ka_max);
-
-            /* Compose header and add entries to iov */
-            mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);            
-            mk_iov_add_entry(iov, ka_format->data, ka_format->len,
-                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
-            mk_iov_add_entry(iov, ka_header->data, ka_header->len,
-                             mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
+    if (sh->connection == 0) {
+        if (mk_http_keepalive_check(fd, cs) == 0) {
+            if (sr->connection.len > 0) {
+                /* Get cached mk_pointers */
+                mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
+                mk_pointer *ka_header = mk_cache_get(mk_cache_header_ka_max);
+                
+                /* Compose header and add entries to iov */
+                mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);            
+                mk_iov_add_entry(iov, ka_format->data, ka_format->len,
+                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, ka_header->data, ka_header->len,
+                                 mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
+            }
         }
-    }
-    else {
-        mk_iov_add_entry(iov,
-                         mk_header_conn_close.data,
-                         mk_header_conn_close.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        else {
+            mk_iov_add_entry(iov,
+                             mk_header_conn_close.data,
+                             mk_header_conn_close.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+        
     }
     
     /* Location */
@@ -443,6 +446,7 @@ void mk_header_response_reset(struct response_headers *header)
     header->ranges[0] = -1;
     header->ranges[1] = -1;
     header->content_length = -1;
+    header->connection = 0;
     header->transfer_encoding = -1;
     header->last_modified = -1;
     header->cgi = SH_NOCGI;
