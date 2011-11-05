@@ -232,7 +232,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
 
     if(inet_ntop(AF_INET6, &s->sin6_addr, ip, INET6_ADDRSTRLEN + 1) == NULL) {
         mk_err("Can't get the IP text form");
-        mk_api->mk_mem_free(ip);
+        mk_api->mem_free(ip);
         return NULL;
     }
 
