@@ -106,6 +106,7 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
         SHA1_Update(&sha, buffer, strlen(buffer));
         SHA1_Final(digest, &sha); 
 
+        /* Encode accept key with base64 */
         encoded_accept = base64_encode(digest, SHA1_DIGEST_LEN, &out_len);
         encoded_accept[out_len] = '\0';
 
@@ -118,7 +119,6 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
 
         /* Monkey core must not handle the Connection header */
         sr->headers.connection = -1;
-
 
         /* Set 'Upgrade: websocket' */
         mk_api->header_add(sr, WS_RESP_UPGRADE, sizeof(WS_RESP_UPGRADE) - 1);
@@ -135,7 +135,6 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
         
         /* Add accept token to response headers */
         mk_api->header_add(sr, accept_token, len);
-        //mk_warn("token  : '%s'", accept_token);
 
         mk_api->header_send(cs->socket, cs, sr);
         mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
@@ -170,7 +169,7 @@ int _mkp_event_read(int sockfd)
     unsigned int frame_mask = 0;
     unsigned int frame_payload = 0;    
     unsigned char frame_masking_key[256];
-    unsigned int payload_offset = 0;
+    unsigned int payload_value = 0;
     unsigned int payload_size = 0;
     unsigned int mask_key_init = 0;
     unsigned char data[256];
@@ -197,18 +196,23 @@ int _mkp_event_read(int sockfd)
     frame_payload = buf[1] & 0x7f;
 
     if (frame_payload == 126) {
-        payload_offset = 2;
+        payload_size = 2;
     }
     else if (frame_payload == 127) {
-        payload_offset = 8;
+        payload_size = 8;
     }
 
-    if (payload_offset != 0) {
-        memcpy(&payload_size, buf + 2, payload_offset); 
+    
+    if (payload_size != 0) {
+        buf[1] = 0;
+        memcpy(&payload_value, buf + 1, payload_size); 
     }
     else {
-        payload_size = frame_payload;
+        payload_value = frame_payload;
     }
+
+    /* FIXME: payload size not working when using frame_payload = 126 || 127 */
+    payload_value = frame_payload;
 
 #ifdef TRACE
     PLUGIN_TRACE("Frame Headers:");
@@ -221,30 +225,29 @@ int _mkp_event_read(int sockfd)
     printf("Mask ?\t%i\n", frame_mask);
     printf("Frame Size\t%i\n", frame_size);
     printf("Frame Payload\t%i\n", frame_payload);
+    printf("Payload Value\t%i\n", (unsigned int) payload_value);
     printf("Payload Size\t%i\n", (unsigned int) payload_size);
     fflush(stdout);
 #endif
 
     memset(data, '\0', sizeof(data));
     if (frame_mask) {
-        mask_key_init = 2 + payload_offset;
+        mask_key_init = 2 + payload_size;
         memcpy(&frame_masking_key, buf + mask_key_init, WS_FRAME_MASK_LEN);
 
         if (payload_size != (frame_size - (mask_key_init + WS_FRAME_MASK_LEN))) {
-            mk_err("Invalid frame size: %i", (frame_size - (mask_key_init + WS_FRAME_MASK_LEN)));
+            //mk_err("Invalid frame size: %i", (frame_size - (mask_key_init + WS_FRAME_MASK_LEN)));
             /* FIXME: Send error, frame size does not cover the payload size */
-            return MK_PLUGIN_RET_EVENT_CLOSE;
+            //return MK_PLUGIN_RET_EVENT_CLOSE;
         }
 
-        /* decode */
-        memcpy(&data, buf + mask_key_init + WS_FRAME_MASK_LEN, payload_size);
-        for (i=0; i < payload_size; i++) {
+        memcpy(&data, buf + mask_key_init + WS_FRAME_MASK_LEN, payload_value);
+        for (i=0; i < payload_value; i++) {
             data[i] = data[i] ^ frame_masking_key[i % 4];
         }
     }
     else {
-        memcpy(&data, buf + 2 + payload_offset, payload_size); 
-
+        memcpy(&data, buf + 2 + payload_size, payload_value); 
     }
 
 #ifdef TRACE
