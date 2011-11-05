@@ -607,7 +607,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
     struct sockaddr_storage addr;
     struct sockaddr_in *s;
     socklen_t len = sizeof(struct sockaddr_in);
-    char *ip = (char *)mk_api->mem_alloc(INET_ADDRSTRLEN + 1);
+    char *ip = (char *)mk_api->mem_alloc_z(INET_ADDRSTRLEN + 1);
 
     *size = INET_ADDRSTRLEN + 1;
 
