@@ -73,6 +73,8 @@ inline int mk_sched_add_client(int remote_fd)
     sched = &sched_list[t];
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
+    
+    sched->active_connections += 1;
 
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
@@ -81,8 +83,8 @@ inline int mk_sched_add_client(int remote_fd)
      * Increment the active connections counter for the scheduler node in
      * question.
      */
-    if (r == 0) {
-        sched->active_connections += 1;
+    if (r != 0) {
+        sched->active_connections -= 1;
     }
 
     return r;

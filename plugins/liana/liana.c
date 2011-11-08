@@ -223,7 +223,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
     *size = INET_ADDRSTRLEN + 1;
 
     if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
-        mk_err("Can't get addr for this socket");
+        mk_err("[FD %i] Can't get addr for this socket", socket_fd);
         return NULL;
     }
 

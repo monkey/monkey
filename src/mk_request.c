@@ -822,8 +822,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 
     sc = mk_sched_get_connection(sched, socket);
     if (!sc) {
-        MK_TRACE("FAILED SOCKET: %i", socket);
-        mk_warn("Sched connection not found");
+        MK_TRACE("[FD %i] No sched node, could not create session", socket);
         return NULL;
     }
 
