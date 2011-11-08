@@ -79,6 +79,7 @@ void mk_server_launch_workers()
 
 void mk_server_loop(int server_fd)
 {
+    int ret;
     int remote_fd;
 
     /* Activate TCP_DEFER_ACCEPT */
@@ -109,6 +110,9 @@ void mk_server_loop(int server_fd)
 #endif
 
         /* Assign socket to worker thread */
-        mk_sched_add_client(remote_fd);
+        ret = mk_sched_add_client(remote_fd);
+        if (ret == -1) {
+            close(remote_fd);
+        }
     }
 }

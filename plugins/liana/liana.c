@@ -223,14 +223,14 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
     *size = INET_ADDRSTRLEN + 1;
 
     if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
-        MK_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
+        PLUGIN_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
         return NULL;
     }
 
     s = (struct sockaddr_in *)&addr;
 
     if(inet_ntop(AF_INET, &s->sin_addr, ip, INET_ADDRSTRLEN) == NULL) {
-        MK_TRACE("Can't get the IP text form");
+        PLUGIN_TRACE("Can't get the IP text form");
         return NULL;
     }
 

@@ -50,6 +50,17 @@ static inline int _next_target()
 {
     int i;
     int target = 0;
+    int total = 0;
+
+    /* Check server load versus capacity */
+    for (i = 0; i < config->workers; i++) {
+        total += sched_list[i].active_connections;
+    }
+
+    if (total >= config->max_load) {
+        MK_TRACE("Too many clients: %i", total);
+        return -1;
+    }
 
     for (i = 1; i < config->workers; i++) {
         if (sched_list[i].active_connections < sched_list[target].active_connections) {
@@ -70,6 +81,12 @@ inline int mk_sched_add_client(int remote_fd)
 
     /* Next worker target */
     t = _next_target();
+
+    if (t == -1) {
+        MK_TRACE("[FD %i] Over Capacity, drop!", remote_fd);
+        return -1;
+    }
+
     sched = &sched_list[t];
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);

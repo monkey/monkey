@@ -420,6 +420,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
 
+    /* Set max server load */
+    config->max_load = (config->worker_capacity * config->workers);
+
     /* Timeout */
     config->timeout = (size_t) mk_config_section_getval(section,
                                                      "Timeout", MK_CONFIG_VAL_NUM);

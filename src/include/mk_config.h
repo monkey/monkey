@@ -74,7 +74,9 @@ struct server_config
 {
     int server_fd;              /* server socket file descriptor */
     int worker_capacity;        /* how many clients per thread... */
+    int max_load;               /* max number of clients (worker_capacity * workers) */
     short int workers;          /* number of worker threads */
+    
 
 
     int is_daemon;
