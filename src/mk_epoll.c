@@ -146,7 +146,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0 && errno != EEXIST) {
-        mk_warn("[FD %i] epoll_ctl()");
+        MK_TRACE("[FD %i] epoll_ctl()", fd, strerror(errno));
         return ret;
     }
 

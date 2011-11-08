@@ -120,8 +120,7 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 
     n = writev(fd, mk_io->io, mk_io->iov_idx);
     if( n < 0 ) {
-        perror("writev");
-        MK_TRACE( "writev() error on FD %i", fd);
+        MK_TRACE( "[FD %i] writev() '%s'", fd, strerror(errno));
         return -1;
     }
 
