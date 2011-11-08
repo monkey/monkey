@@ -224,6 +224,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
 
     if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
         PLUGIN_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
+        mk_api->mem_free(ip);
         return NULL;
     }
 
@@ -231,6 +232,7 @@ char * _mkp_network_io_ip_str(int socket_fd, int *size)
 
     if(inet_ntop(AF_INET, &s->sin_addr, ip, INET_ADDRSTRLEN) == NULL) {
         PLUGIN_TRACE("Can't get the IP text form");
+        mk_api->mem_free(ip);
         return NULL;
     }
 
