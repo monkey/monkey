@@ -714,6 +714,8 @@ void mk_config_start_configure(void)
     /* Load mimes */
     mk_mimetype_read_config();
 
+    mk_pointer_reset(&config->server_software);
+
     /* Basic server information */
     if (config->hideversion == MK_FALSE) {
         mk_string_build(&config->server_software.data,
