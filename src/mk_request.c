@@ -558,14 +558,14 @@ int mk_handler_read(int socket, struct client_session *cs)
          */
         if (cs->body == cs->body_fixed) {
             MK_TRACE("Fixed to dynamic");
-            cs->body = mk_mem_malloc(new_size);
+            cs->body = mk_mem_malloc(new_size + 1);
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
             MK_TRACE("Size: %i, Length: %i", new_size, cs->body_length);
         }
         else {
             MK_TRACE("Realloc from %i to %i", cs->body_size, new_size);
-            tmp = mk_mem_realloc(cs->body, new_size);
+            tmp = mk_mem_realloc(cs->body, new_size + 1);
             if (tmp) {
                 cs->body = tmp;
                 cs->body_size = new_size;
