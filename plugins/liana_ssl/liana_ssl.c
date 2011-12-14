@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <netdb.h>
 
 #include "MKPlugin.h"
 
@@ -295,7 +296,7 @@ int _mkp_network_io_accept(int server_fd)
 {
     int remote_fd;
     struct sockaddr_in sock_addr;
-    socklen_t socket_size = sizeof(struct sockaddr_in);
+    socklen_t socket_size = sizeof(struct sockaddr);
 
     PLUGIN_TRACE("Accepting Connection");
 
@@ -481,38 +482,56 @@ int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
     return bytes_sent;
 }
 
-
-int _mkp_network_io_connect(int socket_fd, char *host, int port)
+int _mkp_network_io_create_socket(int domain, int type, int protocol)
 {
-    int res;
-    struct sockaddr_in *remote;
+    int socket_fd;
 
-    remote = (struct sockaddr_in *) mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
-    remote->sin_family = AF_INET;
+    PLUGIN_TRACE("Creating Socket");
+    socket_fd = socket(domain, type, protocol);
 
-    res = inet_pton(AF_INET, host, (void *) (&(remote->sin_addr.s_addr)));
+    return socket_fd;
+}
 
-    if (res < 0) {
-        PLUGIN_TRACE("Can't set remote->sin_addr.s_addr");
-        mk_api->mem_free(remote);
+int _mkp_network_io_connect(char *host, int port)
+{
+    int ret;
+    int socket_fd;
+    char *port_str = 0;
+    unsigned long len;
+    struct addrinfo hints;
+    struct addrinfo *res, *rp;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    mk_api->str_build(&port_str, &len, "%d", port);
+
+    ret = getaddrinfo(host, port_str, &hints, &res);
+    mk_api->mem_free(port_str);
+    if(ret != 0) {
+        mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
     }
-    else if (res == 0) {
-        PLUGIN_TRACE("Invalid IP address\n");
-        mk_api->mem_free(remote);
-        return -1;
+    for(rp = res; rp != NULL; rp = rp->ai_next) {
+        socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+
+        if( socket_fd == -1) {
+            mk_warn("Error creating client socket");
+            return -1;
+        }
+
+        if (connect(socket_fd,
+                    (struct sockaddr *) rp->ai_addr, rp->ai_addrlen) == -1) {
+            close(socket_fd);
+            mk_err("Can't connect to %s", host);
+            return -1;
+        }
+
+        break;
     }
 
-    remote->sin_port = htons(port);
-    if (connect(socket_fd, (struct sockaddr *) remote, sizeof(struct sockaddr)) == -1) {
-        PLUGIN_TRACE("Error connecting");
-        close(socket_fd);
-        return -1;
-    }
-
-    mk_api->mem_free(remote);
-
-    return 0;
+    return socket_fd;
 }
 
 int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
@@ -531,16 +550,6 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
     if (bytes_written != -1 ) *file_offset += bytes_written;
 
     return bytes_written;
-}
-
-int _mkp_network_io_create_socket(int domain, int type, int protocol)
-{
-    int socket_fd;
-
-    PLUGIN_TRACE("Creating Socket");
-    socket_fd = socket(domain, type, protocol);
-
-    return socket_fd;
 }
 
 int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr,
@@ -569,61 +578,79 @@ int _mkp_network_io_server(int port, char *listen_addr)
 {
     int socket_fd;
     int ret;
-    struct sockaddr_in local_sockaddr_in;
+    char *port_str = 0;
+    unsigned long len;
+    struct addrinfo hints;
+    struct addrinfo *res, *rp;
 
-    PLUGIN_TRACE("Create SSL socket");
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
-    socket_fd = _mkp_network_io_create_socket(PF_INET, SOCK_STREAM, 0);
-    if (socket_fd == -1) {
-        PLUGIN_TRACE("Error creating server socket");
+    mk_api->str_build(&port_str, &len, "%d", port);
+
+    ret = getaddrinfo(listen_addr, port_str, &hints, &res);
+    mk_api->mem_free(port_str);
+    if(ret != 0) {
+        mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
     }
-    mk_api->socket_set_tcp_nodelay(socket_fd);
 
-    local_sockaddr_in.sin_family = AF_INET;
-    local_sockaddr_in.sin_port = htons(port);
-    inet_pton(AF_INET, listen_addr, &local_sockaddr_in.sin_addr.s_addr);
-    memset(&(local_sockaddr_in.sin_zero), '\0', 8);
+    for(rp = res; rp != NULL; rp = rp->ai_next) {
+        socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
-    mk_api->socket_reset(socket_fd);
+        if( socket_fd == -1) {
+            mk_warn("Error creating server socket");
+            return -1;
+        }
 
-    ret = _mkp_network_io_bind(socket_fd,
-                               (struct sockaddr *) &local_sockaddr_in,
-                               sizeof(struct sockaddr),
-                               MK_SOMAXCONN);
+        mk_api->socket_set_tcp_nodelay(socket_fd);
+        mk_api->socket_reset(socket_fd);
+        ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
-    if (ret == -1) {
-        mk_err("Port %i cannot be used", port);
-        exit(EXIT_FAILURE);
+        if(ret == -1) {
+            mk_err("Port %i cannot be used\n", port);
+            return -1;
+        }
+        break;
     }
 
-
-    PLUGIN_TRACE("Socket created, returned socket");
     return socket_fd;
 }
 
 char * _mkp_network_io_ip_str(int socket_fd, int *size)
 {
-    struct sockaddr_storage addr;
-    struct sockaddr_in *s;
-    socklen_t len = sizeof(struct sockaddr_in);
+    struct sockaddr *addr = NULL;
+    socklen_t len = sizeof(struct sockaddr);
     char *ip = (char *)mk_api->mem_alloc_z(INET_ADDRSTRLEN + 1);
 
     *size = INET_ADDRSTRLEN + 1;
 
-    if(getpeername(socket_fd, (struct sockaddr *)&addr, &len) == -1 ) {
-        mk_err("Can't get addr for this socket");
+    if(getpeername(socket_fd, addr, &len) == -1 ) {
+        PLUGIN_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
         mk_api->mem_free(ip);
         return NULL;
     }
 
-    s = (struct sockaddr_in *)&addr;
-
-    if(inet_ntop(AF_INET, &s->sin_addr, ip, INET_ADDRSTRLEN) == NULL) {
-        mk_err("Can't get the IP text form");
-        mk_api->mem_free(ip);
-        return NULL;
+    if(addr->sa_family == AF_INET) {
+        if(inet_ntop(addr->sa_family, &((struct sockaddr_in *)addr)->sin_addr,
+                     ip, INET_ADDRSTRLEN) == NULL) {
+            PLUGIN_TRACE("Can't get the IP text form");
+            mk_api->mem_free(ip);
+            return NULL;
+        }
     }
+
+    if(addr->sa_family == AF_INET6) {
+        if(inet_ntop(addr->sa_family, &((struct sockaddr_in6 *)addr)->sin6_addr,
+                     ip, INET_ADDRSTRLEN) == NULL) {
+            PLUGIN_TRACE("Can't get the IP text form");
+            mk_api->mem_free(ip);
+            return NULL;
+        }
+    }
+
 
     return ip;
 }
