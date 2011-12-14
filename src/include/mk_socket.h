@@ -46,7 +46,7 @@ int mk_socket_close(int socket);
 int mk_socket_timeout(int s, char *buf, int len, int timeout, int recv_send);
 
 int mk_socket_create(void);
-int mk_socket_connect(int socket_fd, char *host, int port);
+int mk_socket_connect(char *host, int port);
 void mk_socket_reset(int socket);
 int mk_socket_server(int port, char *listen_addr);
 

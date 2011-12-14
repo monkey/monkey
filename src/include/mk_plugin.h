@@ -107,7 +107,7 @@ struct plugin_network_io
     int (*write) (int, const void *, size_t);
     int (*writev) (int, struct mk_iov *);
     int (*close) (int);
-    int (*connect) (int, char *, int);
+    int (*connect) (char *, int);
     int (*send_file) (int, int, off_t *, size_t);
     int (*create_socket) (int, int, int);
     int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
@@ -242,7 +242,7 @@ struct plugin_api
     int (*socket_cork_flag) (int, int);
     int (*socket_reset) (int);
     int (*socket_set_tcp_nodelay) (int);
-    int (*socket_connect) (int, char *, int);
+    int (*socket_connect) (char *, int);
     int (*socket_set_nonblocking) (int);
     int (*socket_create) ();
     int (*socket_close) (int);

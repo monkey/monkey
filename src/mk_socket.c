@@ -103,13 +103,13 @@ int mk_socket_create()
     return sockfd;
 }
 
-int mk_socket_connect(int socket_fd, char *host, int port)
+int mk_socket_connect(char *host, int port)
 {
-    int ret;
+    int sockfd;
 
-    ret = plg_netiomap->connect(socket_fd, host, port);
+    sockfd = plg_netiomap->connect(host, port);
 
-    return ret;
+    return sockfd;
 }
 
 void mk_socket_reset(int socket)
