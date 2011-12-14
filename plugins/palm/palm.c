@@ -312,16 +312,12 @@ struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
                                         struct client_session *cs,
                                         struct session_request *sr)
 {
-    int ret;
     int palm_socket;
 
     /* Connecting to Palm Server */
-    palm_socket = mk_api->socket_create();
-    ret = mk_api->socket_connect(palm_socket,
-                                       palm->server_addr,
-                                       palm->server_port);
+    palm_socket = mk_api->socket_connect(palm->server_addr, palm->server_port);
 
-    if (ret < 0) {
+    if (palm_socket < 0) {
         mk_warn("Palm: Could not connect to %s:%i", palm->server_addr, palm->server_port);
         mk_api->header_set_http_status(sr, MK_SERVER_INTERNAL_ERROR);
         return NULL;
