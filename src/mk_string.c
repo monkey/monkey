@@ -254,6 +254,10 @@ int mk_string_trim(char **str)
     len = strlen(buf);
     left = buf;
 
+    if(len == 0) {
+        return 0;
+    }
+
     /* left spaces */
     while (left) {
         if (isspace(*left)) {
