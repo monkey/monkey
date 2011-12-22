@@ -115,7 +115,7 @@ int _mkp_network_io_create_socket(int domain, int type, int protocol)
 int _mkp_network_io_connect(char *host, int port)
 {
     int ret;
-    int socket_fd;
+    int socket_fd = -1;
     char *port_str = 0;
     unsigned long len;
     struct addrinfo hints;
@@ -192,7 +192,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
 
 int _mkp_network_io_server(int port, char *listen_addr)
 {
-    int socket_fd;
+    int socket_fd = -1;
     int ret;
     char *port_str = 0;
     unsigned long len;
