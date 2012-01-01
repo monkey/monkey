@@ -1,3 +1,299 @@
+commit d8035ebcbf071c8e59d87ff4857d163888239f12
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Dec 23 11:27:22 2011 -0300
+
+    Liana_ipv6: Plugin deprecated since we have the IPv6 support integrated in liana plugin
+
+commit 291356eb23d8db491b85b69dc7aafaaefa55bba7
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Dec 22 10:18:32 2011 -0300
+
+    Core: Fix mk_string_trim() it doesn't segfault when we pass a string with lenght 0
+
+commit 4b5327dd99e431803bfd522d9d2889a06a98536a
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Dec 22 10:18:03 2011 -0300
+
+    Liana: Fix some warnings
+
+commit 2cc17fdba1c174fa50f22f6b4d8d6200b8736437
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Dec 14 20:04:54 2011 -0300
+
+    Palm: Fix it to fit the new network layer
+
+commit f97f0932e84f0933898f9f4320b4f64ac6eb6896
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Dec 14 20:03:51 2011 -0300
+
+    Liana_ipv6: We don't need it anymore for the moment
+
+commit 6227a44a8b36ebfff81f8b256543f8aa710334cf
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Dec 14 20:03:04 2011 -0300
+
+    Liana_ssl: Use the same way as liana to connect using ipv4 or ipv6
+
+commit 5d38843cd1abecda7ad1a86f8deb6f870730791a
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Dec 14 20:02:07 2011 -0300
+
+    Liana: Fix network layer to use ipv4 or ipv6 according to configuration values in monkey.c
+
+commit c9b217fa0e9f1c8b178c6d792759ca1fbaa6ef79
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 15 14:36:47 2011 -0300
+
+    Fix double-free() on client_session when keep-alive is off
+    
+    When KeepAlive feature is set to off, Monkey was doubling free
+    the client_session struct, this was done in mk_http_request_end()
+    and also in mk_conn_write().
+    
+    The patch removes the explicit free in mk_conn_write() and let
+    return mk_http_request_end() the final status.
+    
+    This issue was discovered and initially fixed with a patch
+    provided by "hio_ <trustthesky@gmail.com>". This new patch
+    handles the conditionals in a different way.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0cdb0e6a3513af5b1817031bf467e174a2d5e49d
+Author: hio_ <trustthesky@gmail.com>
+Date:   Tue Nov 15 13:22:58 2011 -0300
+
+    Fix session_request buffer size when using dynamic memory
+    
+    If the request is greater than the initial 4KB allocated, Monkey
+    allocate/reallocate space in the main buffer to continue reading
+    the incoming request, but when the buffer is full it was writing
+    a NULL byte outside of the buffer size, issue detected with
+    valgrind:
+    
+    ==25232== Invalid write of size 1
+    ==25232==    at 0x4045AE: mk_handler_read (mk_request.c:602)
+    ==25232==    by 0x40A3AC: mk_conn_read (mk_connection.c:64)
+    ==25232==    by 0x40886E: mk_epoll_init (mk_epoll.c:98)
+    ==25232==    by 0x408E4E: mk_sched_launch_worker_loop (mk_scheduler.c:196)
+    ==25232==    by 0x503AEFB: start_thread (pthread_create.c:304)
+    ==25232==    by 0x533189C: clone (clone.S:112)
+    
+    This patch add one extra byte to the buffer size.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b04e9377769835ee96a09cf8d027ac0b75b0d96
+Author: hio_ <trustthesky@gmail.com>
+Date:   Tue Nov 8 17:20:47 2011 -0300
+
+    Fix unitialized mk_pointer passed to string builder
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9dddd9b5c31ad34828fac1d2061daf204b1f4c96
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 8 11:49:26 2011 -0300
+
+    Fix trace messages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b55d769beba5dafd29f2a7bb002fe80d5b94182
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 8 11:19:29 2011 -0300
+
+    Server: check server load versus capacity
+    
+    Now monkey checks the server load when a new connection arrives,
+    if this connection reach the limit of the current capacity, the
+    socket will be closed.
+    
+    This patch also fix a trace messages.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2a80e9f245a71a22bc08fa7e71b859df9951fc17
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 8 10:40:17 2011 -0300
+
+    Liana: do not print error when socket is unavailable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit be830e0f8a4c5a53ba29abf1792247f81335b8ed
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 8 10:31:00 2011 -0300
+
+    Scheduler: do not print warning message on error handler
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c83ee4d9bbe9bcc4bebac37eb8c72595fbbd5496
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Nov 5 11:54:24 2011 -0300
+
+    Liana_ipv6: Fix typo
+
+commit bab5f5455b782fb3f2f1c453ee68b68fee499a66
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Nov 5 10:42:02 2011 -0300
+
+    Liana_ssl: set ip buffer to zero
+
+commit c990a239aff0b90852554d5a24e6017ceba5311f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 4 22:52:06 2011 -0300
+
+    Liana: set IP buffer to zero
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bae55109d52fc3aa4c28eeb587b4e731d7518bfa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 4 22:51:48 2011 -0300
+
+    Websockets: force payload size
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 11fc3723601ebc0fcada915440d436925829e8b3
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Nov 4 18:45:21 2011 -0300
+
+    Liana, Liana_ssl, Liana_ipv6: free the memory for the ip text from if it returns null
+
+commit bec53b2586f621fc937b957c080e8d0f33edc2f9
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Nov 4 10:16:44 2011 -0300
+
+    Liana_ssl Fix plugin to match the new network layer model
+
+commit b4dd7ce18a1d73fd74f77aa9a974bc6ba0f2f515
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Nov 4 10:15:48 2011 -0300
+
+    Liana: Fix some arguments problem in _mkp_network_io_accept()
+
+commit 3fcd8d30bd498a2d3cf7d0a5bab507f4655e2fb4
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Nov 4 09:46:43 2011 -0300
+
+    Liana: Fix bug remained of the latest network layer fixes
+
+commit 801f7737dbf823b56896a3245144d8d0821b2fda
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 3 23:36:44 2011 -0300
+
+    WebSockets: Initial plugin import
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 138f68e2aeb622a7c3a55f16ac593e3c08b30349
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 3 22:44:21 2011 -0300
+
+    v0.30 begins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e7f303637bed20f33d66e9898755c3182cd42870
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 3 22:43:04 2011 -0300
+
+    Session Request: add new connection field to the response header
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ad2f90a2bdc0b175398ff5ddb327973e4dd69e0a
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Nov 2 22:07:44 2011 -0300
+
+    Logger: Use of the new function socket_ip_str() provided by the API to obtain the text form of the IP address.
+    Mandril: Obtain the in_addr from the socket to use it. This propose some new issues like, should our network layer provide more info necessary for plugins like Mandril?
+    Palm: Use of the new function socket_ip_str() provided by the API to obtain the text from of the IP address.
+
+commit 3aab2cd6fc82c33bbf4a18cd06d308f308fa1790
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Nov 2 22:02:51 2011 -0300
+
+    Removed ipv4 element from struct sched_connections.
+    Removed ipv4 element from struct client_session.
+
+commit 53ab1b86e5e9a8ddcc74d922325943480dcc8c3a
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Nov 2 21:54:30 2011 -0300
+
+    Added new function to the network layer: mk_socket_ip_str(), for now this function will replace mk_socket_get_ip() but in the future it may be renamed to mk_socket_get_ip_str().
+    Removed the old mk_socket_get_ip() to prove that no one use it.
+    Removed the argument of type sockaddr and sockaddr_in in a few functions because they were unnecessary.
+    Match new arguments in mk_server.c
+    Liana: Added new function _mkp_network_io_ip_str() to provide the new required function.
+    Liana: Clean all the functions that use arguments of type sockaddr and sockaddr_in to match new arguments.
+    Liana_ipv6: Clean up of the code and removed some comment lines.
+    Liana_ipv6: Added new function _mkp_newtwork_io_ip_str() to provide the new required function.
+    Liana_ipv6: Clean all the funtions that use arguments of type sockaddr and sockaddr_in to match new arguments.
+
+commit d97ff6ab7fddc0cae88dd26c318365735e07c948
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Nov 2 21:46:27 2011 -0300
+
+    Liana_ipv6: Fixed name of the so object
+
+commit aa57e510f28e695ac6a6d045ea49f65a4f93ce6f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 31 18:30:12 2011 -0300
+
+    Monkey API Manpage (draft)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ecdd29f441d6fec9ccc957cf1ef1173695770fb2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 31 18:17:41 2011 -0300
+
+    mk_header_get() now use different parameters
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e05ff7883af0b57e33e7c3af23f913b0e29cbea5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 31 13:02:57 2011 -0300
+
+    Core/API: now support custom response status
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8752906e72caf9c73472fe59a341cd00e8106263
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 30 14:52:20 2011 -0300
+
+    STAGE_30 plugins now can handle requests with unknown HTTP methods
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 33e546f4d5bed08279bf3aa2bafa9b2f8b9ed44a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 30 13:54:34 2011 -0300
+
+    Listen for PUT and DELETE methods
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 98ffb705b7489d7fbd158ed01914496e7082294b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Oct 26 14:13:32 2011 -0300
+
+    Lists: fix mk_list_entry_next() macro
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 00fd080e47bd817a072311fdc946e951dedfba18
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 21 13:31:40 2011 -0300
+
+    Monkey 0.21.0
+
 commit 78b750df798539a31ef36685857d3f44c68e8744
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Thu Oct 20 20:26:06 2011 -0300
