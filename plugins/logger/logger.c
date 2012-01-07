@@ -189,15 +189,16 @@ void *mk_logger_worker_init(void *args)
             }
 
             if (bytes < buffer_limit && clk <= timeout) {
-                break;
+                continue;
             }
-            else {
-                timeout = clk + mk_logger_timeout;
+
+            timeout = clk + mk_logger_timeout;
         
-                flog = open(target, O_WRONLY | O_CREAT, 0644);
-                if (flog == -1) {
-                    mk_warn("Could not open logfile '%s'", target);
-                    
+            flog = open(target, O_WRONLY | O_CREAT, 0644);
+            if (flog == -1) {
+                mk_warn("Could not open logfile '%s'", target);
+                
+                if (bytes >= buffer_limit) {
                     /*
                      * if our buffer is full and we cannot open the logfile,
                      * we should consume the information in some way :(
@@ -210,19 +211,20 @@ void *mk_logger_worker_init(void *args)
                         if (slen > 0) { consumed += slen; }
                         else { break; }
                     } while (consumed < bytes);
-                    continue;
                 }
 
-                lseek(flog, 0, SEEK_END);
-                slen = splice(events[i].data.fd, NULL, flog,
-                              NULL, bytes, SPLICE_F_MOVE);
-                if (slen == -1) {
-                    mk_warn("Could not write to log file: splice() = %i", slen);
-                }
-
-                PLUGIN_TRACE("written %i bytes", bytes);
-                close(flog);
+                continue;
             }
+            
+            lseek(flog, 0, SEEK_END);
+            slen = splice(events[i].data.fd, NULL, flog,
+                          NULL, bytes, SPLICE_F_MOVE);
+            if (slen == -1) {
+                mk_warn("Could not write to log file: splice() = %i", slen);
+            }
+            
+            PLUGIN_TRACE("written %i bytes", bytes);
+            close(flog);
         }
     }
 }
