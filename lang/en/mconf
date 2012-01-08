@@ -17,9 +17,10 @@ cat > conf/monkey.conf <<EOF
 
     # Listen:
     # -------
-    # The Listen directive restricts Monkey from listening for incoming connections 
-    # other than the network interface associated to the given value. In order to 
-    # allow just loopback connection you could use:
+    # The Listen directive restricts to the network interface from where Monkey 
+    # will be listening for incoming connections. If you want to restrict to the 
+    # lookback interface, for IPv4 you can set '127.0.0.1' or the value '::1' in 
+    # case of IPv6, e.g:
     #
     # Listen 127.0.0.1
 
