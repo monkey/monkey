@@ -448,7 +448,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     }
 
     /* Add IP to IOV */
-    mk_api->iov_add_entry(iov, ip_str, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    mk_api->iov_add_entry(iov, ip_str, len, mk_iov_none, MK_IOV_FREE_BUF);
     mk_api->iov_add_entry(iov, " - ", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
     /* Date/time when object was requested */
     date = mk_api->time_human();
