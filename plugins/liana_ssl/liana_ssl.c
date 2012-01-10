@@ -619,42 +619,6 @@ int _mkp_network_io_server(int port, char *listen_addr)
     return socket_fd;
 }
 
-char * _mkp_network_io_ip_str(int socket_fd, int *size)
-{
-    struct sockaddr addr;
-    socklen_t len = sizeof(addr);
-    char *ip = (char *)mk_api->mem_alloc_z(INET6_ADDRSTRLEN + 1);
-
-    *size = INET6_ADDRSTRLEN + 1;
-
-    if((getpeername(socket_fd, &addr, &len)) == -1 ) {
-        PLUGIN_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
-        mk_api->mem_free(ip);
-        return NULL;
-    }
-
-    if(addr.sa_family == AF_INET) {
-        if((inet_ntop(addr.sa_family, &((struct sockaddr_in *)&addr)->sin_addr,
-                      ip, INET_ADDRSTRLEN)) == NULL) {
-            PLUGIN_TRACE("Can't get the IP text form");
-            mk_api->mem_free(ip);
-            return NULL;
-        }
-    }
-
-    if(addr.sa_family == AF_INET6) {
-        if((inet_ntop(addr.sa_family, &((struct sockaddr_in6 *)&addr)->sin6_addr,
-                     ip, INET6_ADDRSTRLEN)) == NULL) {
-            PLUGIN_TRACE("Can't get the IP text form");
-            mk_api->mem_free(ip);
-            return NULL;
-        }
-    }
-
-
-    return ip;
-}
-
 int _mkp_core_prctx(struct server_config *config)
 {
     struct file_info ssl_file_info;
