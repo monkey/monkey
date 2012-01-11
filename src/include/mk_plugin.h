@@ -250,7 +250,7 @@ struct plugin_api
     int (*socket_send) (int, const void *, size_t);
     int (*socket_read) (int, void *, int);
     int (*socket_send_file) (int, int, off_t, size_t);
-    char *(*socket_ip_str) (int, int *);
+    int (*socket_ip_str) (int, char **, int, unsigned long *);
 
     /* configuration reader functions */
     struct mk_config *(*config_create) (char *);

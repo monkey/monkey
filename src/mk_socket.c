@@ -184,37 +184,32 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
     return bytes;
 }
 
-char *mk_socket_ip_str(int socket_fd, int *size)
+int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 {
     struct sockaddr addr;
-    socklen_t len = sizeof(addr);
-    char *ip = (char *) mk_mem_malloc_z(INET6_ADDRSTRLEN + 1);
+    socklen_t s_len = sizeof(addr);
 
-    *size = INET6_ADDRSTRLEN + 1;
-
-    if((getpeername(socket_fd, &addr, &len)) == -1 ) {
+    if((getpeername(socket_fd, &addr, &s_len)) == -1 ) {
         MK_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
-        mk_mem_free(ip);
-        return NULL;
+        return -1;
     }
 
     if(addr.sa_family == AF_INET) {
         if((inet_ntop(addr.sa_family, &((struct sockaddr_in *)&addr)->sin_addr,
-                      ip, INET_ADDRSTRLEN)) == NULL) {
+                      *buf, INET_ADDRSTRLEN)) == NULL) {
             MK_TRACE("Can't get the IP text form");
-            mk_mem_free(ip);
-            return NULL;
+            return -1;
         }
     }
 
     if(addr.sa_family == AF_INET6) {
         if((inet_ntop(addr.sa_family, &((struct sockaddr_in6 *)&addr)->sin6_addr,
-                     ip, INET6_ADDRSTRLEN)) == NULL) {
+                     *buf, INET6_ADDRSTRLEN)) == NULL) {
             MK_TRACE("Can't get the IP text form");
-            mk_mem_free(ip);
-            return NULL;
+            return -1;
         }
     }
 
-    return ip;
+    *len = strlen(*buf);
+    return 0;
 }

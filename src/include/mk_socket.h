@@ -56,5 +56,5 @@ int mk_socket_send(int socket_fd, const void *buf, size_t count);
 int mk_socket_read(int socket_fd, void *buf, int count);
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset, 
                         size_t file_count);
-char * mk_socket_ip_str(int socket_fd, int *len);
+int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len);
 #endif

@@ -293,6 +293,7 @@ int _mkp_init(void **api, char *confdir)
     /* Specific thread key */
     pthread_key_create(&cache_content_length, NULL);
     pthread_key_create(&cache_status, NULL);
+    pthread_key_create(&cache_ip_str, NULL);
 
     /* Global configuration */
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
@@ -388,6 +389,7 @@ void _mkp_core_thctx()
     struct mk_iov *iov_log;
     mk_pointer *content_length;
     mk_pointer *status;
+    mk_pointer *ip_str;
 
     PLUGIN_TRACE("Creating thread cache");
     
@@ -406,19 +408,24 @@ void _mkp_core_thctx()
     status->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     status->len = -1;
     pthread_setspecific(cache_status, (void *) status);
+
+    /* Cache IP address */
+    ip_str = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    ip_str->data = mk_api->mem_alloc_z(INET6_ADDRSTRLEN + 1);
+    ip_str->len  = -1;
+    pthread_setspecific(cache_ip_str, (void *) ip_str);
 }
 
 int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
-    int i, http_status;
+    int i, http_status, ret;
     int array_len = ARRAY_SIZE(response_codes);
     struct log_target *target;
     struct mk_iov *iov;
     mk_pointer *date;
     mk_pointer *content_length;
+    mk_pointer *ip_str;
     mk_pointer status;
-    char *ip_str = NULL;
-    int len;
 
     /* Set response status */
     http_status = sr->headers.status;
@@ -437,18 +444,22 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     iov->total_len = 0;
 
     /* Format IP string */
-    ip_str = mk_api->socket_ip_str(cs->socket, &len);
-
+    ip_str = pthread_getspecific(cache_ip_str);
+    ret = mk_api->socket_ip_str(cs->socket, 
+                                &ip_str->data, 
+                                INET6_ADDRSTRLEN + 1,
+                                &ip_str->len);
     /* 
      * If the socket is not longer available ip_str can be null, 
      * so we must check this condition and return
      */
-    if (!ip_str) {
+    if (ret < 0) {
         return 0;
     }
 
     /* Add IP to IOV */
-    mk_api->iov_add_entry(iov, ip_str, len, mk_iov_none, MK_IOV_FREE_BUF);
+    mk_api->iov_add_entry(iov, ip_str->data, ip_str->len, mk_iov_none, 
+                          MK_IOV_NOT_FREE_BUF);
     mk_api->iov_add_entry(iov, " - ", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
     /* Date/time when object was requested */
     date = mk_api->time_human();
