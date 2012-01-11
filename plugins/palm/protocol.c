@@ -116,9 +116,10 @@ static int get_port_by_socket(int fd)
 struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
                                             struct session_request *sr)
 {
-    int i;
+    int i, ret;
     int row_len;
-    char *ip;
+    char *ip_str;
+    unsigned long ip_len;
     char *row_buf;
 
     mk_pointer iov_temp;
@@ -220,10 +221,15 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     }
 
     /* REMOTE_ADDR */
-    int ip_size;
-    ip = mk_api->socket_ip_str(cs->socket, &ip_size);
-    iov_temp.len = ip_size;
-    iov_temp.data = ip;
+    ip_str = pthread_getspecific(cache_ip_str);
+    ret = mk_api->socket_ip_str(cs->socket, (char **) &ip_str, INET6_ADDRSTRLEN + 1, &ip_len);
+    if (ret < 0) {
+        PLUGIN_TRACE("[FD %i] Error formatting IP address", cs->socket);
+        return NULL;
+    }
+
+    iov_temp.len = ip_len;
+    iov_temp.data = ip_str;
 
     prot_add_header(iov, mk_cgi_remote_addr, iov_temp);
 
@@ -287,12 +293,12 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
 
 void mk_palm_protocol_thread_init()
 {
-    char *ipv4;
+    char *ip_str;
     struct mk_iov *iov;
 
     iov = mk_api->iov_create(128,0);
     pthread_setspecific(iov_protocol_request, iov);
 
-    ipv4 = mk_api->mem_alloc(16);
-    pthread_setspecific(cache_ipv4, ipv4);
+    ip_str = mk_api->mem_alloc(INET6_ADDRSTRLEN + 1);
+    pthread_setspecific(cache_ip_str, ip_str);
 }
