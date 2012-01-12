@@ -1,3 +1,102 @@
+commit b43b743905349d226a3eeaff34178e3d42dc7938
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 12 10:25:09 2012 -0300
+
+    Update MONKEY_MINOR version to 31
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0b7d5c5ab20b2ffb5fb40f23801a2e03b8cbe328
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jan 11 18:10:13 2012 -0300
+
+    Palm: use new socket_ip_str() API call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 69d630cbb649cfa74e4a81c7b0e6c38784d4dbe1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jan 11 16:21:16 2012 -0300
+
+    Socket: mk_socket_ip_str() accepts input buffer
+    
+    The function which format IP strings was allocating memory buffer
+    for the string, this patch makes the function to accept an input
+    buffer so the caller must care about it.
+    
+    Also this patch modifies the logger plugin to use the new API of
+    the function in question. Now it uses a thread key to hold the
+    buffer in memory used to format the IP string, it should be
+    a little bit faster now.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e8f33a8ecfdcb71336afd0cc54bb4c65eab982f6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 10 15:57:57 2012 -0300
+
+    Logger: fix memory leak on ip_str buffer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 901ca276f3b64e42882e00b30a2ff3d41a27c422
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 10 15:43:30 2012 -0300
+
+    Liana_SSL: deprecate _mkp_network_io_ip_str()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 34572c8ae18199611ceaf3919631e80f452e4714
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 10 15:43:10 2012 -0300
+
+    Liana: deprecate _mkp_network_io_ip_str()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit daffacfa85039688965a9dd9f47cd196ebfb4a30
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 10 15:40:54 2012 -0300
+
+    Socket: move socket_ip_str to core interface
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2d608e5c9556cd201fe72b6db1c416f74452d6c4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 7 22:15:55 2012 -0300
+
+    Config: add details for IPv6
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 95ef0f616c4b25ce4fde895aab33eb4670de6585
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 7 12:12:53 2012 -0300
+
+    Logger: fix fake consuming, perform when the buffer is full
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4f00640fd82912f5560cbe13a75eee873df8bfc6
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Jan 6 13:28:52 2012 -0300
+
+    Liana_ssl: Replicated the fix of Liana because it was happening here too
+
+commit 72a9a427bf5a8e646a8c630def85f3c94aed2db5
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Jan 6 13:28:25 2012 -0300
+
+    Liana: Fix bug #111 reported on the bug tracker of monkey
+
+commit c59682e46d6831ceec219103d37578ad71dee8e4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jan 1 10:21:25 2012 -0300
+
+    Monkey 0.30.0
+
 commit d8035ebcbf071c8e59d87ff4857d163888239f12
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Fri Dec 23 11:27:22 2011 -0300
