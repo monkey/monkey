@@ -135,7 +135,7 @@ char *mk_string_dup(const char *s)
     return strdup(s);
 }
 
-struct mk_string_line *mk_string_split_line(char *line)
+struct mk_string_line *mk_string_split_line(const char *line)
 {
     unsigned int i = 0, len, val_len;
     int end;

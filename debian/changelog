@@ -1,3 +1,9 @@
+monkey (0.31.0-1) unstable; urgency=low
+
+  * Update Monkey release to v0.31.0
+
+ -- Eduardo Silva <edsiper@gmail.com>  Fri, 13 Jan 2012 12:00:00 -0300
+
 monkey (0.21.0-1) unstable; urgency=low
 
   * Update Monkey release to v0.21.0

@@ -112,7 +112,7 @@ int mk_socket_connect(char *host, int port)
     return sockfd;
 }
 
-void mk_socket_reset(int socket)
+int mk_socket_reset(int socket)
 {
     int status = 1;
 
@@ -121,6 +121,8 @@ void mk_socket_reset(int socket)
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+
+    return 0;
 }
 
 /* Just IPv4 for now... */

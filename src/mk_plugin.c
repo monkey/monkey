@@ -319,93 +319,93 @@ void mk_plugin_init()
     /* API plugins funcions */
 
     /* Error helper */
-    api->_error = (void *) mk_print;
+    api->_error = mk_print;
 
     /* HTTP callbacks */
-    api->http_request_end = (void *) mk_plugin_http_request_end;
+    api->http_request_end = mk_plugin_http_request_end;
 
     /* Memory callbacks */
-    api->pointer_set = (void *) mk_pointer_set;
-    api->pointer_print = (void *) mk_pointer_print;
-    api->pointer_to_buf = (void *) mk_pointer_to_buf;
-    api->plugin_load_symbol = (void *) mk_plugin_load_symbol;
-    api->mem_alloc = (void *) mk_mem_malloc;
-    api->mem_alloc_z = (void *) mk_mem_malloc_z;
-    api->mem_free = (void *) mk_mem_free;
+    api->pointer_set = mk_pointer_set;
+    api->pointer_print = mk_pointer_print;
+    api->pointer_to_buf = mk_pointer_to_buf;
+    api->plugin_load_symbol = mk_plugin_load_symbol;
+    api->mem_alloc = mk_mem_malloc;
+    api->mem_alloc_z = mk_mem_malloc_z;
+    api->mem_free = mk_mem_free;
 
     /* String Callbacks */
-    api->str_build = (void *) mk_string_build;
-    api->str_dup = (void *) mk_string_dup;
-    api->str_search = (void *) mk_string_search;
-    api->str_search_n = (void *) mk_string_search_n;
-    api->str_copy_substr = (void *) mk_string_copy_substr;
-    api->str_itop = (void *) mk_string_itop;
-    api->str_split_line = (void *) mk_string_split_line;
+    api->str_build = mk_string_build;
+    api->str_dup = mk_string_dup;
+    api->str_search = mk_string_search;
+    api->str_search_n = mk_string_search_n;
+    api->str_copy_substr = mk_string_copy_substr;
+    api->str_itop = mk_string_itop;
+    api->str_split_line = mk_string_split_line;
 
     /* File Callbacks */
-    api->file_to_buffer = (void *) mk_file_to_buffer;
-    api->file_get_info = (void *) mk_file_get_info;
+    api->file_to_buffer = mk_file_to_buffer;
+    api->file_get_info = mk_file_get_info;
 
     /* HTTP Callbacks */
-    api->header_send = (void *) mk_header_send;
+    api->header_send = mk_header_send;
     api->header_add = mk_plugin_header_add;
     api->header_get = mk_request_header_get;
-    api->header_set_http_status = (void *) mk_header_set_http_status;
+    api->header_set_http_status = mk_header_set_http_status;
 
     /* IOV callbacks */
-    api->iov_create = (void *) mk_iov_create;
-    api->iov_free = (void *) mk_iov_free;
-    api->iov_free_marked = (void  *) mk_iov_free_marked;
-    api->iov_add_entry = (void *) mk_iov_add_entry;
-    api->iov_set_entry = (void *) mk_iov_set_entry;
-    api->iov_send = (void *) mk_iov_send;
-    api->iov_print = (void *) mk_iov_print;
+    api->iov_create = mk_iov_create;
+    api->iov_free = mk_iov_free;
+    api->iov_free_marked = mk_iov_free_marked;
+    api->iov_add_entry =  mk_iov_add_entry;
+    api->iov_set_entry =  mk_iov_set_entry;
+    api->iov_send =  mk_iov_send;
+    api->iov_print =  mk_iov_print;
 
     /* EPoll callbacks */
-    api->epoll_create = (void *) mk_epoll_create;
-    api->epoll_init = (void *) mk_epoll_init;
-    api->epoll_add = (void *) mk_epoll_add;
-    api->epoll_del = (void *) mk_epoll_del;
-    api->epoll_change_mode = (void *) mk_epoll_change_mode;
+    api->epoll_create =  mk_epoll_create;
+    api->epoll_init =  mk_epoll_init;
+    api->epoll_add = mk_epoll_add;
+    api->epoll_del = mk_epoll_del;
+    api->epoll_change_mode = mk_epoll_change_mode;
 
     /* Socket callbacks */
-    api->socket_cork_flag = (void *) mk_socket_set_cork_flag;
-    api->socket_connect = (void *) mk_socket_connect;
-    api->socket_reset = (void *) mk_socket_reset;
-    api->socket_set_tcp_nodelay = (void *) mk_socket_set_tcp_nodelay;
-    api->socket_set_nonblocking = (void *) mk_socket_set_nonblocking;
-    api->socket_create = (void *) mk_socket_create;
-    api->socket_close = (void *) mk_socket_close;
-    api->socket_sendv = (void *) mk_socket_sendv;
-    api->socket_send = (void *) mk_socket_send;
-    api->socket_read = (void *) mk_socket_read;
-    api->socket_send_file = (void *) mk_socket_send_file;
-    api->socket_ip_str = (void *) mk_socket_ip_str;
+    api->socket_cork_flag = mk_socket_set_cork_flag;
+    api->socket_connect = mk_socket_connect;
+    api->socket_reset = mk_socket_reset;
+    api->socket_set_tcp_nodelay = mk_socket_set_tcp_nodelay;
+    api->socket_set_nonblocking = mk_socket_set_nonblocking;
+    api->socket_create = mk_socket_create;
+    api->socket_close = mk_socket_close;
+    api->socket_sendv = mk_socket_sendv;
+    api->socket_send = mk_socket_send;
+    api->socket_read = mk_socket_read;
+    api->socket_send_file = mk_socket_send_file;
+    api->socket_ip_str = mk_socket_ip_str;
 
     /* Config Callbacks */
-    api->config_create = (void *) mk_config_create;
-    api->config_free = (void *) mk_config_free;
-    api->config_section_get = (void *) mk_config_section_get;
-    api->config_section_getval = (void *) mk_config_section_getval;
+    api->config_create = mk_config_create;
+    api->config_free = mk_config_free;
+    api->config_section_get = mk_config_section_get;
+    api->config_section_getval = mk_config_section_getval;
 
     /* Scheduler and Event callbacks */
-    api->sched_get_connection = (void *) mk_sched_get_connection;
-    api->sched_remove_client = (void *) mk_plugin_sched_remove_client;
+    api->sched_get_connection = mk_sched_get_connection;
+    api->sched_remove_client  = mk_plugin_sched_remove_client;
 
-    api->event_add = (void *) mk_plugin_event_add;
-    api->event_del = (void *) mk_plugin_event_del;
-    api->event_socket_change_mode = (void *) mk_plugin_event_socket_change_mode;
+    api->event_add = mk_plugin_event_add;
+    api->event_del = mk_plugin_event_del;
+    api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
     
     /* Worker functions */
-    api->worker_spawn = (void *) mk_utils_worker_spawn;
+    api->worker_spawn = mk_utils_worker_spawn;
 
     /* Time functions */
-    api->time_unix = (void *) mk_plugin_time_now_unix;
-    api->time_human = (void *) mk_plugin_time_now_human;
+    api->time_unix  = mk_plugin_time_now_unix;
+    api->time_human = mk_plugin_time_now_human;
 
 #ifdef TRACE
-    api->trace = (void *) mk_utils_trace;
-    api->errno_print = (void *) mk_utils_print_errno;
+    api->trace = mk_utils_trace;
+    api->errno_print = mk_utils_print_errno;
 #endif
 
     /* Read configuration file */

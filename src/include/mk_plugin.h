@@ -187,14 +187,14 @@ struct plugin_api
     struct sched_list_node *sched_list;
 
     /* Error helper */
-    int *(*_error) (int, const char *, ...);
+    void (*_error) (int, const char *, ...);
 
     /* HTTP request function */
-    int *(*http_request_end) (int);
+    int   (*http_request_end) (int);
 
     /* memory functions */
-    void *(*mem_alloc) (int);
-    void *(*mem_alloc_z) (int);
+    void *(*mem_alloc) (const size_t size);
+    void *(*mem_alloc_z) (const size_t size);
     void  (*mem_free) (void *);
     void  (*pointer_set) (mk_pointer *, char *);
     void  (*pointer_print) (mk_pointer);
@@ -210,8 +210,8 @@ struct plugin_api
     struct mk_string_line *(*str_split_line) (const char *);
 
     /* file functions */
-    char *(*file_to_buffer) (char *);
-    int  (*file_get_info) (char *, struct file_info *);
+    char *(*file_to_buffer) (const char *);
+    int  (*file_get_info) (const char *, struct file_info *);
 
     /* header */
     int  (*header_send) (int, struct client_session *, struct session_request *);
@@ -229,7 +229,7 @@ struct plugin_api
     void (*iov_print) (struct mk_iov *);
 
     /* plugin functions */
-    void *(*plugin_load_symbol) (void *, char *);
+    void *(*plugin_load_symbol) (void *, const char *);
 
     /* epoll functions */
     void *(*epoll_init) (int, mk_epoll_handlers *, int);
@@ -249,14 +249,14 @@ struct plugin_api
     int (*socket_sendv) (int, struct mk_iov *);
     int (*socket_send) (int, const void *, size_t);
     int (*socket_read) (int, void *, int);
-    int (*socket_send_file) (int, int, off_t, size_t);
+    int (*socket_send_file) (int, int, off_t *, size_t);
     int (*socket_ip_str) (int, char **, int, unsigned long *);
 
     /* configuration reader functions */
-    struct mk_config *(*config_create) (char *);
+    struct mk_config *(*config_create) (const char *);
     void (*config_free) (struct mk_config *);
     struct mk_config_section *(*config_section_get) (struct mk_config *,
-                                                     char *);
+                                                     const char *);
     void *(*config_section_getval) (struct mk_config_section *, char *, int);
 
 
@@ -266,7 +266,7 @@ struct plugin_api
                                                       int);
 
     /* worker's functions */
-    int (*worker_spawn) (void (*func) (void *));
+    pthread_t (*worker_spawn) (void (*func) (void *));
 
     /* event's functions */
     int (*event_add) (int, int, struct plugin *, struct client_session *, 
@@ -280,7 +280,7 @@ struct plugin_api
     mk_pointer *(*time_human)();
 
 #ifdef TRACE
-    void (*trace)();
+    void (*trace)(const char *, int, const char *, char *, int, const char *, ...);
     int (*errno_print) (int);
 #endif
 

@@ -137,7 +137,7 @@ int mk_patas_conf(char *confdir)
 
         /* Get section values */
         val_host = mk_api->config_section_getval(section, "IP", MK_CONFIG_VAL_STR);
-        val_port = (int) mk_api->config_section_getval(section, "Port", MK_CONFIG_VAL_NUM);
+        val_port = (int)  mk_api->config_section_getval(section, "Port", MK_CONFIG_VAL_NUM);
         val_uri  = mk_api->config_section_getval(section, "Uri", MK_CONFIG_VAL_LIST);
 
         if (val_host && val_uri && val_port > 0) {
