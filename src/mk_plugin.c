@@ -259,8 +259,7 @@ create socket : %p\nbind : %p\nserver : %p",
                      p->net_io.send_file,
                      p->net_io.create_socket,
                      p->net_io.bind,
-                     p->net_io.server,
-                     p->net_io.ip_str);
+                     p->net_io.server);
 
             mk_plugin_free(p);
             return NULL;
