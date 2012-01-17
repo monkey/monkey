@@ -112,7 +112,6 @@ struct plugin_network_io
     int (*create_socket) (int, int, int);
     int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
     int (*server) (int, char *);
-    char * (*ip_str) (int, int *);
 };
 
 struct plugin_network_ip
