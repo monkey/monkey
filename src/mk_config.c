@@ -336,7 +336,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
             case MK_CONFIG_VAL_STR:
                 return (void *) entry->val;
             case MK_CONFIG_VAL_NUM:
-                return (void *) (size_t) strtol(entry->val, (char **) NULL, 10);
+                return (void *) strtol(entry->val, (char **) NULL, 10);
             case MK_CONFIG_VAL_BOOL:
                 on = strcasecmp(entry->val, VALUE_ON);
                 off = strcasecmp(entry->val, VALUE_OFF);
@@ -404,8 +404,8 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     /* Connection port */
     config->serverport = (size_t) mk_config_section_getval(section,
-                                                        "Port", 
-                                                        MK_CONFIG_VAL_NUM);
+                                                           "Port", 
+                                                           MK_CONFIG_VAL_NUM);
     if (config->serverport <= 1 || config->serverport >= 65535) {
         mk_config_print_error_msg("Port", path);
     }
