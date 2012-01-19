@@ -266,6 +266,7 @@ struct plugin_api
 
     /* worker's functions */
     pthread_t (*worker_spawn) (void (*func) (void *));
+    int (*worker_rename) (const char *);
 
     /* event's functions */
     int (*event_add) (int, int, struct plugin *, struct client_session *, 

@@ -87,8 +87,10 @@ void mk_server_loop(int server_fd)
             mk_warn("TCP_DEFER_ACCEPT failed");
     }
 
+    /* Rename worker */
+    mk_utils_worker_rename("monkey: server");
     mk_info("HTTP Server started");
-    
+
     while (1) {
         remote_fd = mk_socket_accept(server_fd);
 

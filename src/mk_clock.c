@@ -67,6 +67,8 @@ void mk_clock_header_set_time()
 
 void *mk_clock_worker_init(void *args)
 {
+    mk_utils_worker_rename("monkey: clock");
+
     /* Time when monkey was started */
     monkey_init_time = time(NULL);
 

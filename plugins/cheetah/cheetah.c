@@ -99,6 +99,9 @@ void mk_cheetah_config(char *path)
 
 void *mk_cheetah_init(void *args)
 {
+    /* Rename worker */
+    mk_api->worker_rename("monkey: cheetah");
+
     /* Open right FDs for I/O */
     if (listen_mode == LISTEN_STDIN) {
         cheetah_input = stdin;

@@ -154,11 +154,13 @@ static void mk_sched_thread_lists_init()
 /* created thread, all this calls are in the thread context */
 static void *mk_sched_launch_worker_loop(void *thread_conf)
 {
+    char *thread_name = 0;
+    unsigned long len;
     sched_thread_conf *thconf = thread_conf;
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     mk_epoll_handlers *handler;
-
+    
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
 
@@ -182,6 +184,11 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
                                     (void *) mk_conn_timeout);
 
     thinfo = &sched_list[wid];
+
+    /* Rename worker */
+    mk_string_build(&thread_name, &len, "monkey: wrk/%i", thinfo->idx);
+    mk_utils_worker_rename(thread_name);
+    mk_mem_free(thread_name);
 
     /*
      * Export epoll filedescriptor to the thread context using a

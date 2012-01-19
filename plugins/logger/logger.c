@@ -140,6 +140,8 @@ void *mk_logger_worker_init(void *args)
      */
     long buffer_limit;
 
+    mk_api->worker_rename("monkey: logger");
+
     /* Monkey allow just 75% of a pipe capacity */
     pipe_size = sysconf(_SC_PAGESIZE) * 16;
     buffer_limit = (pipe_size * MK_LOGGER_PIPE_LIMIT);
