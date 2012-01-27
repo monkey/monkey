@@ -267,7 +267,7 @@ void mk_cheetah_cmd_workers()
     node = mk_api->sched_list;
     for (i=0; i < mk_api->config->workers; i++) {
 
-        CHEETAH_WRITE("* Worker %i\n", node[i].idx + 1);
+        CHEETAH_WRITE("* Worker %i\n", node[i].idx);
         CHEETAH_WRITE("      - Task ID           : %i\n", node[i].pid);
         CHEETAH_WRITE("      - Active Connections: %i\n", node[i].active_connections);
     }
