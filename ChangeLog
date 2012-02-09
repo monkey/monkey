@@ -1,3 +1,102 @@
+commit 898d00f874831ca1887570441552fbf19db4ad88
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 13:06:15 2012 -0600
+
+    Distribute binary script added by plugins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 07bb5f297ddd6eb0844a01a09e2da39e6d163084
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 12:58:22 2012 -0600
+
+    Update Copyright year
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1148ee03422d3c04da70227e358eb7a971497e83
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 26 23:51:04 2012 -0300
+
+    Cheetah: default to Server mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e1106921235795817c84b16807e3768d58ac8003
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 26 23:11:09 2012 -0300
+
+    Cheetah: adjust worker ID
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 896127b0928027bca4ca2597cd983c6a7ab611ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 19 12:57:11 2012 -0300
+
+    Workers have names
+    
+    Since now all monkey threads (Linux tasks) have set a human readable name,
+    this has been done using the prctl(PR_SET_NAME,...) syscall.
+    
+    You can use 'ps' utility to check the tasks in question, eg:
+    
+       edsiper@monotop:~$ ps -L -p 16058
+         PID   LWP TTY          TIME CMD
+       16058 16058 pts/2    00:00:00 monkey: server
+       16058 16059 pts/2    00:00:00 monkey: clock
+       16058 16060 pts/2    00:00:00 monkey: cheetah
+       16058 16061 pts/2    00:00:00 monkey: logger
+       16058 16062 pts/2    00:00:00 monkey: wrk/0
+       16058 16063 pts/2    00:00:00 monkey: wrk/1
+       16058 16064 pts/2    00:00:00 monkey: wrk/3
+       16058 16065 pts/2    00:00:00 monkey: wrk/2
+       16058 16066 pts/2    00:00:00 monkey: wrk/4
+    
+    If you use 'ps' with common arguments you will not realize this change
+    as 'ps' primary looks for the command line in procfs for each task, you
+    have to use the '-L' argument to get details of the process tasks.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 424217adc5555c0e54acfeffdef264d4d7448870
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 17 10:38:21 2012 -0300
+
+    API: drop ip_str plugin struct field
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dfc6ce449c32281e09dacab38c44526ce844c681
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 17 10:14:26 2012 -0300
+
+    Config: do not cast to size_t
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8eb0a3489013acb73d34da240903d071b8771844
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 16 15:39:48 2012 -0300
+
+    Plugin: drop deprecated ip_str function hook validation
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c63148843a62e747d9d52a01a0bcdc76ba4445b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 16 15:39:14 2012 -0300
+
+    API: drop (void *) casts
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 592389eabd99a7eb0429ab1944ec153c6a4db0b6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 12 10:25:24 2012 -0300
+
+    Monkey 0.31.0
+
 commit b43b743905349d226a3eeaff34178e3d42dc7938
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Jan 12 10:25:09 2012 -0300
