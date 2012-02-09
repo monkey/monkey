@@ -23,7 +23,7 @@ build-stamp:
 		--bindir=/usr/sbin		\
 		--mandir=/usr/share/man		\
 		--sysconfdir=/etc/monkey	\
-		--datadir=/var/www		\
+		--datadir=/var/www/monkey	\
 		--logdir=/var/log/monkey	\
 		--default-user=www-data 	\
 		--plugdir=/usr/lib/monkey	\

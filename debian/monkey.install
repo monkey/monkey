@@ -26,3 +26,8 @@ debian/tmp/usr/lib/monkey/monkey-liana.so
 debian/tmp/usr/lib/monkey/monkey-palm.so
 debian/tmp/usr/lib/monkey/monkey-liana_ssl.so
 
+# WWW Data
+debian/tmp/var/www/monkey/index.html
+debian/tmp/var/www/monkey/favicon.ico
+debian/tmp/var/www/monkey/imgs/monkey_logo.png
+
