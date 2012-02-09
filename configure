@@ -324,8 +324,7 @@ install:
 	install -d \${DATADIR}/docs
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
-	install -m 755 bin/monkey \$(BINDIR)
-	install -m 755 bin/banana \$(BINDIR)
+	install -m 755 bin/* \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
@@ -492,6 +491,11 @@ create_makefile_plugins()
            find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
            find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
            find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+        fi
+
+        # Distribute binary scripts provided by plugins
+        if test -e $plugin_dir/bin ; then
+            cp -r $plugin_dir/bin/* ../bin/
         fi
     done
 
