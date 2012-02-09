@@ -1,3 +1,9 @@
+commit a2ff857f891e8f7cfdea5c3418962da957744664
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 16:06:50 2012 -0600
+
+    Monkey 0.32.0
+
 commit e55d571e11bc333fa6e5e6ee3de8cb95e1947fa6
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Feb 9 16:05:30 2012 -0600
@@ -11,6 +17,12 @@ Date:   Thu Feb 9 16:05:30 2012 -0600
     The version also has been updated to 0.32 in the changelog
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 041f3146c6a2db4cd2a1cbf0899cbfc6bc355d63
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 15:38:53 2012 -0600
+
+    Monkey 0.32.0
 
 commit 898d00f874831ca1887570441552fbf19db4ad88
 Author: Eduardo Silva <edsiper@gmail.com>
