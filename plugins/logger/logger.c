@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2011, Eduardo Silva Pereira <edsiper@gmail.com>
+ *  Copyright (C) 2001-2012, Eduardo Silva Pereira <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
