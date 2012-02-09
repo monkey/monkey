@@ -75,7 +75,7 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
     /* Read credentials file */
     buf = mk_api->file_to_buffer(users_path);
     if (!buf) {
-        mk_warn("Auth: Cannot read users file '%s'", users_path);
+        mk_warn("Auth: No users loaded '%s'", users_path);
         return NULL;
     }
 
