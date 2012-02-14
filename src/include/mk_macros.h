@@ -79,7 +79,7 @@
 
 #define mk_unlikely(x) __builtin_expect((x),0)
 
-#define mk_is_bool(x) ((x == MK_TRUE || x == MK_FALSE) ? 0 : -1)
+#define mk_is_bool(x) ((x == MK_TRUE || x == MK_FALSE) ? 1 : 0)
 
 #define mk_bug(condition) do {                  \
         if (mk_unlikely((condition)!=0)) {         \
