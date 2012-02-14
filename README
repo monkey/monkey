@@ -1,43 +1,45 @@
- Monkey HTTP Daemon - Readme
- ===========================
+Monkey HTTP Daemon
+==================
 
- Monkey is a fast and lightweight Web Server for the Linux platform.
+ Monkey HTTP Daemon, is a very small, fast and lightweight Web Server for 
+ GNU/Linux. It has been designed to be very scalable with low memory and CPU 
+ consumption, the perfect solution for embedded and high production environments.
 
- It is based on the RFC2616 document corresponding to the specification
- HTTP/1.1 protocol.
 
- Features
- ======== 
+Features
+======== 
 
  - HTTP/1.1 Compliant
  - Hybrid Networking Model: Asynchronous mode + fixed Threads
- - Easy unix style configuration
- - Virtual Hosts
- - Pipelining
- - Resume of connections
- - Server user's home directories
- - Log files
- - Versatile plugin subsystem
+ - Indented configuration style
+ - Versatile plugin subsystem / API
+ - x86 & x64 architectures compatible (including ARM processors)
+ - Common features: SSL, IPv6, Basic Auth, log writer, security, 
+                    directory listing, etc.
 
- Contact us!!
- ============
- Our mailing list is a Google group, please feel free to join to share
- your ideas or request help with something related to Monkey:
 
-   http://groups.google.com/group/monkeyd
+Join us!
+========
+We want to hear about you, our community is growing and you can be part of it!,
+you can met us at:
 
- or if you have some time, join to our irc channel on irc.freenode.net
- on #monkeyd.
+ Mailing list: http://lists.monkey-project.com
+ IRC: irc.freenode.net #monkey
+ Twitter: http://www.twitter.com/monkeywebserver
+ Identica: http://identi.ca/group/monkey
+ Freecode: http://freecode.com/projects/monkey
+ Linkedin: http://www.linkedin.com/groups/Monkey-HTTP-Daemon-3211216
 
- About me
- ========
- Developed by	: Eduardo Silva Pereira
+We are open to suggestions and criticisms, if you have an idea, found a
+bug, don't hesitate to report it to find a solution and if you have it,
+send it to include your code.
+
+
+About Maintainer
+================
+ Name           : Eduardo Silva Pereira
  Country	: Chile
  E-mail	     	: edsiper@gmail.com
- IRC          	: irc.freenode.net #monkeyd (edsiper)
+ IRC          	: irc.freenode.net #monkey (edsiper)
  ICQ	     	: 33799244
- Home project 	: http://www.monkey-project.com
-
- I am open to suggestions and criticisms, if you have an idea, found a
- bug, don't hesitate to report it to find a solution and if you have it,
- send it to include your code.
+ Home project 	: http://monkey-project.com
