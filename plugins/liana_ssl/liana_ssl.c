@@ -118,7 +118,13 @@ int liana_conf(char *confdir)
     section = conf->section;
 
     while (section) {
-        /* Just read PALM sections... yes it's a joke for edsiper XD */
+        /*
+         * Just read PALM sections... yes it's a joke for edsiper XD 
+         *
+         * edsiper says "i will start counting the number of Bazingas"         
+         *
+         *  - Feb 13, 2012: +1
+         */
         if (strcasecmp(section->name, "LIANA_SSL") != 0) {
             section = section->next;
             continue;
