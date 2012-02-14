@@ -1,0 +1,18 @@
+CC 	= $CC
+CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../src/include
+SOURCES = duda.c conf.c
+OBJECTS = duda.o conf.o
+
+all: monkey-duda.so
+
+monkey-duda.so: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
+clean:
+	rm -rf *.o *~ *.*so*
