@@ -4,4 +4,4 @@
 *.pyc
 bin/*
 conf/*
-Makefile
+#Makefile
