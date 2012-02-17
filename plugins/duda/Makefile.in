@@ -3,8 +3,8 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
-SOURCES = duda.c conf.c
-OBJECTS = duda.o conf.o
+SOURCES = duda.c conf.c webservice.c
+OBJECTS = duda.o conf.o webservice.o
 
 all: monkey-duda.so
 

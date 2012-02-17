@@ -61,5 +61,3 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 {
     return MK_PLUGIN_RET_CONTINUE;
 }
-
-
