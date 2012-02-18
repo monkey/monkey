@@ -60,13 +60,14 @@ void *duda_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
-int duda_service_register(struct web_service *ws)
+int duda_service_register(struct duda_api *api, struct web_service *ws)
 {
-    int (*map)();
+    int (*service_init)(struct duda_api *);
 
     /* Load interfaces map */
-    map = (int (*)()) duda_load_symbol(ws->handler, "duda_map");
-    if (map() == 0) {
+    service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
+    if (service_init(api) == 0) {
+        mk_info("ok");
         ws->map = duda_load_symbol(ws->handler, "_duda_interfaces");
     }
 
@@ -86,7 +87,10 @@ int duda_load_services()
     struct mk_list *head_ws;
     struct vhost_services *entry_vs;
     struct web_service *entry_ws;
+    struct duda_api *api;
 
+    api = duda_api_to_object();
+    
     mk_list_foreach(head_vh, &services_list) {
         entry_vs = mk_list_entry(head_vh, struct vhost_services, _head);
         mk_list_foreach(head_ws, &entry_vs->services) {
@@ -111,7 +115,7 @@ int duda_load_services()
             mk_api->mem_free(service_path);
 
             /* Register service */
-            duda_service_register(entry_ws);
+            duda_service_register(api, entry_ws);
         }
     }
 
