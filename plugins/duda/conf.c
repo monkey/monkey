@@ -24,7 +24,7 @@
 
 #include "conf.h"
 
-int mk_duda_conf_main_init(const char *confdir)
+int duda_conf_main_init(const char *confdir)
 {
     int ret = 0;
     unsigned long len;
@@ -66,7 +66,7 @@ int mk_duda_conf_main_init(const char *confdir)
     return ret;
 }
 
-int mk_duda_conf_vhost_init()
+int duda_conf_vhost_init()
 {
     /* Section data */
     char *app_name;
@@ -111,7 +111,7 @@ int mk_duda_conf_vhost_init()
 
                 if (app_name && mk_is_bool(app_enabled)) {
                     ws = mk_api->mem_alloc(sizeof(struct web_service));
-                    ws->app_name = app_name;
+                    ws->app_name = mk_api->str_dup(app_name);
                     ws->app_enabled = app_enabled;
 
                     mk_list_add(&ws->_head, &vs->services);

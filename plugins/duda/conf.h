@@ -22,6 +22,8 @@
 #ifndef MK_DUDA_CONF_H
 #define MK_DUDA_CONF_H
 
+#include "webservice.h"
+
 char *services_root;
 
 struct mk_list services_list;
@@ -35,10 +37,15 @@ struct vhost_services {
 struct web_service {
     char *app_name;
     int  app_enabled;
+    void *handler;
+
+    /* Specifics data when registering the service */
+    duda_interface_t *map;
+
     struct mk_list _head;
 };
 
-int mk_duda_conf_main_init(const char *confdir);
-int mk_duda_conf_vhost_init();
+int duda_conf_main_init(const char *confdir);
+int duda_conf_vhost_init();
 
 #endif

@@ -21,17 +21,17 @@ DUDA_REGISTER("Service Example", "service");
 
 void *callback_cpu_usage()
 {
-
+    mk_info("callback cpu_usage()");
 }
 
 void *callback_cpu_hz()
 {
-
+    mk_info("callback cpu_hz()");
 }
 
 void *callback_cpu_list()
 {
-
+    mk_info("callback cpu_list()");
 }
 
 int duda_map()
