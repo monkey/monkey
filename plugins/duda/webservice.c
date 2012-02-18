@@ -16,10 +16,10 @@ duda_interface_t *duda_interface_new(const char *uid)
 }
 
 /* Add a method to an interface */
-void duda_interface_add_method(duda_interface_t *iface,
-                               struct mk_list *iface_list)
+void duda_interface_add_method(duda_method_t *method,
+                               duda_interface_t *iface)
 {
-    mk_list_add(&iface->_head, iface_list);
+    mk_list_add(&method->_head, &iface->methods);
 }
 
 
@@ -39,7 +39,7 @@ duda_method_t *duda_method_new(const char *uid, void (*callback) (void *), int n
 /* Add a parameter to a method */
 void duda_method_add_param(duda_param_t *param, duda_method_t *method)
 {
-    mk_list_add(&param->_head, &method->_head);
+    mk_list_add(&param->_head, &method->params);
 }
 
 /* Creates a new parameter */
@@ -51,4 +51,19 @@ duda_param_t *duda_param_new(const char *uid, short int max_len)
     param->max_len = max_len;
 
     return param;
+}
+
+struct duda_api *duda_api_to_object()
+{
+    struct duda_api *api;
+
+    api = mk_api->mem_alloc(sizeof(struct duda_api));
+    api->interface_new = duda_interface_new;
+    api->interface_add_method = duda_interface_add_method;
+
+    api->method_new = duda_method_new;
+    api->method_add_param = duda_method_add_param;
+    api->param_new = duda_param_new;
+
+    return api;
 }
