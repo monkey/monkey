@@ -1,3 +1,41 @@
+commit 6eeba30564bf31e17e180c4fe23de267bbc74501
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 20 11:49:20 2012 -0600
+
+    Config: fix mk_bug() alert when reading a vhost file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6ef849fde878164c90d09111d8807e56dd7bb625
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 13 21:13:50 2012 -0600
+
+    Liana_SSL: count number of Bazingas
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 62a778c302e18df0fe4dd10daa515fc2d2a72e39
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 13 21:01:55 2012 -0600
+
+    Macros: fix return value for mk_is_bool()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 307261c25e1857591d7faa49f04be56e7937064a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 13 20:27:38 2012 -0600
+
+    Macros: new mk_is_bool() macro to evaluate booleans
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7e07cc54b6536af38ae9b7255cb3c82d1aada392
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 16:08:46 2012 -0600
+
+    Monkey 0.32.0
+
 commit a2ff857f891e8f7cfdea5c3418962da957744664
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Feb 9 16:06:50 2012 -0600

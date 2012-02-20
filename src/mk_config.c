@@ -550,6 +550,7 @@ void mk_config_read_hosts(char *path)
         if (strcasecmp((char *) ent->d_name, "default") == 0)
             continue;
 
+        file = NULL;
         mk_string_build(&file, &len, "%s/sites/%s", path, ent->d_name);
 
         new_host = (struct host *) mk_config_get_host(file);
