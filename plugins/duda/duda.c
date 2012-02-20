@@ -63,12 +63,20 @@ void *duda_load_symbol(void *handler, const char *symbol)
 int duda_service_register(struct duda_api *api, struct web_service *ws)
 {
     int (*service_init)(struct duda_api *);
+    struct mk_list *head;
+    struct duda_interface *entry;
 
-    /* Load interfaces map */
+    /* Load and invoke duda_init() */
     service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
     if (service_init(api) == 0) {
-        mk_info("ok");
-        ws->map = duda_load_symbol(ws->handler, "_duda_interfaces");
+        PLUGIN_TRACE("[%s] duda_init()", ws->app_name);
+        ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
+     
+        mk_info("%p", ws->map);
+
+        //mk_list_foreach(head, &ws->map) {
+
+        //}
     }
 
     return 0;

@@ -40,7 +40,7 @@ struct web_service {
     void *handler;
 
     /* Specifics data when registering the service */
-    duda_interface_t *map;
+    struct mk_list *map;
 
     struct mk_list _head;
 };

@@ -1,4 +1,4 @@
-CC      = gcc
+CC      = gcc -g -Wall
 INCDIR  = ../ -I../../../src/include/
 SOURCES = hello.c
 OBJECTS = hello.o

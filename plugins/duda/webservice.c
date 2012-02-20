@@ -4,7 +4,7 @@
 #include "webservice.h"
 
 /* Creates a new interface */
-duda_interface_t *duda_interface_new(const char *uid)
+duda_interface_t *duda_interface_new(char *uid)
 {
   duda_interface_t *iface;
   
@@ -24,7 +24,7 @@ void duda_interface_add_method(duda_method_t *method,
 
 
 /* Creates a new method */
-duda_method_t *duda_method_new(const char *uid, void (*callback) (void *), int n_params)
+duda_method_t *duda_method_new(char *uid, void (*callback) (void *), int n_params)
 {
     duda_method_t *method;
     
@@ -43,7 +43,7 @@ void duda_method_add_param(duda_param_t *param, duda_method_t *method)
 }
 
 /* Creates a new parameter */
-duda_param_t *duda_param_new(const char *uid, short int max_len)
+duda_param_t *duda_param_new(char *uid, short int max_len)
 {
     duda_param_t *param;
 
