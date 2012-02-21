@@ -1,5 +1,24 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+/*  Monkey HTTP Daemon
+ *  ------------------
+ *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "MKPlugin.h"
 #include "webservice.h"
 
@@ -51,19 +70,4 @@ duda_param_t *duda_param_new(char *uid, short int max_len)
     param->max_len = max_len;
 
     return param;
-}
-
-struct duda_api *duda_api_to_object()
-{
-    struct duda_api *api;
-
-    api = mk_api->mem_alloc(sizeof(struct duda_api));
-    api->interface_new = duda_interface_new;
-    api->interface_add_method = duda_interface_add_method;
-
-    api->method_new = duda_method_new;
-    api->method_add_param = duda_method_add_param;
-    api->param_new = duda_param_new;
-
-    return api;
 }

@@ -1,67 +1,50 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+/*  Monkey HTTP Daemon
+ *  ------------------
+ *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #ifndef DUDA_WEBSERVICE_H
 #define DUDA_WEBSERVICE_H
 
 #include "MKPlugin.h"
-#include "mk_list.h"
-
-/* The basic web service information */
-struct duda_webservice {
-    char *app_name;
-    char *app_path;
-};
-
-/* Interfaces of the web service */
-struct duda_interface {
-    char *uid;
-    struct mk_list methods;
-
-    /* mk_list */
-    struct mk_list _head;
-};
-
-/* Methods associated to an interface */
-struct duda_method {
-    char *uid;
-    short int num_params;
-    void *(*callback);
-
-    struct mk_list params;
-
-    /* mk_list */
-    struct mk_list _head;
-};
-
-/* Parameters: each method supports N parameters */
-struct duda_param {
-    char *name;
-    short int max_len;
-
-    /* mk_list */
-    struct mk_list _head;
-};
-
-/* types of data */
-typedef struct duda_interface duda_interface_t;
-typedef struct duda_method duda_method_t;
-typedef struct duda_param duda_param_t;
-typedef void * duda_callback_t;
+#include "api.h"
 
 struct duda_webservice ws;
-struct mk_list *_duda_interfaces;
+struct mk_list _duda_interfaces;
 
-struct duda_api *duda;
+struct plugin_api *monkey;
+struct duda_api_map *map;
+struct duda_api_msg *msg;
+struct duda_api_debug *debug;
 
 /* Duda Macros */
 #define DUDA_REGISTER(app_name, app_path) struct duda_webservice ws = {app_name, app_path}
 #define duda_service_init() do {                                        \
-        duda = api;                                                     \
-        _duda_interfaces = mk_api->mem_alloc(sizeof(struct mk_list));   \
+        monkey = api->monkey;                                           \
+        map = api->map;                                                 \
+        msg = api->msg;                                                 \
+        debug = api->debug;                                             \
+        mk_list_init(&_duda_interfaces);                                \
     } while(0);
 
 #define duda_service_add_interface(iface) do {              \
-        mk_list_add(&iface->_head,  _duda_interfaces);      \
+        mk_list_add(&iface->_head,  &_duda_interfaces);     \
     } while(0);
 
 #define duda_service_ready() do {               \
@@ -79,20 +62,26 @@ duda_param_t *duda_param_new(char *uid, short int max_len);
 void duda_interface_add_method(duda_method_t *method, duda_interface_t *iface);
 void duda_method_add_param(duda_param_t *param, duda_method_t *method);
 
-struct duda_api *duda_api_to_object();
+struct duda_api_objects *duda_new_api_objects();
 
-/* API object */
-struct duda_api {
-    /* interface_ */
-    duda_interface_t *(*interface_new) (char *);
-    void (*interface_add_method) (duda_method_t *, duda_interface_t *);
+/* 
+ * Redefine messages macros 
+ */
 
-    /* method_ */
-    duda_method_t *(*method_new) (char *, void (*) (void *), int);
-    void (*method_add_param) (duda_param_t *, duda_method_t *);
+/*
+#define mk_info(...) duda->_error(MK_INFO, __VA_ARGS__)
+#define mk_err(...) duda->_error(MK_ERR, __VA_ARGS__)
+#define mk_warn(...) duda->_error(MK_WARN, __VA_ARGS__)
+#define mk_bug(condition) do {                  \
+        if (mk_unlikely((condition)!=0)) {         \
+            mk_api->_error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
+                           _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
+            abort();                                                    \
+        }                                                               \
+    } while(0)
+*/
 
-    /* param_ */
-    duda_param_t *(*param_new) (char *, short int);
-};
+#define msg_info(...) mk_api->_error(MK_INFO, __VA_ARGS__)
 
 #endif
+

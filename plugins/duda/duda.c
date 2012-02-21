@@ -32,7 +32,6 @@ MONKEY_PLUGIN("duda",                                     /* shortname */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hooks */
 
 
-/* Load a shared library (service) */
 void *duda_load_library(const char *path)
 {
     void *handle;
@@ -60,9 +59,9 @@ void *duda_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
-int duda_service_register(struct duda_api *api, struct web_service *ws)
+int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
 {
-    int (*service_init)(struct duda_api *);
+    int (*service_init) (struct duda_api_objects *);
     struct mk_list *head;
     struct duda_interface *entry;
 
@@ -74,9 +73,10 @@ int duda_service_register(struct duda_api *api, struct web_service *ws)
      
         mk_info("%p", ws->map);
 
-        //mk_list_foreach(head, &ws->map) {
-
-        //}
+        mk_list_foreach(head, ws->map) {
+            entry = mk_list_entry(head, struct duda_interface, _head);
+            mk_info("entry: %p", entry);
+        }
     }
 
     return 0;
@@ -95,10 +95,8 @@ int duda_load_services()
     struct mk_list *head_ws;
     struct vhost_services *entry_vs;
     struct web_service *entry_ws;
-    struct duda_api *api;
+    struct duda_api_objects *api;
 
-    api = duda_api_to_object();
-    
     mk_list_foreach(head_vh, &services_list) {
         entry_vs = mk_list_entry(head_vh, struct vhost_services, _head);
         mk_list_foreach(head_ws, &entry_vs->services) {
@@ -123,6 +121,7 @@ int duda_load_services()
             mk_api->mem_free(service_path);
 
             /* Register service */
+            api = duda_api_master();
             duda_service_register(api, entry_ws);
         }
     }
