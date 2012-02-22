@@ -21,19 +21,19 @@ DUDA_REGISTER("Service Example", "service");
 
 void *callback_cpu_usage()
 {
-    mk_info("callback cpu_usage()");
+    msg->info("callback cpu_usage()");
     return NULL;
 }
 
 void *callback_cpu_hz()
 {
-    mk_info("callback cpu_hz()");
+    msg->info("callback cpu_hz()");
     return NULL;
 }
 
 void *callback_cpu_list()
 {
-    mk_info("callback cpu_list()");
+    msg->info("callback cpu_list()");
     return NULL;
 }
 
@@ -44,7 +44,6 @@ int duda_init(struct duda_api_objects *api)
     duda_param_t     *param;
 
     duda_service_init();
-    msg->info("->%p", _duda_interfaces);
 
     /* archive interface */
     if_system = map->interface_new("system");
@@ -71,7 +70,7 @@ int duda_init(struct duda_api_objects *api)
     
     mk_list_foreach(head, &_duda_interfaces) {
         entry = mk_list_entry(head, struct duda_interface, _head);
-        //mk_warn("%s", entry->uid);
+        msg->info("interface: %s", entry->uid);
    }
 
 

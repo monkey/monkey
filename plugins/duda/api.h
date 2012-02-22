@@ -66,13 +66,6 @@ typedef struct duda_method duda_method_t;
 typedef struct duda_param duda_param_t;
 typedef void * duda_callback_t;
 
-
-/* Redefining some macros for the API objects */
-#define msg_info(...) mk_api->_error(MK_INFO, __VA_ARGS__)
-#define msg_warn(...) mk_api->_error(MK_WARN, __VA_ARGS__)
-#define msg_err(...) mk_api->_error(MK_ERR, __VA_ARGS__)
-#define msg_bug(...) mk_api->_error(MK_BUG, __VA_ARGS__)
-
 /* 
  * API objects 
  * ===========

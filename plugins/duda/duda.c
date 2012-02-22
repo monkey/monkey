@@ -59,24 +59,16 @@ void *duda_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
+/* Register the service interfaces into the main list of web services */
 int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
 {
     int (*service_init) (struct duda_api_objects *);
-    struct mk_list *head;
-    struct duda_interface *entry;
 
     /* Load and invoke duda_init() */
     service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
     if (service_init(api) == 0) {
         PLUGIN_TRACE("[%s] duda_init()", ws->app_name);
         ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
-     
-        mk_info("%p", ws->map);
-
-        mk_list_foreach(head, ws->map) {
-            entry = mk_list_entry(head, struct duda_interface, _head);
-            mk_info("entry: %p", entry);
-        }
     }
 
     return 0;
@@ -151,15 +143,89 @@ int _mkp_init(void **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+
+int duda_service_run(struct session_request *sr,
+                     struct web_service *web_service)
 {
+    /* FIXME */
+
+    return 0;
 }
 
-/* 
- * Request handler: when the request arrives, this callback is invoked.
+/*
+ * Get webservice given the processed URI.
+ *
+ * Check the web services registered under the virtual host and try to do a
+ * match with the web services name
  */
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+struct web_service *duda_get_service_from_uri(struct session_request *sr,
+                                              struct vhost_services *vs_host)
+{
+    int pos;
+    struct mk_list *head;
+    struct web_service *ws_entry;
+
+    /* get web service name limit */
+    pos = mk_api->str_search_n(sr->uri_processed.data + 1, "/",
+                               MK_STR_SENSITIVE,
+                               sr->uri_processed.len - 1);
+    if (pos <= 1) {
+        return NULL;
+    }
+
+    /* match services */
+    mk_list_foreach(head, &vs_host->services) {
+        ws_entry = mk_list_entry(head, struct web_service, _head);
+        if (strncmp(ws_entry->app_name,
+                    sr->uri_processed.data + 1,
+                    pos - 1) == 0) {
+            PLUGIN_TRACE("WebService match: %s", ws_entry->app_name);
+            return ws_entry;
+        }
+    }
+
+    return NULL;
+}
+
+
+void _mkp_exit()
+{
+
+}
+
+/*
+ * Request handler: when the request arrives this callback is invoked.
+ */
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
-    return MK_PLUGIN_RET_CONTINUE;
+    struct mk_list *head;
+    struct vhost_services *vs_entry, *vs_match=NULL;
+    struct web_service *web_service;
+
+    /* we don't care about '/' request */
+    if (sr->uri_processed.len > 1) {
+        /* Match virtual host */
+        mk_list_foreach(head, &services_list) {
+            vs_entry = mk_list_entry(head, struct vhost_services, _head);
+            if (sr->host_conf == vs_entry->host) {
+                vs_match = vs_entry;
+                break;
+            }
+        }
+
+        if (!vs_match) {
+            return MK_PLUGIN_RET_NOT_ME;
+        }
+
+        /* Match web service */
+        web_service = duda_get_service_from_uri(sr, vs_match);
+        if (!web_service) {
+            return MK_PLUGIN_RET_NOT_ME;
+        }
+
+        duda_service_run(sr, web_service);
+    }
+
+    return MK_PLUGIN_RET_NOT_ME;
 }
