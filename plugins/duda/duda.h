@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2012, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,37 +16,31 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef MK_DUDA_CONF_H
-#define MK_DUDA_CONF_H
+#ifndef DUDA_MAIN_H
+#define DUDA_MAIN_H
 
-#include "api.h"
+#define MAP_WS_INIT       0x00
+#define MAP_WS_INTERFACE  0X10
+#define MAP_WS_METHOD     0X20
+#define MAP_WS_PARAM      0X30
+#define MAP_WS_END        0X40
 
-char *services_root;
+struct duda_request {
 
-struct mk_list services_list;
+    /* web service details */
+    struct web_service *web_service;
+    mk_pointer interface;
+    mk_pointer method;
+    struct mk_list params;
 
-struct vhost_services {
-    struct host *host;
-    struct mk_list services;
-    struct mk_list _head;
-};
-
-struct web_service {
-    char *app_name;
-    int  app_name_len;
-    int  app_enabled;
-    void *handler;
-
-    /* Specifics data when registering the service */
-    struct mk_list *map;
+    /* Monkey request */
+    struct session_request *sr;
+    struct client_session  *cs;
 
     struct mk_list _head;
 };
-
-int duda_conf_main_init(const char *confdir);
-int duda_conf_vhost_init();
 
 #endif

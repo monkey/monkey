@@ -46,7 +46,7 @@ int duda_conf_main_init(const char *confdir)
 
         services_root = mk_api->config_section_getval(section, "ServicesRoot",
                                                       MK_CONFIG_VAL_STR);
-        
+
         if (mk_api->file_get_info(services_root, &finfo) != 0) {
             mk_err("Duda: Invalid services root path");
             exit(EXIT_FAILURE);
@@ -81,7 +81,7 @@ int duda_conf_vhost_init()
     /* monkey vhost configuration */
     struct host *vhost = mk_api->config->hosts;
     struct mk_config_section *section;
-    
+
     mk_list_init(&services_list);
 
     PLUGIN_TRACE("Loading applications");
@@ -90,8 +90,8 @@ int duda_conf_vhost_init()
         vs->host = vhost;              /* link virtual host entry */
         mk_list_init(&vs->services);   /* init services list */
 
-        /* 
-         * check vhost 'config' and look for [WEB_SERVICE] sections, we don't use 
+        /*
+         * check vhost 'config' and look for [WEB_SERVICE] sections, we don't use
          * mk_config_section_get() because we can have multiple [WEB_SERVICE]
          * sections.
          */
@@ -100,9 +100,9 @@ int duda_conf_vhost_init()
             if (strcasecmp(section->name, "WEB_SERVICE") == 0) {
                 app_name = NULL;
                 app_enabled = MK_FALSE;
-                
+
                 /* Get section keys */
-                app_name = mk_api->config_section_getval(section, 
+                app_name = mk_api->config_section_getval(section,
                                                          "Name",
                                                          MK_CONFIG_VAL_STR);
                 app_enabled = (size_t) mk_api->config_section_getval(section,
@@ -112,12 +112,13 @@ int duda_conf_vhost_init()
                 if (app_name && mk_is_bool(app_enabled)) {
                     ws = mk_api->mem_alloc(sizeof(struct web_service));
                     ws->app_name = mk_api->str_dup(app_name);
+                    ws->app_name_len = strlen(ws->app_name);
                     ws->app_enabled = app_enabled;
 
                     mk_list_add(&ws->_head, &vs->services);
                 }
                 else {
-                    mk_warn("Invalid web service, skipping"); 
+                    mk_warn("Invalid web service, skipping");
                 }
             }
             section = section->next;

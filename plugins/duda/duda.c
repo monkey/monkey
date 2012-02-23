@@ -22,7 +22,7 @@
 #include <dlfcn.h>
 
 #include "MKPlugin.h"
-
+#include "duda.h"
 #include "conf.h"
 #include "request.h"
 
@@ -143,11 +143,77 @@ int _mkp_init(void **api, char *confdir)
     return 0;
 }
 
+int duda_request_parse(struct session_request *sr,
+                       struct duda_request *dr)
+{
+    short int field = MAP_WS_INIT;
+    unsigned int i = 0, len, val_len;
+    int end;
+
+    len = sr->uri_processed.len;
+
+    while (i < len) {
+        end = mk_api->str_search_n(sr->uri_processed.data + i, "/",
+                                   MK_STR_SENSITIVE, len - i);
+
+        if (end >= 0 && end + i < len) {
+            end += i;
+
+            if (i == end) {
+                i++;
+                continue;
+            }
+
+            val_len = end - i;
+        }
+        else {
+            val_len = len - i;
+            end = len;
+        }
+
+        switch (field) {
+        case MAP_WS_INIT:
+            dr->interface.data = sr->uri_processed.data + i;
+            dr->interface.len  = val_len;
+            field = MAP_WS_INTERFACE;
+            break;
+        case MAP_WS_INTERFACE:
+            dr->method.data    = sr->uri_processed.data + i;
+            dr->method.len     = val_len;
+            field = MAP_WS_METHOD;
+            break;
+        }
+
+        /* FIXME: parse parameters inside a mk_list */
+        i = end + 1;
+    }
+
+    if (field < MAP_WS_PARAM) {
+        return -1;
+    }
+
+    return 0;
+}
 
 int duda_service_run(struct session_request *sr,
                      struct web_service *web_service)
 {
-    /* FIXME */
+    struct duda_request *dr;
+
+    dr = mk_api->mem_alloc(sizeof(struct duda_request));
+    if (!dr) {
+        PLUGIN_TRACE("could not allocate enough memory");
+        return -1;
+    }
+
+    /* service details */
+    dr->web_service = web_service;
+    if (duda_request_parse(sr, dr) != 0) {
+        mk_api->mem_free(dr);
+        return -1;
+    }
+
+    /* FIXME: invoke the web service callback */
 
     return 0;
 }

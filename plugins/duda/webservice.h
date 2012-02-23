@@ -64,24 +64,5 @@ void duda_method_add_param(duda_param_t *param, duda_method_t *method);
 
 struct duda_api_objects *duda_new_api_objects();
 
-/* 
- * Redefine messages macros 
- */
-
-/*
-#define mk_info(...) duda->_error(MK_INFO, __VA_ARGS__)
-#define mk_err(...) duda->_error(MK_ERR, __VA_ARGS__)
-#define mk_warn(...) duda->_error(MK_WARN, __VA_ARGS__)
-#define mk_bug(condition) do {                  \
-        if (mk_unlikely((condition)!=0)) {         \
-            mk_api->_error(MK_BUG, "[%s] Bug found in %s() at %s:%d",    \
-                           _plugin_info.shortname, __FUNCTION__, __FILE__, __LINE__); \
-            abort();                                                    \
-        }                                                               \
-    } while(0)
-*/
-
-#define msg_info(...) mk_api->_error(MK_INFO, __VA_ARGS__)
-
 #endif
 
