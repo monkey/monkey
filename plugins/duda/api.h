@@ -43,7 +43,8 @@ struct duda_interface {
 struct duda_method {
     char *uid;
     short int num_params;
-    void *(*callback);
+    char *callback;
+    void *(*func_cb)();
 
     struct mk_list params;
 
@@ -66,10 +67,10 @@ typedef struct duda_method duda_method_t;
 typedef struct duda_param duda_param_t;
 typedef void * duda_callback_t;
 
-/* 
- * API objects 
+/*
+ * API objects
  * ===========
- * We provide an useful and easy to understand API for the developer, 
+ * We provide an useful and easy to understand API for the developer,
  * this is not so easy due to the language and server side nature, if
  * you are not ready to take this red pill, go and run to the NodeJS arms :P
  *
@@ -82,7 +83,7 @@ typedef void * duda_callback_t;
  *
  * Map
  * ---
- * An object which provide methods to create the service map based on 
+ * An object which provide methods to create the service map based on
  * interfaces, methods and parameters.
  *
  *
@@ -107,7 +108,7 @@ struct duda_api_map {
     void (*interface_add_method) (duda_method_t *, duda_interface_t *);
 
     /* method_ */
-    duda_method_t *(*method_new) (char *, void (*) (void *), int);
+    duda_method_t *(*method_new) (char *, char *, int);
     void (*method_add_param) (duda_param_t *, duda_method_t *);
 
     /* param_ */
@@ -129,9 +130,9 @@ struct duda_api_debug {
     void (*stack_trace) ();
 };
 
-/* 
- * Group all objects in one struct so we can pass this memory space 
- * to the web service when it's loaded, then the webservice.h macros 
+/*
+ * Group all objects in one struct so we can pass this memory space
+ * to the web service when it's loaded, then the webservice.h macros
  * do the dirty job...
  */
 struct duda_api_objects {

@@ -54,7 +54,7 @@ void _duda_debug_header(int type)
 
     now = time(NULL);
     current = localtime(&now);
-    printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ", 
+    printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ",
            ANSI_BOLD, ANSI_RESET,
            current->tm_year + 1900,
            current->tm_mon + 1,
@@ -64,7 +64,7 @@ void _duda_debug_header(int type)
            current->tm_sec,
            ANSI_BOLD, ANSI_RESET);
 
-    printf("%s[%s%7s%s]%s ", 
+    printf("%s[%s%7s%s]%s ",
            ANSI_BOLD, header_color, header_title, ANSI_WHITE, ANSI_RESET);
 }
 
@@ -77,52 +77,52 @@ void _duda_debug_footer()
 void duda_debug_info(const char *format, ...)
 {
     va_list args;
-  
+
     _duda_debug_header(MK_INFO);
-    
+
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    
+
     _duda_debug_footer();
 }
 
 void duda_debug_warn(const char *format, ...)
 {
     va_list args;
-  
+
     _duda_debug_header(MK_WARN);
-    
+
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    
+
     _duda_debug_footer();
 }
 
 void duda_debug_err(const char *format, ...)
 {
     va_list args;
-  
+
     _duda_debug_header(MK_ERR);
-    
+
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    
+
     _duda_debug_footer();
 }
 
 void duda_debug_bug(const char *format, ...)
 {
     va_list args;
-  
+
     _duda_debug_header(MK_BUG);
-    
+
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    
+
     _duda_debug_footer();
 }
 

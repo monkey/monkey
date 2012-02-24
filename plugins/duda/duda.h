@@ -22,19 +22,23 @@
 #ifndef DUDA_MAIN_H
 #define DUDA_MAIN_H
 
-#define MAP_WS_INIT       0x00
+#define MAP_WS_APP_NAME   0X00
 #define MAP_WS_INTERFACE  0X10
 #define MAP_WS_METHOD     0X20
 #define MAP_WS_PARAM      0X30
 #define MAP_WS_END        0X40
 
+#define MAP_WS_MAX_PARAMS 8
+
 struct duda_request {
 
     /* web service details */
     struct web_service *web_service;
+    mk_pointer appname;
     mk_pointer interface;
     mk_pointer method;
-    struct mk_list params;
+    mk_pointer params[MAP_WS_MAX_PARAMS];
+    short int n_params;
 
     /* Monkey request */
     struct session_request *sr;

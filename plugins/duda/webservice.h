@@ -56,7 +56,7 @@ struct duda_api_debug *debug;
 
 /* API functions */
 duda_interface_t *duda_interface_new(char *uid);
-duda_method_t *duda_method_new(char *uid, void (*callback) (void *), int n_params);
+duda_method_t *duda_method_new(char *uid, char *callback, int n_params);
 duda_param_t *duda_param_new(char *uid, short int max_len);
 
 void duda_interface_add_method(duda_method_t *method, duda_interface_t *iface);
