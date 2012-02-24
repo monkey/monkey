@@ -350,7 +350,8 @@ void mk_plugin_init()
     api->header_set_http_status = mk_header_set_http_status;
 
     /* IOV callbacks */
-    api->iov_create = mk_iov_create;
+    api->iov_create  = mk_iov_create;
+    api->iov_realloc = mk_iov_realloc;
     api->iov_free = mk_iov_free;
     api->iov_free_marked = mk_iov_free_marked;
     api->iov_add_entry =  mk_iov_add_entry;

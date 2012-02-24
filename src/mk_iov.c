@@ -51,7 +51,7 @@ inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
         fflush(stdout);
     }
 #endif
-    
+
     /* Add separator */
     if (sep.len > 0) {
         mk_io->io[mk_io->iov_idx].iov_base = sep.data;
@@ -59,11 +59,11 @@ inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
         mk_io->iov_idx++;
         mk_io->total_len += sep.len;
     }
-    
+
     if (free == MK_IOV_FREE_BUF) {
         _mk_iov_set_free(mk_io, buf);
     }
-    
+
     return mk_io->iov_idx;
 }
 
@@ -80,7 +80,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
     iov->total_len = 0;
     iov->size = n;
 
-    /* 
+    /*
      * Make sure to set to zero initial entries when an offset
      * is specified
      */
@@ -92,6 +92,29 @@ struct mk_iov *mk_iov_create(int n, int offset)
     }
 
     return iov;
+}
+
+int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
+{
+    int i;
+
+    mk_io->io = mk_mem_realloc(mk_io->io, sizeof(struct iovec) * new_size) ;
+    mk_io->buf_to_free = mk_mem_realloc(mk_io->buf_to_free, sizeof(char *) * new_size);
+
+    if (!mk_io->io || !mk_io->buf_to_free) {
+        MK_TRACE("could not reallocate IOV");
+        return -1;
+    }
+
+    /* set new size */
+    mk_io->size = new_size;
+
+    for (i=mk_io->iov_idx; i < mk_io->size - 1; i++) {
+        mk_io->io[0].iov_base = NULL;
+        mk_io->io[0].iov_len = 0;
+    }
+
+    return 0;
 }
 
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
