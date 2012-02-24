@@ -55,11 +55,10 @@ int __body_flush(duda_request_t *dr)
 {
     /* FIXME:
      * ------
-     * - it must use Monkey IOV interfaces
      * - if written data is less than total, register an event_write() event
      *   to send the pending data
      */
-    return writev(dr->cs->socket, dr->body_buffer, dr->body_buffer_idx);
+    return mk_api->iov_send(dr->cs->socket, dr->body_buffer);
 }
 
 
@@ -83,22 +82,21 @@ int _body_write(duda_request_t *dr, char *raw, int len)
     int size;
 
     if (!dr->body_buffer) {
-        dr->body_buffer = mk_api->mem_alloc(sizeof(struct iovec) * BODY_BUFFER_SIZE);
-        dr->body_buffer_idx = 0;
+        dr->body_buffer = mk_api->iov_create(BODY_BUFFER_SIZE, 0);
         dr->body_buffer_size = BODY_BUFFER_SIZE;
     }
 
     /* perform realloc if body_write() is called more than body_buffer_size */
-    if (dr->body_buffer_idx >= dr->body_buffer_size)  {
+    if (dr->body_buffer->iov_idx >= dr->body_buffer->size)  {
         size = dr->body_buffer_size + BODY_BUFFER_SIZE;
-        dr->body_buffer = mk_api->mem_realloc(dr->body_buffer, sizeof(struct iovec) * size);
+        if (mk_api->iov_realloc(dr->body_buffer, size) == -1) {
+            return -1;
+        }
         dr->body_buffer_size = size;
     }
 
     /* Link data */
-    dr->body_buffer[dr->body_buffer_idx].iov_base = raw;
-    dr->body_buffer[dr->body_buffer_idx].iov_len  = len;
-    dr->body_buffer_idx++;
+    mk_api->iov_add_entry(dr->body_buffer, raw, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     return 0;
 }

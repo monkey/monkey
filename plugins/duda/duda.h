@@ -56,9 +56,8 @@ struct duda_request {
     struct session_request *sr;
 
     /* Body buffers */
-    struct iovec *body_buffer;
-    unsigned int body_buffer_idx;
-    unsigned int body_buffer_size;
+    struct mk_iov *body_buffer;
+    unsigned short int body_buffer_size;
 
     /* Internal statuses */
     unsigned int _st_http_headers_sent;  /* HTTP headers sent? */

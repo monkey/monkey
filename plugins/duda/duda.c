@@ -250,7 +250,6 @@ int duda_service_run(struct client_session *cs,
 
     /* body buffer */
     dr->body_buffer = NULL;
-    dr->body_buffer_idx = 0;
     dr->body_buffer_size = 0;
 
     /* statuses */
