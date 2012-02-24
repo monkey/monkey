@@ -97,16 +97,21 @@ struct mk_iov *mk_iov_create(int n, int offset)
 int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 {
     int i;
+    char **new_buf;
+    struct iovec *new_io;
 
-    mk_io->io = mk_mem_realloc(mk_io->io, sizeof(struct iovec) * new_size) ;
-    mk_io->buf_to_free = mk_mem_realloc(mk_io->buf_to_free, sizeof(char *) * new_size);
+    new_io  = mk_mem_realloc(mk_io->io, sizeof(struct iovec) * new_size) ;
+    new_buf = mk_mem_realloc(mk_io->buf_to_free, sizeof(char *) * new_size);
 
-    if (!mk_io->io || !mk_io->buf_to_free) {
+    if (!new_io || !new_buf) {
         MK_TRACE("could not reallocate IOV");
         return -1;
     }
 
-    /* set new size */
+    /* update data */
+    mk_io->io = new_io;
+    mk_io->buf_to_free = new_buf;
+
     mk_io->size = new_size;
 
     for (i=mk_io->iov_idx; i < mk_io->size - 1; i++) {
