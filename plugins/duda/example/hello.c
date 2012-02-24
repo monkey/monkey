@@ -19,19 +19,19 @@ DUDA_REGISTER("Service Example", "service");
  *
  */
 
-void *callback_cpu_usage()
+void *cb_cpu_usage()
 {
     msg->info("callback cpu_usage()");
     return NULL;
 }
 
-void *callback_cpu_hz()
+void *cb_cpu_hz()
 {
     msg->info("callback cpu_hz()");
     return NULL;
 }
 
-void *callback_cpu_list()
+void *cb_cpu_list()
 {
     msg->info("callback cpu_list()");
     return NULL;
@@ -49,31 +49,21 @@ int duda_init(struct duda_api_objects *api)
     if_system = map->interface_new("system");
 
     /* /app/archive/list */
-    method = map->method_new("cpu_usage", "callback_cpu_usage", 1);
+    method = map->method_new("cpu_usage", "cb_cpu_usage", 1);
     param = map->param_new("cpu_id", 5);
     map->method_add_param(param, method);
     map->interface_add_method(method, if_system);
 
-    method = map->method_new("cpu_hz", "callback_cpu_hz", 1);
+    method = map->method_new("cpu_hz", "cb_cpu_hz", 1);
     param = map->param_new("cpu_id", 5);
     map->method_add_param(param, method);
     map->interface_add_method(method, if_system);
 
-    method = map->method_new("cpu_list", "callback_cpu_list", 0);
+    method = map->method_new("cpu_list", "cb_cpu_list", 0);
     map->interface_add_method(method, if_system);
 
     /* Add interface to map */
     duda_service_add_interface(if_system);
-
-    struct mk_list *head;
-    struct duda_interface *entry;
-
-    mk_list_foreach(head, &_duda_interfaces) {
-        entry = mk_list_entry(head, struct duda_interface, _head);
-        msg->info("interface: %s", entry->uid);
-   }
-
-
 
     duda_service_ready();
 }
