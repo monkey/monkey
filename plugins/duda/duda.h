@@ -28,8 +28,19 @@
 #define MAP_WS_PARAM      0X30
 #define MAP_WS_END        0X40
 
+/* Max number of parameters allowed in Duda URI */
 #define MAP_WS_MAX_PARAMS 8
 
+/*
+ * The response body holds an IOV array struct of BODY_BUFFER_SIZE,
+ * when the limit is reached, the pointer is reallocated adding a new chunk
+ */
+#define BODY_BUFFER_SIZE  8
+
+/*
+ * This struct represent the web service request, as well it contains detailed
+ * information about the response type and buffers associated
+ */
 struct duda_request {
 
     /* web service details */
@@ -40,9 +51,18 @@ struct duda_request {
     mk_pointer params[MAP_WS_MAX_PARAMS];
     short int n_params;
 
-    /* Monkey request */
+    /* Monkey request: client_session & session_request */
+    struct client_session *cs;
     struct session_request *sr;
-    struct client_session  *cs;
+
+    /* Body buffers */
+    struct iovec *body_buffer;
+    unsigned int body_buffer_idx;
+    unsigned int body_buffer_size;
+
+    /* Internal statuses */
+    unsigned int _st_http_headers_sent;  /* HTTP headers sent? */
+    unsigned int _st_body_writes;        /* Number of body_writes invoked */
 
     struct mk_list _head;
 };

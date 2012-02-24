@@ -40,7 +40,7 @@
 
 static struct header_status_response status_response[] = {
 
-    /* 
+    /*
      * The most used first:
      *
      *  - HTTP/1.1 200 OK
@@ -49,7 +49,7 @@ static struct header_status_response status_response[] = {
     {MK_HTTP_OK,
      MK_RH_HTTP_OK,
      sizeof(MK_RH_HTTP_OK) - 1},
-    {MK_CLIENT_NOT_FOUND, 
+    {MK_CLIENT_NOT_FOUND,
      MK_RH_CLIENT_NOT_FOUND,
      sizeof(MK_RH_CLIENT_NOT_FOUND) -1
     },
@@ -111,8 +111,8 @@ static struct header_status_response status_response[] = {
     },
 
     /* Client side errors */
-    {MK_CLIENT_BAD_REQUEST, 
-     MK_RH_CLIENT_BAD_REQUEST, 
+    {MK_CLIENT_BAD_REQUEST,
+     MK_RH_CLIENT_BAD_REQUEST,
      sizeof(MK_RH_CLIENT_BAD_REQUEST) - 1
     },
     {MK_CLIENT_UNAUTH,
@@ -123,7 +123,7 @@ static struct header_status_response status_response[] = {
      MK_RH_CLIENT_PAYMENT_REQ,
      sizeof(MK_RH_CLIENT_PAYMENT_REQ) - 1
     },
-    {MK_CLIENT_FORBIDDEN, 
+    {MK_CLIENT_FORBIDDEN,
      MK_RH_CLIENT_FORBIDDEN,
      sizeof(MK_RH_CLIENT_FORBIDDEN) -1
     },
@@ -151,7 +151,7 @@ static struct header_status_response status_response[] = {
      MK_RH_CLIENT_GONE,
      sizeof(MK_RH_CLIENT_GONE) - 1
     },
-    {MK_CLIENT_LENGTH_REQUIRED, 
+    {MK_CLIENT_LENGTH_REQUIRED,
      MK_RH_CLIENT_LENGTH_REQUIRED,
      sizeof(MK_RH_CLIENT_LENGTH_REQUIRED) - 1
     },
@@ -173,7 +173,7 @@ static struct header_status_response status_response[] = {
     },
 
     /* Server side errors */
-    {MK_SERVER_INTERNAL_ERROR, 
+    {MK_SERVER_INTERNAL_ERROR,
      MK_RH_SERVER_INTERNAL_ERROR,
      sizeof(MK_RH_SERVER_INTERNAL_ERROR) - 1
     },
@@ -199,7 +199,7 @@ static struct header_status_response status_response[] = {
     }
 };
 
-static int status_response_len = 
+static int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
 int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
@@ -288,9 +288,9 @@ int mk_header_send(int fd, struct client_session *cs,
                 /* Get cached mk_pointers */
                 mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
                 mk_pointer *ka_header = mk_cache_get(mk_cache_header_ka_max);
-                
+
                 /* Compose header and add entries to iov */
-                mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);            
+                mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);
                 mk_iov_add_entry(iov, ka_format->data, ka_format->len,
                                  mk_iov_none, MK_IOV_NOT_FREE_BUF);
                 mk_iov_add_entry(iov, ka_header->data, ka_header->len,
@@ -303,9 +303,9 @@ int mk_header_send(int fd, struct client_session *cs,
                              mk_header_conn_close.len,
                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
-        
+
     }
-    
+
     /* Location */
     if (sh->location != NULL) {
         mk_iov_add_entry(iov,
@@ -326,9 +326,9 @@ int mk_header_send(int fd, struct client_session *cs,
                          sh->content_type, MK_IOV_NOT_FREE_BUF);
     }
 
-    /* 
+    /*
      * Transfer Encoding: the transfer encoding header is just sent when
-     * the response has some content defined by the HTTP status response 
+     * the response has some content defined by the HTTP status response
      */
     if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
         switch (sh->transfer_encoding) {
@@ -357,7 +357,7 @@ int mk_header_send(int fd, struct client_session *cs,
         mk_pointer *cl;
         cl = mk_cache_get(mk_cache_header_cl);
         mk_string_itop(sh->content_length, cl);
-        
+
         /* Set headers */
         mk_iov_add_entry(iov, mk_header_content_length.data,
                          mk_header_content_length.len,
@@ -410,7 +410,7 @@ int mk_header_send(int fd, struct client_session *cs,
                              mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
         else {
-            mk_iov_add_entry(sr->headers._extra_rows, mk_iov_crlf.data, 
+            mk_iov_add_entry(sr->headers._extra_rows, mk_iov_crlf.data,
                              mk_iov_crlf.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
         }
     }
@@ -438,6 +438,8 @@ void mk_header_set_http_status(struct session_request *sr, int status)
 {
     mk_bug(!sr);
     sr->headers.status = status;
+
+    MK_TRACE("Set HTTP status = %i", status);
 }
 
 void mk_header_response_reset(struct response_headers *header)

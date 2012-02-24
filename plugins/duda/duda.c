@@ -72,14 +72,15 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
     if (service_init(api) == 0) {
         PLUGIN_TRACE("[%s] duda_init()", ws->app_name);
         ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
+
+        /* Lookup callback functions for each registered method */
         mk_list_foreach(head_iface, ws->map) {
             entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
             mk_list_foreach(head_method, &entry_iface->methods) {
                 entry_method = mk_list_entry(head_method, struct duda_method, _head);
                 entry_method->func_cb = duda_load_symbol(ws->handler, entry_method->callback);
-
                 if (!entry_method->func_cb) {
-                    PLUGIN_TRACE("callback not found '%s'", entry_method->uid);
+                    mk_err("%s / callback not found '%s'", entry_method->uid, entry_method);
                     exit(EXIT_FAILURE);
                 }
 
@@ -215,7 +216,6 @@ int duda_request_parse(struct session_request *sr,
             break;
         }
 
-        /* FIXME: parse parameters inside a mk_list */
         i = end + 1;
     }
 
@@ -226,14 +226,15 @@ int duda_request_parse(struct session_request *sr,
     return 0;
 }
 
-int duda_service_run(struct session_request *sr,
+int duda_service_run(struct client_session *cs,
+                     struct session_request *sr,
                      struct web_service *web_service)
 {
     struct duda_request *dr;
     struct mk_list *head_iface, *head_method;
     struct duda_interface *entry_iface;
     struct duda_method *entry_method;
-    void *(*callback)() = NULL;
+    void *(*callback) (duda_request_t *) = NULL;
 
     dr = mk_api->mem_alloc(sizeof(struct duda_request));
     if (!dr) {
@@ -244,9 +245,19 @@ int duda_service_run(struct session_request *sr,
     /* service details */
     dr->web_service = web_service;
     dr->n_params = 0;
+    dr->cs = cs;
     dr->sr = sr;
-    dr->cs = NULL;
 
+    /* body buffer */
+    dr->body_buffer = NULL;
+    dr->body_buffer_idx = 0;
+    dr->body_buffer_size = 0;
+
+    /* statuses */
+    dr->_st_http_headers_sent = MK_FALSE;
+    dr->_st_body_writes = 0;
+
+    /* Parse request */
     if (duda_request_parse(sr, dr) != 0) {
         mk_api->mem_free(dr);
         return -1;
@@ -273,7 +284,7 @@ int duda_service_run(struct session_request *sr,
     }
 
     PLUGIN_TRACE("CB %s()", entry_method->callback);
-    entry_method->func_cb();
+    entry_method->func_cb(dr);
 
     return 0;
 }
@@ -350,7 +361,8 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
             return MK_PLUGIN_RET_NOT_ME;
         }
 
-        duda_service_run(sr, web_service);
+        duda_service_run(cs, sr, web_service);
+        return MK_PLUGIN_RET_END;
     }
 
     return MK_PLUGIN_RET_NOT_ME;

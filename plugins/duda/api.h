@@ -24,6 +24,13 @@
 
 #include "mk_list.h"
 
+/* types of data */
+typedef struct duda_interface duda_interface_t;
+typedef struct duda_method duda_method_t;
+typedef struct duda_param duda_param_t;
+typedef void * duda_callback_t;
+typedef struct duda_request duda_request_t;
+
 /* The basic web service information */
 struct duda_webservice {
     char *app_name;
@@ -44,7 +51,7 @@ struct duda_method {
     char *uid;
     short int num_params;
     char *callback;
-    void *(*func_cb)();
+    void *(*func_cb)(duda_request_t *);
 
     struct mk_list params;
 
@@ -60,12 +67,6 @@ struct duda_param {
     /* mk_list */
     struct mk_list _head;
 };
-
-/* types of data */
-typedef struct duda_interface duda_interface_t;
-typedef struct duda_method duda_method_t;
-typedef struct duda_param duda_param_t;
-typedef void * duda_callback_t;
 
 /*
  * API objects
@@ -90,6 +91,11 @@ typedef void * duda_callback_t;
  * Message
  * -------
  * Provide methods to print different informative messages.
+ *
+ *
+ * Response
+ * --------
+ * Methods to generate response data to the clien
  *
  *
  * Debug
@@ -123,6 +129,14 @@ struct duda_api_msg {
     void (*bug)  (const char *, ...);
 };
 
+/* RESPONSE object: response->x() */
+struct duda_api_response {
+    int (*http_status) (duda_request_t *, int);
+    int (*http_header) (duda_request_t *, char *, int);
+    int (*body_write)  (duda_request_t *, char *, int);
+    int (*end) (duda_request_t *);
+};
+
 /* DEBUG object: debug->x() */
 struct duda_api_debug {
     /* FIXME: pending interfaces... */
@@ -139,6 +153,7 @@ struct duda_api_objects {
     struct plugin_api *monkey;
     struct duda_api_map *map;
     struct duda_api_msg *msg;
+    struct duda_api_response *response;
     struct duda_api_debug *debug;
 };
 

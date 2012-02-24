@@ -195,7 +195,7 @@ struct plugin *mk_plugin_alloc(void *handler, char *path)
         mk_plugin_load_symbol(handler, "_mkp_network_io_server");
 
     /* Thread key */
-    p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler, 
+    p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler,
                                                             "_mkp_data");
 
     /* Event handlers hooks */
@@ -263,7 +263,7 @@ create socket : %p\nbind : %p\nserver : %p",
         }
 #endif
         /* Just link the transport layer defined in monkey.conf > TransportLayer */
-        if (config->transport_layer && 
+        if (config->transport_layer &&
             strcmp(config->transport_layer, p->shortname) == 0) {
             plg_netiomap = &p->net_io;
             config->transport_layer_plugin = p;
@@ -327,6 +327,7 @@ void mk_plugin_init()
     api->plugin_load_symbol = mk_plugin_load_symbol;
     api->mem_alloc = mk_mem_malloc;
     api->mem_alloc_z = mk_mem_malloc_z;
+    api->mem_realloc = mk_mem_realloc;
     api->mem_free = mk_mem_free;
 
     /* String Callbacks */
@@ -391,7 +392,7 @@ void mk_plugin_init()
     api->event_add = mk_plugin_event_add;
     api->event_del = mk_plugin_event_del;
     api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
-    
+
     /* Worker functions */
     api->worker_spawn = mk_utils_worker_spawn;
     api->worker_rename = mk_utils_worker_rename;
@@ -409,7 +410,7 @@ void mk_plugin_init()
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
     cnf = mk_config_create(path);
-    
+
     if (!cnf) {
         mk_err("Plugins configuration file could not be readed");
         mk_mem_free(path);
@@ -446,7 +447,7 @@ void mk_plugin_init()
                             config->serverconf, p->shortname);
 
             MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
-            
+
             /* Init plugin */
             ret = p->init(&api, plugin_confdir);
             if (ret < 0) {
@@ -540,9 +541,9 @@ int mk_plugin_stage_run(unsigned int hook,
         }
     }
 
-    /* 
-     * The plugin acts like an Object handler, it will take care of the 
-     * request, it decides what to do with the request 
+    /*
+     * The plugin acts like an Object handler, it will take care of the
+     * request, it decides what to do with the request
      */
     if (hook & MK_PLUGIN_STAGE_30) {
         /* The request just arrived and is required to check who can
@@ -565,7 +566,7 @@ int mk_plugin_stage_run(unsigned int hook,
                            stm->p->shortname, ret);
                     exit(EXIT_FAILURE);
                 }
-                
+
                 stm = stm->next;
             }
         }
@@ -630,7 +631,7 @@ void mk_plugin_core_process()
 
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
-        
+
         /* Init plugin */
         if (node->core.prctx) {
             node->core.prctx(config);
@@ -720,7 +721,7 @@ int mk_plugin_event_add(int socket, int mode,
     struct plugin_event *event;
 
     struct mk_list *list;
-    
+
     sched = mk_sched_get_thread_conf();
 
     if (sched && handler && cs && sr) {
@@ -730,14 +731,14 @@ int mk_plugin_event_add(int socket, int mode,
         event->handler = handler;
         event->cs = cs;
         event->sr = sr;
-        
+
         /* Get thread event list */
         list = mk_plugin_event_get_list();
         mk_list_add(&event->_head, list);
         mk_plugin_event_set_list(list);
     }
 
-    /* 
+    /*
      * The thread event info has been registered, now we need
      * to register the socket involved to the thread epoll array
      */
@@ -781,7 +782,7 @@ struct plugin_event *mk_plugin_event_get(int socket)
 
     list = mk_plugin_event_get_list();
 
-    /* 
+    /*
      * In some cases this function is invoked from scheduler.c when a connection is
      * closed, on that moment there's no thread context so the returned list is NULL.
      */
@@ -855,7 +856,7 @@ int mk_plugin_event_check_return(const char *hook, int ret)
     default:
         mk_plugin_event_bad_return(hook, ret);
     }
-    
+
     /* don't cry gcc :_( */
     return -1;
 }
@@ -919,7 +920,7 @@ int mk_plugin_event_write(int socket)
             return ret;
         }
     }
-    
+
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_write) {
@@ -935,7 +936,7 @@ int mk_plugin_event_write(int socket)
             }
         }
     }
-    
+
     return MK_PLUGIN_RET_CONTINUE;
 }
 
@@ -958,7 +959,7 @@ int mk_plugin_event_error(int socket)
             return ret;
         }
     }
-    
+
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_error) {
@@ -997,7 +998,7 @@ int mk_plugin_event_close(int socket)
             return ret;
         }
     }
-    
+
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_close) {
@@ -1036,7 +1037,7 @@ int mk_plugin_event_timeout(int socket)
             return ret;
         }
     }
-    
+
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         if (node->event_timeout) {
@@ -1081,7 +1082,7 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
     mk_bug(!sr);
 
     if (!sr->headers._extra_rows) {
-        /* 
+        /*
          * We allocate space for:
          *   + 8 slots extra headers
          *   + 8 slots to be used with CRLF for every extra header
@@ -1093,7 +1094,7 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
         mk_bug(!sr->headers._extra_rows);
     }
 
-    mk_iov_add_entry(sr->headers._extra_rows, row, len, 
+    mk_iov_add_entry(sr->headers._extra_rows, row, len,
                      mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     return 0;
 }

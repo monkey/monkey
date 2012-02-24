@@ -28,9 +28,11 @@
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;
 
+/* Objects exported to the web service */
 struct plugin_api *monkey;
 struct duda_api_map *map;
 struct duda_api_msg *msg;
+struct duda_api_response *response;
 struct duda_api_debug *debug;
 
 /* Duda Macros */
@@ -39,6 +41,7 @@ struct duda_api_debug *debug;
         monkey = api->monkey;                                           \
         map = api->map;                                                 \
         msg = api->msg;                                                 \
+        response = api->response;                                       \
         debug = api->debug;                                             \
         mk_list_init(&_duda_interfaces);                                \
     } while(0);

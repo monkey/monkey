@@ -19,22 +19,22 @@ DUDA_REGISTER("Service Example", "service");
  *
  */
 
-void *cb_cpu_usage()
+void cb_cpu_usage(duda_request_t *dr)
 {
-    msg->info("callback cpu_usage()");
-    return NULL;
+    response->http_status(dr, 200);
+    response->http_header(dr, "Content-Type: text/plain", 24);
+    response->body_write(dr, "hello world\n", 12);
+    response->end(dr);
 }
 
-void *cb_cpu_hz()
+void cb_cpu_hz(duda_request_t *dr)
 {
     msg->info("callback cpu_hz()");
-    return NULL;
 }
 
-void *cb_cpu_list()
+void cb_cpu_list(duda_request_t *dr)
 {
     msg->info("callback cpu_list()");
-    return NULL;
 }
 
 int duda_init(struct duda_api_objects *api)

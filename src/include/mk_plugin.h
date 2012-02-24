@@ -62,7 +62,7 @@
 #define MK_PLUGIN_RET_END 200
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 
-/* 
+/*
  * Event return values
  * -------------------
  * Any plugin can hook to any socket event, when a worker thread receives
@@ -154,7 +154,7 @@ struct plugin
 
 
 /* Multiple plugins can work on multiple stages, we don't want
- * Monkey be comparing each plugin looking for a specific stage, 
+ * Monkey be comparing each plugin looking for a specific stage,
  * so we create a Map of direct stage calls
  */
 struct plugin_stagem
@@ -194,6 +194,7 @@ struct plugin_api
     /* memory functions */
     void *(*mem_alloc) (const size_t size);
     void *(*mem_alloc_z) (const size_t size);
+    void *(*mem_realloc) (void *, const size_t size);
     void  (*mem_free) (void *);
     void  (*pointer_set) (mk_pointer *, char *);
     void  (*pointer_print) (mk_pointer);
@@ -217,7 +218,7 @@ struct plugin_api
     mk_pointer (*header_get) (struct headers_toc *, const char *key_name, int key_len);
     int  (*header_add) (struct session_request *, char *row, int len);
     void (*header_set_http_status) (struct session_request *, int);
-    
+
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
     void (*iov_free) (struct mk_iov *);
@@ -269,7 +270,7 @@ struct plugin_api
     int (*worker_rename) (const char *);
 
     /* event's functions */
-    int (*event_add) (int, int, struct plugin *, struct client_session *, 
+    int (*event_add) (int, int, struct plugin *, struct client_session *,
                       struct session_request *, int);
     int (*event_del) (int);
 
@@ -291,10 +292,10 @@ typedef pthread_key_t mk_plugin_key_t;
 /* Plugin events thread key */
 pthread_key_t mk_plugin_event_k;
 
-struct plugin_event 
+struct plugin_event
 {
     int socket;
-    
+
     struct plugin *handler;
     struct client_session *cs;
     struct session_request *sr;
@@ -330,7 +331,7 @@ void mk_plugin_preworker_calls();
 /* Plugins events interface */
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_session *cs, 
+                        struct client_session *cs,
                         struct session_request *sr,
                         int behavior);
 int mk_plugin_event_del(int socket);
@@ -361,7 +362,7 @@ mk_pointer *mk_plugin_time_now_human();
 int mk_plugin_sched_remove_client(int socket);
 
 int mk_plugin_header_add(struct session_request *sr, char *row, int len);
-int mk_plugin_header_get(struct session_request *sr, 
+int mk_plugin_header_get(struct session_request *sr,
                          mk_pointer query,
                          mk_pointer *result);
 
