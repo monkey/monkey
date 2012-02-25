@@ -78,6 +78,9 @@ void mk_signal_handler(int signo, siginfo_t *si, void *context)
         break;
     case SIGBUS:
     case SIGSEGV:
+#ifdef DEBUG
+        mk_utils_stacktrace();
+#endif
         mk_err("%s (%d), code=%d, addr=%p", 
                sys_siglist[signo], signo, si->si_code, si->si_addr);
         pthread_exit(NULL);

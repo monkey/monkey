@@ -823,7 +823,8 @@ fi
 if test -z "$debug" ; then
     CFLAGS="$CFLAGS -O2 -Wall"
 else
-    CFLAGS="$CFLAGS -g -Wall"
+    DEFS="-DDEBUG"
+    CFLAGS="$CFLAGS -g -Wall -rdynamic"
 fi
 
 if [ $trace ] ; then

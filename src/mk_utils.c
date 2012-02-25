@@ -481,3 +481,21 @@ int mk_utils_worker_rename(const char *title)
 {
     return prctl(PR_SET_NAME, title, 0, 0, 0);
 }
+
+#ifdef DEBUG
+#include <execinfo.h>
+
+void mk_utils_stacktrace(void)
+{
+    int i;
+    size_t size;
+    char **str;
+    void *arr[10];
+
+    size = backtrace(arr, 10);
+    str = backtrace_symbols(arr, size);
+    for (i = 0; i < size; i++)
+        printf("%s\n", str[i]);
+
+}
+#endif

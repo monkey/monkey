@@ -407,6 +407,10 @@ void mk_plugin_init()
     api->errno_print = mk_utils_print_errno;
 #endif
 
+#ifdef DEBUG
+    api->stacktrace = (void *) mk_utils_stacktrace;
+#endif
+
     /* Read configuration file */
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);

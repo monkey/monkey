@@ -72,4 +72,9 @@ void mk_print(int type, const char *format, ...);
 pthread_t mk_utils_worker_spawn(void (*func) (void *));
 int mk_utils_worker_rename(const char *title);
 
+#ifdef DEBUG
+void mk_utils_stacktrace(void);
+#endif
+
+
 #endif

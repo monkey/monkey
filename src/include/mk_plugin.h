@@ -286,6 +286,9 @@ struct plugin_api
     int (*errno_print) (int);
 #endif
 
+#ifdef DEBUG
+    void (*stacktrace)(void);
+#endif
 };
 
 typedef pthread_key_t mk_plugin_key_t;
