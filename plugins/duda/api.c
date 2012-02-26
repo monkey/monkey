@@ -58,7 +58,46 @@ int __body_flush(duda_request_t *dr)
      * - if written data is less than total, register an event_write() event
      *   to send the pending data
      */
-    return mk_api->iov_send(dr->cs->socket, dr->body_buffer);
+    int i;
+    int count = 0;
+    int bytes_sent, bytes_to;
+    int reset_to = -1;
+
+    bytes_sent = mk_api->socket_sendv(dr->cs->socket, dr->body_buffer);
+    PLUGIN_TRACE("body_flush: %i/%i", bytes_sent, dr->body_buffer->total_len);
+
+    /*
+     * If the call sent less data than total, we must modify the mk_iov struct
+     * to mark the buffers already processed and set them with with length = zero,
+     * so on the next calls to this function the Monkey will skip buffers with bytes
+     * length = 0.
+     */
+    if (bytes_sent < dr->body_buffer->total_len) {
+        /* Go around each buffer entry and check where the offset took place */
+        for (i = 0; i < dr->body_buffer->size; i++) {
+            if (count + dr->body_buffer->io[i].iov_len == bytes_sent) {
+                reset_to = 1;
+                break;
+            }
+            else if ( count + dr->body_buffer->io[i].iov_len < bytes_sent) {
+                reset_to = i - 1;
+                bytes_to = (bytes_sent - count);
+                dr->body_buffer->io[i].iov_base += bytes_to;
+                dr->body_buffer->io[i].iov_len  -= bytes_to;
+                break;
+            }
+            count += dr->body_buffer->io[i].iov_len;
+        }
+
+        /* Reset entries */
+        for (i = 0; i <= reset_to; i++) {
+            dr->body_buffer->io[i].iov_len = 0;
+        }
+
+        dr->body_buffer->total_len -= bytes_sent;
+    }
+
+    return 0;
 }
 
 

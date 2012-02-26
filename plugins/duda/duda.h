@@ -55,9 +55,10 @@ struct duda_request {
     struct client_session *cs;
     struct session_request *sr;
 
-    /* Body buffers */
+    /* Body buffer stuff */
     struct mk_iov *body_buffer;
     unsigned short int body_buffer_size;
+    unsigned int body_buffer_sent;
 
     /* Internal statuses */
     unsigned int _st_http_headers_sent;  /* HTTP headers sent? */
