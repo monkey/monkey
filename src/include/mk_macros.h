@@ -81,8 +81,8 @@
 
 #define mk_is_bool(x) ((x == MK_TRUE || x == MK_FALSE) ? 1 : 0)
 
-#define mk_bug(condition) do {                  \
-        if (mk_unlikely((condition)!=0)) {         \
+#define mk_bug(condition) do {                                          \
+        if (mk_unlikely((condition)!=0)) {                              \
             mk_print(MK_BUG, "Bug found in %s() at %s:%d",              \
                      __FUNCTION__, __FILE__, __LINE__);                 \
             abort();                                                    \

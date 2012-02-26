@@ -55,7 +55,7 @@ static const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "S
 static const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                               "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-/* This function given a unix time, set in a mk_pointer 
+/* This function given a unix time, set in a mk_pointer
  * the date in the RFC1123 format like:
  *
  *    Wed, 23 Jun 2010 22:32:01 GMT
@@ -84,7 +84,7 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
 
     /* struct tm -> tm_year counts number of years after 1900 */
     year = gtm->tm_year + 1900;
-    
+
     /* Compose template */
     buf = (*p)->data;
 
@@ -135,7 +135,7 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
     *buf++ = '\r';
     *buf++ = '\n';
     *buf++ = '\0';
-    
+
     /* Set mk_pointer data len */
     (*p)->len = size;
 
@@ -238,8 +238,8 @@ int mk_utils_hex2int(char *hex, int len)
     return res;
 }
 
-/* If the URI contains hexa format characters it will return 
- * convert the Hexa values to ASCII character 
+/* If the URI contains hexa format characters it will return
+ * convert the Hexa values to ASCII character
  */
 char *mk_utils_url_decode(mk_pointer uri)
 {
@@ -247,7 +247,7 @@ char *mk_utils_url_decode(mk_pointer uri)
     int buf_idx = 0;
     char *buf;
     char hex[3];
-    
+
     if ((i = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
         return NULL;
     }
@@ -289,7 +289,7 @@ char *mk_utils_url_decode(mk_pointer uri)
 
 #ifdef TRACE
 #include <sys/time.h>
-void mk_utils_trace(const char *component, int color, const char *function, 
+void mk_utils_trace(const char *component, int color, const char *function,
                     char *file, int line, const char* format, ...)
 {
     va_list args;
@@ -309,7 +309,7 @@ void mk_utils_trace(const char *component, int color, const char *function,
     pthread_mutex_lock(&mutex_trace);
 
     gettimeofday(&tv, &tz);
- 
+
     /* Switch message color */
     switch(color) {
     case MK_TRACE_CORE:
@@ -324,11 +324,11 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
     va_start( args, format );
 
-    printf("~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ", 
+    printf("~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ",
            ANSI_CYAN, (int) (tv.tv_sec - monkey_init_time), (int) tv.tv_usec, ANSI_RESET,
-           ANSI_MAGENTA, ANSI_BOLD, 
+           ANSI_MAGENTA, ANSI_BOLD,
            ANSI_RESET, ANSI_BOLD, ANSI_GREEN, component, color_fileline, file,
-           line, ANSI_MAGENTA, 
+           line, ANSI_MAGENTA,
            color_function, function, ANSI_RED);
     vprintf(format, args );
     va_end(args);
@@ -401,7 +401,7 @@ int mk_utils_remove_pid()
 {
     unsigned long len = 0;
     char *filepath = NULL;
-    
+
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
     mk_user_undo_uidgid();
     if (unlink(filepath)) {
@@ -437,13 +437,15 @@ void mk_print(int type, const char *format, ...)
         header_color = ANSI_YELLOW;
         break;
     case MK_BUG:
+        mk_utils_stacktrace();
         header_title = " BUG !";
         header_color = ANSI_BOLD ANSI_RED;
+        break;
     }
 
     now = time(NULL);
     current = localtime(&now);
-    printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ", 
+    printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ",
            ANSI_BOLD, ANSI_RESET,
            current->tm_year + 1900,
            current->tm_mon + 1,
@@ -453,7 +455,7 @@ void mk_print(int type, const char *format, ...)
            current->tm_sec,
            ANSI_BOLD, ANSI_RESET);
 
-    printf("%s[%s%7s%s]%s ", 
+    printf("%s[%s%7s%s]%s ",
            ANSI_BOLD, header_color, header_title, ANSI_WHITE, ANSI_RESET);
 
     vprintf(format, args);
@@ -492,10 +494,14 @@ void mk_utils_stacktrace(void)
     char **str;
     void *arr[10];
 
+    printf("\n%s[stack trace]%s\n", ANSI_BOLD, ANSI_RESET);
     size = backtrace(arr, 10);
     str = backtrace_symbols(arr, size);
-    for (i = 0; i < size; i++)
-        printf("%s\n", str[i]);
+    for (i = 0; i < size; i++) {
+        printf(" + %s\n", str[i]);
+    }
+
+    fflush(stdout);
 
 }
 #endif
