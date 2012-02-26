@@ -68,7 +68,7 @@ int mk_conn_read(int socket)
                                  socket, MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
         }
         else if (cs->body_length + 1 >= config->max_request_size) {
-            /* 
+            /*
              * Request is incomplete and our buffer is full,
              * close connection
              */
@@ -104,15 +104,15 @@ int mk_conn_write(int socket)
     }
 
     MK_TRACE("[FD %i] Normal connection write handling", socket);
-    
+
     sched = mk_sched_get_thread_conf();
 
     /* Check if this is a new connection */
     conx = mk_sched_get_connection(sched, socket);
-    if (!conx) { 
+    if (!conx) {
         MK_TRACE("[FD %i] Registering new connection");
         mk_sched_register_client(socket, sched);
-        mk_epoll_change_mode(sched->epoll_fd, socket, 
+        mk_epoll_change_mode(sched->epoll_fd, socket,
                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         return 0;
     }

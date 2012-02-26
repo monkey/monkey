@@ -24,6 +24,7 @@
 #include "debug.h"
 #include "duda.h"
 #include "api.h"
+#include "event.h"
 
 /* Send HTTP response headers just once */
 int __http_send_headers_safe(duda_request_t *dr)
@@ -53,11 +54,6 @@ int __http_send_headers_safe(duda_request_t *dr)
 /* Send body buffers data to the remote socket */
 int __body_flush(duda_request_t *dr)
 {
-    /* FIXME:
-     * ------
-     * - if written data is less than total, register an event_write() event
-     *   to send the pending data
-     */
     int i;
     int count = 0;
     int bytes_sent, bytes_to;
@@ -95,6 +91,14 @@ int __body_flush(duda_request_t *dr)
         }
 
         dr->body_buffer->total_len -= bytes_sent;
+
+        /*
+         * As pending data exists, we should check and possibly add this
+         * request to the events manager
+         */
+        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_FALSE) {
+            duda_event_register_write(dr, DUDA_EVENT_BODYFLUSH);
+        }
     }
 
     return 0;

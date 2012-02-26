@@ -25,6 +25,7 @@
 #include "duda.h"
 #include "conf.h"
 #include "request.h"
+#include "event.h"
 
 MONKEY_PLUGIN("duda",                                     /* shortname */
               "Duda Web Services Framework",              /* name */
@@ -138,14 +139,24 @@ int duda_load_services()
     return 0;
 }
 
+int _mkp_event_write(int sockfd)
+{
+    mk_warn("event write");
+    return duda_event_write_callback(sockfd);
+}
+
 
 void _mkp_core_prctx(struct server_config *config)
 {
-
 }
 
 void _mkp_core_thctx()
 {
+    struct mk_list *list_events_write;
+
+    list_events_write = mk_api->mem_alloc(sizeof(struct mk_list));
+    mk_list_init(list_events_write);
+    pthread_setspecific(duda_global_events_write, list_events_write);
 }
 
 int _mkp_init(void **api, char *confdir)
@@ -156,6 +167,9 @@ int _mkp_init(void **api, char *confdir)
     duda_conf_main_init(confdir);
     duda_conf_vhost_init();
     duda_load_services();
+
+    /* Global data / Thread scope */
+    pthread_key_create(&duda_global_events_write, NULL);
 
     return 0;
 }
@@ -247,6 +261,7 @@ int duda_service_run(struct client_session *cs,
     dr->n_params = 0;
     dr->cs = cs;
     dr->sr = sr;
+    dr->events_mask = 0;
 
     /* body buffer */
     dr->body_buffer = NULL;
