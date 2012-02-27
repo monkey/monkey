@@ -23,6 +23,7 @@
 #define DUDA_MAIN_H
 
 #include "MKPlugin.h"
+#include "api.h"
 
 #define MAP_WS_APP_NAME   0X00
 #define MAP_WS_INTERFACE  0X10
@@ -62,6 +63,9 @@ struct duda_request {
     unsigned short int body_buffer_size;
     unsigned int body_buffer_sent;
 
+    /* Callback functions */
+    void (*end_callback)(duda_request_t *);
+
     /* Internal statuses */
     unsigned int _st_http_headers_sent;  /* HTTP headers sent? */
     unsigned int _st_body_writes;        /* Number of body_writes invoked */
@@ -70,9 +74,11 @@ struct duda_request {
     struct mk_list _head_events_write;
 
     /* Events mask */
-    short int events_mask;
+    unsigned short int events_mask;
 };
 
 pthread_key_t duda_global_events_write;
+
+int duda_service_end(duda_request_t *dr);
 
 #endif

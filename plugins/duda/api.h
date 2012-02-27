@@ -134,7 +134,7 @@ struct duda_api_response {
     int (*http_status) (duda_request_t *, int);
     int (*http_header) (duda_request_t *, char *, int);
     int (*body_write)  (duda_request_t *, char *, int);
-    int (*end) (duda_request_t *);
+    int (*end) (duda_request_t *, void (*end_callback) ());
 };
 
 /* DEBUG object: debug->x() */

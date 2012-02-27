@@ -141,7 +141,6 @@ int duda_load_services()
 
 int _mkp_event_write(int sockfd)
 {
-    mk_warn("event write");
     return duda_event_write_callback(sockfd);
 }
 
@@ -156,7 +155,7 @@ void _mkp_core_thctx()
 
     list_events_write = mk_api->mem_alloc(sizeof(struct mk_list));
     mk_list_init(list_events_write);
-    pthread_setspecific(duda_global_events_write, list_events_write);
+    pthread_setspecific(duda_global_events_write, (void *) list_events_write);
 }
 
 int _mkp_init(void **api, char *confdir)
@@ -240,6 +239,25 @@ int duda_request_parse(struct session_request *sr,
     return 0;
 }
 
+int duda_service_end(duda_request_t *dr)
+{
+    /* call service end_callback() */
+    if (dr->end_callback) {
+        dr->end_callback(dr);
+    }
+
+    /* Finalize HTTP stuff with Monkey core */
+    mk_api->http_request_end(dr->cs->socket);
+
+    /* Free resources allocated by Duda */
+    if (dr->body_buffer) {
+        mk_api->mem_free(dr->body_buffer);
+    }
+    mk_api->mem_free(dr);
+
+    return 0;
+}
+
 int duda_service_run(struct client_session *cs,
                      struct session_request *sr,
                      struct web_service *web_service)
@@ -266,6 +284,9 @@ int duda_service_run(struct client_session *cs,
     /* body buffer */
     dr->body_buffer = NULL;
     dr->body_buffer_size = 0;
+
+    /* callbacks */
+    dr->end_callback = NULL;
 
     /* statuses */
     dr->_st_http_headers_sent = MK_FALSE;
@@ -376,7 +397,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
         }
 
         duda_service_run(cs, sr, web_service);
-        return MK_PLUGIN_RET_END;
+        return MK_PLUGIN_RET_CONTINUE;
     }
 
     return MK_PLUGIN_RET_NOT_ME;

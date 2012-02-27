@@ -40,6 +40,9 @@ int __http_send_headers_safe(duda_request_t *dr)
         return -1;
     }
 
+    /* Calculate body length */
+    dr->sr->headers.content_length = dr->body_buffer->total_len;
+
     r = mk_api->header_send(dr->cs->socket, dr->cs, dr->sr);
     if (r != 0) {
         /* FIXME: Console error */
@@ -61,7 +64,6 @@ int __body_flush(duda_request_t *dr)
 
     bytes_sent = mk_api->socket_sendv(dr->cs->socket, dr->body_buffer);
     PLUGIN_TRACE("body_flush: %i/%i", bytes_sent, dr->body_buffer->total_len);
-
     /*
      * If the call sent less data than total, we must modify the mk_iov struct
      * to mark the buffers already processed and set them with with length = zero,
@@ -70,16 +72,16 @@ int __body_flush(duda_request_t *dr)
      */
     if (bytes_sent < dr->body_buffer->total_len) {
         /* Go around each buffer entry and check where the offset took place */
-        for (i = 0; i < dr->body_buffer->size; i++) {
+        for (i = 0; i < dr->body_buffer->iov_idx; i++) {
             if (count + dr->body_buffer->io[i].iov_len == bytes_sent) {
                 reset_to = 1;
                 break;
             }
-            else if ( count + dr->body_buffer->io[i].iov_len < bytes_sent) {
+            else if (bytes_sent < (count + dr->body_buffer->io[i].iov_len)) {
                 reset_to = i - 1;
                 bytes_to = (bytes_sent - count);
                 dr->body_buffer->io[i].iov_base += bytes_to;
-                dr->body_buffer->io[i].iov_len  -= bytes_to;
+                dr->body_buffer->io[i].iov_len  = dr->body_buffer->io[i].iov_len - bytes_to;
                 break;
             }
             count += dr->body_buffer->io[i].iov_len;
@@ -92,6 +94,17 @@ int __body_flush(duda_request_t *dr)
 
         dr->body_buffer->total_len -= bytes_sent;
 
+#ifdef TRACE
+        PLUGIN_TRACE("new total len: %i (iov_idx=%i)",
+                     dr->body_buffer->total_len,
+                     dr->body_buffer->iov_idx);
+        int j;
+
+        for (j=0; j<dr->body_buffer->iov_idx; j++) {
+            PLUGIN_TRACE("io[%i] = %i", j, dr->body_buffer->io[j].iov_len);
+        }
+#endif
+
         /*
          * As pending data exists, we should check and possibly add this
          * request to the events manager
@@ -101,7 +114,16 @@ int __body_flush(duda_request_t *dr)
         }
     }
 
-    return 0;
+    /* Successfully end ? */
+    if (bytes_sent == dr->body_buffer->total_len) {
+        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_TRUE) {
+            PLUGIN_TRACE("Unregister body_flush");
+            duda_event_unregister_write(dr, DUDA_EVENT_BODYFLUSH);
+        }
+        return 0;
+    }
+
+    return bytes_sent;
 }
 
 
@@ -145,10 +167,17 @@ int _body_write(duda_request_t *dr, char *raw, int len)
 }
 
 /* Finalize the response process */
-int _end_response(duda_request_t *dr)
+int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 {
+    int ret;
+
+    dr->end_callback = end_cb;
     __http_send_headers_safe(dr);
-    __body_flush(dr);
+    ret = __body_flush(dr);
+
+    if (ret == 0) {
+        duda_service_end(dr);
+    }
 
     return 0;
 }

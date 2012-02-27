@@ -19,16 +19,21 @@ DUDA_REGISTER("Service Example", "service");
  *
  */
 
+void cb_end(duda_request_t *dr)
+{
+    msg->info("my end callback");
+}
+
 void cb_cpu_usage(duda_request_t *dr)
 {
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
-    //response->body_write(dr, "hello world\n", 12);
+    response->body_write(dr, "hello world\n", 12);
 
-    char *buf = monkey->file_to_buffer("/home/edsiper/kernel_sdhc_log_001.txt");
-    response->body_write(dr, buf, strlen(buf));
+    //char *buf = monkey->file_to_buffer("/home/edsiper/kernel_sdhc_log_001.txt");
+    //response->body_write(dr, buf, strlen(buf));
 
-    response->end(dr);
+    response->end(dr, cb_end);
 }
 
 void cb_cpu_hz(duda_request_t *dr)

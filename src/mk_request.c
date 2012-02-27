@@ -233,7 +233,7 @@ static int mk_request_header_process(struct session_request *sr)
     mk_request_header_toc_parse(&sr->headers_toc, headers, sr->headers_len);
 
     /* Host */
-    host = mk_request_header_get(&sr->headers_toc, 
+    host = mk_request_header_get(&sr->headers_toc,
                                  mk_rh_host.data,
                                  mk_rh_host.len);
 
@@ -262,15 +262,15 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Looking for headers that ONLY Monkey uses */
-    sr->connection = mk_request_header_get(&sr->headers_toc, 
+    sr->connection = mk_request_header_get(&sr->headers_toc,
                                            mk_rh_connection.data,
                                            mk_rh_connection.len);
 
-    sr->range = mk_request_header_get(&sr->headers_toc, 
+    sr->range = mk_request_header_get(&sr->headers_toc,
                                       mk_rh_range.data,
                                       mk_rh_range.len);
 
-    sr->if_modified_since = mk_request_header_get(&sr->headers_toc, 
+    sr->if_modified_since = mk_request_header_get(&sr->headers_toc,
                                                   mk_rh_if_modified_since.data,
                                                   mk_rh_if_modified_since.len);
 
@@ -313,12 +313,12 @@ static int mk_request_parse(struct client_session *cs)
 
     for (i = 0; i <= cs->body_pos_end; i++) {
         /*
-         * Pipelining can just exists in a persistent connection or 
+         * Pipelining can just exists in a persistent connection or
          * well known as KeepAlive, so if we are in keepalive mode
          * we should check if we have multiple request in our body buffer
          */
         if (cs->counter_connections > 0) {
-            /* 
+            /*
              * Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
              * request can be involved.
              */
@@ -374,7 +374,7 @@ static int mk_request_parse(struct client_session *cs)
         blocks++;
     }
 
-    /* DEBUG BLOCKS 
+    /* DEBUG BLOCKS
     struct mk_list *head;
     struct session_request *entry;
 
@@ -473,7 +473,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     alias = &sr->host_conf->server_names;
     sr->host_alias = mk_list_entry_first(alias,
                                          struct host_alias, _head);
-    
+
     if (sr->host.data) {
         mk_config_host_find(sr->host, &sr->host_conf, &sr->host_alias);
     }
@@ -551,8 +551,8 @@ int mk_handler_read(int socket, struct client_session *cs)
             return -1;
         }
 
-        /* 
-         * Check if the body field still points to the initial body_fixed, if so, 
+        /*
+         * Check if the body field still points to the initial body_fixed, if so,
          * allow the new space required in body, otherwise perform a realloc over
          * body.
          */
@@ -580,7 +580,7 @@ int mk_handler_read(int socket, struct client_session *cs)
     /* Read content */
     bytes = mk_socket_read(socket, cs->body + cs->body_length,
                            (cs->body_size - cs->body_length));
-    
+
     MK_TRACE("[FD %i] read %i", socket, bytes);
 
     if (bytes < 0) {
@@ -654,7 +654,7 @@ int mk_handler_write(int socket, struct client_session *cs)
         }
     }
 
-    /* 
+    /*
      * If we are here, is because all pipelined request were
      * processed successfully, let's return 0;
      */
@@ -919,14 +919,14 @@ mk_pointer mk_request_header_get(struct headers_toc *toc, const char *key_name, 
     row = toc->rows;
     for (i = 0; i < toc->length; i++) {
 
-        /* 
+        /*
          * status = 1 means that the toc entry was already
          * checked by Monkey
          */
         if (row[i].status == 1) {
             continue;
         }
-        
+
         if (strncasecmp(row[i].init, key_name, key_len) == 0) {
             var.data = row[i].init + key_len + 1;
             var.len = row[i].end - var.data;

@@ -20,6 +20,7 @@
  */
 
 #include <pthread.h>
+#include "MKPlugin.h"
 
 #include "duda.h"
 #include "api.h"
@@ -30,7 +31,6 @@ int duda_event_register_write(duda_request_t *dr, short int event)
     struct mk_list *list;
 
     list = pthread_getspecific(duda_global_events_write);
-
     if (!list) {
         return -1;
     }
@@ -38,6 +38,25 @@ int duda_event_register_write(duda_request_t *dr, short int event)
     dr->events_mask |= event;
     mk_list_add(&dr->_head_events_write, list);
     return 0;
+}
+
+int duda_event_unregister_write(duda_request_t *dr, short int event)
+{
+    struct mk_list *list, *head, *temp;
+    duda_request_t *entry;
+
+    list = pthread_getspecific(duda_global_events_write);
+    mk_list_foreach_safe(head, temp, list) {
+        entry = mk_list_entry(head, duda_request_t, _head_events_write);
+        if (entry == dr && (entry->events_mask & event)) {
+            dr->events_mask ^= event;
+            mk_list_del(&entry->_head_events_write);
+            pthread_setspecific(duda_global_events_write, list);
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 int duda_event_is_registered_write(duda_request_t *dr, short int event)
@@ -59,23 +78,23 @@ int duda_event_is_registered_write(duda_request_t *dr, short int event)
 
 int duda_event_write_callback(int sockfd)
 {
-    struct mk_list *list;
-    struct mk_list *head;
+    struct mk_list *list, *temp, *head;
     duda_request_t *entry;
 
-    mk_info("write callback fd %i", sockfd);
     list = pthread_getspecific(duda_global_events_write);
-    mk_list_foreach(head, list) {
+    mk_list_foreach_safe(head, temp, list) {
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
-        mk_info("socket: %i", entry->cs->socket);
         if (entry->cs->socket == sockfd) {
-            mk_warn("match");
             if (entry->events_mask & DUDA_EVENT_BODYFLUSH) {
-                __body_flush(entry);
-                return MK_PLUGIN_RET_EVENT_CLOSE;
+                if (__body_flush(entry) > 0) {
+                    return MK_PLUGIN_RET_EVENT_OWNED;
+                }
+                else {
+                    duda_service_end(entry);
+                }
             }
         }
     }
 
-    return 0;
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
