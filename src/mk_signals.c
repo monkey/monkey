@@ -44,7 +44,7 @@ void mk_signal_exit()
     signal(SIGHUP,  SIG_IGN);
 
     mk_utils_remove_pid();
-    mk_plugin_exit_all();    
+    mk_plugin_exit_all();
     mk_info("Exiting... >:(");
     _exit(EXIT_SUCCESS);
 }
@@ -81,7 +81,7 @@ void mk_signal_handler(int signo, siginfo_t *si, void *context)
 #ifdef DEBUG
         mk_utils_stacktrace();
 #endif
-        mk_err("%s (%d), code=%d, addr=%p", 
+        mk_err("%s (%d), code=%d, addr=%p",
                sys_siglist[signo], signo, si->si_code, si->si_addr);
         pthread_exit(NULL);
     default:
@@ -95,7 +95,7 @@ void mk_signal_init()
 {
     struct sigaction act;
     memset(&act, 0x0, sizeof(act));
- 
+
     /* allow signals to be handled concurrently */
     act.sa_flags = SA_SIGINFO | SA_NODEFER;
     act.sa_sigaction = &mk_signal_handler;

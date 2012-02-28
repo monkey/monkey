@@ -439,6 +439,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
 static int mk_request_process(struct client_session *cs, struct session_request *sr)
 {
     int status = 0;
+    int socket = cs->socket;
     struct mk_list *alias;
 
     status = mk_request_header_process(sr);
@@ -498,8 +499,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* Plugins Stage 20 */
     int ret;
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, cs->socket, NULL,
-                              cs, sr);
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, socket, NULL, cs, sr);
 
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
@@ -509,7 +509,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     /* Normal HTTP process */
     status = mk_http_init(cs, sr);
 
-    MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
+    MK_TRACE("[FD %i] HTTP Init returning %i", socket, status);
 
     return status;
 }
