@@ -19,17 +19,24 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_EVENT_H
-#define DUDA_EVENT_H
+#ifndef DUDA_BODY_BUFFER_H
+#define DUDA_BODY_BUFFER_H
 
-#include "duda.h"
+/*
+ * The response body holds an IOV array struct of BODY_BUFFER_SIZE,
+ * when the limit is reached, the pointer is reallocated adding a new chunk
+ */
+#define BODY_BUFFER_SIZE  8
 
-#define DUDA_EVENT_BODYFLUSH    1
-#define DUDA_EVENT_SENDFILE     2
 
-int duda_event_register_write(duda_request_t *dr, short int event);
-int duda_event_unregister_write(duda_request_t *dr, short int event);
-int duda_event_is_registered_write(duda_request_t *dr, short int event);
-int duda_event_write_callback(int sockfd);
-int __body_flush(duda_request_t *dr);
+struct duda_body_buffer {
+    struct mk_iov *buf;
+    unsigned short int size;
+    unsigned long int sent;
+};
+
+struct duda_body_buffer *duda_body_buffer_new();
+int duda_body_buffer_expand(struct duda_body_buffer *bb);
+int duda_body_buffer_flush(int sock, struct duda_body_buffer *bb);
+
 #endif

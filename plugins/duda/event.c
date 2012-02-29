@@ -25,6 +25,7 @@
 #include "duda.h"
 #include "api.h"
 #include "event.h"
+#include "queue.h"
 
 int duda_event_register_write(duda_request_t *dr, short int event)
 {
@@ -86,7 +87,7 @@ int duda_event_write_callback(int sockfd)
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
         if (entry->cs->socket == sockfd) {
             if (entry->events_mask & DUDA_EVENT_BODYFLUSH) {
-                if (__body_flush(entry) > 0) {
+                if (duda_queue_flush(entry) > 0) {
                     return MK_PLUGIN_RET_EVENT_OWNED;
                 }
                 else {

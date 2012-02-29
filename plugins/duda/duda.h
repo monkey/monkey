@@ -24,6 +24,7 @@
 
 #include "MKPlugin.h"
 #include "api.h"
+#include "queue.h"
 
 #define MAP_WS_APP_NAME   0X00
 #define MAP_WS_INTERFACE  0X10
@@ -33,12 +34,6 @@
 
 /* Max number of parameters allowed in Duda URI */
 #define MAP_WS_MAX_PARAMS 8
-
-/*
- * The response body holds an IOV array struct of BODY_BUFFER_SIZE,
- * when the limit is reached, the pointer is reallocated adding a new chunk
- */
-#define BODY_BUFFER_SIZE  8
 
 /*
  * This struct represent the web service request, as well it contains detailed
@@ -58,17 +53,15 @@ struct duda_request {
     struct client_session *cs;
     struct session_request *sr;
 
-    /* Body buffer stuff */
-    struct mk_iov *body_buffer;
-    unsigned short int body_buffer_size;
-    unsigned int body_buffer_sent;
-
     /* Callback functions */
     void (*end_callback)(duda_request_t *);
 
     /* Internal statuses */
     unsigned int _st_http_headers_sent;  /* HTTP headers sent? */
     unsigned int _st_body_writes;        /* Number of body_writes invoked */
+
+    /* Data queues */
+    struct mk_list queue_out;
 
     /* Lists linked to (events)*/
     struct mk_list _head_events_write;

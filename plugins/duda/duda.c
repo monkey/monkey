@@ -249,10 +249,8 @@ int duda_service_end(duda_request_t *dr)
     /* Finalize HTTP stuff with Monkey core */
     mk_api->http_request_end(dr->cs->socket);
 
-    /* Free resources allocated by Duda */
-    if (dr->body_buffer) {
-        mk_api->mem_free(dr->body_buffer);
-    }
+    /* FIXME: free queue resources... */
+
     mk_api->mem_free(dr);
 
     return 0;
@@ -281,12 +279,11 @@ int duda_service_run(struct client_session *cs,
     dr->sr = sr;
     dr->events_mask = 0;
 
-    /* body buffer */
-    dr->body_buffer = NULL;
-    dr->body_buffer_size = 0;
-
     /* callbacks */
     dr->end_callback = NULL;
+
+    /* data queues */
+    mk_list_init(&dr->queue_out);
 
     /* statuses */
     dr->_st_http_headers_sent = MK_FALSE;

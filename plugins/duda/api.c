@@ -25,6 +25,8 @@
 #include "duda.h"
 #include "api.h"
 #include "event.h"
+#include "queue.h"
+#include "body_buffer.h"
 
 /* Send HTTP response headers just once */
 int __http_send_headers_safe(duda_request_t *dr)
@@ -41,7 +43,7 @@ int __http_send_headers_safe(duda_request_t *dr)
     }
 
     /* Calculate body length */
-    dr->sr->headers.content_length = dr->body_buffer->total_len;
+    dr->sr->headers.content_length = duda_queue_length(&dr->queue_out);
 
     r = mk_api->header_send(dr->cs->socket, dr->cs, dr->sr);
     if (r != 0) {
@@ -53,79 +55,6 @@ int __http_send_headers_safe(duda_request_t *dr)
     dr->_st_http_headers_sent = MK_TRUE;
     return 0;
 }
-
-/* Send body buffers data to the remote socket */
-int __body_flush(duda_request_t *dr)
-{
-    int i;
-    int count = 0;
-    int bytes_sent, bytes_to;
-    int reset_to = -1;
-
-    bytes_sent = mk_api->socket_sendv(dr->cs->socket, dr->body_buffer);
-    PLUGIN_TRACE("body_flush: %i/%i", bytes_sent, dr->body_buffer->total_len);
-    /*
-     * If the call sent less data than total, we must modify the mk_iov struct
-     * to mark the buffers already processed and set them with with length = zero,
-     * so on the next calls to this function the Monkey will skip buffers with bytes
-     * length = 0.
-     */
-    if (bytes_sent < dr->body_buffer->total_len) {
-        /* Go around each buffer entry and check where the offset took place */
-        for (i = 0; i < dr->body_buffer->iov_idx; i++) {
-            if (count + dr->body_buffer->io[i].iov_len == bytes_sent) {
-                reset_to = 1;
-                break;
-            }
-            else if (bytes_sent < (count + dr->body_buffer->io[i].iov_len)) {
-                reset_to = i - 1;
-                bytes_to = (bytes_sent - count);
-                dr->body_buffer->io[i].iov_base += bytes_to;
-                dr->body_buffer->io[i].iov_len  = dr->body_buffer->io[i].iov_len - bytes_to;
-                break;
-            }
-            count += dr->body_buffer->io[i].iov_len;
-        }
-
-        /* Reset entries */
-        for (i = 0; i <= reset_to; i++) {
-            dr->body_buffer->io[i].iov_len = 0;
-        }
-
-        dr->body_buffer->total_len -= bytes_sent;
-
-#ifdef TRACE
-        PLUGIN_TRACE("new total len: %i (iov_idx=%i)",
-                     dr->body_buffer->total_len,
-                     dr->body_buffer->iov_idx);
-        int j;
-
-        for (j=0; j<dr->body_buffer->iov_idx; j++) {
-            PLUGIN_TRACE("io[%i] = %i", j, dr->body_buffer->io[j].iov_len);
-        }
-#endif
-
-        /*
-         * As pending data exists, we should check and possibly add this
-         * request to the events manager
-         */
-        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_FALSE) {
-            duda_event_register_write(dr, DUDA_EVENT_BODYFLUSH);
-        }
-    }
-
-    /* Successfully end ? */
-    if (bytes_sent == dr->body_buffer->total_len) {
-        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_TRUE) {
-            PLUGIN_TRACE("Unregister body_flush");
-            duda_event_unregister_write(dr, DUDA_EVENT_BODYFLUSH);
-        }
-        return 0;
-    }
-
-    return bytes_sent;
-}
-
 
 /* set HTTP response status */
 int _http_status(duda_request_t *dr, int status)
@@ -142,26 +71,33 @@ int _http_header(duda_request_t *dr, char *row, int len)
 }
 
 /* Compose the body_buffer */
-int _body_write(duda_request_t *dr, char *raw, int len)
+int _body_enqueue_write(duda_request_t *dr, char *raw, int len)
 {
-    int size;
+    int ret;
+    struct duda_body_buffer *body_buffer;
+    struct duda_queue_item *item;
 
-    if (!dr->body_buffer) {
-        dr->body_buffer = mk_api->iov_create(BODY_BUFFER_SIZE, 0);
-        dr->body_buffer_size = BODY_BUFFER_SIZE;
+    item = duda_queue_last(&dr->queue_out);
+    if (!item || item->type != DUDA_QTYPE_BODY_BUFFER) {
+        body_buffer = duda_body_buffer_new();
+        item = duda_queue_item_new(DUDA_QTYPE_BODY_BUFFER);
+        item->data = body_buffer;
+        duda_queue_add(item, &dr->queue_out);
+    }
+    else {
+        body_buffer = item->data;
     }
 
     /* perform realloc if body_write() is called more than body_buffer_size */
-    if (dr->body_buffer->iov_idx >= dr->body_buffer->size)  {
-        size = dr->body_buffer_size + BODY_BUFFER_SIZE;
-        if (mk_api->iov_realloc(dr->body_buffer, size) == -1) {
+    if (body_buffer->buf->iov_idx >= body_buffer->size)  {
+        ret = duda_body_buffer_expand(body_buffer);
+        if (ret == -1) {
             return -1;
         }
-        dr->body_buffer_size = size;
     }
 
     /* Link data */
-    mk_api->iov_add_entry(dr->body_buffer, raw, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    mk_api->iov_add_entry(body_buffer->buf, raw, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     return 0;
 }
@@ -210,7 +146,7 @@ struct duda_api_objects *duda_api_master()
     /* RESPONSE object */
     objs->response->http_status = _http_status;
     objs->response->http_header = _http_header;
-    objs->response->body_write = _body_write;
+    objs->response->body_write = _body_enqueue_write;
     objs->response->end = _end_response;
 
     /* FIXME - DEBUG object */
