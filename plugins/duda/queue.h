@@ -41,7 +41,7 @@ struct duda_queue_item {
 struct duda_queue_item *duda_queue_item_new(short int type);
 int duda_queue_add(struct duda_queue_item *item, struct mk_list *queue);
 struct duda_queue_item *duda_queue_last(struct mk_list *queue);
-long int duda_queue_length(struct mk_list *queue);
+unsigned long duda_queue_length(struct mk_list *queue);
 int duda_queue_flush(duda_request_t *dr);
 
 #endif

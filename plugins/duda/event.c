@@ -27,7 +27,7 @@
 #include "event.h"
 #include "queue.h"
 
-int duda_event_register_write(duda_request_t *dr, short int event)
+int duda_event_register_write(duda_request_t *dr)
 {
     struct mk_list *list;
 
@@ -36,12 +36,11 @@ int duda_event_register_write(duda_request_t *dr, short int event)
         return -1;
     }
 
-    dr->events_mask |= event;
     mk_list_add(&dr->_head_events_write, list);
     return 0;
 }
 
-int duda_event_unregister_write(duda_request_t *dr, short int event)
+int duda_event_unregister_write(duda_request_t *dr)
 {
     struct mk_list *list, *head, *temp;
     duda_request_t *entry;
@@ -49,8 +48,7 @@ int duda_event_unregister_write(duda_request_t *dr, short int event)
     list = pthread_getspecific(duda_global_events_write);
     mk_list_foreach_safe(head, temp, list) {
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
-        if (entry == dr && (entry->events_mask & event)) {
-            dr->events_mask ^= event;
+        if (entry == dr) {
             mk_list_del(&entry->_head_events_write);
             pthread_setspecific(duda_global_events_write, list);
             return 0;
@@ -60,7 +58,7 @@ int duda_event_unregister_write(duda_request_t *dr, short int event)
     return -1;
 }
 
-int duda_event_is_registered_write(duda_request_t *dr, short int event)
+int duda_event_is_registered_write(duda_request_t *dr)
 {
     struct mk_list *list;
     struct mk_list *head;
@@ -69,7 +67,7 @@ int duda_event_is_registered_write(duda_request_t *dr, short int event)
     list = pthread_getspecific(duda_global_events_write);
     mk_list_foreach(head, list) {
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
-        if (entry == dr && (entry->events_mask & event)) {
+        if (entry == dr) {
             return MK_TRUE;
         }
     }
@@ -86,14 +84,10 @@ int duda_event_write_callback(int sockfd)
     mk_list_foreach_safe(head, temp, list) {
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
         if (entry->cs->socket == sockfd) {
-            if (entry->events_mask & DUDA_EVENT_BODYFLUSH) {
-                if (duda_queue_flush(entry) > 0) {
-                    return MK_PLUGIN_RET_EVENT_OWNED;
-                }
-                else {
-                    duda_service_end(entry);
-                }
+            if (duda_queue_flush(entry) > 0) {
+                return MK_PLUGIN_RET_EVENT_OWNED;
             }
+            duda_service_end(entry);
         }
     }
 

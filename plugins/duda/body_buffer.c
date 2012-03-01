@@ -99,26 +99,13 @@ int duda_body_buffer_flush(int sock, struct duda_body_buffer *bb)
             PLUGIN_TRACE("io[%i] = %i", j, buf->io[j].iov_len);
         }
 #endif
-
-        /* FIXME: caller should handle the events
-         *
-         * As pending data exists, we should check and possibly add this
-         * request to the events manager
-
-        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_FALSE) {
-            duda_event_register_write(dr, DUDA_EVENT_BODYFLUSH);
-            }
-        */
     }
 
-    /* FIXME Successfully end ?
+    /* Successfully end ? */
     if (bytes_sent == buf->total_len) {
-        if (duda_event_is_registered_write(dr, DUDA_EVENT_BODYFLUSH) == MK_TRUE) {
-            PLUGIN_TRACE("Unregister body_flush");
-            duda_event_unregister_write(dr, DUDA_EVENT_BODYFLUSH);
-        }
+        buf->total_len = 0;
         return 0;
     }
-    */
+
     return bytes_sent;
 }

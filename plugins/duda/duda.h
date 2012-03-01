@@ -65,9 +65,6 @@ struct duda_request {
 
     /* Lists linked to (events)*/
     struct mk_list _head_events_write;
-
-    /* Events mask */
-    unsigned short int events_mask;
 };
 
 pthread_key_t duda_global_events_write;

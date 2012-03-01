@@ -22,6 +22,7 @@
 #include "MKPlugin.h"
 
 #include "duda.h"
+#include "event.h"
 #include "body_buffer.h"
 #include "queue.h"
 
@@ -54,7 +55,7 @@ struct duda_queue_item *duda_queue_last(struct mk_list *queue)
     return item;
 }
 
-long int duda_queue_length(struct mk_list *queue)
+unsigned long duda_queue_length(struct mk_list *queue)
 {
     long int length = 0;
     struct mk_list *head;
@@ -76,7 +77,8 @@ int duda_queue_flush(duda_request_t *dr)
 {
     int ret;
     int socket = dr->cs->socket;
-    unsigned long bytes_sent = 0;
+    short int is_registered;
+    unsigned long queue_len=0;
     struct mk_list *head;
     struct duda_queue_item *item;
 
@@ -95,8 +97,38 @@ int duda_queue_flush(duda_request_t *dr)
         if (ret == 0) {
             item->status = DUDA_QSTATUS_INACTIVE;
         }
+
+        is_registered = duda_event_is_registered_write(dr);
+        queue_len = duda_queue_length(&dr->queue_out);
+
+        if (queue_len > 0 && is_registered == MK_FALSE) {
+            duda_event_register_write(dr);
+        }
+        else if (queue_len == 0 && is_registered == MK_TRUE) {
+            duda_event_unregister_write(dr);
+        }
         break;
     }
 
-    return bytes_sent;
+    return queue_len;
+}
+
+int duda_queue_free(struct mk_list *queue)
+{
+    struct mk_list *head, *temp;
+    struct duda_queue_item *item;
+    struct duda_body_buffer *bb;
+
+    mk_list_foreach_safe(head, temp, queue) {
+        item = mk_list_entry(head, struct duda_queue_item, _head);
+        if (item->type == DUDA_QTYPE_BODY_BUFFER) {
+            mk_list_del(head);
+            bb = (struct duda_body_buffer *) item->data;
+            mk_api->iov_free(bb->buf);
+            mk_api->mem_free(bb);
+            item->data = NULL;
+        }
+    }
+
+    return 0;
 }

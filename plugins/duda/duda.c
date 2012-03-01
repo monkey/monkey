@@ -249,8 +249,8 @@ int duda_service_end(duda_request_t *dr)
     /* Finalize HTTP stuff with Monkey core */
     mk_api->http_request_end(dr->cs->socket);
 
-    /* FIXME: free queue resources... */
-
+    /* free queue resources... */
+    duda_queue_free(dr->queue_out);
     mk_api->mem_free(dr);
 
     return 0;
@@ -277,7 +277,6 @@ int duda_service_run(struct client_session *cs,
     dr->n_params = 0;
     dr->cs = cs;
     dr->sr = sr;
-    dr->events_mask = 0;
 
     /* callbacks */
     dr->end_callback = NULL;
