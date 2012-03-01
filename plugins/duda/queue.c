@@ -20,7 +20,9 @@
  */
 
 #include "MKPlugin.h"
+
 #include "duda.h"
+#include "body_buffer.h"
 #include "queue.h"
 
 struct duda_queue_item *duda_queue_item_new(short int type)
@@ -28,11 +30,13 @@ struct duda_queue_item *duda_queue_item_new(short int type)
     struct duda_queue_item *item;
 
     item = mk_api->mem_alloc(sizeof(struct duda_queue_item));
-    if (item) {
+    if (!item) {
         return NULL;
     }
 
     item->type = type;
+    item->status = DUDA_QSTATUS_ACTIVE;
+
     return item;
 }
 
@@ -61,7 +65,7 @@ long int duda_queue_length(struct mk_list *queue)
         entry = mk_list_entry(head, struct duda_queue_item, _head);
         if (entry->type == DUDA_QTYPE_BODY_BUFFER) {
             entry_bb = (struct duda_body_buffer *) entry->data;
-            /* FIXME length += entry_bb->total_len; */
+            length += entry_bb->buf->total_len;
         }
     }
 
@@ -70,12 +74,28 @@ long int duda_queue_length(struct mk_list *queue)
 
 int duda_queue_flush(duda_request_t *dr)
 {
+    int ret;
+    int socket = dr->cs->socket;
     unsigned long bytes_sent = 0;
-
     struct mk_list *head;
+    struct duda_queue_item *item;
 
     mk_list_foreach(head, &dr->queue_out) {
-        /* FIXME */
+        item = mk_list_entry(head, struct duda_queue_item, _head);
+        if (item->status == DUDA_QSTATUS_INACTIVE) {
+            continue;
+        }
+
+        switch (item->type) {
+        case DUDA_QTYPE_BODY_BUFFER:
+            ret = duda_body_buffer_flush(socket, item->data);
+            break;
+        }
+
+        if (ret == 0) {
+            item->status = DUDA_QSTATUS_INACTIVE;
+        }
+        break;
     }
 
     return bytes_sent;

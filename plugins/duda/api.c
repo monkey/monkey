@@ -109,7 +109,7 @@ int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 
     dr->end_callback = end_cb;
     __http_send_headers_safe(dr);
-    ret = __body_flush(dr);
+    ret = duda_queue_flush(dr);
 
     if (ret == 0) {
         duda_service_end(dr);
@@ -150,6 +150,9 @@ struct duda_api_objects *duda_api_master()
     objs->response->end = _end_response;
 
     /* FIXME - DEBUG object */
+#ifdef DEBUG
+    objs->debug->stacktrace = mk_api->stacktrace;
+#endif
 
     return objs;
 }

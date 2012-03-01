@@ -141,7 +141,7 @@ struct duda_api_response {
 struct duda_api_debug {
     /* FIXME: pending interfaces... */
     void (*trace) ();
-    void (*stack_trace) ();
+    void (*stacktrace) (void);
 };
 
 /*

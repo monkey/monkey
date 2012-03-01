@@ -26,8 +26,13 @@
 #define DUDA_QTYPE_BODY_BUFFER   1
 #define DUDA_QTYPE_SENDFILE      2
 
+/* Queue item status */
+#define DUDA_QSTATUS_ACTIVE      1
+#define DUDA_QSTATUS_INACTIVE    0
+
 struct duda_queue_item {
     short int type;
+    short int status;
     void *data;
 
     struct mk_list _head;
