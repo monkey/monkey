@@ -26,6 +26,7 @@
 #include "duda_api.h"
 #include "duda_event.h"
 #include "duda_queue.h"
+#include "duda_sendfile.h"
 #include "duda_body_buffer.h"
 
 /* Send HTTP response headers just once */
@@ -102,6 +103,24 @@ int _body_enqueue_write(duda_request_t *dr, char *raw, int len)
     return 0;
 }
 
+int _sendfile_enqueue(duda_request_t *dr, char *path)
+{
+    struct duda_sendfile *sf;
+    struct duda_queue_item *item;
+
+    sf = duda_sendfile_new(path);
+
+    if (!sf) {
+        return -1;
+    }
+
+    item = duda_queue_item_new(DUDA_QTYPE_SENDFILE);
+    item->data = sf;
+    duda_queue_add(item, &dr->queue_out);
+
+    return 0;
+}
+
 /* Finalize the response process */
 int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 {
@@ -146,7 +165,8 @@ struct duda_api_objects *duda_api_master()
     /* RESPONSE object */
     objs->response->http_status = _http_status;
     objs->response->http_header = _http_header;
-    objs->response->body_write = _body_enqueue_write;
+    objs->response->body_write  = _body_enqueue_write;
+    objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
 
     /* FIXME - DEBUG object */

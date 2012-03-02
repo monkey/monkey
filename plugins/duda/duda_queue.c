@@ -23,8 +23,9 @@
 
 #include "duda.h"
 #include "duda_event.h"
-#include "duda_body_buffer.h"
 #include "duda_queue.h"
+#include "duda_sendfile.h"
+#include "duda_body_buffer.h"
 
 struct duda_queue_item *duda_queue_item_new(short int type)
 {
@@ -60,6 +61,7 @@ unsigned long duda_queue_length(struct mk_list *queue)
     long int length = 0;
     struct mk_list *head;
     struct duda_queue_item *entry;
+    struct duda_sendfile *entry_sf;
     struct duda_body_buffer *entry_bb;
 
     mk_list_foreach(head, queue) {
@@ -67,6 +69,10 @@ unsigned long duda_queue_length(struct mk_list *queue)
         if (entry->type == DUDA_QTYPE_BODY_BUFFER) {
             entry_bb = (struct duda_body_buffer *) entry->data;
             length += entry_bb->buf->total_len;
+        }
+        else if(entry->type == DUDA_QTYPE_SENDFILE) {
+            entry_sf = (struct duda_sendfile *) entry->data;
+            length += entry_sf->pending_bytes;
         }
     }
 
@@ -91,6 +97,9 @@ int duda_queue_flush(duda_request_t *dr)
         switch (item->type) {
         case DUDA_QTYPE_BODY_BUFFER:
             ret = duda_body_buffer_flush(socket, item->data);
+            break;
+        case DUDA_QTYPE_SENDFILE:
+            ret = duda_sendfile_flush(socket, item->data);
             break;
         }
 
@@ -117,17 +126,25 @@ int duda_queue_free(struct mk_list *queue)
 {
     struct mk_list *head, *temp;
     struct duda_queue_item *item;
+    struct duda_sendfile *sf;
     struct duda_body_buffer *bb;
 
     mk_list_foreach_safe(head, temp, queue) {
         item = mk_list_entry(head, struct duda_queue_item, _head);
         if (item->type == DUDA_QTYPE_BODY_BUFFER) {
-            mk_list_del(head);
             bb = (struct duda_body_buffer *) item->data;
             mk_api->iov_free(bb->buf);
             mk_api->mem_free(bb);
-            item->data = NULL;
         }
+        else if(item->type == DUDA_QTYPE_SENDFILE) {
+            sf = (struct duda_sendfile *) item->data;
+            close(sf->fd);
+            mk_api->mem_free(sf);
+        }
+
+        item->data = NULL;
+        mk_list_del(head);
+        mk_api->mem_free(item);
     }
 
     return 0;
