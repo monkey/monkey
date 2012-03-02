@@ -23,8 +23,8 @@
 #define DUDA_MAIN_H
 
 #include "MKPlugin.h"
-#include "api.h"
-#include "queue.h"
+#include "duda_api.h"
+#include "duda_queue.h"
 
 #define MAP_WS_APP_NAME   0X00
 #define MAP_WS_INTERFACE  0X10

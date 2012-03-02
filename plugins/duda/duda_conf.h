@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,32 +16,37 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DUDA_QUEUE_H
-#define DUDA_QUEUE_H
+#ifndef MK_DUDA_CONF_H
+#define MK_DUDA_CONF_H
 
-#define DUDA_QTYPE_ERROR        -1
-#define DUDA_QTYPE_BODY_BUFFER   1
-#define DUDA_QTYPE_SENDFILE      2
+#include "duda_api.h"
 
-/* Queue item status */
-#define DUDA_QSTATUS_ACTIVE      1
-#define DUDA_QSTATUS_INACTIVE    0
+char *services_root;
 
-struct duda_queue_item {
-    short int type;
-    short int status;
-    void *data;
+struct mk_list services_list;
+
+struct vhost_services {
+    struct host *host;
+    struct mk_list services;
+    struct mk_list _head;
+};
+
+struct web_service {
+    char *app_name;
+    int  app_name_len;
+    int  app_enabled;
+    void *handler;
+
+    /* Specifics data when registering the service */
+    struct mk_list *map;
 
     struct mk_list _head;
 };
 
-struct duda_queue_item *duda_queue_item_new(short int type);
-int duda_queue_add(struct duda_queue_item *item, struct mk_list *queue);
-struct duda_queue_item *duda_queue_last(struct mk_list *queue);
-unsigned long duda_queue_length(struct mk_list *queue);
-int duda_queue_flush(duda_request_t *dr);
+int duda_conf_main_init(const char *confdir);
+int duda_conf_vhost_init();
 
 #endif

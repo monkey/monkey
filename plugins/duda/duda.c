@@ -23,9 +23,9 @@
 
 #include "MKPlugin.h"
 #include "duda.h"
-#include "conf.h"
-#include "request.h"
-#include "event.h"
+#include "duda_conf.h"
+#include "duda_event.h"
+#include "duda_queue.h"
 
 MONKEY_PLUGIN("duda",                                     /* shortname */
               "Duda Web Services Framework",              /* name */
@@ -251,7 +251,7 @@ int duda_service_end(duda_request_t *dr)
     ret = mk_api->http_request_end(dr->cs->socket);
 
     /* free queue resources... */
-    duda_queue_free(dr->queue_out);
+    duda_queue_free(&dr->queue_out);
     mk_api->mem_free(dr);
 
     return ret;

@@ -19,10 +19,30 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef MK_DUDA_REQUEST_H
-#define MK_DUDA_REQUEST_H
+#ifndef DUDA_QUEUE_H
+#define DUDA_QUEUE_H
 
-#include "mk_list.h"
+#define DUDA_QTYPE_ERROR        -1
+#define DUDA_QTYPE_BODY_BUFFER   1
+#define DUDA_QTYPE_SENDFILE      2
 
+/* Queue item status */
+#define DUDA_QSTATUS_ACTIVE      1
+#define DUDA_QSTATUS_INACTIVE    0
+
+struct duda_queue_item {
+    short int type;
+    short int status;
+    void *data;
+
+    struct mk_list _head;
+};
+
+struct duda_queue_item *duda_queue_item_new(short int type);
+int duda_queue_add(struct duda_queue_item *item, struct mk_list *queue);
+struct duda_queue_item *duda_queue_last(struct mk_list *queue);
+unsigned long duda_queue_length(struct mk_list *queue);
+int duda_queue_flush(duda_request_t *dr);
+int duda_queue_free(struct mk_list *queue);
 
 #endif

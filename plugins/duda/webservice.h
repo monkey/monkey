@@ -23,7 +23,7 @@
 #define DUDA_WEBSERVICE_H
 
 #include "MKPlugin.h"
-#include "api.h"
+#include "duda_api.h"
 
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;

@@ -22,7 +22,7 @@
 #include <string.h>
 #include "MKPlugin.h"
 
-#include "conf.h"
+#include "duda_conf.h"
 
 int duda_conf_main_init(const char *confdir)
 {

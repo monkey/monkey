@@ -23,9 +23,9 @@
 #include "MKPlugin.h"
 
 #include "duda.h"
-#include "api.h"
-#include "event.h"
-#include "queue.h"
+#include "duda_api.h"
+#include "duda_event.h"
+#include "duda_queue.h"
 
 int duda_event_register_write(duda_request_t *dr)
 {

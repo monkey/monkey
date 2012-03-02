@@ -22,9 +22,9 @@
 #include "MKPlugin.h"
 
 #include "duda.h"
-#include "event.h"
-#include "body_buffer.h"
-#include "queue.h"
+#include "duda_event.h"
+#include "duda_body_buffer.h"
+#include "duda_queue.h"
 
 struct duda_queue_item *duda_queue_item_new(short int type)
 {

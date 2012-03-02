@@ -21,12 +21,12 @@
 
 #include "MKPlugin.h"
 #include "webservice.h"
-#include "debug.h"
+#include "duda_debug.h"
 #include "duda.h"
-#include "api.h"
-#include "event.h"
-#include "queue.h"
-#include "body_buffer.h"
+#include "duda_api.h"
+#include "duda_event.h"
+#include "duda_queue.h"
+#include "duda_body_buffer.h"
 
 /* Send HTTP response headers just once */
 int __http_send_headers_safe(duda_request_t *dr)

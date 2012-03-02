@@ -21,8 +21,8 @@
 
 #include "MKPlugin.h"
 
-#include "event.h"
-#include "body_buffer.h"
+#include "duda_event.h"
+#include "duda_body_buffer.h"
 
 struct duda_body_buffer *duda_body_buffer_new()
 {
