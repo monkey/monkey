@@ -144,7 +144,6 @@ int _mkp_event_write(int sockfd)
     return duda_event_write_callback(sockfd);
 }
 
-
 void _mkp_core_prctx(struct server_config *config)
 {
 }
@@ -241,19 +240,21 @@ int duda_request_parse(struct session_request *sr,
 
 int duda_service_end(duda_request_t *dr)
 {
+    int ret;
+
     /* call service end_callback() */
     if (dr->end_callback) {
         dr->end_callback(dr);
     }
 
     /* Finalize HTTP stuff with Monkey core */
-    mk_api->http_request_end(dr->cs->socket);
+    ret = mk_api->http_request_end(dr->cs->socket);
 
     /* free queue resources... */
     duda_queue_free(dr->queue_out);
     mk_api->mem_free(dr);
 
-    return 0;
+    return ret;
 }
 
 int duda_service_run(struct client_session *cs,

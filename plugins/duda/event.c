@@ -77,6 +77,7 @@ int duda_event_is_registered_write(duda_request_t *dr)
 
 int duda_event_write_callback(int sockfd)
 {
+    int ret = MK_PLUGIN_RET_CONTINUE;
     struct mk_list *list, *temp, *head;
     duda_request_t *entry;
 
@@ -84,10 +85,20 @@ int duda_event_write_callback(int sockfd)
     mk_list_foreach_safe(head, temp, list) {
         entry = mk_list_entry(head, duda_request_t, _head_events_write);
         if (entry->cs->socket == sockfd) {
-            if (duda_queue_flush(entry) > 0) {
+            ret = duda_queue_flush(entry);
+
+            if (ret > 0) {
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
-            duda_service_end(entry);
+
+            if (duda_service_end(entry) == -1) {
+                return MK_PLUGIN_RET_EVENT_CLOSE;
+            }
+            else {
+                return MK_PLUGIN_RET_EVENT_OWNED;
+            }
+
+            break;
         }
     }
 
