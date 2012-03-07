@@ -358,7 +358,7 @@ fi
 
 cat > src/Makefile<<EOF
 CC	= $CC
-CFLAGS	= $CFLAGS 
+CFLAGS	= $CFLAGS
 DEFS    = $DEFS
 INCDIR  = ./include
 LDFLAGS	= $LDFLAGS
@@ -459,7 +459,14 @@ create_makefile_plugins()
         MAKE_ALL="${MAKE_ALL}\t@(cd $plugin_dir && \$(MAKE) && cd ..)\n"
         MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $plugin_dir && \$(MAKE) clean && cd ..)\n"
 
-        sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $plugin_dir/Makefile.in > $plugin_dir/Makefile
+
+        for d in `find . -type d`
+        do
+            if [ -f "${d}/Makefile.in" ];
+            then
+                sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $d/Makefile.in > $d/Makefile
+            fi
+        done;
 
         # Add details to plugins.load using ABOUT file
         if test -e $plugin_dir/ABOUT ; then
