@@ -2,21 +2,24 @@ CC 	= $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
+DIRS    = crypto
 INCDIR  = ../../src/include
 SOURCES = duda.c duda_conf.c duda_api.c duda_event.c duda_queue.c \
-          duda_body_buffer.c duda_sendfile.c duda_debug.c webservice.c \
+	duda_body_buffer.c duda_sendfile.c duda_debug.c webservice.c
 
 OBJECTS = duda.o duda_conf.o duda_api.o duda_event.o duda_queue.o \
-	  duda_body_buffer.c duda_sendfile.c duda_debug.o webservice.o \
-
+	duda_body_buffer.o duda_sendfile.o duda_debug.o webservice.o \
+	crypto/base64.o
 
 all: monkey-duda.so
 
 monkey-duda.so: $(OBJECTS)
+	for d in $(DIRS); do $(MAKE) -C $$d ; done
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
 
 .c.o: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
 
 clean:
+	for d in $(DIRS); do $(MAKE) -C $$d ; done
 	rm -rf *.o *~ *.*so*

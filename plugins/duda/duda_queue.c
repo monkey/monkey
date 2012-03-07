@@ -81,7 +81,7 @@ unsigned long duda_queue_length(struct mk_list *queue)
 
 int duda_queue_flush(duda_request_t *dr)
 {
-    int ret;
+    int ret = -1;
     int socket = dr->cs->socket;
     short int is_registered;
     unsigned long queue_len=0;

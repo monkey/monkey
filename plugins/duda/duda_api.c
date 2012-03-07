@@ -28,6 +28,7 @@
 #include "duda_queue.h"
 #include "duda_sendfile.h"
 #include "duda_body_buffer.h"
+#include "crypto/base64.h"
 
 /* Send HTTP response headers just once */
 int __http_send_headers_safe(duda_request_t *dr)
@@ -147,6 +148,7 @@ struct duda_api_objects *duda_api_master()
     objs->map      = mk_api->mem_alloc(sizeof(struct duda_api_map));
     objs->msg      = mk_api->mem_alloc(sizeof(struct duda_api_msg));
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
+    objs->crypto   = mk_api->mem_alloc(sizeof(struct duda_api_crypto));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
 
     /* MAP object */
@@ -168,6 +170,10 @@ struct duda_api_objects *duda_api_master()
     objs->response->body_write  = _body_enqueue_write;
     objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
+
+    /* Third party */
+    objs->crypto->base64_encode = base64_encode;
+    objs->crypto->base64_decode = base64_decode;
 
     /* FIXME - DEBUG object */
 #ifdef DEBUG
