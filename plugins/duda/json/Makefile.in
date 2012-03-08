@@ -3,8 +3,8 @@ CFLAGS  = $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../../src/include
-OBJECTS = base64.o
-SOURCES = base64.c
+OBJECTS = cJSON.o
+SOURCES = cJSON.c
 
 all: $(OBJECTS)
 

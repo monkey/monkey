@@ -393,8 +393,9 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
             return MK_PLUGIN_RET_NOT_ME;
         }
 
-        duda_service_run(cs, sr, web_service);
-        return MK_PLUGIN_RET_CONTINUE;
+        if (duda_service_run(cs, sr, web_service) == 0) {
+            return MK_PLUGIN_RET_CONTINUE;
+        }
     }
 
     return MK_PLUGIN_RET_NOT_ME;

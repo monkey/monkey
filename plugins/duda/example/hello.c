@@ -10,11 +10,11 @@ DUDA_REGISTER("Service Example", "service");
  * +--------------------------------------------------------------+
  * |  Interface         Method     Param Name  Param Max Length   |
  * +--------------------------------------------------------------+
- * |  system           cpu_usage     cpu_id          5            |
+ * |  examples         hello_world                   0            |
  * +--------------------------------------------------------------+
- * |                   cpu_hz        cpu_id          5            |
+ * |                   sendfile                      0            |
  * +--------------------------------------------------------------+
- * |                   cpu_list                                   |
+ * |                   json                          0            |
  * +--------------------------------------------------------------+
  *
  */
@@ -24,52 +24,60 @@ void cb_end(duda_request_t *dr)
     msg->info("my end callback");
 }
 
-void cb_cpu_usage(duda_request_t *dr)
+void cb_hello_world(duda_request_t *dr)
 {
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
-    //response->body_write(dr, "hello world\n", 12);
 
-    //char *buf = monkey->file_to_buffer("/home/edsiper/kernel_sdhc_log_001.txt");
-    //response->body_write(dr, buf, strlen(buf));
-
-    response->sendfile(dr, "/home/edsiper/kernel_sdhc_log_001.txt");
+    response->body_write(dr, "hello world!\n", 13);
     response->end(dr, cb_end);
 }
 
-void cb_cpu_hz(duda_request_t *dr)
+void cb_sendfile(duda_request_t *dr)
 {
-    msg->info("callback cpu_hz()");
+    response->http_status(dr, 200);
+    response->http_header(dr, "Content-Type: text/plain", 24);
+
+    response->sendfile(dr, "/etc/issue");
+    response->sendfile(dr, "/etc/motd");
+    response->end(dr, cb_end);
+
 }
 
-void cb_cpu_list(duda_request_t *dr)
+void cb_json(duda_request_t *dr)
 {
-    msg->info("callback cpu_list()");
+    char *resp;
+    json_t *jroot;
+
+    response->http_status(dr, 200);
+    response->http_header(dr, "Content-Type: text/plain", 24);
+
+    jroot = json->create_object();
+    json->add_to_object(jroot, "name", json->create_string("Michel Perez"));
+
+    resp = json->print(jroot);
+    response->body_write(dr, resp, strlen(resp));
+    response->end(dr, cb_end);
 }
 
 int duda_init(struct duda_api_objects *api)
 {
     duda_interface_t *if_system;
     duda_method_t    *method;
-    duda_param_t     *param;
 
     duda_service_init();
 
     /* archive interface */
-    if_system = map->interface_new("system");
+    if_system = map->interface_new("examples");
 
     /* /app/archive/list */
-    method = map->method_new("cpu_usage", "cb_cpu_usage", 1);
-    param = map->param_new("cpu_id", 5);
-    map->method_add_param(param, method);
+    method = map->method_new("hello_world", "cb_hello_world", 0);
     map->interface_add_method(method, if_system);
 
-    method = map->method_new("cpu_hz", "cb_cpu_hz", 1);
-    param = map->param_new("cpu_id", 5);
-    map->method_add_param(param, method);
+    method = map->method_new("json", "cb_json", 0);
     map->interface_add_method(method, if_system);
 
-    method = map->method_new("cpu_list", "cb_cpu_list", 0);
+    method = map->method_new("sendfile", "cb_sendfile", 0);
     map->interface_add_method(method, if_system);
 
     /* Add interface to map */

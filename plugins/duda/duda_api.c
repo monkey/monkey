@@ -149,6 +149,7 @@ struct duda_api_objects *duda_api_master()
     objs->msg      = mk_api->mem_alloc(sizeof(struct duda_api_msg));
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
     objs->crypto   = mk_api->mem_alloc(sizeof(struct duda_api_crypto));
+    objs->json     = mk_api->mem_alloc(sizeof(struct duda_api_json));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
 
     /* MAP object */
@@ -171,9 +172,32 @@ struct duda_api_objects *duda_api_master()
     objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
 
-    /* Third party */
+    /* Crypto */
     objs->crypto->base64_encode = base64_encode;
     objs->crypto->base64_decode = base64_decode;
+
+    /* Json */
+    objs->json->create_null = cJSON_CreateNull;
+    objs->json->create_true = cJSON_CreateTrue;
+    objs->json->create_false = cJSON_CreateFalse;
+    objs->json->create_bool = cJSON_CreateBool;
+    objs->json->create_number = cJSON_CreateNumber;
+    objs->json->create_string = cJSON_CreateString;
+    objs->json->create_array = cJSON_CreateArray;
+    objs->json->create_object = cJSON_CreateObject;
+
+    objs->json->add_to_array  = cJSON_AddItemToArray;
+    objs->json->add_to_object = cJSON_AddItemToObject;
+
+    objs->json->parse = cJSON_Parse;
+    objs->json->print = cJSON_Print;
+    objs->json->print_unformatted = cJSON_PrintUnformatted;
+    objs->json->delete = cJSON_Delete;
+    objs->json->array_size = cJSON_GetArraySize;
+    objs->json->array_item = cJSON_GetArrayItem;
+    objs->json->object_item = cJSON_GetObjectItem;
+    objs->json->get_error = cJSON_GetErrorPtr;
+
 
     /* FIXME - DEBUG object */
 #ifdef DEBUG
