@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2012, Eduardo Silva P.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,41 +16,21 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef MK_DUDA_CONF_H
-#define MK_DUDA_CONF_H
+#include "MKPlugin.h"
+#include "duda_global.h"
 
-#include "duda_api.h"
+#include "webservice.h"
 
-char *services_root;
+int duda_global_set(duda_global_t global, const void *data)
+{
+    return pthread_setspecific(global.key, data);
 
-struct mk_list services_list;
+}
 
-struct vhost_services {
-    struct host *host;
-    struct mk_list services;
-    struct mk_list _head;
-};
-
-struct web_service {
-    char *app_name;
-    int  app_name_len;
-    int  app_enabled;
-    void *handler;
-
-    /* Specifics data when registering the service */
-    struct mk_list *map;
-
-    /* global data */
-    struct mk_list *global;
-
-    /* node hook */
-    struct mk_list _head;
-};
-
-int duda_conf_main_init(const char *confdir);
-int duda_conf_vhost_init();
-
-#endif
+void *duda_global_get(duda_global_t global)
+{
+    return pthread_getspecific(global.key);
+}

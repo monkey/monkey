@@ -22,11 +22,18 @@
 #ifndef DUDA_WEBSERVICE_H
 #define DUDA_WEBSERVICE_H
 
+/* System headers */
+#include <sys/types.h>
+#include <sys/syscall.h>
+
+/* Monkey specifics */
 #include "MKPlugin.h"
 #include "duda_api.h"
+#include "duda_global.h"
 
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;
+struct mk_list _duda_global_dist;
 
 /* Objects exported to the web service */
 struct plugin_api *monkey;
@@ -36,18 +43,34 @@ struct duda_api_response *response;
 struct duda_api_crypto *crypto;
 struct duda_api_json *json;
 struct duda_api_debug *debug;
+struct duda_api_global *global;
 
 /* Duda Macros */
 #define DUDA_REGISTER(app_name, app_path) struct duda_webservice ws = {app_name, app_path}
 #define duda_service_init() do {                                        \
-        monkey = api->monkey;                                           \
-        map = api->map;                                                 \
-        msg = api->msg;                                                 \
+        monkey   = api->monkey;                                         \
+        map      = api->map;                                            \
+        msg      = api->msg;                                            \
         response = api->response;                                       \
-        crypto = api->crypto;                                           \
-        json = api->json;                                               \
-        debug = api->debug;                                             \
+        crypto   = api->crypto;                                         \
+        json     = api->json;                                           \
+        debug    = api->debug;                                          \
+        global   = api->global;                                         \
         mk_list_init(&_duda_interfaces);                                \
+        mk_list_init(&_duda_global_dist);                               \
+    } while(0);
+
+#define duda_global_init(key_t, cb) do {                                \
+        /* Make sure the developer has initialized variables from duda_init() */ \
+        if (getpid() != syscall(__NR_gettid)) {                         \
+            /* FIXME: error handler */                                  \
+            monkey->_error(MK_ERR,                                      \
+                           "Duda: You can only define global vars inside duda_init()"); \
+            exit(EXIT_FAILURE);                                         \
+        }                                                               \
+        pthread_key_create(&key_t.key, NULL);                           \
+        key_t.callback = cb;                                            \
+        mk_list_add(&key_t._head, &_duda_global_dist);                  \
     } while(0);
 
 #define duda_service_add_interface(iface) do {              \

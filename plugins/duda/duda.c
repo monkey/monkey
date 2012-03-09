@@ -67,12 +67,14 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
     struct mk_list *head_iface, *head_method;
     struct duda_interface *entry_iface;
     struct duda_method *entry_method;
+    struct mk_list *test;
 
     /* Load and invoke duda_init() */
     service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
     if (service_init(api) == 0) {
         PLUGIN_TRACE("[%s] duda_init()", ws->app_name);
         ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
+        ws->global = duda_load_symbol(ws->handler, "_duda_global_dist");
 
         /* Lookup callback functions for each registered method */
         mk_list_foreach(head_iface, ws->map) {
@@ -148,13 +150,44 @@ void _mkp_core_prctx(struct server_config *config)
 {
 }
 
+/* Thread context initialization */
 void _mkp_core_thctx()
 {
+    struct mk_list *head_vs, *head_ws, *head_gl;
     struct mk_list *list_events_write;
+    struct vhost_services *entry_vs;
+    struct web_service *entry_ws;
+    duda_global_t *entry_gl;
+    void *data;
 
     list_events_write = mk_api->mem_alloc(sizeof(struct mk_list));
     mk_list_init(list_events_write);
     pthread_setspecific(duda_global_events_write, (void *) list_events_write);
+
+    /*
+     * Load global data if applies, this is toooo recursive, we need to go through
+     * every virtual host and check the services loaded for each one, then lookup
+     * the global variables defined.
+     */
+    mk_list_foreach(head_vs, &services_list) {
+        entry_vs = mk_list_entry(head_vs, struct vhost_services, _head);
+        mk_list_foreach(head_ws, &entry_vs->services) {
+            entry_ws = mk_list_entry(head_ws, struct web_service, _head);
+            /* go around each global variable */
+            mk_list_foreach(head_gl, entry_ws->global) {
+                entry_gl = mk_list_entry(head_gl, duda_global_t, _head);
+                /*
+                 * If a global variable was defined we need to check if was requested
+                 * to initialize it with a specific data returned by a callback
+                 */
+                data = NULL;
+                if (entry_gl->callback) {
+                    data = entry_gl->callback();
+                }
+                pthread_setspecific(entry_gl->key, data);
+            }
+        }
+    }
 }
 
 int _mkp_init(void **api, char *confdir)

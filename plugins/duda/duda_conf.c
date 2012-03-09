@@ -110,7 +110,7 @@ int duda_conf_vhost_init()
                                                                      MK_CONFIG_VAL_BOOL);
 
                 if (app_name && mk_is_bool(app_enabled)) {
-                    ws = mk_api->mem_alloc(sizeof(struct web_service));
+                    ws = mk_api->mem_alloc_z(sizeof(struct web_service));
                     ws->app_name = mk_api->str_dup(app_name);
                     ws->app_name_len = strlen(ws->app_name);
                     ws->app_enabled = app_enabled;

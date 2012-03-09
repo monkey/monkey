@@ -73,3 +73,4 @@ duda_param_t *duda_param_new(char *uid, short int max_len)
 
     return param;
 }
+

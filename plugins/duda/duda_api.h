@@ -23,7 +23,9 @@
 #define DUDA_API_H
 
 #include "mk_list.h"
+#include "duda_global.h"
 #include "json/json.h"
+
 
 /* types of data */
 typedef struct duda_interface duda_interface_t;
@@ -147,6 +149,13 @@ struct duda_api_debug {
 };
 
 
+/* Global data (thread scope) */
+struct duda_api_global {
+    int   (*init) (duda_global_t *, void *(*callback)());
+    int   (*set)  (duda_global_t, const void *);
+    void *(*get)  (duda_global_t);
+};
+
 /* Cryptographic stuff */
 struct duda_api_crypto {
     unsigned char *(*base64_encode) (const unsigned char *, size_t, size_t *);
@@ -192,6 +201,7 @@ struct duda_api_objects {
     struct duda_api_msg *msg;
     struct duda_api_response *response;
     struct duda_api_debug *debug;
+    struct duda_api_global *global;
 
     /* Third party */
     struct duda_api_crypto *crypto;
