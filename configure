@@ -818,6 +818,8 @@ if test -z "$CC" ; then
     if test -x "$gcc_path" ; then
         CC="gcc"
     else
+        echo
+        echo
         echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler!"
         exit 1
     fi
