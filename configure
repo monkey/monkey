@@ -264,10 +264,30 @@ create_makefile1_install()
 touch plugins.list
 for entry in plugins/*
 do
-    if [ -d $entry ] && [ -f "$entry/Makefile" ] ; then
-        plugin_name=${entry##*/}
-	echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
+    if [ ! -d $entry ] ; then
+        continue
     fi
+
+    enabled=`echo $enabled_plugins | grep -w $entry`
+    enabled=$?
+
+    disabled=`echo $disabled_plugins | grep -w $entry`
+    disabled=$?
+
+    if test -e $entry/DISABLED || [ $disabled -eq 0 ] ; then
+        continue
+    fi
+
+    if test -e $entry/EXPERIMENTAL || [ $disabled -eq 0 ]; then
+        if [ $enabled -eq 1 ] ; then
+            continue
+        else
+            comment="    # "
+        fi
+    fi
+
+    plugin_name=${entry##*/}
+    echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
 done;
 plglist=`cat plugins.list`
 rm -rf plugins.list
