@@ -67,7 +67,6 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
     struct mk_list *head_iface, *head_method;
     struct duda_interface *entry_iface;
     struct duda_method *entry_method;
-    struct mk_list *test;
 
     /* Load and invoke duda_init() */
     service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
@@ -104,14 +103,14 @@ int duda_load_services()
     unsigned long len;
     struct file_info finfo;
     struct mk_list *head_vh;
-    struct mk_list *head_ws;
+    struct mk_list *head_ws, *head_temp_ws;
     struct vhost_services *entry_vs;
     struct web_service *entry_ws;
     struct duda_api_objects *api;
 
     mk_list_foreach(head_vh, &services_list) {
         entry_vs = mk_list_entry(head_vh, struct vhost_services, _head);
-        mk_list_foreach(head_ws, &entry_vs->services) {
+        mk_list_foreach_safe(head_ws, head_temp_ws, &entry_vs->services) {
             entry_ws = mk_list_entry(head_ws, struct web_service, _head);
 
             service_path = NULL;
@@ -125,11 +124,14 @@ int duda_load_services()
 
                 entry_ws->app_enabled = 0;
                 mk_api->mem_free(service_path);
+                mk_warn("Duda: service '%s' not found", entry_ws->app_name);
+                mk_list_del(head_ws);
+                mk_api->mem_free(entry_ws);
                 continue;
             }
 
             /* Success */
-            PLUGIN_TRACE("Library loaded: %s", entry_ws->app_name);
+            mk_info("Duda: service '%s' loaded", entry_ws->app_name);
             mk_api->mem_free(service_path);
 
             /* Register service */
