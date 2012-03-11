@@ -28,7 +28,8 @@ duda_interface_t *duda_interface_new(char *uid)
   duda_interface_t *iface;
 
   iface = mk_api->mem_alloc(sizeof(duda_interface_t));
-  iface->uid = uid;
+  iface->uid     = uid;
+  iface->uid_len = strlen(uid);
   mk_list_init(&iface->methods);
 
   return iface;
@@ -48,7 +49,8 @@ duda_method_t *duda_method_new(char *uid, char *callback, int n_params)
     duda_method_t *method;
 
     method = mk_api->mem_alloc(sizeof(duda_method_t));
-    method->uid = uid;
+    method->uid     = uid;
+    method->uid_len = strlen(uid);
     method->num_params = n_params;
     method->callback = callback;
     method->func_cb = NULL;

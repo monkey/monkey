@@ -43,6 +43,9 @@ struct duda_webservice {
 /* Interfaces of the web service */
 struct duda_interface {
     char *uid;
+    int   uid_len;
+
+    /* interface methods */
     struct mk_list methods;
 
     /* mk_list */
@@ -52,6 +55,8 @@ struct duda_interface {
 /* Methods associated to an interface */
 struct duda_method {
     char *uid;
+    int   uid_len;
+
     short int num_params;
     char *callback;
     void *(*func_cb)(duda_request_t *);

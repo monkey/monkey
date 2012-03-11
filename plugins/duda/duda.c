@@ -333,11 +333,15 @@ int duda_service_run(struct client_session *cs,
     /* Invoke the web service callback */
     mk_list_foreach(head_iface, dr->web_service->map) {
         entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
-        if (strncmp(entry_iface->uid, dr->interface.data, dr->interface.len) == 0) {
+
+        if (entry_iface->uid_len == dr->interface.len &&
+            strncmp(entry_iface->uid, dr->interface.data, dr->interface.len) == 0) {
+
             /* try to match method */
             mk_list_foreach(head_method, &entry_iface->methods) {
                 entry_method = mk_list_entry(head_method, struct duda_method, _head);
-                if (strncmp(entry_method->uid, dr->method.data, dr->method.len) == 0) {
+                if (entry_method->uid_len == dr->method.len &&
+                    strncmp(entry_method->uid, dr->method.data, dr->method.len) == 0) {
                     callback = entry_method->func_cb;
                     break;
                 }
