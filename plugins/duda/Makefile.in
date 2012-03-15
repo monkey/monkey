@@ -16,7 +16,7 @@ all: monkey-duda.so
 
 monkey-duda.so: $(OBJECTS)
 	@(for d in $(DIRS); do $(MAKE) -C $$d ; done)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc -lm
 
 .c.o: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
