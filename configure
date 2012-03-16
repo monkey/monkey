@@ -517,7 +517,7 @@ create_makefile_plugins()
            find $target/* -type f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
            find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
            find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
-           find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+           find $target/* -type f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
         fi
 
         # Distribute binary scripts provided by plugins

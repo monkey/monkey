@@ -44,6 +44,7 @@ int duda_conf_main_init(const char *confdir)
             continue;
         }
 
+        /* ServicesRoot */
         services_root = mk_api->config_section_getval(section, "ServicesRoot",
                                                       MK_CONFIG_VAL_STR);
 
@@ -57,7 +58,21 @@ int duda_conf_main_init(const char *confdir)
             exit(EXIT_FAILURE);
         }
 
+        /* Packages */
+        packages_root = mk_api->config_section_getval(section, "PackagesRoot",
+                                                      MK_CONFIG_VAL_STR);
+        if (mk_api->file_get_info(packages_root, &finfo) != 0) {
+            mk_err("Duda: Invalid packages root path");
+            exit(EXIT_FAILURE);
+        }
+
+        if (finfo.is_directory == MK_FALSE) {
+            mk_err("Duda: PackagesRoot must be a valid directory");
+            exit(EXIT_FAILURE);
+        }
+
         PLUGIN_TRACE("Services Root '%s'", services_root);
+        PLUGIN_TRACE("Packages Root '%s'", packages_root);
         section = section->next;
     }
 

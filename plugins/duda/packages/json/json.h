@@ -19,11 +19,39 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_JSON_H
-#define DUDA_JSON_H
+#ifndef DUDA_PACKAGE_JSON_H
+#define DUDA_PACKAGE_JSON_H
 
 #include "cJSON.h"
 
 typedef cJSON json_t;
+
+struct duda_api_json {
+    /* create item types */
+    json_t *(*create_null) ();
+    json_t *(*create_true) ();
+    json_t *(*create_false) ();
+    json_t *(*create_bool) ();
+    json_t *(*create_number) ();
+    json_t *(*create_string) ();
+    json_t *(*create_array) ();
+    json_t *(*create_object) ();
+
+    /* add to */
+    void (*add_to_array) (json_t *, json_t *);
+    void (*add_to_object) (json_t *, const char *, json_t *);
+
+    json_t *(*parse) (const char *);
+    char   *(*print) (json_t *);
+    char   *(*print_unformatted) (json_t *);
+    void    (*delete) (json_t *);
+    int     (*array_size) (json_t *);
+    json_t *(*array_item) (json_t *, int);
+    json_t *(*object_item) (json_t *, const char *);
+    const char *(*get_error) (void);
+};
+
+typedef struct duda_api_json json_object_t;
+json_object_t *json;
 
 #endif

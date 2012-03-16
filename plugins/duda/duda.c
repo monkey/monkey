@@ -46,13 +46,13 @@ void *duda_load_library(const char *path)
 }
 
 /* get specific symbol from the library */
-void *duda_load_symbol(void *handler, const char *symbol)
+void *duda_load_symbol(void *handle, const char *symbol)
 {
     void *s;
     char *err;
 
     dlerror();
-    s = dlsym(handler, symbol);
+    s = dlsym(handle, symbol);
     if ((err = dlerror()) != NULL) {
         return NULL;
     }
@@ -131,7 +131,7 @@ int duda_load_services()
             }
 
             /* Success */
-            mk_info("Duda: service '%s' loaded", entry_ws->app_name);
+            mk_info("Duda: loading service '%s'", entry_ws->app_name);
             mk_api->mem_free(service_path);
 
             /* Register service */

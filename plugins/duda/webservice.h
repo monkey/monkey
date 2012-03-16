@@ -30,6 +30,7 @@
 #include "MKPlugin.h"
 #include "duda_api.h"
 #include "duda_global.h"
+#include "duda_package.h"
 
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;
@@ -41,24 +42,27 @@ struct duda_api_map *map;
 struct duda_api_msg *msg;
 struct duda_api_response *response;
 struct duda_api_crypto *crypto;
-struct duda_api_json *json;
 struct duda_api_debug *debug;
 struct duda_api_global *global;
+duda_package_t *pkg_temp;
 
 /* Duda Macros */
 #define DUDA_REGISTER(app_name, app_path) struct duda_webservice ws = {app_name, app_path}
-#define duda_service_init() do {                                        \
-        monkey   = api->monkey;                                         \
-        map      = api->map;                                            \
-        msg      = api->msg;                                            \
-        response = api->response;                                       \
-        crypto   = api->crypto;                                         \
-        json     = api->json;                                           \
-        debug    = api->debug;                                          \
-        global   = api->global;                                         \
-        mk_list_init(&_duda_interfaces);                                \
-        mk_list_init(&_duda_global_dist);                               \
-    } while(0);
+
+#define duda_load_package(object, package)          \
+    pkg_temp = api->duda->package_load(package);    \
+    object = temp->api;
+
+#define duda_service_init()                                             \
+    monkey   = api->monkey;                                             \
+    map      = api->map;                                                \
+    msg      = api->msg;                                                \
+    response = api->response;                                           \
+    crypto   = api->crypto;                                             \
+    debug    = api->debug;                                              \
+    global   = api->global;                                             \
+    mk_list_init(&_duda_interfaces);                                    \
+    mk_list_init(&_duda_global_dist);
 
 #define duda_global_init(key_t, cb) do {                                \
         /* Make sure the developer has initialized variables from duda_init() */ \

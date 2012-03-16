@@ -1,0 +1,18 @@
+CC      = $CC
+CFLAGS  = $CFLAGS
+LDFLAGS = $LDFLAGS
+DEFS    = $DEFS
+INCDIR  = ../../../src/include -I../../
+OBJECTS = duda_package.o cJSON.o
+SOURCES = duda_package.c cJSON.c
+
+all: ../json.dpkg
+
+../json.dpkg: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc -lm
+
+.c.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
+clean:
+	rm -rf *~ *.o

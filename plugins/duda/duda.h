@@ -69,6 +69,9 @@ struct duda_request {
 
 pthread_key_t duda_global_events_write;
 
+
+void *duda_load_library(const char *path);
+void *duda_load_symbol(void *handle, const char *symbol);
 int duda_service_end(duda_request_t *dr);
 
 #endif

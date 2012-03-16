@@ -24,6 +24,7 @@
 #include "duda_debug.h"
 #include "duda.h"
 #include "duda_api.h"
+#include "duda_package.h"
 #include "duda_event.h"
 #include "duda_queue.h"
 #include "duda_global.h"
@@ -145,14 +146,17 @@ struct duda_api_objects *duda_api_master()
 
     /* Alloc memory */
     objs = mk_api->mem_alloc(sizeof(struct duda_api_objects));
+    objs->duda     = mk_api->mem_alloc(sizeof(struct duda_api_main));
     objs->monkey   = mk_api;
     objs->map      = mk_api->mem_alloc(sizeof(struct duda_api_map));
     objs->msg      = mk_api->mem_alloc(sizeof(struct duda_api_msg));
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
     objs->crypto   = mk_api->mem_alloc(sizeof(struct duda_api_crypto));
-    objs->json     = mk_api->mem_alloc(sizeof(struct duda_api_json));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
+
+    /* MAP Duda calls */
+    objs->duda->package_load = duda_package_load;
 
     /* MAP object */
     objs->map->interface_new = duda_interface_new;
@@ -181,29 +185,6 @@ struct duda_api_objects *duda_api_master()
     /* Crypto */
     objs->crypto->base64_encode = base64_encode;
     objs->crypto->base64_decode = base64_decode;
-
-    /* Json */
-    objs->json->create_null       = cJSON_CreateNull;
-    objs->json->create_true       = cJSON_CreateTrue;
-    objs->json->create_false      = cJSON_CreateFalse;
-    objs->json->create_bool       = cJSON_CreateBool;
-    objs->json->create_number     = cJSON_CreateNumber;
-    objs->json->create_string     = cJSON_CreateString;
-    objs->json->create_array      = cJSON_CreateArray;
-    objs->json->create_object     = cJSON_CreateObject;
-
-    objs->json->add_to_array      = cJSON_AddItemToArray;
-    objs->json->add_to_object     = cJSON_AddItemToObject;
-
-    objs->json->parse             = cJSON_Parse;
-    objs->json->print             = cJSON_Print;
-    objs->json->print_unformatted = cJSON_PrintUnformatted;
-    objs->json->delete            = cJSON_Delete;
-    objs->json->array_size        = cJSON_GetArraySize;
-    objs->json->array_item        = cJSON_GetArrayItem;
-    objs->json->object_item       = cJSON_GetObjectItem;
-    objs->json->get_error         = cJSON_GetErrorPtr;
-
 
     /* FIXME - DEBUG object */
 #ifdef DEBUG

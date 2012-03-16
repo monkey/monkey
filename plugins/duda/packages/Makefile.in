@@ -1,0 +1,9 @@
+DIRS    = json
+
+all:
+	@(make -C json)
+
+clean:
+	@(for d in $(DIRS); do $(MAKE) -C $$d clean; done)
+	rm -rf *.dpkg
+

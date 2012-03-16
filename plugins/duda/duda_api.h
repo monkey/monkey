@@ -24,7 +24,7 @@
 
 #include "mk_list.h"
 #include "duda_global.h"
-#include "json/json.h"
+#include "duda_package.h"
 
 
 /* types of data */
@@ -115,6 +115,11 @@ struct duda_param {
 /* MONKEY object: monkey->x() */
 struct plugin_api *monkey;
 
+/* MAP specific Duda calls */
+struct duda_api_main {
+    duda_package_t *(*package_load) (const char *);
+};
+
 /* MAP object: map->x() */
 struct duda_api_map {
     /* interface_ */
@@ -167,40 +172,13 @@ struct duda_api_crypto {
     unsigned char *(*base64_decode) (const unsigned char *, size_t, size_t *);
 };
 
-
-/* Json */
-struct duda_api_json {
-    /* create item types */
-    json_t *(*create_null) ();
-    json_t *(*create_true) ();
-    json_t *(*create_false) ();
-    json_t *(*create_bool) ();
-    json_t *(*create_number) ();
-    json_t *(*create_string) ();
-    json_t *(*create_array) ();
-    json_t *(*create_object) ();
-
-    /* add to */
-    void (*add_to_array) (json_t *, json_t *);
-    void (*add_to_object) (json_t *, const char *, json_t *);
-
-    json_t *(*parse) (const char *);
-    char   *(*print) (json_t *);
-    char   *(*print_unformatted) (json_t *);
-    void    (*delete) (json_t *);
-    int     (*array_size) (json_t *);
-    json_t *(*array_item) (json_t *, int);
-    json_t *(*object_item) (json_t *, const char *);
-    const char *(*get_error) (void);
-};
-
-
 /*
  * Group all objects in one struct so we can pass this memory space
  * to the web service when it's loaded, then the webservice.h macros
  * do the dirty job...
  */
 struct duda_api_objects {
+    struct duda_api_main *duda;
     struct plugin_api *monkey;
     struct duda_api_map *map;
     struct duda_api_msg *msg;
@@ -210,7 +188,6 @@ struct duda_api_objects {
 
     /* Third party */
     struct duda_api_crypto *crypto;
-    struct duda_api_json *json;
 };
 
 struct duda_api_objects *duda_api_master();
