@@ -34,6 +34,8 @@ mk_pointer log_current_time;
 mk_pointer header_current_time;
 
 #define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
+#define HEADER_TIME_BUFFER_SIZE 32
+#define LOG_TIME_BUFFER_SIZE 30
 
 void *mk_clock_worker_init(void *args);
 void mk_clock_set_time(void);
