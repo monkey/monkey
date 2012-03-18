@@ -26,6 +26,11 @@
 
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
+/* 
+ * Max amount of pid digits. Glibc's pid_t is implemented as a signed
+ * 32bit integer, for both 32 and 64bit systems - max value: 2147483648.
+ */
+#define MK_MAX_PID_LEN 10
 
 #include "mk_request.h"
 #include "mk_memory.h"
