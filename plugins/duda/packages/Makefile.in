@@ -1,4 +1,4 @@
-DIRS    = base64 json
+DIRS    = base64 json sqlite
 
 all:
 	@(for d in $(DIRS); do $(MAKE) -C $$d; done)

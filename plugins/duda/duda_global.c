@@ -27,7 +27,6 @@
 int duda_global_set(duda_global_t global, const void *data)
 {
     return pthread_setspecific(global.key, data);
-
 }
 
 void *duda_global_get(duda_global_t global)

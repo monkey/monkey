@@ -19,26 +19,26 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_GLOBAL_H
-#define DUDA_GLOBAL_H
+#ifndef DUDA_PACKAGE_SQLITE_H
+#define DUDA_PACKAGE_SQLITE_H
 
-#include "MKPlugin.h"
-#include "pthread.h"
+#include <sqlite3.h>
 
-typedef struct {
-    pthread_key_t key;    /* Pthread key unique identifier */
-    void *(*callback) (); /* Return the value assigned to the global scope variable */
-    struct mk_list _head;
-} duda_global_t;
-
-struct duda_global_dist_t {
-    duda_global_t *key;
-    void *(*callback) ();
-
-    struct mk_list _head;
+struct duda_api_sqlite {
+    sqlite3 *(*open) (const char *);
+    int (*exec)  (sqlite3 *, const char *);
+    int (*close) (sqlite3 *);
 };
 
-int duda_global_set(duda_global_t key, const void *data);
-void *duda_global_get(duda_global_t key);
+typedef struct duda_api_sqlite sqlite_object_t;
+typedef sqlite3 sqlite_db_t;
+
+sqlite_object_t *sqlite;
+
+int sql_init();
+
+sqlite3 *sql_open(const char *path);
+int sql_exec(sqlite3 *db, const char *query);
+int sql_close(sqlite3 *db);
 
 #endif
