@@ -41,7 +41,6 @@ struct plugin_api *monkey;
 struct duda_api_map *map;
 struct duda_api_msg *msg;
 struct duda_api_response *response;
-struct duda_api_crypto *crypto;
 struct duda_api_debug *debug;
 struct duda_api_global *global;
 duda_package_t *pkg_temp;
@@ -58,7 +57,6 @@ duda_package_t *pkg_temp;
     map      = api->map;                                                \
     msg      = api->msg;                                                \
     response = api->response;                                           \
-    crypto   = api->crypto;                                             \
     debug    = api->debug;                                              \
     global   = api->global;                                             \
     mk_list_init(&_duda_interfaces);                                    \
