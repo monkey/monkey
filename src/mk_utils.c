@@ -382,8 +382,16 @@ int mk_utils_register_pid()
     unsigned long len = 0;
     char *filepath = NULL;
     struct flock lock;
+    struct stat sb;
+
+    if (config->pid_status == MK_TRUE)
+        return -1;
 
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
+    if (!stat(filepath, &sb)) {
+        /* file exists, perhaps previously kepts by SIGKILL */
+        unlink(filepath);
+    }
 
     if ((fd = open(filepath, O_RDWR | O_CREAT, 0444)) < 0) {
         mk_err("Error: I can't log pid of monkey");
@@ -404,7 +412,7 @@ int mk_utils_register_pid()
     
     sprintf(pidstr, "%i", getpid());
     len = strlen(pidstr);
-    if (write(fd, pidstr, len) > len) {
+    if (write(fd, pidstr, len) != len) {
         close(fd);
         mk_err("Error: I cannot write the lock for the pid of monkey");
         exit(EXIT_FAILURE);
