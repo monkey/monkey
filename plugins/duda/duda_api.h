@@ -166,12 +166,6 @@ struct duda_api_global {
     void *(*get)  (duda_global_t);
 };
 
-/* Cryptographic stuff */
-struct duda_api_crypto {
-    unsigned char *(*base64_encode) (const unsigned char *, size_t, size_t *);
-    unsigned char *(*base64_decode) (const unsigned char *, size_t, size_t *);
-};
-
 /*
  * Group all objects in one struct so we can pass this memory space
  * to the web service when it's loaded, then the webservice.h macros
@@ -185,9 +179,6 @@ struct duda_api_objects {
     struct duda_api_response *response;
     struct duda_api_debug *debug;
     struct duda_api_global *global;
-
-    /* Third party */
-    struct duda_api_crypto *crypto;
 };
 
 struct duda_api_objects *duda_api_master();

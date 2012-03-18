@@ -51,7 +51,7 @@ duda_package_t *pkg_temp;
 
 #define duda_load_package(object, package)          \
     pkg_temp = api->duda->package_load(package);    \
-    object = temp->api;
+    object = pkg_temp->api;
 
 #define duda_service_init()                                             \
     monkey   = api->monkey;                                             \
