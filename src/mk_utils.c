@@ -377,19 +377,39 @@ int mk_utils_print_errno(int n)
 /* Write Monkey's PID */
 int mk_utils_register_pid()
 {
-    FILE *pid_file;
+    int fd;
+    char pidstr[MK_MAX_PID_LEN];
     unsigned long len = 0;
     char *filepath = NULL;
+    struct flock lock;
 
     mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
 
-    if ((pid_file = fopen(filepath, "w")) == NULL) {
+    if ((fd = open(filepath, O_RDWR | O_CREAT, 0444)) < 0) {
         mk_err("Error: I can't log pid of monkey");
         exit(EXIT_FAILURE);
     }
 
-    fprintf(pid_file, "%i", getpid());
-    fclose(pid_file);
+    /* create a write exclusive lock for the entire file */
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = 0;
+
+    if (fcntl(fd, F_SETLK, &lock) < 0) {
+        close(fd);
+        mk_err("Error: I cannot set the lock for the pid of monkey");
+        exit(EXIT_FAILURE);
+    }
+    
+    sprintf(pidstr, "%i", getpid());
+    len = strlen(pidstr);
+    if (write(fd, pidstr, len) > len) {
+        close(fd);
+        mk_err("Error: I cannot write the lock for the pid of monkey");
+        exit(EXIT_FAILURE);
+    }
+
     mk_mem_free(filepath);
     config->pid_status = MK_TRUE;
 
