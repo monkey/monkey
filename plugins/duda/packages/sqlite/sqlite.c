@@ -25,17 +25,10 @@
 
 #include "sqlite.h"
 
+
+/* just in case we need some specific setup in the future */
 int sql_init()
 {
-    int ret;
-
-    return 0;
-    ret = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
-    if (ret != SQLITE_OK) {
-        printf("SQLITE: Cannot set SQLITE_CONFIG_MULTITHREAD mode");
-        exit(EXIT_FAILURE);
-    }
-
     return 0;
 }
 
