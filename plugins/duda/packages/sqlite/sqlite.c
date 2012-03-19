@@ -45,17 +45,21 @@ sqlite3 *sql_open(const char *path)
     }
 
     /* Try to use asynchronous mode */
-    sql_exec(NULL, db, "PRAGMA synchronous = OFF;", NULL);
+    sql_exec(NULL, db, "PRAGMA synchronous = OFF;", NULL, NULL);
     return db;
 }
 
 int sql_exec(duda_request_t *dr, sqlite3 *db, const char *query,
-             int (*callback) (void *, int, char **, char **))
+             int (*callback) (void *, int, char **, char **), void *data)
 {
     int ret;
     char *err;
+    struct sqlite_cb_data cb_data;
 
-    ret = sqlite3_exec(db, query, callback, dr, &err);
+    cb_data.dr   = dr;
+    cb_data.data = data;
+
+    ret = sqlite3_exec(db, query, callback, (void *) &cb_data, &err);
     if (ret != SQLITE_OK) {
         printf("SQLITE: SQL error: %s\n", err);
         return -1;

@@ -26,10 +26,15 @@
 
 #include "duda_api.h"
 
+struct sqlite_cb_data {
+    duda_request_t *dr;
+    void *data;
+};
+
 struct duda_api_sqlite {
     sqlite3 *(*open) (const char *);
     int (*exec) (duda_request_t *, sqlite3 *, const char *,
-                 int (*) (void *, int, char **, char**));
+                 int (*) (void *, int, char **, char**), void *);
     int (*close) (sqlite3 *);
 };
 
@@ -42,7 +47,7 @@ int sql_init();
 
 sqlite3 *sql_open(const char *path);
 int sql_exec(duda_request_t *dr, sqlite3 *db, const char *query,
-             int (*callback) (void *, int, char **, char **));
+             int (*callback) (void *, int, char **, char **), void *data);
 
 int sql_close(sqlite3 *db);
 
