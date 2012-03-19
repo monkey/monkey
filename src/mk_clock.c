@@ -34,19 +34,24 @@
 static char *log_time_buffers[2];
 static char *header_time_buffers[2];
 
-static inline char *next_buffer(mk_pointer *pointer, char **buffers)
+/* The mk_pointers have two buffers for avoid in half-way access from
+ * another thread while a buffer is being modified. The function below returns 
+ * one of two buffers to work with.
+ */
+static inline char *_next_buffer(mk_pointer *pointer, char **buffers)
 {
-	if(pointer->data == buffers[0])
-		return buffers[1];
-	else
-		return buffers[0];
+    if(pointer->data == buffers[0]) {
+        return buffers[1];
+    } else {
+        return buffers[0];
+    }
 }
 
 static void mk_clock_log_set_time(time_t utime)
 {
     char *time_string;
 
-    time_string = next_buffer(&log_current_time, log_time_buffers);
+    time_string = _next_buffer(&log_current_time, log_time_buffers);
     log_current_utime = utime;
 
     strftime(time_string, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
@@ -60,7 +65,7 @@ void mk_clock_header_set_time(time_t utime)
     struct tm *gmt_tm;
     char *time_string;
 
-    time_string = next_buffer(&header_current_time, header_time_buffers);
+    time_string = _next_buffer(&header_current_time, header_time_buffers);
 
     gmt_tm = (struct tm *) gmtime(&utime);
     strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
@@ -88,9 +93,9 @@ void *mk_clock_worker_init(void *args)
     log_current_time.len = LOG_TIME_BUFFER_SIZE - 2;
 
     while (1) {
-	cur_time = time(NULL);
+        cur_time = time(NULL);
 
-	if(cur_time != ((time_t)-1)) {
+        if(cur_time != ((time_t)-1)) {
             mk_clock_log_set_time(cur_time);
             mk_clock_header_set_time(cur_time);
         }
