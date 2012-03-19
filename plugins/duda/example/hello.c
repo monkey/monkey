@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 #include "webservice.h"
+#include "packages/json/json.h"
 
 DUDA_REGISTER("Service Example", "service");
 
@@ -77,6 +78,7 @@ int duda_init(struct duda_api_objects *api)
     duda_method_t    *method;
 
     duda_service_init();
+    duda_load_package(json, "json");
 
     /* An empty global variable */
     duda_global_init(my_data_empty, NULL);
