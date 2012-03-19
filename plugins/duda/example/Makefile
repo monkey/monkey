@@ -1,5 +1,5 @@
 CC      = gcc -g -Wall -DDEBUG
-INCDIR = /home/edsiper/.dudac/monkey/src/include -I/home/edsiper/.dudac/monkey/plugins/duda
+INCDIR  = ../ -I../../../src/include/
 SOURCES = hello.c
 OBJECTS = hello.o
 
