@@ -31,49 +31,70 @@
 #include "mk_clock.h"
 #include "mk_utils.h"
 
-static void mk_clock_log_set_time()
+static char *log_time_buffers[2];
+static char *header_time_buffers[2];
+
+static inline char *next_buffer(mk_pointer *pointer, char **buffers)
 {
-    time_t utime;
-
-    if (!log_current_time.data) {
-        log_current_time.data = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
-        log_current_time.len = LOG_TIME_BUFFER_SIZE - 2;
-    }
-
-    if ((utime = time(NULL)) == -1) {
-        return;
-    }
-
-    log_current_utime = utime;
-    strftime(log_current_time.data, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
-             (struct tm *) localtime((time_t *) & utime));
+	if(pointer->data == buffers[0])
+		return buffers[1];
+	else
+		return buffers[0];
 }
 
-void mk_clock_header_set_time()
+static void mk_clock_log_set_time(time_t utime)
 {
-    time_t date;
+    char *time_string;
+
+    time_string = next_buffer(&log_current_time, log_time_buffers);
+    log_current_utime = utime;
+
+    strftime(time_string, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
+             (struct tm *)localtime((time_t *)&utime));
+
+    log_current_time.data = time_string;
+}
+
+void mk_clock_header_set_time(time_t utime)
+{
     struct tm *gmt_tm;
+    char *time_string;
 
-    if (!header_current_time.data) {
-        header_current_time.data = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
-        header_current_time.len = HEADER_TIME_BUFFER_SIZE - 1;
-    }
+    time_string = next_buffer(&header_current_time, header_time_buffers);
 
-    date = time(NULL);
-    gmt_tm = (struct tm *) gmtime(&date);
-    strftime(header_current_time.data, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
+    gmt_tm = (struct tm *) gmtime(&utime);
+    strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
+
+    header_current_time.data = time_string;
 }
 
 void *mk_clock_worker_init(void *args)
 {
+    time_t cur_time;
+
     mk_utils_worker_rename("monkey: clock");
 
     /* Time when monkey was started */
     monkey_init_time = time(NULL);
 
+    header_time_buffers[0] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
+    header_time_buffers[1] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
+
+    header_current_time.len = HEADER_TIME_BUFFER_SIZE - 1;
+
+    log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
+    log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
+
+    log_current_time.len = LOG_TIME_BUFFER_SIZE - 2;
+
     while (1) {
-        mk_clock_log_set_time();
-        mk_clock_header_set_time();
+	cur_time = time(NULL);
+
+	if(cur_time != ((time_t)-1)) {
+            mk_clock_log_set_time(cur_time);
+            mk_clock_header_set_time(cur_time);
+        }
+
         sleep(1);
     }
 }
