@@ -2,7 +2,7 @@ CC      = $CC
 CFLAGS  = $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
-INCDIR  = ../../../src/include -I../../
+INCDIR  = ../../../../src/include -I../../
 OBJECTS = duda_package.o base64.o
 SOURCES = duda_package.c base64.c
 
