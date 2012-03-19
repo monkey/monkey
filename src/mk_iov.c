@@ -144,9 +144,7 @@ void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
 
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 {
-    ssize_t n = -1;
-
-    n = writev(fd, mk_io->io, mk_io->iov_idx);
+    ssize_t n = writev(fd, mk_io->io, mk_io->iov_idx);
     if( n < 0 ) {
         MK_TRACE( "[FD %i] writev() '%s'", fd, strerror(errno));
         return -1;
