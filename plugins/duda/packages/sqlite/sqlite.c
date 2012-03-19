@@ -24,7 +24,7 @@
 #include <sqlite3.h>
 
 #include "sqlite.h"
-
+#include "duda_api.h"
 
 /* just in case we need some specific setup in the future */
 int sql_init()
@@ -45,16 +45,17 @@ sqlite3 *sql_open(const char *path)
     }
 
     /* Try to use asynchronous mode */
-    sql_exec(db, "PRAGMA synchronous = OFF;");
+    sql_exec(NULL, db, "PRAGMA synchronous = OFF;", NULL);
     return db;
 }
 
-int sql_exec(sqlite3 *db, const char *query)
+int sql_exec(duda_request_t *dr, sqlite3 *db, const char *query,
+             int (*callback) (void *, int, char **, char **))
 {
     int ret;
     char *err;
 
-    ret = sqlite3_exec(db, query, NULL, 0, &err);
+    ret = sqlite3_exec(db, query, callback, dr, &err);
     if (ret != SQLITE_OK) {
         printf("SQLITE: SQL error: %s\n", err);
         return -1;
