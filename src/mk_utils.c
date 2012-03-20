@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-#include <err.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
@@ -182,8 +181,10 @@ int mk_utils_set_daemon()
 {
     pid_t pid;
 
-    if ((pid = fork()) < 0)
-        err(EXIT_FAILURE, "pid");
+    if ((pid = fork()) < 0){
+		mk_err("Error: Failed creating to switch to daemon mode(fork failed)");
+        exit(EXIT_FAILURE);
+	}
 
     if (pid > 0) /* parent */
         exit(EXIT_SUCCESS);
@@ -194,8 +195,10 @@ int mk_utils_set_daemon()
     /* Create new session */
     setsid();
 
-    if (chdir("/") < 0) /* make sure we can unmount the inherited filesystem */
-        err(EXIT_FAILURE, "chdir");
+    if (chdir("/") < 0) { /* make sure we can unmount the inherited filesystem */
+        mk_err("Error: Unable to unmount the inherited filesystem in the daemon process");
+        exit(EXIT_FAILURE);
+	}
 
     /* Our last STDOUT message */
     mk_info("Background mode ON");
@@ -409,7 +412,7 @@ int mk_utils_register_pid()
         mk_err("Error: I cannot set the lock for the pid of monkey");
         exit(EXIT_FAILURE);
     }
-    
+
     sprintf(pidstr, "%i", getpid());
     len = strlen(pidstr);
     if (write(fd, pidstr, len) != len) {
