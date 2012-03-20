@@ -3,6 +3,9 @@
 #include "webservice.h"
 #include "packages/json/json.h"
 
+#define FORMATTED "== Formatted JSON output ==\n"
+#define UNFORMATTED "\n\n== Unformatted JSON output ==\n"
+
 DUDA_REGISTER("Service Example", "service");
 
 duda_global_t my_data_mem;
@@ -53,15 +56,59 @@ void cb_sendfile(duda_request_t *dr)
 void cb_json(duda_request_t *dr)
 {
     char *resp;
-    json_t *jroot;
+    const char strparse[]= " {                   \
+        \"name\":   \"Michel Perez\",            \
+        \"age\":    22,                          \
+        \"address\":      {                      \
+             \"streetAddress\": \"Piso 15\",     \
+             \"city\": \"Valparaiso\",           \
+             \"country\": \"Chile\"              \
+         },                                      \
+        \"phoneNumber\":    [                    \
+             {                                   \
+              \"type\": \"work\",                \
+              \"number\": \"2 666 4567\"         \
+             },                                  \
+             {                                   \
+             \"type\": \"fax\",                  \
+             \"number\": null                    \
+             }                                   \
+         ]                                       \
+        }";
+    json_t *jroot,*jaddress,*jphone,*jphone1,*jphone2,*jparse;
 
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
 
     jroot = json->create_object();
     json->add_to_object(jroot, "name", json->create_string("Michel Perez"));
+    json->add_to_object(jroot, "age", json->create_number(22.0));
 
+    jaddress = json->create_object();
+    json->add_to_object(jaddress, "streetAddress", json->create_string("Piso 15"));
+    json->add_to_object(jaddress, "city", json->create_string("Valparaiso"));
+    json->add_to_object(jaddress, "country", json->create_string("Chile"));
+    json->add_to_object(jroot, "address", jaddress);
+
+    jphone = json->create_array();
+    jphone1 = json->create_object();
+    json->add_to_object(jphone1, "type", json->create_string("work"));
+    json->add_to_object(jphone1, "number", json->create_string("2 666 4567"));
+    jphone2 = json->create_object();
+    json->add_to_object(jphone2, "type", json->create_string("fax"));
+    json->add_to_object(jphone2, "number", json->create_null());
+    json->add_to_array(jphone, jphone1);
+    json->add_to_array(jphone, jphone2);
+    json->add_to_object(jroot, "phoneNumber", jphone);
+
+    response->body_write(dr, FORMATTED, sizeof(FORMATTED)-1);
     resp = json->print(jroot);
+    response->body_write(dr, resp, strlen(resp));
+    resp = NULL;
+    jparse = json->parse(strparse);
+    response->body_write(dr, UNFORMATTED, sizeof(UNFORMATTED)-1);
+    resp = json->print_unformatted(jparse);
+    json->delete(jparse);
     response->body_write(dr, resp, strlen(resp));
     response->end(dr, cb_end);
 }
