@@ -49,6 +49,19 @@ sqlite3 *sql_open(const char *path)
     return db;
 }
 
+int sql_dump(sqlite3 *db, const char *query, sqlite3_stmt **handle)
+{
+    int ret;
+
+    ret = sqlite3_prepare(db, query, -1, handle, NULL);
+    if (ret != SQLITE_OK || !handle) {
+        printf("Error: sql_dump()=%d %s\n", ret, sqlite3_errmsg(db));
+    }
+
+    return ret;
+}
+
+
 int sql_exec(duda_request_t *dr, sqlite3 *db, const char *query,
              int (*callback) (void *, int, char **, char **), void *data)
 {

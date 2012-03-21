@@ -103,8 +103,10 @@ void cb_json(duda_request_t *dr)
 
     response->body_write(dr, FORMATTED, sizeof(FORMATTED)-1);
     resp = json->print(jroot);
+
     response->body_write(dr, resp, strlen(resp));
     resp = NULL;
+
     jparse = json->parse(strparse);
     response->body_write(dr, UNFORMATTED, sizeof(UNFORMATTED)-1);
     resp = json->print_unformatted(jparse);
