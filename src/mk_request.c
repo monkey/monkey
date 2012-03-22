@@ -414,8 +414,12 @@ static void mk_request_premature_close(int http_status, struct client_session *c
     struct session_request *sr;
     struct mk_list *sr_list = &cs->request_list;
 
+    /*
+     * If the connection is too premature, we need to allocate a temporal session_request
+     * to do not break the plugins stages
+     */
     if (mk_list_is_empty(sr_list) == 0) {
-        sr = mk_mem_malloc(sizeof(struct session_request));
+        sr = &cs->sr_fixed;
         mk_request_init(sr);
         mk_list_add(&sr->_head, &cs->request_list);
     }
@@ -432,7 +436,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
                             NULL, cs, sr);
     }
 
-    /* STAGE_50, connection closed */
+    /* STAGE_50, connection closed  and remove client_session*/
     mk_plugin_stage_run(MK_PLUGIN_STAGE_50, cs->socket, NULL, NULL, NULL);
     mk_session_remove(cs->socket);
 }
