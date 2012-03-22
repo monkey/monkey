@@ -109,6 +109,11 @@ struct duda_param {
  * Debug
  * -----
  * A set of methods to debug the web service
+ * 
+ * 
+ * Params
+ * ------
+ * A set of methods to retrieve web service parameters
  *
  */
 
@@ -158,6 +163,11 @@ struct duda_api_debug {
     void (*stacktrace) (void);
 };
 
+/* PARAMS object: params->() */
+struct duda_api_params{
+    char *(*get) (duda_request_t *,short int);
+    short int (*count) (duda_request_t *);
+};
 
 /* Global data (thread scope) */
 struct duda_api_global {
@@ -179,6 +189,7 @@ struct duda_api_objects {
     struct duda_api_response *response;
     struct duda_api_debug *debug;
     struct duda_api_global *global;
+    struct duda_api_params *params;
 };
 
 struct duda_api_objects *duda_api_master();

@@ -70,7 +70,7 @@ duda_param_t *duda_param_new(char *uid, short int max_len)
 {
     duda_param_t *param;
 
-    param = mk_api->mem_alloc(sizeof(duda_method_t));
+    param = mk_api->mem_alloc(sizeof(duda_param_t));
     param->max_len = max_len;
 
     return param;

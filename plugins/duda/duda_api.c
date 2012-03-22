@@ -123,6 +123,25 @@ int _sendfile_enqueue(duda_request_t *dr, char *path)
     return 0;
 }
 
+/* Return ith parameter */
+char * duda_param_get(duda_request_t *dr, short int i)
+{
+    if(i >= dr->n_params){
+        return NULL;
+    }
+
+    return mk_api->str_copy_substr(dr->params[i].data,0,(int)dr->params[i].len);
+}
+
+/* Return the total no of parameters */
+short int duda_param_count(duda_request_t *dr)
+{
+    if(!dr){
+        return -1;
+    }
+    return dr->n_params;
+}
+
 /* Finalize the response process */
 int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 {
@@ -152,6 +171,7 @@ struct duda_api_objects *duda_api_master()
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
+    objs->params   = mk_api->mem_alloc(sizeof(struct duda_api_params));
 
     /* MAP Duda calls */
     objs->duda->package_load = duda_package_load;
@@ -175,6 +195,12 @@ struct duda_api_objects *duda_api_master()
     objs->response->body_write  = _body_enqueue_write;
     objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
+
+    /* DEBUG object */
+
+    /* PARAMS object */
+    objs->params->count = duda_param_count;
+    objs->params->get = duda_param_get;
 
     /* Global data (thread scope) */
     objs->global->set  = duda_global_set;
