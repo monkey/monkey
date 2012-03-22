@@ -82,6 +82,7 @@ static void mk_request_init(struct session_request *request)
 
     request->file_info.size = -1;
     request->virtual_user = NULL;
+    request->keep_alive = MK_FALSE;
 
     mk_pointer_reset(&request->real_path);
     request->host_conf = config->hosts;
