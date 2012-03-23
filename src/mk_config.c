@@ -19,6 +19,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* isblank is not in C89 */
+#define _GNU_SOURCE
+
 #include <dirent.h>
 #include <stdio.h>
 #include <sys/types.h>
