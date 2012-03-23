@@ -31,12 +31,16 @@ struct duda_api_sqlite *get_sqlite_api()
     sqlite = malloc(sizeof(struct duda_api_sqlite));
 
     /* Map API calls */
-    sqlite->open  = sql_open;
-    sqlite->dump  = sql_dump;
-    sqlite->fetch = sqlite3_step;
-    sqlite->done  = sqlite3_finalize;
-    sqlite->exec  = sql_exec;
-    sqlite->close = sql_close;
+    sqlite->open       = sql_open;
+    sqlite->dump       = sql_dump;
+    sqlite->step       = sqlite3_step;
+    sqlite->get_int    = sqlite3_column_int;
+    sqlite->get_double = sqlite3_column_double;
+    sqlite->get_text   = sqlite3_column_text;
+
+    sqlite->done       = sqlite3_finalize;
+    sqlite->exec       = sql_exec;
+    sqlite->close      = sql_close;
 
     return sqlite;
 }

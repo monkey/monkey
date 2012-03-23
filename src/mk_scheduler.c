@@ -90,16 +90,13 @@ inline int mk_sched_add_client(int remote_fd)
     sched = &sched_list[t];
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
-    
+
     sched->active_connections += 1;
 
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
-    /*
-     * Increment the active connections counter for the scheduler node in
-     * question.
-     */
+    /* If epoll has failed, decrement the active connections counter */
     if (r != 0) {
         sched->active_connections -= 1;
     }
@@ -160,7 +157,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     mk_epoll_handlers *handler;
-    
+
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
 
