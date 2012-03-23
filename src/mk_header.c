@@ -248,10 +248,10 @@ int mk_header_send(int fd, struct client_session *cs,
         }
     }
 
-    mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
     /* Invalid status set */
     mk_bug(i == status_response_len);
+
+    mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
 
     if (fd_status < 0) {
         mk_header_iov_free(iov);
