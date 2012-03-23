@@ -4,4 +4,7 @@
 *.pyc
 bin/*
 conf/*
-#Makefile
+Makefile
+mk_env.h
+mk_info.h
+*.dpkg
