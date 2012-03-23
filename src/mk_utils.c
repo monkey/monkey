@@ -507,7 +507,8 @@ void mk_print(int type, const char *format, ...)
     }
 
     now = time(NULL);
-    current = localtime(&now);
+    struct tm result;
+    current = localtime_r(&now, &result);
     printf("%s[%s%i/%02i/%02i %02i:%02i:%02i%s]%s ",
            bold_color, reset_color,
            current->tm_year + 1900,

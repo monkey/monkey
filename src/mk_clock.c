@@ -50,12 +50,13 @@ static inline char *_next_buffer(mk_pointer *pointer, char **buffers)
 static void mk_clock_log_set_time(time_t utime)
 {
     char *time_string;
+    struct tm result;
 
     time_string = _next_buffer(&log_current_time, log_time_buffers);
     __sync_bool_compare_and_swap(&log_current_utime, log_current_utime, utime);
 
     strftime(time_string, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
-             (struct tm *)localtime((time_t *)&utime));
+             localtime_r(&utime, &result));
 
     __sync_bool_compare_and_swap(&log_current_time.data, log_current_time.data, time_string);
 }
@@ -63,11 +64,12 @@ static void mk_clock_log_set_time(time_t utime)
 void mk_clock_header_set_time(time_t utime)
 {
     struct tm *gmt_tm;
+    struct tm result;
     char *time_string;
 
     time_string = _next_buffer(&header_current_time, header_time_buffers);
 
-    gmt_tm = (struct tm *) gmtime(&utime);
+    gmt_tm = gmtime_r(&utime, &result);
     strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
 
     __sync_bool_compare_and_swap(&header_current_time.data, header_current_time.data, time_string);
