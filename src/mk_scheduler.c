@@ -91,14 +91,14 @@ inline int mk_sched_add_client(int remote_fd)
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
-    sched->active_connections += 1;
+    __sync_fetch_and_add(&sched->active_connections, 1);
 
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
     /* If epoll has failed, decrement the active connections counter */
     if (r != 0) {
-        sched->active_connections -= 1;
+        __sync_fetch_and_sub(&sched->active_connections, 1);
     }
 
     return r;
@@ -325,7 +325,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
 
         /* Change node status */
-        sched->active_connections -= 1;
+        __sync_fetch_and_sub(&sched->active_connections, 1);
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         sc->socket = -1;
         return 0;
