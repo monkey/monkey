@@ -52,12 +52,12 @@ static void mk_clock_log_set_time(time_t utime)
     char *time_string;
 
     time_string = _next_buffer(&log_current_time, log_time_buffers);
-    log_current_utime = utime;
+    __sync_bool_compare_and_swap(&log_current_utime, log_current_utime, utime);
 
     strftime(time_string, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
              (struct tm *)localtime((time_t *)&utime));
 
-    log_current_time.data = time_string;
+    __sync_bool_compare_and_swap(&log_current_time.data, log_current_time.data, time_string);
 }
 
 void mk_clock_header_set_time(time_t utime)
@@ -70,7 +70,7 @@ void mk_clock_header_set_time(time_t utime)
     gmt_tm = (struct tm *) gmtime(&utime);
     strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
 
-    header_current_time.data = time_string;
+    __sync_bool_compare_and_swap(&header_current_time.data, header_current_time.data, time_string);
 }
 
 void *mk_clock_worker_init(void *args)
