@@ -42,6 +42,7 @@ struct duda_api_sqlite {
 
 typedef struct duda_api_sqlite sqlite_object_t;
 typedef sqlite3 sqlite_db_t;
+typedef sqlite3_stmt sqlite_handle_t;
 
 sqlite_object_t *sqlite;
 
