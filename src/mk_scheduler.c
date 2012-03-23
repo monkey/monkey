@@ -210,8 +210,8 @@ int mk_sched_register_thread(int efd)
     static int wid = 0;
 
     sl = &sched_list[wid];
-    sl->active_connections = 0;
-    sl->idx = wid++;
+    __sync_bool_compare_and_swap(&sl->active_connections, sl->active_connections, 0);
+    sl->idx = __sync_fetch_and_add(&wid, 1);
     sl->tid = pthread_self();
 
     /*
@@ -226,7 +226,7 @@ int mk_sched_register_thread(int efd)
      */
     sl->pid = syscall(__NR_gettid);
 
-    sl->epoll_fd = efd;
+    __sync_bool_compare_and_swap(&sl->epoll_fd, sl->epoll_fd, efd);
     sl->queue = mk_mem_malloc_z(sizeof(struct sched_connection) *
                                 config->worker_capacity);
     sl->request_handler = NULL;
