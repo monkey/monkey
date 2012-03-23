@@ -31,6 +31,9 @@
 #include "mk_clock.h"
 #include "mk_utils.h"
 
+mk_pointer log_current_time = { NULL, LOG_TIME_BUFFER_SIZE - 2 };
+mk_pointer header_current_time = { NULL, HEADER_TIME_BUFFER_SIZE - 1 };
+
 static char *log_time_buffers[2];
 static char *header_time_buffers[2];
 
@@ -87,12 +90,8 @@ void *mk_clock_worker_init(void *args)
     header_time_buffers[0] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
     header_time_buffers[1] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
 
-    header_current_time.len = HEADER_TIME_BUFFER_SIZE - 1;
-
     log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
     log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
-
-    log_current_time.len = LOG_TIME_BUFFER_SIZE - 2;
 
     while (1) {
         cur_time = time(NULL);
