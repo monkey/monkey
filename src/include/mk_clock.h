@@ -39,5 +39,6 @@ extern mk_pointer header_current_time;
 
 void *mk_clock_worker_init(void *args);
 void mk_clock_set_time(void);
+void mk_clock_sequential_init();
 
 #endif

@@ -84,15 +84,6 @@ void *mk_clock_worker_init(void *args)
 
     mk_utils_worker_rename("monkey: clock");
 
-    /* Time when monkey was started */
-    monkey_init_time = time(NULL);
-
-    header_time_buffers[0] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
-    header_time_buffers[1] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
-
-    log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
-    log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
-
     while (1) {
         cur_time = time(NULL);
 
@@ -102,5 +93,27 @@ void *mk_clock_worker_init(void *args)
         }
 
         sleep(1);
+    }
+}
+
+/* This function must be called before any threads are created */
+void mk_clock_sequential_init()
+{
+    /* Time when monkey was started */
+    monkey_init_time = time(NULL);
+
+    header_time_buffers[0] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
+    header_time_buffers[1] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
+
+    log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
+    log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
+
+
+    /* Set the time once */
+    time_t cur_time = time(NULL);
+
+    if(cur_time != ((time_t)-1)) {
+        mk_clock_log_set_time(cur_time);
+        mk_clock_header_set_time(cur_time);
     }
 }
