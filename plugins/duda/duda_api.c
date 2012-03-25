@@ -24,6 +24,7 @@
 #include "duda_debug.h"
 #include "duda.h"
 #include "duda_api.h"
+#include "duda_param.h"
 #include "duda_package.h"
 #include "duda_event.h"
 #include "duda_queue.h"
@@ -123,25 +124,6 @@ int _sendfile_enqueue(duda_request_t *dr, char *path)
     return 0;
 }
 
-/* Return ith parameter */
-char * duda_param_get(duda_request_t *dr, short int i)
-{
-    if(i >= dr->n_params){
-        return NULL;
-    }
-
-    return mk_api->str_copy_substr(dr->params[i].data,0,(int)dr->params[i].len);
-}
-
-/* Return the total no of parameters */
-short int duda_param_count(duda_request_t *dr)
-{
-    if(!dr){
-        return -1;
-    }
-    return dr->n_params;
-}
-
 /* Finalize the response process */
 int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 {
@@ -200,7 +182,8 @@ struct duda_api_objects *duda_api_master()
 
     /* PARAMS object */
     objs->params->count = duda_param_count;
-    objs->params->get = duda_param_get;
+    objs->params->get   = duda_param_get;
+    objs->params->len   = duda_param_len;
 
     /* Global data (thread scope) */
     objs->global->set  = duda_global_set;
