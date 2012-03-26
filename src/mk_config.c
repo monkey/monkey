@@ -200,6 +200,7 @@ struct mk_config *mk_config_create(const char *path)
             if (end > 0) {
                 section = mk_string_copy_substr(buf, 1, end);
                 mk_config_section_add(conf, section);
+                mk_mem_free(section);
                 continue;
             }
             else {
@@ -271,6 +272,7 @@ struct mk_config *mk_config_create(const char *path)
     }
     fflush(stdout);
     */
+    if (indent) mk_mem_free(indent);
 
     fclose(f);
     return conf;
@@ -295,6 +297,7 @@ void mk_config_free(struct mk_config *conf)
         mk_mem_free(section);
 
         if (section == conf->section) {
+            conf->section = NULL;
             return;
         }
         prev->next = NULL;
@@ -316,6 +319,7 @@ void mk_config_free_entries(struct mk_config_section *section)
         /* Free memory assigned */
         mk_mem_free(target->key);
         mk_mem_free(target->val);
+        mk_mem_free(target);
 
         if (target == section->entry) {
             section->entry = NULL;

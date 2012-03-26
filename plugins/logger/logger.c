@@ -234,6 +234,7 @@ void *mk_logger_worker_init(void *args)
 int mk_logger_read_config(char *path)
 {
     int timeout;
+    char *logfilename = NULL;
     unsigned long len;
     char *default_file = NULL;
     struct mk_config *conf;
@@ -256,13 +257,21 @@ int mk_logger_read_config(char *path)
         PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
 
         /* MasterLog */
-        mk_logger_master_path = mk_api->config_section_getval(section,
-                                                              "MasterLog",
-                                                              MK_CONFIG_VAL_STR);
+        logfilename = mk_api->config_section_getval(section,
+                                                    "MasterLog",
+                                                    MK_CONFIG_VAL_STR);
+        if (logfilename == NULL) {
+            mk_err("MasterLog does not have a proper value");
+            exit(EXIT_FAILURE);
+        }
+
+        mk_logger_master_path = mk_api->str_dup(logfilename);
         PLUGIN_TRACE("MasterLog '%s'", mk_logger_master_path);
     }
 
     mk_api->mem_free(default_file);
+    mk_api->config_free(conf);
+    mk_api->mem_free(conf);
 
     return 0;
 }
