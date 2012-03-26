@@ -53,6 +53,9 @@ struct duda_request {
     struct client_session *cs;
     struct session_request *sr;
 
+    /* Method structure */
+    struct duda_method *_method;
+
     /* Callback functions */
     void (*end_callback)(duda_request_t *);
 

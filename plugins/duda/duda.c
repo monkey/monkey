@@ -207,12 +207,51 @@ int _mkp_init(void **api, char *confdir)
     return 0;
 }
 
+/* Sets the duda_method structure variable in duda_request */
+int duda_request_set_method(struct duda_request *dr)
+{
+    struct mk_list *head_iface, *head_method;
+    struct duda_interface *entry_iface;
+    struct duda_method *entry_method;
+
+    /* Finds the corresponding duda_method structure */
+    mk_list_foreach(head_iface, dr->web_service->map) {
+        entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
+
+        if (entry_iface->uid_len == dr->interface.len &&
+            strncmp(entry_iface->uid, dr->interface.data, dr->interface.len) == 0) {
+
+            mk_list_foreach(head_method, &entry_iface->methods) {
+                entry_method = mk_list_entry(head_method, struct duda_method, _head);
+                if (entry_method->uid_len == dr->method.len &&
+                    strncmp(entry_method->uid, dr->method.data, dr->method.len) == 0) {
+                    dr->_method = entry_method;
+                    break;
+                }
+            }
+            if(dr->_method) {
+                break;
+            }
+        }
+    }
+
+    if(!dr->_method) {
+        PLUGIN_TRACE("Invoked method not found");
+        return -1;
+    }
+
+    PLUGIN_TRACE("Method %s invoked", entry_method->uid);
+    return 0;    
+}
+
+
 int duda_request_parse(struct session_request *sr,
                        struct duda_request *dr)
 {
     short int last_field = MAP_WS_APP_NAME;
     unsigned int i = 0, len, val_len;
     int end;
+    short int allowed_params;
 
     len = sr->uri_processed.len;
 
@@ -250,10 +289,16 @@ int duda_request_parse(struct session_request *sr,
             dr->method.data    = sr->uri_processed.data + i;
             dr->method.len     = val_len;
             last_field = MAP_WS_PARAM;
+            if(duda_request_set_method(dr) == -1) {
+                return -1;
+            }
+            allowed_params = dr->_method->num_params;
             break;
         case MAP_WS_PARAM:
-            if (dr->n_params >= MAP_WS_MAX_PARAMS) {
-                PLUGIN_TRACE("too much parameters (max=%i)", MAP_WS_MAX_PARAMS);
+            if (dr->n_params >= MAP_WS_MAX_PARAMS || dr->n_params >= allowed_params) {
+                PLUGIN_TRACE("too much parameters (max=%i)", 
+                             (dr->n_params >= MAP_WS_MAX_PARAMS)?
+                             MAP_WS_MAX_PARAMS:allowed_params);
                 return -1;
             }
             dr->params[dr->n_params].data = sr->uri_processed.data + i;
@@ -267,6 +312,11 @@ int duda_request_parse(struct session_request *sr,
     }
 
     if (last_field < MAP_WS_METHOD) {
+        return -1;
+    }
+    
+    if ((dr->n_params) != allowed_params) {
+        PLUGIN_TRACE("%i parameters required", allowed_params);
         return -1;
     }
 
@@ -297,9 +347,6 @@ int duda_service_run(struct client_session *cs,
                      struct web_service *web_service)
 {
     struct duda_request *dr;
-    struct mk_list *head_iface, *head_method;
-    struct duda_interface *entry_iface;
-    struct duda_method *entry_method;
     void *(*callback) (duda_request_t *) = NULL;
 
     dr = mk_api->mem_alloc(sizeof(struct duda_request));
@@ -313,6 +360,9 @@ int duda_service_run(struct client_session *cs,
     dr->n_params = 0;
     dr->cs = cs;
     dr->sr = sr;
+
+    /* method invoked */
+    dr->_method = NULL;
 
     /* callbacks */
     dr->end_callback = NULL;
@@ -330,32 +380,15 @@ int duda_service_run(struct client_session *cs,
         return -1;
     }
 
-    /* Invoke the web service callback */
-    mk_list_foreach(head_iface, dr->web_service->map) {
-        entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
-
-        if (entry_iface->uid_len == dr->interface.len &&
-            strncmp(entry_iface->uid, dr->interface.data, dr->interface.len) == 0) {
-
-            /* try to match method */
-            mk_list_foreach(head_method, &entry_iface->methods) {
-                entry_method = mk_list_entry(head_method, struct duda_method, _head);
-                if (entry_method->uid_len == dr->method.len &&
-                    strncmp(entry_method->uid, dr->method.data, dr->method.len) == 0) {
-                    callback = entry_method->func_cb;
-                    break;
-                }
-            }
-        }
-    }
+    callback = dr->_method->func_cb;
 
     if (!callback) {
-        PLUGIN_TRACE("callback not found: '%s'", callback);
+        PLUGIN_TRACE("callback not found");
         return -1;
     }
 
-    PLUGIN_TRACE("CB %s()", entry_method->callback);
-    entry_method->func_cb(dr);
+    PLUGIN_TRACE("CB %s()", dr->_method->callback);
+    dr->_method->func_cb(dr);
 
     return 0;
 }
