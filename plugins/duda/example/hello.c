@@ -4,8 +4,14 @@
 #include "packages/json/json.h"
 
 #define INCORRECT_PARAMETERS "Incorrect Parameters\n"
-#define FORMATTED "==Formatted JSON output==\n"
-#define UNFORMATTED "\n\n==Unformatted JSON output==\n"
+#define FORMATTED_OUT "==Formatted JSON output==\n"
+#define UNFORMATTED_OUT "\n\n==Unformatted JSON output==\n"
+
+/* Allowed parameter values */
+#define CREATE "create"
+#define PARSE "parse"
+#define FORMATTED "formatted"
+#define UNFORMATTED "unformatted"
 
 DUDA_REGISTER("Service Example", "service");
 
@@ -107,13 +113,13 @@ void cb_json_first(duda_request_t *dr)
     json->add_to_array(jphone, jphone2);
     json->add_to_object(jroot, "phoneNumber", jphone);
 
-    response->body_write(dr, FORMATTED, sizeof(FORMATTED)-1);
+    response->body_write(dr, FORMATTED_OUT, sizeof(FORMATTED_OUT) - 1);
     resp = json->print(jroot);
     response->body_write(dr, resp, strlen(resp));
 
     resp = NULL;
     jparse = json->parse(strparse);
-    response->body_write(dr, UNFORMATTED, sizeof(UNFORMATTED)-1);
+    response->body_write(dr, UNFORMATTED_OUT, sizeof(UNFORMATTED_OUT) - 1);
     resp = json->print_unformatted(jparse);
     json->delete(jparse);
     response->body_write(dr, resp, strlen(resp));
@@ -152,8 +158,10 @@ void cb_json_second(duda_request_t *dr){
     pvalue1 = params->get(dr, pnumber);
     pnumber = 1;
     pvalue2 = params->get(dr, pnumber);
-
-    if(strncmp(pvalue1, "create", strlen("create")) == 0 && strlen("create") == strlen(pvalue1)){
+    
+    if(!pvalue1 || !pvalue2) {
+        response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
+    }else if(strncmp(pvalue1, CREATE, sizeof(CREATE) - 1) == 0 && (sizeof(CREATE) - 1) == strlen(pvalue1)) {
         jroot = json->create_object();
         json->add_to_object(jroot, "name", json->create_string("Michel Perez"));
         json->add_to_object(jroot, "age", json->create_number(22.0));
@@ -175,29 +183,29 @@ void cb_json_second(duda_request_t *dr){
         json->add_to_array(jphone, jphone2);
         json->add_to_object(jroot, "phoneNumber", jphone);
 
-        if(strncmp(pvalue2, "formatted", strlen("formatted")) == 0 && strlen("formatted") == strlen(pvalue2)){
+        if(strncmp(pvalue2, FORMATTED, sizeof(FORMATTED) - 1) == 0 && (sizeof(FORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print(jroot);
             response->body_write(dr, resp, strlen(resp));
-        }else if(strncmp(pvalue2, "unformatted", strlen("unformatted")) == 0 && strlen("unformatted") == strlen(pvalue2)){
+        }else if(strncmp(pvalue2, UNFORMATTED, sizeof(UNFORMATTED) - 1) == 0 && (sizeof(UNFORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print_unformatted(jroot);
             response->body_write(dr, resp, strlen(resp));
-        }else{
-            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS)-1);
+        }else  {
+            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
         }
-    }else if(strncmp(pvalue1, "parse", strlen("parse")) == 0 && strlen("parse") == strlen(pvalue1)){
+    }else if(strncmp(pvalue1, PARSE, sizeof(PARSE) - 1) == 0 && (sizeof(PARSE) - 1) == strlen(pvalue1)) {
         jparse = json->parse(strparse);
-        if(strncmp(pvalue2, "formatted", strlen("formatted")) == 0 && strlen("formatted") == strlen(pvalue2)){
+        if(strncmp(pvalue2, FORMATTED, sizeof(FORMATTED) - 1) == 0 && (sizeof(FORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print(jparse);
             response->body_write(dr, resp, strlen(resp));
-        }else if(strncmp(pvalue2, "unformatted", strlen("unformatted")) == 0 && strlen("unformatted") == strlen(pvalue2)){
+        }else if(strncmp(pvalue2, UNFORMATTED, sizeof(UNFORMATTED) - 1) == 0 && (sizeof(UNFORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print_unformatted(jparse);
             response->body_write(dr, resp, strlen(resp));
-        }else{
-            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS)-1);
+        }else {
+            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
         }
         json->delete(jparse);
-    }else{
-        response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS)-1);
+    }else {
+        response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
     }
         response->end(dr, cb_end);
 }
@@ -238,7 +246,7 @@ int duda_init(struct duda_api_objects *api)
      * action: create/parse
      * format: formatted/unformatted
      */
-    method = map->method_new("json_second", "cb_json_second", 1);
+    method = map->method_new("json_second", "cb_json_second", 2);
     param = map->param_new("action", strlen("create"));
     map->method_add_param(param, method);
     param = map->param_new("format", strlen("unformatted")); 
@@ -252,5 +260,8 @@ int duda_init(struct duda_api_objects *api)
     /* Add interface to map */
     duda_service_add_interface(if_system);
 
+    if_system = map->interface_new("test");
+    duda_service_add_interface(if_system);
+    
     duda_service_ready();
 }
