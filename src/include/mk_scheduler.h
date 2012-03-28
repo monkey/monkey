@@ -39,13 +39,17 @@ struct sched_connection
     int socket;
 
     time_t arrive_time;
+
+    struct mk_list _head;
 };
 
 /* Global struct */
 struct sched_list_node
 {
     unsigned short int active_connections;
-    struct sched_connection *queue;
+
+    struct mk_list busy_queue;
+    struct mk_list av_queue;
 
     short int idx;
     pthread_t tid;
