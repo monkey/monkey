@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <errno.h>
 
 /* Networking - I/O*/
@@ -163,13 +164,13 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
 int _mkp_event_read(int sockfd)
 {
     int i, n;
-    char buf[256];
+    unsigned char buf[256];
     unsigned int frame_size = 0;
     unsigned int frame_opcode = 0;
     unsigned int frame_mask = 0;
     unsigned int frame_payload = 0;    
     unsigned char frame_masking_key[256];
-    unsigned int payload_value = 0;
+    uint64_t payload_length = 0;
     unsigned int payload_size = 0;
     unsigned int mask_key_init = 0;
     unsigned char data[256];
@@ -196,24 +197,16 @@ int _mkp_event_read(int sockfd)
     frame_payload = buf[1] & 0x7f;
 
     if (frame_payload == 126) {
-        payload_size = 2;
+        payload_length = buf[2] * 256 + buf[3];
     }
-    else if (frame_payload == 127) {
-        payload_size = 8;
+    else if (frame_payload == 127) { 
+        memcpy(&payload_length, buf + 2, 8);
+    }
+    else {
+        payload_length = frame_payload;
     }
 
     
-    if (payload_size != 0) {
-        buf[1] = 0;
-        memcpy(&payload_value, buf + 1, payload_size); 
-    }
-    else {
-        payload_value = frame_payload;
-    }
-
-    /* FIXME: payload size not working when using frame_payload = 126 || 127 */
-    payload_value = frame_payload;
-
 #ifdef TRACE
     PLUGIN_TRACE("Frame Headers:");
     (CHECK_BIT(buf[0], 7)) ? printf("FIN  ON\n") : printf("FIN  OFF\n");
@@ -225,7 +218,7 @@ int _mkp_event_read(int sockfd)
     printf("Mask ?\t%i\n", frame_mask);
     printf("Frame Size\t%i\n", frame_size);
     printf("Frame Payload\t%i\n", frame_payload);
-    printf("Payload Value\t%i\n", (unsigned int) payload_value);
+    printf("Payload Value\t%i\n", (unsigned int) payload_length);
     printf("Payload Size\t%i\n", (unsigned int) payload_size);
     fflush(stdout);
 #endif
@@ -241,13 +234,13 @@ int _mkp_event_read(int sockfd)
             //return MK_PLUGIN_RET_EVENT_CLOSE;
         }
 
-        memcpy(&data, buf + mask_key_init + WS_FRAME_MASK_LEN, payload_value);
-        for (i=0; i < payload_value; i++) {
+        memcpy(&data, buf + mask_key_init + WS_FRAME_MASK_LEN, payload_length);
+        for (i=0; i < payload_length; i++) {
             data[i] = data[i] ^ frame_masking_key[i % 4];
         }
     }
     else {
-        memcpy(&data, buf + 2 + payload_size, payload_value); 
+        memcpy(&data, buf + 2 + payload_size, payload_length); 
     }
 
 #ifdef TRACE
