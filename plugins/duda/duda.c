@@ -252,6 +252,8 @@ int duda_request_parse(struct session_request *sr,
     unsigned int i = 0, len, val_len;
     int end;
     short int allowed_params;
+    struct mk_list *head_param;
+    struct duda_param *entry_param;
 
     len = sr->uri_processed.len;
 
@@ -301,10 +303,19 @@ int duda_request_parse(struct session_request *sr,
                              MAP_WS_MAX_PARAMS:allowed_params);
                 return -1;
             }
+            if (dr->n_params == 0) {
+                head_param = (&dr->_method->params)->next;
+            }
+            entry_param = mk_list_entry(head_param, struct duda_param, _head);
+            if (val_len > entry_param->max_len) {
+                PLUGIN_TRACE("too long param (max=%i)", entry_param->max_len);
+                return -1;
+            }
             dr->params[dr->n_params].data = sr->uri_processed.data + i;
             dr->params[dr->n_params].len  = val_len;
             dr->n_params++;
             last_field = MAP_WS_PARAM;
+            head_param = head_param->next;
             break;
         }
 
