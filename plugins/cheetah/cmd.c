@@ -27,7 +27,6 @@
 #include <pwd.h>
 
 #include "MKPlugin.h"
-
 #include "cheetah.h"
 #include "cutils.h"
 #include "cmd.h"
@@ -119,7 +118,7 @@ void mk_cheetah_cmd_uptime()
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print_stage(struct mk_list *list, const char *stage, 
+void mk_cheetah_cmd_plugins_print_stage(struct mk_list *list, const char *stage,
                                         int stage_bw)
 {
     struct plugin *p;
@@ -213,33 +212,36 @@ void mk_cheetah_cmd_plugins()
 
 void mk_cheetah_cmd_vhosts()
 {
-    struct host *host;
-    struct host_alias *alias;
+    struct host *entry_host;
+    struct host_alias *entry_alias;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
-    struct mk_list *head, *host_list;
+    struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *aliases;
+    struct mk_list *head_host;
+    struct mk_list *head_alias;
 
-    host = mk_api->config->hosts;
-    while (host) {
-        host_list = &host->server_names;
-        alias = mk_list_entry_first(host_list, struct host_alias, _head);
+    mk_list_foreach(head_host, hosts) {
+        entry_host = mk_list_entry(head_host, struct host, _head);
 
-        CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n", 
-                      ANSI_BOLD, ANSI_YELLOW, 
-                      alias->name, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
+        aliases = &entry_host->server_names;
+        entry_alias = mk_list_entry_first(aliases, struct host_alias, _head);
+        CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n",
+                      ANSI_BOLD, ANSI_YELLOW,
+                      entry_alias->name, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
 
         CHEETAH_WRITE("      - Names         : ");
-        mk_list_foreach(head, host_list) {
-            alias = mk_list_entry(head, struct host_alias, _head);
-            CHEETAH_WRITE("%s ", alias->name);
+        mk_list_foreach(head_alias, aliases) {
+            entry_alias = mk_list_entry(head_alias, struct host_alias, _head);
+            CHEETAH_WRITE("%s ", entry_alias->name);
         }
         CHEETAH_WRITE("\n");
 
-        CHEETAH_WRITE("      - Document root : %s\n", host->documentroot.data);
-        CHEETAH_WRITE("      - Config file   : %s\n", host->file);
-       
-        if (host->config) {
-            section = host->config->section->next;
+        CHEETAH_WRITE("      - Document root : %s\n", entry_host->documentroot.data);
+        CHEETAH_WRITE("      - Config file   : %s\n", entry_host->file);
+
+        if (entry_host->config) {
+            section = entry_host->config->section->next;
             while (section) {
                 CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
                               section->name);
@@ -251,9 +253,6 @@ void mk_cheetah_cmd_vhosts()
                 section = section->next;
             }
         }
-        host = host->next;
-
-        
     }
 
     CHEETAH_WRITE("\n");
@@ -311,7 +310,7 @@ void mk_cheetah_cmd_config()
     CHEETAH_WRITE("Basic configuration");
     CHEETAH_WRITE("\n-------------------");
     CHEETAH_WRITE("\nServer Port     : %i", mk_api->config->serverport);
-    
+
     if (strcmp(mk_api->config->listen_addr, "0.0.0.0") == 0) {
         CHEETAH_WRITE("\nListen          : All interfaces");
     }
@@ -320,7 +319,7 @@ void mk_cheetah_cmd_config()
     }
     CHEETAH_WRITE("\nWorkers         : %i threads", mk_api->config->workers);
     CHEETAH_WRITE("\nTimeout         : %i seconds", mk_api->config->timeout);
-    CHEETAH_WRITE("\nPidFile         : %s.%i", 
+    CHEETAH_WRITE("\nPidFile         : %s.%i",
                   mk_api->config->pid_file_path,
                   mk_api->config->serverport);
     CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
@@ -337,7 +336,7 @@ void mk_cheetah_cmd_config()
         }
 
     }
-    
+
     CHEETAH_WRITE("\nHideVersion     : ");
     if (mk_api->config->hideversion == MK_TRUE) {
         CHEETAH_WRITE("On");
@@ -364,10 +363,10 @@ void mk_cheetah_cmd_config()
     else {
         CHEETAH_WRITE("Off");
     }
-    CHEETAH_WRITE("\nMaxKeepAliveRequest : %i req/connection", 
-           mk_api->config->max_keep_alive_request); 
+    CHEETAH_WRITE("\nMaxKeepAliveRequest : %i req/connection",
+           mk_api->config->max_keep_alive_request);
     CHEETAH_WRITE("\nKeepAliveTimeout    : %i seconds", mk_api->config->keep_alive_timeout);
-    CHEETAH_WRITE("\nMaxRequestSize      : %i KB", 
+    CHEETAH_WRITE("\nMaxRequestSize      : %i KB",
            mk_api->config->max_request_size/1024);
     CHEETAH_WRITE("\nSymLink             : ");
     if (mk_api->config->symlink == MK_TRUE) {
