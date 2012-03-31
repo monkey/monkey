@@ -57,8 +57,8 @@ static struct status_response response_codes[] = {
     {200, "200"}, {404, "404"},
 
     {100, "100"}, {101, "101"},
-    {201, "201"}, {202, "202"}, {203, "203"}, {204, "204"}, 
-    {205, "205"}, {206, "206"},    
+    {201, "201"}, {202, "202"}, {203, "203"}, {204, "204"},
+    {205, "205"}, {206, "206"},
     {300, "300"}, {301, "301"}, {302, "302"}, {303, "303"}, {304, "304"},
     {305, "305"},
     {400, "400"}, {401, "401"}, {402, "402"}, {403, "403"},
@@ -66,7 +66,7 @@ static struct status_response response_codes[] = {
     {410, "410"}, {411, "411"}, {412, "412"}, {413, "413"}, {414, "414"},
     {415, "415"},
     {500, "500"}, {501, "501"}, {502, "502"}, {503, "503"}, {504, "504"},
-    {505, "505"}, 
+    {505, "505"},
 };
 
 
@@ -122,13 +122,13 @@ void *mk_logger_worker_init(void *args)
     struct log_target *entry;
 
     /* pipe_size:
-     * ---------- 
-     * Linux set a pipe size usingto the PAGE_SIZE, 
+     * ----------
+     * Linux set a pipe size usingto the PAGE_SIZE,
      * check linux/include/pipe_fs_i.h for details:
      *
      *       #define PIPE_SIZE               PAGE_SIZE
      *
-     * In the same header file we can found that every 
+     * In the same header file we can found that every
      * pipe has 16 pages, so our real memory allocation
      * is: (PAGE_SIZE*PIPE_BUFFERS)
      */
@@ -155,12 +155,12 @@ void *mk_logger_worker_init(void *args)
 
         /* Add access log file */
         if (entry->fd_access[0] > 0) {
-            mk_api->epoll_add(efd, entry->fd_access[0], 
+            mk_api->epoll_add(efd, entry->fd_access[0],
                               MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         }
         /* Add error log file */
         if (entry->fd_error[0] > 0) {
-            mk_api->epoll_add(efd, entry->fd_error[0], 
+            mk_api->epoll_add(efd, entry->fd_error[0],
                               MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         }
     }
@@ -174,7 +174,7 @@ void *mk_logger_worker_init(void *args)
 
         struct epoll_event events[max_events];
         int num_fds = epoll_wait(efd, events, max_events, -1);
-        
+
         clk = mk_api->time_unix();
 
         for (i = 0; i < num_fds; i++) {
@@ -195,11 +195,11 @@ void *mk_logger_worker_init(void *args)
             }
 
             timeout = clk + mk_logger_timeout;
-        
+
             flog = open(target, O_WRONLY | O_CREAT, 0644);
             if (flog == -1) {
                 mk_warn("Could not open logfile '%s'", target);
-                
+
                 if (bytes >= buffer_limit) {
                     /*
                      * if our buffer is full and we cannot open the logfile,
@@ -217,14 +217,14 @@ void *mk_logger_worker_init(void *args)
 
                 continue;
             }
-            
+
             lseek(flog, 0, SEEK_END);
             slen = splice(events[i].data.fd, NULL, flog,
                           NULL, bytes, SPLICE_F_MOVE);
             if (slen == -1) {
                 mk_warn("Could not write to log file: splice() = %i", slen);
             }
-            
+
             PLUGIN_TRACE("written %i bytes", bytes);
             close(flog);
         }
@@ -283,7 +283,7 @@ void mk_logger_print_details(void)
 
     now = time(NULL);
     current = localtime(&now);
-    printf("[%i/%02i/%02i %02i:%02i:%02i] Monkey Started\n", 
+    printf("[%i/%02i/%02i %02i:%02i:%02i] Monkey Started\n",
            current->tm_year + 1900,
            current->tm_mon,
            current->tm_mday,
@@ -310,7 +310,7 @@ int _mkp_init(void **api, char *confdir)
     mk_logger_timeout = MK_LOGGER_TIMEOUT_DEFAULT;
     mk_logger_master_path = NULL;
     mk_logger_read_config(confdir);
-    
+
     /* Check masterlog */
     if (mk_logger_master_path) {
         fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
@@ -338,7 +338,9 @@ void _mkp_exit()
 void _mkp_core_prctx()
 {
     struct log_target *new;
-    struct host *host;
+    struct host *entry_host;
+    struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *head_host;
     struct mk_config_section *section;
     struct mk_config_entry *access_entry, *error_entry;
 
@@ -353,13 +355,14 @@ void _mkp_core_prctx()
 
     mk_list_init(&targets_list);
 
-    host = mk_api->config->hosts;
-    while (host) {
+    mk_list_foreach(head_host, hosts) {
+        entry_host = mk_list_entry(head_host, struct host, _head);
+
         /* Read logger section from virtual host configuration */
-        section = mk_api->config_section_get(host->config, "LOGGER");
+        section = mk_api->config_section_get(entry_host->config, "LOGGER");
         if (section) {
             /* Read configuration entries */
-            access_entry = mk_api->config_section_getval(section, "AccessLog", 
+            access_entry = mk_api->config_section_getval(section, "AccessLog",
                                                          MK_CONFIG_VAL_STR);
             error_entry = mk_api->config_section_getval(section, "ErrorLog",
                                                         MK_CONFIG_VAL_STR);
@@ -385,13 +388,12 @@ void _mkp_core_prctx()
                     new->file_error = (char *) error_entry;
                 }
 
-                new->host = host;
+                new->host = entry_host;
                 mk_list_add(&new->_head, &targets_list);
             }
         }
-        host = host->next;
     }
-    
+
     mk_api->worker_spawn((void *) mk_logger_worker_init);
 }
 
@@ -403,7 +405,7 @@ void _mkp_core_thctx()
     mk_pointer *ip_str;
 
     PLUGIN_TRACE("Creating thread cache");
-    
+
     /* Cache iov log struct */
     iov_log = mk_api->iov_create(15, 0);
     pthread_setspecific(_mkp_data, (void *) iov_log);
@@ -456,12 +458,12 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 
     /* Format IP string */
     ip_str = pthread_getspecific(cache_ip_str);
-    ret = mk_api->socket_ip_str(cs->socket, 
-                                &ip_str->data, 
+    ret = mk_api->socket_ip_str(cs->socket,
+                                &ip_str->data,
                                 INET6_ADDRSTRLEN + 1,
                                 &ip_str->len);
-    /* 
-     * If the socket is not longer available ip_str can be null, 
+    /*
+     * If the socket is not longer available ip_str can be null,
      * so we must check this condition and return
      */
     if (ret < 0) {
@@ -469,7 +471,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     }
 
     /* Add IP to IOV */
-    mk_api->iov_add_entry(iov, ip_str->data, ip_str->len, mk_iov_none, 
+    mk_api->iov_add_entry(iov, ip_str->data, ip_str->len, mk_iov_none,
                           MK_IOV_NOT_FREE_BUF);
     mk_api->iov_add_entry(iov, " - ", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
     /* Date/time when object was requested */
@@ -485,9 +487,9 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
         }
 
         /* HTTP Method */
-        mk_api->iov_add_entry(iov, 
-                              sr->method_p.data, 
-                              sr->method_p.len, 
+        mk_api->iov_add_entry(iov,
+                              sr->method_p.data,
+                              sr->method_p.len,
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* HTTP URI required */
@@ -513,7 +515,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             status.data = response_codes[i].s_status;
             status.len  = 3;
         }
-        mk_api->iov_add_entry(iov, 
+        mk_api->iov_add_entry(iov,
                               status.data,
                               status.len,
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
@@ -525,13 +527,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             mk_api->str_itop(sr->headers.content_length, content_length);
 
             mk_api->iov_add_entry(iov,
-                                  content_length->data, content_length->len - 2, 
+                                  content_length->data, content_length->len - 2,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
         else {
             mk_api->iov_add_entry(iov,
                                   mk_logger_iov_empty.data,
-                                  mk_logger_iov_empty.len, 
+                                  mk_logger_iov_empty.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
         }
 
