@@ -45,6 +45,7 @@ void mk_signal_exit()
 
     mk_utils_remove_pid();
     mk_plugin_exit_all();
+    mk_config_host_free_all();
     mk_info("Exiting... >:(");
     _exit(EXIT_SUCCESS);
 }

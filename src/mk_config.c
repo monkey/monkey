@@ -756,6 +756,34 @@ int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias 
     return -1;
 }
 
+void mk_config_host_free_all()
+{
+    struct host *host;
+    struct host_alias *host_alias;
+    struct mk_list *head_host;
+    struct mk_list *head_alias;
+    struct mk_list *tmp1, *tmp2;
+
+    mk_list_foreach_safe(head_host, tmp1, &config->hosts) {
+        host = mk_list_entry(head_host, struct host, _head);
+        mk_list_del(&host->_head);
+
+        mk_mem_free(host->file);
+
+        /* Free aliases */
+        mk_list_foreach_safe(head_alias, tmp2, &host->server_names) {
+            host_alias = mk_list_entry(head_alias, struct host_alias, _head);
+            mk_list_del(&host_alias->_head);
+            mk_mem_free(host_alias->name);
+            mk_mem_free(host_alias);
+        }
+
+        mk_pointer_free(&host->documentroot);
+        mk_mem_free(host->host_signature);
+        mk_pointer_free(&host->header_host_signature);
+    }
+}
+
 void mk_config_sanity_check()
 {
     /* Check O_NOATIME for current user, flag will just be used
@@ -771,4 +799,3 @@ void mk_config_sanity_check()
         close(fd);
     }
 }
-
