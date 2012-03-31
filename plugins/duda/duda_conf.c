@@ -94,23 +94,27 @@ int duda_conf_vhost_init()
     struct web_service *ws;
 
     /* monkey vhost configuration */
-    struct host *vhost = mk_api->config->hosts;
+    struct mk_list *head_host;
+    struct mk_list *hosts = &mk_api->config->hosts;
+    struct host *entry_host;
     struct mk_config_section *section;
 
     mk_list_init(&services_list);
 
     PLUGIN_TRACE("Loading applications");
-    while (vhost) {
+    mk_list_foreach(head_host, hosts) {
+        entry_host = mk_list_entry(head_host, struct host, _head);
+
         vs = mk_api->mem_alloc(sizeof(struct vhost_services));
-        vs->host = vhost;              /* link virtual host entry */
-        mk_list_init(&vs->services);   /* init services list */
+        vs->host = entry_host;              /* link virtual host entry */
+        mk_list_init(&vs->services);        /* init services list */
 
         /*
          * check vhost 'config' and look for [WEB_SERVICE] sections, we don't use
          * mk_config_section_get() because we can have multiple [WEB_SERVICE]
          * sections.
          */
-        section = vhost->config->section;
+        section = entry_host->config->section;
         while (section) {
             if (strcasecmp(section->name, "WEB_SERVICE") == 0) {
                 app_name = NULL;
@@ -141,9 +145,6 @@ int duda_conf_vhost_init()
 
         /* Link web_service node to global list services_list */
         mk_list_add(&vs->_head, &services_list);
-
-        /* next global virtual host */
-        vhost = vhost->next;
     }
 
 #ifdef TRACE
