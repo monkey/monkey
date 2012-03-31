@@ -123,7 +123,7 @@ struct users_file *mk_auth_conf_add_users(char *users_path)
 
 /*
  * Read all vhost configuration nodes and looks for users files under an [AUTH]
- * section, if present, it add that file to the unique list. It parse all user's 
+ * section, if present, it add that file to the unique list. It parse all user's
  * files mentioned to avoid duplicated lists in memory.
  */
 int mk_auth_conf_init_users_list()
@@ -132,14 +132,15 @@ int mk_auth_conf_init_users_list()
     char *location;
     char *title;
     char *users_path;
-
     /* auth vhost list */
     struct vhost *auth_vhost;
 
     /* vhost configuration */
-    struct host *vhost = mk_api->config->hosts;
+    struct mk_list *head_hosts;
+    struct mk_list *hosts = &mk_api->config->hosts;
+    struct host *entry_host;
     struct mk_config_section *section;
-    
+
     /* vhost [AUTH] locations */
     struct location *loc;
 
@@ -147,31 +148,34 @@ int mk_auth_conf_init_users_list()
     struct users_file *uf;
 
     PLUGIN_TRACE("Loading user's files");
-    while (vhost) {
+
+    mk_list_foreach(head_hosts, hosts) {
+        entry_host = mk_list_entry(head_hosts, struct host, _head);
+
         auth_vhost = mk_api->mem_alloc(sizeof(struct vhost));
-        auth_vhost->host = vhost;             /* link virtual host entry */
+        auth_vhost->host = entry_host;        /* link virtual host entry */
         mk_list_init(&auth_vhost->locations); /* init locations list */
 
-        /* 
-         * check vhost 'config' and look for [AUTH] sections, we don't use 
+        /*
+         * check vhost 'config' and look for [AUTH] sections, we don't use
          * mk_config_section_get() because we can have multiple [AUTH]
          * sections.
          */
-        section = vhost->config->section;
+        section = entry_host->config->section;
         while (section) {
             if (strcasecmp(section->name, "AUTH") == 0) {
                 location = NULL;
                 title = NULL;
                 users_path = NULL;
-                
+
                 /* Get section keys */
-                location = mk_api->config_section_getval(section, 
+                location = mk_api->config_section_getval(section,
                                                          "Location",
                                                          MK_CONFIG_VAL_STR);
                 title = mk_api->config_section_getval(section,
                                                       "Title",
                                                       MK_CONFIG_VAL_STR);
-                
+
                 users_path = mk_api->config_section_getval(section,
                                                            "Users",
                                                            MK_CONFIG_VAL_STR);
@@ -203,9 +207,6 @@ int mk_auth_conf_init_users_list()
 
         /* Link auth_vhost node to global list vhosts_list */
         mk_list_add(&auth_vhost->_head, &vhosts_list);
-
-        /* next global virtual host */
-        vhost = vhost->next;
     }
 
 #ifdef TRACE
