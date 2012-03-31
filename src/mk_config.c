@@ -62,7 +62,7 @@ void mk_config_error(const char *path, int line, const char *msg)
 }
 
 /* Returns a configuration section by [section name] */
-struct mk_config_section *mk_config_section_get(struct mk_config *conf, 
+struct mk_config_section *mk_config_section_get(struct mk_config *conf,
                                                 const char *section_name)
 {
     struct mk_config_section *section;
@@ -88,8 +88,8 @@ void mk_config_section_add(struct mk_config *conf, char *section_name)
     new->name = mk_string_dup(section_name);
     new->entry = NULL;
     new->next = NULL;
-    
-    if (!conf->section) { 
+
+    if (!conf->section) {
         conf->section = new;
         return;
     }
@@ -105,7 +105,7 @@ void mk_config_section_add(struct mk_config *conf, char *section_name)
 }
 
 /* Register a key/value entry in the last section available of the struct */
-void mk_config_entry_add(struct mk_config *conf, 
+void mk_config_entry_add(struct mk_config *conf,
                          const char *key, const char *val)
 {
     struct mk_config_section *section;
@@ -176,7 +176,7 @@ struct mk_config *mk_config_create(const char *path)
                 buf[--len] = 0;
             }
         }
-        
+
         /* Line number */
         line++;
 
@@ -192,7 +192,7 @@ struct mk_config *mk_config_create(const char *path)
             }
             continue;
         }
-        
+
         /* Section definition */
         if (buf[0] == '[') {
             int end = -1;
@@ -224,7 +224,7 @@ struct mk_config *mk_config_create(const char *path)
             }
 
             /* Validate indentation level */
-            if (strncmp(buf, indent, indent_len) != 0 || !section || 
+            if (strncmp(buf, indent, indent_len) != 0 || !section ||
                 isblank(buf[indent_len]) != 0) {
                 mk_config_error(path, line, "Invalid indentation level");
             }
@@ -403,7 +403,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->config = cnf;
 
     /* Listen */
-    config->listen_addr = mk_config_section_getval(section, "Listen", 
+    config->listen_addr = mk_config_section_getval(section, "Listen",
                                                    MK_CONFIG_VAL_STR);
     if (!config->listen_addr) {
         config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
@@ -411,7 +411,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     /* Connection port */
     config->serverport = (size_t) mk_config_section_getval(section,
-                                                           "Port", 
+                                                           "Port",
                                                            MK_CONFIG_VAL_NUM);
     if (config->serverport <= 1 || config->serverport >= 65535) {
         mk_config_print_error_msg("Port", path);
@@ -419,7 +419,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     /* Number of thread workers */
     config->workers = (size_t) mk_config_section_getval(section,
-                                                     "Workers", 
+                                                     "Workers",
                                                      MK_CONFIG_VAL_NUM);
     if (config->workers < 1) {
         mk_config_print_error_msg("Workers", path);
@@ -436,7 +436,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     if (config->timeout < 1) {
         mk_config_print_error_msg("Timeout", path);
     }
-    
+
     /* KeepAlive */
     config->keep_alive = (size_t) mk_config_section_getval(section,
                                                         "KeepAlive",
@@ -450,7 +450,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         mk_config_section_getval(section,
                                  "MaxKeepAliveRequest",
                                  MK_CONFIG_VAL_NUM);
-    
+
     if (config->max_keep_alive_request == 0) {
         mk_config_print_error_msg("MaxKeepAliveRequest", path);
     }
@@ -466,9 +466,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     /* Pid File */
     config->pid_file_path = mk_config_section_getval(section,
                                                      "PidFile", MK_CONFIG_VAL_STR);
-    
+
     /* Home user's directory /~ */
-    config->user_dir = mk_config_section_getval(section, 
+    config->user_dir = mk_config_section_getval(section,
                                                 "UserDir", MK_CONFIG_VAL_STR);
 
     /* Index files */
@@ -525,19 +525,20 @@ void mk_config_read_hosts(char *path)
     unsigned long len;
     char *buf = 0;
     char *file;
-    struct host *p_host, *new_host;     /* debug */
+    struct host *p_host;     /* debug */
     struct dirent *ent;
 
     /* Read default virtual host file */
     mk_string_build(&buf, &len, "%s/sites/default", path);
-    config->hosts = mk_config_get_host(buf);
+    p_host = mk_config_get_host(buf);
+    if (!p_host) {
+        mk_err("Error parsing main configuration file 'default'");
+    }
+    mk_list_add(&p_host->_head, &config->hosts);
     config->nhosts++;
     mk_mem_free(buf);
     buf = NULL;
 
-    if (!config->hosts) {
-        mk_err("Error parsing main configuration file 'default'");
-    }
 
     /* Read all virtual hosts defined in sites/ */
     mk_string_build(&buf, &len, "%s/sites/", path);
@@ -545,8 +546,6 @@ void mk_config_read_hosts(char *path)
         mk_err("Could not open %s", buf);
     }
     mk_mem_free(buf);
-
-    p_host = config->hosts;
 
     /* Reading content */
     while ((ent = readdir(dir)) != NULL) {
@@ -560,14 +559,13 @@ void mk_config_read_hosts(char *path)
         file = NULL;
         mk_string_build(&file, &len, "%s/sites/%s", path, ent->d_name);
 
-        new_host = (struct host *) mk_config_get_host(file);
+        p_host = mk_config_get_host(file);
         mk_mem_free(file);
-        if (!new_host) {
+        if (!p_host) {
             continue;
         }
         else {
-            p_host->next = new_host;
-            p_host = new_host;
+            mk_list_add(&p_host->_head, &config->hosts);
             config->nhosts++;
         }
     }
@@ -597,7 +595,7 @@ struct host *mk_config_get_host(char *path)
     host->file = mk_string_dup(path);
 
     /* Alloc list for host name aliases */
-    mk_list_init(&host->server_names); 
+    mk_list_init(&host->server_names);
 
     host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
     line_p = line = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
@@ -661,7 +659,6 @@ struct host *mk_config_get_host(char *path)
                     &host->header_host_signature.len,
                     "Server: %s", host->host_signature);
 
-    host->next = NULL;
     return host;
 }
 
@@ -680,6 +677,7 @@ void mk_config_set_init_values(void)
     config->serverport = 2001;
     config->symlink = MK_FALSE;
     config->nhosts = 0;
+    mk_list_init(&config->hosts);
     config->user = NULL;
     config->open_flags = O_RDONLY | O_NONBLOCK;
     config->index_files = NULL;
@@ -696,7 +694,7 @@ void mk_config_set_init_values(void)
     /* Internals */
     config->safe_event_write = MK_FALSE;
 
-    /* 
+    /*
      * Transport type: useful to build redirection headers, values:
      *
      *   MK_TRANSPORT_HTTP
@@ -738,22 +736,21 @@ void mk_config_start_configure(void)
 
 int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias **alias)
 {
-    struct host_alias *entry;
-    struct mk_list *head;
-    struct host *aux_host;
+    struct host *entry_host;
+    struct host_alias *entry_alias;
+    struct mk_list *head_vhost, *head_alias;
 
-    aux_host = config->hosts;
-    while (aux_host) {
-        mk_list_foreach(head, &aux_host->server_names) {
-            entry = mk_list_entry(head, struct host_alias, _head);
-            if (entry->len == host.len &&
-                strncmp(entry->name, host.data, host.len) == 0) {
-                *vhost = aux_host;
-                *alias = entry;
+    mk_list_foreach(head_vhost, &config->hosts) {
+        entry_host = mk_list_entry(head_vhost, struct host, _head);
+        mk_list_foreach(head_alias, &entry_host->server_names) {
+            entry_alias = mk_list_entry(head_alias, struct host_alias, _head);
+            if (entry_alias->len == host.len &&
+                strncmp(entry_alias->name, host.data, host.len) == 0) {
+                *vhost = entry_host;
+                *alias = entry_alias;
                 return 0;
             }
         }
-        aux_host = aux_host->next;
     }
 
     return -1;
@@ -761,7 +758,7 @@ int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias 
 
 void mk_config_sanity_check()
 {
-    /* Check O_NOATIME for current user, flag will just be used 
+    /* Check O_NOATIME for current user, flag will just be used
      * if running user is allowed to.
      */
     int fd, flags = config->open_flags;
@@ -774,3 +771,4 @@ void mk_config_sanity_check()
         close(fd);
     }
 }
+

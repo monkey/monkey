@@ -85,7 +85,6 @@ static void mk_request_init(struct session_request *request)
     request->keep_alive = MK_FALSE;
 
     mk_pointer_reset(&request->real_path);
-    request->host_conf = config->hosts;
 
     request->loop = 0;
     request->bytes_to_send = -1;
@@ -445,6 +444,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 {
     int status = 0;
     int socket = cs->socket;
+    struct mk_list *hosts = &config->hosts;
     struct mk_list *alias;
 
     status = mk_request_header_process(sr);
@@ -475,7 +475,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     }
 
     /* Always assign the first node 'default vhost' */
-    sr->host_conf = config->hosts;
+    sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
     alias = &sr->host_conf->server_names;
     sr->host_alias = mk_list_entry_first(alias,
                                          struct host_alias, _head);

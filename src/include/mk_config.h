@@ -76,7 +76,7 @@ struct server_config
     int worker_capacity;        /* how many clients per thread... */
     int max_load;               /* max number of clients (worker_capacity * workers) */
     short int workers;          /* number of worker threads */
-    
+
 
 
     int is_daemon;
@@ -120,7 +120,7 @@ struct server_config
 
     /* configured host quantity */
     int nhosts;
-    struct host *hosts;
+    struct mk_list hosts;
 
     mode_t open_flags;
     struct mk_list *plugins;
@@ -154,8 +154,8 @@ struct host
     /* source configuration */
     struct mk_config *config;
 
-    /* next node */
-    struct host *next;
+    /* link node */
+    struct mk_list _head;
 };
 
 struct host_alias
@@ -182,7 +182,7 @@ void mk_config_set_init_values(void);
 void mk_config_error(const char *path, int line, const char *msg);
 
 struct mk_config *mk_config_create(const char *path);
-struct mk_config_section *mk_config_section_get(struct mk_config *conf, 
+struct mk_config_section *mk_config_section_get(struct mk_config *conf,
                                                 const char *section_name);
 void mk_config_section_add(struct mk_config *conf, char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
