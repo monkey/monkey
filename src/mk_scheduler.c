@@ -50,23 +50,20 @@ static inline int _next_target()
 {
     int i;
     int target = 0;
-    int total = 0;
 
-    /* Check server load versus capacity */
-    for (i = 0; i < config->workers; i++) {
-        total += sched_list[i].active_connections;
-    }
-
-    if (total >= config->max_load) {
-        MK_TRACE("Too many clients: %i", total);
-        return -1;
-    }
-
+    /* Finds the lowest load worker */
     for (i = 1; i < config->workers; i++) {
         if (sched_list[i].active_connections < sched_list[target].active_connections) {
             target = i;
         }
     }
+
+    /* If sched_list[target] worker is full then the whole server too, because it has the lowest load. */
+    if(sched_list[target].active_connections >= config->worker_capacity) {
+        MK_TRACE("Too many clients: %i", config->worker_capacity * config->workers);
+        return -1;
+    }
+
     return target;
 }
 
