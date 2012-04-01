@@ -41,7 +41,7 @@
 #include "connection.h"
 
 MONKEY_PLUGIN("patas",               /* shortname */
-              "Patas Monkey",        /* name */ 
+              "Patas Monkey",        /* name */
               VERSION,              /* version */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hook for thread context call */
 
@@ -94,9 +94,9 @@ int mk_patas_validate_node(const char *host, int port)
         for (j=0; node_addr_list[j] != NULL; j++) {
             inet_ntop(PF_INET, node->h_addr_list[j], node_addr, 16);
 
-            if (strcmp(local_addr, node_addr) == 0 && 
+            if (strcmp(local_addr, node_addr) == 0 &&
                 mk_api->config->serverport == port) {
-                mk_warn("Node %s:%i = localhost:%i, skip node\n", 
+                mk_warn("Node %s:%i = localhost:%i, skip node\n",
                         host, port, port);
                 return -1;
             }
@@ -117,8 +117,8 @@ int mk_patas_conf(char *confdir)
     char *conf_path=NULL;
 
     struct mk_config_section *section;
-    struct mk_config_entry *entry;
     struct mk_patas_node *node;
+    struct mk_list *head;
 
     /* Init nodes list */
     mk_patas_nodes_list = mk_api->mem_alloc(sizeof(struct mk_list));
@@ -129,15 +129,18 @@ int mk_patas_conf(char *confdir)
     conf = mk_api->config_create(conf_path);
     section = mk_api->config_section_get(conf, "NODE");
 
-    while (section) { 
-        entry = section->entry;
+    mk_list_foreach(head, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
+        if (strcasecmp(section->name, "NODE") != 0) {
+            continue;
+        }
         val_host = NULL;
         val_port = -1;
         val_uri = NULL;
 
         /* Get section values */
         val_host = mk_api->config_section_getval(section, "IP", MK_CONFIG_VAL_STR);
-        val_port = (int)  mk_api->config_section_getval(section, "Port", MK_CONFIG_VAL_NUM);
+        val_port = (size_t) mk_api->config_section_getval(section, "Port", MK_CONFIG_VAL_NUM);
         val_uri  = mk_api->config_section_getval(section, "Uri", MK_CONFIG_VAL_LIST);
 
         if (val_host && val_uri && val_port > 0) {
@@ -150,12 +153,12 @@ int mk_patas_conf(char *confdir)
             node = mk_api->mem_alloc(sizeof(struct mk_patas_node));
             node->host = val_host;
             node->port = val_port;
-                
+
             /* pre-socket stuff */
             node->sockaddr = mk_api->mem_alloc_z(sizeof(struct sockaddr_in));
             node->sockaddr->sin_family = AF_INET;
 
-            res = inet_pton(AF_INET, node->host, 
+            res = inet_pton(AF_INET, node->host,
                             (void *) (&(node->sockaddr->sin_addr.s_addr)));
             if (res < 0) {
                 mk_warn("Can't set remote->sin_addr.s_addr");
@@ -169,14 +172,13 @@ int mk_patas_conf(char *confdir)
             }
 
             node->sockaddr->sin_port = htons(node->port);
-                
+
             /* add node to list */
             PLUGIN_TRACE("Balance Node: %s:%i", val_host, val_port);
 
             mk_list_add(&node->_head, mk_patas_nodes_list);
             mk_patas_n_nodes++;
         }
-        section = section->next;
     }
 
     mk_api->mem_free(conf_path);
@@ -225,10 +227,10 @@ static int mk_patas_write_pending_to_remote(int socket, struct mk_patas_conx *co
     if (!conx) {
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
-    
+
     if (conx->buf_pending_node > 0) {
         PLUGIN_TRACE("PENDING: %i", conx->buf_pending_node);
-        bytes = write(conx->socket_remote, 
+        bytes = write(conx->socket_remote,
                       conx->buf_node + (conx->buf_len_node - conx->buf_pending_node),
                       conx->buf_pending_node);
 
@@ -292,7 +294,7 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
     /* Write node data to remote client */
     bytes = write(conx->socket_remote, conx->buf_node, conx->buf_len_node);
 
-    PLUGIN_TRACE("[FD %i] written %i/%i bytes ", 
+    PLUGIN_TRACE("[FD %i] written %i/%i bytes ",
                  conx->socket_remote, bytes, conx->buf_len_node);
 
     if (bytes == 0) {
@@ -304,9 +306,9 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
 #endif
         switch(errno) {
         case EAGAIN:
-            /* 
-             * Could not write because can block on socket, 
-             * let's set as pending 
+            /*
+             * Could not write because can block on socket,
+             * let's set as pending
              */
             PLUGIN_TRACE("EAGAIN");
             conx->buf_pending_node += conx->buf_len_node;
@@ -317,7 +319,7 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
         }
     }
 
-    if (bytes == conx->buf_len_node) { 
+    if (bytes == conx->buf_len_node) {
         conx->buf_len_node = 0;
     }
     else {
@@ -327,7 +329,7 @@ static int mk_patas_read_from_node(int socket, int av_bytes, struct mk_patas_con
     return MK_PLUGIN_RET_EVENT_OWNED;
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
 
@@ -347,7 +349,7 @@ int _mkp_event_write(int socket)
     if (!conx) {
         return MK_PLUGIN_RET_EVENT_NEXT;
     }
-    
+
     return mk_patas_write_pending_to_remote(socket, conx);
 }
 */
@@ -383,8 +385,8 @@ int _mkp_event_read(int socket)
 
 int hangup(int socket)
 {
-    /* 
-     * Determinate actions to take depending on which 
+    /*
+     * Determinate actions to take depending on which
      * socket the event was raised: remote or proxy
      */
 
@@ -413,7 +415,7 @@ int _mkp_event_timeout(int socket)
     return hangup(socket);
 }
 
-/* 
+/*
  * Return the next target node to balance a new incoming
  * connection
  */
@@ -427,7 +429,7 @@ struct mk_patas_node *mk_patas_node_next_target()
     if (!mk_patas_nodes_head) {
         mk_patas_nodes_head = mk_patas_nodes_list;
     }
-    
+
     node = mk_list_entry_next(mk_patas_nodes_head, struct mk_patas_node, _head,
                               mk_patas_nodes_list);
 
