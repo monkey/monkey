@@ -32,15 +32,15 @@ int duda_conf_main_init(const char *confdir)
     struct mk_config_section *section;
     struct mk_config *conf;
     struct file_info finfo;
+    struct mk_list *head;
 
     /* Read palm configuration file */
     mk_api->str_build(&conf_path, &len, "%s/duda.conf", confdir);
     conf = mk_api->config_create(conf_path);
-    section = conf->section;
 
-    while (section) {
+    mk_list_foreach(head, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
         if (strcasecmp(section->name, "DUDA") != 0) {
-            section = section->next;
             continue;
         }
 
@@ -73,7 +73,6 @@ int duda_conf_main_init(const char *confdir)
 
         PLUGIN_TRACE("Services Root '%s'", services_root);
         PLUGIN_TRACE("Packages Root '%s'", packages_root);
-        section = section->next;
     }
 
     mk_api->mem_free(conf_path);
@@ -96,6 +95,7 @@ int duda_conf_vhost_init()
     /* monkey vhost configuration */
     struct mk_list *head_host;
     struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *head_section;
     struct host *entry_host;
     struct mk_config_section *section;
 
@@ -114,8 +114,9 @@ int duda_conf_vhost_init()
          * mk_config_section_get() because we can have multiple [WEB_SERVICE]
          * sections.
          */
-        section = entry_host->config->section;
-        while (section) {
+        mk_list_foreach(head_section, &entry_host->config->sections) {
+            section = mk_list_entry(head_section, struct mk_config_section, _head);
+
             if (strcasecmp(section->name, "WEB_SERVICE") == 0) {
                 app_name = NULL;
                 app_enabled = MK_FALSE;
@@ -140,7 +141,6 @@ int duda_conf_vhost_init()
                     mk_warn("Invalid web service, skipping");
                 }
             }
-            section = section->next;
         }
 
         /* Link web_service node to global list services_list */
