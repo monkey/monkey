@@ -303,6 +303,7 @@ void mk_plugin_init()
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
+    struct mk_list *head;
 
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
@@ -426,14 +427,13 @@ void mk_plugin_init()
     section = mk_config_section_get(cnf, "PLUGINS");
 
     /* Read key entries */
-    entry = section->entry;
-    while (entry) {
+    mk_list_foreach(head, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
         if (strcasecmp(entry->key, "Load") == 0) {
             handle = mk_plugin_load(entry->val);
 
             if (!handle) {
                 mk_warn("Invalid plugin '%s'", entry->val);
-                entry = entry->next;
                 continue;
             }
 
@@ -441,7 +441,6 @@ void mk_plugin_init()
             if (!p) {
                 mk_warn("Plugin error: %s\n", entry->val);
                 dlclose(handle);
-                entry = entry->next;
                 continue;
             }
 
@@ -462,7 +461,6 @@ void mk_plugin_init()
                 mk_plugin_free(p);
                 mk_mem_free(plugin_confdir);
                 plugin_confdir  = NULL;
-                entry = entry->next;
                 continue;
             }
 
@@ -472,7 +470,6 @@ void mk_plugin_init()
             /* If everything worked, register plugin */
             mk_plugin_register(p);
         }
-        entry = entry->next;
     }
 
     if (!plg_netiomap) {

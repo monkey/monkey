@@ -108,6 +108,7 @@ void mk_mimetype_read_config()
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
+    struct mk_list *head;
 
     /* Read mime types configuration file */
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
@@ -119,8 +120,9 @@ void mk_mimetype_read_config()
         mk_err("Error: Invalid mime type file");
     }
 
-    entry = section->entry;
-    while (entry) {
+    mk_list_foreach(head, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
+
         if (i < MIME_COMMON) {
             if (mk_mimetype_add(entry->key, entry->val, 1) != 0) {
                 mk_err("Error loading Mime Types");
@@ -134,7 +136,6 @@ void mk_mimetype_read_config()
                 mk_err("Error loading Mime Types");
             }
         }
-        entry = entry->next;
         i++;
     }
 

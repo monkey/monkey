@@ -66,13 +66,13 @@ struct mk_config_section *mk_config_section_get(struct mk_config *conf,
                                                 const char *section_name)
 {
     struct mk_config_section *section;
+    struct mk_list *head;
 
-    section = conf->section;
-    while (section) {
+    mk_list_foreach(head, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
         if (strcasecmp(section->name, section_name) == 0) {
             return section;
         }
-        section = section->next;
     }
 
     return NULL;
@@ -81,27 +81,13 @@ struct mk_config_section *mk_config_section_get(struct mk_config *conf,
 /* Register a new section into the configuration struct */
 void mk_config_section_add(struct mk_config *conf, char *section_name)
 {
-    struct mk_config_section *new, *aux;
+    struct mk_config_section *new;
 
     /* Alloc section node */
     new = mk_mem_malloc(sizeof(struct mk_config_section));
     new->name = mk_string_dup(section_name);
-    new->entry = NULL;
-    new->next = NULL;
-
-    if (!conf->section) {
-        conf->section = new;
-        return;
-    }
-
-    /* go to last section available */
-    aux = conf->section;
-    while (aux->next) {
-        aux = aux->next;
-    }
-
-    aux->next = new;
-    return;
+    mk_list_init(&new->entries);
+    mk_list_add(&new->_head, &conf->sections);
 }
 
 /* Register a key/value entry in the last section available of the struct */
@@ -109,37 +95,22 @@ void mk_config_entry_add(struct mk_config *conf,
                          const char *key, const char *val)
 {
     struct mk_config_section *section;
-    struct mk_config_entry *aux_entry, *new_entry;
+    struct mk_config_entry *new;
+    struct mk_list *head = &conf->sections;;
 
-    if (!conf->section) {
+    if (mk_list_is_empty(&conf->sections) == 0) {
         mk_err("Error: there are not sections available!");
     }
 
-    /* Go to last section */
-    section = conf->section;
-    while (section->next) {
-        section = section->next;
-    }
+    /* Last section */
+    section = mk_list_entry_last(head, struct mk_config_section, _head);
 
     /* Alloc new entry */
-    new_entry = mk_mem_malloc(sizeof(struct mk_config_entry));
-    new_entry->key = mk_string_dup(key);
-    new_entry->val = mk_string_dup(val);
-    new_entry->next = NULL;
+    new = mk_mem_malloc(sizeof(struct mk_config_entry));
+    new->key = mk_string_dup(key);
+    new->val = mk_string_dup(val);
 
-    /* Add first entry */
-    if (!section->entry) {
-        section->entry = new_entry;
-        return;
-    }
-
-    /* Go to last entry */
-    aux_entry = section->entry;
-    while (aux_entry->next) {
-        aux_entry = aux_entry->next;
-    }
-
-    aux_entry->next = new_entry;
+    mk_list_add(&new->_head, &section->entries);
 }
 
 struct mk_config *mk_config_create(const char *path)
@@ -162,10 +133,10 @@ struct mk_config *mk_config_create(const char *path)
     }
 
     /* Alloc configuration node */
-    conf = mk_mem_malloc(sizeof(struct mk_config));
+    conf = mk_mem_malloc_z(sizeof(struct mk_config));
     conf->created = time(NULL);
     conf->file = mk_string_dup(path);
-    conf->section = NULL;
+    mk_list_init(&conf->sections);
 
     /* looking for configuration directives */
     while (fgets(buf, 255, f)) {
@@ -280,54 +251,36 @@ struct mk_config *mk_config_create(const char *path)
 
 void mk_config_free(struct mk_config *conf)
 {
-    struct mk_config_section *prev=0, *section;
+    struct mk_config_section *section;
+    struct mk_list *head, *tmp;
 
     /* Free sections */
-    section = conf->section;
-    while (section) {
-        while (section->next) {
-            prev = section;
-            section = section->next;
-        }
+    mk_list_foreach_safe(head, tmp, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
+        mk_list_del(&section->_head);
+
         /* Free section entries */
         mk_config_free_entries(section);
 
         /* Free section node */
         mk_mem_free(section->name);
         mk_mem_free(section);
-
-        if (section == conf->section) {
-            conf->section = NULL;
-            return;
-        }
-        prev->next = NULL;
-        section = conf->section;
     }
 }
 
 void mk_config_free_entries(struct mk_config_section *section)
 {
-    struct mk_config_entry *prev = 0, *target;
+    struct mk_config_entry *entry;
+    struct mk_list *head, *tmp;
 
-    target = section->entry;
-    while (target) {
-        while (target->next) {
-            prev = target;
-            target = target->next;
-        }
+    mk_list_foreach_safe(head, tmp, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        mk_list_del(&entry->_head);
 
         /* Free memory assigned */
-        mk_mem_free(target->key);
-        mk_mem_free(target->val);
-        mk_mem_free(target);
-
-        if (target == section->entry) {
-            section->entry = NULL;
-            return;
-        }
-
-        prev->next = NULL;
-        target = section->entry;
+        mk_mem_free(entry->key);
+        mk_mem_free(entry->val);
+        mk_mem_free(entry);
     }
 }
 
@@ -335,9 +288,11 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 {
     int on, off;
     struct mk_config_entry *entry;
+    struct mk_list *head;
 
-    entry = section->entry;
-    while (entry) {
+    mk_list_foreach(head, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
+
         if (strcasecmp(entry->key, key) == 0) {
             switch (mode) {
             case MK_CONFIG_VAL_STR:
@@ -360,9 +315,6 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
             case MK_CONFIG_VAL_LIST:
                 return mk_string_split_line(entry->val);
             }
-        }
-        else {
-            entry = entry->next;
         }
     }
     return NULL;

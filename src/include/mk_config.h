@@ -51,22 +51,23 @@ struct mk_config
     char *file;
 
     /* list of sections */
-    struct mk_config_section *section;
+    struct mk_list sections;
 };
 
 struct mk_config_section
 {
     char *name;
 
-    struct mk_config_entry *entry;
-    struct mk_config_section *next;
+    struct mk_list entries;
+    struct mk_list _head;
 };
 
 struct mk_config_entry
 {
     char *key;
     char *val;
-    struct mk_config_entry *next;
+
+    struct mk_list _head;
 };
 
 /* Base struct of server */
