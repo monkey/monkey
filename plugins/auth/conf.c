@@ -138,6 +138,7 @@ int mk_auth_conf_init_users_list()
     /* vhost configuration */
     struct mk_list *head_hosts;
     struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *head_sections;
     struct host *entry_host;
     struct mk_config_section *section;
 
@@ -161,8 +162,9 @@ int mk_auth_conf_init_users_list()
          * mk_config_section_get() because we can have multiple [AUTH]
          * sections.
          */
-        section = entry_host->config->section;
-        while (section) {
+        mk_list_foreach(head_sections, &entry_host->config->sections) {
+            section = mk_list_entry(head_sections, struct mk_config_section, _head);
+
             if (strcasecmp(section->name, "AUTH") == 0) {
                 location = NULL;
                 title = NULL;
@@ -183,7 +185,6 @@ int mk_auth_conf_init_users_list()
                 /* get or create users file entry */
                 uf = mk_auth_conf_add_users(users_path);
                 if (!uf) {
-                    section = section->next;
                     continue;
                 }
 
@@ -202,7 +203,6 @@ int mk_auth_conf_init_users_list()
                 /* Add new location to auth_vhost node */
                 mk_list_add(&loc->_head, &auth_vhost->locations);
             }
-            section = section->next;
         }
 
         /* Link auth_vhost node to global list vhosts_list */
