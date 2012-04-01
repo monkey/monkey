@@ -47,17 +47,17 @@ int mk_palm_conf(char *confdir)
     char *conf_path = NULL;
     struct mk_palm *new, *r;
     struct mk_config_section *section;
+    struct mk_list *head;
 
     /* Read palm configuration file */
     mk_api->str_build(&conf_path, &len, "%s/palm.conf", confdir);
     conf = mk_api->config_create(conf_path);
-    section = conf->section;
 
     r = palms;
-    while (section) {
+    mk_list_foreach(head, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
         /* Just read PALM sections */
         if (strcasecmp(section->name, "PALM") != 0) {
-            section = section->next;
             continue;
         }
 
@@ -92,7 +92,6 @@ int mk_palm_conf(char *confdir)
             }
             r->next = new;
         }
-        section = section->next;
     }
 
     mk_api->mem_free(conf_path);
@@ -139,11 +138,11 @@ int mk_palm_send_headers(struct mk_palm_request *pr)
 
     sr->headers.cgi = SH_CGI;
 
-    /* 
-     * Chunked transfer encoding: just on HTTP/1.1 and when there's no 
-     * redirection 
+    /*
+     * Chunked transfer encoding: just on HTTP/1.1 and when there's no
+     * redirection
      */
-    if (sr->protocol >= HTTP_PROTOCOL_11 && 
+    if (sr->protocol >= HTTP_PROTOCOL_11 &&
         (sr->headers.status < MK_REDIR_MULTIPLE ||
          sr->headers.status > MK_REDIR_USE_PROXY))
         {
@@ -168,11 +167,11 @@ int mk_palm_send_headers(struct mk_palm_request *pr)
 
 void _mkp_core_prctx(struct server_config *config)
 {
-    /* 
+    /*
      * Server Address Lookup
      * ---------------------
      *
-     * this variable specify the server IP address ,this lookup needs to be 
+     * this variable specify the server IP address ,this lookup needs to be
      * performed in the process context hook as is at this point where the
      * server socket is already binded. We do not trust in the Listen configuration
      * key so we do our own lookup.
@@ -242,11 +241,11 @@ void _mkp_exit()
 {
 }
 
-/* 
+/*
  * Request handler: when the request arrives, this hook is invoked so Palm plugin
  * start it's job checking if it should handle or not this request
  */
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
     struct mk_palm *palm;
@@ -278,11 +277,11 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     /* Register palm_request object with the thread list */
     mk_palm_request_add(pr);
 
-    /* 
-     * Register socket with thread Epoll interface 
+    /*
+     * Register socket with thread Epoll interface
      * -------------------------------------------
      * For each Monkey worker thread exists a epoll() loop used to handle
-     * events on sockets, plugins can use the same epoll loop and register 
+     * events on sockets, plugins can use the same epoll loop and register
      * events. Here we register the connected FD to palm server and wait for
      * such events.
      */
@@ -292,14 +291,14 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     /* Send request to Palm server */
     mk_palm_send_request(cs, sr);
 
-    PLUGIN_TRACE("[PALM_FD %i] return MK_PLUGIN_RET_CONTINUE (%i)", 
+    PLUGIN_TRACE("[PALM_FD %i] return MK_PLUGIN_RET_CONTINUE (%i)",
                  pr->palm_fd, MK_PLUGIN_RET_CONTINUE);
 
-    /* 
+    /*
      * We need to set the remote client socket event to READ, right now the socket
      * is in write mode and it will be joining this function every time until some
      * data is send.
-     
+
     mk_api->event_socket_change_mode(cs->socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
     */
     return MK_PLUGIN_RET_CONTINUE;
@@ -339,14 +338,14 @@ int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
 
     if (pr && pr->bytes_sent == 0) {
         PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
-        
+
         /* Create protocol request  */
         iov = mk_palm_protocol_request_new(cs, sr);
-        
+
         /* Write protocol request to palm server */
         bytes_iov = (ssize_t ) mk_api->iov_send(pr->palm_fd, iov);
         PLUGIN_TRACE("[PALM_FD %i] written: %i", pr->palm_fd, bytes_iov);
-        
+
         if (bytes_iov >= 0){
             pr->bytes_sent += bytes_iov;
         }
@@ -362,7 +361,7 @@ int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
     int chunk_len;
     int chunk_size = 16;
     char chunk_header[chunk_size];
-    
+
     if  (len <=0){
         return 0;
     }
@@ -396,9 +395,9 @@ int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
     return n;
 }
 
-/* Check if the CGI field 'Status: XYZ Some message' is 
+/* Check if the CGI field 'Status: XYZ Some message' is
  * present, if so, it modifies the header struct response
- * and return the offset position 
+ * and return the offset position
  */
 int mk_palm_cgi_status(char *data, struct session_request *sr)
 {
@@ -442,7 +441,7 @@ int mk_palm_cgi_status(char *data, struct session_request *sr)
         sr->headers.status = status;
         return offset;
     }
-    
+
     return 0;
 }
 
@@ -460,9 +459,9 @@ int hangup(int sockfd)
 
         mk_api->event_del(pr->palm_fd);
 
-        /* 
+        /*
          * We must be careful when invoking http_request_end(), as this
-         * function can raise an event close and this same function 
+         * function can raise an event close and this same function
          * hangup() can be invoked before continue, in the second loop
          * can get into the client condition (else {..}) so the palm_request
          * object can not be longer valid.
@@ -499,7 +498,7 @@ int _mkp_event_write(int sockfd)
         return MK_PLUGIN_RET_EVENT_CONTINUE;
     }
 
-    /* 
+    /*
      * Write when data exists and the plugin already processed the
      * response HTTP headers
      */
@@ -590,8 +589,8 @@ int _mkp_event_read(int sockfd)
 
         /* Add bytes length for two break lines */
         headers_end += 4;
-        
-        /* 
+
+        /*
          * Check if some 'Status:' field was sent in the first line, update the
          * response HTTP status and return the offset of the content
          */
@@ -600,9 +599,9 @@ int _mkp_event_read(int sockfd)
         /* Send HTTP response headers */
         mk_palm_send_headers(pr);
 
-        /* 
+        /*
          * Send remaining Palm HTTP headers, we cannot send all in the same block
-         * as the response body can need a chunked transfer encoding type for the 
+         * as the response body can need a chunked transfer encoding type for the
          * next reads from Palm server
          */
         n = mk_palm_write(pr->client_fd, pr->in_buffer + offset,
