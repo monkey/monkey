@@ -220,6 +220,8 @@ void mk_cheetah_cmd_vhosts()
     struct mk_list *aliases;
     struct mk_list *head_host;
     struct mk_list *head_alias;
+    struct mk_list *head_sections;
+    struct mk_list *head_entries;
 
     mk_list_foreach(head_host, hosts) {
         entry_host = mk_list_entry(head_host, struct host, _head);
@@ -240,17 +242,18 @@ void mk_cheetah_cmd_vhosts()
         CHEETAH_WRITE("      - Document root : %s\n", entry_host->documentroot.data);
         CHEETAH_WRITE("      - Config file   : %s\n", entry_host->file);
 
-        if (entry_host->config) {
-            section = entry_host->config->section->next;
-            while (section) {
-                CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
-                              section->name);
-                entry = section->entry;
-                while (entry) {
+        if (!entry_host->config) {
+            continue;
+        }
+
+        mk_list_foreach(head_sections, &entry_host->config->sections) {
+            section = mk_list_entry(head_sections, struct mk_config_section, _head);
+            CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
+                          section->name);
+
+            mk_list_foreach(head_entries, &section->entries) {
+                entry = mk_list_entry(head_entries, struct mk_config_entry, _head);
                     CHEETAH_WRITE("        - %11.10s : %s\n", entry->key, entry->val);
-                    entry = entry->next;
-                }
-                section = section->next;
             }
         }
     }
