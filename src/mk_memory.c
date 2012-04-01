@@ -38,12 +38,12 @@ inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc(const size_t size)
 {
     void *aux = malloc(size);
-    
+
     if (!aux && size) {
         perror("malloc");
         return NULL;
     }
-    
+
     return aux;
 }
 
@@ -193,3 +193,4 @@ void mk_mem_pointers_init()
     mk_pointer_reset(&mk_http_protocol_null_p);
 
 }
+

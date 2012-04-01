@@ -55,6 +55,7 @@ char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
 struct mk_list *mk_string_split_line(const char *line);
+void mk_string_split_free(struct mk_list *list);
 int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len,
                       const char *format, ...);

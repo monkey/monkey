@@ -185,6 +185,21 @@ struct mk_list *mk_string_split_line(const char *line)
     return list;
 }
 
+void mk_string_split_free(struct mk_list *list)
+{
+    struct mk_list *head, *tmp;
+    struct mk_string_line *entry;
+
+    mk_list_foreach_safe(head, tmp, list) {
+        entry = mk_list_entry(head, struct mk_string_line, _head);
+        mk_list_del(&entry->_head);
+        mk_mem_free(entry->val);
+        mk_mem_free(entry);
+    }
+
+    mk_mem_free(list);
+}
+
 char *mk_string_build(char **buffer, unsigned long *len,
                       const char *format, ...)
 {

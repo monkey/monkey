@@ -117,8 +117,6 @@ struct server_config
 
     struct mk_list *index_files;
 
-    struct dir_html_theme *dir_theme;
-
     /* configured host quantity */
     int nhosts;
     struct mk_list hosts;
@@ -167,13 +165,6 @@ struct host_alias
     struct mk_list _head;
 };
 
-/* Handle index file names: index.* */
-struct index_file
-{
-    char indexname[16];
-    struct indexfile *next;
-};
-
 /* Functions */
 void mk_config_start_configure(void);
 void mk_config_add_index(char *indexname);
@@ -189,6 +180,7 @@ void mk_config_section_add(struct mk_config *conf, char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
 void mk_config_free(struct mk_config *cnf);
+void mk_config_free_all();
 void mk_config_free_entries(struct mk_config_section *section);
 
 

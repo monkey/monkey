@@ -284,6 +284,27 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
+void mk_config_free_all()
+{
+    mk_config_host_free_all();
+    mk_config_free(config->config);
+
+    if (config->serverconf) mk_mem_free(config->serverconf);
+    if (config->listen_addr) mk_mem_free(config->listen_addr);
+    if (config->pid_file_path) mk_mem_free(config->pid_file_path);
+    if (config->user_dir) mk_mem_free(config->user_dir);
+
+    /* free config->index_files */
+    if (config->index_files) {
+        mk_string_split_free(config->index_files);
+    }
+
+    if (config->user) mk_mem_free(config->user);
+    if (config->transport_layer) mk_mem_free(config->transport_layer);
+    mk_pointer_free(&config->server_software);
+    mk_mem_free(config);
+}
+
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
 {
     int on, off;
@@ -579,6 +600,7 @@ struct host *mk_config_get_host(char *path)
         mk_list_add(&new_alias->_head, &host->server_names);
     }
     mk_mem_free(host_low);
+    mk_string_split_free(list);
 
     /* document root handled by a mk_pointer */
     host->documentroot.data = mk_config_section_getval(section,
@@ -722,7 +744,7 @@ void mk_config_host_free_all()
 
         mk_mem_free(host->file);
 
-        /* Free aliases */
+        /* Free aliases or servernames */
         mk_list_foreach_safe(head_alias, tmp2, &host->server_names) {
             host_alias = mk_list_entry(head_alias, struct host_alias, _head);
             mk_list_del(&host_alias->_head);
