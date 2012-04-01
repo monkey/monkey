@@ -111,22 +111,22 @@ int liana_conf(char *confdir)
     char *conf_path = NULL;
     struct mk_config_section *section;
     struct mk_config *conf;
+    struct mk_list *head;
 
     /* Read palm configuration file */
     mk_api->str_build(&conf_path, &len, "%s/liana_ssl.conf", confdir);
     conf = mk_api->config_create(conf_path);
-    section = conf->section;
 
-    while (section) {
+    mk_list_foreach(head, &conf->sections) {
+        section = mk_list_entry(head, struct mk_config_section, _head);
         /*
-         * Just read PALM sections... yes it's a joke for edsiper XD 
+         * Just read PALM sections... yes it's a joke for edsiper XD
          *
-         * edsiper says "i will start counting the number of Bazingas"         
+         * edsiper says "i will start counting the number of Bazingas"
          *
          *  - Feb 13, 2012: +1
          */
         if (strcasecmp(section->name, "LIANA_SSL") != 0) {
-            section = section->next;
             continue;
         }
 
@@ -141,7 +141,6 @@ int liana_conf(char *confdir)
                                           MK_CONFIG_VAL_STR);
 
         PLUGIN_TRACE("Register Key File '%s'", key_file);
-        section = section->next;
     }
 
     mk_api->mem_free(conf_path);
@@ -501,7 +500,7 @@ int _mkp_network_io_create_socket(int domain, int type, int protocol)
 int _mkp_network_io_connect(char *host, int port)
 {
     int ret;
-    int socket_fd;
+    int socket_fd = 0;
     char *port_str = 0;
     unsigned long len;
     struct addrinfo hints;
@@ -582,7 +581,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr,
 
 int _mkp_network_io_server(int port, char *listen_addr)
 {
-    int socket_fd;
+    int socket_fd = 0;
     int ret;
     char *port_str = 0;
     unsigned long len;
