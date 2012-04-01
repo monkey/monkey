@@ -34,7 +34,7 @@
 #include "mandril.h"
 
 MONKEY_PLUGIN("mandril",  /* shortname */
-              "Mandril",  /* name */ 
+              "Mandril",  /* name */
               VERSION,    /* version */
               MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
 
@@ -54,25 +54,28 @@ int mk_security_conf(char *confdir)
 
     struct mk_config_section *section;
     struct mk_config_entry *entry;
+    struct mk_list *head;
 
     /* Read configuration */
     mk_api->str_build(&conf_path, &len, "%s/mandril.conf", confdir);
     conf = mk_api->config_create(conf_path);
     section = mk_api->config_section_get(conf, "RULES");
-    entry = section->entry;
 
-    while (entry) {
+
+    mk_list_foreach(head, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
+
         /* Passing to internal struct */
         if (strcasecmp(entry->key, "Deny_IP") == 0) {
             new_ip = mk_api->mem_alloc(sizeof(struct mk_secure_ip_t));
             n = mk_api->str_search(entry->val, "/", 1);
-            
+
             /* subnet */
             if (n > 0) {
                 /* split network addr and netmask */
                 _net  = mk_api->str_copy_substr(entry->val, 0, n);
-                _mask = mk_api->str_copy_substr(entry->val, 
-                                                n + 1, 
+                _mask = mk_api->str_copy_substr(entry->val,
+                                                n + 1,
                                                 strlen(entry->val));
 
                 /* validations... */
@@ -93,7 +96,7 @@ int mk_security_conf(char *confdir)
 
                 /* parse mask */
                 new_ip->netmask = strtol(_mask, (char **) NULL, 10);
-                if (new_ip->netmask <= 0 || new_ip->netmask >= 32) { 
+                if (new_ip->netmask <= 0 || new_ip->netmask >= 32) {
                     mk_warn("Mandril: invalid mask value '%s' in RULES section",
                             entry->val);
                     goto ip_next;
@@ -108,8 +111,8 @@ int mk_security_conf(char *confdir)
                 /* link node with main list */
                 mk_list_add(&new_ip->_head, &mk_secure_ip);
 
-            /* 
-             * I know, you were instructed to hate 'goto' statements!, ok, show this 
+            /*
+             * I know, you were instructed to hate 'goto' statements!, ok, show this
              * code to your teacher and let him blame :P
              */
             ip_next:
@@ -141,9 +144,6 @@ int mk_security_conf(char *confdir)
             /* link node with main list */
             mk_list_add(&new_url->_head, &mk_secure_url);
         }
-
-        /* next */
-        entry = entry->next;
     }
 
     mk_api->mem_free(conf_path);
@@ -196,7 +196,7 @@ int mk_security_check_url(int socket, mk_pointer url)
 
     PLUGIN_TRACE("[FD %i] Mandril validating URL", socket);
     mk_list_foreach(head, &mk_secure_url) {
-        entry = mk_list_entry(head, struct mk_secure_url_t, _head);        
+        entry = mk_list_entry(head, struct mk_secure_url_t, _head);
         n = mk_api->str_search_n(url.data, entry->criteria, MK_STR_INSENSITIVE, url.len);
         if (n >= 0) {
             PLUGIN_TRACE("[FD %i] Mandril closing by rule in URL match", socket);
