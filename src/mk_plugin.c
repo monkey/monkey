@@ -487,17 +487,29 @@ void mk_plugin_init()
     /* Look for plugins thread key data */
     mk_plugin_preworker_calls();
     mk_mem_free(path);
+    mk_config_free(cnf);
 }
 
+/* Invoke all plugins 'exit' hook and free resources by the plugin interface */
 void mk_plugin_exit_all()
 {
     struct plugin *node;
-    struct mk_list *head;
+    struct mk_list *head, *tmp;
 
+    /* Plugins */
     mk_list_foreach(head, config->plugins) {
         node = mk_list_entry(head, struct plugin, _head);
         node->exit();
     }
+
+    /* Plugin interface it self */
+    mk_list_foreach_safe(head, tmp, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        mk_list_del(&node->_head);
+        mk_mem_free(node->path);
+        mk_mem_free(node);
+    }
+    mk_mem_free(api);
 }
 
 int mk_plugin_stage_run(unsigned int hook,

@@ -290,7 +290,7 @@ struct plugin_api
     void (*stacktrace)(void);
 #endif
 };
-
+struct plugin_api *api;
 typedef pthread_key_t mk_plugin_key_t;
 
 /* Plugin events thread key */
