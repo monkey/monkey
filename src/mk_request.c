@@ -672,14 +672,15 @@ mk_pointer mk_request_index(char *pathfile)
     unsigned long len;
     char *file_aux = NULL;
     mk_pointer f;
-    struct mk_string_line *aux_index;
+    struct mk_string_line *entry;
+    struct mk_list *head;
 
     mk_pointer_reset(&f);
-    aux_index = config->index_files;
 
-    while (aux_index) {
+    mk_list_foreach(head, config->index_files) {
+        entry = mk_list_entry(head, struct mk_string_line, _head);
         mk_string_build(&file_aux, &len, "%s%s",
-                        pathfile, aux_index->val);
+                        pathfile, entry->val);
 
         if (access(file_aux, F_OK) == 0) {
             f.data = file_aux;
@@ -688,8 +689,6 @@ mk_pointer mk_request_index(char *pathfile)
         }
         mk_mem_free(file_aux);
         file_aux = NULL;
-
-        aux_index = aux_index->next;
     }
 
     return f;

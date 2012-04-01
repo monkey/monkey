@@ -296,7 +296,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
         if (strcasecmp(entry->key, key) == 0) {
             switch (mode) {
             case MK_CONFIG_VAL_STR:
-                return (void *) entry->val;
+                return (void *) mk_string_dup(entry->val);
             case MK_CONFIG_VAL_NUM:
                 return (void *) strtol(entry->val, (char **) NULL, 10);
             case MK_CONFIG_VAL_BOOL:
@@ -313,7 +313,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
                     return (void *) MK_FALSE;
                 }
             case MK_CONFIG_VAL_LIST:
-                return mk_string_split_line(entry->val);
+                return (void *)mk_string_split_line(entry->val);
             }
         }
     }
@@ -533,7 +533,8 @@ struct host *mk_config_get_host(char *path)
     struct host_alias *new_alias;
     struct mk_config *cnf;
     struct mk_config_section *section;
-    struct mk_string_line *line, *line_p;
+    struct mk_string_line *entry;
+    struct mk_list *head, *list;
 
     /* Read configuration file */
     cnf = mk_config_create(path);
@@ -550,16 +551,17 @@ struct host *mk_config_get_host(char *path)
     mk_list_init(&host->server_names);
 
     host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
-    line_p = line = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
-    while (line_p) {
-        if (line_p->len > MK_HOSTNAME_LEN - 1) {
-            line_p = line_p->next;
+
+    list = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
+    mk_list_foreach(head, list) {
+        entry = mk_list_entry(head, struct mk_string_line, _head);
+        if (entry->len > MK_HOSTNAME_LEN - 1) {
             continue;
         }
 
         /* Hostname to lowercase */
         char *h = host_low;
-        char *p = line_p->val;
+        char *p = entry->val;
 
         while (*p) {
             *h = tolower(*p);
@@ -569,14 +571,12 @@ struct host *mk_config_get_host(char *path)
 
         /* Alloc node */
         new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
-        new_alias->name = mk_mem_malloc_z(line_p->len + 1);
-        strncpy(new_alias->name, host_low, line_p->len);
+        new_alias->name = mk_mem_malloc_z(entry->len + 1);
+        strncpy(new_alias->name, host_low, entry->len);
 
-        new_alias->len = line_p->len;
+        new_alias->len = entry->len;
 
         mk_list_add(&new_alias->_head, &host->server_names);
-
-        line_p = line_p->next;
     }
     mk_mem_free(host_low);
 
@@ -733,6 +733,10 @@ void mk_config_host_free_all()
         mk_pointer_free(&host->documentroot);
         mk_mem_free(host->host_signature);
         mk_pointer_free(&host->header_host_signature);
+
+        /* Free source configuration */
+        mk_config_free(host->config);
+        mk_mem_free(host);
     }
 }
 

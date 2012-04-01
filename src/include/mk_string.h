@@ -23,6 +23,7 @@
 #define MK_STR_H
 
 #include "memory.h"
+#include "mk_list.h"
 
 /* Case sensitive OFF */
 #define MK_STR_SENSITIVE 0
@@ -34,7 +35,8 @@ struct mk_string_line
 {
     char *val;
     int len;
-    struct mk_string_line *next;
+
+    struct mk_list _head;
 };
 
 /* Lookup char into string, return position */
@@ -52,9 +54,9 @@ int mk_string_search_n(const char *haystack, const char *needle, int sensitive, 
 char *mk_string_remove_space(char *buf);
 char *mk_string_casestr(char *heystack, char *needle);
 char *mk_string_dup(const char *s);
-struct mk_string_line *mk_string_split_line(const char *line);
+struct mk_list *mk_string_split_line(const char *line);
 int mk_string_trim(char **str);
-char *mk_string_build(char **buffer, unsigned long *len, 
+char *mk_string_build(char **buffer, unsigned long *len,
                       const char *format, ...);
 int mk_string_itop(int n, mk_pointer *p);
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);

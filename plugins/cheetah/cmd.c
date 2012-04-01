@@ -308,7 +308,8 @@ void mk_cheetah_cmd_help()
 
 void mk_cheetah_cmd_config()
 {
-    struct mk_string_line *line;
+    struct mk_string_line *entry;
+    struct mk_list *head;
 
     CHEETAH_WRITE("Basic configuration");
     CHEETAH_WRITE("\n-------------------");
@@ -327,15 +328,15 @@ void mk_cheetah_cmd_config()
                   mk_api->config->serverport);
     CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
 
-    line = mk_api->config->index_files;
-    if (!line) {
+
+    if (mk_list_is_empty(mk_api->config->index_files) == 0) {
         CHEETAH_WRITE("\nIndexFile       : No index files defined");
     }
     else {
         CHEETAH_WRITE("\nIndexFile       : ");
-        while (line) {
-            CHEETAH_WRITE("%s ", line->val);
-            line = line->next;
+        mk_list_foreach(head, mk_api->config->index_files) {
+            entry = mk_list_entry(head, struct mk_string_line, _head);
+            CHEETAH_WRITE("%s ", entry->val);
         }
 
     }

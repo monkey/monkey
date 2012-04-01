@@ -34,9 +34,9 @@
 
 #include <stdio.h>
 
-/* 
+/*
  * Base function for search routines, it accept modifiers to enable/disable
- * the case sensitive feature and also allow to specify a haystack len 
+ * the case sensitive feature and also allow to specify a haystack len
  * Get position of a substring.
  */
 static int _mk_string_search(const char *string, const char *search, int sensitive, int len)
@@ -44,7 +44,7 @@ static int _mk_string_search(const char *string, const char *search, int sensiti
     int i = 0;
     char *p = NULL, *q = NULL;
     char *s = NULL;
-    
+
     p = (char *) string;
     do {
         q = p;
@@ -59,18 +59,18 @@ static int _mk_string_search(const char *string, const char *search, int sensiti
                 q++, s++;
             }
         }
-        
-        /* match */        
+
+        /* match */
         if (*s == 0) {
             return (p - string);
         }
-        
+
         i++;
         if (len > 0 && i >= len) {
             break;
         }
     } while (*p++);
-    
+
     return -1;
 }
 
@@ -135,16 +135,20 @@ char *mk_string_dup(const char *s)
     return strdup(s);
 }
 
-struct mk_string_line *mk_string_split_line(const char *line)
+struct mk_list *mk_string_split_line(const char *line)
 {
     unsigned int i = 0, len, val_len;
     int end;
     char *val;
-    struct mk_string_line *sl = 0, *new, *p;
+    struct mk_list *list;
+    struct mk_string_line *new;
 
     if (!line) {
         return NULL;
     }
+
+    list = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(list);
 
     len = strlen(line);
 
@@ -173,27 +177,15 @@ struct mk_string_line *mk_string_split_line(const char *line)
         new = mk_mem_malloc(sizeof(struct mk_string_line));
         new->val = val;
         new->len = val_len;
-        new->next = NULL;
 
-        /* Link node */
-        if (!sl) {
-            sl = new;
-        }
-        else {
-            p = sl;
-            while (p->next) {
-                p = p->next;
-            }
-
-            p->next = new;
-        }
+        mk_list_add(&new->_head, list);
         i = end + 1;
     }
 
-    return sl;
+    return list;
 }
 
-char *mk_string_build(char **buffer, unsigned long *len, 
+char *mk_string_build(char **buffer, unsigned long *len,
                       const char *format, ...)
 {
     va_list ap;

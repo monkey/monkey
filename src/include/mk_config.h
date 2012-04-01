@@ -115,7 +115,7 @@ struct server_config
 
     int max_request_size;
 
-    struct mk_string_line *index_files;
+    struct mk_list *index_files;
 
     struct dir_html_theme *dir_theme;
 
