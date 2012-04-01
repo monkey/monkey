@@ -265,13 +265,12 @@ int mk_logger_read_config(char *path)
             exit(EXIT_FAILURE);
         }
 
-        mk_logger_master_path = mk_api->str_dup(logfilename);
+        mk_logger_master_path = logfilename;
         PLUGIN_TRACE("MasterLog '%s'", mk_logger_master_path);
     }
 
     mk_api->mem_free(default_file);
     mk_api->config_free(conf);
-    mk_api->mem_free(conf);
 
     return 0;
 }
@@ -333,6 +332,18 @@ int _mkp_init(void **api, char *confdir)
 
 void _mkp_exit()
 {
+    struct mk_list *head, *tmp;
+    struct log_target *entry;
+
+    mk_list_foreach_safe(head, tmp, &targets_list) {
+        entry = mk_list_entry(head, struct log_target, _head);
+        mk_list_del(&entry->_head);
+        mk_api->mem_free(entry->file_access);
+        mk_api->mem_free(entry->file_error);
+        mk_api->mem_free(entry);
+    }
+
+    mk_api->mem_free(mk_logger_master_path);
 }
 
 void _mkp_core_prctx()
