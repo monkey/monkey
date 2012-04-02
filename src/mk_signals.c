@@ -45,7 +45,10 @@ void mk_signal_exit()
 
     mk_utils_remove_pid();
     mk_plugin_exit_all();
+
+#ifdef SAFE_FREE
     mk_config_free_all();
+#endif
 
     mk_info("Exiting... >:(");
     _exit(EXIT_SUCCESS);

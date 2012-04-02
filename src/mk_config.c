@@ -286,6 +286,7 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
+#ifdef SAFE_FREE
 void mk_config_free_all()
 {
     mk_config_host_free_all();
@@ -306,6 +307,7 @@ void mk_config_free_all()
     mk_pointer_free(&config->server_software);
     mk_mem_free(config);
 }
+#endif
 
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
 {
@@ -732,6 +734,7 @@ int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias 
     return -1;
 }
 
+#ifdef SAFE_FREE
 void mk_config_host_free_all()
 {
     struct host *host;
@@ -763,6 +766,7 @@ void mk_config_host_free_all()
         mk_mem_free(host);
     }
 }
+#endif
 
 void mk_config_sanity_check()
 {

@@ -764,6 +764,9 @@ for arg in $*; do
                 --disable-plugins*)
                 	disabled_plugins=$optarg
                         ;;
+                --safe-free*)
+                        safe_free=1
+                        ;;
                 --platform*)
                         platform=$optarg
                         ;;
@@ -804,6 +807,7 @@ for arg in $*; do
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
                         echo "  --disable-plugins=a,b   Disable the listed plugins"
+                        echo "  --safe-free             Force Monkey to free resources before exit"
                         echo
                         echo "Override Server Configuration:"
                         echo "  --default-port=PORT     Override default TCP port (default: 2001)"
@@ -852,8 +856,14 @@ fi
 if test -z "$debug" ; then
     CFLAGS="$CFLAGS -O2 -Wall"
 else
-    DEFS="-DDEBUG"
+    DEFS="-DDEBUG -DSAFE_FREE"
     CFLAGS="$CFLAGS -g -Wall"
+fi
+
+if test -n "$safe_free" ; then
+    if test -z "$debug" ; then
+        DEFS="$DEFS -DSAFE_FREE"
+    fi
 fi
 
 if [ $trace ] ; then
