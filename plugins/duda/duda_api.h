@@ -163,11 +163,16 @@ struct duda_api_debug {
     void (*stacktrace) (void);
 };
 
-/* PARAMS object: params->() */
-struct duda_api_params{
-    char *(*get) (duda_request_t *, short int);
+/* PARAMS object: params->x() */
+struct duda_api_params {
+    char *(*get)       (duda_request_t *, short int);
     short int (*count) (duda_request_t *);
-    short int (*len) (duda_request_t *, short int);
+    short int (*len)   (duda_request_t *, short int);
+};
+
+/* SESSION object: session->x() */
+struct duda_api_session {
+    int (*init) (const char *);
 };
 
 /* Global data (thread scope) */
@@ -191,6 +196,7 @@ struct duda_api_objects {
     struct duda_api_debug *debug;
     struct duda_api_global *global;
     struct duda_api_params *params;
+    struct duda_api_session *session;
 };
 
 struct duda_api_objects *duda_api_master();

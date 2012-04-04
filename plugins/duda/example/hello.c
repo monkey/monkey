@@ -158,7 +158,7 @@ void cb_json_second(duda_request_t *dr){
     pvalue1 = params->get(dr, pnumber);
     pnumber = 1;
     pvalue2 = params->get(dr, pnumber);
-    
+
     if(!pvalue1 || !pvalue2) {
         response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
     }else if(strncmp(pvalue1, CREATE, sizeof(CREATE) - 1) == 0 && (sizeof(CREATE) - 1) == strlen(pvalue1)) {
@@ -221,7 +221,7 @@ int duda_init(struct duda_api_objects *api)
     duda_interface_t *if_system;
     duda_method_t    *method;
     duda_param_t *param;
-    
+
     duda_service_init();
     duda_load_package(json, "json");
 
@@ -249,7 +249,7 @@ int duda_init(struct duda_api_objects *api)
     method = map->method_new("json_second", "cb_json_second", 2);
     param = map->param_new("action", strlen("create"));
     map->method_add_param(param, method);
-    param = map->param_new("format", strlen("unformatted")); 
+    param = map->param_new("format", strlen("unformatted"));
     map->method_add_param(param, method);
     map->interface_add_method(method, if_system);
 
@@ -262,6 +262,6 @@ int duda_init(struct duda_api_objects *api)
 
     if_system = map->interface_new("test");
     duda_service_add_interface(if_system);
-    
+
     duda_service_ready();
 }
