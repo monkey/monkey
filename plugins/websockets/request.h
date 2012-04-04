@@ -29,6 +29,13 @@ struct mk_ws_request
 {
     int socket_fd;
 
+    /* Websocket subprotocol */
+    unsigned int subprotocol_id;
+
+    /* Payload data */
+    unsigned char *payload;
+    uint64_t payload_len;
+
     /* Client request data */
     struct client_session *cs;
     struct session_request *sr;
@@ -39,7 +46,8 @@ struct mk_ws_request
 void mk_ws_request_init();
 struct mk_ws_request *mk_ws_request_create(int socket_fd,
                                            struct client_session *cs,
-                                           struct session_request *sr);
+                                           struct session_request *sr,
+                                           unsigned int subprotocol_id);
 
 void mk_ws_request_add(struct mk_ws_request *pr);
 struct mk_ws_request *mk_ws_request_get(int socket);

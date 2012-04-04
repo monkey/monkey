@@ -29,7 +29,8 @@
 /* Create a ws_request node */
 struct mk_ws_request *mk_ws_request_create(int socket_fd,
                                            struct client_session *cs,
-                                           struct session_request *sr)
+                                           struct session_request *sr,
+                                           unsigned int subprotocol_id)
 {
     struct mk_ws_request *new;
 
@@ -37,6 +38,9 @@ struct mk_ws_request *mk_ws_request_create(int socket_fd,
     new->socket_fd = socket_fd;
     new->cs = cs;
     new->sr = sr;
+    new->subprotocol_id = subprotocol_id;
+    new->payload = NULL;
+    new->payload_len = 0;
 
     return new;
 }

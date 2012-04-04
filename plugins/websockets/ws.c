@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <errno.h>
+#include <string.h>
 
 /* Networking - I/O*/
 #include <fcntl.h>
@@ -42,6 +43,7 @@
 #include "base64.h"
 #include "request.h"
 #include "ws.h"
+#include "echo.h"
 
 MONKEY_PLUGIN("websocket",          /* shortname */
               "Web Sockets",        /* name */ 
@@ -49,8 +51,22 @@ MONKEY_PLUGIN("websocket",          /* shortname */
               MK_PLUGIN_STAGE_30);  /* hook for thread context call */
 
 
+struct ws_subprotocol
+{
+    char *name;
+    unsigned int id;
+
+    int (*event_write_callback)(int, unsigned char *, uint64_t);
+};
+
+#define WS_SUBPROTOCOL_NUM 2
+static struct ws_subprotocol subprotocol_list[WS_SUBPROTOCOL_NUM] = {
+    {"/websockets", 0, NULL},
+    {"/echo", 1, NULL},
+};
+
 int ws_handler(int socket, struct client_session *cs, struct session_request *sr,
-               struct plugin *plugin)
+               struct plugin *plugin, unsigned int subprotocol_id)
 {
     int len;
     size_t out_len;
@@ -144,7 +160,7 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
         mk_api->mem_free(encoded_accept);
         
         /* Register node in main list */
-        wr_node = mk_ws_request_create(socket, cs, sr);
+        wr_node = mk_ws_request_create(socket, cs, sr, subprotocol_id);
         mk_ws_request_add(wr_node);
 
         /* Register socket with plugin events interface */
@@ -159,6 +175,54 @@ int ws_handler(int socket, struct client_session *cs, struct session_request *sr
     return MK_PLUGIN_RET_CONTINUE;
 }
 
+int ws_send_data(int sockfd,
+                unsigned int fin,
+                unsigned int rsv1,
+                unsigned int rsv2,
+                unsigned int rsv3,
+                unsigned int opcode,
+                unsigned int frame_mask,
+                uint64_t payload_len,
+                unsigned char *frame_masking_key,
+                unsigned char *payload_data)
+{
+    unsigned char buf[256];
+    unsigned int offset = 0;
+    int n;
+
+    memset(buf, 0, sizeof(buf));
+    buf[0] |= ((fin << 7) | (rsv1 << 6) | (rsv2 << 5) | (rsv3 << 4) | opcode);
+
+    if (payload_len < 126) {
+        buf[1] |= ((frame_mask << 7) | payload_len);
+        offset = 2;
+    }
+    else if (payload_len >= 126 && payload_len <= 0xFFFF) {
+        buf[1] |= ((frame_mask << 7) | 126);
+        buf[2] = payload_len >> 8;
+        buf[3] = payload_len & 0x0F;
+        offset = 4;
+    }
+    else {
+        buf[1] |= ((frame_mask << 7) | 127);
+        memcpy(buf + 2, &payload_len, 8);
+        offset = 10;
+    }
+
+    if (frame_mask) {
+        memcpy(buf + offset, frame_masking_key, WS_FRAME_MASK_LEN);
+        offset += WS_FRAME_MASK_LEN;
+    }
+
+    memcpy(buf + offset, payload_data, payload_len);
+
+    n = mk_api->socket_send(sockfd, buf, offset + payload_len);
+    if (n <= 0) {
+        return -1;
+    }
+
+    return n;
+}
 
 /* _MKP_EVENTs */
 int _mkp_event_read(int sockfd)
@@ -168,13 +232,10 @@ int _mkp_event_read(int sockfd)
     unsigned int frame_size = 0;
     unsigned int frame_opcode = 0;
     unsigned int frame_mask = 0;
-    unsigned int frame_payload = 0;    
-    unsigned char frame_masking_key[256];
+    unsigned char *frame_payload;
+    unsigned char frame_masking_key[WS_FRAME_MASK_LEN];
     uint64_t payload_length = 0;
-    unsigned int payload_size = 0;
-    unsigned int mask_key_init = 0;
-    unsigned char data[256];
-
+    unsigned int masking_key_offset = 0;
     struct mk_ws_request *wr;
 
     wr = mk_ws_request_get(sockfd);
@@ -194,16 +255,18 @@ int _mkp_event_read(int sockfd)
     frame_size    = n;
     frame_opcode  = buf[0] & 0x0f;
     frame_mask    = CHECK_BIT(buf[1], 7);
-    frame_payload = buf[1] & 0x7f;
+    payload_length = buf[1] & 0x7f;
 
-    if (frame_payload == 126) {
+    if (payload_length == 126) {
         payload_length = buf[2] * 256 + buf[3];
+        masking_key_offset = 4;
     }
-    else if (frame_payload == 127) { 
+    else if (payload_length == 127) {
         memcpy(&payload_length, buf + 2, 8);
+        masking_key_offset = 10;
     }
     else {
-        payload_length = frame_payload;
+        masking_key_offset = 2;
     }
 
     
@@ -217,43 +280,70 @@ int _mkp_event_read(int sockfd)
     printf("Op Code\t%i\n", frame_opcode);
     printf("Mask ?\t%i\n", frame_mask);
     printf("Frame Size\t%i\n", frame_size);
-    printf("Frame Payload\t%i\n", frame_payload);
-    printf("Payload Value\t%i\n", (unsigned int) payload_length);
-    printf("Payload Size\t%i\n", (unsigned int) payload_size);
+    printf("Payload Length\t%i\n", (unsigned int) payload_length);
+    printf("Mask Key Offset\t%i\n", (unsigned int) masking_key_offset);
     fflush(stdout);
 #endif
 
-    memset(data, '\0', sizeof(data));
-    if (frame_mask) {
-        mask_key_init = 2 + payload_size;
-        memcpy(&frame_masking_key, buf + mask_key_init, WS_FRAME_MASK_LEN);
+    wr->payload_len = payload_length;
+    wr->payload = mk_api->mem_alloc(256);
+    memset(wr->payload, '\0', sizeof(wr->payload));
 
-        if (payload_size != (frame_size - (mask_key_init + WS_FRAME_MASK_LEN))) {
+    if (frame_mask) {
+        memcpy(frame_masking_key, buf + masking_key_offset, WS_FRAME_MASK_LEN);
+
+        if (payload_length != (frame_size - (masking_key_offset + WS_FRAME_MASK_LEN))) {
             //mk_err("Invalid frame size: %i", (frame_size - (mask_key_init + WS_FRAME_MASK_LEN)));
             /* FIXME: Send error, frame size does not cover the payload size */
             //return MK_PLUGIN_RET_EVENT_CLOSE;
         }
 
-        memcpy(&data, buf + mask_key_init + WS_FRAME_MASK_LEN, payload_length);
-        for (i=0; i < payload_length; i++) {
-            data[i] = data[i] ^ frame_masking_key[i % 4];
+        /* Unmasking the frame payload */
+        frame_payload = buf + masking_key_offset + WS_FRAME_MASK_LEN;
+        for (i = 0; i < payload_length; i++) {
+            wr->payload[i] = frame_payload[i] ^ frame_masking_key[i & 0x03];
         }
     }
     else {
-        memcpy(&data, buf + 2 + payload_size, payload_length); 
+        // There is no masking key, get to the frame payload
+        frame_payload = buf + masking_key_offset;
+        memcpy(wr->payload, frame_payload, payload_length);
     }
 
 #ifdef TRACE
-    if (frame_opcode == 1) printf("Data:\n\"%s\"\n", data);
+    if (frame_opcode == 1) printf("Data:\n\"%s\"\n", wr->data);
 #endif
 
     return MK_PLUGIN_RET_EVENT_OWNED;
 }
 
+int _mkp_event_write(int sockfd)
+{
+    struct mk_ws_request *wr;
+
+    wr = mk_ws_request_get(sockfd);
+    if (!wr){
+        PLUGIN_TRACE("[FD %i] this FD is not a WebSocket Frame", sockfd);
+        return MK_PLUGIN_RET_EVENT_NEXT;
+    }
+
+    if (wr->payload_len == 0 || wr->payload == NULL)
+        return MK_PLUGIN_RET_EVENT_OWNED;
+
+    subprotocol_list[wr->subprotocol_id].event_write_callback(sockfd,
+        wr->payload, wr->payload_len); 
+
+    mk_api->mem_free(wr->payload);
+    wr->payload_len = 0;
+
+    return MK_PLUGIN_RET_EVENT_OWNED;
+}
 
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
+    
+    subprotocol_list[1].event_write_callback = ws_echo_write_callback;
 
     return 0;
 }
@@ -271,15 +361,19 @@ void _mkp_core_thctx()
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
                   struct session_request *sr)
 {
+    int i;
+
     PLUGIN_TRACE("[FD %i] STAGE 30", cs->socket);
 
     /* Do websocket stuff just for the defined path */
-    if (sr->uri_processed.len == sizeof(WS_PATH) - 1 &&
-        strncmp(sr->uri_processed.data, WS_PATH, 
-                sizeof(WS_PATH) - 1) == 0) {
+    for (i = 0; i < WS_SUBPROTOCOL_NUM; i++) {
 
-        return ws_handler(cs->socket, cs, sr, plugin);
+        if (sr->uri_processed.len == strlen(subprotocol_list[i].name) &&
+                strncmp(sr->uri_processed.data, subprotocol_list[i].name, 
+                    strlen(subprotocol_list[i].name)) == 0) {
+
+            return ws_handler(cs->socket, cs, sr, plugin, subprotocol_list[i].id);
+        }
     }
-
     return MK_PLUGIN_RET_NOT_ME;
 }

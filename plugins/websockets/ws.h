@@ -42,11 +42,33 @@
 #define WS_RESP_CONNECTION         "Connection: Upgrade"
 #define WS_RESP_WS_ACCEPT          "Sec-WebSocket-Accept: "
 
+/* Frame Opcode */
+#define WS_FRAME_CONTINUE   0x00
+#define WS_FRAME_TEXT       0x01
+#define WS_FRAME_BINARY     0x02
+
+#define WS_FRAME_CTL_CLOSE  0x08
+#define WS_FRAME_CTL_PING   0x09
+#define WS_FRAME_CTL_PONG   0x0a
+
 /* Framing macros */
-#define WS_FRAME_MASK_LEN          4
+#define WS_FRAME_MASK_LEN       4
 
 #define CHECK_BIT(var, pos) !!((var) & (1 << (pos)))
 
 /* SHA1 stuff */
 #define SHA1_DIGEST_LEN            20
+
+
+int ws_send_data(int sockfd,
+                unsigned int fin,
+                unsigned int rsv1,
+                unsigned int rsv2,
+                unsigned int rsv3,
+                unsigned int opcode,
+                unsigned int frame_mask,
+                uint64_t payload_len,
+                unsigned char *frame_masking_key,
+                unsigned char *payload_data);
+
 #endif

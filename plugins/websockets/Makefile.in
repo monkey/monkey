@@ -3,7 +3,7 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
-WS_OBJECTS = ws.o request.o base64.o sha1.o
+WS_OBJECTS = ws.o request.o base64.o sha1.o echo.o
 
 all: monkey-websockets.so
 
