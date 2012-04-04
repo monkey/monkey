@@ -253,7 +253,7 @@ static int mk_request_header_process(struct session_request *sr)
             memcpy(_port, host.data + pos_sep + 1, host.len - pos_sep);
             sr->port = strtol(_port, (char **) NULL, 10);
             if ((errno == ERANGE && (sr->port == LONG_MAX || sr->port == LONG_MIN))
-                || (errno != 0 && sr->port == 0)) {
+                || errno != 0 || sr->port == 0) {
                 return -1;
             }
 
@@ -453,6 +453,10 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     struct mk_list *hosts = &config->hosts;
     struct mk_list *alias;
 
+    /* Always assign the first node 'default vhost' */
+    sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
+
+    /* Parse request */
     status = mk_request_header_process(sr);
     if (status < 0) {
         mk_header_set_http_status(sr, MK_CLIENT_BAD_REQUEST);
@@ -480,8 +484,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
         return EXIT_ABORT;
     }
 
-    /* Always assign the first node 'default vhost' */
-    sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
+    /* Assign the first node alias */
     alias = &sr->host_conf->server_names;
     sr->host_alias = mk_list_entry_first(alias,
                                          struct host_alias, _head);
