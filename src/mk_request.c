@@ -238,7 +238,7 @@ static int mk_request_header_process(struct session_request *sr)
                                  mk_rh_host.len);
 
     if (host.data) {
-        if ((pos_sep = mk_string_char_search(host.data, ':', host.len)) >= 0) {
+        if ((pos_sep = mk_string_char_search_r(host.data, ':', host.len)) >= 0) {
             /* TCP port should not be higher than 65535 */
             char _port[6];
 
