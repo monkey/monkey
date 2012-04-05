@@ -83,8 +83,8 @@ int duda_session_create(duda_request_t *dr, char **uuid)
     long e;
 
     /* generate UUID */
-    e = ((long) &dr) + (dr->cs->socket);
-    snprintf(*uuid, SESSION_UUID_SIZE - 1, "%x%x-%x%x",
+    e = ((long) &dr) + ((long) &dr->cs) + (dr->cs->socket);
+    snprintf(*uuid, SESSION_UUID_SIZE, "%x%x-%x%x",
              _rand(e), _rand(e),
              _rand(e), _rand(e));
 
