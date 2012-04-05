@@ -22,9 +22,13 @@
 #ifndef DUDA_SESSION_H
 #define DUDA_SESSION_H
 
+#include "duda.h"
+
 #define SESSION_STORE_PATH     "/dev/shm/duda_sessions"
 #define SESSION_DEFAULT_PERM   0700
+#define SESSION_UUID_SIZE      130  /* 130 bytes = %x%x-%x%x + NULL byte */
 
 int duda_session_init(const char *store_name);
+int duda_session_create(duda_request_t *dr, char **uuid);
 
 #endif

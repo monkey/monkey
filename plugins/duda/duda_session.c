@@ -19,8 +19,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 
 #include "MKPlugin.h"
 #include "duda_session.h"
@@ -61,6 +63,30 @@ int duda_session_init(const char *store_name)
             return -1;
         }
     }
+
+    return 0;
+}
+
+
+static inline int _rand(int entropy)
+{
+    struct timeval tm;
+
+    gettimeofday(&tm, NULL);
+    srand(tm.tv_usec + entropy);
+
+    return rand();
+}
+
+int duda_session_create(duda_request_t *dr, char **uuid)
+{
+    long e;
+
+    /* generate UUID */
+    e = ((long) &dr) + (dr->cs->socket);
+    snprintf(*uuid, SESSION_UUID_SIZE - 1, "%x%x-%x%x",
+             _rand(e), _rand(e),
+             _rand(e), _rand(e));
 
     return 0;
 }

@@ -189,6 +189,7 @@ struct duda_api_objects *duda_api_master()
 
     /* SESSION object */
     objs->session->init = duda_session_init;
+    objs->session->create = duda_session_create;
 
     /* Global data (thread scope) */
     objs->global->set  = duda_global_set;

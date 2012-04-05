@@ -172,7 +172,8 @@ struct duda_api_params {
 
 /* SESSION object: session->x() */
 struct duda_api_session {
-    int (*init) (const char *);
+    int (*init)   (const char *);
+    int (*create) (duda_request_t *, char **);
 };
 
 /* Global data (thread scope) */
