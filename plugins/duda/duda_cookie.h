@@ -19,32 +19,31 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_QUEUE_H
-#define DUDA_QUEUE_H
+#ifndef DUDA_COOKIE_H
+#define DUDA_COOKIE_H
 
 #include "duda.h"
 
-#define DUDA_QTYPE_ERROR        -1
-#define DUDA_QTYPE_BODY_BUFFER   1
-#define DUDA_QTYPE_SENDFILE      2
+#define COOKIE_CRLF          "\r\n"
+#define COOKIE_EQUAL         "="
+#define COOKIE_SET           "Set-Cookie: "
+#define COOKIE_EXPIRE        "; expires="
+#define COOKIE_DELETED       "deleted"
+#define COOKIE_EXPIRE_TIME   337606980
+#define COOKIE_MAX_DATE_LEN  32
 
-/* Queue item status */
-#define DUDA_QSTATUS_ACTIVE      1
-#define DUDA_QSTATUS_INACTIVE    0
+mk_pointer mk_cookie_crlf;
+mk_pointer mk_cookie_equal;
+mk_pointer mk_cookie_set;
+mk_pointer mk_cookie_expire;
+mk_pointer mk_cookie_expire_value;
 
-struct duda_queue_item {
-    short int type;
-    short int status;
-    void *data;
-
-    struct mk_list _head;
+struct duda_api_cookie {
+    int (*set) (duda_request_t *, char *, int, char *, int, int);
+    int (*destroy) (duda_request_t *, char *, int);
 };
 
-struct duda_queue_item *duda_queue_item_new(short int type);
-int duda_queue_add(struct duda_queue_item *item, struct mk_list *queue);
-struct duda_queue_item *duda_queue_last(struct mk_list *queue);
-unsigned long duda_queue_length(struct mk_list *queue);
-int duda_queue_flush(duda_request_t *dr);
-int duda_queue_free(struct mk_list *queue);
-
+int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
+                    char *val, int val_len, int expires);
+int duda_cookie_destroy(duda_request_t *dr, char *key, int key_len);
 #endif

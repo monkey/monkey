@@ -23,8 +23,6 @@
 #define DUDA_MAIN_H
 
 #include "MKPlugin.h"
-#include "duda_api.h"
-#include "duda_queue.h"
 
 #define MAP_WS_APP_NAME   0X00
 #define MAP_WS_INTERFACE  0X10
@@ -39,7 +37,7 @@
  * This struct represent the web service request, as well it contains detailed
  * information about the response type and buffers associated
  */
-struct duda_request {
+typedef struct duda_request {
 
     /* web service details */
     struct web_service *web_service;
@@ -57,7 +55,7 @@ struct duda_request {
     struct duda_method *_method;
 
     /* Callback functions */
-    void (*end_callback)(duda_request_t *);
+    void (*end_callback) (struct duda_request *);
 
     /* Internal statuses */
     unsigned int _st_http_headers_sent;  /* HTTP headers sent? */
@@ -68,7 +66,7 @@ struct duda_request {
 
     /* Lists linked to (events)*/
     struct mk_list _head_events_write;
-};
+} duda_request_t;
 
 pthread_key_t duda_global_events_write;
 

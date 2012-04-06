@@ -44,6 +44,7 @@ struct duda_api_response *response;
 struct duda_api_debug *debug;
 struct duda_api_params *params;
 struct duda_api_session *session;
+struct duda_api_cookie *cookie;
 struct duda_api_global *global;
 duda_package_t *pkg_temp;
 
@@ -62,6 +63,7 @@ duda_package_t *pkg_temp;
     debug    = api->debug;                                              \
     params   = api->params;                                             \
     session  = api->session;                                            \
+    cookie   = api->cookie;                                             \
     global   = api->global;                                             \
     mk_list_init(&_duda_interfaces);                                    \
     mk_list_init(&_duda_global_dist);

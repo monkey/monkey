@@ -274,7 +274,7 @@ int mk_header_send(int fd, struct client_session *cs,
     if (sh->last_modified > 0) {
         mk_pointer *lm;
         lm = mk_cache_get(mk_cache_header_lm);
-        mk_utils_utime2gmt(&lm, sh->last_modified);
+        lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
 
         mk_iov_add_entry(iov, mk_header_last_modified.data,
                          mk_header_last_modified.len,

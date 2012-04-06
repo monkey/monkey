@@ -26,6 +26,7 @@
 #include "duda_api.h"
 #include "duda_param.h"
 #include "duda_session.h"
+#include "duda_cookie.h"
 #include "duda_package.h"
 #include "duda_event.h"
 #include "duda_queue.h"
@@ -156,6 +157,7 @@ struct duda_api_objects *duda_api_master()
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
     objs->params   = mk_api->mem_alloc(sizeof(struct duda_api_params));
     objs->session  = mk_api->mem_alloc(sizeof(struct duda_api_session));
+    objs->cookie   = mk_api->mem_alloc(sizeof(struct duda_api_cookie));
 
     /* MAP Duda calls */
     objs->duda->package_load = duda_package_load;
@@ -190,6 +192,10 @@ struct duda_api_objects *duda_api_master()
     /* SESSION object */
     objs->session->init = duda_session_init;
     objs->session->create = duda_session_create;
+
+    /* COOKIE object */
+    objs->cookie->set     = duda_cookie_set;
+    objs->cookie->destroy = duda_cookie_destroy;
 
     /* Global data (thread scope) */
     objs->global->set  = duda_global_set;

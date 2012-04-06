@@ -26,7 +26,7 @@
 
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_pointer */
-/* 
+/*
  * Max amount of pid digits. Glibc's pid_t is implemented as a signed
  * 32bit integer, for both 32 and 64bit systems - max value: 2147483648.
  */
@@ -52,10 +52,10 @@ char *envtrace;
 pthread_mutex_t mutex_trace;
 
 #else
-#define MK_TRACE(...) do {} while (0) 
+#define MK_TRACE(...) do {} while (0)
 #endif
 
-int    mk_utils_utime2gmt(mk_pointer **p, time_t date);
+int    mk_utils_utime2gmt(char **data, time_t date);
 time_t mk_utils_gmt2utime(char *date);
 
 int mk_buffer_cat(mk_pointer * p, char *buf1, int len1, char *buf2, int len2);
@@ -64,7 +64,7 @@ int mk_utils_set_daemon(void);
 char *mk_utils_url_decode(mk_pointer req_uri);
 
 #ifdef TRACE
-void mk_utils_trace(const char *component, int color, const char *function, 
+void mk_utils_trace(const char *component, int color, const char *function,
                     char *file, int line, const char* format, ...);
 int mk_utils_print_errno(int n);
 #endif

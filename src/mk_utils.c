@@ -50,18 +50,19 @@
 #include "mk_macros.h"
 
 /* Date helpers */
-static const char *mk_date_wd[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+static const char *mk_date_wd[7]  = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 static const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                              "Aug", "Sep", "Oct", "Nov", "Dec"};
+                                     "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-/* This function given a unix time, set in a mk_pointer
+/*
+ *This function given a unix time, set in a mk_pointer
  * the date in the RFC1123 format like:
  *
  *    Wed, 23 Jun 2010 22:32:01 GMT
  *
  * it also adds a 'CRLF' at the end
  */
-int mk_utils_utime2gmt(mk_pointer **p, time_t date)
+int mk_utils_utime2gmt(char **data, time_t date)
 {
     int size = 31;
     unsigned int year;
@@ -76,6 +77,9 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
 
     /* Convert unix time to struct tm */
     gtm = mk_cache_get(mk_cache_utils_gmtime);
+
+    /* If this function was invoked from a non-thread context it should exit */
+    mk_bug(!gtm);
     gtm = gmtime_r(&date, gtm);
     if (!gtm) {
         return -1;
@@ -85,7 +89,7 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
     year = gtm->tm_year + 1900;
 
     /* Compose template */
-    buf = (*p)->data;
+    buf = *data;
 
     /* Week day */
     *buf++ = mk_date_wd[gtm->tm_wday][0];
@@ -136,9 +140,7 @@ int mk_utils_utime2gmt(mk_pointer **p, time_t date)
     *buf++ = '\0';
 
     /* Set mk_pointer data len */
-    (*p)->len = size;
-
-    return 0;
+    return size;
 }
 
 time_t mk_utils_gmt2utime(char *date)

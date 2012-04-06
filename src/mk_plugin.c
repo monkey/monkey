@@ -400,8 +400,9 @@ void mk_plugin_init()
     api->worker_rename = mk_utils_worker_rename;
 
     /* Time functions */
-    api->time_unix  = mk_plugin_time_now_unix;
-    api->time_human = mk_plugin_time_now_human;
+    api->time_unix   = mk_plugin_time_now_unix;
+    api->time_to_gmt = mk_utils_utime2gmt;
+    api->time_human  = mk_plugin_time_now_human;
 
 #ifdef TRACE
     api->trace = mk_utils_trace;
@@ -1097,14 +1098,13 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
 
     if (!sr->headers._extra_rows) {
         /*
-         * We allocate space for:
-         *   + 8 slots extra headers
-         *   + 8 slots to be used with CRLF for every extra header
-         *   + 2 slots for the ending CRLF
-         * -------------------------------------------------------
-         *    18 iov slots
+         * We allocate space for a fixed number of IOV entries:
+         *
+         *   MK_PLUGIN_HEADER_EXTRA_ROWS = X
+         *
+         *  we use (MK_PLUGIN_HEADER_EXTRA_ROWS * 2) thinking in an ending CRLF
          */
-        sr->headers._extra_rows = mk_iov_create(18, 0);
+        sr->headers._extra_rows = mk_iov_create(MK_PLUGIN_HEADER_EXTRA_ROWS * 2, 0);
         mk_bug(!sr->headers._extra_rows);
     }
 

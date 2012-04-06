@@ -23,7 +23,9 @@
 #define DUDA_API_H
 
 #include "mk_list.h"
+#include "duda.h"
 #include "duda_global.h"
+#include "duda_cookie.h"
 #include "duda_package.h"
 
 
@@ -32,7 +34,6 @@ typedef struct duda_interface duda_interface_t;
 typedef struct duda_method duda_method_t;
 typedef struct duda_param duda_param_t;
 typedef void * duda_callback_t;
-typedef struct duda_request duda_request_t;
 
 /* The basic web service information */
 struct duda_webservice {
@@ -198,6 +199,7 @@ struct duda_api_objects {
     struct duda_api_global *global;
     struct duda_api_params *params;
     struct duda_api_session *session;
+    struct duda_api_cookie *cookie;
 };
 
 struct duda_api_objects *duda_api_master();

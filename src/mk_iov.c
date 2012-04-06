@@ -29,6 +29,7 @@
 
 #include "monkey.h"
 
+#include "mk_macros.h"
 #include "mk_header.h"
 #include "mk_memory.h"
 #include "mk_utils.h"
@@ -63,6 +64,8 @@ inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
     if (free == MK_IOV_FREE_BUF) {
         _mk_iov_set_free(mk_io, buf);
     }
+
+    mk_bug(mk_io->iov_idx > mk_io->size);
 
     return mk_io->iov_idx;
 }

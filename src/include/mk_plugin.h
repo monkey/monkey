@@ -62,6 +62,8 @@
 #define MK_PLUGIN_RET_END 200
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 
+#define MK_PLUGIN_HEADER_EXTRA_ROWS  18
+
 /*
  * Event return values
  * -------------------
@@ -278,8 +280,9 @@ struct plugin_api
     int (*event_socket_change_mode) (int, int, int);
 
     /* Time utils functions */
-    int (*time_unix)();
-    mk_pointer *(*time_human)();
+    int (*time_unix) ();
+    int (*time_to_gmt) (char **, time_t);
+    mk_pointer *(*time_human) ();
 
 #ifdef TRACE
     void (*trace)(const char *, int, const char *, char *, int, const char *, ...);

@@ -143,6 +143,22 @@ int duda_load_services()
     return 0;
 }
 
+void duda_mem_init()
+{
+    int len;
+
+    /* Init mk_pointer's */
+    mk_api->pointer_set(&mk_cookie_crlf, COOKIE_CRLF);
+    mk_api->pointer_set(&mk_cookie_equal, COOKIE_EQUAL);
+    mk_api->pointer_set(&mk_cookie_set, COOKIE_SET);
+    mk_api->pointer_set(&mk_cookie_expire, COOKIE_EXPIRE);
+
+    /* Default expire value */
+    mk_cookie_expire_value.data = mk_api->mem_alloc_z(COOKIE_MAX_DATE_LEN);
+    len = mk_api->time_to_gmt(&mk_cookie_expire_value.data, COOKIE_EXPIRE_TIME);
+    mk_cookie_expire_value.len = len;
+}
+
 int _mkp_event_write(int sockfd)
 {
     return duda_event_write_callback(sockfd);
@@ -161,6 +177,9 @@ void _mkp_core_thctx()
     struct web_service *entry_ws;
     duda_global_t *entry_gl;
     void *data;
+
+    /* Initialize some pointers */
+    duda_mem_init();
 
     list_events_write = mk_api->mem_alloc(sizeof(struct mk_list));
     mk_list_init(list_events_write);
@@ -203,12 +222,11 @@ int _mkp_init(void **api, char *confdir)
 
     /* Global data / Thread scope */
     pthread_key_create(&duda_global_events_write, NULL);
-
     return 0;
 }
 
 /* Sets the duda_method structure variable in duda_request */
-int duda_request_set_method(struct duda_request *dr)
+int duda_request_set_method(duda_request_t *dr)
 {
     struct mk_list *head_iface, *head_method;
     struct duda_interface *entry_iface;
@@ -241,7 +259,7 @@ int duda_request_set_method(struct duda_request *dr)
     }
 
     PLUGIN_TRACE("Method %s invoked", entry_method->uid);
-    return 0;    
+    return 0;
 }
 
 
@@ -298,7 +316,7 @@ int duda_request_parse(struct session_request *sr,
             break;
         case MAP_WS_PARAM:
             if (dr->n_params >= MAP_WS_MAX_PARAMS || dr->n_params >= allowed_params) {
-                PLUGIN_TRACE("too much parameters (max=%i)", 
+                PLUGIN_TRACE("too much parameters (max=%i)",
                              (dr->n_params >= MAP_WS_MAX_PARAMS)?
                              MAP_WS_MAX_PARAMS:allowed_params);
                 return -1;
@@ -325,7 +343,7 @@ int duda_request_parse(struct session_request *sr,
     if (last_field < MAP_WS_METHOD) {
         return -1;
     }
-    
+
     if ((dr->n_params) != allowed_params) {
         PLUGIN_TRACE("%i parameters required", allowed_params);
         return -1;
@@ -360,7 +378,7 @@ int duda_service_run(struct client_session *cs,
     struct duda_request *dr;
     void *(*callback) (duda_request_t *) = NULL;
 
-    dr = mk_api->mem_alloc(sizeof(struct duda_request));
+    dr = mk_api->mem_alloc(sizeof(duda_request_t));
     if (!dr) {
         PLUGIN_TRACE("could not allocate enough memory");
         return -1;
