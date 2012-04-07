@@ -26,9 +26,13 @@
 
 #define SESSION_STORE_PATH     "/dev/shm/duda_sessions"
 #define SESSION_DEFAULT_PERM   0700
-#define SESSION_UUID_SIZE      130  /* 130 bytes = %x%x-%x%x + NULL byte */
+#define SESSION_UUID_SIZE      128  /* 128 bytes */
 
-int duda_session_init(const char *store_name);
-int duda_session_create(duda_request_t *dr, char **uuid);
+struct mk_list session_list;
+
+int duda_session_init();
+int duda_session_create(duda_request_t *dr, char *name, char *value, int expires);
+int duda_session_destroy(duda_request_t *dr, char *uuid);
+void *duda_session_get(duda_request_t *dr, char *uuid);
 
 #endif

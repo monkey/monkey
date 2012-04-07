@@ -233,7 +233,7 @@ int duda_request_set_method(duda_request_t *dr)
     struct duda_method *entry_method;
 
     /* Finds the corresponding duda_method structure */
-    mk_list_foreach(head_iface, dr->web_service->map) {
+    mk_list_foreach(head_iface, dr->ws_root->map) {
         entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
 
         if (entry_iface->uid_len == dr->interface.len &&
@@ -385,7 +385,7 @@ int duda_service_run(struct client_session *cs,
     }
 
     /* service details */
-    dr->web_service = web_service;
+    dr->ws_root = web_service;
     dr->n_params = 0;
     dr->cs = cs;
     dr->sr = sr;

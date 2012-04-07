@@ -40,7 +40,8 @@
 typedef struct duda_request {
 
     /* web service details */
-    struct web_service *web_service;
+    struct web_service *ws_root;
+
     mk_pointer appname;
     mk_pointer interface;
     mk_pointer method;

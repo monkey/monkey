@@ -190,8 +190,10 @@ struct duda_api_objects *duda_api_master()
     objs->params->len   = duda_param_len;
 
     /* SESSION object */
-    objs->session->init = duda_session_init;
-    objs->session->create = duda_session_create;
+    objs->session->init    = duda_session_init;
+    objs->session->create  = duda_session_create;
+    objs->session->destroy = duda_session_destroy;
+    objs->session->get     = duda_session_get;
 
     /* COOKIE object */
     objs->cookie->set     = duda_cookie_set;
