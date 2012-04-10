@@ -154,8 +154,7 @@ int main(int argc, char **argv)
     mk_plugin_init();
 
     /* Server listening socket */
-    server_fd = mk_socket_server(config->serverport, config->listen_addr);
-    config->server_fd = server_fd;
+    config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
 
     /* Running Monkey as daemon */
     if (config->is_daemon == MK_TRUE) {
@@ -190,7 +189,7 @@ int main(int argc, char **argv)
     mk_server_launch_workers();
 
     /* Server loop, let's listen for incomming clients */
-    mk_server_loop(server_fd);
+    mk_server_loop(config->server_fd);
 
     mk_mem_free(config);
     return 0;

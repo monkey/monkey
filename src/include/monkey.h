@@ -24,8 +24,6 @@
 #include <netinet/in.h>
 #include "mk_memory.h"
 
-int server_fd;
-
 /* Max Path lenth */
 #define MAX_PATH 1024
 
