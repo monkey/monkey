@@ -125,7 +125,7 @@ int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len)
 
     /* Get the value ending position */
     offset = pos_key + pos_val;
-    for (i = offset; i <= length; i++) {
+    for (i = offset; i < length; i++) {
         if (cookie[i] == ';') {
             break;
         }
@@ -133,7 +133,7 @@ int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len)
 
     /* Set results */
     *val     = (cookie + offset);
-    *val_len = (i - offset) - 1;
+    *val_len = (i - offset);
 
     return 0;
 }
