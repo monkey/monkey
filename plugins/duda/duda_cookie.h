@@ -27,6 +27,7 @@
 #define COOKIE_CRLF          "\r\n"
 #define COOKIE_EQUAL         "="
 #define COOKIE_SET           "Set-Cookie: "
+#define COOKIE_HEADER        "Cookie:"
 #define COOKIE_EXPIRE        "; expires="
 #define COOKIE_DELETED       "deleted"
 #define COOKIE_EXPIRE_TIME   337606980
@@ -40,10 +41,12 @@ mk_pointer mk_cookie_expire_value;
 
 struct duda_api_cookie {
     int (*set) (duda_request_t *, char *, int, char *, int, int);
+    int (*get) (duda_request_t *, char *, char **, int *);
     int (*destroy) (duda_request_t *, char *, int);
 };
 
 int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
                     char *val, int val_len, int expires);
+int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len);
 int duda_cookie_destroy(duda_request_t *dr, char *key, int key_len);
 #endif

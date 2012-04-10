@@ -185,6 +185,7 @@ int duda_session_destroy(duda_request_t *dr, char *uuid)
     return ret;
 }
 
+/* FIXME: it should retrieve by key name, not just UUID */
 void *duda_session_get(duda_request_t *dr, char *uuid)
 {
     int ret;

@@ -19,6 +19,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+
 #include "MKPlugin.h"
 #include "duda_cookie.h"
 #include "duda.h"
@@ -81,4 +83,57 @@ int duda_cookie_destroy(duda_request_t *dr, char *key, int key_len)
 {
     return duda_cookie_set(dr, key, key_len, COOKIE_DELETED, sizeof(COOKIE_DELETED) -1,
                            COOKIE_EXPIRE_TIME);
+}
+
+int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len)
+{
+    int i, offset;
+    int pos_key, pos_val;
+    int length;
+    int header_len = sizeof(COOKIE_HEADER) - 1;
+    char *cookie;
+    struct headers_toc *toc;
+
+    /* Get headers table-of-content (TOC) */
+    toc = &dr->sr->headers_toc;
+    for (i=0; i < toc->length; i++) {
+        /* Compare header title */
+        if (strncmp(toc->rows[i].init, COOKIE_HEADER, header_len) == 0) {
+            break;
+        }
+    }
+
+    if (i == toc->length) {
+        return -1;
+    }
+
+    /* Look for 'cookie key' */
+    cookie = toc->rows[i].init + header_len;
+    pos_key = mk_api->str_search(cookie, key, MK_STR_SENSITIVE);
+    if (pos_key == -1) {
+        return -1;
+    }
+    length = (toc->rows[i].end - toc->rows[i].init) - header_len;
+
+
+    /* Get value position */
+    pos_val = mk_api->str_search_n(cookie + pos_key, "=", MK_STR_SENSITIVE, length - pos_key);
+    if (pos_val == -1) {
+        return -1;
+    }
+    pos_val++;
+
+    /* Get the value ending position */
+    offset = pos_key + pos_val;
+    for (i = offset; i <= length; i++) {
+        if (cookie[i] == ';') {
+            break;
+        }
+    }
+
+    /* Set results */
+    *val     = (cookie + offset);
+    *val_len = (i - offset) - 1;
+
+    return 0;
 }
