@@ -137,3 +137,27 @@ int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len)
 
     return 0;
 }
+
+int duda_cookie_cmp(duda_request_t *dr, char *key, char *cmp)
+{
+    int ret;
+    int val_len;
+    int cmp_len;
+    char *value;
+
+    ret = duda_cookie_get(dr, key, &value, &val_len);
+    if (ret == -1) {
+        return -1;
+    }
+
+    cmp_len = strlen(cmp);
+    if (cmp_len != val_len) {
+        return -1;
+    }
+
+    if (strncmp(value, cmp, val_len) == 0) {
+        return 0;
+    }
+
+    return -1;
+}

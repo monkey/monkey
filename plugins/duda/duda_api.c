@@ -198,6 +198,7 @@ struct duda_api_objects *duda_api_master()
     /* COOKIE object */
     objs->cookie->set     = duda_cookie_set;
     objs->cookie->get     = duda_cookie_get;
+    objs->cookie->cmp     = duda_cookie_cmp;
     objs->cookie->destroy = duda_cookie_destroy;
 
     /* Global data (thread scope) */

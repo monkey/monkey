@@ -42,11 +42,13 @@ mk_pointer mk_cookie_expire_value;
 struct duda_api_cookie {
     int (*set) (duda_request_t *, char *, int, char *, int, int);
     int (*get) (duda_request_t *, char *, char **, int *);
+    int (*cmp) (duda_request_t *, char *, char *);
     int (*destroy) (duda_request_t *, char *, int);
 };
 
 int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
                     char *val, int val_len, int expires);
 int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len);
+int duda_cookie_cmp(duda_request_t *dr, char *key, char *cmp);
 int duda_cookie_destroy(duda_request_t *dr, char *key, int key_len);
 #endif
