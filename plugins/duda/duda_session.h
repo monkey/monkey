@@ -35,5 +35,6 @@ int duda_session_init();
 int duda_session_create(duda_request_t *dr, char *name, char *value, int expires);
 int duda_session_destroy(duda_request_t *dr, char *uuid);
 void *duda_session_get(duda_request_t *dr, char *name);
+int duda_session_isset(duda_request_t *dr, char *name);
 
 #endif

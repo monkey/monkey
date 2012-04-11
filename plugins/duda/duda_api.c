@@ -194,6 +194,7 @@ struct duda_api_objects *duda_api_master()
     objs->session->create  = duda_session_create;
     objs->session->destroy = duda_session_destroy;
     objs->session->get     = duda_session_get;
+    objs->session->isset   = duda_session_isset;
 
     /* COOKIE object */
     objs->cookie->set     = duda_cookie_set;

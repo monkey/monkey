@@ -186,7 +186,6 @@ int duda_session_destroy(duda_request_t *dr, char *uuid)
     return ret;
 }
 
-/* FIXME: it should retrieve by key name, not just UUID */
 void *duda_session_get(duda_request_t *dr, char *name)
 {
     int ret;
@@ -239,4 +238,55 @@ void *duda_session_get(duda_request_t *dr, char *name)
 
     closedir(dir);
     return NULL;
+}
+
+int duda_session_isset(duda_request_t *dr, char *name)
+{
+    int ret;
+    int len;
+    int buf_len;
+    char buf[SESSION_UUID_SIZE];
+    char *session_val;
+    DIR *dir;
+    struct dirent *ent;
+
+    /* Get UUID for the specified key */
+    ret = duda_cookie_get(dr, SESSION_KEY, &session_val, &len);
+    if (ret == -1) {
+        return -1;
+    }
+
+    /* Open store path */
+    if (!(dir = opendir(SESSION_STORE_PATH))) {
+        return -1;
+    }
+
+    /* Compose possible session file name */
+    memset(buf, '\0', sizeof(buf));
+    ret = snprintf(buf, SESSION_UUID_SIZE, "%s.", name);
+    strncpy(buf + ret, session_val, len);
+    buf_len = ret + len;
+    buf[buf_len++] = '.';
+    buf[buf_len  ] = '\0';
+
+    /* Go into session files */
+    while ((ent = readdir(dir)) != NULL) {
+        if ((ent->d_name[0] == '.') && (strcmp(ent->d_name, "..") != 0)) {
+            continue;
+        }
+
+        /* Look just for files */
+        if (ent->d_type != DT_REG) {
+            continue;
+        }
+
+        /* try to match the file name */
+        if (strncmp(ent->d_name, buf, buf_len) == 0) {
+            closedir(dir);
+            return 0;
+        }
+    }
+
+    closedir(dir);
+    return -1;
 }
