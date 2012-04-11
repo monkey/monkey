@@ -409,6 +409,11 @@ int duda_service_run(struct client_session *cs,
         return -1;
     }
 
+    if (!dr->_method) {
+        PLUGIN_TRACE("method not found");
+        return -1;
+    }
+
     callback = dr->_method->func_cb;
 
     if (!callback) {
