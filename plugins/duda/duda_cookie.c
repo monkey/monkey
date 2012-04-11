@@ -108,13 +108,26 @@ int duda_cookie_get(duda_request_t *dr, char *key, char **val, int *val_len)
     }
 
     /* Look for 'cookie key' */
+    /* FIXME:
+     * we must handle the case where the user set two cookies with transversal name/values,
+     * like:
+     *
+     *   Set-Cookie: name=bob
+     *   Set-Cookie: bob=name
+     *
+     * That code will generate this in the browser:
+     *
+     *   Cookie: name=bob; bob=name;
+     *
+     * If someone try to lookup the key 'bob' it will not be found.
+     *
+     */
     cookie = toc->rows[i].init + header_len;
     pos_key = mk_api->str_search(cookie, key, MK_STR_SENSITIVE);
     if (pos_key == -1) {
         return -1;
     }
     length = (toc->rows[i].end - toc->rows[i].init) - header_len;
-
 
     /* Get value position */
     pos_val = mk_api->str_search_n(cookie + pos_key, "=", MK_STR_SENSITIVE, length - pos_key);

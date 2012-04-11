@@ -93,6 +93,7 @@ static inline int _rand(int entropy)
     return rand();
 }
 
+/* FIXME: It must check for duplicates */
 int duda_session_create(duda_request_t *dr, char *name, char *value, int expires)
 {
     long e;
@@ -118,8 +119,8 @@ int duda_session_create(duda_request_t *dr, char *name, char *value, int expires
     duda_cookie_set(dr, "DUDA_SESSION", 12, uuid, len, expires);
 
     /* session format: expire_time.name.UUID.duda_session */
-    snprintf(session, SESSION_UUID_SIZE, "%s/%d.%s.%s",
-             SESSION_STORE_PATH, expires, name, uuid);
+    snprintf(session, SESSION_UUID_SIZE, "%s/%s.%s.%d",
+             SESSION_STORE_PATH, name, uuid, expires);
     fd = open(session, O_CREAT | O_WRONLY, 0600);
     if (fd == -1) {
         mk_err("duda_session: could not create session file");
@@ -186,17 +187,56 @@ int duda_session_destroy(duda_request_t *dr, char *uuid)
 }
 
 /* FIXME: it should retrieve by key name, not just UUID */
-void *duda_session_get(duda_request_t *dr, char *uuid)
+void *duda_session_get(duda_request_t *dr, char *name)
 {
     int ret;
-    char *buf = mk_api->mem_alloc(SESSION_UUID_SIZE);
+    int len;
+    int buf_len;
+    char buf[SESSION_UUID_SIZE];
     char *raw = NULL;
+    char *session_val;
+    DIR *dir;
+    struct dirent *ent;
 
-    ret = _duda_session_path(dr, uuid, &buf, SESSION_UUID_SIZE);
-    if (ret == 0) {
-        raw = mk_api->file_to_buffer(buf);
+    /* Get UUID for the specified key */
+    ret = duda_cookie_get(dr, SESSION_KEY, &session_val, &len);
+    if (ret == -1) {
+        return NULL;
     }
 
-    mk_api->mem_free(buf);
-    return raw;
+    /* Open store path */
+    if (!(dir = opendir(SESSION_STORE_PATH))) {
+        return NULL;
+    }
+
+    /* Compose possible session file name */
+    memset(buf, '\0', sizeof(buf));
+    ret = snprintf(buf, SESSION_UUID_SIZE, "%s.", name);
+    strncpy(buf + ret, session_val, len);
+    buf_len = ret + len;
+    buf[buf_len++] = '.';
+    buf[buf_len  ] = '\0';
+
+    /* Go into session files */
+    while ((ent = readdir(dir)) != NULL) {
+        if ((ent->d_name[0] == '.') && (strcmp(ent->d_name, "..") != 0)) {
+            continue;
+        }
+
+        /* Look just for files */
+        if (ent->d_type != DT_REG) {
+            continue;
+        }
+
+        /* try to match the file name */
+        if (strncmp(ent->d_name, buf, buf_len) == 0) {
+            snprintf(buf, SESSION_UUID_SIZE, "%s/%s", SESSION_STORE_PATH, ent->d_name);
+            raw = mk_api->file_to_buffer(buf);
+            closedir(dir);
+            return raw;
+        }
+    }
+
+    closedir(dir);
+    return NULL;
 }
