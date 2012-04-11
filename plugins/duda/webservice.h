@@ -92,6 +92,17 @@ duda_package_t *pkg_temp;
 
 #define duda_map_add_interface(iface) mk_list_add(&iface->_head,  _duda_interfaces)
 
+/* Invalid object messages */
+#undef mk_info
+#undef mk_warn
+#undef mk_err
+#undef mk_bug
+#define _invalid_call     " is invalid, use msg->x() object instead"
+#define mk_info(a, ...)   msg->err("mk_info()" _invalid_call)
+#define mk_warn(a, ...)   msg->err("mk_warn()" _invalid_call)
+#define mk_err(a, ...)    msg->err("mk_err()" _invalid_call)
+#define mk_bug(a, ...)    msg->err("mk_bug()" _invalid_call)
+
 /* API functions */
 duda_interface_t *duda_interface_new(char *uid);
 duda_method_t *duda_method_new(char *uid, char *callback, int n_params);
