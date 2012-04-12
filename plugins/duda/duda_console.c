@@ -38,7 +38,7 @@ void duda_console_cb_debug(duda_request_t *dr)
     _end_response(dr, NULL);
 }
 
-void duda_console_write(duda_request_t *dr, const char *format, ...)
+void duda_console_write(duda_request_t *dr, char *file, int line, char *format, ...)
 {
     int fd;
     int buf_size = 1024;
@@ -79,7 +79,7 @@ void duda_console_write(duda_request_t *dr, const char *format, ...)
     }
 
     now = mk_api->time_human();
-    n = snprintf(buf, buf_size, "%s %s\n", now->data, p);
+    n = snprintf(buf, buf_size, "%s [fd=%i] [%s:%i] %s\n", now->data, dr->cs->socket, file, line, p);
     write(fd, buf, n);
     close(fd);
 

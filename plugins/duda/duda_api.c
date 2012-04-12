@@ -188,7 +188,7 @@ struct duda_api_objects *duda_api_master()
     objs->response->end = _end_response;
 
     /* CONSOLE object */
-    objs->console->write = duda_console_write;
+    objs->console->_debug = duda_console_write;
 
     /* PARAMS object */
     objs->params->count = duda_param_count;

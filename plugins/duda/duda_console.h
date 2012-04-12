@@ -25,11 +25,13 @@
 #include "duda.h"
 #include "duda_api.h"
 
+#define debug(dr, fmt, ...) _debug(dr, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+
 struct duda_api_console {
-  void (*write) (duda_request_t *, const char *, ...);
+    void (*_debug) (duda_request_t *, char *, int, char *, ...);
 };
 
 void duda_console_cb_debug(duda_request_t *dr);
-void duda_console_write(duda_request_t *dr, const char *format, ...);
+void duda_console_write(duda_request_t *dr, char *file, int line, char *format, ...);
 
 #endif
