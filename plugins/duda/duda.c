@@ -26,6 +26,7 @@
 #include "duda_conf.h"
 #include "duda_event.h"
 #include "duda_queue.h"
+#include "duda_console.h"
 
 MONKEY_PLUGIN("duda",                                     /* shortname */
               "Duda Web Services Framework",              /* name */
@@ -65,8 +66,8 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
 {
     int (*service_init) (struct duda_api_objects *);
     struct mk_list *head_iface, *head_method;
-    struct duda_interface *entry_iface;
-    struct duda_method *entry_method;
+    struct duda_interface *entry_iface, *cs_iface;
+    struct duda_method *entry_method, *cs_method;
 
     /* Load and invoke duda_init() */
     service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
@@ -75,17 +76,25 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
         ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
         ws->global = duda_load_symbol(ws->handler, "_duda_global_dist");
 
+        /* Register Duda built-in interfaces: console */
+        cs_iface  = api->map->interface_new("console");
+        cs_method = api->map->method_builtin_new("debug", duda_console_cb_debug, 0);
+        api->map->interface_add_method(cs_method, cs_iface);
+        mk_list_add(&cs_iface->_head, ws->map);
+
         /* Lookup callback functions for each registered method */
         mk_list_foreach(head_iface, ws->map) {
             entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
             mk_list_foreach(head_method, &entry_iface->methods) {
                 entry_method = mk_list_entry(head_method, struct duda_method, _head);
-                entry_method->func_cb = duda_load_symbol(ws->handler, entry_method->callback);
-                if (!entry_method->func_cb) {
-                    mk_err("%s / callback not found '%s'", entry_method->uid, entry_method);
-                    exit(EXIT_FAILURE);
+                if (entry_method->callback) {
+                    entry_method->cb_webservice = duda_load_symbol(ws->handler,
+                                                                   entry_method->callback);
+                    if (!entry_method->cb_webservice) {
+                        mk_err("%s / callback not found '%s'", entry_method->uid, entry_method);
+                        exit(EXIT_FAILURE);
+                    }
                 }
-
             }
         }
     }
@@ -376,7 +385,6 @@ int duda_service_run(struct client_session *cs,
                      struct web_service *web_service)
 {
     struct duda_request *dr;
-    void *(*callback) (duda_request_t *) = NULL;
 
     dr = mk_api->mem_alloc(sizeof(duda_request_t));
     if (!dr) {
@@ -414,15 +422,13 @@ int duda_service_run(struct client_session *cs,
         return -1;
     }
 
-    callback = dr->_method->func_cb;
-
-    if (!callback) {
-        PLUGIN_TRACE("callback not found");
-        return -1;
+    if (dr->_method->cb_webservice) {
+        PLUGIN_TRACE("CB %s()", dr->_method->callback);
+        dr->_method->cb_webservice(dr);
     }
-
-    PLUGIN_TRACE("CB %s()", dr->_method->callback);
-    dr->_method->func_cb(dr);
+    else if (dr->_method->cb_builtin) {
+        dr->_method->cb_builtin(dr);
+    }
 
     return 0;
 }

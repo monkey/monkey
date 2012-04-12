@@ -44,7 +44,9 @@ void duda_interface_add_method(duda_method_t *method,
 
 
 /* Creates a new method */
-duda_method_t *duda_method_new(char *uid, char *callback, int n_params)
+duda_method_t *_duda_method_new(char *uid, char *cb_webservice,
+                                void (*cb_builtin)(duda_request_t *),
+                                int n_params)
 {
     duda_method_t *method;
 
@@ -52,11 +54,33 @@ duda_method_t *duda_method_new(char *uid, char *callback, int n_params)
     method->uid     = uid;
     method->uid_len = strlen(uid);
     method->num_params = n_params;
-    method->callback = callback;
-    method->func_cb = NULL;
-    mk_list_init(&method->params);
 
+    if (cb_webservice) {
+        method->callback = cb_webservice;
+        method->cb_webservice = NULL;
+        method->cb_builtin = NULL;
+    }
+    else {
+        method->callback = NULL;
+        method->cb_webservice = NULL;
+        method->cb_builtin = cb_builtin;
+    }
+
+    mk_list_init(&method->params);
     return method;
+}
+
+duda_method_t *duda_method_new(char *uid, char *callback, int n_params)
+{
+    return _duda_method_new(uid, callback, NULL, n_params);
+}
+
+/* Creates a new method */
+duda_method_t *duda_method_builtin_new(char *uid,
+                                       void (*cb_builtin) (duda_request_t *),
+                                       int n_params)
+{
+    return _duda_method_new(uid, NULL, cb_builtin, n_params);
 }
 
 /* Add a parameter to a method */

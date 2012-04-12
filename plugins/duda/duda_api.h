@@ -27,7 +27,7 @@
 #include "duda_global.h"
 #include "duda_cookie.h"
 #include "duda_package.h"
-
+#include "duda_console.h"
 
 /* types of data */
 typedef struct duda_interface duda_interface_t;
@@ -60,7 +60,8 @@ struct duda_method {
 
     short int num_params;
     char *callback;
-    void *(*func_cb)(duda_request_t *);
+    void *(*cb_webservice) (duda_request_t *);
+    void *(*cb_builtin)    (duda_request_t *);
 
     struct mk_list params;
 
@@ -134,6 +135,9 @@ struct duda_api_map {
 
     /* method_ */
     duda_method_t *(*method_new) (char *, char *, int);
+    duda_method_t *(*method_builtin_new) (char *, void (*cb_builtin) (duda_request_t *),
+                                          int n_params);
+
     void (*method_add_param) (duda_param_t *, duda_method_t *);
 
     /* param_ */
@@ -199,6 +203,7 @@ struct duda_api_objects {
     struct duda_api_msg *msg;
     struct duda_api_response *response;
     struct duda_api_debug *debug;
+    struct duda_api_console *console;
     struct duda_api_global *global;
     struct duda_api_params *params;
     struct duda_api_session *session;

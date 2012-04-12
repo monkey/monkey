@@ -22,6 +22,7 @@
 #include "MKPlugin.h"
 #include "webservice.h"
 #include "duda_debug.h"
+#include "duda_console.h"
 #include "duda.h"
 #include "duda_api.h"
 #include "duda_param.h"
@@ -33,6 +34,7 @@
 #include "duda_global.h"
 #include "duda_sendfile.h"
 #include "duda_body_buffer.h"
+#include "webservice.h"
 
 /* Send HTTP response headers just once */
 int __http_send_headers_safe(duda_request_t *dr)
@@ -154,6 +156,7 @@ struct duda_api_objects *duda_api_master()
     objs->msg      = mk_api->mem_alloc(sizeof(struct duda_api_msg));
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
+    objs->console  = mk_api->mem_alloc(sizeof(struct duda_api_console));
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
     objs->params   = mk_api->mem_alloc(sizeof(struct duda_api_params));
     objs->session  = mk_api->mem_alloc(sizeof(struct duda_api_session));
@@ -166,6 +169,8 @@ struct duda_api_objects *duda_api_master()
     objs->map->interface_new = duda_interface_new;
     objs->map->interface_add_method = duda_interface_add_method;
     objs->map->method_new = duda_method_new;
+    objs->map->method_builtin_new = duda_method_builtin_new;
+
     objs->map->method_add_param = duda_method_add_param;
     objs->map->param_new = duda_param_new;
 
@@ -182,7 +187,8 @@ struct duda_api_objects *duda_api_master()
     objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
 
-    /* DEBUG object */
+    /* CONSOLE object */
+    objs->console->write = duda_console_write;
 
     /* PARAMS object */
     objs->params->count = duda_param_count;
