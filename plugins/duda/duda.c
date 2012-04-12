@@ -319,6 +319,7 @@ int duda_request_parse(struct session_request *sr,
             dr->method.len     = val_len;
             last_field = MAP_WS_PARAM;
             if(duda_request_set_method(dr) == -1) {
+                console_debug(dr, "Error: unknown method");
                 return -1;
             }
             allowed_params = dr->_method->num_params;
@@ -350,11 +351,13 @@ int duda_request_parse(struct session_request *sr,
     }
 
     if (last_field < MAP_WS_METHOD) {
+        console_debug(dr, "invalid method");
         return -1;
     }
 
     if ((dr->n_params) != allowed_params) {
         PLUGIN_TRACE("%i parameters required", allowed_params);
+        console_debug(dr, "Error: unexpected number of parameters");
         return -1;
     }
 
