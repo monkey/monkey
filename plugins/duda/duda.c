@@ -335,7 +335,7 @@ int duda_request_parse(struct session_request *sr,
                 head_param = (&dr->_method->params)->next;
             }
             entry_param = mk_list_entry(head_param, struct duda_param, _head);
-            if (val_len > entry_param->max_len) {
+            if (val_len > entry_param->max_len && entry_param->max_len != 0) {
                 PLUGIN_TRACE("too long param (max=%i)", entry_param->max_len);
                 return -1;
             }
