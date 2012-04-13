@@ -42,7 +42,7 @@ struct duda_api_sqlite {
 
     int (*done)  (sqlite3_stmt *);
     int (*exec)  (duda_request_t *, sqlite3 *, const char *,
-                  int (*) (void *, int, char **, char **), void *);
+                  int (*) (struct sqlite_cb_data *, int, char **, char **), void *);
     int (*close) (sqlite3 *);
 };
 
