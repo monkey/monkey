@@ -58,7 +58,7 @@ sqlite3 *sql_open(const char *path);
 int sql_dump(sqlite3 *db, const char *query, sqlite3_stmt **handle);
 int sql_exec(duda_request_t *dr, sqlite3 *db, const char *query,
              int (*callback) (void *, int, char **, char **), void *data);
-
+int sql_step(sqlite3_stmt *handle);
 int sql_close(sqlite3 *db);
 
 #define SQLITE_FOREACH(handle) while (sqlite->step(handle) == SQLITE_ROW)

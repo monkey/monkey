@@ -33,7 +33,7 @@ struct duda_api_sqlite *get_sqlite_api()
     /* Map API calls */
     sqlite->open       = sql_open;
     sqlite->dump       = sql_dump;
-    sqlite->step       = sqlite3_step;
+    sqlite->step       = sql_step;
     sqlite->get_int    = sqlite3_column_int;
     sqlite->get_double = sqlite3_column_double;
     sqlite->get_text   = sqlite3_column_text;
