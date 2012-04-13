@@ -79,7 +79,8 @@ void duda_console_write(duda_request_t *dr, char *file, int line, char *format, 
     }
 
     now = mk_api->time_human();
-    n = snprintf(buf, buf_size, "%s [fd=%i] [%s:%i] %s\n", now->data, dr->cs->socket, file, line, p);
+    n = snprintf(buf, buf_size, "%s [fd=%i req=%p] [%s:%i] %s\n", now->data, dr->cs->socket,
+                 dr, file, line, p);
     write(fd, buf, n);
     close(fd);
 
