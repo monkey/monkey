@@ -89,6 +89,9 @@ int sql_step(sqlite3_stmt *handle)
     if (ret == SQLITE_OK || ret == SQLITE_DONE) {
         return 0;
     }
+    else if (ret == SQLITE_ROW) {
+        return SQLITE_ROW;
+    }
 
     return -1;
 }
