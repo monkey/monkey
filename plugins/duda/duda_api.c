@@ -191,9 +191,10 @@ struct duda_api_objects *duda_api_master()
     objs->console->_debug = duda_console_write;
 
     /* PARAMS object */
-    objs->params->count = duda_param_count;
-    objs->params->get   = duda_param_get;
-    objs->params->len   = duda_param_len;
+    objs->params->count      = duda_param_count;
+    objs->params->get        = duda_param_get;
+    objs->params->get_number = duda_param_get_number;
+    objs->params->len        = duda_param_len;
 
     /* SESSION object */
     objs->session->init    = duda_session_init;

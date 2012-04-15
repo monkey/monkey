@@ -19,14 +19,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_PARAM_H
-#define DUDA_PARAM_H
+#ifndef DUDA_UTILS_H
+#define DUDA_UTILS_H
 
-#include "duda.h"
-
-char *duda_param_get(duda_request_t *dr, short int i);
-int duda_param_get_number(duda_request_t *dr, short int idx, long *res);
-short int duda_param_count(duda_request_t *dr);
-short int duda_param_len(duda_request_t *dr, short int idx);
+int duda_utils_strtol(const char *nptr, int len, long *result);
 
 #endif

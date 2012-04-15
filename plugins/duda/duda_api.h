@@ -171,6 +171,7 @@ struct duda_api_debug {
 /* PARAMS object: params->x() */
 struct duda_api_params {
     char *(*get)       (duda_request_t *, short int);
+    int   (*get_number)(duda_request_t *, short int, long *);
     short int (*count) (duda_request_t *);
     short int (*len)   (duda_request_t *, short int);
 };

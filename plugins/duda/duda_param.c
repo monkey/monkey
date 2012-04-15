@@ -19,10 +19,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "duda_utils.h"
+
 #include "MKPlugin.h"
+#include "duda_param.h"
 #include "duda.h"
 
-/* Return ith parameter */
+/* Return a new buffer with the value of the parameter */
 char *duda_param_get(duda_request_t *dr, short int idx)
 {
     if (idx >= dr->n_params) {
@@ -31,6 +34,24 @@ char *duda_param_get(duda_request_t *dr, short int idx)
 
     return mk_api->str_copy_substr(dr->params[idx].data, 0,
                                    (int) dr->params[idx].len);
+}
+
+int duda_param_get_number(duda_request_t *dr, short int idx, long *res)
+{
+    int ret;
+    long number;
+
+    if (idx >= dr->n_params) {
+        return -1;
+    }
+
+    ret = duda_utils_strtol(dr->params[idx].data, dr->params[idx].len, &number);
+    if (ret == -1) {
+        return -1;
+    }
+
+    *res = number;
+    return 0;
 }
 
 /* Return the total no of parameters */
