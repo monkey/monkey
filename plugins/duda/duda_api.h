@@ -168,15 +168,6 @@ struct duda_api_debug {
     void (*stacktrace) (void);
 };
 
-/* SESSION object: session->x() */
-struct duda_api_session {
-    int (*init)     ();
-    int (*create)   (duda_request_t *, char *, char *, int);
-    int (*destroy)  (duda_request_t *, char *);
-    void *(*get)    (duda_request_t *, char *);
-    int (*isset)    (duda_request_t *, char *);
-};
-
 /* Global data (thread scope) */
 struct duda_api_global {
     int   (*init) (duda_global_t *, void *(*callback)());

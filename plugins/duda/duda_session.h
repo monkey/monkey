@@ -31,6 +31,14 @@
 
 struct mk_list session_list;
 
+struct duda_api_session {
+    int (*init)     ();
+    int (*create)   (duda_request_t *, char *, char *, int);
+    int (*destroy)  (duda_request_t *, char *);
+    void *(*get)    (duda_request_t *, char *);
+    int (*isset)    (duda_request_t *, char *);
+};
+
 struct duda_api_session *duda_session_object();
 int duda_session_init();
 int duda_session_create(duda_request_t *dr, char *name, char *value, int expires);

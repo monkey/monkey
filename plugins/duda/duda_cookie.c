@@ -25,6 +25,19 @@
 #include "duda_cookie.h"
 #include "duda.h"
 
+struct duda_api_cookie *duda_cookie_object()
+{
+    struct duda_api_cookie *c;
+
+    c = mk_api->mem_alloc(sizeof(struct duda_api_cookie));
+    c->set     = duda_cookie_set;
+    c->get     = duda_cookie_get;
+    c->cmp     = duda_cookie_cmp;
+    c->destroy = duda_cookie_destroy;
+
+    return c;
+}
+
 int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
                     char *val, int val_len, int expires)
 {

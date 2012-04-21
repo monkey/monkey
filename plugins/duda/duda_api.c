@@ -189,15 +189,10 @@ struct duda_api_objects *duda_api_master()
     /* CONSOLE object */
     objs->console->_debug = duda_console_write;
 
-    objs->param = duda_param_object();
+    objs->param   = duda_param_object();
     objs->session = duda_session_object();
-    objs->time = duda_time_object();
-
-    /* COOKIE object */
-    objs->cookie->set     = duda_cookie_set;
-    objs->cookie->get     = duda_cookie_get;
-    objs->cookie->cmp     = duda_cookie_cmp;
-    objs->cookie->destroy = duda_cookie_destroy;
+    objs->time    = duda_time_object();
+    objs->cookie  = duda_cookie_object();
 
     /* Global data (thread scope) */
     objs->global->set  = duda_global_set;
