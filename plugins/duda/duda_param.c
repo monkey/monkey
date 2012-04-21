@@ -25,6 +25,19 @@
 #include "duda_param.h"
 #include "duda.h"
 
+struct duda_api_param *duda_param_object()
+{
+    struct duda_api_param *p;
+
+    p = mk_api->mem_alloc(sizeof(struct duda_api_param));
+    p->count      = duda_param_count;
+    p->get        = duda_param_get;
+    p->get_number = duda_param_get_number;
+    p->len        = duda_param_len;
+
+    return p;
+};
+
 /* Return a new buffer with the value of the parameter */
 char *duda_param_get(duda_request_t *dr, short int idx)
 {

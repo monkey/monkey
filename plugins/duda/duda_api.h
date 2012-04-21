@@ -168,14 +168,6 @@ struct duda_api_debug {
     void (*stacktrace) (void);
 };
 
-/* PARAMS object: params->x() */
-struct duda_api_param {
-    char *(*get)       (duda_request_t *, short int);
-    int   (*get_number)(duda_request_t *, short int, long *);
-    short int (*count) (duda_request_t *);
-    short int (*len)   (duda_request_t *, short int);
-};
-
 /* SESSION object: session->x() */
 struct duda_api_session {
     int (*init)     ();
