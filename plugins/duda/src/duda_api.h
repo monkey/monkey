@@ -192,7 +192,7 @@ struct duda_api_objects {
     struct duda_api_param *param;
     struct duda_api_session *session;
     struct duda_api_cookie *cookie;
-    struct duda_api_time *time;
+    struct duda_api_utime *utime;
 };
 
 struct duda_api_objects *duda_api_master();

@@ -188,7 +188,7 @@ struct duda_api_objects *duda_api_master()
     objs->console = duda_console_object();
     objs->param   = duda_param_object();
     objs->session = duda_session_object();
-    objs->time    = duda_time_object();
+    objs->utime   = duda_utime_object();
     objs->cookie  = duda_cookie_object();
 
     /* Global data (thread scope) */
