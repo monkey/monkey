@@ -27,6 +27,7 @@
 #include "duda_api.h"
 #include "duda_param.h"
 #include "duda_session.h"
+#include "duda_time.h"
 #include "duda_cookie.h"
 #include "duda_package.h"
 #include "duda_event.h"
@@ -202,6 +203,8 @@ struct duda_api_objects *duda_api_master()
     objs->session->destroy = duda_session_destroy;
     objs->session->get     = duda_session_get;
     objs->session->isset   = duda_session_isset;
+
+    objs->time = duda_time_object();
 
     /* COOKIE object */
     objs->cookie->set     = duda_cookie_set;
