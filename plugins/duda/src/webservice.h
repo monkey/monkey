@@ -64,7 +64,7 @@ duda_package_t *pkg_temp;
     response = api->response;                                           \
     debug    = api->debug;                                              \
     console  = api->console;                                            \
-    params   = api->params;                                             \
+    param    = api->param;                                              \
     session  = api->session;                                            \
     cookie   = api->cookie;                                             \
     global   = api->global;                                             \
