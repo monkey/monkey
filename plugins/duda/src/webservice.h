@@ -31,6 +31,10 @@
 #include "duda_api.h"
 #include "duda_global.h"
 #include "duda_package.h"
+#include "duda_param.h"
+#include "duda_session.h"
+#include "duda_cookie.h"
+#include "duda_utime.h"
 
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;
