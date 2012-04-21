@@ -157,9 +157,7 @@ struct duda_api_objects *duda_api_master()
     objs->msg      = mk_api->mem_alloc(sizeof(struct duda_api_msg));
     objs->response = mk_api->mem_alloc(sizeof(struct duda_api_response));
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
-    objs->console  = mk_api->mem_alloc(sizeof(struct duda_api_console));
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
-    objs->cookie   = mk_api->mem_alloc(sizeof(struct duda_api_cookie));
 
     /* MAP Duda calls */
     objs->duda->package_load = duda_package_load;
