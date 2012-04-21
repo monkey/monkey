@@ -45,7 +45,7 @@ int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
      * entries to compose the Cookie row.
      */
     if (!dr->sr->headers._extra_rows) {
-        dr->sr->headers._extra_rows = mk_iov_create(MK_PLUGIN_HEADER_EXTRA_ROWS * 2, 0);
+        dr->sr->headers._extra_rows = mk_api->iov_create(MK_PLUGIN_HEADER_EXTRA_ROWS * 2, 0);
     }
 
     mk_api->iov_add_entry(dr->sr->headers._extra_rows, COOKIE_SET, sizeof(COOKIE_SET) -1,
