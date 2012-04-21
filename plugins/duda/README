@@ -1,11 +1,10 @@
-Duda Web Services Framework
-===========================
-Duda is a plugin which empower Monkey with a powerful web services
-applications interface. 
+Duda: Web Services Framework
+============================
+Duda is a web services framework for Monkey HTTP Daemon, it 
+expose a new and clean api for event-driven web services.
 
 For more details about how Duda works please check the spec.txt 
 file located under the docs/ directory.
-
 
 Setup
 =====
