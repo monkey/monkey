@@ -47,7 +47,7 @@ struct duda_api_params *params;
 struct duda_api_session *session;
 struct duda_api_cookie *cookie;
 struct duda_api_global *global;
-struct duda_api_time *time;
+struct duda_api_utime *utime;
 duda_package_t *pkg_temp;
 
 /* Duda Macros */

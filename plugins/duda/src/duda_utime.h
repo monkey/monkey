@@ -25,15 +25,15 @@
 #define TIME_HOUR   3600
 #define TIME_DAY    (TIME_HOUR * 24)
 
-struct duda_api_time {
+struct duda_api_utime {
     time_t (*now) ();
     time_t (*tomorrow) ();
     time_t (*next_hours) (int);
 };
 
-time_t duda_time_now();
-time_t duda_time_tomorrow();
-time_t duda_time_next_hours(int h);
-struct duda_api_time *duda_time_object();
+time_t duda_utime_now();
+time_t duda_utime_tomorrow();
+time_t duda_utime_next_hours(int h);
+struct duda_api_utime *duda_utime_object();
 
 #endif

@@ -20,34 +20,33 @@
  */
 
 #include "MKPlugin.h"
-#include "duda_time.h"
+#include "duda_utime.h"
 
-struct duda_api_time *duda_time_object() {
-    struct duda_api_time *t;
+struct duda_api_utime *duda_utime_object() {
+    struct duda_api_utime *t;
 
-    t = mk_api->mem_alloc(sizeof(struct duda_api_time));
-    t->now = duda_time_now;
-    t->tomorrow = duda_time_tomorrow;
-    t->next_hours = duda_time_next_hours;
+    t = mk_api->mem_alloc(sizeof(struct duda_api_utime));
+    t->now = duda_utime_now;
+    t->tomorrow = duda_utime_tomorrow;
+    t->next_hours = duda_utime_next_hours;
 
     return t;
 }
 
 /* Return the current time in unix time format */
-time_t duda_time_now()
+time_t duda_utime_now()
 {
     return mk_api->time_unix();
 }
 
 /* Return the unix time for the next 24 hours */
-time_t duda_time_tomorrow()
+time_t duda_utime_tomorrow()
 {
     return (mk_api->time_unix() + TIME_DAY);
 }
 
 /* Return the unix time in the next 'h' hours */
-time_t duda_time_next_hours(int h)
+time_t duda_utime_next_hours(int h)
 {
     return (mk_api->time_unix() + (h * TIME_HOUR));
-
 }
