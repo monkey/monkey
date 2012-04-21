@@ -169,7 +169,7 @@ struct duda_api_debug {
 };
 
 /* PARAMS object: params->x() */
-struct duda_api_params {
+struct duda_api_param {
     char *(*get)       (duda_request_t *, short int);
     int   (*get_number)(duda_request_t *, short int, long *);
     short int (*count) (duda_request_t *);
@@ -206,7 +206,7 @@ struct duda_api_objects {
     struct duda_api_debug *debug;
     struct duda_api_console *console;
     struct duda_api_global *global;
-    struct duda_api_params *params;
+    struct duda_api_param *param;
     struct duda_api_session *session;
     struct duda_api_cookie *cookie;
 };
