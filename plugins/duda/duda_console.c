@@ -29,6 +29,16 @@
 #include "duda.h"
 #include "duda_api.h"
 
+struct duda_api_console *duda_console_object()
+{
+    struct duda_api_console *c;
+
+    c = mk_api->mem_alloc(sizeof(struct duda_api_console));
+    c->_debug = duda_console_write;
+
+    return c;
+}
+
 /* callback for /app/console/debug */
 void duda_console_cb_debug(duda_request_t *dr)
 {

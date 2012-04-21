@@ -186,9 +186,8 @@ struct duda_api_objects *duda_api_master()
     objs->response->sendfile    = _sendfile_enqueue;
     objs->response->end = _end_response;
 
-    /* CONSOLE object */
-    objs->console->_debug = duda_console_write;
-
+    /* Assign Objects */
+    objs->console = duda_console_object();
     objs->param   = duda_param_object();
     objs->session = duda_session_object();
     objs->time    = duda_time_object();
