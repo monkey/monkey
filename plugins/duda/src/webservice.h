@@ -43,7 +43,7 @@ struct duda_api_msg *msg;
 struct duda_api_response *response;
 struct duda_api_debug *debug;
 struct duda_api_console *console;
-struct duda_api_params *params;
+struct duda_api_params *param;
 struct duda_api_session *session;
 struct duda_api_cookie *cookie;
 struct duda_api_global *global;
