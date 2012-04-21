@@ -159,7 +159,6 @@ struct duda_api_objects *duda_api_master()
     objs->debug    = mk_api->mem_alloc(sizeof(struct duda_api_debug));
     objs->console  = mk_api->mem_alloc(sizeof(struct duda_api_console));
     objs->global   = mk_api->mem_alloc(sizeof(struct duda_api_global));
-    objs->session  = mk_api->mem_alloc(sizeof(struct duda_api_session));
     objs->cookie   = mk_api->mem_alloc(sizeof(struct duda_api_cookie));
 
     /* MAP Duda calls */
@@ -190,16 +189,8 @@ struct duda_api_objects *duda_api_master()
     /* CONSOLE object */
     objs->console->_debug = duda_console_write;
 
-    /* PARAMS object */
     objs->param = duda_param_object();
-
-    /* SESSION object */
-    objs->session->init    = duda_session_init;
-    objs->session->create  = duda_session_create;
-    objs->session->destroy = duda_session_destroy;
-    objs->session->get     = duda_session_get;
-    objs->session->isset   = duda_session_isset;
-
+    objs->session = duda_session_object();
     objs->time = duda_time_object();
 
     /* COOKIE object */

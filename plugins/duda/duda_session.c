@@ -32,6 +32,20 @@
 #include "webservice.h"
 #include "duda_conf.h"
 
+struct duda_api_session *duda_session_object()
+{
+    struct duda_api_session *s;
+
+    s = mk_api->mem_alloc(sizeof(struct duda_api_session));
+    s->init    = duda_session_init;
+    s->create  = duda_session_create;
+    s->destroy = duda_session_destroy;
+    s->get     = duda_session_get;
+    s->isset   = duda_session_isset;
+
+    return s;
+}
+
 /*
  * Duda sessions are stored into /dev/shm, yes, we know that is not expected as
  * the main purpose of /dev/shm is for process intercommunication and we are breaking
