@@ -22,7 +22,7 @@
 #include "MKPlugin.h"
 #include "duda_xtime.h"
 
-struct duda_api_xtime *duda_utime_object() {
+struct duda_api_xtime *duda_xtime_object() {
     struct duda_api_xtime *t;
 
     t = mk_api->mem_alloc(sizeof(struct duda_api_xtime));
