@@ -172,9 +172,9 @@ void cb_json_second(duda_request_t *dr){
     response->http_header(dr, "Content-Type: text/plain", 24);
 
     pnumber = 0;
-    pvalue1 = params->get(dr, pnumber);
+    pvalue1 = param->get(dr, pnumber);
     pnumber = 1;
-    pvalue2 = params->get(dr, pnumber);
+    pvalue2 = param->get(dr, pnumber);
 
     if(!pvalue1 || !pvalue2) {
         response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
@@ -240,6 +240,7 @@ int duda_init(struct duda_api_objects *api)
     duda_param_t *param;
 
     duda_service_init();
+
     duda_load_package(json, "json");
     duda_load_package(sha1, "sha1");
 

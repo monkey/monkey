@@ -34,7 +34,8 @@
 #include "duda_param.h"
 #include "duda_session.h"
 #include "duda_cookie.h"
-#include "duda_utime.h"
+#include "duda_xtime.h"
+#include "duda_console.h"
 
 struct duda_webservice ws;
 struct mk_list _duda_interfaces;
@@ -51,7 +52,7 @@ struct duda_api_param *param;
 struct duda_api_session *session;
 struct duda_api_cookie *cookie;
 struct duda_api_global *global;
-struct duda_api_utime *utime;
+struct duda_api_xtime *xtime;
 duda_package_t *pkg_temp;
 
 /* Duda Macros */
@@ -72,7 +73,7 @@ duda_package_t *pkg_temp;
     session  = api->session;                                            \
     cookie   = api->cookie;                                             \
     global   = api->global;                                             \
-    utime    = api->utime;                                             \
+    xtime    = api->xtime;                                              \
     mk_list_init(&_duda_interfaces);                                    \
     mk_list_init(&_duda_global_dist);
 

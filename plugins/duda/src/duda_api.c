@@ -27,7 +27,7 @@
 #include "duda_api.h"
 #include "duda_param.h"
 #include "duda_session.h"
-#include "duda_utime.h"
+#include "duda_xtime.h"
 #include "duda_cookie.h"
 #include "duda_package.h"
 #include "duda_event.h"
@@ -188,7 +188,7 @@ struct duda_api_objects *duda_api_master()
     objs->console = duda_console_object();
     objs->param   = duda_param_object();
     objs->session = duda_session_object();
-    objs->utime   = duda_utime_object();
+    objs->xtime   = duda_xtime_object();
     objs->cookie  = duda_cookie_object();
 
     /* Global data (thread scope) */

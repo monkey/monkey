@@ -19,21 +19,34 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DUDA_TIME_H
-#define DUDA_TIME_H
+#include "MKPlugin.h"
+#include "duda_xtime.h"
 
-#define TIME_HOUR   3600
-#define TIME_DAY    (TIME_HOUR * 24)
+struct duda_api_xtime *duda_utime_object() {
+    struct duda_api_xtime *t;
 
-struct duda_api_utime {
-    time_t (*now) ();
-    time_t (*tomorrow) ();
-    time_t (*next_hours) (int);
-};
+    t = mk_api->mem_alloc(sizeof(struct duda_api_xtime));
+    t->now = duda_xtime_now;
+    t->tomorrow = duda_xtime_tomorrow;
+    t->next_hours = duda_xtime_next_hours;
 
-time_t duda_utime_now();
-time_t duda_utime_tomorrow();
-time_t duda_utime_next_hours(int h);
-struct duda_api_utime *duda_utime_object();
+    return t;
+}
 
-#endif
+/* Return the current time in unix time format */
+time_t duda_xtime_now()
+{
+    return mk_api->time_unix();
+}
+
+/* Return the unix time for the next 24 hours */
+time_t duda_xtime_tomorrow()
+{
+    return (mk_api->time_unix() + TIME_DAY);
+}
+
+/* Return the unix time in the next 'h' hours */
+time_t duda_xtime_next_hours(int h)
+{
+    return (mk_api->time_unix() + (h * TIME_HOUR));
+}

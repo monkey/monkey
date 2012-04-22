@@ -1,5 +1,5 @@
 CC      = gcc -g -Wall -DDEBUG
-INCDIR  = ../ -I../../../src/include/
+INCDIR  = ../src -I../ -I../../../src/include/
 SOURCES = hello.c
 OBJECTS = hello.o
 
