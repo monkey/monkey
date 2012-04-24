@@ -137,6 +137,7 @@ int duda_session_create(duda_request_t *dr, char *name, char *value, int expires
              SESSION_STORE_PATH, name, uuid, expires);
     fd = open(session, O_CREAT | O_WRONLY, 0600);
     if (fd == -1) {
+        perror("open");
         mk_err("duda_session: could not create session file");
         return -1;
     }

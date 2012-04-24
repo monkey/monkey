@@ -161,6 +161,8 @@ void duda_mem_init()
     mk_api->pointer_set(&mk_cookie_equal, COOKIE_EQUAL);
     mk_api->pointer_set(&mk_cookie_set, COOKIE_SET);
     mk_api->pointer_set(&mk_cookie_expire, COOKIE_EXPIRE);
+    mk_api->pointer_set(&mk_cookie_path, COOKIE_PATH);
+    mk_api->pointer_set(&mk_cookie_semicolon, COOKIE_SEMICOLON);
 
     /* Default expire value */
     mk_cookie_expire_value.data = mk_api->mem_alloc_z(COOKIE_MAX_DATE_LEN);

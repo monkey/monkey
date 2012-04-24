@@ -20,7 +20,7 @@
  */
 
 #include "MKPlugin.h"
-#include "webservice.h"
+
 #include "duda_debug.h"
 #include "duda_console.h"
 #include "duda.h"
@@ -35,6 +35,7 @@
 #include "duda_global.h"
 #include "duda_sendfile.h"
 #include "duda_body_buffer.h"
+
 #include "webservice.h"
 
 /* Send HTTP response headers just once */

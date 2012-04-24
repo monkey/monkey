@@ -74,18 +74,27 @@ int duda_cookie_set(duda_request_t *dr, char *key, int key_len,
                               mk_cookie_expire_value.data,
                               mk_cookie_expire_value.len,
                               mk_cookie_crlf, MK_IOV_NOT_FREE_BUF);
+        return 0;
     }
-    else if (expires > 0) {
+
+
+    mk_api->iov_add_entry(dr->sr->headers._extra_rows, val, val_len,
+                          mk_cookie_path, MK_IOV_NOT_FREE_BUF);
+
+    /* If the expire time was set */
+    if (expires > 0) {
         exp.data = mk_api->mem_alloc(COOKIE_MAX_DATE_LEN);
         exp.len = mk_api->time_to_gmt(&exp.data, expires);
 
-        mk_api->iov_add_entry(dr->sr->headers._extra_rows, val, val_len,
+        /* path */
+        mk_api->iov_add_entry(dr->sr->headers._extra_rows, dr->appname.data, dr->appname.len,
                               mk_cookie_expire, MK_IOV_NOT_FREE_BUF);
         mk_api->iov_add_entry(dr->sr->headers._extra_rows,
                               exp.data, exp.len, mk_iov_none, MK_IOV_FREE_BUF);
     }
     else {
-        mk_api->iov_add_entry(dr->sr->headers._extra_rows, val, val_len,
+        /* path */
+        mk_api->iov_add_entry(dr->sr->headers._extra_rows, dr->appname.data, dr->appname.len,
                               mk_cookie_crlf, MK_IOV_NOT_FREE_BUF);
     }
 

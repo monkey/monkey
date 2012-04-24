@@ -29,6 +29,8 @@
 #define COOKIE_SET           "Set-Cookie: "
 #define COOKIE_HEADER        "Cookie:"
 #define COOKIE_EXPIRE        "; expires="
+#define COOKIE_PATH          "; path=/"
+#define COOKIE_SEMICOLON     "; "
 #define COOKIE_DELETED       "deleted"
 #define COOKIE_EXPIRE_TIME   337606980
 #define COOKIE_MAX_DATE_LEN  32
@@ -38,6 +40,8 @@ mk_pointer mk_cookie_equal;
 mk_pointer mk_cookie_set;
 mk_pointer mk_cookie_expire;
 mk_pointer mk_cookie_expire_value;
+mk_pointer mk_cookie_path;
+mk_pointer mk_cookie_semicolon;
 
 struct duda_api_cookie {
     int (*set) (duda_request_t *, char *, int, char *, int, int);
