@@ -56,6 +56,7 @@ int sql_dump(sqlite3 *db, const char *query, sqlite3_stmt **handle)
     ret = sqlite3_prepare(db, query, -1, handle, NULL);
     if (ret != SQLITE_OK || !handle) {
         printf("Error: sql_dump()=%d %s\n", ret, sqlite3_errmsg(db));
+        return -1;
     }
 
     return ret;
