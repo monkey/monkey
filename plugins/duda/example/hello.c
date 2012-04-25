@@ -241,6 +241,8 @@ int duda_init(struct duda_api_objects *api)
 
     duda_service_init();
 
+    session->init();
+
     duda_load_package(json, "json");
     duda_load_package(sha1, "sha1");
 

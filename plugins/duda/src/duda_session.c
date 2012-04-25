@@ -153,61 +153,12 @@ int duda_session_create(duda_request_t *dr, char *name, char *value, int expires
     return 0;
 }
 
-int _duda_session_path(duda_request_t *dr, char *uuid, char **buffer, int size)
-{
-    int d_len, u_len;
-    DIR *dir;
-    struct dirent *ent;
-
-    if (!(dir = opendir(SESSION_STORE_PATH))) {
-        return -1;
-    }
-
-    u_len = strlen(uuid);
-
-    while ((ent = readdir(dir)) != NULL) {
-        if ((ent->d_name[0] == '.') && (strcmp(ent->d_name, "..") != 0)) {
-            continue;
-        }
-
-        /* Look just for files */
-        if (ent->d_type != DT_REG) {
-            continue;
-        }
-
-        d_len = strlen(ent->d_name);
-        if (strncmp(ent->d_name + (d_len - u_len), uuid, u_len) == 0) {
-            snprintf(*buffer, size, "%s/%s", SESSION_STORE_PATH, ent->d_name);
-            closedir(dir);
-            return 0;
-        }
-    }
-
-    closedir(dir);
-    return -1;
-}
-
-int duda_session_destroy(duda_request_t *dr, char *uuid)
-{
-    int ret;
-    char *buf = mk_api->mem_alloc(SESSION_UUID_SIZE);
-
-    ret = _duda_session_path(dr, uuid, &buf, SESSION_UUID_SIZE);
-    if (ret == 0) {
-        unlink(buf);
-    }
-
-    mk_api->mem_free(buf);
-    return ret;
-}
-
-void *duda_session_get(duda_request_t *dr, char *name)
+int _duda_session_get_path(duda_request_t *dr, char *name, char **buffer, int buf_size)
 {
     int ret;
     int len;
     int buf_len;
     char buf[SESSION_UUID_SIZE];
-    char *raw = NULL;
     char *session_val;
     DIR *dir;
     struct dirent *ent;
@@ -215,12 +166,12 @@ void *duda_session_get(duda_request_t *dr, char *name)
     /* Get UUID for the specified key */
     ret = duda_cookie_get(dr, SESSION_KEY, &session_val, &len);
     if (ret == -1) {
-        return NULL;
+        return -1;
     }
 
     /* Open store path */
     if (!(dir = opendir(SESSION_STORE_PATH))) {
-        return NULL;
+        return -1;
     }
 
     /* Compose possible session file name */
@@ -244,15 +195,46 @@ void *duda_session_get(duda_request_t *dr, char *name)
 
         /* try to match the file name */
         if (strncmp(ent->d_name, buf, buf_len) == 0) {
-            snprintf(buf, SESSION_UUID_SIZE, "%s/%s", SESSION_STORE_PATH, ent->d_name);
-            raw = mk_api->file_to_buffer(buf);
+            snprintf(*buffer, buf_size, "%s/%s", SESSION_STORE_PATH, ent->d_name);
             closedir(dir);
-            return raw;
+            return 0;
         }
     }
 
     closedir(dir);
-    return NULL;
+    return -1;
+}
+
+int duda_session_destroy(duda_request_t *dr, char *name)
+{
+    int ret;
+    char *buf = mk_api->mem_alloc(SESSION_UUID_SIZE);
+
+    /* We need to catch the right UUID for the session in question */
+    ret = _duda_session_get_path(dr, name, &buf, SESSION_UUID_SIZE);
+    if (ret == 0) {
+        unlink(buf);
+    }
+
+    mk_api->mem_free(buf);
+    return ret;
+}
+
+void *duda_session_get(duda_request_t *dr, char *name)
+{
+    int ret;
+    char *buf = mk_api->mem_alloc(SESSION_UUID_SIZE);
+    char *raw;
+
+    /* We need to catch the right UUID for the session in question */
+    ret = _duda_session_get_path(dr, name, &buf, SESSION_UUID_SIZE);
+    if (ret == -1) {
+        return NULL;
+    }
+
+    raw = mk_api->file_to_buffer(buf);
+    mk_api->mem_free(buf);
+    return raw;
 }
 
 int duda_session_isset(duda_request_t *dr, char *name)
