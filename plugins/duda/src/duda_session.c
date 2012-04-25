@@ -210,13 +210,16 @@ int duda_session_destroy(duda_request_t *dr, char *name)
     int ret;
     char *buf = mk_api->mem_alloc(SESSION_UUID_SIZE);
 
-    /* We need to catch the right UUID for the session in question */
+    /* Get the absolute path for the session file */
     ret = _duda_session_get_path(dr, name, &buf, SESSION_UUID_SIZE);
     if (ret == 0) {
         unlink(buf);
     }
 
     mk_api->mem_free(buf);
+
+    /* Now lets make the client cookie expire */
+    duda_cookie_destroy(dr, SESSION_KEY, sizeof(SESSION_KEY) - 1);
     return ret;
 }
 
