@@ -60,10 +60,6 @@ unsigned char *base64_encode(const unsigned char *src, size_t len,
 		*pos++ = base64_table[in[2] & 0x3f];
 		in += 3;
 		line_len += 4;
-		if (line_len >= 72) {
-			*pos++ = '\n';
-			line_len = 0;
-		}
 	}
 
 	if (end - in) {
