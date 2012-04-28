@@ -195,7 +195,7 @@ static struct header_status_response status_response[] = {
     },
     {MK_SERVER_HTTP_VERSION_UNSUP,
      MK_RH_SERVER_HTTP_VERSION_UNSUP,
-     sizeof(MK_RH_SERVER_HTTP_VERSION_UNSUP)
+     sizeof(MK_RH_SERVER_HTTP_VERSION_UNSUP) - 1
     }
 };
 
