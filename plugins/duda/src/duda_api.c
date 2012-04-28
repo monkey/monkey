@@ -19,6 +19,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+#include <stdarg.h>
+
 #include "MKPlugin.h"
 
 #include "duda_debug.h"
@@ -67,21 +70,21 @@ int __http_send_headers_safe(duda_request_t *dr)
 }
 
 /* set HTTP response status */
-int _http_status(duda_request_t *dr, int status)
+int http_status(duda_request_t *dr, int status)
 {
     mk_api->header_set_http_status(dr->sr, status);
     return 0;
 }
 
 /* add a new HTTP response header */
-int _http_header(duda_request_t *dr, char *row, int len)
+int http_header(duda_request_t *dr, char *row, int len)
 {
     mk_api->header_add(dr->sr, row, len);
     return 0;
 }
 
 /* Compose the body_buffer */
-int _body_enqueue_write(duda_request_t *dr, char *raw, int len)
+int _body_print(duda_request_t *dr, char *raw, int len, int free)
 {
     int ret;
     struct duda_body_buffer *body_buffer;
@@ -107,12 +110,64 @@ int _body_enqueue_write(duda_request_t *dr, char *raw, int len)
     }
 
     /* Link data */
-    mk_api->iov_add_entry(body_buffer->buf, raw, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    if (free == MK_TRUE) {
+        mk_api->iov_add_entry(body_buffer->buf, raw, len, mk_iov_none, MK_IOV_FREE_BUF);
+    }
+    else {
+        mk_api->iov_add_entry(body_buffer->buf, raw, len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
 
     return 0;
 }
 
-int _sendfile_enqueue(duda_request_t *dr, char *path)
+/* Enqueue a constant raw buffer */
+int body_print(duda_request_t *dr, char *raw, int len)
+{
+    return _body_print(dr, raw, len, MK_FALSE);
+}
+
+/*
+ * Format a new buffer and enqueue it contents, when the queue is flushed all reference
+ * to the buffers created here are freed
+ */
+int body_printf(duda_request_t *dr, const char *format, ...)
+{
+    int ret;
+    int n, size = 128;
+    char *p, *np;
+    va_list ap;
+
+    if ((p = mk_api->mem_alloc(size)) == NULL) {
+        return -1;
+    }
+
+    while (1) {
+        /* Try to print in the allocated space. */
+        va_start(ap, format);
+        n = vsnprintf(p, size, format, ap);
+        va_end(ap);
+        /* If that worked, return the string. */
+        if (n > -1 && n < size)
+            break;
+
+        size *= 2;  /* twice the old size */
+        if ((np = mk_api->mem_realloc(p, size)) == NULL) {
+            mk_api->mem_free(p);
+            return - 1;
+        } else {
+            p = np;
+        }
+    }
+
+    ret = _body_print(dr, p, n, MK_TRUE);
+    if (ret == -1) {
+        mk_api->mem_free(p);
+    }
+
+    return ret;
+}
+
+int sendfile_enqueue(duda_request_t *dr, char *path)
 {
     struct duda_sendfile *sf;
     struct duda_queue_item *item;
@@ -131,7 +186,7 @@ int _sendfile_enqueue(duda_request_t *dr, char *path)
 }
 
 /* Finalize the response process */
-int _end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
+int end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *))
 {
     int ret;
 
@@ -179,11 +234,12 @@ struct duda_api_objects *duda_api_master()
     objs->msg->bug   = duda_debug_bug;
 
     /* RESPONSE object */
-    objs->response->http_status = _http_status;
-    objs->response->http_header = _http_header;
-    objs->response->body_write  = _body_enqueue_write;
-    objs->response->sendfile    = _sendfile_enqueue;
-    objs->response->end = _end_response;
+    objs->response->http_status = http_status;
+    objs->response->http_header = http_header;
+    objs->response->body_print  = body_print;
+    objs->response->body_printf = body_printf;
+    objs->response->sendfile    = sendfile_enqueue;
+    objs->response->end         = end_response;
 
     /* Assign Objects */
     objs->console = duda_console_object();

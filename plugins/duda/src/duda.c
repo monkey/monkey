@@ -78,9 +78,17 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
 
         /* Register Duda built-in interfaces: console */
         cs_iface  = api->map->interface_new("console");
+
+        /* app/console/debug */
         cs_method = api->map->method_builtin_new("debug", duda_console_cb_debug, 0);
         api->map->interface_add_method(cs_method, cs_iface);
+
+        /* app/console/map */
+        cs_method = api->map->method_builtin_new("map", duda_console_cb_map, 0);
+        api->map->interface_add_method(cs_method, cs_iface);
+
         mk_list_add(&cs_iface->_head, ws->map);
+
 
         /* Lookup callback functions for each registered method */
         mk_list_foreach(head_iface, ws->map) {
@@ -280,8 +288,8 @@ int duda_request_parse(struct session_request *sr,
     short int last_field = MAP_WS_APP_NAME;
     unsigned int i = 0, len, val_len;
     int end;
-    short int allowed_params;
-    struct mk_list *head_param;
+    short int allowed_params = 0;
+    struct mk_list *head_param = NULL;
     struct duda_param *entry_param;
 
     len = sr->uri_processed.len;

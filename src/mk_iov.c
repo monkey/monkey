@@ -117,11 +117,6 @@ int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 
     mk_io->size = new_size;
 
-    for (i=mk_io->iov_idx; i < mk_io->size - 1; i++) {
-        mk_io->io[0].iov_base = NULL;
-        mk_io->io[0].iov_len = 0;
-    }
-
     return 0;
 }
 

@@ -33,11 +33,11 @@
 #define DUDA_QSTATUS_INACTIVE    0
 
 struct duda_queue_item {
-    short int type;
-    short int status;
-    void *data;
+    short int type;        /* item type */
+    short int status;      /* item status */
+    void *data;            /* the data it self */
 
-    struct mk_list _head;
+    struct mk_list _head;  /* link to the queue list */
 };
 
 struct duda_queue_item *duda_queue_item_new(short int type);

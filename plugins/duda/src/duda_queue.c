@@ -36,7 +36,7 @@ struct duda_queue_item *duda_queue_item_new(short int type)
         return NULL;
     }
 
-    item->type = type;
+    item->type   = type;
     item->status = DUDA_QSTATUS_ACTIVE;
 
     return item;
@@ -141,7 +141,6 @@ int duda_queue_free(struct mk_list *queue)
             close(sf->fd);
             mk_api->mem_free(sf);
         }
-
         item->data = NULL;
         mk_list_del(head);
         mk_api->mem_free(item);

@@ -28,6 +28,7 @@
 #include "MKPlugin.h"
 #include "duda.h"
 #include "duda_api.h"
+#include "duda_conf.h"
 
 struct duda_api_console *duda_console_object()
 {
@@ -42,10 +43,71 @@ struct duda_api_console *duda_console_object()
 /* callback for /app/console/debug */
 void duda_console_cb_debug(duda_request_t *dr)
 {
-    _http_status(dr, 200);
-    _http_header(dr, "Content-Type: text/plain", 24);
-    _sendfile_enqueue(dr, "/tmp/duda.console");
-    _end_response(dr, NULL);
+    http_status(dr, 200);
+    http_header(dr, "Content-Type: text/plain", 24);
+    sendfile_enqueue(dr, "/tmp/duda.console");
+    end_response(dr, NULL);
+}
+
+/* callback for /app/console/map */
+void duda_console_cb_map(duda_request_t *dr)
+{
+    struct web_service *ws = dr->ws_root;
+    struct mk_list *head_iface, *head_method;
+    struct duda_interface *entry_iface;
+    struct duda_method *entry_method;
+
+    char *header = "<html><head><title>Duda Map: %s</title>%s</head><body>\n";
+    char *css    = "<STYLE type=\"text/css\">\n"
+                   "body {\n"
+                   "      font-family: trebuchet, Arial, Verdana, Helvetica, sans-serif;\n"
+		           "      letter-spacing: 0.015em;\n"
+                   " 	  word-spacing: 0.080em;\n"
+		           "      font-style:normal;\n"
+                   "	  font-weight:normal;\n"
+                   "      font-size: 0.75em;\n"
+                   "	  color: #073a61;\n"
+                   "  	  border-width: 6px 0 0 0;\n"
+                   "      border-style: solid;\n"
+                   "      margin: 0;\n"
+                   "      padding-left: 10px;\n"
+                   "}\n"
+                   "</STYLE>\n";
+    char *footer = "</body></html>\n";
+
+    http_status(dr, 200);
+    http_header(dr, "Content-Type: text/html", 23);
+
+    /* Header */
+    body_printf(dr, header, dr->ws_root->app_name, css);
+    body_printf(dr, "<h2>%s/</h2>\n<ul>", dr->ws_root->app_name);
+
+    /* List of interfaces */
+    mk_list_foreach(head_iface, ws->map) {
+        entry_iface = mk_list_entry(head_iface, struct duda_interface, _head);
+        body_printf(dr, "<h3>%s/<h3>\n<ul>\n", entry_iface->uid);
+
+        /* List methods */
+        mk_list_foreach(head_method, &entry_iface->methods) {
+            entry_method = mk_list_entry(head_method, struct duda_method, _head);
+            body_printf(dr, "\t<li>%s()</li>\n", entry_method->uid);
+
+            /* FIXME: print parameters
+            mk_list_foreach(head_param, &entry_method->params) {
+                entry_param = mk_list_entry(head_param, struct duda_param, _head);
+                body_printf(dr, "\t\t<li>%s</li>\n", entry_param->name);
+            }
+            body_printf(dr, "\t\t</ul>\n");
+            */
+        }
+        body_printf(dr, "</ul>\n");
+    }
+
+    body_printf(dr, "</ul>");
+
+    /* Footer */
+    body_print(dr, footer, strlen(footer));
+    end_response(dr, NULL);
 }
 
 void duda_console_write(duda_request_t *dr, char *file, int line, char *format, ...)
@@ -55,7 +117,7 @@ void duda_console_write(duda_request_t *dr, char *file, int line, char *format, 
     char buf[buf_size];
     mk_pointer *now;
 
-    /* Guess we need no more than 100 bytes. */
+    /* Guess we need no more than 128 bytes. */
     int n, size = 128;
     char *p, *np;
     va_list ap;

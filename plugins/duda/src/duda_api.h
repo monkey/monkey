@@ -156,7 +156,8 @@ struct duda_api_msg {
 struct duda_api_response {
     int (*http_status) (duda_request_t *, int);
     int (*http_header) (duda_request_t *, char *, int);
-    int (*body_write)  (duda_request_t *, char *, int);
+    int (*body_print)  (duda_request_t *, char *, int);
+    int (*body_printf) (duda_request_t *, const char *, ...);
     int (*sendfile)    (duda_request_t *, char *);
     int (*end) (duda_request_t *, void (*end_callback) ());
 };
@@ -196,5 +197,12 @@ struct duda_api_objects {
 };
 
 struct duda_api_objects *duda_api_master();
+
+int http_status(duda_request_t *dr, int status);
+int http_header(duda_request_t *dr, char *row, int len);
+int body_print(duda_request_t *dr, char *raw, int len);
+int body_printf(duda_request_t *dr, const char *format, ...);
+int sendfile_enqueue(duda_request_t *dr, char *path);
+int end_response(duda_request_t *dr, void (*end_cb) (duda_request_t *));
 
 #endif

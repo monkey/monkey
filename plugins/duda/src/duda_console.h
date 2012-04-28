@@ -34,6 +34,7 @@ struct duda_api_console {
 
 struct duda_api_console *duda_console_object();
 void duda_console_cb_debug(duda_request_t *dr);
+void duda_console_cb_map(duda_request_t *dr);
 void duda_console_write(duda_request_t *dr, char *file, int line, char *format, ...);
 
 #endif
