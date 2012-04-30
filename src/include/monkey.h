@@ -34,6 +34,7 @@
 
 /* Thread mutexes */
 pthread_mutex_t mutex_wait_register;
+pthread_mutex_t mutex_sched_active_connections;
 mk_pointer mk_monkey_protocol;
 mk_pointer mk_monkey_port;
 

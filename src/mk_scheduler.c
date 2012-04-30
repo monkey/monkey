@@ -88,14 +88,18 @@ inline int mk_sched_add_client(int remote_fd)
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
-    __sync_fetch_and_add(&sched->active_connections, 1);
+    pthread_mutex_lock(&mutex_sched_active_connections);
+    sched->active_connections += 1;
+    pthread_mutex_unlock(&mutex_sched_active_connections);
 
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
     /* If epoll has failed, decrement the active connections counter */
     if (r != 0) {
-        __sync_fetch_and_sub(&sched->active_connections, 1);
+        pthread_mutex_lock(&mutex_sched_active_connections);
+        sched->active_connections -= 1;
+        pthread_mutex_unlock(&mutex_sched_active_connections);
     }
 
     return r;
@@ -211,8 +215,8 @@ int mk_sched_register_thread(int efd)
     static int wid = 0;
 
     sl = &sched_list[wid];
-    __sync_bool_compare_and_swap(&sl->active_connections, sl->active_connections, 0);
-    sl->idx = __sync_fetch_and_add(&wid, 1);
+    sl->active_connections = 0;
+    sl->idx = wid++;
     sl->tid = pthread_self();
 
     /*
@@ -226,8 +230,7 @@ int mk_sched_register_thread(int efd)
      * the syscall, we need to call it directly through syscall(2).
      */
     sl->pid = syscall(__NR_gettid);
-
-    __sync_bool_compare_and_swap(&sl->epoll_fd, sl->epoll_fd, efd);
+    sl->epoll_fd = efd;
 
     mk_list_init(&sl->busy_queue);
     mk_list_init(&sl->av_queue);
@@ -332,8 +335,11 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
 
+        pthread_mutex_lock(&mutex_sched_active_connections);
+        sched->active_connections -= 1;
+        pthread_mutex_unlock(&mutex_sched_active_connections);
+
         /* Change node status */
-        __sync_fetch_and_sub(&sched->active_connections, 1);
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;
         sc->socket = -1;
 
