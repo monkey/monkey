@@ -38,7 +38,7 @@ static char *log_time_buffers[2];
 static char *header_time_buffers[2];
 
 /* The mk_pointers have two buffers for avoid in half-way access from
- * another thread while a buffer is being modified. The function below returns 
+ * another thread while a buffer is being modified. The function below returns
  * one of two buffers to work with.
  */
 static inline char *_next_buffer(mk_pointer *pointer, char **buffers)
@@ -56,12 +56,12 @@ static void mk_clock_log_set_time(time_t utime)
     struct tm result;
 
     time_string = _next_buffer(&log_current_time, log_time_buffers);
-    __sync_bool_compare_and_swap(&log_current_utime, log_current_utime, utime);
+    log_current_utime = utime;
 
     strftime(time_string, LOG_TIME_BUFFER_SIZE, "[%d/%b/%G %T %z]",
              localtime_r(&utime, &result));
 
-    __sync_bool_compare_and_swap(&log_current_time.data, log_current_time.data, time_string);
+    log_current_time.data = time_string;
 }
 
 void mk_clock_header_set_time(time_t utime)
@@ -75,7 +75,7 @@ void mk_clock_header_set_time(time_t utime)
     gmt_tm = gmtime_r(&utime, &result);
     strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
 
-    __sync_bool_compare_and_swap(&header_current_time.data, header_current_time.data, time_string);
+    header_current_time.data = time_string;
 }
 
 void *mk_clock_worker_init(void *args)
