@@ -53,7 +53,7 @@ void cb_hello_world(duda_request_t *dr)
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
 
-    response->body_write(dr, "hello world!\n", 13);
+    response->body_print(dr, "hello world!\n", 13);
     response->end(dr, cb_end);
 }
 
@@ -77,8 +77,8 @@ void cb_sha1_test(duda_request_t *dr)
 
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/html;charset=UTF-8", 37);
-    response->body_write(dr, "Raw: hello world!<br>Encoded: ", 30);
-    response->body_write(dr, (char *)encoded, SHA_DIGEST_LENGTH);
+    response->body_print(dr, "Raw: hello world!<br>Encoded: ", 30);
+    response->body_print(dr, (char *)encoded, SHA_DIGEST_LENGTH);
     response->end(dr, cb_end);
 }
 
@@ -130,16 +130,16 @@ void cb_json_first(duda_request_t *dr)
     json->add_to_array(jphone, jphone2);
     json->add_to_object(jroot, "phoneNumber", jphone);
 
-    response->body_write(dr, FORMATTED_OUT, sizeof(FORMATTED_OUT) - 1);
+    response->body_print(dr, FORMATTED_OUT, sizeof(FORMATTED_OUT) - 1);
     resp = json->print(jroot);
-    response->body_write(dr, resp, strlen(resp));
+    response->body_print(dr, resp, strlen(resp));
 
     resp = NULL;
     jparse = json->parse(strparse);
-    response->body_write(dr, UNFORMATTED_OUT, sizeof(UNFORMATTED_OUT) - 1);
+    response->body_print(dr, UNFORMATTED_OUT, sizeof(UNFORMATTED_OUT) - 1);
     resp = json->print_unformatted(jparse);
     json->delete(jparse);
-    response->body_write(dr, resp, strlen(resp));
+    response->body_print(dr, resp, strlen(resp));
 
     response->end(dr, cb_end);
 }
@@ -177,7 +177,7 @@ void cb_json_second(duda_request_t *dr){
     pvalue2 = param->get(dr, pnumber);
 
     if(!pvalue1 || !pvalue2) {
-        response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
+        response->body_print(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
     }else if(strncmp(pvalue1, CREATE, sizeof(CREATE) - 1) == 0 && (sizeof(CREATE) - 1) == strlen(pvalue1)) {
         jroot = json->create_object();
         json->add_to_object(jroot, "name", json->create_string("Michel Perez"));
@@ -202,27 +202,27 @@ void cb_json_second(duda_request_t *dr){
 
         if(strncmp(pvalue2, FORMATTED, sizeof(FORMATTED) - 1) == 0 && (sizeof(FORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print(jroot);
-            response->body_write(dr, resp, strlen(resp));
+            response->body_print(dr, resp, strlen(resp));
         }else if(strncmp(pvalue2, UNFORMATTED, sizeof(UNFORMATTED) - 1) == 0 && (sizeof(UNFORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print_unformatted(jroot);
-            response->body_write(dr, resp, strlen(resp));
+            response->body_print(dr, resp, strlen(resp));
         }else  {
-            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
+            response->body_print(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
         }
     }else if(strncmp(pvalue1, PARSE, sizeof(PARSE) - 1) == 0 && (sizeof(PARSE) - 1) == strlen(pvalue1)) {
         jparse = json->parse(strparse);
         if(strncmp(pvalue2, FORMATTED, sizeof(FORMATTED) - 1) == 0 && (sizeof(FORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print(jparse);
-            response->body_write(dr, resp, strlen(resp));
+            response->body_print(dr, resp, strlen(resp));
         }else if(strncmp(pvalue2, UNFORMATTED, sizeof(UNFORMATTED) - 1) == 0 && (sizeof(UNFORMATTED) - 1) == strlen(pvalue2)) {
             resp = json->print_unformatted(jparse);
-            response->body_write(dr, resp, strlen(resp));
+            response->body_print(dr, resp, strlen(resp));
         }else {
-            response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
+            response->body_print(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
         }
         json->delete(jparse);
     }else {
-        response->body_write(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
+        response->body_print(dr, INCORRECT_PARAMETERS, sizeof(INCORRECT_PARAMETERS) - 1);
     }
         response->end(dr, cb_end);
 }
