@@ -33,7 +33,7 @@
 #endif
 
 #define M_DEFAULT_CONFIG_FILE	"monkey.conf"
-#define MK_DEFAULT_LISTEN_ADDR NULL
+#define MK_DEFAULT_LISTEN_ADDR  "0.0.0.0"
 #define MK_WORKERS_DEFAULT 1
 
 #define VALUE_ON "on"
