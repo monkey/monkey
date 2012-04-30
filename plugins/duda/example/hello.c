@@ -233,7 +233,7 @@ void *cb_global_mem()
     return mem;
 }
 
-int duda_init(struct duda_api_objects *api)
+int duda_main(struct duda_api_objects *api)
 {
     duda_interface_t *if_system;
     duda_method_t    *method;

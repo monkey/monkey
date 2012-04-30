@@ -69,10 +69,15 @@ int duda_service_register(struct duda_api_objects *api, struct web_service *ws)
     struct duda_interface *entry_iface, *cs_iface;
     struct duda_method *entry_method, *cs_method;
 
-    /* Load and invoke duda_init() */
-    service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_init");
+    /* Load and invoke duda_main() */
+    service_init = (int (*)()) duda_load_symbol(ws->handler, "duda_maina");
+    if (!service_init) {
+        mk_err("Duda: invalid web service %s", ws->app_name);
+        exit(EXIT_FAILURE);
+    }
+
     if (service_init(api) == 0) {
-        PLUGIN_TRACE("[%s] duda_init()", ws->app_name);
+        PLUGIN_TRACE("[%s] duda_main()", ws->app_name);
         ws->map = (struct mk_list *) duda_load_symbol(ws->handler, "_duda_interfaces");
         ws->global = duda_load_symbol(ws->handler, "_duda_global_dist");
 
