@@ -383,7 +383,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->listen_addr = mk_config_section_getval(section, "Listen",
                                                    MK_CONFIG_VAL_STR);
     if (!config->listen_addr) {
-        config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
+        config->listen_addr = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
     }
 
     /* Connection port */
