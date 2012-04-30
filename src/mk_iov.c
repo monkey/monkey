@@ -99,7 +99,6 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
 int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 {
-    int i;
     char **new_buf;
     struct iovec *new_io;
 
