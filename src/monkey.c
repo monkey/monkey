@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     }
 
     /* setup basic configurations */
-    config = mk_mem_malloc(sizeof(struct server_config));
+    config = mk_mem_malloc_z(sizeof(struct server_config));
 
     if (!file_config)
         config->file_config = MONKEY_PATH_CONF;
