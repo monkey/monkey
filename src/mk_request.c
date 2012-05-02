@@ -61,46 +61,18 @@
 /* Create a memory allocation in order to handle the request data */
 static void mk_request_init(struct session_request *request)
 {
-    request->status = MK_FALSE;  /* Request not processed yet */
-    request->close_now = MK_FALSE;
+    memset(request, 0, sizeof(struct session_request));
 
-    mk_pointer_reset(&request->body);
     request->status = MK_TRUE;
     request->method = HTTP_METHOD_UNKNOWN;
 
-    mk_pointer_reset(&request->uri);
-    request->uri_processed.data = NULL;
-
-    request->content_length = 0;
-    request->content_type.data = NULL;
-    request->connection.data = NULL;
-    request->host.data = NULL;
-    request->if_modified_since.data = NULL;
-    request->last_modified_since.data = NULL;
-    request->range.data = NULL;
-
-    request->data.data = NULL;
-    mk_pointer_reset(&request->query_string);
-
     request->file_info.size = -1;
-    request->virtual_user = NULL;
-    request->keep_alive = MK_FALSE;
 
-    mk_pointer_reset(&request->real_path);
-
-    request->loop = 0;
     request->bytes_to_send = -1;
-    request->bytes_offset = 0;
     request->fd_file = -1;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
-
-    /* Plugin handler */
-    request->handled_by = NULL;
-
-    /* Headers TOC */
-    request->headers_toc.length = 0;
 }
 
 static void mk_request_free(struct session_request *sr)
