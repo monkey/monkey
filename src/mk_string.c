@@ -45,6 +45,25 @@ static int _mk_string_search(const char *string, const char *search, int sensiti
     char *p = NULL, *q = NULL;
     char *s = NULL;
 
+    /* Fast path */
+    if (len <= 0) {
+        switch(sensitive) {
+        case MK_STR_SENSITIVE:
+            p = strstr(string, search);
+            break;
+        case MK_STR_INSENSITIVE:
+            p = strcasestr(string, search);
+            break;
+        }
+
+        if (p) {
+            return (p - string);
+        }
+        else {
+            return -1;
+        }
+    }
+
     p = (char *) string;
     do {
         q = p;
