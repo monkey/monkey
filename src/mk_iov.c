@@ -180,7 +180,8 @@ void mk_iov_free_marked(struct mk_iov *mk_io)
 
 void mk_iov_print(struct mk_iov *mk_io)
 {
-    int i, j;
+    int i;
+    unsigned j;
     char *c;
 
     for (i = 0; i < mk_io->iov_idx; i++) {
