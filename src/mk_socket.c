@@ -190,24 +190,29 @@ int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 {
     struct sockaddr addr;
     socklen_t s_len = sizeof(addr);
+    const int bufsize = 80;
+    char errormsg[bufsize];
 
     if((getpeername(socket_fd, &addr, &s_len)) == -1 ) {
         MK_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
         return -1;
     }
 
+    errno = 0;
+
     if(addr.sa_family == AF_INET) {
         if((inet_ntop(addr.sa_family, &((struct sockaddr_in *)&addr)->sin_addr,
-                      *buf, INET_ADDRSTRLEN)) == NULL) {
-            MK_TRACE("Can't get the IP text form");
+                      *buf, size)) == NULL) {
+            strerror_r(errno, errormsg, bufsize);
+            mk_warn("mk_socket_ip_str: Can't get the IP text form, %s", errormsg);
             return -1;
         }
     }
-
-    if(addr.sa_family == AF_INET6) {
+    else if(addr.sa_family == AF_INET6) {
         if((inet_ntop(addr.sa_family, &((struct sockaddr_in6 *)&addr)->sin6_addr,
-                     *buf, INET6_ADDRSTRLEN)) == NULL) {
-            MK_TRACE("Can't get the IP text form");
+                     *buf, size)) == NULL) {
+            strerror_r(errno, errormsg, bufsize);
+            mk_warn("mk_socket_ip_str: Can't get the IP text form, %s", errormsg);
             return -1;
         }
     }
