@@ -119,7 +119,7 @@ char *mk_pointer_to_buf(mk_pointer p)
 
 void mk_pointer_print(mk_pointer p)
 {
-    int i;
+    unsigned int i;
 
     printf("\nDEBUG MK_POINTER: '");
     for (i = 0; i < p.len && p.data != NULL; i++) {
