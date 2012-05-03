@@ -637,11 +637,13 @@ int mk_handler_write(int socket, struct client_session *cs)
 
         /* Request not processed also no plugin has take some action */
         /* Request with data to send by static file sender */
-        if (sr_node->bytes_to_send > 0 && !sr_node->handled_by) {
-            final_status = mk_http_send_file(cs, sr_node);
-        }
-        else if (sr_node->bytes_to_send < 0 && !sr_node->handled_by) {
-            final_status = mk_request_process(cs, sr_node);
+        if (!sr_node->handled_by) {
+            if (sr_node->bytes_to_send > 0) {
+                final_status = mk_http_send_file(cs, sr_node);
+            }
+            else if (sr_node->bytes_to_send < 0) {
+                final_status = mk_request_process(cs, sr_node);
+            }
         }
 
         /*
@@ -651,7 +653,7 @@ int mk_handler_write(int socket, struct client_session *cs)
         if (final_status > 0) {
             return final_status;
         }
-        else if (final_status <= 0) {
+        else {
             /* STAGE_40, request has ended */
             mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
                                 NULL, cs, sr_node);
