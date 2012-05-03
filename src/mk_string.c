@@ -267,7 +267,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
 
 int mk_string_trim(char **str)
 {
-    int i;
+    unsigned int i;
     unsigned int len;
     char *left = 0, *right = 0;
     char *buf;
