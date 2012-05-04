@@ -85,7 +85,7 @@ static int _mk_string_search(const char *string, const char *search, int sensiti
         }
 
         i++;
-        if (len > 0 && i >= len) {
+        if (i >= len) {
             break;
         }
     } while (*p++);
