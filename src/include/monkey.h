@@ -31,11 +31,8 @@
 #define SH_NOCGI 0
 #define SH_CGI 1
 
-
-/* Thread mutexes */
-pthread_mutex_t mutex_wait_register;
+/* Monkey Protocol */
 mk_pointer mk_monkey_protocol;
-mk_pointer mk_monkey_port;
 
 /* Process UID/GID */
 gid_t EGID;
