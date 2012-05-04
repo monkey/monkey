@@ -123,7 +123,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 {
     int ret;
-    struct epoll_event event;
+    struct epoll_event event = {0, {0}};
 
     event.data.fd = fd;
     event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -169,7 +169,7 @@ int mk_epoll_del(int efd, int fd)
 int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
 {
     int ret;
-    struct epoll_event event;
+    struct epoll_event event = {0, {0}};
 
     event.events = EPOLLERR | EPOLLHUP;
     event.data.fd = fd;
