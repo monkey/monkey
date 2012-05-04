@@ -50,16 +50,26 @@ static inline int _next_target()
 {
     int i;
     int target = 0;
+    unsigned long long tmp = 0, cur = 0;
+
+    cur = sched_list[0].accepted_connections - sched_list[0].closed_connections;
+    if (cur == 0)
+        return 0;
 
     /* Finds the lowest load worker */
     for (i = 1; i < config->workers; i++) {
-        if (sched_list[i].active_connections < sched_list[target].active_connections) {
+        tmp = sched_list[i].accepted_connections - sched_list[i].closed_connections;
+        if (tmp < cur) {
             target = i;
+            cur = tmp;
+
+            if (cur == 0)
+                break;
         }
     }
 
     /* If sched_list[target] worker is full then the whole server too, because it has the lowest load. */
-    if(sched_list[target].active_connections >= config->worker_capacity) {
+    if(cur >= config->worker_capacity) {
         MK_TRACE("Too many clients: %i", config->worker_capacity * config->workers);
         return -1;
     }
@@ -88,18 +98,12 @@ inline int mk_sched_add_client(int remote_fd)
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
-    pthread_mutex_lock(&mutex_sched_active_connections);
-    sched->active_connections += 1;
-    pthread_mutex_unlock(&mutex_sched_active_connections);
-
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
     /* If epoll has failed, decrement the active connections counter */
-    if (r != 0) {
-        pthread_mutex_lock(&mutex_sched_active_connections);
-        sched->active_connections -= 1;
-        pthread_mutex_unlock(&mutex_sched_active_connections);
+    if (r == 0) {
+        sched->accepted_connections++;
     }
 
     return r;
@@ -114,8 +118,10 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     int ret;
     struct sched_connection *sched_conn;
     struct mk_list *av_queue = &sched->av_queue;
+    unsigned long long active_connections;
 
-    if (sched->active_connections < config->worker_capacity) {
+    active_connections = sched->accepted_connections - sched->closed_connections;
+    if (active_connections < config->worker_capacity) {
         sched_conn = mk_list_entry_first(av_queue, struct sched_connection, _head);
 
         /* Before to continue, we need to run plugin stage 10 */
@@ -215,7 +221,6 @@ int mk_sched_register_thread(int efd)
     static int wid = 0;
 
     sl = &sched_list[wid];
-    sl->active_connections = 0;
     sl->idx = wid++;
     sl->tid = pthread_self();
 
@@ -265,7 +270,7 @@ int mk_sched_launch_thread(int max_events)
         return -1;
     }
 
-    thconf = mk_mem_malloc(sizeof(sched_thread_conf));
+    thconf = mk_mem_malloc_z(sizeof(sched_thread_conf));
     thconf->epoll_fd = efd;
     thconf->epoll_max_events = max_events*2;
     thconf->max_events = max_events;
@@ -334,10 +339,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
-
-        pthread_mutex_lock(&mutex_sched_active_connections);
-        sched->active_connections -= 1;
-        pthread_mutex_unlock(&mutex_sched_active_connections);
+        sched->closed_connections++;
 
         /* Change node status */
         sc->status = MK_SCHEDULER_CONN_AVAILABLE;

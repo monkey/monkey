@@ -153,9 +153,6 @@ int main(int argc, char **argv)
     mk_sched_init();
     mk_plugin_init();
 
-    /* FIXME: temporal mutex */
-    pthread_mutex_init(&mutex_sched_active_connections, (pthread_mutexattr_t *) NULL);
-
     /* Server listening socket */
     config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
 

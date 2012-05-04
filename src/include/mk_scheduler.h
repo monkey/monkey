@@ -46,7 +46,8 @@ struct sched_connection
 /* Global struct */
 struct sched_list_node
 {
-    unsigned short int active_connections;
+    unsigned long long accepted_connections;
+    unsigned long long closed_connections;
 
     struct mk_list busy_queue;
     struct mk_list av_queue;
