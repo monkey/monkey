@@ -8,7 +8,7 @@ WS_OBJECTS = ws.o request.o base64.o sha1.o echo.o
 all: monkey-websockets.so
 
 monkey-websockets.so: $(WS_OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<

@@ -8,7 +8,7 @@ OBJECTS = sha1.o base64.o conf.o auth.o
 all: monkey-auth.so
 
 monkey-auth.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<

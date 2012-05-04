@@ -9,7 +9,7 @@ OBJECTS = palm.o protocol.o cgi.o request.o
 all: monkey-palm.so
 
 monkey-palm.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<

@@ -8,7 +8,7 @@ CHEETAH_OBJECTS = cheetah.o loop.o cmd.o cutils.o
 all: monkey-cheetah.so
 
 monkey-cheetah.so: $(CHEETAH_OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<

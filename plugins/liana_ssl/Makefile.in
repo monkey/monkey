@@ -9,7 +9,7 @@ MATRIX_HEADERS = /usr/include/matrixssl/
 all: monkey-liana_ssl.so
 
 monkey-liana_ssl.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lmatrixssl
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lmatrixssl
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) $(INCDIR) -I$(MATRIX_HEADERS) -fPIC -c $<

@@ -8,7 +8,7 @@ DIRLISTING_OBJECTS = dirlisting.o
 all: monkey-dirlisting.so
 
 monkey-dirlisting.so: $(DIRLISTING_OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
