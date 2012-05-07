@@ -118,31 +118,27 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     int ret;
     struct sched_connection *sched_conn;
     struct mk_list *av_queue = &sched->av_queue;
-    unsigned long long active_connections;
 
-    active_connections = sched->accepted_connections - sched->closed_connections;
-    if (active_connections < config->worker_capacity) {
-        sched_conn = mk_list_entry_first(av_queue, struct sched_connection, _head);
+    sched_conn = mk_list_entry_first(av_queue, struct sched_connection, _head);
 
-        /* Before to continue, we need to run plugin stage 10 */
-        ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
-                                  remote_fd,
-                                  sched_conn, NULL, NULL);
+    /* Before to continue, we need to run plugin stage 10 */
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
+                              remote_fd,
+                              sched_conn, NULL, NULL);
 
-        /* Close connection, otherwise continue */
-        if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            mk_conn_close(remote_fd);
-            return MK_PLUGIN_RET_CLOSE_CONX;
-        }
-
-        mk_list_del(&sched_conn->_head);
-        mk_list_add(&sched_conn->_head, &sched->busy_queue);
-
-        /* Socket and status */
-        sched_conn->socket = remote_fd;
-        sched_conn->status = MK_SCHEDULER_CONN_PENDING;
-        sched_conn->arrive_time = log_current_utime;
+    /* Close connection, otherwise continue */
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+        mk_conn_close(remote_fd);
+        return MK_PLUGIN_RET_CLOSE_CONX;
     }
+
+    mk_list_del(&sched_conn->_head);
+    mk_list_add(&sched_conn->_head, &sched->busy_queue);
+
+    /* Socket and status */
+    sched_conn->socket = remote_fd;
+    sched_conn->status = MK_SCHEDULER_CONN_PENDING;
+    sched_conn->arrive_time = log_current_utime;
 
 
     return -1;
