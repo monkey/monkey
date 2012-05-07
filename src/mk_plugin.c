@@ -508,6 +508,7 @@ void mk_plugin_exit_all()
         node = mk_list_entry(head, struct plugin, _head);
         mk_list_del(&node->_head);
         mk_mem_free(node->path);
+        dlclose(node->handler);
         mk_mem_free(node);
     }
     mk_mem_free(api);
