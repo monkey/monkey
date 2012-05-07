@@ -653,7 +653,7 @@ int mk_handler_write(int socket, struct client_session *cs)
         }
         else {
             /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
+            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
                                 NULL, cs, sr_node);
             switch (final_status) {
             case EXIT_NORMAL:
