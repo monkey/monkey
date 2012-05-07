@@ -212,7 +212,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
 int mk_sched_register_thread(int efd)
 {
     int i;
-    struct sched_connection *sched_conn;
+    struct sched_connection *sched_conn, *array;
     struct sched_list_node *sl;
     static int wid = 0;
 
@@ -236,8 +236,10 @@ int mk_sched_register_thread(int efd)
     mk_list_init(&sl->busy_queue);
     mk_list_init(&sl->av_queue);
 
+    array = mk_mem_malloc_z(sizeof(struct sched_connection) * config->worker_capacity);
+
     for (i = 0; i < config->worker_capacity; i++) {
-        sched_conn = mk_mem_malloc_z(sizeof(struct sched_connection));
+        sched_conn = &array[i];
         sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
         sched_conn->socket = -1;
         sched_conn->arrive_time = 0;
