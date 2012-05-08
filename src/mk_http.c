@@ -221,14 +221,27 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         /* looking for a index file */
         mk_pointer index_file;
-        index_file = mk_request_index(sr->real_path.data);
+        char tmppath[MAX_PATH];
+        index_file = mk_request_index(sr->real_path.data, tmppath, MAX_PATH);
 
         if (index_file.data) {
             if (sr->real_path.data != sr->real_path_static) {
                 mk_pointer_free(&sr->real_path);
+                sr->real_path = index_file;
+                sr->real_path.data = strdup(index_file.data);
+            }
+            /* If it's static, and still fits */
+            else if (index_file.len < MK_PATH_BASE) {
+                memcpy(sr->real_path_static, index_file.data, index_file.len);
+                sr->real_path_static[index_file.len] = '\0';
+                sr->real_path.len = index_file.len;
+            }
+            /* It was static, but didn't fit */
+            else {
+                sr->real_path = index_file;
+                sr->real_path.data = strdup(index_file.data);
             }
 
-            sr->real_path = index_file;
             mk_file_get_info(sr->real_path.data, &sr->file_info);
         }
     }
