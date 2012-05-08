@@ -80,6 +80,4 @@
 /* Text header messages */
 #define M_HTTP_OK_TXT				"HTTP/1.1 200 OK\r\n"
 
-mk_list_sint_t *mk_http_status_list;
-
 #endif

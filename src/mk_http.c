@@ -687,69 +687,6 @@ int mk_http_pending_request(struct client_session *cs)
     return 0;
 }
 
-mk_pointer *mk_http_status_get(short int code)
-{
-    mk_list_sint_t *l;
-
-    l = mk_http_status_list;
-    while (l) {
-        if (l->index == code) {
-            return &l->value;
-        }
-        else {
-            l = l->next;
-        }
-    }
-
-    return NULL;
-}
-
-void mk_http_status_add(short int val[2])
-{
-    short i, len = 6;
-    char *str_val;
-    mk_list_sint_t *list, *new;
-
-    for (i = val[0]; i <= val[1]; i++) {
-
-        new = mk_mem_malloc(sizeof(mk_list_sint_t));
-        new->index = i;
-        new->next = NULL;
-
-        str_val = mk_mem_malloc(6);
-        snprintf(str_val, len - 1, "%i", i);
-
-        new->value.data = str_val;
-        new->value.len = 3;
-
-        if (!mk_http_status_list) {
-            mk_http_status_list = new;
-        }
-        else {
-            list = mk_http_status_list;
-            while (list->next)
-                list = list->next;
-
-            list->next = new;
-            list = new;
-        }
-    }
-}
-
-void mk_http_status_list_init()
-{
-    /* Status type */
-    short int success[2] = { 200, 206 };
-    short int redirections[2] = { 300, 305 };
-    short int client_errors[2] = { 400, 415 };
-    short int server_errors[2] = { 500, 505 };
-
-    mk_http_status_add(success);
-    mk_http_status_add(redirections);
-    mk_http_status_add(client_errors);
-    mk_http_status_add(server_errors);
-}
-
 int mk_http_request_end(int socket)
 {
     int ka;

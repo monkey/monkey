@@ -171,7 +171,6 @@ void mk_mem_pointers_init()
     mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
     mk_pointer_set(&mk_header_last_modified, MK_HEADER_LAST_MODIFIED);
 
-    mk_http_status_list_init();
     mk_iov_separators_init();
 
     /* Server */
