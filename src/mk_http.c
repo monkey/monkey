@@ -19,6 +19,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -182,10 +184,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Check backward directory request */
-    if (mk_string_search_n(sr->uri_processed.data,
-                           HTTP_DIRECTORY_BACKWARD,
-                           MK_STR_SENSITIVE,
-                           sr->uri_processed.len) >= 0) {
+    if (memmem(sr->uri_processed.data, sr->uri_processed.len,
+               HTTP_DIRECTORY_BACKWARD, sizeof(HTTP_DIRECTORY_BACKWARD) - 1)) {
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
