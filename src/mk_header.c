@@ -202,18 +202,18 @@ static struct header_status_response status_response[] = {
 static int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
+static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
                             mk_pointer sep, int free)
 {
     return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
 }
 
-struct mk_iov *mk_header_iov_get()
+static struct mk_iov *mk_header_iov_get()
 {
     return mk_cache_get(mk_cache_iov_header);
 }
 
-void mk_header_iov_free(struct mk_iov *iov)
+static void mk_header_iov_free(struct mk_iov *iov)
 {
     mk_iov_free_marked(iov);
 }
