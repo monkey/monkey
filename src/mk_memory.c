@@ -57,7 +57,7 @@ void *mk_mem_malloc_z(const size_t size)
     return buf;
 }
 
-inline ALLOCSZ_ATTR(1,2)
+inline ALLOCSZ_ATTR(2)
 void *mk_mem_realloc(void *ptr, const size_t size)
 {
     void *aux = realloc(ptr, size);
