@@ -50,11 +50,9 @@ void *mk_mem_malloc(const size_t size)
 inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc_z(const size_t size)
 {
-    void *buf = mk_mem_malloc(size);
+    void *buf = calloc(1, size);
     if (!buf)
         return NULL;
-
-    memset(buf, '\0', size);
 
     return buf;
 }
