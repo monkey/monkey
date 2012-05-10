@@ -168,7 +168,7 @@ main()
 
         echo
         echo "--"
-	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, type 'make' to build or 'make help"
+	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, to build type 'make"
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
 	else
@@ -779,7 +779,7 @@ for arg in $*; do
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
-			echo "Copyright 2001-2011 - Monkey Development Team"
+			echo "Copyright 2001-2012 - Monkey Development Team"
 			echo "Written by Eduardo Silva P. <edsiper@gmail.com>"
 			echo "Monkey Home   : http://www.monkey-project.com"
 			echo
@@ -826,7 +826,7 @@ echo -en "*"$YELLOW"  We need beta testers, developers and    "$RED"*\n"
 echo -en "*"$YELLOW" translators!, if you want to contribute  "$RED"*\n"
 echo -en "*"$YELLOW" to this wonderful project, contact us !  "$RED"*\n"
 echo -en "*"$YELLOW"                                          "$RED"*\n"
-echo -en "*"$YELLOW"        irc.freenode.net #monkeyd         "$RED"*\n"
+echo -en "*"$YELLOW"        irc.freenode.net #monkey          "$RED"*\n"
 echo -en "*"$YELLOW"                                          "$RED"*\n"
 echo -en "*"$YELLOW"        Thanks for using Monkey!!!        "$RED"*\n"
 echo -en "*"$YELLOW"                                          "$RED"*\n"
