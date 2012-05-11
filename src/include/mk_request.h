@@ -144,7 +144,6 @@ struct session_request
 {
     int status;
 
-    int pipelined;              /* Pipelined request */
     mk_pointer body;
 
     /* HTTP Headers Table of Content */ 
