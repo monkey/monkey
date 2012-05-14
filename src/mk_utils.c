@@ -311,8 +311,8 @@ void mk_utils_trace(const char *component, int color, const char *function,
     struct timeval tv;
     struct timezone tz;
 
-    if (envtrace) {
-        if (!strstr(envtrace, file)) {
+    if (env_trace_filter) {
+        if (!strstr(env_trace_filter, file)) {
             return;
         }
     }

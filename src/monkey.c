@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 #ifdef TRACE
     monkey_init_time = time(NULL);
     MK_TRACE("Monkey TRACE is enabled");
-    envtrace = getenv("MONKEY_TRACE");
+    env_trace_filter = getenv("MK_TRACE_FILTER");
     pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
 #endif
 

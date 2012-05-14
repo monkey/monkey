@@ -48,7 +48,7 @@
 
 #include "mk_plugin.h"
 
-char *envtrace;
+char *env_trace_filter;
 pthread_mutex_t mutex_trace;
 
 #else
