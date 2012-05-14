@@ -107,7 +107,7 @@ void mk_server_loop(int server_fd)
         node = sched_list;
         for (i=0; i < config->workers; i++) {
             MK_TRACE("Worker Status");
-            MK_TRACE(" WID %i / conx = %i", node[i].idx, node[i].active_connections);
+            MK_TRACE(" WID %i / conx = %llu", node[i].idx, node[i].accepted_connections - node[i].closed_connections);
         }
 #endif
 
