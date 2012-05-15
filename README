@@ -18,6 +18,16 @@ Features
                     directory listing, etc.
 
 
+Requirements
+============
+ Monkey requires the following components:
+
+ - Linux Kernel >= 2.6.29
+ - Glibc >= 2.5
+ - Pthreads
+ - GNU C Compiler
+
+
 Join us!
 ========
 We want to hear about you, our community is growing and you can be part of it!,
