@@ -556,8 +556,11 @@ struct host *mk_config_get_host(char *path)
     struct stat checkdir;
     struct host *host;
     struct host_alias *new_alias;
+    struct error_page *err_page;
     struct mk_config *cnf;
-    struct mk_config_section *section;
+    struct mk_config_section *section_host;
+    struct mk_config_section *section_ep;
+    struct mk_config_entry *entry_ep;
     struct mk_string_line *entry;
     struct mk_list *head, *list;
 
@@ -565,19 +568,28 @@ struct host *mk_config_get_host(char *path)
     cnf = mk_config_create(path);
 
     /* Read tag 'HOST' */
-    section = mk_config_section_get(cnf, "HOST");
+    section_host = mk_config_section_get(cnf, "HOST");
 
     /* Alloc configuration node */
     host = mk_mem_malloc_z(sizeof(struct host));
     host->config = cnf;
     host->file = mk_string_dup(path);
 
-    /* Alloc list for host name aliases */
+    /* Init list for custom error pages */
+    mk_list_init(&host->error_pages);
+
+    /* Init list for host name aliases */
     mk_list_init(&host->server_names);
 
     host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
 
-    list = mk_config_section_getval(section, "Servername", MK_CONFIG_VAL_LIST);
+    /* Lookup Servername */
+    list = mk_config_section_getval(section_host, "Servername", MK_CONFIG_VAL_LIST);
+    if (!list) {
+        mk_err("Hostname does not contain a Servername");
+        exit(EXIT_FAILURE);
+    }
+
     mk_list_foreach(head, list) {
         entry = mk_list_entry(head, struct mk_string_line, _head);
         if (entry->len > MK_HOSTNAME_LEN - 1) {
@@ -606,13 +618,13 @@ struct host *mk_config_get_host(char *path)
     mk_mem_free(host_low);
     mk_string_split_free(list);
 
-    /* document root handled by a mk_pointer */
-    host->documentroot.data = mk_config_section_getval(section,
+    /* Lookup document root handled by a mk_pointer */
+    host->documentroot.data = mk_config_section_getval(section_host,
                                                        "DocumentRoot",
                                                        MK_CONFIG_VAL_STR);
     host->documentroot.len = strlen(host->documentroot.data);
 
-    /* validate document root configured */
+    /* Validate document root configured */
     if (stat(host->documentroot.data, &checkdir) == -1) {
         mk_err("Invalid path to DocumentRoot in %s", path);
     }
@@ -623,6 +635,41 @@ struct host *mk_config_get_host(char *path)
     if (mk_list_is_empty(&host->server_names) == 0) {
         mk_config_free(cnf);
         return NULL;
+    }
+
+    /* Error Pages */
+    section_ep = mk_config_section_get(cnf, "ERROR_PAGES");
+    if (section_ep) {
+        mk_list_foreach(head, &section_ep->entries) {
+            entry_ep = mk_list_entry(head, struct mk_config_entry, _head);
+
+            int ep_status = -1;
+            char *ep_file = NULL;
+            unsigned long len;
+
+            ep_status = atoi(entry_ep->key);
+            ep_file   = entry_ep->val;
+
+            /* Validate input values */
+            if (ep_status < MK_CLIENT_BAD_REQUEST ||
+                ep_status > MK_SERVER_HTTP_VERSION_UNSUP ||
+                ep_file == NULL) {
+                continue;
+            }
+
+            /* Alloc error page node */
+            err_page = mk_mem_malloc_z(sizeof(struct error_page));
+            err_page->status = ep_status;
+            err_page->file   = mk_string_dup(ep_file);
+            err_page->real_path = NULL;
+            mk_string_build(&err_page->real_path, &len, "%s/%s",
+                            host->documentroot.data, err_page->file);
+
+            MK_TRACE("ErrorPage: status %i -> %s", err_page->status, err_page->file);
+
+            /* Link page to the error page list */
+            mk_list_add(&err_page->_head, &host->error_pages);
+        }
     }
 
     /* Server Signature */

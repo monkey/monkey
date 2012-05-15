@@ -140,6 +140,14 @@ struct server_config
 
 struct server_config *config;
 
+/* Custom error page */
+struct error_page {
+    short int status;
+    char *file;
+    char *real_path;
+    struct mk_list _head;
+};
+
 struct host
 {
     char *file;                   /* configuration file */
@@ -152,6 +160,9 @@ struct host
 
     /* source configuration */
     struct mk_config *config;
+
+    /* custom error pages */
+    struct mk_list error_pages;
 
     /* link node */
     struct mk_list _head;

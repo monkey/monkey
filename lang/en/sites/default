@@ -36,4 +36,7 @@ cat > conf/sites/default <<EOF
 
     ErrorLog $logdir/error.log
 
+[ERROR_PAGES]
+    404  404.html
+
 EOF

@@ -37,6 +37,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 #include "monkey.h"
 #include "mk_request.h"
@@ -504,7 +505,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* Handling method requested */
     if (sr->method == HTTP_METHOD_POST || sr->method == HTTP_METHOD_PUT) {
-        if ((status = mk_method_parse_data(cs, sr)) == -1) {
+        if ((status = mk_method_parse_data(cs, sr)) != 0) {
             return status;
         }
     }
@@ -512,7 +513,6 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     /* Plugins Stage 20 */
     int ret;
     ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, socket, NULL, cs, sr);
-
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
         return EXIT_ABORT;
@@ -704,10 +704,56 @@ mk_pointer mk_request_index(char *pathfile)
 }
 
 /* Send error responses */
-void mk_request_error(int http_status, struct client_session *cs,
-                      struct session_request *sr) {
+int mk_request_error(int http_status, struct client_session *cs,
+                     struct session_request *sr) {
+    int ret, fd;
     char *aux_message = 0;
     mk_pointer message, *page = 0;
+    struct error_page *entry;
+    struct mk_list *head;
+    struct file_info finfo;
+
+    mk_header_set_http_status(sr, http_status);
+
+    /*
+     * We are nice sending error pages for clients who at least respect
+     * the especification
+     */
+    if (http_status != MK_CLIENT_LENGTH_REQUIRED &&
+        http_status != MK_CLIENT_BAD_REQUEST &&
+        http_status != MK_CLIENT_REQUEST_ENTITY_TOO_LARGE) {
+
+
+        /* Lookup a customized error page */
+        mk_list_foreach(head, &sr->host_conf->error_pages) {
+            entry = mk_list_entry(head, struct error_page, _head);
+            if (entry->status != http_status) {
+                continue;
+            }
+
+            /* validate error file */
+            ret = mk_file_get_info(entry->real_path, &finfo);
+            if (ret == -1 && finfo.size > 0) {
+                break;
+            }
+
+            /* open file */
+            fd = open(entry->real_path, config->open_flags);
+            if (fd == -1) {
+                break;
+            }
+
+            sr->fd_file = fd;
+            sr->bytes_to_send = finfo.size;
+            sr->headers.content_length = finfo.size;
+            sr->headers.real_length    = finfo.size;
+
+            memcpy(&sr->file_info, &finfo, sizeof(struct file_info));
+
+            mk_header_send(cs->socket, cs, sr);
+            return mk_http_send_file(cs, sr);
+        }
+    }
 
     mk_pointer_reset(&message);
 
@@ -772,7 +818,6 @@ void mk_request_error(int http_status, struct client_session *cs,
         break;
     }
 
-    mk_header_set_http_status(sr, http_status);
     if (page) {
         sr->headers.content_length = page->len;
     }
@@ -803,6 +848,7 @@ void mk_request_error(int http_status, struct client_session *cs,
 
     /* Turn off TCP_CORK */
     mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
+    return EXIT_ERROR;
 }
 
 void mk_request_free_list(struct client_session *cs)

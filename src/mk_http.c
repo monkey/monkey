@@ -142,7 +142,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int ret;
     int bytes = 0;
     struct mimetype *mime;
-    
+
     MK_TRACE("HTTP Protocol Init");
 
     /* Request to root path of the virtualhost in question */
@@ -157,7 +157,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         len = sr->host_conf->documentroot.len + sr->uri_processed.len;
         if (len < MK_PATH_BASE) {
-            memcpy(sr->real_path_static, 
+            memcpy(sr->real_path_static,
                    sr->host_conf->documentroot.data,
                    sr->host_conf->documentroot.len);
             memcpy(sr->real_path_static + sr->host_conf->documentroot.len,
@@ -168,12 +168,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             sr->real_path.len = len;
         }
         else {
-            ret = mk_buffer_cat(&sr->real_path, 
+            ret = mk_buffer_cat(&sr->real_path,
                                 sr->host_conf->documentroot.data,
                                 sr->host_conf->documentroot.len,
                                 sr->uri_processed.data,
                                 sr->uri_processed.len);
-        
+
             if (ret < 0) {
                 MK_TRACE("Error composing real path");
                 return EXIT_ERROR;
@@ -186,28 +186,26 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                            HTTP_DIRECTORY_BACKWARD,
                            MK_STR_SENSITIVE,
                            sr->uri_processed.len) >= 0) {
-        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-        return EXIT_ERROR;
+        return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
+
     if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
-        /* if the resource requested doesn't exists, let's 
+        /* if the resource requested doesn't exists, let's
          * check if some plugin would like to handle it
          */
         MK_TRACE("No file, look for handler plugin");
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-            return EXIT_ERROR;
+            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
             return MK_PLUGIN_RET_CONTINUE;
-        } 
+        }
         else if (ret == MK_PLUGIN_RET_END) {
             return EXIT_NORMAL;
         }
 
-        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
-        return -1;
+        return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
     /* is it a valid directory ? */
@@ -237,16 +235,14 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Check symbolic link file */
     if (sr->file_info.is_link == MK_TRUE) {
         if (config->symlink == MK_FALSE) {
-            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-            return EXIT_ERROR;
+            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         else {
             int n;
             char linked_file[MAX_PATH];
             n = readlink(sr->real_path.data, linked_file, MAX_PATH);
             if (n < 0) {
-                mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-                return EXIT_ERROR;
+                return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
         }
     }
@@ -259,31 +255,28 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_CLOSE_CONX:
         if (sr->headers.status > 0) {
-            mk_request_error(sr->headers.status, cs, sr);
+            return mk_request_error(sr->headers.status, cs, sr);
         }
         else {
-            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
+            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
-        return EXIT_ERROR;
     case MK_PLUGIN_RET_END:
         return EXIT_NORMAL;
     }
 
     /*
-     * Monkey listen for PUT and DELETE methods in addition to GET, POST and 
-     * HEAD, but it does not care about them, so if any plugin did not worked 
+     * Monkey listen for PUT and DELETE methods in addition to GET, POST and
+     * HEAD, but it does not care about them, so if any plugin did not worked
      * on it, Monkey will return error 501 (501 Not Implemented).
      */
     if (sr->method == HTTP_METHOD_PUT || sr->method == HTTP_METHOD_DELETE ||
         sr->method == HTTP_METHOD_UNKNOWN) {
-        mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
-        return EXIT_ERROR;
+        return mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
     /* read permissions and check file */
     if (sr->file_info.read_access == MK_FALSE) {
-        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-        return EXIT_ERROR;
+        return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
     /* Matching MimeType  */
@@ -293,14 +286,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     if (sr->file_info.is_directory == MK_TRUE) {
-        mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-        return EXIT_ERROR;
+        return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
     /* get file size */
     if (sr->file_info.size < 0) {
-        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
-        return EXIT_ERROR;
+        return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
     /* counter connections */
@@ -313,7 +304,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
         time_t date_file_server;  /* Date server file */
-        
+
         date_client = mk_utils_gmt2utime(sr->if_modified_since.data);
         date_file_server = sr->file_info.last_modification;
 
@@ -336,28 +327,26 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         /* Range */
         if (sr->range.data != NULL && config->resume == MK_TRUE) {
             if (mk_http_range_parse(sr) < 0) {
-                mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-                return EXIT_ERROR;
+                return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
             }
             if (sr->headers.ranges[0] >= 0 || sr->headers.ranges[1] >= 0) {
                 mk_header_set_http_status(sr, MK_HTTP_PARTIAL);
             }
         }
     }
-    else {                      
+    else {
         /* without content-type */
         mk_pointer_reset(&sr->headers.content_type);
     }
 
-    
- 
+
+
     /* Open file */
     if (sr->file_info.size > 0) {
         sr->fd_file = open(sr->real_path.data, config->open_flags);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
-            mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
-            return EXIT_ERROR;
+            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
     }
 
@@ -372,8 +361,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
         /* Calc bytes to send & offset */
         if (mk_http_range_set(sr, sr->file_info.size) != 0) {
-            mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-            return EXIT_ERROR;
+            return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         }
 
         bytes = mk_http_send_file(cs, sr);
@@ -399,6 +387,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     sr->loop++;
 
     if (nbytes < 0) {
+        perror("sendfile");
         return EXIT_ABORT;
     }
 
@@ -413,7 +402,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
     char *real_location = 0;
     unsigned long len;
 
-    /* 
+    /*
      * We have to check if exist an slash to the end of
      * this string, if doesn't exist we send a redirection header
      */
@@ -432,7 +421,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
     location[sr->uri_processed.len + 1] = '\0';
 
     if (config->serverport == config->standard_port) {
-        mk_string_build(&real_location, &len, "%s://%s%s", 
+        mk_string_build(&real_location, &len, "%s://%s%s",
                         config->transport, host, location);
     }
     else {
@@ -448,7 +437,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
 
     mk_header_set_http_status(sr, MK_REDIR_MOVED);
     sr->headers.content_length = 0;
-    
+
     mk_pointer_reset(&sr->headers.content_type);
     sr->headers.location = real_location;
     sr->headers.cgi = SH_NOCGI;
@@ -458,16 +447,16 @@ int mk_http_directory_redirect_check(struct client_session *cs,
     mk_header_send(cs->socket, cs, sr);
     mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
 
-    /* 
-     *  we do not free() real_location 
-     *  as it's freed by iov 
+    /*
+     *  we do not free() real_location
+     *  as it's freed by iov
      */
     mk_mem_free(location);
     sr->headers.location = NULL;
     return -1;
 }
 
-/* 
+/*
  * Check if a connection can continue open using as criteria
  * the keepalive headers vars and Monkey configuration
  */
@@ -610,11 +599,11 @@ int mk_http_range_parse(struct session_request *sr)
     return -1;
 }
 
-/* 
- * Check if client request still has pending data 
- * 
+/*
+ * Check if client request still has pending data
+ *
  * Return 0 when all expected data has arrived or -1 when
- * the connection is on a pending status due to HTTP spec 
+ * the connection is on a pending status due to HTTP spec
  *
  * This function is called from request.c :: mk_handler_read(..)
  */
@@ -631,7 +620,7 @@ int mk_http_pending_request(struct client_session *cs)
     }
 
     /* try to match CRLF at the end of the request */
-    if (cs->body_pos_end < 0) { 
+    if (cs->body_pos_end < 0) {
         if (strncmp(end, mk_endblock.data, mk_endblock.len) == 0) {
             cs->body_pos_end = cs->body_length - mk_endblock.len;
         }
@@ -661,13 +650,13 @@ int mk_http_pending_request(struct client_session *cs)
                 return 0;
             }
 
-            /* if first block has ended, we need to verify if exists 
-             * a previous block end, that will means that the POST 
-             * method has sent the whole information. 
+            /* if first block has ended, we need to verify if exists
+             * a previous block end, that will means that the POST
+             * method has sent the whole information.
              * just for ref: pipelining is not allowed with POST
              */
             if (cs->body_pos_end == cs->body_length - mk_endblock.len) {
-                /* Content-length is required, if is it not found, 
+                /* Content-length is required, if is it not found,
                  * we pass as successfull in order to raise the error
                  * later
                  */
@@ -769,7 +758,7 @@ int mk_http_request_end(int socket)
 
     sched = mk_sched_get_thread_conf();
     cs = mk_session_get(socket);
-    
+
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
         return -1;
@@ -780,9 +769,9 @@ int mk_http_request_end(int socket)
         return -1;
     }
 
-    /* 
-     * We need to ask to http_keepalive if this 
-     * connection can continue working or we must 
+    /*
+     * We need to ask to http_keepalive if this
+     * connection can continue working or we must
      * close it.
      */
     ka = mk_http_keepalive_check(socket, cs);

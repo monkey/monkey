@@ -94,9 +94,9 @@ struct response_headers
 {
     int status;
 
-    /* 
-     * If some plugins wants to set a customized HTTP status, here 
-     * is the 'how and where' 
+    /*
+     * If some plugins wants to set a customized HTTP status, here
+     * is the 'how and where'
      */
     mk_pointer custom_status;
 
@@ -120,7 +120,7 @@ struct response_headers
     mk_pointer content_encoding;
     char *location;
 
-    /* 
+    /*
      * This field allow plugins to add their own response
      * headers
      */
@@ -146,11 +146,11 @@ struct session_request
 
     mk_pointer body;
 
-    /* HTTP Headers Table of Content */ 
+    /* HTTP Headers Table of Content */
     struct headers_toc headers_toc;
 
     int headers_len;
-    
+
 
     /*----First header of client request--*/
     int method;
@@ -180,7 +180,7 @@ struct session_request
     mk_pointer range;
 
     /*---------------------*/
-    
+
     /* POST/PUT data */
     mk_pointer data;
     /*-----------------*/
@@ -188,11 +188,11 @@ struct session_request
     /*-Internal-*/
     mk_pointer real_path;        /* Absolute real path */
 
-    /* 
+    /*
      * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
      * it will be stored here and real_path will point this buffer
      */
-    char real_path_static[MK_PATH_BASE]; 
+    char real_path_static[MK_PATH_BASE];
 
     /* Query string: ?.... */
     mk_pointer query_string;
@@ -205,11 +205,11 @@ struct session_request
 
     /* is it serving a user's home directory ? */
     int user_home;
-    
+
     /*-Connection-*/
     long port;
     /*------------*/
-    
+
     /* file descriptors */
     int fd_file;
 
@@ -220,7 +220,7 @@ struct session_request
     struct file_info file_info;
 
     /* Vhost */
-    struct host       *host_conf;     /* root vhost config */ 
+    struct host       *host_conf;     /* root vhost config */
     struct host_alias *host_alias;    /* specific vhost matched */
 
     /* Response headers */
@@ -241,7 +241,7 @@ struct client_session
     int status;                 /* Request status */
 
     /* request body buffer */
-    char *body;              
+    char *body;
 
     /* Initial fixed size buffer for small requests */
     char body_fixed[MK_REQUEST_CHUNK];
@@ -261,7 +261,7 @@ struct client_session
 
 pthread_key_t request_list;
 
-/* Request plugin Handler, each request can be handled by 
+/* Request plugin Handler, each request can be handled by
  * several plugins, we handle list in a simple list */
 struct handler
 {
@@ -274,8 +274,8 @@ mk_pointer mk_request_index(char *pathfile);
 mk_pointer mk_request_header_get(struct headers_toc *toc,
                                  const char *key_name, int key_len);
 
-void mk_request_error(int http_status, struct client_session *cs, 
-                      struct session_request *sr);
+int mk_request_error(int http_status, struct client_session *cs,
+                     struct session_request *sr);
 
 void mk_request_free_list(struct client_session *cs);
 
