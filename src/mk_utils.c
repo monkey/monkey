@@ -50,9 +50,9 @@
 #include "mk_macros.h"
 
 /* Date helpers */
-static const char *mk_date_wd[7]  = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-static const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                                     "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char *mk_date_wd[7]  = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
+static const char *mk_date_ym[12] = {"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ", "Jul ",
+                                     "Aug ", "Sep ", "Oct ", "Nov ", "Dec "};
 
 static int mk_utils_gmt_cache_get(char **data, time_t date)
 {
@@ -128,22 +128,17 @@ int mk_utils_utime2gmt(char **data, time_t date)
     buf = *data;
 
     /* Week day */
-    *buf++ = mk_date_wd[gtm->tm_wday][0];
-    *buf++ = mk_date_wd[gtm->tm_wday][1];
-    *buf++ = mk_date_wd[gtm->tm_wday][2];
-    *buf++ = ',';
-    *buf++ = ' ';
+    memcpy(buf, mk_date_wd[gtm->tm_wday], 5);
+    buf += 5;
 
     /* Day of the month */
     *buf++ = ('0' + (gtm->tm_mday / 10));
     *buf++ = ('0' + (gtm->tm_mday % 10));
     *buf++ = ' ';
 
-    /* Year month */
-    *buf++ = mk_date_ym[gtm->tm_mon][0];
-    *buf++ = mk_date_ym[gtm->tm_mon][1];
-    *buf++ = mk_date_ym[gtm->tm_mon][2];
-    *buf++ = ' ';
+    /* Month */
+    memcpy(buf, mk_date_ym[gtm->tm_mon], 4);
+    buf += 4;
 
     /* Year */
     *buf++ = ('0' + (year / 1000) % 10);
@@ -165,16 +160,11 @@ int mk_utils_utime2gmt(char **data, time_t date)
     /* Seconds */
     *buf++ = ('0' + (gtm->tm_sec / 10));
     *buf++ = ('0' + (gtm->tm_sec % 10));
-    *buf++ = ' ';
 
     /* GMT Time zone + CRLF */
-    *buf++ = 'G';
-    *buf++ = 'M';
-    *buf++ = 'T';
-    *buf++ = '\r';
-    *buf++ = '\n';
-    *buf++ = '\0';
+    memcpy(buf, " GMT\r\n\0", 7);
 
+    /* Add new entry to the cache */
     mk_utils_gmt_cache_add(*data, date);
 
     /* Set mk_pointer data len */
