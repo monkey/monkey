@@ -31,6 +31,7 @@ pthread_key_t mk_cache_header_cl;
 pthread_key_t mk_cache_header_ka;
 pthread_key_t mk_cache_header_ka_max;
 pthread_key_t mk_cache_utils_gmtime;
+pthread_key_t mk_cache_utils_gmt_text;
 
 struct mk_cache_date_t
 {

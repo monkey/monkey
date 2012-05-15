@@ -41,7 +41,8 @@ void mk_cache_thread_init()
 
     struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
-    
+    struct mk_gmt_cache *cache_utils_gmt_text;
+
     /* Cache header request -> last modified */
     cache_header_lm = mk_mem_malloc_z(sizeof(mk_pointer));
     cache_header_lm->data = mk_mem_malloc_z(32);
@@ -74,6 +75,10 @@ void mk_cache_thread_init()
     /* Cache gmtime buffer */
     cache_utils_gmtime = mk_mem_malloc(sizeof(struct tm));
     pthread_setspecific(mk_cache_utils_gmtime, (void *) cache_utils_gmtime);
+
+    /* Cache the most used text representations of utime2gmt */
+    cache_utils_gmt_text = mk_mem_malloc_z(sizeof(struct mk_gmt_cache) * MK_GMT_CACHES);
+    pthread_setspecific(mk_cache_utils_gmt_text, (void *) cache_utils_gmt_text);
 }
 
 void *mk_cache_get(pthread_key_t key)

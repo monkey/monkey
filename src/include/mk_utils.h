@@ -36,6 +36,14 @@
 #include "mk_memory.h"
 #include "mk_list.h"
 
+#define MK_GMT_CACHES 10
+
+struct mk_gmt_cache {
+    time_t time;
+    char text[32];
+    unsigned long long hits;
+};
+
 /* Trace definitions */
 #ifdef TRACE
 
@@ -45,7 +53,6 @@
 
 #define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, \
                                      __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-
 #include "mk_plugin.h"
 
 char *env_trace_filter;

@@ -54,6 +54,37 @@ static const char *mk_date_wd[7]  = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "
 static const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                                      "Aug", "Sep", "Oct", "Nov", "Dec"};
 
+static int mk_utils_gmt_cache_get(char **data, time_t date)
+{
+    unsigned int i;
+    struct mk_gmt_cache *gcache = mk_cache_get(mk_cache_utils_gmt_text);
+
+    for (i = 0; i < MK_GMT_CACHES; i++) {
+        if (date == gcache[i].time) {
+            memcpy(*data, gcache[i].text, 32);
+            gcache[i].hits++;
+            return MK_TRUE;
+        }
+    }
+
+    return MK_FALSE;
+}
+
+static void mk_utils_gmt_cache_add(char *data, time_t time)
+{
+    unsigned int i, min = 0;
+    struct mk_gmt_cache *gcache = mk_cache_get(mk_cache_utils_gmt_text);
+
+    for (i = 1; i < MK_GMT_CACHES; i++) {
+        if (gcache[i].hits < gcache[min].hits)
+            min = i;
+    }
+
+    gcache[min].hits = 1;
+    gcache[min].time = time;
+    memcpy(gcache[min].text, data, 32);
+}
+
 /*
  *This function given a unix time, set in a mk_pointer
  * the date in the RFC1123 format like:
@@ -64,7 +95,7 @@ static const char *mk_date_ym[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "
  */
 int mk_utils_utime2gmt(char **data, time_t date)
 {
-    int size = 31;
+    const int size = 31;
     unsigned int year;
     char *buf=0;
     struct tm *gtm;
@@ -73,6 +104,11 @@ int mk_utils_utime2gmt(char **data, time_t date)
         if ((date = time(NULL)) == -1) {
             return -1;
         }
+    }
+
+    /* Maybe it's converted already? */
+    if (mk_utils_gmt_cache_get(data, date) == MK_TRUE) {
+        return size;
     }
 
     /* Convert unix time to struct tm */
@@ -138,6 +174,8 @@ int mk_utils_utime2gmt(char **data, time_t date)
     *buf++ = '\r';
     *buf++ = '\n';
     *buf++ = '\0';
+
+    mk_utils_gmt_cache_add(*data, date);
 
     /* Set mk_pointer data len */
     return size;
