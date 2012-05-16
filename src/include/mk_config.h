@@ -134,6 +134,9 @@ struct server_config
     char *transport_layer;
     struct plugin *transport_layer_plugin;
 
+    /* Define the default mime type when is not possible to find the proper one */
+    char *default_mimetype;
+
     /* source configuration */
     struct mk_config *config;
 };

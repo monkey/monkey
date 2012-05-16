@@ -145,8 +145,8 @@ void mk_mimetype_read_config()
 
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
-    mimetype_default->name = MIMETYPE_DEFAULT_NAME;
-    mk_pointer_set(&mimetype_default->type, MIMETYPE_DEFAULT_TYPE);
+    mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
+    mk_pointer_set(&mimetype_default->type, config->default_mimetype);
 
     mk_config_free(cnf);
 }

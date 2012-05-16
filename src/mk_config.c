@@ -349,7 +349,7 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 static void mk_config_read_files(char *path_conf, char *file_conf)
 {
     unsigned long len;
-    char *path = 0;
+    char *tmp = NULL;
     struct stat checkdir;
     struct mk_config *cnf;
     struct mk_config_section *section;
@@ -362,14 +362,13 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         exit(EXIT_FAILURE);
     }
 
-    mk_string_build(&path, &len, "%s/%s", path_conf, file_conf);
+    mk_string_build(&tmp, &len, "%s/%s", path_conf, file_conf);
 
-    cnf = mk_config_create(path);
+    cnf = mk_config_create(tmp);
     if (!cnf) {
         mk_err("Cannot read 'monkey.conf'");
         exit(EXIT_FAILURE);
     }
-
     section = mk_config_section_get(cnf, "SERVER");
 
     if (!section) {
@@ -391,7 +390,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                            "Port",
                                                            MK_CONFIG_VAL_NUM);
     if (config->serverport <= 1 || config->serverport >= 65535) {
-        mk_config_print_error_msg("Port", path);
+        mk_config_print_error_msg("Port", tmp);
     }
 
     /* Number of thread workers */
@@ -399,7 +398,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                      "Workers",
                                                      MK_CONFIG_VAL_NUM);
     if (config->workers < 1) {
-        mk_config_print_error_msg("Workers", path);
+        mk_config_print_error_msg("Workers", tmp);
     }
     /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
@@ -411,7 +410,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->timeout = (size_t) mk_config_section_getval(section,
                                                      "Timeout", MK_CONFIG_VAL_NUM);
     if (config->timeout < 1) {
-        mk_config_print_error_msg("Timeout", path);
+        mk_config_print_error_msg("Timeout", tmp);
     }
 
     /* KeepAlive */
@@ -419,7 +418,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                         "KeepAlive",
                                                         MK_CONFIG_VAL_BOOL);
     if (config->keep_alive == MK_ERROR) {
-        mk_config_print_error_msg("KeepAlive", path);
+        mk_config_print_error_msg("KeepAlive", tmp);
     }
 
     /* MaxKeepAliveRequest */
@@ -429,7 +428,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                  MK_CONFIG_VAL_NUM);
 
     if (config->max_keep_alive_request == 0) {
-        mk_config_print_error_msg("MaxKeepAliveRequest", path);
+        mk_config_print_error_msg("MaxKeepAliveRequest", tmp);
     }
 
     /* KeepAliveTimeout */
@@ -437,7 +436,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                                 "KeepAliveTimeout",
                                                                 MK_CONFIG_VAL_NUM);
     if (config->keep_alive_timeout == 0) {
-        mk_config_print_error_msg("KeepAliveTimeout", path);
+        mk_config_print_error_msg("KeepAliveTimeout", tmp);
     }
 
     /* Pid File */
@@ -457,7 +456,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                          "HideVersion",
                                                          MK_CONFIG_VAL_BOOL);
     if (config->hideversion == MK_ERROR) {
-        mk_config_print_error_msg("HideVersion", path);
+        mk_config_print_error_msg("HideVersion", tmp);
     }
 
     /* User Variable */
@@ -467,7 +466,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->resume = (size_t) mk_config_section_getval(section,
                                                     "Resume", MK_CONFIG_VAL_BOOL);
     if (config->resume == MK_ERROR) {
-        mk_config_print_error_msg("Resume", path);
+        mk_config_print_error_msg("Resume", tmp);
     }
 
     /* Max Request Size */
@@ -475,7 +474,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                               "MaxRequestSize",
                                                               MK_CONFIG_VAL_NUM);
     if (config->max_request_size <= 0) {
-        mk_config_print_error_msg("MaxRequestSize", path);
+        mk_config_print_error_msg("MaxRequestSize", tmp);
     }
     else {
         config->max_request_size *= 1024;
@@ -485,14 +484,24 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->symlink = (size_t) mk_config_section_getval(section,
                                                      "SymLink", MK_CONFIG_VAL_BOOL);
     if (config->symlink == MK_ERROR) {
-        mk_config_print_error_msg("SymLink", path);
+        mk_config_print_error_msg("SymLink", tmp);
     }
 
     /* Transport Layer plugin */
     config->transport_layer = mk_config_section_getval(section,
                                                        "TransportLayer",
                                                        MK_CONFIG_VAL_STR);
-    mk_mem_free(path);
+
+    /* Default Mimetype */
+    tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
+    if (!tmp) {
+        config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
+    }
+    else {
+        mk_string_build(&config->default_mimetype, &len, "%s\r\n", tmp);
+        mk_mem_free(tmp);
+    }
+
     mk_config_read_hosts(path_conf);
 }
 
