@@ -417,6 +417,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
 {
     struct session_request *sr;
     struct mk_list *sr_list = &cs->request_list;
+    struct mk_list *host_list = &config->hosts;
 
     /*
      * If the connection is too premature, we need to allocate a temporal session_request
@@ -433,6 +434,9 @@ static void mk_request_premature_close(int http_status, struct client_session *c
 
     /* Raise error */
     if (http_status > 0) {
+        if (!sr->host_conf) {
+            sr->host_conf = mk_list_entry_first(host_list, struct host, _head);
+        }
         mk_request_error(http_status, cs, sr);
 
         /* STAGE_40, request has ended */
@@ -539,6 +543,7 @@ static mk_pointer *mk_request_set_default_page(char *title, mk_pointer message,
     temp = mk_pointer_to_buf(message);
     mk_string_build(&p->data, &p->len,
                     MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+
     mk_mem_free(temp);
 
     return p;
@@ -722,7 +727,6 @@ int mk_request_error(int http_status, struct client_session *cs,
     if (http_status != MK_CLIENT_LENGTH_REQUIRED &&
         http_status != MK_CLIENT_BAD_REQUEST &&
         http_status != MK_CLIENT_REQUEST_ENTITY_TOO_LARGE) {
-
 
         /* Lookup a customized error page */
         mk_list_foreach(head, &sr->host_conf->error_pages) {
