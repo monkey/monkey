@@ -460,7 +460,7 @@ int mk_http_directory_redirect_check(struct client_session *cs,
  * Check if a connection can continue open using as criteria
  * the keepalive headers vars and Monkey configuration
  */
-int mk_http_keepalive_check(int socket, struct client_session *cs)
+int mk_http_keepalive_check(struct client_session *cs)
 {
     struct session_request *sr_node;
     struct mk_list *sr_head;
@@ -711,7 +711,7 @@ int mk_http_request_end(int socket)
      * connection can continue working or we must
      * close it.
      */
-    ka = mk_http_keepalive_check(socket, cs);
+    ka = mk_http_keepalive_check(cs);
     mk_request_free_list(cs);
 
     if (ka < 0) {

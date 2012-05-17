@@ -283,7 +283,7 @@ int mk_header_send(int fd, struct client_session *cs,
 
     /* Connection */
     if (sh->connection == 0) {
-        if (mk_http_keepalive_check(fd, cs) == 0) {
+        if (mk_http_keepalive_check(cs) == 0) {
             if (sr->connection.len > 0) {
                 /* Get cached mk_pointers */
                 mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
