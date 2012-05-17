@@ -8,11 +8,14 @@ OBJECTS = palm.o protocol.o cgi.o request.o
 
 all: monkey-palm.so
 
+-include $(OBJECTS:.o=.d)
+
 monkey-palm.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+	$(CC) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c > $*.d
 
 clean:
-	rm -rf *.o *.*~ *.*so*
+	rm -rf *.[od] *.*~ *.*so*

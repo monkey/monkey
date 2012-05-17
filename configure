@@ -393,6 +393,8 @@ OBJ	= monkey.o mk_method.o mk_mimetype.o mk_request.o \\
 
 all: ../bin/monkey
 
+-include \$(OBJ:.o=.d)
+
 ../bin/monkey: \$(OBJ)
 	@echo
 	@echo "Compiling Monkey"
@@ -400,7 +402,7 @@ all: ../bin/monkey
 	\$(CC) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS)
 
 clean:
-	rm -rf *.o
+	rm -rf *.[od]
 	rm -rf ../bin/monkey
 
 distclean:
@@ -411,6 +413,7 @@ distclean:
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
+	\$(CC) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c > \$*.d
 EOF
 }
 

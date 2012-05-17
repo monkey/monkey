@@ -7,11 +7,14 @@ LIANA_OBJECTS = liana.o
 
 all: monkey-liana.so
 
+-include $(LIANA_OBJECTS:.o=.d)
+
 monkey-liana.so: $(LIANA_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+	$(CC) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c > $*.d
 
 clean:
-	rm -rf *.o *~ *.*so*
+	rm -rf *.[od] *~ *.*so*

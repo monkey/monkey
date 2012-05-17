@@ -7,11 +7,14 @@ LOGGER_OBJECTS = pointers.o logger.o
 
 all: monkey-logger.so
 
+-include $(LOGGER_OBJECTS:.o=.d)
+
 monkey-logger.so: $(LOGGER_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+	$(CC) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c > $*.d
 clean:
-	rm -rf *.o *~
+	rm -rf *.[od] *~
 	rm -rf *.*so*

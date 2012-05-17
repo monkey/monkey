@@ -7,12 +7,15 @@ MANDRIL_OBJECTS = mandril.o
 
 all: monkey-mandril.so
 
+-include $(MANDRIL_OBJECTS:.o=.d)
+
 monkey-mandril.so: $(MANDRIL_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+	$(CC) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c > $*.d
 
 clean:
-	rm -rf *.o
+	rm -rf *.[od]
 	rm -rf *.*so*
