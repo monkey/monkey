@@ -442,7 +442,7 @@ void _mkp_core_thctx()
 
 int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 {
-    int i, http_status, ret;
+    int i, http_status, ret, tmp;
     int array_len = ARRAY_SIZE(response_codes);
     struct log_target *target;
     struct mk_iov *iov;
@@ -535,7 +535,13 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
         if (sr->method != HTTP_METHOD_HEAD) {
             /* Int to mk_pointer */
             content_length = pthread_getspecific(cache_content_length);
-            mk_api->str_itop(sr->headers.content_length, content_length);
+
+            tmp = sr->headers.content_length;
+            if (tmp < 0) {
+                tmp = 0;
+            }
+
+            mk_api->str_itop(tmp, content_length);
 
             mk_api->iov_add_entry(iov,
                                   content_length->data, content_length->len - 2,
