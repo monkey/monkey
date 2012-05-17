@@ -320,6 +320,16 @@ char *mk_utils_url_decode(mk_pointer uri)
     return buf;
 }
 
+/*robust get environment variable that also checks __secure_getenv() */
+char *mk_utils_getenv(const char *arg)
+{
+#ifdef HAVE___SECURE_GETENV
+    return __secure_getenv(arg);
+#else
+    return getenv(arg);
+#endif
+}
+
 #ifdef TRACE
 #include <sys/time.h>
 void mk_utils_trace(const char *component, int color, const char *function,
@@ -351,15 +361,35 @@ void mk_utils_trace(const char *component, int color, const char *function,
     gettimeofday(&tv, &tz);
 
     /* Switch message color */
-    switch(color) {
-    case MK_TRACE_CORE:
-        color_function = ANSI_YELLOW;
-        color_fileline = ANSI_WHITE;
-        break;
-    case MK_TRACE_PLUGIN:
-        color_function = ANSI_BLUE;
-        color_fileline = ANSI_WHITE;
-        break;
+    char* bgcolortype = mk_utils_getenv("MK_TRACE_BACKGROUND");
+
+    if (!bgcolortype) {
+        bgcolortype = "dark";
+    }
+
+    if (!strcmp(bgcolortype,"light")) {
+        switch(color) {
+        case MK_TRACE_CORE:
+            color_function = ANSI_MAGENTA;
+            color_fileline = ANSI_GREEN;
+            break;
+        case MK_TRACE_PLUGIN:
+            color_function = ANSI_BLUE;
+            color_fileline = ANSI_GREEN;
+            break;
+        }
+    }
+    else { /* covering 'dark' and garbage values defaulting to 'dark' cases */
+        switch(color) {
+        case MK_TRACE_CORE:
+            color_function = ANSI_YELLOW;
+            color_fileline = ANSI_WHITE;
+            break;
+        case MK_TRACE_PLUGIN:
+            color_function = ANSI_BLUE;
+            color_fileline = ANSI_WHITE;
+            break;
+        }
     }
 
     /* Only print colors to a terminal */
