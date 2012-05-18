@@ -232,11 +232,12 @@ cat > Makefile << EOF
 # ============================
 
 all:
-	@(cd src; \$(MAKE) all)
-	@(cd plugins; \$(MAKE) all)
+	@\$(MAKE) -s -C src all
+	@\$(MAKE) -s -C plugins all
+	@echo "done"
 
 plugins:
-	@(cd plugins; \$(MAKE) all)
+	@\$(MAKE) -s -C plugins all
 
 monkeyversion:
 	@echo $VERSION
@@ -307,6 +308,7 @@ rm -rf plugins.conf
 cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
+export monkey_root=\$(CURDIR)
 PREFIX=\$(DESTDIR)${prefix}
 BINDIR=\$(DESTDIR)${bindir}
 MANDIR=\$(DESTDIR)${mandir}
@@ -316,13 +318,9 @@ LOGDIR=\$(DESTDIR)${logdir}
 PLUGINDIR=\$(DESTDIR)${plugdir}
 
 all:
-	@echo "Compiling Monkey"
-	@echo "================"
-	@(cd src; \$(MAKE) all)
-	@echo
-	@echo "Compiling Monkey Plugins"
-	@echo "================"
-	@(cd plugins; \$(MAKE) all)
+	@\$(MAKE) -s -C src all
+	@\$(MAKE) -s -C plugins all
+	@echo "  DONE"
 
 clean:
 	@(cd src; \$(MAKE) clean)
@@ -377,7 +375,9 @@ elif [ $platform == "android" ]; then
 fi
 
 cat > src/Makefile<<EOF
-CC	= $CC
+_PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
+CC	= @echo "  CC   \$(_PATH)/\$@"; $CC
+CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 DEFS    = $DEFS
 INCDIR  = ./include
@@ -396,10 +396,7 @@ all: ../bin/monkey
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
-	@echo
-	@echo "Compiling Monkey"
-	@echo "================"
-	\$(CC) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS)
+	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS)
 
 clean:
 	rm -rf *.[od]
@@ -413,7 +410,7 @@ distclean:
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
-	\$(CC) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c > \$*.d
+	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o \$*.d > /dev/null &2>&1
 EOF
 }
 

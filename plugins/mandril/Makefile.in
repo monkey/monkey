@@ -1,4 +1,6 @@
-CC 	= $CC
+_PATH   = $(patsubst $(monkey_root)/%, %, $(CURDIR))
+CC	= @echo "  CC   $(_PATH)/$@"; $CC
+CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
@@ -14,7 +16,7 @@ monkey-mandril.so: $(MANDRIL_OBJECTS)
 
 .c.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
-	$(CC) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c > $*.d
+	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) -I$(INCDIR) $*.c -o $*.d > /dev/null &2>&1
 
 clean:
 	rm -rf *.[od]
