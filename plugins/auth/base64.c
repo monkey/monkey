@@ -105,7 +105,7 @@ unsigned char *base64_decode(const unsigned char *src, size_t len,
                               size_t *out_len)
 {
     unsigned char dtable[256], *out, *pos, in[4], block[4], tmp;
-    size_t i, count, olen;
+    size_t i, count;
 
     memset(dtable, 0x80, 256);
     for (i = 0; i < sizeof(base64_table); i++)
@@ -121,7 +121,22 @@ unsigned char *base64_decode(const unsigned char *src, size_t len,
     if (count % 4)
         return NULL;
 
-    olen = count / 4 * 3;
+    /* FIXME:
+     * ------
+     * base64.c: In function ‘base64_decode’:
+     * base64.c:108:22: warning: variable ‘olen’ set but not used [-Wunused-but-set-variable]
+     *
+     * olen = count / 4 * 3;
+     *
+     * The compiler claims that olen is set but not used, which is correct. But we are not sure
+     * if the following malloc should really use olen or count as it does in the encoder function.
+     *
+     * count is greater than olen, so it should not generate issues. I tried to contact the author
+     * of this code 'Jouni Malinen' but his email address is not working anymore.
+     *
+     * Would be great if we could clarify whats the proper allocation size in malloc.
+     */
+
     pos = out = malloc(count);
     if (out == NULL)
         return NULL;
