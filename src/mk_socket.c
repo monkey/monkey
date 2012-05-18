@@ -44,7 +44,7 @@ static void mk_socket_safe_event_write(int socket)
 
     sched = mk_sched_get_thread_conf();
     MK_TRACE("[FD %i] Safe event write ON", socket);
-    mk_epoll_change_mode(sched->epoll_fd, socket, 
+    mk_epoll_change_mode(sched->epoll_fd, socket,
                          MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
 }
 
@@ -188,29 +188,29 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 {
-    struct sockaddr addr;
+    struct sockaddr_storage addr;
     socklen_t s_len = sizeof(addr);
     const int bufsize = 80;
     char errormsg[bufsize];
 
-    if((getpeername(socket_fd, &addr, &s_len)) == -1 ) {
+    if((getpeername(socket_fd, (struct sockaddr *) &addr, &s_len)) == -1 ) {
         MK_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
         return -1;
     }
 
     errno = 0;
 
-    if(addr.sa_family == AF_INET) {
-        if((inet_ntop(addr.sa_family, &((struct sockaddr_in *)&addr)->sin_addr,
+    if(addr.ss_family == AF_INET) {
+        if((inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr,
                       *buf, size)) == NULL) {
             strerror_r(errno, errormsg, bufsize);
             mk_warn("mk_socket_ip_str: Can't get the IP text form, %s", errormsg);
             return -1;
         }
     }
-    else if(addr.sa_family == AF_INET6) {
-        if((inet_ntop(addr.sa_family, &((struct sockaddr_in6 *)&addr)->sin6_addr,
-                     *buf, size)) == NULL) {
+    else if(addr.ss_family == AF_INET6) {
+        if((inet_ntop(AF_INET6, &((struct sockaddr_in6 *)&addr)->sin6_addr,
+                      *buf, size)) == NULL) {
             strerror_r(errno, errormsg, bufsize);
             mk_warn("mk_socket_ip_str: Can't get the IP text form, %s", errormsg);
             return -1;
