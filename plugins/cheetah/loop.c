@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Daemon
@@ -45,6 +46,10 @@ void mk_cheetah_loop_stdin()
         CHEETAH_WRITE(MK_CHEETAH_PROMPT, ANSI_BOLD, ANSI_GREEN, ANSI_RESET);
 
         rcmd = fgets(line, sizeof(line), cheetah_input);
+        if (!rcmd) {
+            continue;
+        }
+
         len = strlen(line);
 
         if (len == 0){
