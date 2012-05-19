@@ -413,6 +413,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 int mk_http_directory_redirect_check(struct client_session *cs,
                                      struct session_request *sr)
 {
+    int port_redirect = 0;
     char *host;
     char *location = 0;
     char *real_location = 0;
@@ -436,13 +437,20 @@ int mk_http_directory_redirect_check(struct client_session *cs,
     location[sr->uri_processed.len]     = '/';
     location[sr->uri_processed.len + 1] = '\0';
 
-    if (config->serverport == config->standard_port) {
-        mk_string_build(&real_location, &len, "%s://%s%s",
-                        config->transport, host, location);
+    /* FIXME: should we done something similar for SSL = 443 */
+    if (sr->host.data && sr->port > 0) {
+        if (sr->port != config->standard_port) {
+            port_redirect = sr->port;
+        }
+    }
+
+    if (port_redirect > 0) {
+        mk_string_build(&real_location, &len, "%s://%s:%i%s",
+                        config->transport, host, port_redirect, location);
     }
     else {
-        mk_string_build(&real_location, &len, "%s://%s:%i%s",
-                        config->transport, host, config->serverport, location);
+        mk_string_build(&real_location, &len, "%s://%s%s",
+                        config->transport, host, location);
     }
 
 #ifdef TRACE

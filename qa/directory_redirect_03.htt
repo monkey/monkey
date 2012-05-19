@@ -1,12 +1,12 @@
 ###############################################################################
 # DESCRIPTION
-#	Check directory redirect
+#	Check directory redirect, we set a different port in the Host header
 #
 # AUTHOR
 #	Eduardo Silva <edsiper@gmail.com>
 #
 # DATE
-#	Jun 2 2010
+#	May 19 2012
 #
 # COMMENTS
 #	Server must return a 301 moved permanently header.
@@ -22,12 +22,12 @@ _CALL TESTDOC_GETDATE
 
 _REQ $HOST $PORT
 __GET /imgs $HTTPVER
-__Host: $HOST:$PORT
+__Host: $HOST:12345
 __If-Modified-Since: $TEST_DOC_HTTPDATE
 __Connection: close
 __
 _EXPECT . "HTTP/1.1 301 Moved Permanently"
 _EXPECT . "Content-Length: 0"
-_EXPECT . "Location: http://$HOST:$PORT/imgs/
+_EXPECT . "Location: http://$HOST:12345/imgs/
 _WAIT
 END

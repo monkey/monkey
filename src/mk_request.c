@@ -229,7 +229,6 @@ static int mk_request_header_process(struct session_request *sr)
                 || sr->port == 0) {
                 return -1;
             }
-
         }
         else {
             sr->host = host;    /* maybe null */
