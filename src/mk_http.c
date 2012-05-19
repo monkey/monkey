@@ -359,7 +359,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Open file */
     if (sr->file_info.size > 0) {
-        sr->fd_file = open(sr->real_path.data, config->open_flags);
+        sr->fd_file = open(sr->real_path.data, sr->file_info.flags_read_only);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);

@@ -19,8 +19,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +94,17 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
     }
 #endif
 
+    /* Suggest open(2) flags */
+    f_info->flags_read_only = O_RDONLY | O_NONBLOCK;
+
+    /*
+     * If the user is the owner of the file or the user is root, it
+     * can set the O_NOATIME flag for open(2) operations to avoid
+     * inode updates about last accessed time
+     */
+    if (target.st_uid == EUID || EUID == 0) {
+        f_info->flags_read_only |=  O_NOATIME;
+    }
     return 0;
 }
 

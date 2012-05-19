@@ -32,6 +32,9 @@ struct file_info
     short int exec_access;
     short int read_access;
     time_t last_modification;
+
+    /* Suggest flags to open this file */
+    int flags_read_only;
 };
 
 int mk_file_get_info(const char *path, struct file_info *f_info);
