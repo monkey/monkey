@@ -26,6 +26,7 @@ struct file_info
 {
     off_t size;
 
+    short int exists;
     short int is_file;
     short int is_link;
     short int is_directory;

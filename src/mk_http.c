@@ -190,6 +190,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
+
     if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
         /* if the resource requested doesn't exists, let's
          * check if some plugin would like to handle it
@@ -206,7 +207,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             return EXIT_NORMAL;
         }
 
-        return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
+        if (sr->file_info.exists == MK_FALSE) {
+            return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
+        }
+        else {
+            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
+        }
     }
 
     /* is it a valid directory ? */

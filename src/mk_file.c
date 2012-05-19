@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "monkey.h"
 #include "mk_file.h"
@@ -39,8 +40,13 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
 {
     struct stat f, target;
 
+    f_info->exists = MK_FALSE;
+
     /* Stat right resource */
     if (lstat(path, &f) == -1) {
+        if (errno == EACCES) {
+            f_info->exists = MK_TRUE;
+        }
         return -1;
     }
 
