@@ -58,10 +58,7 @@ int _mkp_network_io_accept(int server_fd)
 
 #ifdef ACCEPT_GENERIC
     remote_fd = accept(server_fd, &sock_addr, &socket_size);
-
-    if (fcntl(remote_fd, F_SETFL, fcntl(remote_fd, F_GETFD, 0) | O_NONBLOCK) == -1) {
-        mk_err("Can't set to non-blocking the socket");
-    }
+    mk_api->socket_set_nonblocking(remote_fd);
 #else
     remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK);
 #endif
