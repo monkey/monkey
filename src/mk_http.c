@@ -409,7 +409,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     sr->loop++;
 
     if (nbytes < 0) {
-        perror("sendfile");
+        MK_TRACE("sendfile() = -1;");
         return EXIT_ABORT;
     }
 

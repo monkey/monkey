@@ -76,7 +76,7 @@ static void mk_version(void)
            __MONKEY__, __MONKEY_MINOR__, __MONKEY_PATCHLEVEL__);
     printf("Built : %s (%s %i.%i.%i)\n",
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-    printf("Home  : http://www.monkey-project.com\n");
+    printf("Home  : http://monkey-project.com\n");
     fflush(stdout);
 }
 
