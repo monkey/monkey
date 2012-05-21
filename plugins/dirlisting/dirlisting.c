@@ -666,7 +666,7 @@ static int mk_dirhtml_send_chunked_end(int fd)
 
 static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 {
-    int i;
+    unsigned int i;
     struct mk_f_list *entry;
 
     for (i = 0; i < len; i++) {
@@ -684,8 +684,8 @@ static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 {
     DIR *dir;
-    int i = 0, n;
-    int is_chunked = MK_FALSE;
+    unsigned int i = 0;
+    int is_chunked = MK_FALSE, n;
     char *title = 0;
     mk_pointer sep;
 
@@ -797,7 +797,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
         /* send entry */
         n = mk_dirhtml_send(cs->socket, sr, iov_entry);
 
-        if ((i % 20) == 0 && i > 0) {
+        if ((i % 20) == 0) {
             mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
             mk_api->socket_cork_flag(cs->socket, TCP_CORK_ON);
         }
