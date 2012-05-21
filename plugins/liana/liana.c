@@ -38,8 +38,6 @@ MONKEY_PLUGIN("liana",         /* shortname */
               VERSION,        /* version */
               MK_PLUGIN_NETWORK_IO); /* hooks */
 
-struct mk_config *conf;
-
 int _mkp_init(void **api, char *confdir)
 {
     mk_api = *api;
