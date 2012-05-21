@@ -79,7 +79,8 @@ struct mk_config_section *mk_config_section_get(struct mk_config *conf,
 }
 
 /* Register a new section into the configuration struct */
-void mk_config_section_add(struct mk_config *conf, char *section_name)
+struct mk_config_section *mk_config_section_add(struct mk_config *conf,
+                                                char *section_name)
 {
     struct mk_config_section *new;
 
@@ -88,6 +89,8 @@ void mk_config_section_add(struct mk_config *conf, char *section_name)
     new->name = mk_string_dup(section_name);
     mk_list_init(&new->entries);
     mk_list_add(&new->_head, &conf->sections);
+
+    return new;
 }
 
 /* Register a key/value entry in the last section available of the struct */
@@ -119,11 +122,13 @@ struct mk_config *mk_config_create(const char *path)
     int len;
     int line = 0;
     int indent_len = -1;
+    int n_keys;
     char buf[255];
-    char *section = 0;
-    char *indent = 0;
+    char *section = NULL;
+    char *indent = NULL;
     char *key, *val;
-    struct mk_config *conf = 0;
+    struct mk_config *conf = NULL;
+    struct mk_config_section *current = NULL;
     FILE *f;
 
     /* Open configuration file */
@@ -157,10 +162,6 @@ struct mk_config *mk_config_create(const char *path)
 
         /* Skip commented lines */
         if (buf[0] == '#') {
-            if (section) {
-                mk_mem_free(section);
-                section = NULL;
-            }
             continue;
         }
 
@@ -169,62 +170,77 @@ struct mk_config *mk_config_create(const char *path)
             int end = -1;
             end = mk_string_char_search(buf, ']', len);
             if (end > 0) {
+                /*
+                 * Before to add a new section, lets check the previous
+                 * one have at least one key set
+                 */
+                if (current && n_keys == 0) {
+                    mk_config_error(path, line, "Previous section did not have keys");
+                }
+
+                /* Create new section */
                 section = mk_string_copy_substr(buf, 1, end);
-                mk_config_section_add(conf, section);
+                current = mk_config_section_add(conf, section);
                 mk_mem_free(section);
+                n_keys = 0;
                 continue;
             }
             else {
                 mk_config_error(path, line, "Bad header definition");
             }
         }
-        else {
-            /* No separator defined */
-            if (!indent) {
-                i = 0;
 
-                do { i++; } while (i < len && isblank(buf[i]));
+        /* No separator defined */
+        if (!indent) {
+            i = 0;
 
-                indent = mk_string_copy_substr(buf, 0, i);
-                indent_len = strlen(indent);
+            do { i++; } while (i < len && isblank(buf[i]));
 
-                /* Blank indented line */
-                if (i == len) {
-                    continue;
-                }
-            }
+            indent = mk_string_copy_substr(buf, 0, i);
+            indent_len = strlen(indent);
 
-            /* Validate indentation level */
-            if (strncmp(buf, indent, indent_len) != 0 || !section ||
-                isblank(buf[indent_len]) != 0) {
-                mk_config_error(path, line, "Invalid indentation level");
-            }
-
-            if (buf[indent_len] == '#' || indent_len == len) {
+            /* Blank indented line */
+            if (i == len) {
                 continue;
             }
-
-            /* Get key and val */
-            i = mk_string_char_search(buf + indent_len, ' ', len - indent_len);
-            key = mk_string_copy_substr(buf + indent_len, 0, i);
-            val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len);
-
-            if (!key || !val || i < 0) {
-                mk_config_error(path, line, "Each key must have a value");
-                continue;
-            }
-
-            /* Trim strings */
-            mk_string_trim(&key);
-            mk_string_trim(&val);
-
-            /* Register entry: key and val are copied as duplicated */
-            mk_config_entry_add(conf, key, val);
-
-            /* Free temporal key and val */
-            mk_mem_free(key);
-            mk_mem_free(val);
         }
+
+
+        /* Validate indentation level */
+        if (strncmp(buf, indent, indent_len) != 0 ||
+            isblank(buf[indent_len]) != 0) {
+            mk_config_error(path, line, "Invalid indentation level");
+        }
+
+        if (buf[indent_len] == '#' || indent_len == len) {
+            continue;
+        }
+
+        /* Get key and val */
+        i = mk_string_char_search(buf + indent_len, ' ', len - indent_len);
+        key = mk_string_copy_substr(buf + indent_len, 0, i);
+        val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len);
+
+        if (!key || !val || i < 0) {
+            mk_config_error(path, line, "Each key must have a value");
+        }
+
+        /* Trim strings */
+        mk_string_trim(&key);
+        mk_string_trim(&val);
+
+        /* Register entry: key and val are copied as duplicated */
+        mk_config_entry_add(conf, key, val);
+
+        /* Free temporal key and val */
+        mk_mem_free(key);
+        mk_mem_free(val);
+
+        n_keys++;
+    }
+
+    if (n_keys == 0) {
+        mk_config_error(path, line, "Section do not have keys");
     }
 
     /*

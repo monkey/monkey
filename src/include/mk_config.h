@@ -190,7 +190,8 @@ void mk_config_error(const char *path, int line, const char *msg);
 struct mk_config *mk_config_create(const char *path);
 struct mk_config_section *mk_config_section_get(struct mk_config *conf,
                                                 const char *section_name);
-void mk_config_section_add(struct mk_config *conf, char *section_name);
+struct mk_config_section *mk_config_section_add(struct mk_config *conf,
+                                                char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
 void mk_config_free(struct mk_config *cnf);
