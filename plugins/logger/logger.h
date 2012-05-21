@@ -59,10 +59,5 @@ struct mk_list targets_list;
 
 //struct log_target *lt;
 
-/* Global Monkey core API */
-struct plugin_api *mk_api;
-
-void *mk_logger_worker_init(void *args);
-void mk_logger_target_add(int fd, char *target);
 
 #endif

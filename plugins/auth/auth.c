@@ -36,9 +36,7 @@ MONKEY_PLUGIN("auth",              /* shortname */
               VERSION,             /* version */
               MK_PLUGIN_STAGE_30); /* hooks */
 
-struct mk_config *conf;
-
-int mk_auth_validate_user(struct users_file *users,
+static int mk_auth_validate_user(struct users_file *users,
                           const char *credentials, unsigned int len)
 {
     int sep;

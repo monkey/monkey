@@ -37,7 +37,7 @@ static void prot_add_header(struct mk_iov *iov, mk_pointer header, mk_pointer va
                           mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
 }
 
-struct mk_iov *prot_template()
+static struct mk_iov *prot_template()
 {
     struct mk_iov *iov;
 

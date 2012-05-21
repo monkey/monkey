@@ -40,7 +40,7 @@ MONKEY_PLUGIN("palm",              /* shortname */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hooks */
 
 /* Read database configuration parameters */
-int mk_palm_conf(char *confdir)
+static int mk_palm_conf(char *confdir)
 {
     int ret = 0;
     unsigned long len;
@@ -97,7 +97,7 @@ int mk_palm_conf(char *confdir)
     return ret;
 }
 
-struct mk_palm *mk_palm_get_handler(mk_pointer * file)
+static struct mk_palm *mk_palm_get_handler(mk_pointer * file)
 {
     struct mk_palm *p;
     int j, len, extlen;
@@ -125,7 +125,7 @@ struct mk_palm *mk_palm_get_handler(mk_pointer * file)
     return NULL;
 }
 
-int mk_palm_send_headers(struct mk_palm_request *pr)
+static int mk_palm_send_headers(struct mk_palm_request *pr)
 {
     int n;
     struct client_session *cs = pr->cs;
@@ -356,7 +356,7 @@ int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
     return pr->bytes_sent;
 }
 
-int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
+static int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
 {
     int n;
     int chunk_len;
@@ -386,7 +386,7 @@ int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
     return n;
 }
 
-int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
+static int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
 {
     int n=0;
 
@@ -400,7 +400,7 @@ int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
  * present, if so, it modifies the header struct response
  * and return the offset position
  */
-int mk_palm_cgi_status(char *data, struct session_request *sr)
+static int mk_palm_cgi_status(char *data, struct session_request *sr)
 {
     int status;
     const int status_len = 3;

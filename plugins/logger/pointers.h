@@ -19,7 +19,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "memory.h"
+#ifndef MK_LOGGER_POINTERS_H
+#define MK_LOGGER_POINTERS_H
+
+#include <memory.h>
 
 /* Request error messages for log file */
 #define ERROR_MSG_400 "[error 400] Bad Request"
@@ -57,3 +60,5 @@ mk_pointer mk_logger_iov_empty;
 
 /* functions */
 void mk_logger_init_pointers();
+
+#endif

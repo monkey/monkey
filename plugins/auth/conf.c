@@ -21,9 +21,9 @@
 
 #include <string.h>
 #include "MKPlugin.h"
-#include "sha1.h"
 #include "base64.h"
 #include "auth.h"
+#include "conf.h"
 
 /*
  * Register a users file into the main list, if the users
@@ -31,7 +31,7 @@
  * otherwise add the node to the list and return the node
  * created.
  */
-struct users_file *mk_auth_conf_add_users(char *users_path)
+static struct users_file *mk_auth_conf_add_users(char *users_path)
 {
     struct file_info finfo;
     struct mk_list *head;

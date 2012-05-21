@@ -38,10 +38,10 @@ MONKEY_PLUGIN("mandril",  /* shortname */
               VERSION,    /* version */
               MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
 
-struct mk_config *conf;
+static struct mk_config *conf;
 
 /* Read database configuration parameters */
-int mk_security_conf(char *confdir)
+static int mk_security_conf(char *confdir)
 {
     int n;
     int ret = 0;
@@ -150,7 +150,7 @@ int mk_security_conf(char *confdir)
     return ret;
 }
 
-int mk_security_check_ip(int socket)
+static int mk_security_check_ip(int socket)
 {
     int network;
     struct mk_secure_ip_t *entry;
@@ -189,7 +189,7 @@ int mk_security_check_ip(int socket)
 }
 
 /* Check if the incoming URL is restricted for some rule */
-int mk_security_check_url(mk_pointer url)
+static int mk_security_check_url(mk_pointer url)
 {
     int n;
     struct mk_list *head;

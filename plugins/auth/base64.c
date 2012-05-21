@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "base64.h"
+
 static const unsigned char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

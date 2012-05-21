@@ -48,7 +48,7 @@ void mk_cheetah_welcome_msg()
     CHEETAH_FLUSH();
 }
 
-void mk_cheetah_config(char *path)
+static void mk_cheetah_config(char *path)
 {
     unsigned long len;
     char *listen = NULL;

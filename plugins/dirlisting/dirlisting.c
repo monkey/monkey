@@ -68,7 +68,7 @@ MONKEY_PLUGIN("dirlisting",          /* shortname */
  */
 
 /* Function wrote by Max (Felipe Astroza), thanks! */
-char *mk_dirhtml_human_readable_size(off_t size)
+static char *mk_dirhtml_human_readable_size(off_t size)
 {
     unsigned long u = 1024, i, len;
     char *buf = NULL;
@@ -93,7 +93,7 @@ char *mk_dirhtml_human_readable_size(off_t size)
     return buf;
 }
 
-struct mk_f_list *mk_dirhtml_create_element(char *file,
+static struct mk_f_list *mk_dirhtml_create_element(char *file,
                                             unsigned char type,
                                             char *full_path,
                                             unsigned long *list_len)
@@ -135,7 +135,7 @@ struct mk_f_list *mk_dirhtml_create_element(char *file,
     return entry;
 }
 
-struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
+static struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
                                          unsigned long *list_len)
 {
     unsigned long len;
@@ -318,7 +318,7 @@ int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl)
 /* Search which tag exists first in content :
  * ex: %_html_title_%
  */
-int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
+static int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
 {
     int i, len, match;
 
@@ -334,7 +334,7 @@ int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
 }
 
 /* return the number of valid tags found in text string */
-int mk_dirhtml_content_count_tags(char *content, char *tpl[])
+static int mk_dirhtml_content_count_tags(char *content, char *tpl[])
 {
     int pos = 0, count = 0;
     int len, tpl_idx;
@@ -470,7 +470,7 @@ struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **
     return (struct dirhtml_template *) node;
 }
 
-int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
+static int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
 {
     int i;
     for (i = 0; tpl_tags[i]; i++) {
@@ -482,7 +482,7 @@ int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
     return -1;
 }
 
-int mk_dirhtml_template_len(struct dirhtml_template *tpl)
+static int mk_dirhtml_template_len(struct dirhtml_template *tpl)
 {
     int len = 0;
     struct dirhtml_template *aux;
@@ -496,7 +496,7 @@ int mk_dirhtml_template_len(struct dirhtml_template *tpl)
     return len;
 }
 
-struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
+static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
                                         struct dirhtml_value *values,
                                         int is_chunked)
 {
@@ -589,7 +589,7 @@ struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
     return (struct dirhtml_value *) aux;
 }
 
-void mk_dirhtml_tag_free_list(struct dirhtml_value **list)
+static void mk_dirhtml_tag_free_list(struct dirhtml_value **list)
 {
     struct dirhtml_value *prev=0, *target;
 
@@ -631,7 +631,7 @@ char *mk_dirhtml_load_file(char *filename)
     return (char *) data;
 }
 
-int mk_dirhtml_entry_cmp(const void *a, const void *b)
+static int mk_dirhtml_entry_cmp(const void *a, const void *b)
 {
     struct mk_f_list *const *f_a = a;
     struct mk_f_list *const *f_b = b;
@@ -639,7 +639,7 @@ int mk_dirhtml_entry_cmp(const void *a, const void *b)
     return strcmp((*f_a)->name, (*f_b)->name);
 }
 
-int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
+static int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
 {
     int n;
     unsigned long len;
@@ -656,7 +656,7 @@ int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
     return n;
 }
 
-int mk_dirhtml_send_chunked_end(int fd)
+static int mk_dirhtml_send_chunked_end(int fd)
 {
     char *_end = "0\r\n\r\n";
     int len = 5;
@@ -664,7 +664,7 @@ int mk_dirhtml_send_chunked_end(int fd)
     return mk_api->socket_send(fd, _end, len);
 }
 
-void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
+static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 {
     int i;
     struct mk_f_list *entry;

@@ -32,6 +32,7 @@
 #include "cheetah.h"
 #include "cutils.h"
 #include "cmd.h"
+#include "loop.h"
 
 void mk_cheetah_loop_stdin()
 {
