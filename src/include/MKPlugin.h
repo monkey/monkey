@@ -34,13 +34,13 @@
 #include "mk_macros.h"
 
 /* global vars */
-struct plugin_api *mk_api;
-struct plugin_info _plugin_info;
+struct plugin_api MK_EXPORT *mk_api;
+struct plugin_info MK_EXPORT _plugin_info;
 
-mk_plugin_key_t _mkp_data;
+mk_plugin_key_t MK_EXPORT _mkp_data;
 
 #define MONKEY_PLUGIN(a, b, c, d)                   \
-    struct plugin_info _plugin_info = {a, b, c, d}
+    struct plugin_info MK_EXPORT _plugin_info = {a, b, c, d}
 
 #ifdef TRACE
 #define PLUGIN_TRACE(...) \

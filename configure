@@ -891,6 +891,7 @@ else
     DEFS="-DDEBUG -DSAFE_FREE"
     CFLAGS="$CFLAGS -g -Wall"
 fi
+CFLAGS="$CFLAGS -fvisibility=hidden"
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
     echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"
