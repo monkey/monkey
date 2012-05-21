@@ -122,7 +122,7 @@ struct mk_config *mk_config_create(const char *path)
     int len;
     int line = 0;
     int indent_len = -1;
-    int n_keys;
+    int n_keys = 0;
     char buf[255];
     char *section = NULL;
     char *indent = NULL;
