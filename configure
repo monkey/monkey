@@ -100,13 +100,28 @@ main()
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
         # Check for accept4()
-        echo -n "+ Checking for accept4() function... "
-        check_accept4_func result
-        if [ $result == 0 ]; then
+        if [ $only_accept4 -eq 1 ]; then
+            echo -n "+ Checking for accept4() function... "
+            check_accept4_func result
+            if [ $result != 0 ]; then
+                echo -en $RED$BOLD"No"$END_COLOR"\n"
+                exit 1
+            else
+                echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
+            fi
+        elif [ $only_accept -eq 1 ]; then
+            echo -n "+ Using generic accept()............ "
             echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-        else
-            echo -en $RED$BOLD"No"$END_COLOR"\n"
             DEFS="$DEFS -DACCEPT_GENERIC"
+        else
+            echo -n "+ Checking for accept4() function... "
+            check_accept4_func result
+            if [ $result == 0 ]; then
+                echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
+            else
+                echo -en $RED$BOLD"No"$END_COLOR"\n"
+                DEFS="$DEFS -DACCEPT_GENERIC"
+            fi
         fi
 
         if [ $platform == "generic" ]; then
@@ -716,6 +731,10 @@ platform="generic"
 default_port="2001"
 default_user="nobody"
 
+# accept type
+only_accept=0
+only_accept4=0
+
 for arg in $*; do
 
 	case "$arg" in
@@ -764,6 +783,12 @@ for arg in $*; do
                 --disable-plugins*)
                 	disabled_plugins=$optarg
                         ;;
+                --only-accept)
+                        only_accept=1
+                        ;;
+                --only-accept4)
+                        only_accept4=1
+                        ;;
                 --safe-free*)
                         safe_free=1
                         ;;
@@ -807,6 +832,8 @@ for arg in $*; do
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
                         echo "  --enable-plugins=a,b    Enable the listed plugins"
                         echo "  --disable-plugins=a,b   Disable the listed plugins"
+                        echo "  --only-accept           Use only accept(2)"
+                        echo "  --only-accept4          Use only accept4(2) (default and preferred)"
                         echo "  --safe-free             Force Monkey to free resources before exit"
                         echo
                         echo "Override Server Configuration:"
@@ -860,6 +887,11 @@ else
     CFLAGS="$CFLAGS -g -Wall"
 fi
 
+if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
+    echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"
+    exit 1
+fi
+
 if test -n "$safe_free" ; then
     if test -z "$debug" ; then
         DEFS="$DEFS -DSAFE_FREE"
@@ -876,5 +908,5 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 fi
 
 # Starting main function
-main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform SYSNAME VERSION
+main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION
 exit 0
