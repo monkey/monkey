@@ -56,11 +56,11 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
     }
     fclose(f);
 
-    last = 0;
-    init = 0;
-
     CHEETAH_WRITE("\n");
     return;
+
+/*    last = 0;
+    init = 0;
 
     while ((n = mk_api->str_search(buf + last, " ", MK_STR_SENSITIVE)) > 0) {
         if (c == 23) {
@@ -73,7 +73,7 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
         init = last + n + 1;
         last += n + 1;
         c++;
-    }
+    }*/
 }
 
 void mk_cheetah_print_running_user()
