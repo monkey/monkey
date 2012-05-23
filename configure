@@ -347,7 +347,8 @@ distclean:
 install:
 	\$(MAKE) -C src all
 	install -d \$(BINDIR)
-	install -d \$(MANDIR)
+	install -d \$(MANDIR)/man1
+	install -d \$(MANDIR)/man3
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
@@ -362,7 +363,9 @@ install:
 $plgconf
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 $plglist
-	install -m 644 ./man/* \$(MANDIR)
+	install -m 644 ./man/banana.1 \$(MANDIR)/man1
+	install -m 644 ./man/monkey.1 \$(MANDIR)/man1
+	install -m 644 ./man/monkey-api.3 \$(MANDIR)/man3
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
 	$STRIP \$(BINDIR)/monkey
