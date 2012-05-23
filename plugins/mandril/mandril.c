@@ -155,10 +155,11 @@ int mk_security_check_ip(int socket)
     int network;
     struct mk_secure_ip_t *entry;
     struct mk_list *head;
-    struct in_addr *addr = NULL;
+    struct in_addr addr_t, *addr = &addr_t;
     socklen_t len = sizeof(addr);
 
-    getpeername(socket, (struct sockaddr *)addr, &len);
+    if (getpeername(socket, (struct sockaddr *)&addr_t, &len) < 0)
+        return -1;
 
     PLUGIN_TRACE("[FD %i] Mandril validating IP address", socket);
     mk_list_foreach(head, &mk_secure_ip) {
