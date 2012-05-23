@@ -109,6 +109,8 @@ char *mk_pointer_to_buf(mk_pointer p)
     char *buf;
 
     buf = mk_mem_malloc(p.len + 1);
+    if (!buf) return NULL;
+
     memcpy(buf, p.data, p.len);
     buf[p.len] = '\0';
 
