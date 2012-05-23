@@ -53,7 +53,6 @@ int mk_palm_conf(char *confdir)
     mk_api->str_build(&conf_path, &len, "%s/palm.conf", confdir);
     conf = mk_api->config_create(conf_path);
 
-    r = palms;
     mk_list_foreach(head, &conf->sections) {
         section = mk_list_entry(head, struct mk_config_section, _head);
         /* Just read PALM sections */
@@ -372,7 +371,7 @@ int mk_palm_write(int socket, char *buffer, int len, int is_chunked)
     if (is_chunked == MK_TRUE) {
         mk_api->socket_cork_flag(socket, TCP_CORK_ON);
         chunk_len = snprintf(chunk_header, chunk_size - 1, "%x%s", len, MK_CRLF);
-        n = mk_api->socket_send(socket, chunk_header, chunk_len);
+        mk_api->socket_send(socket, chunk_header, chunk_len);
     }
 
     n = mk_api->socket_send(socket, buffer, len);
