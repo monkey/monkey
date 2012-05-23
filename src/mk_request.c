@@ -337,7 +337,6 @@ static int mk_request_parse(struct client_session *cs)
             offset = end + mk_endblock.len;
             sr_node->data = mk_method_get_data(cs->body + offset,
                                                cs->body_length - offset);
-            i += sr_node->data.len;
         }
 
         /* Increase index to the end of the current block */
