@@ -335,7 +335,9 @@ int mk_palm_send_request(struct client_session *cs, struct session_request *sr)
     pr = mk_palm_request_get_by_http(cs->socket);
     PLUGIN_TRACE("[FD %i] Sending request to Palm Server", pr->palm_fd);
 
-    if (pr && pr->bytes_sent == 0) {
+    if (!pr) return -1;
+
+    if (pr->bytes_sent == 0) {
         PLUGIN_TRACE("Palm request: '%s'", sr->real_path.data);
 
         /* Create protocol request  */
