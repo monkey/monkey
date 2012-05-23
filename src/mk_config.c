@@ -594,6 +594,10 @@ struct host *mk_config_get_host(char *path)
 
     /* Read tag 'HOST' */
     section_host = mk_config_section_get(cnf, "HOST");
+    if (!section_host) {
+        mk_err("Invalid config file %s", path);
+        return NULL;
+    }
 
     /* Alloc configuration node */
     host = mk_mem_malloc_z(sizeof(struct host));
