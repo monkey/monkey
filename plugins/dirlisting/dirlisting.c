@@ -457,7 +457,7 @@ struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **
     node->tags = tpl;
     node->next = NULL;
 
-    if (!header) {
+    if (!header || !(*header)) {
         return (struct dirhtml_template *) node;
     }
 
