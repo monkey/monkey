@@ -118,6 +118,7 @@ void mk_mimetype_read_config()
     section = mk_config_section_get(cnf, "MIMETYPES");
     if (!section) {
         mk_err("Error: Invalid mime type file");
+        exit(EXIT_FAILURE);
     }
 
     mk_list_foreach(head, &section->entries) {
