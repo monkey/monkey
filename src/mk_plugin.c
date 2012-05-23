@@ -594,7 +594,7 @@ int mk_plugin_stage_run(unsigned int hook,
         while (stm) {
             MK_TRACE("[%s] STAGE 40", stm->p->shortname);
 
-            ret = stm->p->stage.s40(cs, sr);
+            stm->p->stage.s40(cs, sr);
             stm = stm->next;
         }
     }
