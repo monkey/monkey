@@ -292,7 +292,7 @@ static void mk_logger_print_details(void)
     fflush(stdout);
 }
 
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     int fd;
     mk_api = *api;
@@ -343,7 +343,7 @@ void _mkp_exit()
     mk_api->mem_free(mk_logger_master_path);
 }
 
-void _mkp_core_prctx()
+int _mkp_core_prctx(struct server_config *config)
 {
     struct log_target *new;
     struct host *entry_host;

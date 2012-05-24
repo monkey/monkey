@@ -208,7 +208,7 @@ static int mk_security_check_url(mk_pointer url)
     return 0;
 }
 
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
 

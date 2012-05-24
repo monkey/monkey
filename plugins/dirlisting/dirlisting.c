@@ -830,7 +830,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     return 0;
 }
 
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
     return mk_dirhtml_conf(confdir);

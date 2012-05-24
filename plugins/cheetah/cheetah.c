@@ -118,7 +118,7 @@ void *mk_cheetah_init(void *args)
 /* This function is called when the plugin is loaded, it must
  * return 
  */
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
     init_time = time(NULL);

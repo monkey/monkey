@@ -164,7 +164,7 @@ static int mk_palm_send_headers(struct mk_palm_request *pr)
     return n;
 }
 
-void _mkp_core_prctx(struct server_config *config)
+int _mkp_core_prctx(struct server_config *config)
 {
     /*
      * Server Address Lookup
@@ -203,7 +203,7 @@ void _mkp_core_thctx()
     mk_palm_protocol_thread_init();
 }
 
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
     palms = 0;
