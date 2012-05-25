@@ -546,6 +546,8 @@ void mk_config_read_hosts(char *path)
     mk_string_build(&buf, &len, "%s/sites/", path);
     if (!(dir = opendir(buf))) {
         mk_err("Could not open %s", buf);
+        mk_mem_free(buf);
+        exit(EXIT_FAILURE);
     }
     mk_mem_free(buf);
 
