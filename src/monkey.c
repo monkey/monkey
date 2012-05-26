@@ -54,6 +54,7 @@ static void mk_thread_keys_init(void)
     pthread_key_create(&mk_cache_header_ka, NULL);
     pthread_key_create(&mk_cache_header_ka_max, NULL);
     pthread_key_create(&mk_cache_utils_gmtime, NULL);
+    pthread_key_create(&mk_cache_utils_gmt_text, NULL);
     pthread_key_create(&mk_plugin_event_k, NULL);
 }
 
