@@ -403,11 +403,11 @@ int mk_palm_send_end_chunk(int socket, struct mk_palm_request *pr)
 int mk_palm_cgi_status(char *data, struct session_request *sr)
 {
     int status;
-    int status_len = 3;
+    const int status_len = 3;
     int offset = 0;
-    int field_len = 8;
+    const int field_len = 8;
     char buffer[4];
-    char field[] = "Status: ";
+    const char field[] = "Status: ";
 
     if (strlen(data) <= (field_len + status_len)) {
         return 0;
