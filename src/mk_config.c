@@ -371,7 +371,6 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     struct mk_config_section *section;
 
     config->serverconf = mk_string_dup(path_conf);
-    config->workers = MK_WORKERS_DEFAULT;
 
     if (stat(config->serverconf, &checkdir) == -1) {
         mk_err("ERROR: Cannot find/open '%s'", config->serverconf);
@@ -738,6 +737,7 @@ void mk_config_set_init_values(void)
     config->open_flags = O_RDONLY | O_NONBLOCK;
     config->index_files = NULL;
     config->user_dir = NULL;
+    config->workers = MK_WORKERS_DEFAULT;
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
