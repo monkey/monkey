@@ -902,7 +902,7 @@ if test -n "$safe_free" ; then
 fi
 
 if [ $trace ] ; then
-    DEFS="-DTRACE"
+    DEFS="$DEFS -DTRACE"
 fi
 
 if [ $platform != "generic" ] && [ $platform != "android" ]; then
