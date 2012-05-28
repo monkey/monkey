@@ -299,7 +299,6 @@ void mk_plugin_init()
     void *handle;
     unsigned long len;
     struct plugin *p;
-    struct plugin_api *api;
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
