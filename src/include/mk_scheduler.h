@@ -78,7 +78,7 @@ extern pthread_mutex_t mutex_worker_init;
 
 void mk_sched_init();
 int mk_sched_register_thread(int epoll_fd);
-int mk_sched_launch_thread(int max_events);
+int mk_sched_launch_thread(int max_events, pthread_t *tout);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 

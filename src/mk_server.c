@@ -70,10 +70,11 @@ int mk_server_worker_capacity(int nworkers)
 void mk_server_launch_workers()
 {
     int i;
+    pthread_t skip;
 
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(config->worker_capacity);
+        mk_sched_launch_thread(config->worker_capacity, &skip);
     }
 }
 
