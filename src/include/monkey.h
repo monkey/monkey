@@ -38,4 +38,6 @@ mk_pointer mk_monkey_protocol;
 gid_t EGID;
 gid_t EUID;
 
+void mk_thread_keys_init();
+
 #endif

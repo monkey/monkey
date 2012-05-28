@@ -42,7 +42,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-static void mk_thread_keys_init(void)
+void mk_thread_keys_init(void)
 {
     /* Create thread keys */
     pthread_key_create(&worker_sched_node, NULL);
