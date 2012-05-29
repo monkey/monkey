@@ -306,7 +306,7 @@ void mk_config_free_entries(struct mk_config_section *section)
 void mk_config_free_all()
 {
     mk_config_host_free_all();
-    mk_config_free(config->config);
+    if (config->config) mk_config_free(config->config);
 
     if (config->serverconf) mk_mem_free(config->serverconf);
     if (config->listen_addr) mk_mem_free(config->listen_addr);
@@ -320,7 +320,7 @@ void mk_config_free_all()
 
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
-    mk_pointer_free(&config->server_software);
+    if (config->server_software.len) mk_pointer_free(&config->server_software);
     mk_mem_free(config);
 }
 #endif
@@ -840,7 +840,7 @@ void mk_config_host_free_all()
         mk_pointer_free(&host->header_host_signature);
 
         /* Free source configuration */
-        mk_config_free(host->config);
+        if (host->config) mk_config_free(host->config);
         mk_mem_free(host);
     }
 }
