@@ -527,7 +527,6 @@ int mk_plugin_stage_run(unsigned int hook,
         stm = plg_stagemap->stage_10;
         while (stm) {
             MK_TRACE("[%s] STAGE 10", stm->p->shortname);
-
             ret = stm->p->stage.s10(socket, conx);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:

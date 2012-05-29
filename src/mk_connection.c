@@ -111,7 +111,11 @@ int mk_conn_write(int socket)
     conx = mk_sched_get_connection(sched, socket);
     if (!conx) {
         MK_TRACE("[FD %i] Registering new connection");
-        mk_sched_register_client(socket, sched);
+        if (mk_sched_register_client(socket, sched) == -1) {
+            MK_TRACE("[FD %i] Close requested", socket);
+            return -1;
+        }
+
         mk_epoll_change_mode(sched->epoll_fd, socket,
                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
         return 0;
