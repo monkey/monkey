@@ -374,3 +374,17 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
     return (char *) buffer;
 }
 
+char *mk_string_tolower(const char *in)
+{
+    char *out = strdup(in);
+    const char *ip = in;
+    char *op = out;
+
+    while (*ip) {
+        *op = tolower(*ip);
+        ip++, op++;
+    }
+    *op = '\0';
+
+    return out;
+}

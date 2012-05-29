@@ -62,4 +62,6 @@ char *mk_string_build(char **buffer, unsigned long *len,
 int mk_string_itop(int n, mk_pointer *p);
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
 
+char *mk_string_tolower(const char *in);
+
 #endif
