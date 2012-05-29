@@ -659,6 +659,7 @@ mk_pointer mk_request_index(char *pathfile, char *file_aux, const unsigned int f
     struct mk_list *head;
 
     mk_pointer_reset(&f);
+    if (!config->index_files) return f;
 
     mk_list_foreach(head, config->index_files) {
         entry = mk_list_entry(head, struct mk_string_line, _head);
