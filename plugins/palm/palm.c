@@ -520,7 +520,7 @@ int _mkp_event_write(int sockfd)
         pr->in_offset = 0;
     }
 
-    PLUGIN_TRACE("EVENT WRITE!!!!!!!!!!!!!!!!!!!!");
+    PLUGIN_TRACE("[FD %i] EVENT WRITE", sockfd);
     return MK_PLUGIN_RET_EVENT_OWNED;
 }
 

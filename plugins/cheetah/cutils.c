@@ -32,10 +32,8 @@
 
 void mk_cheetah_print_worker_memory_usage(pid_t pid)
 {
-    int last, init, n, c = 0;
     int s = 1024;
     char *buf;
-    char *value;
     pid_t ppid;
     FILE *f;
 
@@ -59,8 +57,11 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
     CHEETAH_WRITE("\n");
     return;
 
-/*    last = 0;
-    init = 0;
+/*
+    int n, c;
+    int init = 0;
+    int last = 0;
+    char *value;
 
     while ((n = mk_api->str_search(buf + last, " ", MK_STR_SENSITIVE)) > 0) {
         if (c == 23) {
