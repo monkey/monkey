@@ -611,8 +611,6 @@ struct host *mk_config_get_host(char *path)
     /* Init list for host name aliases */
     mk_list_init(&host->server_names);
 
-    host_low = mk_mem_malloc_z(MK_HOSTNAME_LEN);
-
     /* Lookup Servername */
     list = mk_config_section_getval(section_host, "Servername", MK_CONFIG_VAL_LIST);
     if (!list) {
@@ -627,25 +625,18 @@ struct host *mk_config_get_host(char *path)
         }
 
         /* Hostname to lowercase */
-        char *h = host_low;
-        char *p = entry->val;
-
-        while (*p) {
-            *h = tolower(*p);
-            p++, h++;
-        }
-        *h = '\0';
+        host_low = mk_string_tolower(entry->val);
 
         /* Alloc node */
         new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
         new_alias->name = mk_mem_malloc_z(entry->len + 1);
         strncpy(new_alias->name, host_low, entry->len);
+        mk_mem_free(host_low);
 
         new_alias->len = entry->len;
 
         mk_list_add(&new_alias->_head, &host->server_names);
     }
-    mk_mem_free(host_low);
     mk_string_split_free(list);
 
     /* Lookup document root handled by a mk_pointer */
