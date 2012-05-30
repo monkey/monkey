@@ -141,7 +141,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     sched_conn->arrive_time = log_current_utime;
 
 
-    return -1;
+    return 0;
 }
 
 static void mk_sched_thread_lists_init()
