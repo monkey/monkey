@@ -42,6 +42,8 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
+static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
+
 /*
  * Returns the worker id which should take a new incomming connection,
  * it returns the worker id with less active connections
@@ -216,6 +218,12 @@ int mk_sched_register_thread(int efd)
     struct sched_list_node *sl;
     static int wid = 0;
 
+    /*
+     * If this thread slept inside this section, some other thread may touch wid.
+     * So protect it with a mutex, only one thread may handle wid.
+     */
+    pthread_mutex_lock(&mutex_sched_init);
+
     sl = &sched_list[wid];
     sl->idx = wid++;
     sl->tid = pthread_self();
@@ -232,6 +240,8 @@ int mk_sched_register_thread(int efd)
      */
     sl->pid = syscall(__NR_gettid);
     sl->epoll_fd = efd;
+
+    pthread_mutex_unlock(&mutex_sched_init);
 
     mk_list_init(&sl->busy_queue);
     mk_list_init(&sl->av_queue);
