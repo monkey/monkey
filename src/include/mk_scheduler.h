@@ -56,6 +56,7 @@ struct sched_list_node
     pthread_t tid;
     pid_t pid;
     int epoll_fd;
+    unsigned char initialized;
 
     struct client_session *request_handler;
 };
@@ -72,6 +73,8 @@ typedef struct
 
 pthread_key_t epoll_fd;
 pthread_key_t worker_sched_node;
+
+extern pthread_mutex_t mutex_worker_init;
 
 void mk_sched_init();
 int mk_sched_register_thread(int epoll_fd);

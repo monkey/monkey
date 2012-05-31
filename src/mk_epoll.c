@@ -86,6 +86,10 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     fds_timeout = log_current_utime + config->timeout;
     events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
 
+    pthread_mutex_lock(&mutex_worker_init);
+    sched->initialized = 1;
+    pthread_mutex_unlock(&mutex_worker_init);
+
     while (1) {
         ret = -1;
         num_fds = epoll_wait(efd, events, max_events, MK_EPOLL_WAIT_TIMEOUT);

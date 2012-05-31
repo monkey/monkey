@@ -43,6 +43,7 @@
 #include "mk_macros.h"
 
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 
 /*
  * Returns the worker id which should take a new incomming connection,

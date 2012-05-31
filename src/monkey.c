@@ -192,6 +192,21 @@ int main(int argc, char **argv)
     /* Launch monkey http workers */
     mk_server_launch_workers();
 
+    /* Wait until all workers report as ready */
+    while (1) {
+        int i, ready = 0;
+
+        pthread_mutex_lock(&mutex_worker_init);
+        for (i = 0; i < config->workers; i++) {
+            if (sched_list[i].initialized)
+                ready++;
+        }
+        pthread_mutex_unlock(&mutex_worker_init);
+
+        if (ready == config->workers) break;
+        usleep(10000);
+    }
+
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(config->server_fd);
 
