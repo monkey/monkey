@@ -192,7 +192,10 @@ main()
 	echo -n "Have fun! ;)"
         echo
 
-	echo "#define CC \"${CC}\"" > src/include/mk_env.h
+	echo "#ifndef MK_ENV_H" > src/include/mk_env.h
+	echo "#define MK_ENV_H" >> src/include/mk_env.h
+	echo "#define CC \"${CC}\"" >> src/include/mk_env.h
+	echo "#endif" >> src/include/mk_env.h
 }
 
 # Check accept4() function

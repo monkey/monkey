@@ -22,6 +22,9 @@
 #include "mk_memory.h"
 #include "mk_list.h"
 
+#ifndef MK_MIMETYPE_H
+#define MK_MIMETYPE_H
+
 #define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
 #define MIMETYPE_DEFAULT_NAME "default"
 
@@ -35,3 +38,5 @@ struct mimetype *mimetype_default;
 
 void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_pointer * filename);
+
+#endif

@@ -17,7 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_METHOD_H
+#define MK_METHOD_H
+
 /* method.c */
 int mk_method_parse_data(struct client_session *cs, struct session_request *sr);
 mk_pointer mk_method_get_data(void *data, int size);
 long int mk_method_validate_content_length(const char *body, int body_len);
+
+#endif

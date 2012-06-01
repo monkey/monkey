@@ -19,6 +19,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_LIMITS_H
+#define MK_LIMITS_H
+
 /* Configuration */
 #define MK_HOSTNAME_LEN 64
 
@@ -27,3 +30,5 @@
 
 /* File system */
 #define MK_PATH_BASE 128
+
+#endif

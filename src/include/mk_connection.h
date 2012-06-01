@@ -17,6 +17,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef MK_CONNECTION_H
+#define MK_CONNECTION_H
+
 #define MK_CONN_SWITCH_READ 0
 #define MK_CONN_SWITCH_WRITE 1
 
@@ -28,3 +31,5 @@ int mk_conn_write(int socket);
 int mk_conn_error(int socket);
 int mk_conn_close(int socket);
 int mk_conn_timeout(int socket);
+
+#endif
