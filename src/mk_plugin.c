@@ -628,7 +628,7 @@ void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p)
 
 void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p)
 {
-    if (!sr->handled_by) {
+    if (!sr->handled_by || sr->handled_by != p) {
         return;
     }
 
