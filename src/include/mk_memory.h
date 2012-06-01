@@ -43,9 +43,9 @@ typedef struct list_sint mk_list_sint_t;
 # define ALLOCSZ_ATTR(x,...)
 #endif
 
-void *mk_mem_malloc(const size_t size);
-void *mk_mem_malloc_z(const size_t size);
-void *mk_mem_realloc(void *ptr, const size_t size);
+inline void *mk_mem_malloc(const size_t size);
+inline void *mk_mem_malloc_z(const size_t size);
+inline void *mk_mem_realloc(void *ptr, const size_t size);
 void mk_mem_free(void *ptr);
 void mk_mem_pointers_init(void);
 
