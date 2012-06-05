@@ -543,6 +543,9 @@ int _mkp_event_read(int sockfd)
     n = mk_api->socket_read(pr->palm_fd, pr->in_buffer + pr->in_len,
                             (MK_PALM_BUFFER_SIZE - pr->in_len));
 
+    mk_err("%s", pr->in_buffer);
+    exit(1);
+
 #ifdef TRACE
     PLUGIN_TRACE("[FD %i | CLIENT_FD %i | PALM_FD %i]", sockfd, pr->client_fd, pr->palm_fd);
     PLUGIN_TRACE(" just readed  : %i", n);

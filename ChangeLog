@@ -1,8 +1,2541 @@
+commit 976340d08576e36e06d45a9f55cb119efe0210ca
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 31 20:17:42 2012 +0300
+
+    monkey: wait until all workers are ready
+    
+    Otherwise the manager thread may cause a client to be added to an epoll fd
+    that has not been initialized yet.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5659e4ac6c2dd805e74670411231d2b63fee03c1
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 1 17:01:15 2012 +0300
+
+    headers: Remove unused header file
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 32324994d0d3a2d6edbfec2f92db668b90e5851d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 1 17:03:34 2012 +0300
+
+    configure, headers: Make sure every header has include guards
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f84cf355886b7d4e2646f7c1dc43e55c3c0ec764
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 1 17:08:42 2012 +0300
+
+    memory: Correct the header to have the same definition as the source
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 55e736dc846c5f711347bdcdc8d827e5972e5258
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 31 19:54:49 2012 +0300
+
+    sched: Protect the wid init with a mutex
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 46a029b86042d6ec024068a5250048d779a495cc
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 20:50:32 2012 +0200
+
+    Clock: move sequential clock init to its own function
+    
+    If the memory were allocated in a thread, it may happen too late.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 28ee0b84fb73f83893e324293104c7cdf34447c6
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 30 07:46:59 2012 -0600
+
+    Scheduler: fix return value when registering a new client
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b5cf6793490ac2ee96a87e05c69c71db1830ca1e
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 29 17:04:49 2012 +0300
+
+    configure: Use wildcards for the man page installs
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bb436da99383077109819b2c458fd0db28e312f0
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 29 13:59:27 2012 +0300
+
+    config: Add some checks in SAFE_FREE for things that aren't alloced with the lib
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a98f2b874ada4e2a6353cb3f85601208aabd6aeb
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 28 15:01:11 2012 +0300
+
+    configure: Don't overwrite other defs with TRACE
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4d2ccdf2bf362b206876bbea19892991ae49e030
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 29 09:09:22 2012 -0600
+
+    Connection: validate mk_sched_register_client() return value
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0b93ac03b38c791f5103a912114f25422dbe7536
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 28 19:24:23 2012 -0600
+
+    Cheetah: variables cleanup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0cf0f38428669a060ff5a84119d9ea317d5324eb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 27 18:08:27 2012 -0600
+
+    Mandril: re-write configuration file and examples
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e8f6cc6a220b2e7e720b879aa5d9e44db394670
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sat May 26 20:10:52 2012 -0600
+
+    mandril: Remove unused function argument
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d1edaed10ea987933aad85a5886cba78136b949b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sat May 26 20:07:51 2012 -0600
+
+    palm: Constify some read-only variables
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f716104d38a3ee1f7e2ff42ac78e8d7f284e262b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 21 20:00:47 2012 +0300
+
+    liana: Remove unused variable
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 267f9a6d89618f76ecde102194ccc16dc893d6f6
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 18:10:51 2012 +0300
+
+    dirlisting: Prevent possible crash
+    
+    Fixes a Clang warning.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 89d918ad3096a1a096ba8c3a7ada2bcb9473a210
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 18:00:33 2012 +0300
+
+    cheetah: Comment out some dead code
+    
+    Fixes two Clang warnings (dead writes to init and last).
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 77ba5b5b4ced1b218df0177ce686b7ab0c859387
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:40:01 2012 +0300
+
+    mimetype: If the file is invalid, we would crash. Exit instead. v2
+    
+    Fixes a Clang warning. v2: exit instead of abort
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7e1cd84da7fc8e2da4f2ceead4ae4987f478289d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 25 13:41:06 2012 +0300
+
+    config: Don't pass NULL to readdir, v2
+    
+    Exit instead of return.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8aa2fc246dab61808db4e5f28599639ddc32143a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 18:03:11 2012 +0300
+
+    palm: Prevent possible crash
+    
+    Fixes a Clang warning. If pr is NULL, the final return would crash.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f53867d9dd9d0bc179b322d36152e9806fb7f8bd
+Author: mahesh gondi <mashf13@gmail.com>
+Date:   Sun May 27 01:06:44 2012 +0530
+
+    monkey : adds thread key initialization
+    
+    added missing thread key initialization for mk_cache_utils_gmt_text
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e3131ef6eea71820059636d714e39a5d81ab347a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 18:04:37 2012 +0300
+
+    mandril: Correct in_addr usage
+    
+    Fixes a Clang warning. The file had used only a pointer to in_addr, when
+    it should have used a struct!
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 041cb9843211a05e997f4d4742e0754abcd34770
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:58:56 2012 +0300
+
+    palm: Remove two dead writes
+    
+    Fixes two Clang warnings.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 72912a6d113ba6fe78f326f04b073b0baa87209b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:58:35 2012 +0300
+
+    config: Prevent possible crash
+    
+    Fixes a Clang warning.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e9961d6fd5ff92a6a787788a5acaa8098f276073
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:28:25 2012 +0300
+
+    user: Check the return value of sete[ug]id
+    
+    Fixes a Clang warning.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8a83a2645b51897b1cea99f1b73ee0b4f94f1a6f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:21:43 2012 +0300
+
+    user: Fix possible crash
+    
+    Fixes a Clang warning. If getpwnam returns NULL, accessing usr->something
+    would segfault.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6fc0f92b09e2d76f6bb4574ea62708584c7bb886
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:18:43 2012 +0300
+
+    request: Remove dead assignment
+    
+    Fixes a Clang warning. This write is pointless, since it is never read.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 70f9a5063921bfc967a161e8a86fb10503b9d7a0
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:17:30 2012 +0300
+
+    plugin: Remove dead assignment
+    
+    Fixes a Clang warning.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 11859b9416ab0fa9cd3866d2882458dfc4602863
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 23 17:15:54 2012 +0300
+
+    memory: Prevent a possible crash in mk_pointer_to_buf
+    
+    Fixes a Clang warning. If *dest is NULL, memcpy would crash.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9bb06a3cb31d5164588b67e466c4ee53984d7aae
+Author: Anthony G. Basile <blueness@gentoo.org>
+Date:   Wed May 23 10:53:10 2012 -0400
+
+    configure: fix #156, install man pages to the correct sections
+    
+    The current configure script installs the man pages banana.1, monkey.1
+    and monkey-api.3 at the top level man dir, /usr/share/man, and not in
+    the appropriate categories by FHS standards.  This fixes the issue.
+    
+    Signed-off-by: Anthony G. Basile <blueness@gentoo.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e57c12e63555141cfd4cc23c8850994dfcac2364
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 22 07:48:02 2012 -0600
+
+    Auth: rename mkpasswd utlity to mk_passwd
+    
+    Monkey's "mkpasswd" clashes with the /usr/bin/mkpasswd
+    utility of the standard Whois tools package.
+    
+    Thanks to Fiorella Santini for catching this.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6b6595bd4c9aa97fb2557ee6d0bea2964df02973
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 21 20:31:06 2012 +0300
+
+    file: Reorder struct file_info, drop 8 bytes, v2
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 92fa0e1c195561981de9fd0cc05916cc933255cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 22 07:12:44 2012 -0600
+
+    Configure: fix #155 new accept() mode in configure flags
+    
+    This patch add two new flags to the configure script:
+    
+        --only-accept
+        --only-accept4
+    
+    These flags let specify the builder system which accept mode
+    must be used in the server socket: accept() or accept4(). If
+    no one is specified the builder will auto-test accept4(), if
+    it fails, it will go for accept().
+    
+    This is useful when doing cross compiling and want to specify a
+    specific operation mode.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e7cea98fb67ba94b4bc2a3fbd2f35511e9c8ec97
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 21 14:33:47 2012 -0600
+
+    http: do not perror() when sendfile() fails
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 28d844073108cdc3786024b4487059ad8b1b430c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 21 11:34:30 2012 -0600
+
+    Config: fix unitilialized variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ee151fc730b8ea7057bbec4a63f80dbfff1a3436
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 21 11:29:46 2012 -0600
+
+    Liana: use monkey api to set a socket non-blocking
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d3db12dee2a384bd0d298428535bc4c5281512cb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 20 20:45:32 2012 -0600
+
+    Config: fix minor validation bug and add extra checks
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c7392542711fb00819d877378b674847a1183b53
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 19 14:56:07 2012 -0600
+
+    file: add new field 'exists' to the struct file_info
+    
+    The new field added is used to mark if the file exists or not,
+    because lstat(2)/stat(2) can fail due to multiple reasons.
+    
+    If the HTTP core get a -1 from mk_file_get_info(), it now will
+    validate the 'exists' field to send a 404 or 403 error
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 508d413cca627b9ba5ee206dc7654e782b4b1185
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 19 13:33:30 2012 -0600
+
+    QA: remove old redir_301.htt test
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit be62ea4f9d1074a970fc114348dfa5583fb38b2c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 19 13:32:20 2012 -0600
+
+    file: set the proper O_NOATIME when applies
+    
+    if the user is the owner of the file or the user is root, it
+    can set the O_NOATIME flag for open(2) operations to avoid
+    inode updates about last accessed time.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9d3b09bb976fe28d0f88bf0e1e476480895bfef6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 19 08:37:16 2012 -0600
+
+    http: fix directory redirect when Host header specify a TCP port
+    
+    This patch makes the server to respect the port sent in the Host
+    header, so if a redirect is performed it must use the port sent in
+    the request headers.
+    
+    This patch also add two QA scripts to verify the right behavior:
+    
+       - directory_redirect_02.htt
+       - directory_redirect_03.htt
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c807c1894c6817bd1c11c3118a64e8890d874a3e
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 8 20:53:05 2012 +0300
+
+    http/request: Remove malloc from request_index with short paths
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 851590893a992728d24d607b93c8b49e9c8ff04b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 18 11:07:35 2012 -0600
+
+    auth: adapt base64.c to monkey
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9f5633473aa49413a9288b0fa38a639cb52f53ab
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 18 11:04:38 2012 -0600
+
+    auth: use new base64.c version from Jouni Malinen
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 37ecbbdf577148be7a47b8ef940d1506cc41f6a0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 18 11:02:28 2012 -0600
+
+    socket: fix mk_socket_ip_str() for IPv6
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 43784c313a7cbc249408a1897213b619853f219a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 15:19:00 2012 +0300
+
+    socket: Fix possible overflow, v2
+    
+    mk_socket_ip_str passed the wrong size to inet_ntop.
+    
+    v2: Output a nice error message
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d16e0530615c9dc5b924fa206dcc353ecbb34a13
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 18 08:17:44 2012 -0600
+
+    auth: temporal fix for GCC warning over olen in decode function
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 368be9249051cfe4917d515ad4f6438d822477ec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 18 07:15:59 2012 -0600
+
+    Cheetah: validate return of fgets()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0dbeaa6e42701417e10d40f53b524d2cc9f0b462
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 17 21:27:36 2012 -0600
+
+    Builder: compile output like Linux Kernel style
+    
+    Makefiles has been modified to print out messages like the Linux
+    Kernel at compile time:
+    
+     edsiper@monotop:~/coding/monkey$ make
+       CC    src/monkey.o
+       CC    src/mk_method.o
+       CC    src/mk_mimetype.o
+       CC    src/mk_request.o
+       CC    src/mk_header.o
+       CC    src/mk_config.o
+       CC    src/mk_signals.o
+       CC    src/mk_user.o
+       CC    src/mk_utils.o
+       CC    src/mk_epoll.o
+       CC    src/mk_scheduler.o
+       ...
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cbcdb2d8fdac5284b4248504b75cd490b42ea591
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 17 22:20:04 2012 +0300
+
+    Build system: Automatic dependencies for the header files
+    
+    This removes the need to "make clean" after editing a header file.
+    All C files that need recompiling are automatically rebuilt.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bf0b20cb4b6b63585aac51525870bd9ee5ddb754
+Author: Ankit Kumar <ankitkumar.itbhu@gmail.com>
+Date:   Thu May 17 12:13:41 2012 -0600
+
+    utils: add MK_TRACE_BACKGROUND env var for trace mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 41863a08de9c55b3fd039fb4e53440ee3dd30db7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 17 12:00:22 2012 -0600
+
+    http: fix a validation over if-modified-since
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 82e95aba7b3208e589434a1fc8bcea7908fe6e13
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 17 11:47:02 2012 -0600
+
+    QA: fix and add missing error_413_02.htt file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4e7379d64ebf9d57983f701d709394df56c9ff41
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 2 19:18:36 2012 +0300
+
+    request: Optimize mk_request_init, v2
+    
+    This both simplifies the code, and moves the function from 1.6% to 0.4% of
+    Monkey CPU time.
+    
+    Changelog:
+    	v2 - Removed one forgotten zero set
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8138e4044b0a0c1fe058df7cab99b676c055dd70
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu May 17 11:28:33 2012 -0600
+
+    request: on premature close, make sure a default vhost details exists
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 036cc1d30dd9ff49577233700c23ed99bb3af95f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 2 18:03:33 2012 +0300
+
+    main: Use malloc_z for the config struct
+    
+    Valgrind found an uninitialized use. Initializing to zero fixes that.
+    
+    Conditional jump or move depends on uninitialised value(s)
+        at 0x406D28: mk_utils_register_pid (mk_utils.c:411)
+        by 0x402CD5: main (monkey.c:168)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit d0b38247d6ba44efbdaabcc769eab5dc7c752c01
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 17 10:13:45 2012 -0600
+
+    http: Remove unused arg from mk_http_keepalive_check
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 16d10675e2e6dd09914111bcab64b64b43f20a68
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 16 20:53:35 2012 -0600
+
+    Logger: if content length is not set in headers, use zero
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9e67f09f907667b522856303831f0a686351b058
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 16 09:39:52 2012 -0600
+
+    Config: add new DefaultMimeType configuration key
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0541d1ea9ca602a59437ee842b378f72bfbe4ce9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 15 12:59:31 2012 -0600
+
+    Readme: add requirements section
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 862f46c4837b46ebc1ca54237ae5e4707db60a92
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 15 12:33:55 2012 -0600
+
+    Duda: drop plugin (new repo has been created)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 563cb7516dba2c2411abd2927858422500cd880c
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 10 19:14:13 2012 +0300
+
+    memory: realloc had wrong size hint
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 28936ef50c37b1e5c2b24c78b169f787617c8a91
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Tue May 15 16:05:37 2012 +0530
+
+    htdocs: corrected image path
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f54d9fa4e24907af1d08f4e204862bc807cdede3
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 9 16:33:46 2012 +0300
+
+    http: use memmem for the ".." check
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 517634c2cee744acb58cdbcff356df3337d30d80
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 8 19:26:05 2012 +0300
+
+    http: Remove the _status_ functions and list, all unused
+    
+    Besides cleaner code, runtime RAM use drops by 1.3kb.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 347265e1327e59414795268bcadae0ccaa46195c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue May 15 08:56:34 2012 -0600
+
+    utils: optimize utime2gmt when the entry does not hit the cache
+    
+    This patch reduce the number of char assignation to the target buffer
+    replacing a few of them with the memcpy() call.
+    
+    Using valgrind is possible to see that the optimization helps to reduce
+    the computing time from 2.73 to 2.34.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0ffe16fb144bc1d6a00d5acc1a72aa4d4a783f8e
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 15 14:49:15 2012 +0300
+
+    utils: Add a gmt text cache for utime2gmt
+    
+    In the worst case (no cache hit ever), the overhead for utime2gmt is little less than 1%.
+    In the best case (cache hits always), drops utime2gmt cpu usage from 9.6% to 1.2%.
+    
+    Helps in mixed usage, since often accessed pages like the index page stay in the
+    cache.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f2e96ab21f32063b0d01bb96a05a3af0f8169e0f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 10 19:13:43 2012 +0300
+
+    memory: Calloc is much faster than malloc+memset.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3362d3c6437c25934df8ae5452cf493ecb666d5b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 14 23:22:49 2012 -0600
+
+    Config: add support for customized error pages
+    
+    This patch allow to add customized error pages per virtual host,
+    it adds a new section under the virtual host file called [ERROR_PAGES].
+    
+    You can define multiple error pages depending of the error status, check
+    the following example:
+    
+       [ERROR_PAGES]
+           404  404.html
+           500  500.html
+    
+    Everytime a an error is raised, it looks for the defined error pages, if
+    it match, it will try to send the file in question, if even the configured
+    file is not found, it will send the built-in error page.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3b57324c8527e5e100fdcf841510be4acbbfdac4
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 11 17:39:54 2012 +0300
+
+    Request: Remove one unused struct member from session_request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit 607ad623ad365c8be9e8f5cfe360680c5f876ab0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 14 11:50:31 2012 -0600
+
+    Trace: rename filter variable from MK_TRACE to MK_TRACE_FILTER
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9b3bb925816285f487b94e0db2933057c56f0cbd
+Author: Ankit Kumar <ankitkumar.iitbhu@gmail.com>
+Date:   Mon May 14 11:42:10 2012 -0600
+
+    Scheduler: Fix #151: changing %i to %llu and connections counter
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b7cc73867c7c00be9404e9ce627075508b1e39b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 10 12:26:28 2012 +0300
+
+    Update the configure script
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit 855fc67178d334ee26856a2b3e9278fdbd336103
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 7 17:45:45 2012 +0300
+
+    request: Make use of the socket arg
+    
+    GCC said that socket was unused. Another option would be to remove it
+    as an argument and keep the access as cs->socket.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e28880d7a858699dfdb569195ae216192919f7bf
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 7 19:07:38 2012 +0300
+
+    plugin: close memory leak (~5kb)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit 44a0dda51fbf2c1c8ea7e1d351bb3f0a3e1f243f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 9 18:01:30 2012 +0300
+
+    header: Make mk_header_iov_* static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit c160cd9848c0e13996bb0a3bd644dcc891776014
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 7 16:46:35 2012 +0300
+
+    sched: Allocate the connections at once
+    
+    This saves some 4kb of memory, and improves cache usage.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit 2939842f743fb4b7fc9cbb91f245994c7591a48d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 7 10:50:12 2012 -0600
+
+    Scheduler: remove unneeded active_connections check
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8fd10d02ce169a7d863202f0dabc72ab95a00b7e
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 4 14:24:33 2012 -0600
+
+    epoll: fix unitialized variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a25e0593fb2a57a1cec588a567cb711dbabfd969
+Author: Ivo Brunnbauer <ivobrunnbauer@gmail.com>
+Date:   Fri May 4 13:10:04 2012 -0600
+
+    GCC: Make monkey compile on gcc 4.7
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8dc3b186efe1b4d1209a3d6919c196166c55eb50
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 4 12:24:59 2012 -0600
+
+    String: fast path / pending part
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 32f764a155788ac9956c1ab2adbf01e772b87e14
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 4 12:00:12 2012 -0600
+
+    monkey: Remove two unused global variables
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5bb1a5b22f941fc149833f12c71989938bd53470
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 4 11:48:39 2012 -0600
+
+    Cheetah: use new accepted/closed connection from the scheduler
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 34bf2db21deaa9d1b7877463fd96427d8d42c093
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri May 4 11:36:44 2012 -0600
+
+    Scheduler: Fix #144: Make active_connections lock free
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ea83cb6860f9555011a4959294bd7d765b1fe533
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:53:01 2012 -0600
+
+    iov: Remove one gcc warning (unsigned-signed)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fd97b0a4652b9046e34bd3f718661bed61f26867
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:50:11 2012 -0600
+
+    string: Remove one gcc warning (unsigned-signed)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 64321e79e9e6ae14344b7d484fbaa65c566570f7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:48:45 2012 -0600
+
+    request: Remove always-true if
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3f77bf3d9809005daf686e13761d82a44f9d054b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:43:12 2012 -0600
+
+    memory: fix one gcc warning
+    
+    Comparison between signed and unsigned.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c3b43cb2550fbd77253b5e53d3bf0618137b65b7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:41:27 2012 -0600
+
+    string: Add string fast path
+    
+    This dropped _mk_string_search from 4.5% to 3.5% of Monkey CPU time.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c65ddde770dda43b2940f2bc6049c3088ce06152
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 3 16:35:36 2012 -0600
+
+    request: no-op cleanups
+    
+    Remove always true else if check, and move one common if check one level above.
+    
+    No functional changes.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 03e2a6a1e3638018897bee44d2c034aa5f91ced9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 14:56:45 2012 -0600
+
+    Duda: rename hook duda_init() to duda_main()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dc2d07d8ac991392aaf8de8ea82cc60257a15670
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 11:57:25 2012 -0600
+
+    Monkey v1.0 is coming. Woohooo
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4e25739b9369f9bee278140280e04db8e00a324d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 11:55:35 2012 -0600
+
+    Duda: example: use new API
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0d9ad9a07bdbd32a28145bc4145a9d2f2b0520fb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 10:23:17 2012 -0600
+
+    Clock: remove atomic operations
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ac962a24a8be46e5a989363d8e5e258197073a5f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 10:13:26 2012 -0600
+
+    Scheduler: remove atomic lock mechanism provided by GCC:
+    
+    This patch drops the atomic calls set by the compiler from patch:
+    
+        http://goo.gl/Ff0u0
+    
+    It now uses the common pthread mutex in place.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dada1cf543d5c1842d6b6553df46eaebeb513fcc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 09:34:25 2012 -0600
+
+    Config: allocate a new memory space when assigning MK_DEFAULT_LISTEN_ADDR
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 37cb86881d9ac9367233328d7b30384a3df41706
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 30 06:46:35 2012 -0600
+
+    Config: #fix 139 Invalid value for config->listen_addr
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d06d004638380368137b82362a98b4aebefcc7ca
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Apr 29 20:14:39 2012 -0600
+
+    iov: Remove unused variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 484f819cf5a65d8f26add14243c8ffcee6293cc1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 27 22:03:09 2012 -0600
+
+    Header: fix HTTP header length
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c5e31d2e6f89d957eae281988de6ff9d466f4176
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 27 21:56:34 2012 -0600
+
+    Duda: API changes and new 'map' console interface
+    
+     - New response->body_print() method. Implemented to send static
+       buffers, this one deprecates the old body_write().
+     - New response->body_printf() method. Similar to its 'print' version
+       but it allows to format a string as printf(3) does.
+     - When creating a dynamic buffer, the memory is freed automatically
+       by Duda when the flush process is done.
+     - New web interface 'map' under console interface, it prints the
+       interfaces and methods available.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9ece261ac94053020951d8954c694d8575e02de8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 25 10:53:29 2012 -0600
+
+    Duda: cookie: fix path location when expiring a cookie
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b8cc1a7ff6a5751c8286851c9affe16c02735ae6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 25 09:22:40 2012 -0600
+
+    Duda: session: on destroy, make the cookie expire
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 56429614cdd2da82fded3040117515726f5c3b2d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 25 08:51:34 2012 -0600
+
+    Duda: session: destroy sessions by name (internal lookup for UUID)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 70d6fdb1b6a4e82587933a11c4947e7d890401c3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 24 20:56:41 2012 -0600
+
+    Duda: base64: do not add breaklines to encoded string
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8d1b5ebe321c6ae2303d6a7530b3fb8208b6a5a6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 23 23:08:01 2012 -0600
+
+    Duda: SQLite: fix return value on sql_dump()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 592347065cd028b1fe79f4c993087d30678b4f06
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 23 22:54:03 2012 -0600
+
+    Duda: cookie: add path field specifying the webservice path
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f84b3b21b8953ce1ca10e206bd40a24ac881eb0a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 22 09:54:05 2012 -0600
+
+    Duda: fix xtime object name
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2d640f48841b43c03f18f0869145af1bc630e356
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 22 09:52:09 2012 -0600
+
+    Duda: rename utime object to xtime, no more conflicts.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8182ba0ede256493d0680e2dc907cc6eaeabebdc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:57:41 2012 -0600
+
+    Duda: add missing headers to webservice.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e211b9778d046b214b2e0529014a4464b9f75727
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:54:49 2012 -0600
+
+    Duda: minor fixes on webservice.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 26cea04fd15a81e2ae1bdcdd27f1582628c258ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:38:21 2012 -0600
+
+    Duda: adjust utime object
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ef9c2d02abc8e85eadca87f2858680b3a385e625
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:33:36 2012 -0600
+
+    Duda: adjust param object name #2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1bc05e0785ca78af6ba774f1c415a7591669f8b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:31:08 2012 -0600
+
+    Duda: adjust param object name
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 79823d071c4a951c88b378374702953999b87531
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 15:27:50 2012 -0600
+
+    Duda: rename time object to utime to avoid time.h conflict
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3dd489d90d1508090360a68fc930526ec18e5a79
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 12:20:05 2012 -0600
+
+    Duda: expose 'time' object in the web services
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3751045757a60d9b928d286bef9741c010664ebe
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 12:19:12 2012 -0600
+
+    Duda: update README file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f699c3e7cb232ea8293423c211d5464b968aa937
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 12:13:00 2012 -0600
+
+    Duda: new directory and files structure
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5d266b76e6516da1e2d307b5844716e9b6d4d922
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 11:34:24 2012 -0600
+
+    Duda: console: move object logic to the same file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fa6489bdfa3893ac612c34d08b0a56b66cf28f53
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 11:27:06 2012 -0600
+
+    Duda: cookie: move object logic to the same file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3b8978f92b56e599215d173f723cd553010a072b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 11:22:28 2012 -0600
+
+    Duda: session: move object logic to same file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e6f3149ec64e03c1c7c28449ce5fcbdf254ccc8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 11:16:36 2012 -0600
+
+    Duda: param: move object logic to same file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3706dd5750ddc24c72fca9b36fd7a20a8d913b30
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 10:56:34 2012 -0600
+
+    Duda: plugin now is disabled by default
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 50254308131b6c89d2009f52cfe0c3ec81a09682
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 10:55:27 2012 -0600
+
+    Duda: new 'time' object
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c333eac18e3eb071fb41d0dfd53364c45e106c7b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 21 09:03:12 2012 -0600
+
+    Duda: object names are singular
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 16133773decb6acbc9cb4601c760ce1fe199cce0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 20 22:13:09 2012 -0600
+
+    Duda: cookie: fix iov_create() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 02ab4621c153c18d92c426ace4414de033303690
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 15 12:56:16 2012 -0600
+
+    Duda: params: new get_number() method
+    
+    This new method add the capability to get a converted parameter
+    from it string origin to a long data type, the work is done without
+    extra memory allocations and it take cares of long overflows. The
+    implementation its almost equal to strtol() but it uses a fixed
+    base 10 and accept an offset for the string length.
+    
+    The patch also add a new file duda_utils.c and duda_utils.h where
+    the duda_utils_strtol() function lives.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d2047a2ff79e1a437655938eeeb6b1a3cdacc796
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 13 15:44:19 2012 -0600
+
+    Duda: fix some data types
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5ac91e40e1e5b4203f19d3fecb201ad14972dccc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 23:26:56 2012 -0600
+
+    Duda: SQLite: sqlite->step now can return SQLITE_ROW
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5641eb9ad3146e8a8b8f51527d19378cb579ee16
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 22:32:50 2012 -0600
+
+    Duda: SQLite: sql_step is a wrapper now of sqlite3_step
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e68b748e44706f6fc99b8a84ae1b7a36ebd160f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 22:21:40 2012 -0600
+
+    Duda: console: include duda_request_t address in the log
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2b53185f872a74870bb6ca3bbf00053c8f27fec5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 21:05:35 2012 -0600
+
+    Duda: param: write params error to the debug console
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 724d28c1ae300b77ce1bd6abefc4d4740042377f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 21:00:46 2012 -0600
+
+    Duda: param: if max_len=0, skip validation
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 101d602cc9c6d3f08f7a844bfe88b719ba1c2a29
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 11:59:16 2012 -0600
+
+    Duda: map console_debug() to console->debug()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f6b95269857bddf135166a88df1f02d736915a1d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 12 11:12:00 2012 -0600
+
+    Duda: console: rename method 'write' to 'debug' and add __FILE__ and __LINE__
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fe7fb973ad2cd14a9a2dd7cf593b1b53f1936d44
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 11 23:52:31 2012 -0600
+
+    Duda: new 'console' object
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit af30f7c7da2863997c971d027419a1dcd9367685
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 11 08:56:19 2012 -0600
+
+    Duda: validate that the method was set
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2b6b45b749c2bb666dfb58b1860916611a053415
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 11 08:50:47 2012 -0600
+
+    Duda: session: new isset() method
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d45b98021233fc3b8d1c717550405aba6781e1ec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 11 08:12:38 2012 -0600
+
+    Duda: api: add a message for invalid macros
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a8c27389cf9b06a2819c9efd42190174e8d96301
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 11 08:00:13 2012 -0600
+
+    Duda: session: session->get() is working now
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ba906cdeac72578dd5e67f691c32bbd0e0e10fbb
+Author: Felipe Astroza Araya <felipe@astroza.cl>
+Date:   Tue Apr 10 13:00:04 2012 -0600
+
+    Server: unused global variable removed
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8bb6a3e35ee5640de9c57e237db7d7ae103dfdaa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 10 12:42:59 2012 -0600
+
+    Duda: cookie: minor fix in get() method
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73e31e091c55007556be8a87e65355c355110f7e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 10 12:34:39 2012 -0600
+
+    Duda: cookie: new cmp() method
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b4291f20441a6b5e15f82876011a985f1f98f3ad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 10 12:06:54 2012 -0600
+
+    Duda: cookie: new get() method
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f11eef1e920687503652f2e787fb51c872a0c26f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 6 23:45:30 2012 -0600
+
+    Duda: Session support completed (create/destroy/get)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dc8019a4edafaa0fd9b555cf8cf21b00885af01b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 5 23:01:39 2012 -0600
+
+    Duda: new Cookies support
+    
+    This patch do the following changes:
+    
+     - Duda : add a new 'cookie' object, allows to set and destroy a cookie
+     - IOV  : add a mk_bug() to check if the iov is being used over capacity
+     - API  : export a new function time_to_gmt()
+     - Utils: mk_utils_utime2gmt() now accepts a buffer instead a mk_pointer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 260064836b7aae1fc38039cfc8f331281e6e66e6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 23:33:21 2012 -0600
+
+    Duda: session: more entropy
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 91575a40ccfc989ba08d4f70de923dbc8f0897a5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 23:26:53 2012 -0600
+
+    Duda: session: generate UUID
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 245540a0d1fd01965b9a64aa4d5bab1c86b05f17
+Author: Nicolas Pépin Perreault <n.pepinpe@gmail.com>
+Date:   Wed Apr 4 12:04:42 2012 -0600
+
+    Duda: new SHA1 package
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b77e32b428bea3622246469c2debecc6f2c5c17d
+Author: Kay <kay21s@gmail.com>
+Date:   Wed Apr 4 11:18:43 2012 -0600
+
+    Websocket: implement 'echo' subprotocol
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 01be8a3bab1fc66fbd90e8bca2fe9ee9c36d4297
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 09:10:45 2012 -0600
+
+    QA: add check for HTTP parsing
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8ab993fbe960a2138a351c4a81083a63994afc22
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 09:10:20 2012 -0600
+
+    HTTP: assign default host before HTTP parsing
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 126e383a45bd810a12be2aad9f21c6b92e86ebe1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 08:58:57 2012 -0600
+
+    HTTP: validate port value after numeric conversion
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ba8fd7dbf5aa5ee774341ba333a48727b0326d7c
+Author: Jean-Paul Bonnet <bonnet.jp@gmail.com>
+Date:   Wed Apr 4 08:55:15 2012 -0600
+
+    HTTP: fix Host header parser
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2c05d6ee3f128282180ff3f951f24be91180e77c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 4 08:40:00 2012 -0600
+
+    Duda: initial session support
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2a971e5b7aa1b594988994ab40ff5ef54db5c808
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 2 13:25:44 2012 -0600
+
+    Core: new SAFE_FREE macro (./configure --safe-free)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3d05fa9238b13c85f13a934f974bddb564f94779
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Sun Apr 1 15:10:12 2012 -0600
+
+    Scheduler: improve algorithm to get the lowest load worker
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1cd7bc0e639bc56a81773371b416bc3f1ece89d1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 15:02:52 2012 -0600
+
+    Plugin: free resources on exit
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4b5a409f5c36d1a323921a80d5e45fa072096f9f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 14:49:52 2012 -0600
+
+    Config: free 'file' buffer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6a4644d618a7f40134f343760e9db6aa31dd1c97
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 14:46:01 2012 -0600
+
+    Logger: free resources on exit
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7f692265986643b97ded3f49becc754777e3f225
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 13:48:16 2012 -0600
+
+    String: new mk_string_split_free call and other changes
+    
+    A new function called mk_string_split_free() has been added, this
+    function free any resources allocated by a mk_string_split_line()
+    function.
+    
+    This patch also free some resources used by the main configuration
+    structure of Monkey
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit be5a8455d49c8913c2aafb6d36340342387e1862
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 11:55:50 2012 -0600
+
+    Signal: free main configuration on exit
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b600b7cf7e08b08a12795b2f648eb7f0dfe51889
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 1 11:55:14 2012 -0600
+
+    String: split_line now returns a mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b841ccf79a975f36584158ce1743acf225dfe5e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 21:37:20 2012 -0600
+
+    Patas: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8e7c6cb4f9d1a3402aee1e6ff6d3c5145d4fea8e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:21:48 2012 -0600
+
+    Palm: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 822ebe18f3844e4f75c2dae30e087b55da90a909
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:20:36 2012 -0600
+
+    Mandril: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a2ecf6a410af102ee75349a69432c5dc9a1112da
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:18:54 2012 -0600
+
+    Liana_SSL: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b285ed3af3ba7adf72dbfcfd92debfeb7845bec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:17:08 2012 -0600
+
+    Duda: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6290c20886bfb5aabfddd5a4697192b887381936
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:12:43 2012 -0600
+
+    Cheetah: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 977acfd620662459bac39f23e5aac64b886858eb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:05:32 2012 -0600
+
+    Auth: use mk_list method when reading config sections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 94fd69b66f018cab0cdc0bc2d1b1bb7716820092
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 18:00:41 2012 -0600
+
+    Config: struct mk_config now uses mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 71c8f051dc4030a63b949a68397da4f0d3979aef
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 17:32:55 2012 -0600
+
+    Config: free hosts information when exiting
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f26230e314699331e2094b67e2badbbf79800101
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 15:55:04 2012 -0600
+
+    Logger: use new vhost structure based on mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5ecb697f8516d57a7ef53a87d3229c98412852d8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 15:51:38 2012 -0600
+
+    Duda: use new vhost structure based on mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a80fe821b1cfa9964bbca01f70a36d932036c48a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 15:48:38 2012 -0600
+
+    Cheetah: use new vhost structure based on mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5c6ea12e93c83a6ed611a48f7ff392938d546aef
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 14:52:01 2012 -0600
+
+    Auth: use new vhost structure based on mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 985329d65e8b242572cd23c5b8c5213d378e56d2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 14:44:27 2012 -0600
+
+    Config: vhosts are now handled by a mk_list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e1e1d0c0d3c160c0a44dd8c62db71fc86d72fea5
+Author: Kay <kay21s@gmail.com>
+Date:   Fri Mar 30 13:41:56 2012 -0600
+
+    websockets: fix variable payload length
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b30bd47f6422b363a9b8ca94a1c145737dc93d0f
+Author: Kay <kay21s@gmail.com>
+Date:   Fri Mar 30 13:41:56 2012 -0600
+
+    websockets: fix variable payload length
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fe7bd889834e00b7aa050509e68ac97332f8b9a9
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Fri Mar 30 08:49:18 2012 -0600
+
+    Duda: apply restriction for number of method parameters
+    
+    This patch looks after the restriction on the max permissible length
+    of every parameter.If a parameter value exceeds the max length it
+    duda_request_parse returns -1 and an appropriate message is shown
+    on the terminal when in the TRACE mode.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bc530876e840ece9316010e386b3169c5d4d0949
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Mar 27 23:23:24 2012 -0600
+
+    Scheduler: optimize connection queues
+    
+    This patch does a great improvement in terms of performance. When
+    a write event is triggered the scheduler is invoked to verify if the
+    connection already exist or if it refers to a new one.
+    
+    The past scheduler implementation had a fixed array per thread with
+    slots for a number of (sched_connection struct * worker_capacity). The
+    main problem was that when many connections were active, do a sequencial
+    search was very expensive due to the fragmentation originated by the
+    'status' field of the the sched_connection entries in the whole array.
+    
+    In the mailing list, developers were discussing a better approach to
+    register a new connection and Max mentioned that having two queues of
+    connection could improve something and be more clean.
+    
+    This patch applies the "two queues" idea proposed to the scheduler but
+    improving not only the connection register, also improving the hard lookup
+    when the write event is triggered, the new mechanism is as follows:
+    
+       struct sched_connection {
+          ...
+          mk_list busy_queue;    /* active sched connections */
+          mk_list av_queue;      /* available sched connections */
+          ...
+       };
+    
+    Comparing and profiling with valgrind/callgrind we get the following
+    performance results:
+    
+             Function name               Inclusive Cost    Self Cost
+             -------------------------------------------------------
+     old ->  mk_sched_get_connection()       10.63          10.63
+     new ->  mk_sched_get_connection()        0.86           0.86
+    
+    The new mechanism optimize the scheduler connections lookup in a 90%!,
+    conclusion?, good public discussions get great ideas :)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 58fe4349b558159c356fc9a3b0b4a023dd5ed085
+Author: Torsten Pfüller <torsten.pfueller@message-people.de>
+Date:   Mon Mar 26 11:57:39 2012 -0600
+
+    config: fix some memory leaks
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6bb902569b3080f9d41aa83b6fa812e66d58d56c
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Sun Mar 25 21:14:07 2012 -0600
+
+    Duda: modifed sample webservice for better string handling
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ed0ffeda9e5a8e6469013620753dfbbef1ffd169
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Sun Mar 25 20:57:14 2012 -0600
+
+    Duda: added duda_structure type variable to duda_request and related methods
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b3bab756c41549de4fa9d12878a0d41a714567f1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 25 13:33:41 2012 -0600
+
+    Duda: move params interface to a duda_param.c file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e265d90acb21f9bb1acca9cf2c0564cc23f29783
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 17:42:38 2012 -0600
+
+    scheduler: Use atomic writes in register_thread
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 437786e4d04eba98e8b2d8c73decee852a5400f7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 17:38:44 2012 -0600
+
+    clock: Initialize the _current_time variables
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d1cf22e74a0794e464a5e62ace20ac6cb9d56597
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 17:23:45 2012 -0600
+
+    scheduler: Do atomic writes for active_connections
+    
+    This fixes the bug under extremely high load.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c5eebd8b4da2924f1ddda86ecd33cddb693c37e6
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 16:49:39 2012 -0600
+
+    threading: Use thread-safe time functions
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 290717de95dc276e4108d6f9bbe5e1d546593d79
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 16:48:14 2012 -0600
+
+    threading: Do atomic writes in the clock thread (gcc-specific)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9a2b826e119513835ed65b63dbdf0bc78ab536fe
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 16:42:52 2012 -0600
+
+    messages: only print colors to terminal
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 512c6c898dd1778a0aa7819231e8f42bcb9751c9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 13:09:27 2012 -0600
+
+    header: move mk_bug() check before iov_*() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dd092f94a0083dbbf6d423ccbeec750f8f544825
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 13:06:57 2012 -0600
+
+    config: enable GNU extensions to get isblank()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 614dbdde7c988bdffd163769ff6b67d821e6aeb2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Mar 23 13:05:36 2012 -0600
+
+    git: Update .gitignore to match all generated files
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0cbbc480e66bc52a794d8cdf2963fdb68e1b331c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 23 13:03:49 2012 -0600
+
+    Duda: SQLite: update API, new methods to retrieve column values
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0c9cad07f5a2cce4905a27d52c1b425766ad44e4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 22 20:14:22 2012 -0600
+
+    Duda: SQLite: new sqlite_handle_t data type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 35fbe01f79d132305343ee360f3eedac2239d082
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 22 19:08:27 2012 -0600
+
+    Duda: SQLite: rename method step() to fetch()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8bdad89a66e5529aedf558b1438b1c7d1c87fa86
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 22 14:50:50 2012 -0600
+
+    Request: fix memory leak when invoking premature close
+    
+    When premature close was invoked, it requested memory for a temporal
+    session_request. On this condition that memory block was never freed.
+    
+    The patch drops the mk_mem_alloc() call and just link the temporal
+    session_request pointer to the sr_fixed field from the client_session
+    struct.
+    
+    Thanks to Felipe Astroza for report this issue!
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7c75f3547d114bed39b52edc63f1791cad681c7e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 22 13:39:41 2012 -0600
+
+    HTTP: fix keep_alive initial value on session_request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 53650ac48a163f95eefb10abee9680be9b7a087b
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Wed Mar 21 23:16:20 2012 -0600
+
+    Duda: add new 'params' object to handle parameters
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 841c6607eec2db8084043df5d8fb54129bd5c269
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Mar 20 22:01:40 2012 -0600
+
+    Duda: SQLite: new dump() and done() methods
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 697ab06e2f28597a475a8db212bffc8b73c268ae
+Author: Mahesh Gondi <mashf13@gmail.com>
+Date:   Tue Mar 20 12:49:44 2012 -0600
+
+    [PATCH] utils: deprecate err(), use mk_err() as it should
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit afb82edd01846e3f65d9f60110bc556ed70d006c
+Author: Sourabh Chandak <sourabh3934@gmail.com>
+Date:   Tue Mar 20 08:23:14 2012 -0600
+
+    [PATCH] Duda: examples: improved json example
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a6f4f43673e3ed98d4c337d3f07d37cfb3792354
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 19 16:28:45 2012 -0600
+
+    Duda: SQLite: callback now gets 'struct sqlite_cb_data' as data
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3fb9eee764c98e803038e509302d8558c383d203
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 19 09:25:38 2012 -0600
+
+    Duda: examples: fix Makefile paths
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 08e3e0be5e8318640a085d556793931ed42fc681
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Mon Mar 19 09:22:15 2012 -0600
+
+    clock: Comments added and indentation fixes
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ff8fd67dd32976e156b55c55bf9ca7ffbf1e8354
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Mon Mar 19 09:20:57 2012 -0600
+
+    clock: improve time strings concurrent access
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a5e22aa45db79eec35c85739de75ddd0efccb4b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 19 09:14:45 2012 -0600
+
+    Duda: examples: add json loader
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d2696fe56f8347f324cd5057634c0172785e685b
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Mon Mar 19 14:29:33 2012 +0100
+
+    iov: remove bogus variable initialization
+    
+    There's no point setting up an initial variable value when it is replaced right away, it wastes cycles.
+
+commit 93e9510343395a9ff24407cdcd8b01131099c1a5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 23:51:21 2012 -0600
+
+    Duda: fix Makefile.in in packages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a58f49525992526a4f20afdbcf8a4ced0c521719
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 18:02:26 2012 -0600
+
+    Duda: SQLite: add callback support to sqlite->exec()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 730354399b181815d04e0b715150b04a3612672c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 15:45:13 2012 -0600
+
+    Duda: SQLITE: deprecate content of sql_init() routine
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 76c5d4a142e74d8fe942f2c5d5af697c058ec6ee
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 15:15:23 2012 -0600
+
+    Duda: SQLITE / delete hidden file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a4979060b2226afce6331da2b38dca141c45e225
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 15:14:52 2012 -0600
+
+    Duda: new SQLITE package
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cb1b1eea50060808320ce68c2870d14979214755
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sun Mar 18 17:38:49 2012 +0100
+
+    overwrite pidfile upon SIGKILL
+    
+    With the pidfile as a write-lock, SIGKILL does not remove the file
+    and causes the next execution of monkey to abort as it cannot open
+    the existing file. Solve this by unlinking it before opening it if
+    the file is already there (from the previous run).
+
+commit 60b6303aedceeafd12867fa5bc2bfe73a8bb4ce8
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sun Mar 18 14:54:05 2012 +0100
+
+    monkey: core: lockup pidfile
+    
+    The pidfile that is created when monkey is started should, as its exclusive nature requires,
+    be locked against other processes's that might attempt to write over it. Create a POSIX write-lock
+    for this, as shown by lslocks(8):
+    
+    $> lslocks -p 15676
+    COMMAND           PID SIZE ACCESS M START END PATH
+    monkey: server  15676   5B WRITE  0     0   0 /home/dave/projects/monkey-dev/logs/monkey.pid.2001
+
+commit fcd3b9a26f0b45c6b748384d3058f9270a763102
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 17 23:51:10 2012 -0600
+
+    Duda: deprecate crypto routines
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 92ddb8d358f7ff4f06256eae788e428d4ca3f88c
+Author: Felipe Astroza <felipe@astroza.cl>
+Date:   Sat Mar 17 20:15:38 2012 -0600
+
+    core:time string sizes constant replaced by macro definition
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 25c43e80ef70a5be53cefd2aa53450b18055b63f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 17 18:12:05 2012 -0600
+
+    Duda: new base64 package
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 74a2e71006a6c5fa1555bcb3914fe52b5eba54e5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 16 10:21:07 2012 -0600
+
+    Duda: new packages support!
+    
+    This patch adds a new packages mechanism, so web services can
+    request to Duda to load specific packages/objects.
+    
+    The first package available with Duda is JSON, so to add JSON
+    support to a web service, it will take two steps:
+    
+      #include "packages/json/json.h"
+    
+      int duda_init(struct duda_api_objects *api)
+      {
+          ...
+          duda_service_init();
+          duda_load_package(json, "json");
+          ...
+      }
+    
+    The duda_load_package() call takes two arguments, the first one
+    is the package object which expose the API calls, the second is
+    the name of the package.
+    
+    The packages lookup takes place in duda.conf file under the configuration
+    key 'PackagesRoot'.
+    
+    Now the fun begins :)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit da5cecae409761582207c07f115f4d1ed15ae3e7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 14 23:05:04 2012 -0600
+
+    Duda: link to libmath '-lm', required by cJSON
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4f0b80c677818ed54a18fae7c3931477b928c5dd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 14 16:59:55 2012 -0600
+
+    Header: fix memory leak when extra_rows are set by the API
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7857513b51d0c021d650189fe82d116f18679ef7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 10 23:01:36 2012 -0600
+
+    Duda: check interfaces and methods string length
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6ce9948ae08c6a4499d8a5ab8246f447a791ee31
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 10 20:37:09 2012 -0600
+
+    Duda: validate wrong services path
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b9ab3c926f5e65a0ef8054cb97184daeab53eb5f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 10 13:19:28 2012 -0600
+
+    Configure: do not install not compiled plugins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4ac2b2a2cbf8422a550a8d24594f4bc376fa1d9f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 9 22:04:55 2012 -0600
+
+    Configure: tweak compiler message
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3d024c987071bb35e60878000b1c7297c50bb622
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 9 17:04:58 2012 -0600
+
+    Duda: update Makefile.in
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 106de2c80f62b04c1f305fe6a6a5389f429a519f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 9 16:56:58 2012 -0600
+
+    Duda: new global variables support
+    
+    In order to create a global variable in your service:
+    
+    1) Define a global variable as any C global var:
+    
+        /* define variable */
+        duda_global_t my_variable;
+    
+    2) Declare the variable as global for Duda, you need to do this
+       inside the duda_init() call and after duda_service_init():
+    
+        /* initialize variable */
+        duda_global_init(my_variable, NULL);
+    
+    3) Optionally, you can initialize the variable with a defined value,
+       this is done using a callback function, so you could do:
+    
+        /* define variable callback */
+        void *cb_global_myvar()
+        {
+           void *mem = malloc(16);
+           return mem;
+        }
+    
+        /* initialize the variable with the callback */
+        duda_global_init(my_variable, cb_global_myvar);
+    
+    4) Inside the services callback for each method you can retrieve or
+       set a new value for each one using the global object:
+    
+        global->set(my_variable, some_value);
+        global->get(my_variable);
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8f37d029001b157ef47be5ad7cd4209ea258cd42
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 8 08:51:24 2012 -0600
+
+    Duda: fix bad object name in Makefile.in
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d38824c7b6e33ea3aca3c291c05b5496ce8d89cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 7 22:48:13 2012 -0600
+
+    Duda: add JSON support
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 80de9a781787a04ff5d8b5bac69cf67a3f304464
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Mar 6 22:56:43 2012 -0600
+
+    Duda: new crypto object with base64_[en|de]code support
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 266a9b3469bc707c90b37dc08c16af1acf077e4a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Mar 6 22:07:11 2012 -0600
+
+    Configure: recursive search for Makefile.in in plugins directory
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 605a3690b533cf82bf7a0b6279a008b31dbf41a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 2 10:47:08 2012 -0600
+
+    Duda: add Makefile.in to examples/
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2bfd63c43a54a274a36f6200e513a1123952d832
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 1 21:58:47 2012 -0600
+
+    Duda: new response->sendfile() method
+    
+    the sendfile() method send a complete file in asyncronous mode using
+    the Monkey socket_sendfile() api.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ef1dac2dabd2c8fc74fbc1d88babbdfdc028bdfe
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 1 19:51:46 2012 -0600
+
+    Duda: prefix filenames
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6bbbf5672c78bdf9d97b06bc8dcbb24071ac5818
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 1 19:02:14 2012 -0600
+
+    Duda: on response end, use service_end() properly
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f7fbad6848c8f40a576ba8d86b629b967ba77170
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 29 22:26:26 2012 -0600
+
+    Duda: complete queue_flush() and free resources
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 680c9771abe513ea620d3413838e0ebb276a2184
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 29 20:08:16 2012 -0600
+
+    Jump to v0.99
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 87cc2365e3c87ccf7317176069656d24291bf434
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 29 19:39:27 2012 -0600
+
+    Macros: fix mk_bug() w/stacktrace
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c7ba6efd915c1d52cf2d4ff245f8340ab4466650
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 29 19:38:34 2012 -0600
+
+    Duda: queue_flush
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f41f22c500fda4161f98586865b95f4315fee8e3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 28 23:48:30 2012 -0600
+
+    Duda: initial implementation of output queue
+    
+    This patch add a new way to handle the output data. All new output
+    request are linked to dr->queue_out and handle in async mode in order.
+    
+    New files have been added: queue.c & body_buffer.c (and it headers)
+    
+    The queue.c file represent the queue management routines, the body_buffer
+    stuff represents the the strings output: response->body_write().
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit caf6e49f0a6f6955398136b2f5cd588d7ba1184d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 27 21:38:11 2012 -0600
+
+    Request: on trace mode do not use cs->socket
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9bd31cbb12fe0d42b96bc752360bd8357abfca57
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 26 23:31:18 2012 -0600
+
+    Duda: events_write management
+    
+    The framework now supports handlers for the write events, so it
+    can send multiple data buffer and close session properly.
+    
+    Other improvements:
+    
+      - Added a callback to response->end(..., callback_func)
+      - Content length is sent on every response
+      - Free allocated resources when the Duda request ends
+      - Events write: register / unregister
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e12777ce010909b792465b2ff258b9c6b3053904
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 26 11:15:06 2012 -0600
+
+    Duda: body_buffer adjust to asynchronous mode (event oriented)
+    
+    When writting the body_buffer, due to the asynchronous sockets mode,
+    less data than the expected can be written, so Duda must catch up this
+    behavior.
+    
+    This patch makes to adjust an offset in the body_buffer, as well it
+    register a callback with the write events triggered by the core of
+    Monkey, so in the next event calls it sends the pending data.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 65a4c25dffdc55efd86816a4628c5b61e25149e3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 25 21:27:54 2012 -0600
+
+    Macros: print stacktrace when mk_bug() is called
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4b4efc5011f84ce31211a869cc9c857cb41daf94
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 25 21:12:45 2012 -0600
+
+    Duda: body_flush set offset when data sent is less than total
+    
+    If the socket_sendv() function wrote less data than the total instructed,
+    it reset the iovec struct and perform an offset operation for the available
+    iovec entries setting length=0 and adjusting iov_base if required.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5e60aaff9a6eeef5222befca2a68e873ef11f714
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Sat Feb 25 23:37:48 2012 +0100
+
+    add stacktrace output
+    
+    Add a stacktrace output for debugging purposes in both the plugins API and
+    the SIGSEGV handler.
+
+commit cfa10482915871a696e4bbbac1d6eaeca14f18e9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 24 16:06:11 2012 -0600
+
+    Duda: body_buffer now uses Monkey iov struct to store buffers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit be74d947e7aba560171dc0c22f4e38eddf2c5b24
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 24 15:58:32 2012 -0600
+
+    iov: fix realloc new pointers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e98e97afbc830e521fff3294e38625aea9e25cf8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 24 15:50:50 2012 -0600
+
+    iov: new mk_iov_realloc() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 283c7df870c6c1b7eec3b0d61a9bb071281cb2f1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 24 15:32:41 2012 -0600
+
+    Duda: new response API object
+    
+    the response API object expose methods to configure and perform
+    a response of data to the client, this patch implements the following
+    methods:
+    
+      - http_status: set the response HTTP status
+      - http_header: add a new HTTP response header
+      - body_write : write content in the body part of the response
+      - end        : finalize the work flushing data as required
+    
+    This patch also implements the body_buffer concept. Each duda_request_t
+    have associated a 'struct iovec *' array which is used by body_write()
+    to perform socket writes. These writes are asynchronous and done when
+    the callback is ending, leaving Duda and Monkey Core to handle the
+    output data.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cd91d10faa7ef3a0d680968a2d97d2b010885fa6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 23 23:57:02 2012 -0600
+
+    Duda: hello service rename callbacks
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7d3c2c477be9bc8da8e29bf5e2dc3336a3573661
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 23 23:53:33 2012 -0600
+
+    Duda: callbacks working
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 41bf469a405a7beab1c92a443685b24ea91c26e0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Feb 22 23:39:47 2012 -0600
+
+    Duda: parse request routine
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cceb21fd529dd9432b4b13ba7230664e20563896
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 21 21:59:22 2012 -0600
+
+    Duda: match web service app with request URI
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fd95b4897f1c96bba3248f44522a5634529c67e0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 20 23:31:00 2012 -0600
+
+    Duda: new API objects
+    
+    Duda framework now export four pseudo-objects for the webservice usage:
+    
+      - monkey: core monkey API methods
+      - map   : methods to define the webservice URI map
+      - msg   : messaging object (info/warn/err/bug)
+      - debug : debugging methods (not yet implemented)
+    
+    Each object contains N methods which can be invoked like:
+    
+        msg->info("some message");
+    
+    The API is still in a early state and it will implement more features
+    in the next commits.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6f4a9b9534d624a27fa848719383b7c5cc759e77
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 20 11:49:26 2012 -0600
+
+    Monkey 0.33.0
+
 commit 6eeba30564bf31e17e180c4fe23de267bbc74501
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Feb 20 11:49:20 2012 -0600
 
     Config: fix mk_bug() alert when reading a vhost file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 48882eef8b690e76091ee83b850113cc2006d27a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 20 11:47:13 2012 -0600
+
+    Duda: checking hooks references
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 85b9ac2e267448960ee11ec5c2849f8d1031c194
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 17 22:55:28 2012 -0600
+
+    Duda: initial API object
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 78cec1ffe2c1d3ef7f3533ac979945f78fcc309f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 17 21:27:59 2012 -0600
+
+    Duda: load service libraries
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 79a8edd9ed782d8ef38f69999948f45116f273e7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 16 19:55:39 2012 -0600
+
+    Duda: add example service
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6287750ae1fe4c801c83fbc4175a61f0f6fbf557
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 16 19:52:06 2012 -0600
+
+    Duda: add example service
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e83477dccaa5d080a7aaa9737e92d15bc7c633cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 16 19:51:42 2012 -0600
+
+    Duda: add webservice API files
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a451185ef30de2c68649d92f18e57fb7dfb14e23
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 14 10:12:41 2012 -0600
+
+    README: update project basic info
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fc3f4c71f02bdd16fd20db7bcb1847f2d28fb315
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 14 10:02:21 2012 -0600
+
+    Duda: plugin is licensed under LGPL v2.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8ca25f97ffbaefabde23e58a7b938045d62f8f87
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 13 21:55:00 2012 -0600
+
+    Duda: web services framework
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
