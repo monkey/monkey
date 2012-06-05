@@ -1,3 +1,17 @@
+commit 87146aa7535061ff5e45ded5cd969a1eeb619de2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 5 16:37:21 2012 -0600
+
+    Deprecate websockets and patas plugins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 28640341187a1c2e64d4c00663c96a12557ccb6b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 5 16:34:26 2012 -0600
+
+    Monkey 1.0.0
+
 commit 976340d08576e36e06d45a9f55cb119efe0210ca
 Author: Lauri Kasanen <cand@gmx.com>
 Date:   Thu May 31 20:17:42 2012 +0300
