@@ -82,8 +82,8 @@
 
 struct header_status_response {
     int   status;
-    char *response;
     int   length;
+    char *response;
 };
 
 /* Short header values */

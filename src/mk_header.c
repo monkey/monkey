@@ -51,7 +51,9 @@ mk_pointer mk_header_accept_ranges;
 mk_pointer mk_header_te_chunked;
 mk_pointer mk_header_last_modified;
 
-static struct header_status_response status_response[] = {
+#define status_entry(num, str) {num, sizeof(str) - 1, str}
+
+static const struct header_status_response status_response[] = {
 
     /*
      * The most used first:
@@ -59,160 +61,93 @@ static struct header_status_response status_response[] = {
      *  - HTTP/1.1 200 OK
      *  - HTTP/1.1 404 Not Found
      */
-    {MK_HTTP_OK,
-     MK_RH_HTTP_OK,
-     sizeof(MK_RH_HTTP_OK) - 1},
-    {MK_CLIENT_NOT_FOUND,
-     MK_RH_CLIENT_NOT_FOUND,
-     sizeof(MK_RH_CLIENT_NOT_FOUND) -1
-    },
+    status_entry(MK_HTTP_OK,
+     MK_RH_HTTP_OK),
+    status_entry(MK_CLIENT_NOT_FOUND,
+     MK_RH_CLIENT_NOT_FOUND),
 
     /* Informational */
-    {MK_INFO_CONTINUE,
-     MK_RH_INFO_CONTINUE,
-     sizeof(MK_RH_INFO_CONTINUE) - 1
-    },
-    {MK_INFO_SWITCH_PROTOCOL,
-     MK_RH_INFO_SWITCH_PROTOCOL,
-     sizeof(MK_RH_INFO_SWITCH_PROTOCOL) - 1
-    },
+    status_entry(MK_INFO_CONTINUE,
+     MK_RH_INFO_CONTINUE),
+    status_entry(MK_INFO_SWITCH_PROTOCOL,
+     MK_RH_INFO_SWITCH_PROTOCOL),
 
     /* Successful */
-    {MK_HTTP_CREATED,
-     MK_RH_HTTP_CREATED,
-     sizeof(MK_RH_HTTP_CREATED) - 1},
-    {MK_HTTP_ACCEPTED,
-     MK_RH_HTTP_ACCEPTED,
-     sizeof(MK_RH_HTTP_ACCEPTED) - 1},
-    {MK_HTTP_NON_AUTH_INFO,
-     MK_RH_HTTP_NON_AUTH_INFO,
-     sizeof(MK_RH_HTTP_NON_AUTH_INFO) - 1},
-    {MK_HTTP_NOCONTENT,
-     MK_RH_HTTP_NOCONTENT,
-     sizeof(MK_RH_HTTP_NOCONTENT) - 1},
-    {MK_HTTP_RESET,
-     MK_RH_HTTP_RESET,
-     sizeof(MK_RH_HTTP_RESET) - 1},
-    {MK_HTTP_PARTIAL,
-     MK_RH_HTTP_PARTIAL,
-     sizeof(MK_RH_HTTP_PARTIAL) - 1},
+    status_entry(MK_HTTP_CREATED,
+     MK_RH_HTTP_CREATED),
+    status_entry(MK_HTTP_ACCEPTED,
+     MK_RH_HTTP_ACCEPTED),
+    status_entry(MK_HTTP_NON_AUTH_INFO,
+     MK_RH_HTTP_NON_AUTH_INFO),
+    status_entry(MK_HTTP_NOCONTENT,
+     MK_RH_HTTP_NOCONTENT),
+    status_entry(MK_HTTP_RESET,
+     MK_RH_HTTP_RESET),
+    status_entry(MK_HTTP_PARTIAL,
+     MK_RH_HTTP_PARTIAL),
 
     /* Redirections */
-    {MK_REDIR_MULTIPLE,
-     MK_RH_REDIR_MULTIPLE,
-     sizeof(MK_RH_REDIR_MULTIPLE) - 1
-    },
-    {MK_REDIR_MOVED,
-     MK_RH_REDIR_MOVED,
-     sizeof(MK_RH_REDIR_MOVED) - 1
-    },
-    {MK_REDIR_MOVED_T,
-     MK_RH_REDIR_MOVED_T,
-     sizeof(MK_RH_REDIR_MOVED_T) - 1
-    },
-    {MK_REDIR_SEE_OTHER,
-     MK_RH_REDIR_SEE_OTHER,
-     sizeof(MK_RH_REDIR_SEE_OTHER) - 1
-    },
-    {MK_NOT_MODIFIED,
-     MK_RH_NOT_MODIFIED,
-     sizeof(MK_RH_NOT_MODIFIED) - 1
-    },
-    {MK_REDIR_USE_PROXY,
-     MK_RH_REDIR_USE_PROXY,
-     sizeof(MK_RH_REDIR_USE_PROXY) - 1
-    },
+    status_entry(MK_REDIR_MULTIPLE,
+     MK_RH_REDIR_MULTIPLE),
+    status_entry(MK_REDIR_MOVED,
+     MK_RH_REDIR_MOVED),
+    status_entry(MK_REDIR_MOVED_T,
+     MK_RH_REDIR_MOVED_T),
+    status_entry(MK_REDIR_SEE_OTHER,
+     MK_RH_REDIR_SEE_OTHER),
+    status_entry(MK_NOT_MODIFIED,
+     MK_RH_NOT_MODIFIED),
+    status_entry(MK_REDIR_USE_PROXY,
+     MK_RH_REDIR_USE_PROXY),
 
     /* Client side errors */
-    {MK_CLIENT_BAD_REQUEST,
-     MK_RH_CLIENT_BAD_REQUEST,
-     sizeof(MK_RH_CLIENT_BAD_REQUEST) - 1
-    },
-    {MK_CLIENT_UNAUTH,
-     MK_RH_CLIENT_UNAUTH,
-     sizeof(MK_RH_CLIENT_UNAUTH) - 1
-    },
-    {MK_CLIENT_PAYMENT_REQ,
-     MK_RH_CLIENT_PAYMENT_REQ,
-     sizeof(MK_RH_CLIENT_PAYMENT_REQ) - 1
-    },
-    {MK_CLIENT_FORBIDDEN,
-     MK_RH_CLIENT_FORBIDDEN,
-     sizeof(MK_RH_CLIENT_FORBIDDEN) -1
-    },
-    {MK_CLIENT_METHOD_NOT_ALLOWED,
-     MK_RH_CLIENT_METHOD_NOT_ALLOWED,
-     sizeof(MK_RH_CLIENT_METHOD_NOT_ALLOWED) - 1
-    },
-    {MK_CLIENT_NOT_ACCEPTABLE,
-     MK_RH_CLIENT_NOT_ACCEPTABLE,
-     sizeof(MK_RH_CLIENT_NOT_ACCEPTABLE) - 1
-    },
-    {MK_CLIENT_PROXY_AUTH,
-     MK_RH_CLIENT_PROXY_AUTH,
-     sizeof(MK_RH_CLIENT_PROXY_AUTH) - 1
-    },
-    {MK_CLIENT_REQUEST_TIMEOUT,
-     MK_RH_CLIENT_REQUEST_TIMEOUT,
-     sizeof(MK_RH_CLIENT_REQUEST_TIMEOUT) - 1
-    },
-    {MK_CLIENT_CONFLICT,
-     MK_RH_CLIENT_CONFLICT,
-     sizeof(MK_RH_CLIENT_CONFLICT) - 1
-    },
-    {MK_CLIENT_GONE,
-     MK_RH_CLIENT_GONE,
-     sizeof(MK_RH_CLIENT_GONE) - 1
-    },
-    {MK_CLIENT_LENGTH_REQUIRED,
-     MK_RH_CLIENT_LENGTH_REQUIRED,
-     sizeof(MK_RH_CLIENT_LENGTH_REQUIRED) - 1
-    },
-    {MK_CLIENT_PRECOND_FAILED,
-     MK_RH_CLIENT_PRECOND_FAILED,
-     sizeof(MK_RH_CLIENT_PRECOND_FAILED) - 1
-    },
-    {MK_CLIENT_REQUEST_ENTITY_TOO_LARGE,
-     MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE,
-     sizeof(MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE) - 1
-    },
-    {MK_CLIENT_REQUEST_URI_TOO_LONG,
-     MK_RH_CLIENT_REQUEST_URI_TOO_LONG,
-     sizeof(MK_RH_CLIENT_REQUEST_URI_TOO_LONG) - 1
-    },
-    {MK_CLIENT_UNSUPPORTED_MEDIA,
-     MK_RH_CLIENT_UNSUPPORTED_MEDIA,
-     sizeof(MK_RH_CLIENT_UNSUPPORTED_MEDIA) - 1
-    },
+    status_entry(MK_CLIENT_BAD_REQUEST,
+     MK_RH_CLIENT_BAD_REQUEST),
+    status_entry(MK_CLIENT_UNAUTH,
+     MK_RH_CLIENT_UNAUTH),
+    status_entry(MK_CLIENT_PAYMENT_REQ,
+     MK_RH_CLIENT_PAYMENT_REQ),
+    status_entry(MK_CLIENT_FORBIDDEN,
+     MK_RH_CLIENT_FORBIDDEN),
+    status_entry(MK_CLIENT_METHOD_NOT_ALLOWED,
+     MK_RH_CLIENT_METHOD_NOT_ALLOWED),
+    status_entry(MK_CLIENT_NOT_ACCEPTABLE,
+     MK_RH_CLIENT_NOT_ACCEPTABLE),
+    status_entry(MK_CLIENT_PROXY_AUTH,
+     MK_RH_CLIENT_PROXY_AUTH),
+    status_entry(MK_CLIENT_REQUEST_TIMEOUT,
+     MK_RH_CLIENT_REQUEST_TIMEOUT),
+    status_entry(MK_CLIENT_CONFLICT,
+     MK_RH_CLIENT_CONFLICT),
+    status_entry(MK_CLIENT_GONE,
+     MK_RH_CLIENT_GONE),
+    status_entry(MK_CLIENT_LENGTH_REQUIRED,
+     MK_RH_CLIENT_LENGTH_REQUIRED),
+    status_entry(MK_CLIENT_PRECOND_FAILED,
+     MK_RH_CLIENT_PRECOND_FAILED),
+    status_entry(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE,
+     MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE),
+    status_entry(MK_CLIENT_REQUEST_URI_TOO_LONG,
+     MK_RH_CLIENT_REQUEST_URI_TOO_LONG),
+    status_entry(MK_CLIENT_UNSUPPORTED_MEDIA,
+     MK_RH_CLIENT_UNSUPPORTED_MEDIA),
 
     /* Server side errors */
-    {MK_SERVER_INTERNAL_ERROR,
-     MK_RH_SERVER_INTERNAL_ERROR,
-     sizeof(MK_RH_SERVER_INTERNAL_ERROR) - 1
-    },
-    {MK_SERVER_NOT_IMPLEMENTED,
-     MK_RH_SERVER_NOT_IMPLEMENTED,
-     sizeof(MK_RH_SERVER_NOT_IMPLEMENTED) - 1
-    },
-    {MK_SERVER_BAD_GATEWAY,
-     MK_RH_SERVER_BAD_GATEWAY,
-     sizeof(MK_RH_SERVER_BAD_GATEWAY) - 1
-    },
-    {MK_SERVER_SERVICE_UNAV,
-     MK_RH_SERVER_SERVICE_UNAV,
-     sizeof(MK_RH_SERVER_SERVICE_UNAV) - 1
-    },
-    {MK_SERVER_GATEWAY_TIMEOUT,
-     MK_RH_SERVER_GATEWAY_TIMEOUT,
-     sizeof(MK_RH_SERVER_GATEWAY_TIMEOUT) - 1
-    },
-    {MK_SERVER_HTTP_VERSION_UNSUP,
-     MK_RH_SERVER_HTTP_VERSION_UNSUP,
-     sizeof(MK_RH_SERVER_HTTP_VERSION_UNSUP) - 1
-    }
+    status_entry(MK_SERVER_INTERNAL_ERROR,
+     MK_RH_SERVER_INTERNAL_ERROR),
+    status_entry(MK_SERVER_NOT_IMPLEMENTED,
+     MK_RH_SERVER_NOT_IMPLEMENTED),
+    status_entry(MK_SERVER_BAD_GATEWAY,
+     MK_RH_SERVER_BAD_GATEWAY),
+    status_entry(MK_SERVER_SERVICE_UNAV,
+     MK_RH_SERVER_SERVICE_UNAV),
+    status_entry(MK_SERVER_GATEWAY_TIMEOUT,
+     MK_RH_SERVER_GATEWAY_TIMEOUT),
+    status_entry(MK_SERVER_HTTP_VERSION_UNSUP,
+     MK_RH_SERVER_HTTP_VERSION_UNSUP)
 };
 
-static int status_response_len =
+static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
 static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
