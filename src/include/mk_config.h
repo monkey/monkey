@@ -78,10 +78,8 @@ struct server_config
     int max_load;               /* max number of clients (worker_capacity * workers) */
     short int workers;          /* number of worker threads */
 
-
-
-    int is_daemon;
-    int is_seteuid;
+    int8_t is_daemon;
+    int8_t is_seteuid;
     char *serverconf;           /* path to configuration files */
 
     char *listen_addr;
@@ -94,16 +92,16 @@ struct server_config
     char *file_config;
     char **request_headers_allowed;
 
-    int symlink;                /* symbolic links */
     int serverport;             /* port */
     int timeout;                /* max time to wait for a new connection */
-    int hideversion;            /* hide version of server to clients ? */
     int standard_port;          /* common port used in web servers (80) */
     int pid_status;
-    int resume;                 /* Resume (on/off) */
+    int8_t hideversion;           /* hide version of server to clients ? */
+    int8_t resume;                /* Resume (on/off) */
+    int8_t symlink;               /* symbolic links */
 
     /* keep alive */
-    int keep_alive;             /* it's a persisten connection ? */
+    int8_t keep_alive;            /* it's a persisten connection ? */
     int max_keep_alive_request; /* max persistent connections to allow */
     int keep_alive_timeout;     /* persistent connection timeout */
 
