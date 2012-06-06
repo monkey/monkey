@@ -50,7 +50,7 @@ static struct mk_list *mk_plugin_event_get_list()
     return pthread_getspecific(mk_plugin_event_k);
 }
 
-void *mk_plugin_load(char *path)
+void *mk_plugin_load(const char *path)
 {
     void *handle;
 
@@ -122,7 +122,7 @@ static void mk_plugin_register_stagemap(struct plugin *p)
     }
 }
 
-struct plugin *mk_plugin_alloc(void *handler, char *path)
+struct plugin *mk_plugin_alloc(void *handler, const char *path)
 {
     struct plugin *p;
     struct plugin_info *info;
