@@ -105,10 +105,11 @@ int mk_utils_utime2gmt(char **data, time_t date)
             return -1;
         }
     }
-
-    /* Maybe it's converted already? */
-    if (mk_utils_gmt_cache_get(data, date) == MK_TRUE) {
-        return size;
+    else {
+        /* Maybe it's converted already? */
+        if (mk_utils_gmt_cache_get(data, date) == MK_TRUE) {
+            return size;
+        }
     }
 
     /* Convert unix time to struct tm */
