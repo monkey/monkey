@@ -79,7 +79,7 @@ int mk_utils_print_errno(int n);
 int mk_utils_register_pid(void);
 int mk_utils_remove_pid(void);
 
-void mk_print(int type, const char *format, ...);
+void mk_print(int type, const char *format, ...) PRINTF_WARNINGS(2,3);
 
 pthread_t mk_utils_worker_spawn(void (*func) (void *));
 int mk_utils_worker_rename(const char *title);

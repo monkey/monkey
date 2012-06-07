@@ -24,6 +24,7 @@
 
 #include "memory.h"
 #include "mk_list.h"
+#include "mk_macros.h"
 
 /* Case sensitive OFF */
 #define MK_STR_SENSITIVE 0
@@ -58,7 +59,7 @@ struct mk_list *mk_string_split_line(const char *line);
 void mk_string_split_free(struct mk_list *list);
 int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len,
-                      const char *format, ...);
+                      const char *format, ...) PRINTF_WARNINGS(3,4);
 int mk_string_itop(int n, mk_pointer *p);
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
 
