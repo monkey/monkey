@@ -83,7 +83,7 @@ char *mk_dirhtml_human_readable_size(off_t size)
         u *= 1024;
     }
     if (!i) {
-        mk_api->str_build(&buf, &len, "%u%s", size, __units[0]);
+        mk_api->str_build(&buf, &len, "%lu%s", (long unsigned int) size, __units[0]);
     }
     else {
         float fsize = (float) ((double) size / (u / 1024));
@@ -647,7 +647,7 @@ int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
 
     if (sr->protocol >= HTTP_PROTOCOL_11) {
         /* Chunk header */
-        mk_api->str_build(&buf, &len, "%x\r\n", data->total_len - 2);
+        mk_api->str_build(&buf, &len, "%lx\r\n", data->total_len - 2);
 
         /* Add chunked information */
         mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
