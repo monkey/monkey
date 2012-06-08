@@ -72,7 +72,7 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
-    if (sr->uri_processed.len > (offset+limit)) {
+    if (sr->uri_processed.len > (unsigned int) (offset+limit)) {
         user_uri = mk_mem_malloc(sr->uri_processed.len);
         if (!user_uri) {
             return -1;
