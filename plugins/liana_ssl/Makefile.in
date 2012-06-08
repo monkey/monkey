@@ -16,8 +16,8 @@ monkey-liana_ssl.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lmatrixssl
 
 .c.o:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) $(INCDIR) -I$(MATRIX_HEADERS) -fPIC -c $<
-	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) $(LDFLAGS) $(INCDIR) $*.c -o $*.d > /dev/null &2>&1
+	$(CC) $(CFLAGS) $(DEFS) $(INCDIR) -I$(MATRIX_HEADERS) -fPIC -c $<
+	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) $(INCDIR) $*.c -o $*.d > /dev/null &2>&1
 
 clean:
 	rm -rf *.[od] *.*~ *.*so*
