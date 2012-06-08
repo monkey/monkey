@@ -703,7 +703,7 @@ int mk_http_pending_request(struct client_session *cs)
              * method has sent the whole information.
              * just for ref: pipelining is not allowed with POST
              */
-            if (cs->body_pos_end == cs->body_length - mk_endblock.len) {
+            if ((unsigned int) cs->body_pos_end == cs->body_length - mk_endblock.len) {
                 /* Content-length is required, if is it not found,
                  * we pass as successfull in order to raise the error
                  * later
