@@ -41,8 +41,8 @@
 int mk_user_init(struct client_session *cs, struct session_request *sr)
 {
     int limit;
-    int offset = 2; /* The user is defined after the '/~' string, so offset = 2 */
-    int user_len = 255;
+    const int offset = 2; /* The user is defined after the '/~' string, so offset = 2 */
+    const int user_len = 255;
     char user[user_len], *user_uri;
     struct passwd *s_user;
 
