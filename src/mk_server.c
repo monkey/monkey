@@ -39,9 +39,9 @@
 /* Return the number of clients that can be attended
  * at the same time per worker thread
  */
-int mk_server_worker_capacity(int nworkers)
+unsigned int mk_server_worker_capacity(unsigned short nworkers)
 {
-    int max, avl;
+    unsigned int max, avl;
     struct rlimit lim;
 
     /* Limit by system */
