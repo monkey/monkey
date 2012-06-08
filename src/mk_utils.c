@@ -503,8 +503,8 @@ int mk_utils_register_pid()
     }
 
     sprintf(pidstr, "%i", getpid());
-    len = strlen(pidstr);
-    if (write(fd, pidstr, len) != len) {
+    ssize_t write_len = strlen(pidstr);
+    if (write(fd, pidstr, len) != write_len) {
         close(fd);
         mk_err("Error: I cannot write the lock for the pid of monkey");
         exit(EXIT_FAILURE);
