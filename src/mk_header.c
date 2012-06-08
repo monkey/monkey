@@ -372,7 +372,7 @@ int mk_header_send(int fd, struct client_session *cs,
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %d-%d/%d",
+                            "%s bytes %d-%ld/%ld",
                             RH_CONTENT_RANGE,
                             sh->ranges[0],
                             (sh->real_length - 1), sh->real_length);
@@ -383,7 +383,7 @@ int mk_header_send(int fd, struct client_session *cs,
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %d-%d/%d",
+                            "%s bytes %d-%d/%ld",
                             RH_CONTENT_RANGE,
                             sh->ranges[0], sh->ranges[1], sh->real_length);
 
@@ -394,7 +394,7 @@ int mk_header_send(int fd, struct client_session *cs,
         if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %d-%d/%d",
+                            "%s bytes %ld-%ld/%ld",
                             RH_CONTENT_RANGE,
                             (sh->real_length - sh->ranges[1]),
                             (sh->real_length - 1), sh->real_length);
