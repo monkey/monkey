@@ -9,3 +9,4 @@ mk_env.h
 mk_info.h
 *.dpkg
 *.pc
+*.lo
