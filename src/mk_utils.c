@@ -283,14 +283,17 @@ int mk_utils_hex2int(char *hex, int len)
  */
 char *mk_utils_url_decode(mk_pointer uri)
 {
-    int i, hex_result;
+    int tmp, hex_result;
+    unsigned int i;
     int buf_idx = 0;
     char *buf;
     char hex[3];
 
-    if ((i = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
+    if ((tmp = mk_string_char_search(uri.data, '%', uri.len)) < 0) {
         return NULL;
     }
+
+    i = tmp;
 
     buf = mk_mem_malloc_z(uri.len);
 
