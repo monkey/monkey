@@ -246,8 +246,8 @@ struct client_session
     /* Initial fixed size buffer for small requests */
     char body_fixed[MK_REQUEST_CHUNK];
 
-    int body_size;
-    int body_length;
+    unsigned int body_size;
+    unsigned int body_length;
 
     int body_pos_end;
     int first_method;
