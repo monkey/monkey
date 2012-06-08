@@ -74,8 +74,8 @@ struct mk_config_entry
 struct server_config
 {
     int server_fd;              /* server socket file descriptor */
-    int worker_capacity;        /* how many clients per thread... */
-    int max_load;               /* max number of clients (worker_capacity * workers) */
+    unsigned int worker_capacity; /* how many clients per thread... */
+    unsigned int max_load;      /* max number of clients (worker_capacity * workers) */
     short int workers;          /* number of worker threads */
 
     int8_t is_daemon;
@@ -172,7 +172,7 @@ struct host
 struct host_alias
 {
     char *name;
-    int len;
+    unsigned int len;
 
     struct mk_list _head;
 };
