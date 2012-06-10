@@ -500,7 +500,7 @@ create_makefile_plugins()
         MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $plugin_dir && \$(MAKE) clean && cd ..)\n"
 
 
-        for d in `find . -type d`
+        for d in `find . -xtype d`
         do
             if [ -f "${d}/Makefile.in" ];
             then
@@ -531,13 +531,13 @@ create_makefile_plugins()
            cp -r $plugin_dir/conf/* $target/
 
            # Replace configuration variables:
-           find $target/* -type f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
-           find $target/* -type f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
-           find $target/* -type f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-           find $target/* -type f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
-           find $target/* -type f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
-           find $target/* -type f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
-           find $target/* -type f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
         fi
 
         # Distribute binary scripts provided by plugins
