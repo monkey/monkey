@@ -197,12 +197,6 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_utils_worker_rename(thread_name);
     mk_mem_free(thread_name);
 
-    /*
-     * Export epoll filedescriptor to the thread context using a
-     * thread_key.
-     */
-    mk_sched_set_thread_poll(thinfo->epoll_fd);
-
     /* Export known scheduler node to context thread */
     pthread_setspecific(worker_sched_node, (void *) thinfo);
 
@@ -317,16 +311,6 @@ struct mk_list *mk_sched_get_request_list()
 void mk_sched_set_request_list(struct mk_list *list)
 {
     pthread_setspecific(request_list, (void *) list);
-}
-
-void mk_sched_set_thread_poll(int epoll)
-{
-    pthread_setspecific(epoll_fd, (void *) (size_t) epoll);
-}
-
-int mk_sched_get_thread_poll()
-{
-    return (size_t) pthread_getspecific(epoll_fd);
 }
 
 struct sched_list_node *mk_sched_get_thread_conf()

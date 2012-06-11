@@ -47,7 +47,6 @@ void mk_thread_keys_init(void)
     /* Create thread keys */
     pthread_key_create(&worker_sched_node, NULL);
     pthread_key_create(&request_list, NULL);
-    pthread_key_create(&epoll_fd, NULL);
     pthread_key_create(&mk_epoll_state_k, NULL);
     pthread_key_create(&mk_cache_iov_header, NULL);
     pthread_key_create(&mk_cache_header_lm, NULL);
