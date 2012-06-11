@@ -101,7 +101,7 @@ inline int mk_sched_add_client(int remote_fd)
 
     MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
 
-    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
+    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
     /* If epoll has failed, decrement the active connections counter */
