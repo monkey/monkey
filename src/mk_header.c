@@ -333,16 +333,6 @@ int mk_header_send(int fd, struct client_session *cs,
     return 0;
 }
 
-char *mk_header_chunked_line(int len)
-{
-    char *buf;
-
-    buf = mk_mem_malloc_z(10);
-    snprintf(buf, 9, "%x%s", len, MK_CRLF);
-
-    return buf;
-}
-
 void mk_header_set_http_status(struct session_request *sr, int status)
 {
     mk_bug(!sr);
