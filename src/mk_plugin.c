@@ -624,23 +624,6 @@ int mk_plugin_stage_run(unsigned int hook,
     return -1;
 }
 
-void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p)
-{
-    if (!sr->handled_by) {
-        sr->handled_by = p;
-        return;
-    }
-}
-
-void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p)
-{
-    if (!sr->handled_by || sr->handled_by != p) {
-        return;
-    }
-
-    mk_mem_free(sr->handled_by);
-}
-
 /* This function is called by every created worker
  * for plugins which need to set some data under a thread
  * context

@@ -322,9 +322,6 @@ int mk_plugin_stage_run(unsigned int stage,
 void mk_plugin_core_process();
 void mk_plugin_core_thread();
 
-void mk_plugin_request_handler_add(struct session_request *sr, struct plugin *p);
-void mk_plugin_request_handler_del(struct session_request *sr, struct plugin *p);
-
 void mk_plugin_preworker_calls();
 
 /* Plugins events interface */
