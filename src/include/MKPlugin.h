@@ -34,7 +34,7 @@
 #include "mk_macros.h"
 
 /* global vars */
-struct plugin_api MK_EXPORT *mk_api;
+struct plugin_api *mk_api;
 struct plugin_info MK_EXPORT _plugin_info;
 
 mk_plugin_key_t MK_EXPORT _mkp_data;
