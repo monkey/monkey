@@ -338,10 +338,12 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     struct sched_connection *sc;
 
     /*
-     * Close socket and change status: we do not invoke mk_epoll_del()
+     * Close socket and change status: we must invoke mk_epoll_del()
      * because when the socket is closed is cleaned from the queue by
-     * the Kernel.
+     * the Kernel at its leisure, and we may get false events if we rely
+     * on that.
      */
+    mk_epoll_del(sched->epoll_fd, remote_fd);
     close(remote_fd);
 
     sc = mk_sched_get_connection(sched, remote_fd);
