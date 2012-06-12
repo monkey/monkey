@@ -25,7 +25,7 @@ Requirements
  - Linux Kernel >= 2.6.29
  - Glibc >= 2.5
  - Pthreads
- - GNU C Compiler
+ - GNU C Compiler >= 3.2
 
 
 Join us!
