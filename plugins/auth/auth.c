@@ -70,7 +70,7 @@ static int mk_auth_validate_user(struct users_file *users,
     }
 
     sep = mk_api->str_search_n((char *) decoded, ":", 1, auth_len);
-    if (sep == -1 || sep == 0  || sep == auth_len - 1) {
+    if (sep == -1 || sep == 0  || (unsigned int) sep == auth_len - 1) {
         return -1;
     }
     
