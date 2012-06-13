@@ -68,6 +68,12 @@
  #define PRINTF_WARNINGS(a,b)
 #endif
 
+#ifdef __GNUC__ /* GCC supports this since 2.7. */
+ #define UNUSED_PARAM __attribute__ ((unused))
+#else
+ #define UNUSED_PARAM
+#endif
+
 /*
  * Validation macros
  * -----------------
