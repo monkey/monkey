@@ -1,0 +1,8 @@
+CGI plugin
+==========
+
+This plugin provides plain old CGI, ie sh/perl/C/C++/etc
+one-process-per-request architecture.
+
+It's slow and using FastCGI instead is recommended, but building CGI
+apps is rather easy and fast.
