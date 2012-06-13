@@ -82,7 +82,7 @@ void mk_cheetah_print_running_user()
     struct passwd pwd;
     struct passwd *result;
     char *buf;
-    size_t bufsize;
+    long bufsize;
     uid_t uid;
 
     bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
