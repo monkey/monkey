@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     mk_clock_sequential_init();
 
     /* Workers: logger and clock */
-    mk_utils_worker_spawn((void *) mk_clock_worker_init);
+    mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
 
     /* Init mk pointers */
     mk_mem_pointers_init();
