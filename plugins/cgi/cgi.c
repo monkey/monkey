@@ -63,14 +63,12 @@ static int swrite(const int fd, const void *buf, const size_t count)
     return 1;
 }
 
-static void *cgi_write_post(void *p)
+static void cgi_write_post(void *p)
 {
     const struct post_t * const in = p;
 
     swrite(in->fd, in->buf, in->len);
     close(in->fd);
-
-    return NULL;
 }
 
 static int do_cgi(const char * const __restrict__ file, const char * const __restrict__ url,
@@ -228,9 +226,7 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
         p.buf = sr->data.data;
         p.len = sr->data.len;
 
-        pthread_t tid;
-
-        pthread_create(&tid, NULL, cgi_write_post, &p);
+        mk_api->worker_spawn(cgi_write_post, &p);
     }
 
     char buf[PATHLEN], *outptr;
