@@ -402,7 +402,7 @@ void _mkp_core_prctx()
         }
     }
 
-    mk_api->worker_spawn((void *) mk_logger_worker_init);
+    mk_api->worker_spawn((void *) mk_logger_worker_init, NULL);
 }
 
 void _mkp_core_thctx()
