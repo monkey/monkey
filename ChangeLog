@@ -1,3 +1,39 @@
+commit 1381163bfcb42f60e312271a32425de28082cc15
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 15 16:01:38 2012 -0600
+
+    Configure: set v1.0.1 version
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f7dfeedace9ceccec03719fdfcdadbd9f1a3dd0e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 15 16:00:26 2012 -0600
+
+    Backport: Request: fix possible buffer overflow in Host header
+    
+    The Host header allow the input of the hostname plus the TCP
+    port used, e.g:
+    
+     GET / HTTP/1.1
+     Host: localhost:2001
+    
+    If the port length was higher than 6 bytes, it make monkey crash
+    due an overflow in the port buffer.
+    
+    This patch restrict the port length and also add a validation
+    to the port value so it just can hold numeric values.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dbd0f65089f1696f2395dbc178b3de8c3215815a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 5 16:38:37 2012 -0600
+
+    Monkey v1.0.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 87146aa7535061ff5e45ded5cd969a1eeb619de2
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Jun 5 16:37:21 2012 -0600
