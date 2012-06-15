@@ -32,6 +32,7 @@
 #include <netdb.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <ctype.h>
 #include <errno.h>
 
 #include <arpa/inet.h>
@@ -214,7 +215,9 @@ static int mk_request_header_process(struct session_request *sr)
     if (host.data) {
         if ((pos_sep = mk_string_char_search_r(host.data, ':', host.len)) >= 0) {
             /* TCP port should not be higher than 65535 */
-            char _port[6];
+            char *p;
+            short int port_len, port_size = 6;
+            char port[port_size];
 
             /* just the host */
             sr->host.data = host.data;
@@ -223,8 +226,26 @@ static int mk_request_header_process(struct session_request *sr)
             /* including the port */
             sr->host_port = host;
 
-            memcpy(_port, host.data + pos_sep + 1, host.len - pos_sep);
-            sr->port = strtol(_port, (char **) NULL, 10);
+            /* Port string length */
+            port_len = (host.len - pos_sep - 1);
+            if (port_len >= port_size) {
+                return -1;
+            }
+
+            /* Copy to buffer */
+            memcpy(port, host.data + pos_sep + 1, port_len);
+            port[port_len] = '\0';
+
+            /* Validate that the input port is numeric */
+            p = port;
+            while (*p) {
+                if (!isdigit(*p)) return -1;
+                p++;
+            }
+
+            /* Convert to base 10 */
+            errno = 0;
+            sr->port = strtol(port, (char **) NULL, 10);
             if ((errno == ERANGE && (sr->port == LONG_MAX || sr->port == LONG_MIN))
                 || sr->port == 0) {
                 return -1;
