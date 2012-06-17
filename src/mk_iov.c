@@ -89,8 +89,8 @@ struct mk_iov *mk_iov_create(int n, int offset)
      */
     if (offset > 0) {
         for (i=0; i < offset; i++) {
-            iov->io[0].iov_base = NULL;
-            iov->io[0].iov_len = 0;
+            iov->io[i].iov_base = NULL;
+            iov->io[i].iov_len = 0;
         }
     }
 
