@@ -43,6 +43,12 @@ mk_pointer mk_iov_slash;
 mk_pointer mk_iov_none;
 mk_pointer mk_iov_equal;
 
+static void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
+{
+    mk_io->buf_to_free[mk_io->buf_idx] = (char *) buf;
+    mk_io->buf_idx++;
+}
+
 inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                             mk_pointer sep, int free)
 {
@@ -139,12 +145,6 @@ int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
     }
 
     return 0;
-}
-
-void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
-{
-    mk_io->buf_to_free[mk_io->buf_idx] = (char *) buf;
-    mk_io->buf_idx++;
 }
 
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)

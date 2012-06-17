@@ -73,8 +73,6 @@ void mk_iov_free(struct mk_iov *mk_io);
 int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
                 mk_pointer sep, int free, int idx);
 
-void _mk_iov_set_free(struct mk_iov *mk_io, char *buf);
-
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
                      int free, int idx);
 
