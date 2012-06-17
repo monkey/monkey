@@ -96,7 +96,7 @@ struct mk_config_section *mk_config_section_add(struct mk_config *conf,
 }
 
 /* Register a key/value entry in the last section available of the struct */
-void mk_config_entry_add(struct mk_config *conf,
+static void mk_config_entry_add(struct mk_config *conf,
                          const char *key, const char *val)
 {
     struct mk_config_section *section;
