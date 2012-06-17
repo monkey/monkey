@@ -161,6 +161,57 @@ static void mk_sched_thread_lists_init()
     mk_sched_set_request_list(cs_list);
 }
 
+/* Register thread information. The caller thread is the thread information's owner */
+static int mk_sched_register_thread(int efd)
+{
+    unsigned int i;
+    struct sched_connection *sched_conn, *array;
+    struct sched_list_node *sl;
+    static int wid = 0;
+
+    /*
+     * If this thread slept inside this section, some other thread may touch wid.
+     * So protect it with a mutex, only one thread may handle wid.
+     */
+    pthread_mutex_lock(&mutex_sched_init);
+
+    sl = &sched_list[wid];
+    sl->idx = wid++;
+    sl->tid = pthread_self();
+
+    /*
+     * Under Linux does not exists the difference between process and
+     * threads, everything is a thread in the kernel task struct, and each
+     * one has it's own numerical identificator: PID .
+     *
+     * Here we want to know what's the PID associated to this running
+     * task (which is different from parent Monkey PID), it can be
+     * retrieved with gettid() but Glibc does not export to userspace
+     * the syscall, we need to call it directly through syscall(2).
+     */
+    sl->pid = syscall(__NR_gettid);
+    sl->epoll_fd = efd;
+
+    pthread_mutex_unlock(&mutex_sched_init);
+
+    mk_list_init(&sl->busy_queue);
+    mk_list_init(&sl->av_queue);
+
+    array = mk_mem_malloc_z(sizeof(struct sched_connection) * config->worker_capacity);
+
+    for (i = 0; i < config->worker_capacity; i++) {
+        sched_conn = &array[i];
+        sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
+        sched_conn->socket = -1;
+        sched_conn->arrive_time = 0;
+
+        mk_list_add(&sched_conn->_head, &sl->av_queue);
+    }
+    sl->request_handler = NULL;
+
+    return sl->idx;
+}
+
 /* created thread, all this calls are in the thread context */
 static void *mk_sched_launch_worker_loop(void *thread_conf)
 {
@@ -211,57 +262,6 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_epoll_init(thinfo->epoll_fd, handler, epoll_max_events);
 
     return 0;
-}
-
-/* Register thread information. The caller thread is the thread information's owner */
-int mk_sched_register_thread(int efd)
-{
-    int i;
-    struct sched_connection *sched_conn, *array;
-    struct sched_list_node *sl;
-    static int wid = 0;
-
-    /*
-     * If this thread slept inside this section, some other thread may touch wid.
-     * So protect it with a mutex, only one thread may handle wid.
-     */
-    pthread_mutex_lock(&mutex_sched_init);
-
-    sl = &sched_list[wid];
-    sl->idx = wid++;
-    sl->tid = pthread_self();
-
-    /*
-     * Under Linux does not exists the difference between process and
-     * threads, everything is a thread in the kernel task struct, and each
-     * one has it's own numerical identificator: PID .
-     *
-     * Here we want to know what's the PID associated to this running
-     * task (which is different from parent Monkey PID), it can be
-     * retrieved with gettid() but Glibc does not export to userspace
-     * the syscall, we need to call it directly through syscall(2).
-     */
-    sl->pid = syscall(__NR_gettid);
-    sl->epoll_fd = efd;
-
-    pthread_mutex_unlock(&mutex_sched_init);
-
-    mk_list_init(&sl->busy_queue);
-    mk_list_init(&sl->av_queue);
-
-    array = mk_mem_malloc_z(sizeof(struct sched_connection) * config->worker_capacity);
-
-    for (i = 0; i < config->worker_capacity; i++) {
-        sched_conn = &array[i];
-        sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
-        sched_conn->socket = -1;
-        sched_conn->arrive_time = 0;
-
-        mk_list_add(&sched_conn->_head, &sl->av_queue);
-    }
-    sl->request_handler = NULL;
-
-    return sl->idx;
 }
 
 /*
