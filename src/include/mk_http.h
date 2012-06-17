@@ -72,8 +72,6 @@ mk_pointer mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct client_session *cs, struct session_request *sr);
 int mk_http_keepalive_check(struct client_session *cs);
-int mk_http_directory_redirect_check(struct client_session *cs,
-                                     struct session_request *sr);
 int mk_http_range_set(struct session_request *sr, long file_size);
 int mk_http_range_parse(struct session_request *sr);
 

@@ -153,6 +153,76 @@ mk_pointer mk_http_protocol_check_str(int protocol)
     return mk_http_protocol_null_p;
 }
 
+static int mk_http_directory_redirect_check(struct client_session *cs,
+                                            struct session_request *sr)
+{
+    int port_redirect = 0;
+    char *host;
+    char *location = 0;
+    char *real_location = 0;
+    unsigned long len;
+
+    /*
+     * We have to check if exist an slash to the end of
+     * this string, if doesn't exist we send a redirection header
+     */
+    if (sr->uri_processed.data[sr->uri_processed.len - 1] == '/') {
+        return 0;
+    }
+
+    host = mk_pointer_to_buf(sr->host);
+
+    /*
+     * Add ending slash to the location string
+     */
+    location = mk_mem_malloc(sr->uri_processed.len + 2);
+    memcpy(location, sr->uri_processed.data, sr->uri_processed.len);
+    location[sr->uri_processed.len]     = '/';
+    location[sr->uri_processed.len + 1] = '\0';
+
+    /* FIXME: should we done something similar for SSL = 443 */
+    if (sr->host.data && sr->port > 0) {
+        if (sr->port != config->standard_port) {
+            port_redirect = sr->port;
+        }
+    }
+
+    if (port_redirect > 0) {
+        mk_string_build(&real_location, &len, "%s://%s:%i%s",
+                        config->transport, host, port_redirect, location);
+    }
+    else {
+        mk_string_build(&real_location, &len, "%s://%s%s",
+                        config->transport, host, location);
+    }
+
+#ifdef TRACE
+    MK_TRACE("Redirecting to '%s'", real_location);
+#endif
+
+    mk_mem_free(host);
+
+    mk_header_set_http_status(sr, MK_REDIR_MOVED);
+    sr->headers.content_length = 0;
+
+    mk_pointer_reset(&sr->headers.content_type);
+    sr->headers.location = real_location;
+    sr->headers.cgi = SH_NOCGI;
+    sr->headers.pconnections_left =
+        (config->max_keep_alive_request - cs->counter_connections);
+
+    mk_header_send(cs->socket, cs, sr);
+    mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
+
+    /*
+     *  we do not free() real_location
+     *  as it's freed by iov
+     */
+    mk_mem_free(location);
+    sr->headers.location = NULL;
+    return -1;
+}
+
 int mk_http_init(struct client_session *cs, struct session_request *sr)
 {
     int ret;
@@ -432,76 +502,6 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     }
 
     return sr->bytes_to_send;
-}
-
-int mk_http_directory_redirect_check(struct client_session *cs,
-                                     struct session_request *sr)
-{
-    int port_redirect = 0;
-    char *host;
-    char *location = 0;
-    char *real_location = 0;
-    unsigned long len;
-
-    /*
-     * We have to check if exist an slash to the end of
-     * this string, if doesn't exist we send a redirection header
-     */
-    if (sr->uri_processed.data[sr->uri_processed.len - 1] == '/') {
-        return 0;
-    }
-
-    host = mk_pointer_to_buf(sr->host);
-
-    /*
-     * Add ending slash to the location string
-     */
-    location = mk_mem_malloc(sr->uri_processed.len + 2);
-    memcpy(location, sr->uri_processed.data, sr->uri_processed.len);
-    location[sr->uri_processed.len]     = '/';
-    location[sr->uri_processed.len + 1] = '\0';
-
-    /* FIXME: should we done something similar for SSL = 443 */
-    if (sr->host.data && sr->port > 0) {
-        if (sr->port != config->standard_port) {
-            port_redirect = sr->port;
-        }
-    }
-
-    if (port_redirect > 0) {
-        mk_string_build(&real_location, &len, "%s://%s:%i%s",
-                        config->transport, host, port_redirect, location);
-    }
-    else {
-        mk_string_build(&real_location, &len, "%s://%s%s",
-                        config->transport, host, location);
-    }
-
-#ifdef TRACE
-    MK_TRACE("Redirecting to '%s'", real_location);
-#endif
-
-    mk_mem_free(host);
-
-    mk_header_set_http_status(sr, MK_REDIR_MOVED);
-    sr->headers.content_length = 0;
-
-    mk_pointer_reset(&sr->headers.content_type);
-    sr->headers.location = real_location;
-    sr->headers.cgi = SH_NOCGI;
-    sr->headers.pconnections_left =
-        (config->max_keep_alive_request - cs->counter_connections);
-
-    mk_header_send(cs->socket, cs, sr);
-    mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
-
-    /*
-     *  we do not free() real_location
-     *  as it's freed by iov
-     */
-    mk_mem_free(location);
-    sr->headers.location = NULL;
-    return -1;
 }
 
 /*
