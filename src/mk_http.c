@@ -103,6 +103,107 @@ mk_pointer mk_http_method_check_str(int method)
     return mk_http_method_null_p;
 }
 
+static int mk_http_range_set(struct session_request *sr, long file_size)
+{
+    struct response_headers *sh = &sr->headers;
+
+    sr->bytes_to_send = file_size;
+    sr->bytes_offset = 0;
+
+    if (config->resume == MK_TRUE && sr->range.data) {
+        /* yyy- */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
+            sr->bytes_offset = sh->ranges[0];
+            sr->bytes_to_send = file_size - sr->bytes_offset;
+        }
+
+        /* yyy-xxx */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
+            sr->bytes_offset = sh->ranges[0];
+            sr->bytes_to_send = labs(sh->ranges[1] - sh->ranges[0]) + 1;
+        }
+
+        /* -xxx */
+        if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
+            sr->bytes_to_send = sh->ranges[1];
+            sr->bytes_offset = file_size - sh->ranges[1];
+        }
+
+        if (sr->bytes_offset > file_size || sr->bytes_to_send > file_size) {
+            return -1;
+        }
+
+        lseek(sr->fd_file, sr->bytes_offset, SEEK_SET);
+    }
+    return 0;
+
+
+}
+
+static int mk_http_range_parse(struct session_request *sr)
+{
+    int eq_pos, sep_pos, len;
+    char *buffer = 0;
+    struct response_headers *sh;
+
+    if (!sr->range.data)
+        return -1;
+
+    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0)
+        return -1;
+
+    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
+        return -1;
+
+    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0)
+        return -1;
+
+    len = sr->range.len;
+    sh = &sr->headers;
+
+    /* =-xxx */
+    if (eq_pos + 1 == sep_pos) {
+        sh->ranges[0] = -1;
+        sh->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
+
+        if (sh->ranges[1] <= 0) {
+            return -1;
+        }
+
+        sh->content_length = sh->ranges[1];
+        return 0;
+    }
+
+    /* =yyy-xxx */
+    if ((eq_pos + 1 != sep_pos) && (len > sep_pos + 1)) {
+        buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, sep_pos);
+        sh->ranges[0] = (unsigned long) atol(buffer);
+        mk_mem_free(buffer);
+
+        buffer = mk_string_copy_substr(sr->range.data, sep_pos + 1, len);
+        sh->ranges[1] = (unsigned long) atol(buffer);
+        mk_mem_free(buffer);
+
+        if (sh->ranges[1] <= 0 || (sh->ranges[0] > sh->ranges[1])) {
+            return -1;
+        }
+
+        sh->content_length = abs(sh->ranges[1] - sh->ranges[0]) + 1;
+        return 0;
+    }
+    /* =yyy- */
+    if ((eq_pos + 1 != sep_pos) && (len == sep_pos + 1)) {
+        buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, len);
+        sr->headers.ranges[0] = (unsigned long) atol(buffer);
+        mk_mem_free(buffer);
+
+        sh->content_length = (sh->content_length - sh->ranges[0]);
+        return 0;
+    }
+
+    return -1;
+}
+
 int mk_http_method_get(char *body)
 {
     int int_method, pos = 0;
@@ -544,107 +645,6 @@ int mk_http_keepalive_check(struct client_session *cs)
     }
 
     return 0;
-}
-
-int mk_http_range_set(struct session_request *sr, long file_size)
-{
-    struct response_headers *sh = &sr->headers;
-
-    sr->bytes_to_send = file_size;
-    sr->bytes_offset = 0;
-
-    if (config->resume == MK_TRUE && sr->range.data) {
-        /* yyy- */
-        if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = file_size - sr->bytes_offset;
-        }
-
-        /* yyy-xxx */
-        if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = labs(sh->ranges[1] - sh->ranges[0]) + 1;
-        }
-
-        /* -xxx */
-        if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
-            sr->bytes_to_send = sh->ranges[1];
-            sr->bytes_offset = file_size - sh->ranges[1];
-        }
-
-        if (sr->bytes_offset > file_size || sr->bytes_to_send > file_size) {
-            return -1;
-        }
-
-        lseek(sr->fd_file, sr->bytes_offset, SEEK_SET);
-    }
-    return 0;
-
-
-}
-
-int mk_http_range_parse(struct session_request *sr)
-{
-    int eq_pos, sep_pos, len;
-    char *buffer = 0;
-    struct response_headers *sh;
-
-    if (!sr->range.data)
-        return -1;
-
-    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0)
-        return -1;
-
-    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
-        return -1;
-
-    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0)
-        return -1;
-
-    len = sr->range.len;
-    sh = &sr->headers;
-
-    /* =-xxx */
-    if (eq_pos + 1 == sep_pos) {
-        sh->ranges[0] = -1;
-        sh->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
-
-        if (sh->ranges[1] <= 0) {
-            return -1;
-        }
-
-        sh->content_length = sh->ranges[1];
-        return 0;
-    }
-
-    /* =yyy-xxx */
-    if ((eq_pos + 1 != sep_pos) && (len > sep_pos + 1)) {
-        buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, sep_pos);
-        sh->ranges[0] = (unsigned long) atol(buffer);
-        mk_mem_free(buffer);
-
-        buffer = mk_string_copy_substr(sr->range.data, sep_pos + 1, len);
-        sh->ranges[1] = (unsigned long) atol(buffer);
-        mk_mem_free(buffer);
-
-        if (sh->ranges[1] <= 0 || (sh->ranges[0] > sh->ranges[1])) {
-            return -1;
-        }
-
-        sh->content_length = abs(sh->ranges[1] - sh->ranges[0]) + 1;
-        return 0;
-    }
-    /* =yyy- */
-    if ((eq_pos + 1 != sep_pos) && (len == sep_pos + 1)) {
-        buffer = mk_string_copy_substr(sr->range.data, eq_pos + 1, len);
-        sr->headers.ranges[0] = (unsigned long) atol(buffer);
-        mk_mem_free(buffer);
-
-        sh->content_length = (sh->content_length - sh->ranges[0]);
-        return 0;
-    }
-
-    return -1;
 }
 
 /*
