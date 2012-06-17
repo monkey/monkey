@@ -67,7 +67,7 @@ static void mk_clock_log_set_time(time_t utime)
     log_current_time.data = time_string;
 }
 
-void mk_clock_header_set_time(time_t utime)
+static void mk_clock_header_set_time(time_t utime)
 {
     struct tm *gmt_tm;
     struct tm result;
