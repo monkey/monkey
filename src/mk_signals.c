@@ -36,7 +36,7 @@
 
 /* when we catch a signal and want to exit we call this function
    to do it gracefully */
-void mk_signal_exit()
+static void mk_signal_exit()
 {
     /* ignore future signals to properly handle the cleanup */
     signal(SIGTERM, SIG_IGN);
@@ -64,7 +64,7 @@ void mk_signal_thread_sigpipe_safe()
 }
 
 
-void mk_signal_handler(int signo, siginfo_t *si, void *context)
+static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PARAM)
 {
     switch (signo) {
     case SIGTERM:
