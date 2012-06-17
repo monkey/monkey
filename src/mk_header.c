@@ -170,7 +170,7 @@ static void mk_header_iov_free(struct mk_iov *iov)
 int mk_header_send(int fd, struct client_session *cs,
                    struct session_request *sr)
 {
-    int i=0, fd_status = 0;
+    int i=0;
     unsigned long len = 0;
     char *buffer = 0;
     mk_pointer response;
@@ -200,11 +200,6 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_bug(i == status_response_len);
 
     mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
-
-    if (fd_status < 0) {
-        mk_header_iov_free(iov);
-        return -1;
-    }
 
     /* Server details */
     mk_iov_add_entry(iov, sr->host_conf->header_host_signature.data,
