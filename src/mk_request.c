@@ -726,7 +726,6 @@ mk_pointer mk_request_index(char *pathfile, char *file_aux, const unsigned int f
 int mk_request_error(int http_status, struct client_session *cs,
                      struct session_request *sr) {
     int ret, fd;
-    char *aux_message = 0;
     mk_pointer message, *page = 0;
     struct error_page *entry;
     struct mk_list *head;
@@ -844,10 +843,6 @@ int mk_request_error(int http_status, struct client_session *cs,
     sr->headers.cgi = SH_NOCGI;
     sr->headers.pconnections_left = 0;
     sr->headers.last_modified = -1;
-
-    if (aux_message) {
-        mk_mem_free(aux_message);
-    }
 
     if (!page) {
         mk_pointer_reset(&sr->headers.content_type);
