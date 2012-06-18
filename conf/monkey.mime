@@ -29,6 +29,7 @@
     xpm image/x-xpixmap
     xwd image/x-xwindowdump
 
+    json application/json
     ez application/andrew-inset
     hqx application/mac-binhex40
     cpt application/mac-compactpro
