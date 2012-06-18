@@ -17,29 +17,19 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#define _GNU_SOURCE
+#include <sys/time.h>
+#include <sys/resource.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <regex.h>
-#include <unistd.h>
-#include <signal.h>
-#include <libgen.h>
-
-#include "MKPlugin.h"
+#include "cgi.h"
 
 MONKEY_PLUGIN("cgi",		/* shortname */
               "CGI handler",	/* name */
               VERSION,		/* version */
-              MK_PLUGIN_STAGE_30);	/* hooks */
+              MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX);	/* hooks */
 
 static regex_t match_regex;
 
-enum {
-    PATHLEN = 1024,
-    SHORTLEN = 36
-};
+struct cgi_request **requests_by_socket;
 
 struct post_t {
     int fd;
@@ -47,7 +37,7 @@ struct post_t {
     unsigned long len;
 };
 
-static int swrite(const int fd, const void *buf, const size_t count)
+int swrite(const int fd, const void *buf, const size_t count)
 {
     ssize_t pos = count, ret = 0;
 
@@ -72,7 +62,9 @@ static void cgi_write_post(void *p)
 }
 
 static int do_cgi(const char * const __restrict__ file, const char * const __restrict__ url,
-                  int socket, const struct session_request * const sr)
+                  int socket, struct session_request * const sr,
+                  struct client_session * const cs,
+                  struct plugin * const plugin)
 {
     char *env[30];
 
@@ -217,8 +209,6 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
     close(writepipe[0]);
     close(readpipe[1]);
 
-    mk_api->socket_cork_flag(socket, TCP_CORK_ON);
-
     /* If we have POST data to write, spawn a thread to do that */
     if (sr->data.len) {
         struct post_t p;
@@ -228,37 +218,22 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
 
         mk_api->worker_spawn(cgi_write_post, &p);
     }
-
-    char buf[PATHLEN], *outptr;
-    long count;
-    char headers_done = 0;
-
-    while ((count = read(readpipe[0], buf, PATHLEN)) > 0) {
-        outptr = buf;
-
-        /* We have to check the headers are OK */
-        if (!headers_done) {
-            if (count >= 8 && memcmp(buf, "Status: ", 8) == 0) {
-                swrite(socket, "HTTP/1.0 ", 9);
-                outptr += 8;
-                count -= 8;
-                headers_done = 1;
-            }
-            else if (count >= 4) {
-                if (memcmp(buf, "HTTP", 4) != 0) {
-                    swrite(socket, "HTTP/1.0 200 OK\r\n", sizeof("HTTP/1.0 200 OK\r\n") - 1);
-                }
-                headers_done = 1;
-            }
-        }
-
-        swrite(socket, outptr, count);
+    else {
+        close(writepipe[1]);
     }
 
-    close(writepipe[1]);
-    close(readpipe[0]);
 
-    mk_api->socket_cork_flag(socket, TCP_CORK_OFF);
+    struct cgi_request *r = cgi_req_create(readpipe[0], socket);
+    if (!r) return 403;
+
+    cgi_req_add(r);
+    mk_api->event_add(readpipe[0], MK_EPOLL_READ, plugin, cs, sr, MK_EPOLL_LEVEL_TRIGGERED);
+
+    /* XXX Fixme: this needs to be atomic */
+    requests_by_socket[socket] = r;
+
+    /* We have nothing to write yet */
+    mk_api->event_socket_change_mode(socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
 
     return 200;
 }
@@ -304,6 +279,13 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     mk_api = *api;
     cgi_read_config(confdir);
 
+    pthread_key_create(&_mkp_data, NULL);
+
+    struct rlimit lim;
+    getrlimit(RLIMIT_NOFILE, &lim);
+//    printf("Allocating a cache for %lu fds\n", lim.rlim_cur);
+    requests_by_socket = mk_api->mem_alloc_z(sizeof(struct cgi_request *) * lim.rlim_cur);
+
     /* Make sure we act good if the child dies */
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
@@ -314,6 +296,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 void _mkp_exit()
 {
     regfree(&match_regex);
+    free(requests_by_socket);
 }
 
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
@@ -333,12 +316,28 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     if (regexec(&match_regex, url, 0, NULL, 0))
         return MK_PLUGIN_RET_NOT_ME;
 
-    int status = do_cgi(file, url, cs->socket, sr);
+    if (cgi_req_get(cs->socket)) {
+        printf("Error, someone tried to retry\n");
+        return MK_PLUGIN_RET_CONTINUE;
+    }
+
+    int status = do_cgi(file, url, cs->socket, sr, cs, plugin);
 
     /* These are just for the other plugins, such as logger; bogus data */
     mk_api->header_set_http_status(sr, status);
 
+    if (status != 200)
+        return MK_PLUGIN_RET_END;
+
     sr->close_now = MK_TRUE;
 
-    return MK_PLUGIN_RET_END;
+    return MK_PLUGIN_RET_CONTINUE;
+}
+
+void _mkp_core_thctx()
+{
+    struct mk_list *list = mk_api->mem_alloc_z(sizeof(struct mk_list));
+
+    mk_list_init(list);
+    pthread_setspecific(_mkp_data, list);
 }

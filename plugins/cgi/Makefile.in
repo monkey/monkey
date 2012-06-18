@@ -5,7 +5,7 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 INCDIR  = ../../src/include
-OBJECTS = cgi.o
+OBJECTS = cgi.o request.o event.o
 
 all: monkey-cgi.so
 
