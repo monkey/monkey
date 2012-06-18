@@ -31,6 +31,16 @@
 #include "mk_macros.h"
 #include "mk_utils.h"
 
+pthread_key_t mk_cache_iov_header;
+pthread_key_t mk_cache_header_lm;
+pthread_key_t mk_cache_header_cl;
+pthread_key_t mk_cache_header_ka;
+pthread_key_t mk_cache_header_ka_max;
+pthread_key_t mk_cache_utils_gmtime;
+pthread_key_t mk_cache_utils_gmt_text;
+
+struct mk_cache_date_t *mk_cache_file_date;
+
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {

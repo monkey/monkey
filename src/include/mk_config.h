@@ -141,7 +141,7 @@ struct server_config
     struct mk_config *config;
 };
 
-struct server_config *config;
+extern struct server_config *config;
 
 /* Custom error page */
 struct error_page {

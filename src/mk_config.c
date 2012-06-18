@@ -53,6 +53,8 @@ static void mk_config_print_error_msg(char *variable, char *path)
     exit(EXIT_FAILURE);
 }
 
+struct server_config *config;
+
 /* Raise a configuration schema error */
 void mk_config_error(const char *path, int line, const char *msg)
 {

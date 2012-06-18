@@ -91,10 +91,6 @@ struct header_status_response {
 #define MK_HEADER_SHORT_LOCATION "Location: "
 #define MK_HEADER_SHORT_CT "Content-Type: "
 
-mk_pointer mk_header_short_date;
-mk_pointer mk_header_short_location;
-mk_pointer mk_header_short_ct;
-
 /* Accept ranges */
 #define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes" MK_CRLF
 
@@ -109,14 +105,18 @@ mk_pointer mk_header_short_ct;
 
 #define MK_HEADER_LAST_MODIFIED "Last-Modified: "
 
+extern mk_pointer mk_header_short_date;
+extern mk_pointer mk_header_short_location;
+extern mk_pointer mk_header_short_ct;
+
 /* mk pointers with response server headers */
-mk_pointer mk_header_conn_ka;
-mk_pointer mk_header_conn_close;
-mk_pointer mk_header_content_length;
-mk_pointer mk_header_content_encoding;
-mk_pointer mk_header_accept_ranges;
-mk_pointer mk_header_te_chunked;
-mk_pointer mk_header_last_modified;
+extern mk_pointer mk_header_conn_ka;
+extern mk_pointer mk_header_conn_close;
+extern mk_pointer mk_header_content_length;
+extern mk_pointer mk_header_content_encoding;
+extern mk_pointer mk_header_accept_ranges;
+extern mk_pointer mk_header_te_chunked;
+extern mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
 void mk_header_response_reset(struct response_headers *header);

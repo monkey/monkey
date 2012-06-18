@@ -59,6 +59,28 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
+mk_pointer mk_crlf;
+mk_pointer mk_endblock;
+
+mk_pointer mk_rh_accept;
+mk_pointer mk_rh_accept_charset;
+mk_pointer mk_rh_accept_encoding;
+mk_pointer mk_rh_accept_language;
+mk_pointer mk_rh_connection;
+mk_pointer mk_rh_cookie;
+mk_pointer mk_rh_content_length;
+mk_pointer mk_rh_content_range;
+mk_pointer mk_rh_content_type;
+mk_pointer mk_rh_if_modified_since;
+mk_pointer mk_rh_host;
+mk_pointer mk_rh_last_modified;
+mk_pointer mk_rh_last_modified_since;
+mk_pointer mk_rh_referer;
+mk_pointer mk_rh_range;
+mk_pointer mk_rh_user_agent;
+
+pthread_key_t request_list;
+
 /* Create a memory allocation in order to handle the request data */
 static void mk_request_init(struct session_request *request)
 {

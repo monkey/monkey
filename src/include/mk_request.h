@@ -36,8 +36,8 @@
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
 
-mk_pointer mk_crlf;
-mk_pointer mk_endblock;
+extern mk_pointer mk_crlf;
+extern mk_pointer mk_endblock;
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
@@ -57,22 +57,22 @@ mk_pointer mk_endblock;
 #define RH_RANGE "Range:"
 #define RH_USER_AGENT "User-Agent:"
 
-mk_pointer mk_rh_accept;
-mk_pointer mk_rh_accept_charset;
-mk_pointer mk_rh_accept_encoding;
-mk_pointer mk_rh_accept_language;
-mk_pointer mk_rh_connection;
-mk_pointer mk_rh_cookie;
-mk_pointer mk_rh_content_length;
-mk_pointer mk_rh_content_range;
-mk_pointer mk_rh_content_type;
-mk_pointer mk_rh_if_modified_since;
-mk_pointer mk_rh_host;
-mk_pointer mk_rh_last_modified;
-mk_pointer mk_rh_last_modified_since;
-mk_pointer mk_rh_referer;
-mk_pointer mk_rh_range;
-mk_pointer mk_rh_user_agent;
+extern mk_pointer mk_rh_accept;
+extern mk_pointer mk_rh_accept_charset;
+extern mk_pointer mk_rh_accept_encoding;
+extern mk_pointer mk_rh_accept_language;
+extern mk_pointer mk_rh_connection;
+extern mk_pointer mk_rh_cookie;
+extern mk_pointer mk_rh_content_length;
+extern mk_pointer mk_rh_content_range;
+extern mk_pointer mk_rh_content_type;
+extern mk_pointer mk_rh_if_modified_since;
+extern mk_pointer mk_rh_host;
+extern mk_pointer mk_rh_last_modified;
+extern mk_pointer mk_rh_last_modified_since;
+extern mk_pointer mk_rh_referer;
+extern mk_pointer mk_rh_range;
+extern mk_pointer mk_rh_user_agent;
 
 /* String limits */
 #define MAX_REQUEST_METHOD 10
@@ -259,7 +259,7 @@ struct client_session
     struct mk_list _head;
 };
 
-pthread_key_t request_list;
+extern pthread_key_t request_list;
 
 /* Request plugin Handler, each request can be handled by
  * several plugins, we handle list in a simple list */

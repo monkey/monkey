@@ -31,6 +31,9 @@
 #include "mk_clock.h"
 #include "mk_utils.h"
 
+time_t log_current_utime;
+time_t monkey_init_time;
+
 mk_pointer log_current_time = { NULL, LOG_TIME_BUFFER_SIZE - 2 };
 mk_pointer header_current_time = { NULL, HEADER_TIME_BUFFER_SIZE - 1 };
 

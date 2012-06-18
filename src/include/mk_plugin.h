@@ -169,10 +169,10 @@ struct plugin_stagemap
     struct plugin_stagem *stage_50;
 };
 
-struct plugin_stagemap *plg_stagemap;
+extern struct plugin_stagemap *plg_stagemap;
 
 /* Network map calls */
-struct plugin_network_io *plg_netiomap;
+extern struct plugin_network_io *plg_netiomap;
 
 /* API functions exported to plugins */
 struct plugin_api
@@ -287,11 +287,13 @@ struct plugin_api
     void (*stacktrace)(void);
 #endif
 };
-struct plugin_api *api;
+
+extern struct plugin_api *api;
+
 typedef pthread_key_t mk_plugin_key_t;
 
 /* Plugin events thread key */
-pthread_key_t mk_plugin_event_k;
+extern pthread_key_t mk_plugin_event_k;
 
 struct plugin_event
 {

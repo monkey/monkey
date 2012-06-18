@@ -25,9 +25,6 @@
 /* User home string */
 #define MK_USER_HOME '~'
 
-gid_t egid;
-uid_t euid;
-
 /* user.c */
 int mk_user_init(struct client_session *cs, struct session_request *sr);
 int mk_user_set_uidgid(void);

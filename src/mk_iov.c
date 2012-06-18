@@ -35,6 +35,14 @@
 #include "mk_utils.h"
 #include "mk_iov.h"
 
+mk_pointer mk_iov_crlf;
+mk_pointer mk_iov_crlfcrlf;
+mk_pointer mk_iov_lf;
+mk_pointer mk_iov_space;
+mk_pointer mk_iov_slash;
+mk_pointer mk_iov_none;
+mk_pointer mk_iov_equal;
+
 inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                             mk_pointer sep, int free)
 {

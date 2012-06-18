@@ -32,11 +32,11 @@
 #define SH_CGI 1
 
 /* Monkey Protocol */
-mk_pointer mk_monkey_protocol;
+extern mk_pointer mk_monkey_protocol;
 
 /* Process UID/GID */
-gid_t EGID;
-gid_t EUID;
+extern gid_t EGID;
+extern gid_t EUID;
 
 void mk_thread_keys_init();
 

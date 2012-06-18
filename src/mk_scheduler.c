@@ -42,6 +42,10 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
+pthread_key_t worker_sched_node;
+
+struct sched_list_node *sched_list;
+
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 

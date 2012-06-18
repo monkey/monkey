@@ -22,13 +22,13 @@
 #ifndef MK_CACHE_H
 #define MK_CACHE_H
 
-pthread_key_t mk_cache_iov_header;
-pthread_key_t mk_cache_header_lm;
-pthread_key_t mk_cache_header_cl;
-pthread_key_t mk_cache_header_ka;
-pthread_key_t mk_cache_header_ka_max;
-pthread_key_t mk_cache_utils_gmtime;
-pthread_key_t mk_cache_utils_gmt_text;
+extern pthread_key_t mk_cache_iov_header;
+extern pthread_key_t mk_cache_header_lm;
+extern pthread_key_t mk_cache_header_cl;
+extern pthread_key_t mk_cache_header_ka;
+extern pthread_key_t mk_cache_header_ka_max;
+extern pthread_key_t mk_cache_utils_gmtime;
+extern pthread_key_t mk_cache_utils_gmt_text;
 
 struct mk_cache_date_t
 {
@@ -38,7 +38,7 @@ struct mk_cache_date_t
     mk_pointer date;
 };
 
-struct mk_cache_date_t *mk_cache_file_date;
+extern struct mk_cache_date_t *mk_cache_file_date;
 
 void mk_cache_thread_init(void);
 void *mk_cache_get(pthread_key_t key);

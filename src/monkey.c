@@ -42,6 +42,10 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
+mk_pointer mk_monkey_protocol;
+gid_t EGID;
+gid_t EUID;
+
 void mk_thread_keys_init(void)
 {
     /* Create thread keys */

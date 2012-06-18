@@ -27,8 +27,8 @@
 #include <time.h>
 #include "memory.h"
 
-time_t log_current_utime;
-time_t monkey_init_time;
+extern time_t log_current_utime;
+extern time_t monkey_init_time;
 
 extern mk_pointer log_current_time;
 extern mk_pointer header_current_time;

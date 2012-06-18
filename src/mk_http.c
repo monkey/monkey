@@ -46,6 +46,19 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
+mk_pointer mk_http_method_get_p;
+mk_pointer mk_http_method_post_p;
+mk_pointer mk_http_method_head_p;
+mk_pointer mk_http_method_put_p;
+mk_pointer mk_http_method_delete_p;
+mk_pointer mk_http_method_null_p;
+
+mk_pointer mk_http_protocol_09_p;
+mk_pointer mk_http_protocol_10_p;
+mk_pointer mk_http_protocol_11_p;
+mk_pointer mk_http_protocol_null_p;
+
+
 int mk_http_method_check(mk_pointer method)
 {
     if (strncmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {

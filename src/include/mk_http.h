@@ -39,13 +39,6 @@
 #define HTTP_METHOD_PUT_STR         "PUT"
 #define HTTP_METHOD_DELETE_STR      "DELETE"
 
-mk_pointer mk_http_method_get_p;
-mk_pointer mk_http_method_post_p;
-mk_pointer mk_http_method_head_p;
-mk_pointer mk_http_method_put_p;
-mk_pointer mk_http_method_delete_p;
-mk_pointer mk_http_method_null_p;
-
 #define HTTP_PROTOCOL_UNKNOWN (-1)
 #define HTTP_PROTOCOL_09 (9)
 #define HTTP_PROTOCOL_10 (10)
@@ -55,10 +48,17 @@ mk_pointer mk_http_method_null_p;
 #define HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
-mk_pointer mk_http_protocol_09_p;
-mk_pointer mk_http_protocol_10_p;
-mk_pointer mk_http_protocol_11_p;
-mk_pointer mk_http_protocol_null_p;
+extern mk_pointer mk_http_method_get_p;
+extern mk_pointer mk_http_method_post_p;
+extern mk_pointer mk_http_method_head_p;
+extern mk_pointer mk_http_method_put_p;
+extern mk_pointer mk_http_method_delete_p;
+extern mk_pointer mk_http_method_null_p;
+
+extern mk_pointer mk_http_protocol_09_p;
+extern mk_pointer mk_http_protocol_10_p;
+extern mk_pointer mk_http_protocol_11_p;
+extern mk_pointer mk_http_protocol_null_p;
 
 #include "mk_request.h"
 #include "mk_memory.h"

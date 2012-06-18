@@ -61,7 +61,7 @@ struct sched_list_node
     struct client_session *request_handler;
 };
 
-struct sched_list_node *sched_list;
+extern struct sched_list_node *sched_list;
 
 /* Struct under thread context */
 typedef struct
@@ -71,7 +71,7 @@ typedef struct
     int max_events;
 } sched_thread_conf;
 
-pthread_key_t worker_sched_node;
+extern pthread_key_t worker_sched_node;
 
 extern pthread_mutex_t mutex_worker_init;
 

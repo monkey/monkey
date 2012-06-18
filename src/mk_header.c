@@ -38,6 +38,19 @@
 #include "mk_string.h"
 #include "mk_macros.h"
 
+
+mk_pointer mk_header_short_date;
+mk_pointer mk_header_short_location;
+mk_pointer mk_header_short_ct;
+
+mk_pointer mk_header_conn_ka;
+mk_pointer mk_header_conn_close;
+mk_pointer mk_header_content_length;
+mk_pointer mk_header_content_encoding;
+mk_pointer mk_header_accept_ranges;
+mk_pointer mk_header_te_chunked;
+mk_pointer mk_header_last_modified;
+
 static struct header_status_response status_response[] = {
 
     /*
