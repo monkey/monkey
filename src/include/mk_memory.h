@@ -28,15 +28,6 @@ typedef struct
     unsigned long len;
 } mk_pointer;
 
-struct list_sint
-{
-    unsigned short int index;
-    mk_pointer value;
-    struct list_sint *next;
-};
-
-typedef struct list_sint mk_list_sint_t;
-
 #if ((__GNUC__ * 100 + __GNUC__MINOR__) > 430)  /* gcc version > 4.3 */
 # define ALLOCSZ_ATTR(x,...) __attribute__ ((alloc_size(x, ##__VA_ARGS__)))
 #else
