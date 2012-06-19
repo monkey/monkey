@@ -122,7 +122,7 @@ int mk_conn_write(int socket)
      */
     cs = mk_session_get(socket);
     if (!cs) {
-        return -1;
+        return 0;
     }
 
     ret = mk_handler_write(socket, cs);
