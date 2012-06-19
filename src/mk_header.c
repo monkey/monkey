@@ -39,17 +39,17 @@
 #include "mk_macros.h"
 
 
-mk_pointer mk_header_short_date;
-mk_pointer mk_header_short_location;
-mk_pointer mk_header_short_ct;
+const mk_pointer mk_header_short_date = mk_pointer_init(MK_HEADER_SHORT_DATE);
+const mk_pointer mk_header_short_location = mk_pointer_init(MK_HEADER_SHORT_LOCATION);
+const mk_pointer mk_header_short_ct = mk_pointer_init(MK_HEADER_SHORT_CT);
 
-mk_pointer mk_header_conn_ka;
-mk_pointer mk_header_conn_close;
-mk_pointer mk_header_content_length;
-mk_pointer mk_header_content_encoding;
-mk_pointer mk_header_accept_ranges;
-mk_pointer mk_header_te_chunked;
-mk_pointer mk_header_last_modified;
+const mk_pointer mk_header_conn_ka = mk_pointer_init(MK_HEADER_CONN_KA);
+const mk_pointer mk_header_conn_close = mk_pointer_init(MK_HEADER_CONN_CLOSE);
+const mk_pointer mk_header_content_length = mk_pointer_init(MK_HEADER_CONTENT_LENGTH);
+const mk_pointer mk_header_content_encoding = mk_pointer_init(MK_HEADER_CONTENT_ENCODING);
+const mk_pointer mk_header_accept_ranges = mk_pointer_init(MK_HEADER_ACCEPT_RANGES);
+const mk_pointer mk_header_te_chunked = mk_pointer_init(MK_HEADER_TE_CHUNKED);
+const mk_pointer mk_header_last_modified = mk_pointer_init(MK_HEADER_LAST_MODIFIED);
 
 #define status_entry(num, str) {num, sizeof(str) - 1, str}
 

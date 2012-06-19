@@ -105,18 +105,18 @@ struct header_status_response {
 
 #define MK_HEADER_LAST_MODIFIED "Last-Modified: "
 
-extern mk_pointer mk_header_short_date;
-extern mk_pointer mk_header_short_location;
-extern mk_pointer mk_header_short_ct;
+extern const mk_pointer mk_header_short_date;
+extern const mk_pointer mk_header_short_location;
+extern const mk_pointer mk_header_short_ct;
 
 /* mk pointers with response server headers */
-extern mk_pointer mk_header_conn_ka;
-extern mk_pointer mk_header_conn_close;
-extern mk_pointer mk_header_content_length;
-extern mk_pointer mk_header_content_encoding;
-extern mk_pointer mk_header_accept_ranges;
-extern mk_pointer mk_header_te_chunked;
-extern mk_pointer mk_header_last_modified;
+extern const mk_pointer mk_header_conn_ka;
+extern const mk_pointer mk_header_conn_close;
+extern const mk_pointer mk_header_content_length;
+extern const mk_pointer mk_header_content_encoding;
+extern const mk_pointer mk_header_accept_ranges;
+extern const mk_pointer mk_header_te_chunked;
+extern const mk_pointer mk_header_last_modified;
 
 int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
 void mk_header_response_reset(struct response_headers *header);

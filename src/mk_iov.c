@@ -35,13 +35,12 @@
 #include "mk_utils.h"
 #include "mk_iov.h"
 
-mk_pointer mk_iov_crlf;
-mk_pointer mk_iov_crlfcrlf;
-mk_pointer mk_iov_lf;
-mk_pointer mk_iov_space;
-mk_pointer mk_iov_slash;
-mk_pointer mk_iov_none;
-mk_pointer mk_iov_equal;
+const mk_pointer mk_iov_crlf = mk_pointer_init(MK_IOV_CRLF);
+const mk_pointer mk_iov_lf = mk_pointer_init(MK_IOV_LF);
+const mk_pointer mk_iov_space = mk_pointer_init(MK_IOV_SPACE);
+const mk_pointer mk_iov_slash = mk_pointer_init(MK_IOV_SLASH);
+const mk_pointer mk_iov_none = mk_pointer_init(MK_IOV_NONE);
+const mk_pointer mk_iov_equal = mk_pointer_init(MK_IOV_EQUAL);
 
 static void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
 {
@@ -208,10 +207,4 @@ void mk_iov_print(struct mk_iov *mk_io)
 
 void mk_iov_separators_init()
 {
-    mk_pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
-    mk_pointer_set(&mk_iov_lf, MK_IOV_LF);
-    mk_pointer_set(&mk_iov_space, MK_IOV_SPACE);
-    mk_pointer_set(&mk_iov_slash, MK_IOV_SLASH);
-    mk_pointer_set(&mk_iov_none, MK_IOV_NONE);
-    mk_pointer_set(&mk_iov_equal, MK_IOV_EQUAL);
 }

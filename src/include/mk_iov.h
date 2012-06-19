@@ -40,13 +40,12 @@
 
 #include "mk_memory.h"
 
-extern mk_pointer mk_iov_crlf;
-extern mk_pointer mk_iov_crlfcrlf;
-extern mk_pointer mk_iov_lf;
-extern mk_pointer mk_iov_space;
-extern mk_pointer mk_iov_slash;
-extern mk_pointer mk_iov_none;
-extern mk_pointer mk_iov_equal;
+extern const mk_pointer mk_iov_crlf;
+extern const mk_pointer mk_iov_lf;
+extern const mk_pointer mk_iov_space;
+extern const mk_pointer mk_iov_slash;
+extern const mk_pointer mk_iov_none;
+extern const mk_pointer mk_iov_equal;
 
 struct mk_iov
 {

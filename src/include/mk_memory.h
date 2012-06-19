@@ -48,4 +48,6 @@ void mk_pointer_print(mk_pointer p);
 char *mk_pointer_to_buf(mk_pointer p);
 void mk_pointer_set(mk_pointer * p, char *data);
 
+#define mk_pointer_init(a) {a, sizeof(a) - 1}
+
 #endif

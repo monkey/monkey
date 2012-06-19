@@ -35,6 +35,7 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 #include "mk_env.h"
+#include "mk_http.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -42,7 +43,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-mk_pointer mk_monkey_protocol;
+const mk_pointer mk_monkey_protocol = mk_pointer_init(HTTP_PROTOCOL_11_STR);
 gid_t EGID;
 gid_t EUID;
 

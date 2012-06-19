@@ -48,17 +48,17 @@
 #define HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
-extern mk_pointer mk_http_method_get_p;
-extern mk_pointer mk_http_method_post_p;
-extern mk_pointer mk_http_method_head_p;
-extern mk_pointer mk_http_method_put_p;
-extern mk_pointer mk_http_method_delete_p;
-extern mk_pointer mk_http_method_null_p;
+extern const mk_pointer mk_http_method_get_p;
+extern const mk_pointer mk_http_method_post_p;
+extern const mk_pointer mk_http_method_head_p;
+extern const mk_pointer mk_http_method_put_p;
+extern const mk_pointer mk_http_method_delete_p;
+extern const mk_pointer mk_http_method_null_p;
 
-extern mk_pointer mk_http_protocol_09_p;
-extern mk_pointer mk_http_protocol_10_p;
-extern mk_pointer mk_http_protocol_11_p;
-extern mk_pointer mk_http_protocol_null_p;
+extern const mk_pointer mk_http_protocol_09_p;
+extern const mk_pointer mk_http_protocol_10_p;
+extern const mk_pointer mk_http_protocol_11_p;
+extern const mk_pointer mk_http_protocol_null_p;
 
 #include "mk_request.h"
 #include "mk_memory.h"

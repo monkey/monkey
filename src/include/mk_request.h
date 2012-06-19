@@ -36,8 +36,8 @@
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
 
-extern mk_pointer mk_crlf;
-extern mk_pointer mk_endblock;
+extern const mk_pointer mk_crlf;
+extern const mk_pointer mk_endblock;
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
@@ -57,22 +57,22 @@ extern mk_pointer mk_endblock;
 #define RH_RANGE "Range:"
 #define RH_USER_AGENT "User-Agent:"
 
-extern mk_pointer mk_rh_accept;
-extern mk_pointer mk_rh_accept_charset;
-extern mk_pointer mk_rh_accept_encoding;
-extern mk_pointer mk_rh_accept_language;
-extern mk_pointer mk_rh_connection;
-extern mk_pointer mk_rh_cookie;
-extern mk_pointer mk_rh_content_length;
-extern mk_pointer mk_rh_content_range;
-extern mk_pointer mk_rh_content_type;
-extern mk_pointer mk_rh_if_modified_since;
-extern mk_pointer mk_rh_host;
-extern mk_pointer mk_rh_last_modified;
-extern mk_pointer mk_rh_last_modified_since;
-extern mk_pointer mk_rh_referer;
-extern mk_pointer mk_rh_range;
-extern mk_pointer mk_rh_user_agent;
+extern const mk_pointer mk_rh_accept;
+extern const mk_pointer mk_rh_accept_charset;
+extern const mk_pointer mk_rh_accept_encoding;
+extern const mk_pointer mk_rh_accept_language;
+extern const mk_pointer mk_rh_connection;
+extern const mk_pointer mk_rh_cookie;
+extern const mk_pointer mk_rh_content_length;
+extern const mk_pointer mk_rh_content_range;
+extern const mk_pointer mk_rh_content_type;
+extern const mk_pointer mk_rh_if_modified_since;
+extern const mk_pointer mk_rh_host;
+extern const mk_pointer mk_rh_last_modified;
+extern const mk_pointer mk_rh_last_modified_since;
+extern const mk_pointer mk_rh_referer;
+extern const mk_pointer mk_rh_range;
+extern const mk_pointer mk_rh_user_agent;
 
 /* String limits */
 #define MAX_REQUEST_METHOD 10

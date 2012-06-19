@@ -32,7 +32,7 @@
 #define SH_CGI 1
 
 /* Monkey Protocol */
-extern mk_pointer mk_monkey_protocol;
+extern const mk_pointer mk_monkey_protocol;
 
 /* Process UID/GID */
 extern gid_t EGID;

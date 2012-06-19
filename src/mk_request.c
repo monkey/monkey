@@ -59,25 +59,25 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
-mk_pointer mk_crlf;
-mk_pointer mk_endblock;
+const mk_pointer mk_crlf = mk_pointer_init(MK_CRLF);
+const mk_pointer mk_endblock = mk_pointer_init(MK_ENDBLOCK);
 
-mk_pointer mk_rh_accept;
-mk_pointer mk_rh_accept_charset;
-mk_pointer mk_rh_accept_encoding;
-mk_pointer mk_rh_accept_language;
-mk_pointer mk_rh_connection;
-mk_pointer mk_rh_cookie;
-mk_pointer mk_rh_content_length;
-mk_pointer mk_rh_content_range;
-mk_pointer mk_rh_content_type;
-mk_pointer mk_rh_if_modified_since;
-mk_pointer mk_rh_host;
-mk_pointer mk_rh_last_modified;
-mk_pointer mk_rh_last_modified_since;
-mk_pointer mk_rh_referer;
-mk_pointer mk_rh_range;
-mk_pointer mk_rh_user_agent;
+const mk_pointer mk_rh_accept = mk_pointer_init(RH_ACCEPT);
+const mk_pointer mk_rh_accept_charset = mk_pointer_init(RH_ACCEPT_CHARSET);
+const mk_pointer mk_rh_accept_encoding = mk_pointer_init(RH_ACCEPT_ENCODING);
+const mk_pointer mk_rh_accept_language = mk_pointer_init(RH_ACCEPT_LANGUAGE);
+const mk_pointer mk_rh_connection = mk_pointer_init(RH_CONNECTION);
+const mk_pointer mk_rh_cookie = mk_pointer_init(RH_COOKIE);
+const mk_pointer mk_rh_content_length = mk_pointer_init(RH_CONTENT_LENGTH);
+const mk_pointer mk_rh_content_range = mk_pointer_init(RH_CONTENT_RANGE);
+const mk_pointer mk_rh_content_type = mk_pointer_init(RH_CONTENT_TYPE);
+const mk_pointer mk_rh_if_modified_since = mk_pointer_init(RH_IF_MODIFIED_SINCE);
+const mk_pointer mk_rh_host = mk_pointer_init(RH_HOST);
+const mk_pointer mk_rh_last_modified = mk_pointer_init(RH_LAST_MODIFIED);
+const mk_pointer mk_rh_last_modified_since = mk_pointer_init(RH_LAST_MODIFIED_SINCE);
+const mk_pointer mk_rh_referer = mk_pointer_init(RH_REFERER);
+const mk_pointer mk_rh_range = mk_pointer_init(RH_RANGE);
+const mk_pointer mk_rh_user_agent = mk_pointer_init(RH_USER_AGENT);
 
 pthread_key_t request_list;
 

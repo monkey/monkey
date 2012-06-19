@@ -46,17 +46,17 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
-mk_pointer mk_http_method_get_p;
-mk_pointer mk_http_method_post_p;
-mk_pointer mk_http_method_head_p;
-mk_pointer mk_http_method_put_p;
-mk_pointer mk_http_method_delete_p;
-mk_pointer mk_http_method_null_p;
+const mk_pointer mk_http_method_get_p = mk_pointer_init(HTTP_METHOD_GET_STR);
+const mk_pointer mk_http_method_post_p = mk_pointer_init(HTTP_METHOD_POST_STR);
+const mk_pointer mk_http_method_head_p = mk_pointer_init(HTTP_METHOD_HEAD_STR);
+const mk_pointer mk_http_method_put_p = mk_pointer_init(HTTP_METHOD_PUT_STR);
+const mk_pointer mk_http_method_delete_p = mk_pointer_init(HTTP_METHOD_DELETE_STR);
+const mk_pointer mk_http_method_null_p = { NULL, 0 };
 
-mk_pointer mk_http_protocol_09_p;
-mk_pointer mk_http_protocol_10_p;
-mk_pointer mk_http_protocol_11_p;
-mk_pointer mk_http_protocol_null_p;
+const mk_pointer mk_http_protocol_09_p = mk_pointer_init(HTTP_PROTOCOL_09_STR);
+const mk_pointer mk_http_protocol_10_p = mk_pointer_init(HTTP_PROTOCOL_10_STR);
+const mk_pointer mk_http_protocol_11_p = mk_pointer_init(HTTP_PROTOCOL_11_STR);
+const mk_pointer mk_http_protocol_null_p = { NULL, 0 };
 
 
 int mk_http_method_check(mk_pointer method)

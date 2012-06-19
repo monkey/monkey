@@ -137,59 +137,6 @@ void mk_pointer_set(mk_pointer *p, char *data)
 
 void mk_mem_pointers_init()
 {
-    /* Short server response headers */
-    mk_pointer_set(&mk_header_short_date, MK_HEADER_SHORT_DATE);
-    mk_pointer_set(&mk_header_short_location, MK_HEADER_SHORT_LOCATION);
-    mk_pointer_set(&mk_header_short_ct, MK_HEADER_SHORT_CT);
-
-    /* Request vars */
-    mk_pointer_set(&mk_crlf, MK_CRLF);
-    mk_pointer_set(&mk_endblock, MK_ENDBLOCK);
-
-    /* Client headers */
-    mk_pointer_set(&mk_rh_accept, RH_ACCEPT);
-    mk_pointer_set(&mk_rh_accept_charset, RH_ACCEPT_CHARSET);
-    mk_pointer_set(&mk_rh_accept_encoding, RH_ACCEPT_ENCODING);
-    mk_pointer_set(&mk_rh_accept_language, RH_ACCEPT_LANGUAGE);
-    mk_pointer_set(&mk_rh_connection, RH_CONNECTION);
-    mk_pointer_set(&mk_rh_cookie, RH_COOKIE);
-    mk_pointer_set(&mk_rh_content_length, RH_CONTENT_LENGTH);
-    mk_pointer_set(&mk_rh_content_range, RH_CONTENT_RANGE);
-    mk_pointer_set(&mk_rh_content_type, RH_CONTENT_TYPE);
-    mk_pointer_set(&mk_rh_if_modified_since, RH_IF_MODIFIED_SINCE);
-    mk_pointer_set(&mk_rh_host, RH_HOST);
-    mk_pointer_set(&mk_rh_last_modified, RH_LAST_MODIFIED);
-    mk_pointer_set(&mk_rh_last_modified_since, RH_LAST_MODIFIED_SINCE);
-    mk_pointer_set(&mk_rh_referer, RH_REFERER);
-    mk_pointer_set(&mk_rh_range, RH_RANGE);
-    mk_pointer_set(&mk_rh_user_agent, RH_USER_AGENT);
-
-    /* Server response normal headers */
-    mk_pointer_set(&mk_header_conn_ka, MK_HEADER_CONN_KA);
-    mk_pointer_set(&mk_header_conn_close, MK_HEADER_CONN_CLOSE);
-    mk_pointer_set(&mk_header_content_length, MK_HEADER_CONTENT_LENGTH);
-    mk_pointer_set(&mk_header_content_encoding, MK_HEADER_CONTENT_ENCODING);
-    mk_pointer_set(&mk_header_accept_ranges, MK_HEADER_ACCEPT_RANGES);
-    mk_pointer_set(&mk_header_te_chunked, MK_HEADER_TE_CHUNKED);
-    mk_pointer_set(&mk_header_last_modified, MK_HEADER_LAST_MODIFIED);
-
     mk_iov_separators_init();
-
-    /* Server */
-    mk_pointer_set(&mk_monkey_protocol, HTTP_PROTOCOL_11_STR);
-
-    /* HTTP */
-    mk_pointer_set(&mk_http_method_get_p, HTTP_METHOD_GET_STR);
-    mk_pointer_set(&mk_http_method_post_p, HTTP_METHOD_POST_STR);
-    mk_pointer_set(&mk_http_method_head_p, HTTP_METHOD_HEAD_STR);
-    mk_pointer_set(&mk_http_method_put_p, HTTP_METHOD_PUT_STR);
-    mk_pointer_set(&mk_http_method_delete_p, HTTP_METHOD_DELETE_STR);
-    mk_pointer_reset(&mk_http_method_null_p);
-
-    mk_pointer_set(&mk_http_protocol_09_p, HTTP_PROTOCOL_09_STR);
-    mk_pointer_set(&mk_http_protocol_10_p, HTTP_PROTOCOL_10_STR);
-    mk_pointer_set(&mk_http_protocol_11_p, HTTP_PROTOCOL_11_STR);
-    mk_pointer_reset(&mk_http_protocol_null_p);
-
 }
 
