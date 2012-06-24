@@ -44,7 +44,6 @@ struct cgi_request {
     struct mk_list _head;
 
     unsigned int in_len;
-    unsigned int out_len;
 
     int fd;			/* From the CGI app */
     int socket;

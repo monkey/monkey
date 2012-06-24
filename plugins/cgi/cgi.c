@@ -62,10 +62,12 @@ static void cgi_write_post(void *p)
 }
 
 static int do_cgi(const char * const __restrict__ file, const char * const __restrict__ url,
-                  int socket, struct session_request * const sr,
+                  struct session_request * const sr,
                   struct client_session * const cs,
                   struct plugin * const plugin)
 {
+    const int socket = cs->socket;
+
     char *env[30];
 
     /* Unchanging env vars */
@@ -130,6 +132,7 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
     if (query) {
         snprintf(query_string, PATHLEN, "QUERY_STRING=%s", query);
         env[envpos++] = query_string;
+        free(query);
     }
 
     unsigned long len;
@@ -267,6 +270,8 @@ static void cgi_read_config(const char * const path)
                 regerror(ret, &match_regex, tmp, 80);
                 mk_err("CGI: Failed to compile regex: %s", tmp);
             }
+
+            free(match);
         }
     }
 
@@ -302,8 +307,12 @@ void _mkp_exit()
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
-    char *url = mk_api->mem_alloc_z(sr->uri.len + 1);
+    char url[PATHLEN];
+    if (sr->uri.len + 1 > PATHLEN)
+        return MK_PLUGIN_RET_NOT_ME;
+
     memcpy(url, sr->uri.data, sr->uri.len);
+    url[sr->uri.len] = '\0';
 
 //    printf("Got URL %s\n", url);
 //    printf("Realpath: %s\n", sr->real_path.data);
@@ -321,7 +330,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
         return MK_PLUGIN_RET_CONTINUE;
     }
 
-    int status = do_cgi(file, url, cs->socket, sr, cs, plugin);
+    int status = do_cgi(file, url, sr, cs, plugin);
 
     /* These are just for the other plugins, such as logger; bogus data */
     mk_api->header_set_http_status(sr, status);
