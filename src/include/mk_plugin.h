@@ -116,12 +116,6 @@ struct plugin_network_io
     int (*server) (int, char *);
 };
 
-struct plugin_network_ip
-{
-    int (*addr) (int);
-    int (*maxlen) ();
-};
-
 struct plugin
 {
     char *shortname;

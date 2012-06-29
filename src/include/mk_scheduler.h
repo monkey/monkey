@@ -35,12 +35,12 @@
 
 struct sched_connection
 {
-    int socket;
-    int status;
+    int socket;           /* file descriptor   */
+    int status;           /* connection status */
+    uint32_t events;      /* epoll events      */
+    time_t arrive_time;   /* arrived time      */
 
-    time_t arrive_time;
-
-    struct mk_list _head;
+    struct mk_list _head; /* list head         */
 };
 
 /* Global struct */
