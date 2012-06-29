@@ -199,6 +199,10 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
         MK_TRACE("[FD %i] Epoll changing mode to READ/WRITE", fd);
         event.events |= EPOLLIN | EPOLLOUT;
         break;
+    case MK_EPOLL_DISABLE:
+        MK_TRACE("[FD %i] Epoll changing mode to DISABLE", fd);
+        event.events = 0;
+        break;
     }
 
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
