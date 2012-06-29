@@ -150,7 +150,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0 && errno != EEXIST) {
-        MK_TRACE("[FD %i] epoll_ctl()", fd, strerror(errno));
+        MK_TRACE("[FD %i] epoll_ctl() %s", fd, strerror(errno));
         return ret;
     }
 
@@ -164,9 +164,13 @@ int mk_epoll_del(int efd, int fd)
     ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
     MK_TRACE("Epoll, removing fd %i from efd %i", fd, efd);
 
+#ifdef TRACE
     if (ret < 0) {
+        MK_TRACE("[FD %i] epoll_ctl() = %i", fd, ret);
         perror("epoll_ctl");
     }
+#endif
+
     return ret;
 }
 
@@ -198,8 +202,12 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
     }
 
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
+#ifdef TRACE
     if (ret < 0) {
+        MK_TRACE("[FD %i] epoll_ctl() = %i", fd, ret);
         perror("epoll_ctl");
     }
+#endif
+
     return ret;
 }
