@@ -40,7 +40,7 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
-static int mk_epoll_state_init()
+int mk_epoll_state_init()
 {
     struct mk_list *state_list = mk_mem_malloc(sizeof(struct mk_list));
 
@@ -127,7 +127,7 @@ struct epoll_state *mk_epoll_state_get(int efd, int fd)
     return NULL;
 }
 
-static inline int mk_epoll_state_del(int efd, int fd)
+static int mk_epoll_state_del(int efd, int fd)
 {
     struct epoll_state *es_entry;
     struct mk_list *list, *head, *tmp;
@@ -347,20 +347,3 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
     mk_epoll_state_set(efd, fd, mode, behavior, event.events);
     return ret;
 }
-
-struct epoll_state *mk_epoll_state_get(int efd, int fd)
-{
-    struct epoll_state *es_entry;
-    struct mk_list *list, *head;
-
-    list = pthread_getspecific(mk_epoll_state_k);
-    mk_list_foreach(head, list) {
-        es_entry = mk_list_entry(head, struct epoll_state, _head);
-        if (es_entry->instance == efd && es_entry->fd == fd) {
-            return es_entry;
-        }
-    }
-
-    return NULL;
-}
-
