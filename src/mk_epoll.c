@@ -40,6 +40,111 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
+static int mk_epoll_state_init()
+{
+    struct mk_list *state_list = mk_mem_malloc(sizeof(struct mk_list));
+
+    mk_list_init(state_list);
+    return pthread_setspecific(mk_epoll_state_k, (void *) state_list);
+}
+
+inline struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
+                                              int behavior,
+                                              int events)
+{
+    struct epoll_state *es_entry = NULL;
+    struct mk_list *list, *head;
+
+    list = (struct mk_list *) pthread_getspecific(mk_epoll_state_k);
+
+    /*
+     * Lets check if we are in the thread context, if dont, this can be the
+     * situation when the file descriptor is new and comes from the parent
+     * server loop and is just being assigned to the worker thread
+     */
+    if (!list) {
+        return NULL;
+    }
+
+    mk_list_foreach(head, list) {
+        es_entry = mk_list_entry(head, struct epoll_state, _head);
+        if (es_entry->instance == efd && es_entry->fd == fd) {
+            break;
+        }
+        es_entry = NULL;
+    }
+
+    /* Add new entry to the list */
+    /*
+     * FIXME: this should be implemented over a fixed size list to avoid
+     * memory allocations. It should also support resize on demand.
+     */
+    if (!es_entry) {
+        /* New entry */
+        es_entry = mk_mem_malloc(sizeof(struct epoll_state));
+        es_entry->instance = efd;
+        es_entry->fd       = fd;
+        es_entry->mode     = mode;
+        es_entry->behavior = behavior;
+        es_entry->events   = events;
+
+        /* Link to thread key list */
+        mk_list_add(&es_entry->_head, list);
+        return es_entry;
+    }
+
+    /*
+     * Sleep mode: the sleep mode disable the events in the epoll queue so the Kernel
+     * will not trigger any events, when mode == MK_EPOLL_SLEEP, the epoll_state events
+     * keeps the previous events state which can be used in the MK_EPOLL_WAKEUP routine.
+     *
+     * So we just touch the events and behavior state fields if mode != MK_EPOLL_SLEEP.
+     */
+    if (mode != MK_EPOLL_SLEEP) {
+        es_entry->events   = events;
+        es_entry->behavior = behavior;
+    }
+
+    /* Update current mode */
+    es_entry->mode = mode;
+
+    return es_entry;
+}
+
+struct epoll_state *mk_epoll_state_get(int efd, int fd)
+{
+    struct epoll_state *es_entry;
+    struct mk_list *list, *head;
+
+    list = pthread_getspecific(mk_epoll_state_k);
+    mk_list_foreach(head, list) {
+        es_entry = mk_list_entry(head, struct epoll_state, _head);
+        if (es_entry->instance == efd && es_entry->fd == fd) {
+            return es_entry;
+        }
+    }
+
+    return NULL;
+}
+
+static inline int mk_epoll_state_del(int efd, int fd)
+{
+    struct epoll_state *es_entry;
+    struct mk_list *list, *head, *tmp;
+
+    list = pthread_getspecific(mk_epoll_state_k);
+    mk_list_foreach_safe(head, tmp, list) {
+        es_entry = mk_list_entry(head, struct epoll_state, _head);
+        if (es_entry->instance == efd && es_entry->fd == fd) {
+            mk_list_del(&es_entry->_head);
+            mk_mem_free(es_entry);
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
                                          void (*write) (int),
                                          void (*error) (int),
@@ -79,6 +184,8 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
     struct epoll_event *events;
     struct sched_list_node *sched;
+
+    //    mk_epoll_state_init();
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
@@ -146,13 +253,20 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
     case MK_EPOLL_RW:
         event.events |= EPOLLIN | EPOLLOUT;
         break;
+    case MK_EPOLL_SLEEP:
+        event.events = 0;
+        break;
     }
 
+    /* Add to epoll queue */
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0 && errno != EEXIST) {
         MK_TRACE("[FD %i] epoll_ctl() %s", fd, strerror(errno));
         return ret;
     }
+
+    /* Add to event state list */
+    mk_epoll_state_set(efd, fd, init_mode, behavior, event.events);
 
     return ret;
 }
@@ -171,6 +285,9 @@ int mk_epoll_del(int efd, int fd)
     }
 #endif
 
+    /* remove epoll state */
+    mk_epoll_state_del(efd, fd);
+
     return ret;
 }
 
@@ -178,13 +295,10 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
 {
     int ret;
     struct epoll_event event = {0, {0}};
+    struct epoll_state *state;
 
     event.events = EPOLLERR | EPOLLHUP;
     event.data.fd = fd;
-
-    if (behavior == MK_EPOLL_EDGE_TRIGGERED) {
-        event.events |= EPOLLET;
-    }
 
     switch (mode) {
     case MK_EPOLL_READ:
@@ -199,12 +313,28 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
         MK_TRACE("[FD %i] Epoll changing mode to READ/WRITE", fd);
         event.events |= EPOLLIN | EPOLLOUT;
         break;
-    case MK_EPOLL_DISABLE:
+    case MK_EPOLL_SLEEP:
         MK_TRACE("[FD %i] Epoll changing mode to DISABLE", fd);
         event.events = 0;
         break;
+    case MK_EPOLL_WAKEUP:
+        state = mk_epoll_state_get(efd, fd);
+        if (state && state->mode == MK_EPOLL_SLEEP) {
+            event.events = state->events;
+            behavior     = state->behavior;
+        }
+        else {
+            mk_err("[FD %i] MK_EPOLL_WAKEUP error", fd);
+            exit(EXIT_FAILURE);
+        }
+        break;
     }
 
+    if (behavior == MK_EPOLL_EDGE_TRIGGERED) {
+        event.events |= EPOLLET;
+    }
+
+    /* Update epoll fd events */
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
 #ifdef TRACE
     if (ret < 0) {
@@ -213,5 +343,24 @@ int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
     }
 #endif
 
+    /* Update state */
+    mk_epoll_state_set(efd, fd, mode, behavior, event.events);
     return ret;
 }
+
+struct epoll_state *mk_epoll_state_get(int efd, int fd)
+{
+    struct epoll_state *es_entry;
+    struct mk_list *list, *head;
+
+    list = pthread_getspecific(mk_epoll_state_k);
+    mk_list_foreach(head, list) {
+        es_entry = mk_list_entry(head, struct epoll_state, _head);
+        if (es_entry->instance == efd && es_entry->fd == fd) {
+            return es_entry;
+        }
+    }
+
+    return NULL;
+}
+

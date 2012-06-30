@@ -27,7 +27,8 @@
 #define MK_EPOLL_READ     0
 #define MK_EPOLL_WRITE    1
 #define MK_EPOLL_RW       2
-#define MK_EPOLL_DISABLE  3
+#define MK_EPOLL_SLEEP    3
+#define MK_EPOLL_WAKEUP   4
 
 /* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000
@@ -48,6 +49,24 @@ typedef struct
     int (*timeout) (int);
 } mk_epoll_handlers;
 
+/*
+ * An epoll_state represents the state of the descriptor from
+ * a Monkey core point of view.
+ */
+struct epoll_state
+{
+    int instance;      /* Instance created by epoll_create() */
+    int fd;            /* File descriptor                    */
+    int mode;          /* Operation mode                     */
+    int behavior;      /* Triggered behavior                 */
+    int events;        /* Events mask                        */
+
+    struct mk_list _head;
+};
+
+pthread_key_t mk_epoll_state_k;
+
+/* Monkey epoll calls */
 int mk_epoll_create(int max_events);
 void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events);
 
@@ -60,5 +79,12 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
 int mk_epoll_add(int efd, int fd, int mode, int behavior);
 int mk_epoll_del(int efd, int fd);
 int mk_epoll_change_mode(int efd, int fd, int mode, int behavior);
+
+/* epoll state handlers */
+struct epoll_state *mk_epoll_state_get(int efd, int fd);
+struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
+                                       int behavior,
+                                       int events);
+int mk_epoll_state_init();
 
 #endif

@@ -54,6 +54,14 @@ int mk_conn_read(int socket)
                 MK_TRACE("[FD %i] Close requested", socket);
                 return -1;
             }
+            /*
+             * New connections are not registered yet into the epoll
+             * event state list, we need to do it manually
+             */
+            mk_epoll_state_set(sched->epoll_fd, socket,
+                               MK_EPOLL_READ,
+                               MK_EPOLL_LEVEL_TRIGGERED,
+                               (EPOLLERR | EPOLLHUP | EPOLLRDHUP | EPOLLIN));
             return 0;
         }
 
