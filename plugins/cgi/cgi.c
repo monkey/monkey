@@ -37,6 +37,13 @@ struct post_t {
     unsigned long len;
 };
 
+struct cgi_vhost_t {
+    struct host *host;
+    regex_t match;
+};
+
+static struct cgi_vhost_t *cgi_vhosts;
+
 int swrite(const int fd, const void *buf, const size_t count)
 {
     ssize_t pos = count, ret = 0;
@@ -241,6 +248,23 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
     return 200;
 }
 
+static void str_to_regex(char *str, regex_t *reg)
+{
+    char *p = str;
+    while (*p) {
+        if (*p == ' ') *p = '|';
+        p++;
+    }
+
+//    printf("Got match %s\n", str);
+    int ret = regcomp(reg, str, REG_EXTENDED|REG_ICASE|REG_NOSUB);
+    if (ret) {
+        char tmp[80];
+        regerror(ret, reg, tmp, 80);
+        mk_err("CGI: Failed to compile regex: %s", tmp);
+    }
+}
+
 static void cgi_read_config(const char * const path)
 {
     char *file = NULL;
@@ -257,19 +281,7 @@ static void cgi_read_config(const char * const path)
         if (match) {
 //            printf("Got match %s\n", match);
 
-            char *p = match;
-            while (*p) {
-                if (*p == ' ') *p = '|';
-                p++;
-            }
-
-//            printf("Got match %s\n", match);
-            int ret = regcomp(&match_regex, match, REG_EXTENDED|REG_ICASE|REG_NOSUB);
-            if (ret) {
-                char tmp[80];
-                regerror(ret, &match_regex, tmp, 80);
-                mk_err("CGI: Failed to compile regex: %s", tmp);
-            }
+            str_to_regex(match, &match_regex);
 
             free(match);
         }
@@ -277,6 +289,45 @@ static void cgi_read_config(const char * const path)
 
     free(file);
     mk_api->config_free(conf);
+
+    // Plugin config done. Then check for virtual hosts
+
+    struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *head_host;
+    struct host *entry_host;
+
+    unsigned short vhosts = 0;
+
+    mk_list_foreach(head_host, hosts) {
+        entry_host = mk_list_entry(head_host, struct host, _head);
+        section = mk_api->config_section_get(entry_host->config, "CGI");
+        if (section) vhosts++;
+    }
+
+//    printf("Found %hu vhosts with CGI section\n", vhosts);
+
+    if (vhosts < 1) return;
+
+    // NULL-terminated linear cache
+    cgi_vhosts = mk_api->mem_alloc_z((vhosts + 1) * sizeof(struct cgi_vhost_t));
+
+    vhosts = 0;
+    mk_list_foreach(head_host, hosts) {
+        entry_host = mk_list_entry(head_host, struct host, _head);
+        section = mk_api->config_section_get(entry_host->config, "CGI");
+
+        if (section) {
+            char *match = mk_api->config_section_getval(section, "Match", MK_CONFIG_VAL_STR);
+            if (match) {
+                cgi_vhosts[vhosts].host = entry_host;
+//                printf("Vhost %hu matches for %s\n", vhosts, match);
+
+                str_to_regex(match, &cgi_vhosts[vhosts].match);
+                free(match);
+                vhosts++;
+            }
+        }
+    }
 }
 
 int _mkp_init(struct plugin_api **api, char *confdir)
@@ -322,8 +373,21 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     if (!sr->file_info.is_file || !sr->file_info.exec_access)
         return MK_PLUGIN_RET_NOT_ME;
 
-    if (regexec(&match_regex, url, 0, NULL, 0))
-        return MK_PLUGIN_RET_NOT_ME;
+    if (regexec(&match_regex, url, 0, NULL, 0)) {
+        // No global match; check for per-vhost
+
+        unsigned int i;
+        for (i = 0; cgi_vhosts[i].host; i++)
+            if (sr->host_conf == cgi_vhosts[i].host) break;
+
+        // No vhost matched
+        if (!cgi_vhosts[i].host)
+            return MK_PLUGIN_RET_NOT_ME;
+
+        // A vhost was found, check if its regex matches
+        if (regexec(&cgi_vhosts[i].match, url, 0, NULL, 0))
+            return MK_PLUGIN_RET_NOT_ME;
+    }
 
     if (cgi_req_get(cs->socket)) {
         printf("Error, someone tried to retry\n");
