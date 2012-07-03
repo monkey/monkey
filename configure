@@ -466,6 +466,10 @@ create_makefile_plugins()
         disabled=`echo $disabled_plugins | grep -w $plugin_dir`
         disabled=$?
 
+        if test ! -e $plugin_dir/Makefile -a ! -e $plugin_dir/Makefile.in ; then
+                continue
+        fi
+
         comment="    "
 	if test -e $plugin_dir/DISABLED || [ $disabled -eq 0 ] ; then
             if [ $enabled -eq 1 ] ; then
