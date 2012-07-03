@@ -85,14 +85,14 @@ static inline int mk_list_is_empty(struct mk_list *head)
 #define mk_list_entry( ptr, type, member ) container_of( ptr, type, member )
 
 /* First node of the list */
-#define mk_list_entry_first(ptr, type, member) container_of(ptr->next, type, member)
+#define mk_list_entry_first(ptr, type, member) container_of((ptr)->next, type, member)
 
 /* Last node of the list */
-#define mk_list_entry_last(ptr, type, member) container_of(ptr->prev, type, member)
+#define mk_list_entry_last(ptr, type, member) container_of((ptr)->prev, type, member)
 
 /* Next node */
 #define mk_list_entry_next(ptr, type, member, head)                     \
-    ptr->next == (head) ? container_of((head)->next, type, member) :    \
-        container_of(ptr->next, type, member);
+    (ptr)->next == (head) ? container_of((head)->next, type, member) :  \
+        container_of((ptr)->next, type, member);
 
 #endif /* !MK_LIST_H_ */
