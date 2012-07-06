@@ -19,13 +19,16 @@
 
 #include "cgi.h"
 
-struct cgi_request *cgi_req_create(int fd, int socket)
+struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *sr,
+					struct client_session *cs)
 {
     struct cgi_request *newcgi = mk_api->mem_alloc_z(sizeof(struct cgi_request));
     if (!newcgi) return NULL;
 
     newcgi->fd = fd;
     newcgi->socket = socket;
+    newcgi->sr = sr;
+    newcgi->cs = cs;
 
     return newcgi;
 }

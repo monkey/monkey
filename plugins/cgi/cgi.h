@@ -43,19 +43,25 @@ struct cgi_request {
 
     struct mk_list _head;
 
+    struct session_request *sr;
+    struct client_session *cs;
+
     unsigned int in_len;
 
     int fd;			/* From the CGI app */
     int socket;
 
-    unsigned char headers_done;
+    unsigned char status_done;
+    unsigned char all_headers_done;
+    unsigned char chunked;
 };
 
 extern struct cgi_request **requests_by_socket;
 
 int swrite(const int fd, const void *buf, const size_t count);
 
-struct cgi_request *cgi_req_create(int fd, int socket);
+struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *sr,
+					struct client_session *cs);
 void cgi_req_add(struct cgi_request *r);
 int cgi_req_del(struct cgi_request *r);
 

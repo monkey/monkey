@@ -233,8 +233,17 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
     }
 
 
-    struct cgi_request *r = cgi_req_create(readpipe[0], socket);
+    struct cgi_request *r = cgi_req_create(readpipe[0], socket, sr, cs);
     if (!r) return 403;
+
+    if (r->sr->protocol >= HTTP_PROTOCOL_11 &&
+        (r->sr->headers.status < MK_REDIR_MULTIPLE ||
+         r->sr->headers.status > MK_REDIR_USE_PROXY))
+    {
+        r->sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        r->chunked = 1;
+    }
+
 
     cgi_req_add(r);
     mk_api->event_add(readpipe[0], MK_EPOLL_READ, plugin, cs, sr, MK_EPOLL_LEVEL_TRIGGERED);
@@ -243,7 +252,7 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
     requests_by_socket[socket] = r;
 
     /* We have nothing to write yet */
-    mk_api->event_socket_change_mode(socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+    mk_api->event_socket_change_mode(socket, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
 
     return 200;
 }
@@ -402,7 +411,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     if (status != 200)
         return MK_PLUGIN_RET_END;
 
-    sr->close_now = MK_TRUE;
+    sr->headers.cgi = SH_CGI;
 
     return MK_PLUGIN_RET_CONTINUE;
 }
