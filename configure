@@ -454,7 +454,7 @@ create_makefile_plugins()
 
     if [ $platform == "android" ]; then
         if test -z $disabled_plugins; then
-            disabled_plugins="cheetah,palm,logger"
+            disabled_plugins="cheetah,palm,logger,cgi"
         fi
     fi
 
