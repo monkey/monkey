@@ -40,33 +40,51 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
+/*
+ * Initialize the epoll state index per worker thread, every index struct contains
+ * a fixed array of epoll_state entries and two mk_list to represent an available and
+ * busy queue for each entry
+ */
 int mk_epoll_state_init()
 {
-    struct mk_list *state_list = mk_mem_malloc(sizeof(struct mk_list));
+    int i;
+    struct epoll_state *es;
+    struct epoll_state_index *index;
 
-    mk_list_init(state_list);
-    return pthread_setspecific(mk_epoll_state_k, (void *) state_list);
+    index = mk_mem_malloc_z(sizeof(struct epoll_state_index));
+    index->size  = MK_EPOLL_STATE_INDEX_CHUNK;
+    mk_list_init(&index->busy_queue);
+    mk_list_init(&index->av_queue);
+
+    for (i = 0; i < index->size; i++) {
+        es = mk_mem_malloc_z(sizeof(struct epoll_state));
+        mk_list_add(&es->_head, &index->av_queue);
+    }
+
+    return pthread_setspecific(mk_epoll_state_k, (void *) index);
 }
 
-inline struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
-                                              int behavior,
-                                              int events)
+inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
+                                              uint8_t  behavior,
+                                              uint32_t events)
 {
-    struct epoll_state *es_entry = NULL;
-    struct mk_list *list, *head;
+    int i;
+    struct epoll_state_index *index;
+    struct epoll_state *es_entry = NULL, *es_tmp;
+    struct mk_list *head, *tmp;
 
-    list = (struct mk_list *) pthread_getspecific(mk_epoll_state_k);
+    index = (struct epoll_state_index *) pthread_getspecific(mk_epoll_state_k);
 
     /*
      * Lets check if we are in the thread context, if dont, this can be the
      * situation when the file descriptor is new and comes from the parent
      * server loop and is just being assigned to the worker thread
      */
-    if (!list) {
+    if (!index) {
         return NULL;
     }
 
-    mk_list_foreach(head, list) {
+    mk_list_foreach(head, &index->busy_queue) {
         es_entry = mk_list_entry(head, struct epoll_state, _head);
         if (es_entry->instance == efd && es_entry->fd == fd) {
             break;
@@ -75,21 +93,34 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
     }
 
     /* Add new entry to the list */
-    /*
-     * FIXME: this should be implemented over a fixed size list to avoid
-     * memory allocations. It should also support resize on demand.
-     */
     if (!es_entry) {
+
+        /* check if we have available slots */
+        if (mk_list_is_empty(&index->av_queue) == 0) {
+
+            /* We need to grow the epoll_states list */
+            for (i = 0; i < MK_EPOLL_STATE_INDEX_CHUNK; i++) {
+                es_tmp = mk_mem_malloc(sizeof(struct epoll_state));
+                mk_list_add(&es_tmp->_head, &index->av_queue);
+            }
+            MK_TRACE("state index size=%i, grow from %i to %i",
+                     index->size, index->size + MK_EPOLL_STATE_INDEX_CHUNK);
+            index->size += MK_EPOLL_STATE_INDEX_CHUNK;
+
+        }
+
         /* New entry */
-        es_entry = mk_mem_malloc(sizeof(struct epoll_state));
+        es_entry = mk_list_entry_first(&index->av_queue, struct epoll_state, _head);
         es_entry->instance = efd;
         es_entry->fd       = fd;
         es_entry->mode     = mode;
         es_entry->behavior = behavior;
         es_entry->events   = events;
 
-        /* Link to thread key list */
-        mk_list_add(&es_entry->_head, list);
+        /* Unlink from available queue and link to busy queue */
+        mk_list_del(&es_entry->_head);
+        mk_list_add(&es_entry->_head, &index->busy_queue);
+
         return es_entry;
     }
 
@@ -111,13 +142,14 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
     return es_entry;
 }
 
-struct epoll_state *mk_epoll_state_get(int efd, int fd)
+static struct epoll_state *mk_epoll_state_get(int efd, int fd)
 {
+    struct epoll_state_index *index;
     struct epoll_state *es_entry;
-    struct mk_list *list, *head;
+    struct mk_list *head, *tmp;
 
-    list = pthread_getspecific(mk_epoll_state_k);
-    mk_list_foreach(head, list) {
+    index = pthread_getspecific(mk_epoll_state_k);
+    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
         es_entry = mk_list_entry(head, struct epoll_state, _head);
         if (es_entry->instance == efd && es_entry->fd == fd) {
             return es_entry;
@@ -129,15 +161,16 @@ struct epoll_state *mk_epoll_state_get(int efd, int fd)
 
 static int mk_epoll_state_del(int efd, int fd)
 {
+    struct epoll_state_index *index;
     struct epoll_state *es_entry;
-    struct mk_list *list, *head, *tmp;
+    struct mk_list *head, *tmp;
 
-    list = pthread_getspecific(mk_epoll_state_k);
-    mk_list_foreach_safe(head, tmp, list) {
+    index = pthread_getspecific(mk_epoll_state_k);
+    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
         es_entry = mk_list_entry(head, struct epoll_state, _head);
         if (es_entry->instance == efd && es_entry->fd == fd) {
             mk_list_del(&es_entry->_head);
-            mk_mem_free(es_entry);
+            mk_list_add(&es_entry->_head, &index->av_queue);
             return 0;
         }
     }
@@ -184,8 +217,6 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
     struct epoll_event *events;
     struct sched_list_node *sched;
-
-    //    mk_epoll_state_init();
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();

@@ -40,6 +40,8 @@
 #define EPOLLRDHUP 0x2000
 #endif
 
+#define MK_EPOLL_STATE_INDEX_CHUNK 64
+
 typedef struct
 {
     int (*read) (int);
@@ -55,13 +57,20 @@ typedef struct
  */
 struct epoll_state
 {
-    int instance;      /* Instance created by epoll_create() */
-    int fd;            /* File descriptor                    */
-    int mode;          /* Operation mode                     */
-    int behavior;      /* Triggered behavior                 */
-    int events;        /* Events mask                        */
+    int      instance;      /* Instance created by epoll_create() */
+    int      fd;            /* File descriptor                    */
+    uint8_t  mode;          /* Operation mode                     */
+    uint8_t  behavior;      /* Triggered behavior                 */
+    uint32_t events;        /* Events mask                        */
 
     struct mk_list _head;
+};
+
+struct epoll_state_index
+{
+    int size;
+    struct mk_list busy_queue;
+    struct mk_list av_queue;
 };
 
 pthread_key_t mk_epoll_state_k;
@@ -81,10 +90,9 @@ int mk_epoll_del(int efd, int fd);
 int mk_epoll_change_mode(int efd, int fd, int mode, int behavior);
 
 /* epoll state handlers */
-struct epoll_state *mk_epoll_state_get(int efd, int fd);
-struct epoll_state *mk_epoll_state_set(int efd, int fd, int mode,
-                                       int behavior,
-                                       int events);
+inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
+                                              uint8_t  behavior,
+                                              uint32_t events);
 int mk_epoll_state_init();
 
 #endif
