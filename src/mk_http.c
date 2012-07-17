@@ -198,7 +198,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         MK_TRACE("No file, look for handler plugin");
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
+            if (sr->headers.status > 0) {
+                return mk_request_error(sr->headers.status, cs, sr);
+            }
+            else {
+                return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
+            }
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
             return MK_PLUGIN_RET_CONTINUE;
