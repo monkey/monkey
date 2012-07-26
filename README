@@ -16,6 +16,7 @@ Features
  - x86 & x64 architectures compatible (including ARM processors)
  - Common features: SSL, IPv6, Basic Auth, log writer, security, 
                     directory listing, etc.
+ - Embeddable as a shared library (only one context supported currently)
 
 
 Requirements
