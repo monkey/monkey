@@ -145,7 +145,7 @@ static struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
 
     /* Before to send the information, we need to build
      * the list of entries, this really sucks because the user
-     * always will want to have the information sorted, why we don't 
+     * always will want to have the information sorted, why we don't
      * add some spec to the HTTP protocol in order to send the information
      * in a generic way and let the client choose how to show it
      * as they does browsing a FTP server ???, we can save bandweight,
@@ -208,14 +208,14 @@ int mk_dirhtml_conf(char *confdir)
         return -1;
     }
 
-    /* 
+    /*
      * This function will load the default theme setted in dirhtml_conf struct
      */
     return mk_dirhtml_theme_load();
 }
 
-/* 
- * Read the main configuration file for dirhtml: dirhtml.conf, 
+/*
+ * Read the main configuration file for dirhtml: dirhtml.conf,
  * it will alloc the dirhtml_conf struct
 */
 int mk_dirhtml_read_config(char *path)
@@ -237,7 +237,7 @@ int mk_dirhtml_read_config(char *path)
 
     /* alloc dirhtml config struct */
     dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
-    dirhtml_conf->theme = mk_api->config_section_getval(section, "Theme", 
+    dirhtml_conf->theme = mk_api->config_section_getval(section, "Theme",
                                                         MK_CONFIG_VAL_STR);
     dirhtml_conf->theme_path = NULL;
 
@@ -333,33 +333,6 @@ static int mk_dirhtml_theme_match_tag(char *content, char *tpl[])
     return -1;
 }
 
-/* return the number of valid tags found in text string */
-static int mk_dirhtml_content_count_tags(char *content, char *tpl[])
-{
-    int pos = 0, count = 0;
-    int len, tpl_idx;
-    int loop = 0;
-
-    len = strlen(content);
-    while (loop < len) {
-        pos = mk_api->str_search(content + loop, MK_DIRHTML_TAG_INIT, MK_STR_INSENSITIVE);
-
-        if (pos >= 0) {
-            tpl_idx = mk_dirhtml_theme_match_tag(content + loop, tpl);
-            if (tpl_idx >= 0) {
-                count++;
-            }
-            loop += pos;
-        }
-        else {
-            break;
-        }
-        loop++;
-
-    }
-    return count;
-}
-
 struct dirhtml_template *mk_dirhtml_template_create(char *content)
 {
     int i = 0, cont_len;
@@ -389,7 +362,7 @@ struct dirhtml_template *mk_dirhtml_template_create(char *content)
             break;
         }
 
-        /* Checking global tag, if it's not found, proceed with 
+        /* Checking global tag, if it's not found, proceed with
          * 'entry tags'
          */
         _tpl = (char **) _tags_global;
@@ -468,18 +441,6 @@ struct dirhtml_template *mk_dirhtml_template_list_add(struct dirhtml_template **
 
     (*aux).next = node;
     return (struct dirhtml_template *) node;
-}
-
-static int mk_dirhtml_tag_get_id(char *tpl_tags[], char *tag)
-{
-    int i;
-    for (i = 0; tpl_tags[i]; i++) {
-        if (strcmp(tpl_tags[i], tag) == 0) {
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 static int mk_dirhtml_template_len(struct dirhtml_template *tpl)
@@ -715,7 +676,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
         is_chunked = MK_TRUE;
     }
 
-    /* 
+    /*
      * Creating response template
      */
 
@@ -833,6 +794,12 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
+
+    /* Initialize mk pointers */
+    mk_api->pointer_set(&mk_iov_none, "");
+    mk_api->pointer_set(&mk_iov_dash, "-");
+    mk_api->pointer_set(&mk_iov_slash, "/");
+
     return mk_dirhtml_conf(confdir);
 }
 
@@ -840,7 +807,7 @@ void _mkp_exit()
 {
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs, 
+int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
     /* validate file_info */
@@ -852,7 +819,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     if (sr->file_info.is_directory == MK_FALSE) {
         return MK_PLUGIN_RET_NOT_ME;
     }
-    
+
     PLUGIN_TRACE("Dirlisting attending socket %i", cs->socket);
     mk_dirhtml_init(cs, sr);
     return MK_PLUGIN_RET_END;

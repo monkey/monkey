@@ -78,6 +78,9 @@ struct dirhtml_config
 
 
 mk_pointer mk_dirhtml_default_mime;
+mk_pointer mk_iov_none;
+mk_pointer mk_iov_dash;
+mk_pointer mk_iov_slash;
 
 /* Global config */
 struct dirhtml_config *dirhtml_conf;
