@@ -49,6 +49,7 @@ mk_pointer mk_server_protocol;
 mk_pointer mk_server_port;
 mk_pointer mk_server_address;
 
+mk_pointer mk_iov_none;
 mk_pointer mk_iov_empty;
 mk_pointer mk_iov_crlf;
 mk_pointer mk_iov_crlfcrlf;
@@ -57,7 +58,7 @@ mk_pointer mk_iov_equal;
 struct mk_palm *palms;
 
 struct mk_palm_request *mk_palm_connect(struct mk_palm *palm,
-                                        struct client_session *cs, 
+                                        struct client_session *cs,
                                         struct session_request *sr);
 int mk_palm_send_request(struct client_session *cs, struct session_request *sr);
 int hangup(int sockfd);
