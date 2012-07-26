@@ -106,7 +106,7 @@ static struct iov *mk_logger_get_cache()
     return pthread_getspecific(_mkp_data);
 }
 
-static void *mk_logger_worker_init(void *args)
+static void mk_logger_worker_init(void *args)
 {
     int efd, max_events = mk_api->config->nhosts;
     int i, bytes, err;
@@ -403,6 +403,7 @@ int _mkp_core_prctx(struct server_config *config)
     }
 
     mk_api->worker_spawn((void *) mk_logger_worker_init, NULL);
+    return 0;
 }
 
 void _mkp_core_thctx()

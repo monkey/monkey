@@ -42,4 +42,7 @@ void mk_logger_init_pointers()
     mk_api->pointer_set(&error_msg_500, ERROR_MSG_500);
     mk_api->pointer_set(&error_msg_501, ERROR_MSG_501);
     mk_api->pointer_set(&error_msg_505, ERROR_MSG_505);
+
+    /* None */
+    mk_api->pointer_set(&mk_iov_none, "");
 }

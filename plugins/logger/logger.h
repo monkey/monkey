@@ -57,7 +57,7 @@ struct log_target
 
 struct mk_list targets_list;
 
-//struct log_target *lt;
+mk_pointer mk_iov_none;
 
 
 #endif
