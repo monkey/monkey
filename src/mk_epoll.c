@@ -71,7 +71,7 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
     int i;
     struct epoll_state_index *index;
     struct epoll_state *es_entry = NULL, *es_tmp;
-    struct mk_list *head, *tmp;
+    struct mk_list *head;
 
     index = (struct epoll_state_index *) pthread_getspecific(mk_epoll_state_k);
 
