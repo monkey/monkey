@@ -1,23 +1,14 @@
-_PATH   = $(patsubst $(monkey_root)/%, %, $(CURDIR))
+all: monkey-mandril.so
+include ../Make.common
+
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
-INCDIR  = ../../src/include
 MANDRIL_OBJECTS = mandril.o
-
-all: monkey-mandril.so
 
 -include $(MANDRIL_OBJECTS:.o=.d)
 
 monkey-mandril.so: $(MANDRIL_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
-
-.c.o:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
-	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) -I$(INCDIR) $*.c -o $*.d > /dev/null &2>&1
-
-clean:
-	rm -rf *.[od]
-	rm -rf *.*so*

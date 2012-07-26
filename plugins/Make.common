@@ -1,0 +1,9 @@
+_PATH   = $(patsubst $(monkey_root)/%, %, $(CURDIR))
+INCDIR  = ../../src/include
+
+.c.o:
+	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) -I$(INCDIR) $*.c -o $*.d > /dev/null &2>&1
+
+clean:
+	rm -rf *.[od] *~ *.*so*

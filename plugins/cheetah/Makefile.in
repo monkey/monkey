@@ -1,21 +1,14 @@
-_PATH   = $(patsubst $(monkey_root)/%, %, $(CURDIR))
+all: monkey-cheetah.so
+include ../Make.common
+
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
-INCDIR  = ../../src/include
 CHEETAH_OBJECTS = cheetah.o loop.o cmd.o cutils.o
-
-all: monkey-cheetah.so
 
 -include $(CHEETAH_OBJECTS:.o=.d)
 
 monkey-cheetah.so: $(CHEETAH_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
-
-.c.o:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
-	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) -I$(INCDIR) $*.c -o $*.d > /dev/null &2>&1
-clean:
-	rm -rf *.[od] *~ *.*so*

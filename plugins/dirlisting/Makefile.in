@@ -1,22 +1,14 @@
-_PATH   = $(patsubst $(monkey_root)/%, %, $(CURDIR))
+all: monkey-dirlisting.so
+include ../Make.common
+
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
-INCDIR  = ../../src/include
 DIRLISTING_OBJECTS = dirlisting.o
-
-all: monkey-dirlisting.so
 
 -include $(DIRLISTING_OBJECTS:.o=.d)
 
 monkey-dirlisting.so: $(DIRLISTING_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
-
-.c.o:
-	$(CC) $(CFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
-	$(CC_QUIET) -MM -MP $(CFLAGS) $(DEFS) -I$(INCDIR) $*.c -o $*.d > /dev/null &2>&1
-
-clean:
-	rm -rf *.[od] *~ *.*so*
