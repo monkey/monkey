@@ -49,11 +49,8 @@ mk_pointer mk_server_protocol;
 mk_pointer mk_server_port;
 mk_pointer mk_server_address;
 
-mk_pointer mk_iov_none;
-mk_pointer mk_iov_empty;
-mk_pointer mk_iov_crlf;
-mk_pointer mk_iov_crlfcrlf;
-mk_pointer mk_iov_equal;
+extern const mk_pointer mk_iov_empty;
+extern const mk_pointer mk_iov_crlfcrlf;
 
 struct mk_palm *palms;
 

@@ -41,24 +41,21 @@
 #define MK_LOGGER_IOV_EMPTY "-"
 
 /* mk pointers for errors */
-mk_pointer error_msg_400;
-mk_pointer error_msg_403;
-mk_pointer error_msg_404;
-mk_pointer error_msg_405;
-mk_pointer error_msg_408;
-mk_pointer error_msg_411;
-mk_pointer error_msg_413;
-mk_pointer error_msg_500;
-mk_pointer error_msg_501;
-mk_pointer error_msg_505;
+extern const mk_pointer error_msg_400;
+extern const mk_pointer error_msg_403;
+extern const mk_pointer error_msg_404;
+extern const mk_pointer error_msg_405;
+extern const mk_pointer error_msg_408;
+extern const mk_pointer error_msg_411;
+extern const mk_pointer error_msg_413;
+extern const mk_pointer error_msg_500;
+extern const mk_pointer error_msg_501;
+extern const mk_pointer error_msg_505;
 
 /* mk pointer for IOV */
-mk_pointer mk_logger_iov_dash;
-mk_pointer mk_logger_iov_space;
-mk_pointer mk_logger_iov_lf;
-mk_pointer mk_logger_iov_empty;
-
-/* functions */
-void mk_logger_init_pointers();
+extern const mk_pointer mk_logger_iov_dash;
+extern const mk_pointer mk_logger_iov_space;
+extern const mk_pointer mk_logger_iov_lf;
+extern const mk_pointer mk_logger_iov_empty;
 
 #endif

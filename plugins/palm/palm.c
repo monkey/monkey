@@ -39,6 +39,12 @@ MONKEY_PLUGIN("palm",              /* shortname */
               VERSION,            /* version */
               MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_30); /* hooks */
 
+const mk_pointer mk_iov_equal = mk_pointer_init(MK_IOV_EQUAL);
+const mk_pointer mk_iov_none = mk_pointer_init("");
+const mk_pointer mk_iov_crlf = mk_pointer_init(MK_IOV_CRLF);
+const mk_pointer mk_iov_empty = mk_pointer_init(MK_IOV_NONE);
+const mk_pointer mk_iov_crlfcrlf = mk_pointer_init(MK_IOV_CRLFCRLF);
+
 /* Read database configuration parameters */
 static int mk_palm_conf(char *confdir)
 {
@@ -221,13 +227,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     mk_server_port.data = mk_api->mem_alloc(6);
     mk_api->str_itop(mk_api->config->serverport, &mk_server_port);
     mk_server_port.len -= 2;
-
-    /* iov separators */
-    mk_api->pointer_set(&mk_iov_none, "");
-    mk_api->pointer_set(&mk_iov_empty, MK_IOV_NONE);
-    mk_api->pointer_set(&mk_iov_crlf, MK_IOV_CRLF);
-    mk_api->pointer_set(&mk_iov_crlfcrlf, MK_IOV_CRLFCRLF);
-    mk_api->pointer_set(&mk_iov_equal, MK_IOV_EQUAL);
 
     /* Read configuration */
     mk_palm_conf(confdir);

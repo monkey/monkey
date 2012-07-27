@@ -321,9 +321,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
         }
     }
 
-    /* Init mk_pointers */
-    mk_logger_init_pointers();
-
     return 0;
 }
 

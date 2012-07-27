@@ -49,6 +49,11 @@ MONKEY_PLUGIN("dirlisting",          /* shortname */
               VERSION,              /* version */
               MK_PLUGIN_STAGE_30);   /* hooks */
 
+const mk_pointer mk_dirhtml_default_mime = mk_pointer_init(MK_DIRHTML_DEFAULT_MIME);
+const mk_pointer mk_iov_dash = mk_pointer_init("-");
+const mk_pointer mk_iov_none = mk_pointer_init("");
+const mk_pointer mk_iov_slash = mk_pointer_init("/");
+
 /* DIR_HTML logic:
  * ---------------
  * [Monkey Start]
@@ -200,7 +205,6 @@ int mk_dirhtml_conf(char *confdir)
     char *conf_file = NULL;
 
     mk_api->str_build(&conf_file, &len, "%s", confdir);
-    mk_api->pointer_set(&mk_dirhtml_default_mime, MK_DIRHTML_DEFAULT_MIME);
 
     /* Read configuration */
     ret = mk_dirhtml_read_config(conf_file);
@@ -794,11 +798,6 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
-
-    /* Initialize mk pointers */
-    mk_api->pointer_set(&mk_iov_none, "");
-    mk_api->pointer_set(&mk_iov_dash, "-");
-    mk_api->pointer_set(&mk_iov_slash, "/");
 
     return mk_dirhtml_conf(confdir);
 }
