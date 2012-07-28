@@ -736,8 +736,6 @@ int mk_plugin_event_del(int socket)
 
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_session *cs,
-                        struct session_request *sr,
                         int behavior)
 {
     struct sched_list_node *sched;
@@ -747,13 +745,11 @@ int mk_plugin_event_add(int socket, int mode,
 
     sched = mk_sched_get_thread_conf();
 
-    if (sched && handler && cs && sr) {
+    if (sched && handler) {
         /* Event node (this list exist at thread level */
         event = mk_mem_malloc(sizeof(struct plugin_event));
         event->socket = socket;
         event->handler = handler;
-        event->cs = cs;
-        event->sr = sr;
 
         /* Get thread event list */
         list = mk_plugin_event_get_list();

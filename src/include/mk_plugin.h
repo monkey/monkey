@@ -267,8 +267,7 @@ struct plugin_api
     int (*worker_rename) (const char *);
 
     /* event's functions */
-    int (*event_add) (int, int, struct plugin *, struct client_session *,
-                      struct session_request *, int);
+    int (*event_add) (int, int, struct plugin *, int);
     int (*event_del) (int);
 
     int (*event_socket_change_mode) (int, int, int);
@@ -300,8 +299,6 @@ struct plugin_event
     int socket;
 
     struct plugin *handler;
-    struct client_session *cs;
-    struct session_request *sr;
 
     struct mk_list _head;
 };
@@ -334,8 +331,6 @@ void mk_plugin_preworker_calls();
 /* Plugins events interface */
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        struct client_session *cs,
-                        struct session_request *sr,
                         int behavior);
 int mk_plugin_event_del(int socket);
 

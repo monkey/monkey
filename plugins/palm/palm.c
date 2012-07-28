@@ -286,7 +286,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
      * events. Here we register the connected FD to palm server and wait for
      * such events.
      */
-    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, cs, sr, MK_EPOLL_LEVEL_TRIGGERED);
+    mk_api->event_add(pr->palm_fd, MK_EPOLL_READ, plugin, MK_EPOLL_LEVEL_TRIGGERED);
     PLUGIN_TRACE("[PALM_FD %i] Socket registered in epoll events", pr->palm_fd);
 
     /* Send request to Palm server */

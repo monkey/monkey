@@ -246,7 +246,7 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
 
 
     cgi_req_add(r);
-    mk_api->event_add(readpipe[0], MK_EPOLL_READ, plugin, cs, sr, MK_EPOLL_LEVEL_TRIGGERED);
+    mk_api->event_add(readpipe[0], MK_EPOLL_READ, plugin, MK_EPOLL_LEVEL_TRIGGERED);
 
     /* XXX Fixme: this needs to be atomic */
     requests_by_socket[socket] = r;
