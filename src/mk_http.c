@@ -589,10 +589,10 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
                                  &sr->bytes_offset, sr->bytes_to_send);
 
     if (nbytes > 0) {
-        if (sr->loop == 0) {
+        sr->bytes_to_send -= nbytes;
+        if (sr->bytes_to_send == 0) {
             mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
         }
-        sr->bytes_to_send -= nbytes;
     }
 
     sr->loop++;
