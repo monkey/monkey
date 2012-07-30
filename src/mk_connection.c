@@ -65,11 +65,6 @@ int mk_conn_read(int socket)
             return 0;
         }
 
-        /* Note: Linux don't set TCP_NODELAY socket flag by default */
-        if (mk_socket_set_tcp_nodelay(socket) != 0) {
-            mk_warn("TCP_NODELAY failed");
-        }
-
         /* Create session for the client */
         MK_TRACE("[FD %i] Create session", socket);
         cs = mk_session_create(socket, sched);
