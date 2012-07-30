@@ -177,7 +177,7 @@ struct mk_list *mk_string_split_line(const char *line)
         if (end >= 0 && end + i < len) {
             end += i;
 
-            if (i == end) {
+            if (i == (unsigned int) end) {
                 i++;
                 continue;
             }
@@ -225,7 +225,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
     va_list ap;
     int length;
     char *ptr;
-    static size_t _mem_alloc = 64;
+    const size_t _mem_alloc = 64;
     size_t alloc = 0;
 
     /* *buffer *must* be an empty/NULL buffer */
@@ -241,7 +241,11 @@ char *mk_string_build(char **buffer, unsigned long *len,
     length = vsnprintf(*buffer, alloc, format, ap);
     va_end(ap);
 
-    if (length >= alloc) {
+    if (length < 0) {
+        return NULL;
+    }
+
+    if ((unsigned int) length >= alloc) {
         ptr = realloc(*buffer, length + 1);
         if (!ptr) {
             return NULL;
@@ -252,10 +256,6 @@ char *mk_string_build(char **buffer, unsigned long *len,
         va_start(ap, format);
         length = vsnprintf(*buffer, alloc, format, ap);
         va_end(ap);
-    }
-
-    if (length < 0) {
-        return NULL;
     }
 
     ptr = *buffer;
