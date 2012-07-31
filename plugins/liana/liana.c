@@ -145,6 +145,7 @@ int _mkp_network_io_connect(char *host, int port)
 
         break;
     }
+    freeaddrinfo(res);
 
     return socket_fd;
 }
@@ -226,6 +227,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
         }
         break;
     }
+    freeaddrinfo(res);
 
     return socket_fd;
 }
