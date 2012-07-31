@@ -169,8 +169,6 @@ struct plugin_stagemap
     struct plugin_stagem *stage_50;
 };
 
-extern struct plugin_stagemap *plg_stagemap;
-
 /* Network map calls */
 extern struct plugin_network_io *plg_netiomap;
 
