@@ -186,6 +186,7 @@ struct plugin_api
 
     /* HTTP request function */
     int   (*http_request_end) (int);
+    int   (*http_request_error) (int, struct client_session *, struct session_request *);
 
     /* memory functions */
     void *(*mem_alloc) (const size_t size);
