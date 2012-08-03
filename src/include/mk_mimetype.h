@@ -30,7 +30,7 @@
 
 struct mimetype
 {
-    char *name;
+    const char *name;
     mk_pointer type;
 };
 
