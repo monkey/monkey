@@ -40,6 +40,8 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
+pthread_key_t mk_epoll_state_k;
+
 /*
  * Initialize the epoll state index per worker thread, every index struct contains
  * a fixed array of epoll_state entries and two mk_list to represent an available and
