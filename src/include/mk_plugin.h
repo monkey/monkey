@@ -288,8 +288,6 @@ struct plugin_api
 
 extern struct plugin_api *api;
 
-typedef pthread_key_t mk_plugin_key_t;
-
 /* Plugin events thread key */
 extern pthread_key_t mk_plugin_event_k;
 
