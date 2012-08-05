@@ -200,7 +200,8 @@ static int do_cgi(const char * const __restrict__ file, const char * const __res
         char *argv[2] = { NULL };
 
         char *tmp = strdup(file);
-        chdir(dirname(tmp));
+        if (chdir(dirname(tmp)))
+            _exit(1);
 
         char *tmp2 = strdup(file);
         argv[0] = basename(tmp2);
