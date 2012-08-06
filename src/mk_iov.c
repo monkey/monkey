@@ -48,15 +48,13 @@ static void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
     mk_io->buf_idx++;
 }
 
-inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
+int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
                             mk_pointer sep, int free)
 {
-    if (buf) {
-        mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
-        mk_io->io[mk_io->iov_idx].iov_len = len;
-        mk_io->iov_idx++;
-        mk_io->total_len += len;
-    }
+    mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
+    mk_io->io[mk_io->iov_idx].iov_len = len;
+    mk_io->iov_idx++;
+    mk_io->total_len += len;
 
 #ifdef DEBUG_IOV
     if (mk_io->iov_idx > mk_io->size) {
@@ -149,7 +147,7 @@ int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 {
     ssize_t n = writev(fd, mk_io->io, mk_io->iov_idx);
-    if( n < 0 ) {
+    if (mk_unlikely(n < 0)) {
         MK_TRACE( "[FD %i] writev() '%s'", fd, strerror(errno));
         return -1;
     }

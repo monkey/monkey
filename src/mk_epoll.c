@@ -80,7 +80,7 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
      * situation when the file descriptor is new and comes from the parent
      * server loop and is just being assigned to the worker thread
      */
-    if (!index) {
+    if (mk_unlikely(!index)) {
         return NULL;
     }
 
@@ -291,7 +291,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
 
     /* Add to epoll queue */
     ret = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event);
-    if (ret < 0 && errno != EEXIST) {
+    if (mk_unlikely(ret < 0 && errno != EEXIST)) {
         MK_TRACE("[FD %i] epoll_ctl() %s", fd, strerror(errno));
         return ret;
     }

@@ -91,6 +91,8 @@
  */
 
 #define mk_unlikely(x) __builtin_expect((x),0)
+#define mk_likely(x) __builtin_expect((x),1)
+#define mk_prefetch(x, ...) __builtin_prefetch(x, __VA_ARGS__)
 
 #define mk_is_bool(x) ((x == MK_TRUE || x == MK_FALSE) ? 1 : 0)
 

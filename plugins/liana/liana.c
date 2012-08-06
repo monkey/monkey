@@ -157,7 +157,7 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
     bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
 
-    if (bytes_written == -1) {
+    if (mk_unlikely(bytes_written == -1)) {
         PLUGIN_TRACE("[FD %i] error from sendfile() = -1", socket_fd);
         return -1;
     }

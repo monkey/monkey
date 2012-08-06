@@ -195,7 +195,7 @@ time_t mk_utils_gmt2utime(char *date)
 int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
 {
     /* Validate lengths */
-    if (len1 < 0 || len2 < 0) {
+    if (mk_unlikely(len1 < 0 || len2 < 0)) {
          return -1;
     }
 

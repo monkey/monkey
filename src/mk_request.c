@@ -164,14 +164,14 @@ static int mk_request_header_process(struct session_request *sr)
 
     uri_end = mk_string_char_search_r(sr->body.data, ' ', fh_limit) - 1;
 
-    if (uri_end <= 0) {
+    if (mk_unlikely(uri_end <= 0)) {
         MK_TRACE("Error, first header bad formed");
         return -1;
     }
 
     prot_init = uri_end + 2;
 
-    if (uri_end < uri_init) {
+    if (mk_unlikely(uri_end < uri_init)) {
         return -1;
     }
 
@@ -192,13 +192,13 @@ static int mk_request_header_process(struct session_request *sr)
 
     /* Request URI Part 2 */
     sr->uri = mk_pointer_create(sr->body.data, uri_init, uri_end + 1);
-    if (sr->uri.len < 1) {
+    if (mk_unlikely(sr->uri.len < 1)) {
         return -1;
     }
 
     /* HTTP Version */
     prot_end = fh_limit - 1;
-    if (prot_init == prot_end) {
+    if (mk_unlikely(prot_init == prot_end)) {
         return  -1;
     }
 
@@ -707,7 +707,7 @@ mk_pointer mk_request_index(char *pathfile, char *file_aux, const unsigned int f
     mk_list_foreach(head, config->index_files) {
         entry = mk_list_entry(head, struct mk_string_line, _head);
         len = snprintf(file_aux, flen, "%s%s", pathfile, entry->val);
-        if (len > flen) {
+        if (mk_unlikely(len > flen)) {
             len = flen;
             mk_warn("Path too long, truncated! '%s'", file_aux);
         }

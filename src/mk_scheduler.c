@@ -76,7 +76,7 @@ static inline int _next_target()
     }
 
     /* If sched_list[target] worker is full then the whole server too, because it has the lowest load. */
-    if(cur >= config->worker_capacity) {
+    if (mk_unlikely(cur >= config->worker_capacity)) {
         MK_TRACE("Too many clients: %i", config->worker_capacity * config->workers);
         return -1;
     }
@@ -96,7 +96,7 @@ inline int mk_sched_add_client(int remote_fd)
     /* Next worker target */
     t = _next_target();
 
-    if (t == -1) {
+    if (mk_unlikely(t == -1)) {
         MK_TRACE("[FD %i] Over Capacity, drop!", remote_fd);
         return -1;
     }
@@ -109,7 +109,7 @@ inline int mk_sched_add_client(int remote_fd)
                       MK_EPOLL_LEVEL_TRIGGERED);
 
     /* If epoll has failed, decrement the active connections counter */
-    if (r == 0) {
+    if (mk_likely(r == 0)) {
         sched->accepted_connections++;
     }
 
@@ -203,6 +203,9 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Export known scheduler node to context thread */
     pthread_setspecific(worker_sched_node, (void *) thinfo);
+
+    __builtin_prefetch(thinfo);
+    __builtin_prefetch(&worker_sched_node);
 
     /* Init epoll_wait() loop */
     mk_epoll_init(thinfo->epoll_fd, handler, epoll_max_events);
@@ -444,7 +447,7 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
     struct mk_list *head;
     struct sched_connection *sched_conn;
 
-    if (!sched) {
+    if (mk_unlikely(!sched)) {
         return -1;
     }
 

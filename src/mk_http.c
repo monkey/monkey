@@ -212,7 +212,7 @@ int mk_http_method_get(char *body)
 
     /* Max method length is 6 (GET/POST/HEAD/PUT/DELETE) */
     pos = mk_string_char_search(body, ' ', 7);
-    if (pos <= 2 || pos >= max_len_method) {
+    if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
         return HTTP_METHOD_UNKNOWN;
     }
 
@@ -553,7 +553,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
 
     /* Open file */
-    if (sr->file_info.size > 0) {
+    if (mk_likely(sr->file_info.size > 0)) {
         sr->fd_file = open(sr->real_path.data, sr->file_info.flags_read_only);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
@@ -564,7 +564,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Send headers */
     mk_header_send(cs->socket, cs, sr);
 
-    if (sr->headers.content_length == 0) {
+    if (mk_unlikely(sr->headers.content_length == 0)) {
         return 0;
     }
 
@@ -597,7 +597,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 
     sr->loop++;
 
-    if (nbytes < 0) {
+    if (mk_unlikely(nbytes < 0)) {
         MK_TRACE("sendfile() = -1;");
         return EXIT_ABORT;
     }
@@ -749,7 +749,7 @@ int mk_http_request_end(int socket)
         return -1;
     }
 
-    if (!sched) {
+    if (mk_unlikely(!sched)) {
         MK_TRACE("Could not find sched list node :/");
         return -1;
     }

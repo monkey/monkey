@@ -33,13 +33,14 @@
 #include "mk_http.h"
 #include "mk_iov.h"
 #include "mk_user.h"
+#include "mk_macros.h"
 
 inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc(const size_t size)
 {
     void *aux = malloc(size);
 
-    if (!aux && size) {
+    if (mk_unlikely(!aux && size)) {
         perror("malloc");
         return NULL;
     }
@@ -51,8 +52,9 @@ inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc_z(const size_t size)
 {
     void *buf = calloc(1, size);
-    if (!buf)
+    if (mk_unlikely(!buf)) {
         return NULL;
+    }
 
     return buf;
 }
@@ -62,7 +64,7 @@ void *mk_mem_realloc(void *ptr, const size_t size)
 {
     void *aux = realloc(ptr, size);
 
-    if (!aux && size) {
+    if (mk_unlikely(!aux && size)) {
         perror("realloc");
         return NULL;
     }

@@ -183,7 +183,7 @@ static void mk_logger_worker_init(void *args)
             }
 
             err = ioctl(events[i].data.fd, FIONREAD, &bytes);
-            if (err == -1) {
+            if (mk_unlikely(err == -1)){
                 perror("ioctl");
             }
 
@@ -194,7 +194,7 @@ static void mk_logger_worker_init(void *args)
             timeout = clk + mk_logger_timeout;
 
             flog = open(target, O_WRONLY | O_CREAT, 0644);
-            if (flog == -1) {
+            if (mk_unlikely(flog == -1)) {
                 mk_warn("Could not open logfile '%s'", target);
 
                 if (bytes >= buffer_limit) {
@@ -218,7 +218,7 @@ static void mk_logger_worker_init(void *args)
             lseek(flog, 0, SEEK_END);
             slen = splice(events[i].data.fd, NULL, flog,
                           NULL, bytes, SPLICE_F_MOVE);
-            if (slen == -1) {
+            if (mk_unlikely(slen == -1)) {
                 mk_warn("Could not write to log file: splice() = %ld", slen);
             }
 
@@ -472,14 +472,15 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
      * If the socket is not longer available ip_str can be null,
      * so we must check this condition and return
      */
-    if (ret < 0) {
+    if (mk_unlikely(ret < 0)) {
         return 0;
     }
 
     /* Add IP to IOV */
-    mk_api->iov_add_entry(iov, ip_str->data, ip_str->len, mk_iov_none,
+    mk_api->iov_add_entry(iov, ip_str->data, ip_str->len,
+                          mk_logger_iov_dash,
                           MK_IOV_NOT_FREE_BUF);
-    mk_api->iov_add_entry(iov, " - ", 3, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+
     /* Date/time when object was requested */
     date = mk_api->time_human();
     mk_api->iov_add_entry(iov, date->data, date->len,
@@ -553,9 +554,10 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
         mk_api->iov_send(target->fd_access[1], iov);
     }
     else {
-        if (!target->file_error) {
+        if (mk_unlikely(!target->file_error)) {
             return 0;
         }
+
         switch (http_status) {
         case MK_CLIENT_BAD_REQUEST:
             mk_api->iov_add_entry(iov,

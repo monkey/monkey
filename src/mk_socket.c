@@ -188,12 +188,15 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 {
+    int ret;
     struct sockaddr_storage addr;
     socklen_t s_len = sizeof(addr);
     const int bufsize = 80;
     char errormsg[bufsize];
 
-    if((getpeername(socket_fd, (struct sockaddr *) &addr, &s_len)) == -1 ) {
+    ret = getpeername(socket_fd, (struct sockaddr *) &addr, &s_len);
+
+    if (mk_unlikely(ret == -1)) {
         MK_TRACE("[FD %i] Can't get addr for this socket", socket_fd);
         return -1;
     }
