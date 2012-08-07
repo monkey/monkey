@@ -96,6 +96,8 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
     return 0;
 }
 
+#ifndef SHAREDLIB
+
 /* Change process user */
 int mk_user_set_uidgid()
 {
@@ -153,3 +155,5 @@ int mk_user_undo_uidgid()
     }
     return 0;
 }
+
+#endif // !SHAREDLIB

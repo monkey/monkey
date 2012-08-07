@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 
 #include "mk_list.h"
+#include "mk_lib.h"
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
@@ -59,6 +60,9 @@ struct sched_list_node
     unsigned char initialized;
 
     struct client_session *request_handler;
+#ifdef SHAREDLIB
+    mklib_ctx ctx;
+#endif
 };
 
 extern struct sched_list_node *sched_list;
@@ -69,6 +73,9 @@ typedef struct
     int epoll_fd;
     int epoll_max_events;
     int max_events;
+#ifdef SHAREDLIB
+    mklib_ctx ctx;
+#endif
 } sched_thread_conf;
 
 extern pthread_key_t worker_sched_node;
@@ -76,7 +83,7 @@ extern pthread_key_t worker_sched_node;
 extern pthread_mutex_t mutex_worker_init;
 
 void mk_sched_init();
-int mk_sched_launch_thread(int max_events, pthread_t *tout);
+int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 

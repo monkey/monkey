@@ -222,8 +222,10 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     struct sched_list_node *thinfo = NULL;
     mk_epoll_handlers *handler;
 
+#ifndef SHAREDLIB
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
+#endif
 
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
@@ -231,7 +233,6 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Register working thread */
     wid = mk_sched_register_thread(thconf->epoll_fd);
-    mk_mem_free(thread_conf);
 
     /* Plugin thread context calls */
     mk_epoll_state_init();
@@ -246,6 +247,12 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
                                     (void *) mk_conn_timeout);
 
     thinfo = &sched_list[wid];
+
+#ifdef SHAREDLIB
+    thinfo->ctx = thconf->ctx;
+#endif
+
+    mk_mem_free(thread_conf);
 
     /* Rename worker */
     mk_string_build(&thread_name, &len, "monkey: wrk/%i", thinfo->idx);
@@ -268,7 +275,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
  * Create thread which will be listening
  * for incomings file descriptors
  */
-int mk_sched_launch_thread(int max_events, pthread_t *tout)
+int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED_PARAM)
 {
     int efd;
     pthread_t tid;
@@ -285,6 +292,9 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout)
     thconf->epoll_fd = efd;
     thconf->epoll_max_events = max_events*2;
     thconf->max_events = max_events;
+#ifdef SHAREDLIB
+    thconf->ctx = ctx;
+#endif
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

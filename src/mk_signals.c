@@ -20,6 +20,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* If a library, do not interfere with the app's signals */
+#ifndef SHAREDLIB
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -111,3 +114,5 @@ void mk_signal_init()
     sigaction(SIGINT,  &act, NULL);
     sigaction(SIGTERM, &act, NULL);
 }
+
+#endif // !SHAREDLIB

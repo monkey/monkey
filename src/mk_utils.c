@@ -213,39 +213,6 @@ int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
     return 0;
 }
 
-/* Run current process in background mode (daemon, evil Monkey >:) */
-int mk_utils_set_daemon()
-{
-    pid_t pid;
-
-    if ((pid = fork()) < 0){
-		mk_err("Error: Failed creating to switch to daemon mode(fork failed)");
-        exit(EXIT_FAILURE);
-	}
-
-    if (pid > 0) /* parent */
-        exit(EXIT_SUCCESS);
-
-    /* set files mask */
-    umask(0);
-
-    /* Create new session */
-    setsid();
-
-    if (chdir("/") < 0) { /* make sure we can unmount the inherited filesystem */
-        mk_err("Error: Unable to unmount the inherited filesystem in the daemon process");
-        exit(EXIT_FAILURE);
-	}
-
-    /* Our last STDOUT message */
-    mk_info("Background mode ON");
-
-    fclose(stderr);
-    fclose(stdout);
-
-    return 0;
-}
-
 /* Convert hexadecimal to int */
 int mk_utils_hex2int(char *hex, int len)
 {
@@ -466,6 +433,41 @@ int mk_utils_print_errno(int n)
 
 #endif
 
+#ifndef SHAREDLIB
+
+/* Run current process in background mode (daemon, evil Monkey >:) */
+int mk_utils_set_daemon()
+{
+    pid_t pid;
+
+    if ((pid = fork()) < 0){
+		mk_err("Error: Failed creating to switch to daemon mode(fork failed)");
+        exit(EXIT_FAILURE);
+	}
+
+    if (pid > 0) /* parent */
+        exit(EXIT_SUCCESS);
+
+    /* set files mask */
+    umask(0);
+
+    /* Create new session */
+    setsid();
+
+    if (chdir("/") < 0) { /* make sure we can unmount the inherited filesystem */
+        mk_err("Error: Unable to unmount the inherited filesystem in the daemon process");
+        exit(EXIT_FAILURE);
+	}
+
+    /* Our last STDOUT message */
+    mk_info("Background mode ON");
+
+    fclose(stderr);
+    fclose(stdout);
+
+    return 0;
+}
+
 /* Write Monkey's PID */
 int mk_utils_register_pid()
 {
@@ -531,6 +533,8 @@ int mk_utils_remove_pid()
     config->pid_status = MK_FALSE;
     return 0;
 }
+
+#endif // !SHAREDLIB
 
 void mk_print(int type, const char *format, ...)
 {

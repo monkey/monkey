@@ -34,6 +34,10 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
+enum {
+    bufsize = 256
+};
+
 pthread_key_t mk_plugin_event_k;
 
 static struct plugin_stagemap *plg_stagemap;
@@ -299,17 +303,6 @@ void mk_plugin_free(struct plugin *p)
 
 void mk_plugin_init()
 {
-    int ret;
-    char *path;
-    char *plugin_confdir = 0;
-    void *handle;
-    unsigned long len;
-    struct plugin *p;
-    struct mk_config *cnf;
-    struct mk_config_section *section;
-    struct mk_config_entry *entry;
-    struct mk_list *head;
-
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     __builtin_prefetch(api);
 
@@ -421,6 +414,24 @@ void mk_plugin_init()
     api->stacktrace = (void *) mk_utils_stacktrace;
 #endif
 
+    api->plugins = config->plugins;
+}
+
+#ifndef SHAREDLIB
+
+void mk_plugin_read_config()
+{
+    int ret;
+    char *path;
+    char *plugin_confdir = 0;
+    void *handle;
+    unsigned long len;
+    struct plugin *p;
+    struct mk_config *cnf;
+    struct mk_config_section *section;
+    struct mk_config_entry *entry;
+    struct mk_list *head;
+
     /* Read configuration file */
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
@@ -491,13 +502,13 @@ void mk_plugin_init()
         exit(EXIT_FAILURE);
     }
 
-    api->plugins = config->plugins;
-
     /* Look for plugins thread key data */
     mk_plugin_preworker_calls();
     mk_mem_free(path);
     mk_config_free(cnf);
 }
+
+#endif //!SHAREDLIB
 
 /* Invoke all plugins 'exit' hook and free resources by the plugin interface */
 void mk_plugin_exit_all()
@@ -529,6 +540,30 @@ int mk_plugin_stage_run(unsigned int hook,
 {
     int ret;
     struct plugin_stagem *stm;
+
+#ifdef SHAREDLIB
+    struct sched_list_node *thconf = mk_sched_get_thread_conf();
+    mklib_ctx ctx = thconf->ctx;
+    char buf[bufsize], *ptr = buf;
+    unsigned long len;
+
+    if (hook & MK_PLUGIN_STAGE_10 && ctx->ipf) {
+        mk_socket_ip_str(socket, &ptr, bufsize, &len);
+        ret = ctx->ipf(buf);
+        if (ret == MKLIB_FALSE) return MK_PLUGIN_RET_CLOSE_CONX;
+    }
+
+    if (hook & MK_PLUGIN_STAGE_20 && ctx->urlf) {
+        len = sr->uri.len;
+        if (len >= bufsize) len = bufsize - 1;
+        strncpy(buf, sr->uri.data, len);
+        buf[len] = '\0';
+
+        ret = ctx->urlf(buf);
+        if (ret == MKLIB_FALSE) return MK_PLUGIN_RET_CLOSE_CONX;
+    }
+
+#endif
 
     /* Connection just accept(ed) not assigned to worker thread */
     if (hook & MK_PLUGIN_STAGE_10) {
@@ -622,6 +657,66 @@ int mk_plugin_stage_run(unsigned int hook,
             stm = stm->next;
         }
     }
+
+#ifdef SHAREDLIB
+
+    if (hook & MK_PLUGIN_STAGE_30 && ctx->dataf) {
+        unsigned int status = 200;
+        unsigned long clen, get_len = 0, post_len = 0;
+        const char *content;
+        char *get = NULL, *post = NULL;
+        char header[bufsize] = "";
+
+        if (sr->query_string.data) {
+            get = mk_mem_malloc_z(sr->query_string.len + 1);
+            memcpy(get, sr->query_string.data, sr->query_string.len);
+            get_len = sr->query_string.len;
+        }
+        if (sr->data.data) {
+            post = mk_mem_malloc_z(sr->data.len + 1);
+            memcpy(post, sr->data.data, sr->data.len);
+            post_len = sr->data.len;
+        }
+
+        len = sr->uri.len;
+        if (len >= bufsize) len = bufsize - 1;
+        strncpy(buf, sr->uri.data, len);
+        buf[len] = '\0';
+
+        ret = ctx->dataf(sr, sr->host_conf->file, buf,
+                         get, get_len, post, post_len,
+                         &status, &content, &clen, header);
+	mk_mem_free(get);
+	mk_mem_free(post);
+
+        if (ret == MKLIB_FALSE) return -1;
+
+        /* Status */
+        api->header_set_http_status(sr, status);
+
+        /* Headers */
+        sr->headers.content_length = clen;
+        len = strlen(header);
+        if (len) api->header_add(sr, header, len);
+        api->header_send(socket, cs, sr);
+
+        /* Data */
+        while (clen > 0) {
+            int remaining = api->socket_send(socket, content, clen);
+            if (remaining < 0) return -1;
+
+            clen -= remaining;
+        }
+        mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
+
+        if (ret == MKLIB_TRUE) return MK_PLUGIN_RET_END;
+    }
+
+    if (hook & MK_PLUGIN_STAGE_40 && ctx->closef) {
+        ctx->closef(sr);
+    }
+
+#endif
 
     return -1;
 }

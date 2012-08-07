@@ -308,6 +308,7 @@ struct plugin_info {
 };
 
 void mk_plugin_init();
+void mk_plugin_read_config();
 void mk_plugin_exit_all();
 
 void mk_plugin_event_init_list();
@@ -337,6 +338,7 @@ int mk_plugin_event_error(int socket);
 int mk_plugin_event_close(int socket);
 int mk_plugin_event_timeout(int socket);
 
+void *mk_plugin_load(const char *path);
 void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
 int mk_plugin_http_request_end(int socket);

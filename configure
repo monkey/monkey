@@ -23,6 +23,7 @@ __MONKEY_MINOR__="1"
 __MONKEY_PATCHLEVEL__="0"
 
 VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
+SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
 INCDIR="src/include/"
@@ -160,8 +161,8 @@ main()
 
         echo
         echo -e "\033[1m=== Monkey Configuration ===\033[0m"
-        echo -e "PLATFORM\t= $platform"
-        echo -e "COMPILER\t= $CC"
+        echo -e "Platform\t= $platform"
+        echo -e "Compiler\t= $CC"
         echo -e "CFLAGS\t\t= $CFLAGS"
         echo -e "LDFLAGS\t\t= $LDFLAGS"
 
@@ -169,16 +170,26 @@ main()
             echo -e "DEFS\t\t= $DEFS"
         fi
 
+	echo
+
+	echo -en "Shared library\t= "
+	[ -n "$sharedlib" ] && echo "enabled" || echo "disabled"
+
+	echo -en "Relaxed plugins\t= "
+	[ -n "$relaxed_plugins" ] && echo "enabled" || echo "disabled"
+
         echo
-        echo -e "PREFIX\t\t= $prefix"
-        echo -e "BINDIR\t\t= $bindir"
-        echo -e "SYSCONFDIR\t= $sysconfdir"
-        echo -e "DATADIR\t\t= $datadir"
-        echo -e "MANDIR\t\t= $mandir"
-        echo -e "LOGDIR\t\t= $logdir"
+        echo -e "Prefix\t\t= $prefix"
+        echo -e "Bindir\t\t= $bindir"
+        echo -e "Libdir\t\t= $libdir"
+        echo -e "Incdir\t\t= $incdir"
+        echo -e "Sysconfdir\t= $sysconfdir"
+        echo -e "Datadir\t\t= $datadir"
+        echo -e "Mandir\t\t= $mandir"
+        echo -e "Logdir\t\t= $logdir"
 
 	if [ "$plugdir" != "" ]; then
-            echo -e "PLUGDIR\t\t= $plugdir"
+            echo -e "Plugdir\t\t= $plugdir"
         fi
 
         echo
@@ -323,19 +334,26 @@ done;
 plgconf=`cat plugins.conf`
 rm -rf plugins.conf
 
+if [ -n "$sharedlib" ]; then
+    incinstall="	install -m 644 src/include/public/* \$(INCDIR)"
+fi
+
 cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
 export monkey_root=\$(CURDIR)
 PREFIX=\$(DESTDIR)${prefix}
 BINDIR=\$(DESTDIR)${bindir}
+LIBDIR=\$(DESTDIR)${libdir}
+INCDIR=\$(DESTDIR)${incdir}
 MANDIR=\$(DESTDIR)${mandir}
 SYSCONFDIR=\$(DESTDIR)${sysconfdir}
 DATADIR=\$(DESTDIR)${datadir}
 LOGDIR=\$(DESTDIR)${logdir}
 PLUGINDIR=\$(DESTDIR)${plugdir}
+VERSION=$VERSION
 
-all:
+all: monkey.pc
 	@\$(MAKE) -s -C src all
 	@\$(MAKE) -s -C plugins all
 	@echo "  DONE"
@@ -343,6 +361,7 @@ all:
 clean:
 	@(cd src; \$(MAKE) clean)
 	@(cd plugins; \$(MAKE) clean)
+	@rm -f monkey.pc
 
 distclean:
 	@(cd src; \$(MAKE) distclean)
@@ -350,6 +369,8 @@ distclean:
 install:
 	\$(MAKE) -C src all
 	install -d \$(BINDIR)
+	install -d \$(LIBDIR)/pkgconfig
+	install -d \$(INCDIR)
 	install -d \$(MANDIR)/man1
 	install -d \$(MANDIR)/man3
 	install -d \$(SYSCONFDIR)
@@ -370,8 +391,13 @@ $plglist
 	install -m 644 ./man/*.3 \$(MANDIR)/man3
 	install -m 644 ./htdocs/*.* \$(DATADIR)
 	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
-	$STRIP \$(BINDIR)/monkey
-	$STRIP \${PLUGINDIR}/*
+$incinstall
+	-install -m 644 src/$SONAME \$(LIBDIR)
+	-install -m 644 monkey.pc \$(LIBDIR)/pkgconfig
+	-ln -sf $SONAME \$(LIBDIR)/libmonkey.so
+	-$STRIP --strip-unneeded \$(LIBDIR)/$SONAME
+	-$STRIP --strip-unneeded \$(BINDIR)/monkey
+	-$STRIP --strip-unneeded \${PLUGINDIR}/*
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
@@ -380,6 +406,10 @@ $plglist
 	@echo
 	@echo  "  For more help use '-h' option"
 	@echo
+
+monkey.pc:
+	@sed -e "s@PREFIX@$prefix@" -e "s@LIBDIR@$libdir@" -e "s@INCDIR@$incdir@" \
+	    -e "s@VERSION@$VERSION@" monkey.pc.in > monkey.pc
 
 EOF
 }
@@ -394,12 +424,19 @@ elif [ $platform == "android" ]; then
     libs=""
 fi
 
+if [ -n "$sharedlib" ]; then
+	alltarget="../bin/monkey lib"
+else
+	alltarget="../bin/monkey"
+fi
+
 cat > src/Makefile<<EOF
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 CC	= @echo "  CC   \$(_PATH)/\$@"; $CC
 CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
-DEFS    = $DEFS
+DEFS    += $DEFS
+LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ./include
 LDFLAGS	= $LDFLAGS
 DESTDIR	= ../bin/monkey
@@ -409,17 +446,25 @@ OBJ	= monkey.o mk_method.o mk_mimetype.o mk_request.o \\
 	mk_user.o mk_utils.o mk_epoll.o mk_scheduler.o \\
 	mk_string.o mk_memory.o mk_connection.o mk_iov.o mk_http.o \\
 	mk_file.o mk_socket.o mk_clock.o mk_cache.o \\
-	mk_server.o mk_plugin.o
+	mk_server.o mk_plugin.o mk_lib.o
+LIBOBJ  = \$(OBJ:.o=.lo)
 
-all: ../bin/monkey
+.PHONY: clean distclean lib
+
+all: $alltarget
+
+lib: $SONAME
 
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
 	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS)
 
+$SONAME: \$(LIBOBJ)
+	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ \$(LIBOBJ) $mod_obj \$(LIBS)
+
 clean:
-	rm -rf *.[od]
+	rm -rf *.[od] $SONAME *.lo
 	rm -rf ../bin/monkey
 
 distclean:
@@ -431,6 +476,10 @@ distclean:
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
 	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o \$*.d > /dev/null &2>&1
+
+%.lo : %.c
+	\$(CC) -c -o \$@ \$(CFLAGS) \$(LIBDEFS) -I\$(INCDIR) \$<
+
 EOF
 }
 
@@ -589,9 +638,15 @@ cat > $INCDIR/mk_info.h <<EOF
                                 __MONKEY_PATCHLEVEL__)
 #define VERSION "$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 #define MONKEY_PATH_CONF "$sysconfdir"
+#define PLUGDIR "$plugdir"
 
 #endif
 EOF
+
+sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
+-e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
+-e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
+$INCDIR/public/monkey.h
 }
 
 create_conf()
@@ -600,6 +655,8 @@ cat > $INCDIR/config.path <<EOF
 #!/bin/sh
 prefix=$prefix
 bindir=$bindir
+libdir=$libdir
+incdir=$incdir
 sysconfdir=$sysconfdir
 datadir=$datadir
 logdir=$logdir
@@ -729,6 +786,8 @@ aux=`pwd`
 
 prefix="$aux"
 bindir="$aux/bin"
+libdir="$aux/lib"
+incdir=""
 mandir="$aux/man"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
@@ -756,6 +815,8 @@ for arg in $*; do
 		--prefix*)
 			prefix=$optarg
 			bindir="$optarg/bin"
+			libdir="$optarg/lib"
+			incdir="$optarg/include"
                         mandir="$optarg/man"
 			sysconfdir="$optarg/conf"
 			datadir="$optarg/htdocs"
@@ -774,6 +835,12 @@ for arg in $*; do
 		--datadir*)
 			datadir=$optarg
 			;;
+		--libdir*)
+			libdir=$optarg
+			;;
+		--incdir*)
+			incdir=$optarg
+			;;
 		--logdir*)
 			logdir=$optarg
 			;;
@@ -785,6 +852,12 @@ for arg in $*; do
 			;;
 		--trace*)
 			trace=1
+			;;
+		--enable-shared*)
+			sharedlib=1
+			;;
+		--enable-relaxed-plugins*)
+			relaxed_plugins=1
 			;;
                 --enable-plugins*)
                 	enabled_plugins=$optarg
@@ -831,9 +904,16 @@ for arg in $*; do
 			echo "  --trace                 Enable trace messages (don't use in production)"
                         echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
 			echo
+			echo "Shared library options:"
+                        echo "  --enable-shared         Build Monkey as a shared library in addition to a stand-alone server"
+                        echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
+                        echo "                          WARNING security risk, do not enable in distro packages!"
+			echo
                         echo "Installation Directories:"
 			echo "  --prefix=PREFIX         Root prefix directory"
 			echo "  --bindir=BINDIR         Binary files (executables)"
+			echo "  --libdir=LIBDIR         Libraries"
+			echo "  --incdir=INCDIR         Header install path"
 			echo "  --sysconfdir=SYSCONFDIR Configuration files"
 			echo "  --datadir=DATADIR       Specific Monkey data files"
                         echo "  --mandir=MANDIR         Manpages - documentation"
@@ -889,11 +969,13 @@ if test -z "$STRIP" ; then
     STRIP="strip"
 fi
 
+[ -n "$relaxed_plugins" ] && DEFS="$DEFS -DRELAXED_PLUGINS"
+
 if test -z "$debug" ; then
-    CFLAGS="$CFLAGS -O2 -Wall"
+    CFLAGS="$CFLAGS -O2 -Wall -Wextra"
 else
     DEFS="-DDEBUG -DSAFE_FREE"
-    CFLAGS="$CFLAGS -g -Wall"
+    CFLAGS="$CFLAGS -g -Wall -Wextra"
 fi
 CFLAGS="$CFLAGS -fvisibility=hidden"
 

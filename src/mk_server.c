@@ -66,6 +66,8 @@ unsigned int mk_server_worker_capacity(unsigned short nworkers)
     return ((avl / 2) / nworkers);
 }
 
+#ifndef SHAREDLIB
+
 /* Here we launch the worker threads to attend clients */
 void mk_server_launch_workers()
 {
@@ -74,7 +76,7 @@ void mk_server_launch_workers()
 
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(config->worker_capacity, &skip);
+        mk_sched_launch_thread(config->worker_capacity, &skip, NULL);
     }
 }
 
@@ -119,3 +121,5 @@ void mk_server_loop(int server_fd)
         }
     }
 }
+
+#endif // !SHAREDLIB

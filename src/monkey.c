@@ -63,6 +63,7 @@ void mk_thread_keys_init(void)
     pthread_key_create(&mk_plugin_event_k, NULL);
 }
 
+#ifndef SHAREDLIB
 static void mk_details(void)
 {
     printf("* Process ID is %i", getpid());
@@ -158,6 +159,7 @@ int main(int argc, char **argv)
     mk_config_start_configure();
     mk_sched_init();
     mk_plugin_init();
+    mk_plugin_read_config();
 
     /* Server listening socket */
     config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
@@ -218,3 +220,4 @@ int main(int argc, char **argv)
     mk_mem_free(config);
     return 0;
 }
+#endif

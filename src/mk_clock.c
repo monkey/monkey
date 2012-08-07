@@ -81,7 +81,7 @@ static void mk_clock_header_set_time(time_t utime)
     header_current_time.data = time_string;
 }
 
-void *mk_clock_worker_init(void *args)
+void *mk_clock_worker_init(void *args UNUSED_PARAM)
 {
     time_t cur_time;
 

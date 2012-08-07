@@ -1,5 +1,3 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
@@ -19,32 +17,29 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "mk_memory.h"
-#include "mk_list.h"
+#ifndef MK_LIB_H
+#define MK_LIB_H
 
-#ifndef MK_MIMETYPE_H
-#define MK_MIMETYPE_H
+#include "mk_macros.h"
+#include "public/monkey.h"
 
-#define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
-#define MIMETYPE_DEFAULT_NAME "default"
+/* Data */
 
-struct mimetype
-{
-    const char *name;
-    mk_pointer type;
+struct mklib_ctx_t {
+    pthread_t tid;
+    pthread_t clock;
+    pthread_t *workers;
+
+    cb_ipcheck ipf;
+    cb_urlcheck urlf;
+    cb_data dataf;
+    cb_close closef;
+
+    struct mklib_worker_info **worker_info;
+
+    const char *plugdir;
+
+    int lib_running;
 };
-
-/* amount of the top used mime types */
-enum {
-    MIME_COMMON=10
-};
-
-extern struct mimetype *mimetype_default;
-
-int mk_mimetype_add(const char *name, const char *type, const int common);
-void mk_mimetype_read_config(void);
-struct mimetype *mk_mimetype_find(mk_pointer * filename);
-inline struct mimetype *mk_mimetype_lookup(const char *name);
-void mk_mimearr_sort();
 
 #endif
