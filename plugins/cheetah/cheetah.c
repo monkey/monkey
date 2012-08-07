@@ -97,7 +97,7 @@ static void mk_cheetah_config(char *path)
     }
 }
 
-void *mk_cheetah_init(void *args)
+static void mk_cheetah_init(void *args UNUSED_PARAM)
 {
     /* Rename worker */
     mk_api->worker_rename("monkey: cheetah");
@@ -111,8 +111,6 @@ void *mk_cheetah_init(void *args)
     else if (listen_mode == LISTEN_SERVER) {
         mk_cheetah_loop_server();
     }
-
-    return 0;
 }
 
 /* This function is called when the plugin is loaded, it must
@@ -138,16 +136,6 @@ void _mkp_exit()
 
 int _mkp_core_prctx(struct server_config *config)
 {
-    pthread_t tid;
-    pthread_attr_t thread_attr;
-
-    pthread_attr_init(&thread_attr);
-    pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-    if (pthread_create(&tid, &thread_attr, 
-                       (void *) mk_cheetah_init, config) < 0) {
-        perror("pthread_create");
-        exit(EXIT_FAILURE);
-    }
-    
+    mk_api->worker_spawn(mk_cheetah_init, config);
     return 0;
 }

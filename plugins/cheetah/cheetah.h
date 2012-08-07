@@ -87,7 +87,6 @@ FILE *cheetah_input;
 FILE *cheetah_output;
 
 /* functions */
-void *mk_cheetah_init(void *args);
 void mk_cheetah_welcome_msg();
 
 #endif
