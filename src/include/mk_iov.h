@@ -23,6 +23,7 @@
 #define MK_IOV_H
 
 #include <sys/uio.h>
+#include "mk_utils.h"
 
 #define MK_IOV_FREE_BUF 1
 #define MK_IOV_NOT_FREE_BUF 0
@@ -60,9 +61,6 @@ struct mk_iov
 struct mk_iov *mk_iov_create(int n, int offset);
 int mk_iov_realloc(struct mk_iov *mk_io, int new_size);
 
-extern inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf,
-                                   int len, mk_pointer sep, int free);
-
 int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
 
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
@@ -78,5 +76,45 @@ int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
 void mk_iov_separators_init(void);
 void mk_iov_free_marked(struct mk_iov *mk_io);
 void mk_iov_print(struct mk_iov *mk_io);
+
+static inline void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
+{
+    mk_io->buf_to_free[mk_io->buf_idx] = (char *) buf;
+    mk_io->buf_idx++;
+}
+
+static inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
+                                   mk_pointer sep, int free)
+{
+    mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
+    mk_io->io[mk_io->iov_idx].iov_len = len;
+    mk_io->iov_idx++;
+    mk_io->total_len += len;
+
+#ifdef DEBUG_IOV
+    if (mk_io->iov_idx > mk_io->size) {
+        printf("\nDEBUG IOV :: ERROR, Broken array size in:");
+        printf("\n          '''%s'''", buf);
+        fflush(stdout);
+    }
+#endif
+
+    /* Add separator */
+    if (sep.len > 0) {
+        mk_io->io[mk_io->iov_idx].iov_base = sep.data;
+        mk_io->io[mk_io->iov_idx].iov_len = sep.len;
+        mk_io->iov_idx++;
+        mk_io->total_len += sep.len;
+    }
+
+    if (free == MK_IOV_FREE_BUF) {
+        _mk_iov_set_free(mk_io, buf);
+    }
+
+    mk_bug(mk_io->iov_idx > mk_io->size);
+
+    return mk_io->iov_idx;
+}
+
 
 #endif
