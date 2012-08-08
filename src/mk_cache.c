@@ -88,8 +88,3 @@ void mk_cache_thread_init()
     cache_utils_gmt_text = mk_mem_malloc_z(sizeof(struct mk_gmt_cache) * MK_GMT_CACHES);
     pthread_setspecific(mk_cache_utils_gmt_text, (void *) cache_utils_gmt_text);
 }
-
-void *mk_cache_get(pthread_key_t key)
-{
-    return ( void *) pthread_getspecific(key);
-}
