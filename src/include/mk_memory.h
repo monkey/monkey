@@ -43,10 +43,16 @@ void mk_mem_pointers_init(void);
 /* mk_pointer_* */
 mk_pointer mk_pointer_create(char *buf, long init, long end);
 void mk_pointer_free(mk_pointer * p);
-void mk_pointer_reset(mk_pointer * p);
 void mk_pointer_print(mk_pointer p);
 char *mk_pointer_to_buf(mk_pointer p);
 void mk_pointer_set(mk_pointer * p, char *data);
+
+static inline void mk_pointer_reset(mk_pointer * p)
+{
+    p->data = NULL;
+    p->len = 0;
+}
+
 
 #define mk_pointer_init(a) {a, sizeof(a) - 1}
 
