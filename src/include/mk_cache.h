@@ -31,6 +31,10 @@ extern pthread_key_t mk_cache_utils_gmtime;
 extern pthread_key_t mk_cache_utils_gmt_text;
 
 void mk_cache_thread_init(void);
-void *mk_cache_get(pthread_key_t key);
+
+static inline void *mk_cache_get(pthread_key_t key)
+{
+    return pthread_getspecific(key);
+}
 
 #endif
