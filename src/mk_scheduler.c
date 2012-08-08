@@ -310,11 +310,6 @@ void mk_sched_init()
                                  config->workers);
 }
 
-struct mk_list *mk_sched_get_request_list()
-{
-    return pthread_getspecific(request_list);
-}
-
 void mk_sched_set_request_list(struct mk_list *list)
 {
     pthread_setspecific(request_list, (void *) list);

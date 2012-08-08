@@ -80,7 +80,14 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 
-struct mk_list *mk_sched_get_request_list(void);
+// Re-declared here, because we can't include mk_request.h
+extern pthread_key_t request_list;
+
+static inline struct mk_list *mk_sched_get_request_list()
+{
+    return pthread_getspecific(request_list);
+}
+
 void mk_sched_set_request_list(struct mk_list *list);
 
 static inline struct sched_list_node *mk_sched_get_thread_conf()
