@@ -90,7 +90,11 @@ struct sched_list_node *mk_sched_get_handler_owner(void);
 struct mk_list *mk_sched_get_request_list(void);
 void mk_sched_set_request_list(struct mk_list *list);
 
-struct sched_list_node *mk_sched_get_thread_conf(void);
+static inline struct sched_list_node *mk_sched_get_thread_conf()
+{
+    return pthread_getspecific(worker_sched_node);
+}
+
 void mk_sched_update_thread_status(struct sched_list_node *sched,
                                    int active, int closed);
 
