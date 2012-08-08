@@ -463,6 +463,8 @@ lib: $SONAME
 $SONAME: \$(LIBOBJ)
 	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ \$(LIBOBJ) $mod_obj \$(LIBS)
 
+\$(LIBOBJ): \$(OBJ)
+
 clean:
 	rm -rf *.[od] $SONAME *.lo
 	rm -rf ../bin/monkey
