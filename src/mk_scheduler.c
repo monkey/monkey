@@ -320,11 +320,6 @@ void mk_sched_set_request_list(struct mk_list *list)
     pthread_setspecific(request_list, (void *) list);
 }
 
-struct sched_list_node *mk_sched_get_thread_conf()
-{
-    return pthread_getspecific(worker_sched_node);
-}
-
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
     struct sched_connection *sc;
