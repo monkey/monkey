@@ -262,6 +262,8 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             fds_timeout = log_current_utime + config->timeout;
         }
     }
+
+    return NULL;
 }
 
 int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
