@@ -97,6 +97,8 @@ void *mk_clock_worker_init(void *args UNUSED_PARAM)
 
         sleep(1);
     }
+
+    return NULL;
 }
 
 /* This function must be called before any threads are created */
