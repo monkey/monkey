@@ -265,7 +265,7 @@ static void liana_ssl_version_error()
            MATRIXSSL_VERSION_PATCH);
 }
 
-int _mkp_init(void **api, char *confdir)
+int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
     config_dir = mk_api->str_dup(confdir);
