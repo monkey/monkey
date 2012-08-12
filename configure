@@ -217,7 +217,7 @@ main()
 check_accept4_func()
 {
 cat > check.c <<EOF
-#include <sys/types.h>
+#define _GNU_SOURCE
 #include <sys/socket.h>
 
 int main()
@@ -227,7 +227,7 @@ int main()
 }
 EOF
 
-functest=`$CC check.c &>configure.log`
+functest=`$CC -Wimplicit check.c &>configure.log`
 funcstatus=`cat configure.log`
 if test -n "$funcstatus" ; then
     result=-1
