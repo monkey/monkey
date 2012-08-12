@@ -7,7 +7,7 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS -DPOSIX
 OBJECTS = liana_ssl.o
-MATRIX_HEADERS = /usr/include/matrixssl/
+INC_EXTRA = /usr/include/matrixssl/
 
 -include $(OBJECTS:.o=.d)
 
