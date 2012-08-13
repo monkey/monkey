@@ -54,8 +54,6 @@ struct mk_gmt_cache {
 
 #define MK_TRACE(...) mk_utils_trace(MK_TRACE_COMP_CORE, MK_TRACE_CORE, \
                                      __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#include "mk_plugin.h"
-
 char *env_trace_filter;
 pthread_mutex_t mutex_trace;
 
