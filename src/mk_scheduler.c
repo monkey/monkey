@@ -88,7 +88,7 @@ static inline int _next_target()
  * Assign a new incomming connection to a specific worker thread, this call comes
  * from the main monkey process.
  */
-inline int mk_sched_add_client(int remote_fd)
+int mk_sched_add_client(int remote_fd)
 {
     int r, t=0;
     struct sched_list_node *sched;

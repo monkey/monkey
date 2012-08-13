@@ -107,7 +107,7 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 
 
 int mk_sched_check_timeouts(struct sched_list_node *sched);
-inline int mk_sched_add_client(int remote_fd);
+int mk_sched_add_client(int remote_fd);
 int mk_sched_register_client(int remote_fd, struct sched_list_node *sched);
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
 struct sched_connection *mk_sched_get_connection(struct sched_list_node
