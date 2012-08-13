@@ -22,6 +22,9 @@
 #ifndef MK_MEM_H
 #define MK_MEM_H
 
+#include <stdio.h>
+#include "mk_macros.h"
+
 typedef struct
 {
     char *data;
@@ -34,9 +37,48 @@ typedef struct
 # define ALLOCSZ_ATTR(x,...)
 #endif
 
-inline void *mk_mem_malloc(const size_t size);
-inline void *mk_mem_malloc_z(const size_t size);
-inline void *mk_mem_realloc(void *ptr, const size_t size);
+static inline ALLOCSZ_ATTR(1)
+void *mk_mem_malloc(const size_t size)
+{
+    void *aux = malloc(size);
+
+    if (mk_unlikely(!aux && size)) {
+        perror("malloc");
+        return NULL;
+    }
+
+    return aux;
+}
+
+static inline ALLOCSZ_ATTR(1)
+void *mk_mem_malloc_z(const size_t size)
+{
+    void *buf = calloc(1, size);
+    if (mk_unlikely(!buf)) {
+        return NULL;
+    }
+
+    return buf;
+}
+
+static inline ALLOCSZ_ATTR(2)
+void *mk_mem_realloc(void *ptr, const size_t size)
+{
+    void *aux = realloc(ptr, size);
+
+    if (mk_unlikely(!aux && size)) {
+        perror("realloc");
+        return NULL;
+    }
+
+    return aux;
+}
+
+static inline void mk_mem_free(void *ptr)
+{
+    free(ptr);
+}
+
 void mk_mem_free(void *ptr);
 void mk_mem_pointers_init(void);
 
