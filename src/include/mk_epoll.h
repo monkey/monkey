@@ -90,7 +90,7 @@ int mk_epoll_del(int efd, int fd);
 int mk_epoll_change_mode(int efd, int fd, int mode, int behavior);
 
 /* epoll state handlers */
-inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
+struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
                                               uint8_t  behavior,
                                               uint32_t events);
 int mk_epoll_state_init();
