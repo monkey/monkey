@@ -44,7 +44,7 @@ extern struct mimetype *mimetype_default;
 int mk_mimetype_add(const char *name, const char *type, const int common);
 void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_pointer * filename);
-inline struct mimetype *mk_mimetype_lookup(const char *name);
+struct mimetype *mk_mimetype_lookup(const char *name);
 void mk_mimearr_sort();
 
 #endif
