@@ -611,7 +611,6 @@ create_makefile_plugins()
            mkdir -p $target
            cp -r $plugin_dir/conf/* $target/
 
-           echo "target $plugin_dir/conf/* to $target"
            # Replace configuration variables:
            find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
            find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
