@@ -41,9 +41,9 @@ extern "C" {
  #endif
 #endif
 
-#define MONKEY__
-#define MONKEY_MINOR__
-#define MONKEY_PATCHLEVEL__
+#define MONKEY__            1
+#define MONKEY_MINOR__      2
+#define MONKEY_PATCHLEVEL__ 0
 
 /* ---------------------------------
  *               Data

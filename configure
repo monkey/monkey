@@ -392,7 +392,6 @@ skip_plugin()
         return 0
     fi
 
-    exit 0
     # Return True by default
     return 1
 }
@@ -480,9 +479,6 @@ $plglist
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 	install -m 644 ./man/*.1 \$(MANDIR)/man1
 	install -m 644 ./man/*.3 \$(MANDIR)/man3
-<<<<<<< HEAD
-	install -m 644 ./htdocs/*.* \$(DATADIR)
-	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
 $incinstall
 	-install -m 644 src/$SONAME \$(LIBDIR)
 	-install -m 644 monkey.pc \$(LIBDIR)/pkgconfig
