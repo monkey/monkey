@@ -27,7 +27,8 @@ build-stamp:
 		--logdir=/var/log/monkey	\
 		--default-user=www-data 	\
 		--plugdir=/usr/lib/monkey	\
-		--enable-plugins="liana_ssl"    \
+		--enable-plugins="auth,liana,liana_ssl,mandril,cheetah,cgi,logger,palm,dirlisting"    \
+		--disable-plugins="*"
 
 	dh build --after auto_configure
 	touch $@

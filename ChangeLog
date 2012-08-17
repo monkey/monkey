@@ -1,3 +1,1253 @@
+commit c04cd225ca81977d80566e05087f86ea2f876dec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 10:16:03 2012 -0600
+
+    Configure: remove trace message
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit af7cea3dc41d0bb278aaa6c2eaedbd64e8d209c3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 10:12:37 2012 -0600
+
+    Configure: fix plugins configuration files path
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f45169a8ab9874df74bc6701d6b97cdb240b07f7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 09:59:59 2012 -0600
+
+    Debian: update changelog to v1.1.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d72e0cf49253d30daa70811ae768b189fb089f98
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 09:51:26 2012 -0600
+
+    Configure: improve plugin detection
+    
+    The configure script now have a new function called skip_plugin()
+    which determinate if a plugin must be compiled/included or not
+    in the build stage, as well the same is used for the Makefile
+    generation.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bdbe14c4c9dea086d094f67e3143cda02717d7cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 12 09:52:28 2012 -0600
+
+    Plugins: Fix usage of INC_EXTRA in Make.comm
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9dd7a634294735da3536e4e8fac50372c26222bd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 12 09:16:15 2012 -0600
+
+    Auth: enable -fPIC flag in Makefile to fix relocation error
+    
+    If -fPIC is not used, the following error is raised by the compiler:
+    
+       "relocation R_X86_64_32 against `a local symbol' can not be
+        used when making a shared object"
+    
+    Adding that flag to Makefile.in fixes the issue
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ed49c1dc112da8ba2c2839f2d1ad27a7796582fa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 12 09:11:48 2012 -0600
+
+    Liana_SSL: Use proper prototype for _mkp_init()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 14dd9e004f784e1618e0cb46f939785b4828bd6f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 12 09:10:52 2012 -0600
+
+    Liana_SSL: define INC_EXTRA for MatrixSSL headers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 789f1a3015cc71a32c8043a5f095728462536ec2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Aug 12 09:09:22 2012 -0600
+
+    Plugins: update Make.commons to allow add extra headers through INC_EXTRA var
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4917a2491b0a1aa313830f9ffb41f630ddb4e37b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 16:54:42 2012 +0300
+
+    clock, epoll: Fix gcc warning "no return statement in function returning non-void"
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 95f374c1346832c28ac9739d2290c0ba960fb7d0
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:20:30 2012 +0300
+
+    mem: Inline pointer_reset, called ~3 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3901ff6e77ae442b2d0d47dc7941b896501f57cb
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:18:23 2012 +0300
+
+    sched: Inline get_request_list, called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3e08ef527a96c11a9ef70eb7a80e3ccc7b55a728
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:13:52 2012 +0300
+
+    cache: Inline cache_get, called ~4 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 61920a7da546024ec72017fab6531a03b6c747b8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:11:58 2012 +0300
+
+    sched: Inline sched_get_thread_conf, it's called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6fb56fd85c8005b79b7faaf897f1791fd0b99047
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:03:44 2012 +0300
+
+    iov: Make iov_add_entry inline
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ea1e5a5d246f1870a3d43814d48fb03e4f288298
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 12 16:54:41 2012 +0300
+
+    utils: Fix a small oops from the signed warning removal
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d2363c8fefe33249ae24536cb3233870f871e191
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 13 18:32:03 2012 +0300
+
+    auth: Remove one signed-unsigned warning, we know sep is positive at that point
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4191cf5de6fe0c8304aca24163e0124d21078f79
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:25:01 2012 +0300
+
+    http: Remove one signed-unsigned warning
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b169703ecf36fc527874da0e547191518d0c404
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:18:46 2012 +0300
+
+    sched: Mark mk_sched_register_thread as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a5d91c050db3533ad0cb18d207198c3523e152ad
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Aug 5 12:52:28 2012 +0300
+
+    cgi: Make sure chdir succeeds
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 188d96017789f82b9fe8aaa73579719c085b7367
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Aug 3 18:29:28 2012 +0300
+
+    epoll: Make mk_epoll_state_k properly extern
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a5e86fea65e7538f981839d8997082cdcffa667f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Aug 3 18:27:28 2012 +0300
+
+    plugin: Remove unneeded typedef
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 21931ff0a4aeb611f4c342c0a33a8c64ddeb0b6f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:04:38 2012 +0300
+
+    request: body_size and body_length can't be negative
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b2cb07f040e365b30ed978ea39c18a4123b943f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:10:37 2012 +0300
+
+    utils: Remove one signed-unsigned warning
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e5575ef707e14830d31c675688605a9d4649b215
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:14:08 2012 +0300
+
+    user: Remove one signed-unsigned warning
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c701ded506effbe4f5a9aaa3b6eeb20de0800641
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Aug 3 16:24:30 2012 +0300
+
+    mime: Mimetype names are const
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 95c3e62558787f8b6f8318c5c999dc8db4cc79c7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:12:38 2012 +0300
+
+    utils: Remove two signed-unsigned warnings
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit f5367ae1c6aacb5cdc0b95c12b5510c5b089cf10
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Aug 6 11:16:35 2012 -0600
+
+    Core: usage of GCC built-ins: prefetch/[un]likely
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 65264d6ced93bbc9de34b2a189a8ae66ed89c252
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 11 22:10:49 2012 +0300
+
+    plugin: Remove two unused functions
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7829f0c442ec0e80ba68c9415243091900676174
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 18:12:21 2012 +0300
+
+    plugin: The path passed in is const
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a745d25152896a80889112236ed175e121e82091
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jul 31 13:32:08 2012 +0300
+
+    plugin: Mark plg_stagemap as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ec923083f1a13eaaf38a27933e2370d94e7c9a12
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 12 18:45:03 2012 +0300
+
+    MKPlugin.h: no need to export mk_api
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 44b887d06ed3f24896043a6712e62bb53e79dff7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:08:52 2012 +0300
+
+    config: host_alias, worker_capacity and max_load are never negative
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1cfe4c3dba41420430d8e5f88846bb7ec9a889d2
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Jul 31 21:04:18 2012 +0200
+
+    liano: Plug leak of struct addrinfo.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3996a5495b5916705791ab56275f2c81129d0e44
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Wed Aug 1 11:54:26 2012 +0200
+
+    plugin_api: Add http_request_error.
+    
+    Allow serving errors outside of _stage_* callbacks.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 515ef47f67e9052d452e464eb99044149df295ef
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 18:50:01 2012 +0300
+
+    utils: Make sure the date_yd date_wd arrays are read-only
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b0819286dd8a44588dd97f445879b2fed5d17ba9
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Jul 30 11:44:03 2012 +0200
+
+    connection: Don't enable TCP_NODELAY in mk_conn_read.
+    
+    The option is overridden by TCP_CORK.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f08a347f6a906f46f084e2c095ebd7c1e061dac8
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Jul 30 11:40:23 2012 +0200
+
+    http: Unset cork flag when mk_http_send_file is done.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0a7056e452c1d9c408631099cc22b83d6188bf69
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:24:25 2012 +0300
+
+    connection: Remove one signed-unsigned warning
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0fc969d4e1bbb4af16a964c6476ad8f3101b3889
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:11:14 2012 +0300
+
+    clock: Mark mk_clock_header_set_time as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a7d6ceb1e6520e2cc5b7ef1b154ce768293f3a93
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:15:51 2012 +0300
+
+    signals: Mark signal_handler and signal_exit as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 70e97e83e8e5031d966624ac9325299468cb8fd9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 11 22:06:20 2012 +0300
+
+    header: Remove unused function chunked_line
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3b6f307108adbdd44a4f1e658f48c0315bf1e510
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:55:44 2012 +0300
+
+    user: Constify some read-only variables
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0774534137dd45df0b69e6dba33d9ba0ce14000b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jul 30 19:35:50 2012 +0300
+
+    string: Fix some signed-unsigned warnings, plus one wrongly declared variable (static > const)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a4a0f44441955dd7e82ad1470e5cc48e7de7a1ab
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 15:21:04 2012 +0300
+
+    server: Use more appropriate types for mk_server_worker_capacity
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0dbac768aaf4f9e639e6b9211bc7e3fd53b1454f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 18:08:13 2012 +0300
+
+    config: Use int8_t, not int, for tri-state options (true, false, error)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 41265d96e9cffc255c463d1151f84eb6a09113f7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jul 29 08:03:15 2012 -0600
+
+    Header: merge lines in status entries
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a204f12bc27f990ad2cd04d37a0de7193f43bdf5
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jul 27 17:35:22 2012 +0300
+
+    dirlisting, palm, logger: Use const mk_pointers where possible
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4f59c55225a5522dc3ceeed6c4539cf7558f6cdc
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 19 13:26:34 2012 +0300
+
+    memory, header, request, monkey, http, iov: Add mk_pointer_init macro, mark global mk_pinters const
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bafb88732a4fa57dcf2e35853e9716721117d510
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 16:51:34 2012 +0300
+
+    header: Remove unused code
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c1f0af7bd1d57df4c1bb4739921f6f2bc12897cc
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sat Jul 28 17:38:28 2012 +0200
+
+    plugin: Remove sr and cs members from plugin_event struct.
+    
+    Remove unused members and change the event_add api function.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f586a31c85c53185b3fb41dabd7b2bb438f46397
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 13 18:33:22 2012 +0300
+
+    cheetah: sysconf returns a long, not size_t; removes one signed-unsigned warning
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 35c4be79bb001831c94690eb7ceda03c6d70ddda
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 13 18:21:27 2012 +0300
+
+    macros: Add a macro to skip warnings about possibly unused parameters
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit adbb2f08dead908e86de600cef7e4bbfbdfd9b6a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:14:48 2012 +0300
+
+    http: Mark range_set, range_parse as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bbfe79eeb5f6a7a390340e99fb94c9a6711d0902
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:18:27 2012 +0300
+
+    config: Mark mk_config_entry_add as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7704bc1f41d9e7238b2d7bec2cf7371279203266
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:12:35 2012 +0300
+
+    http: Mark mk_http_directory_redirect_check as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c1d7d922f04d10ef9fbef32abe75ade7e9bfd0af
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 19 13:10:36 2012 +0300
+
+    cache: Remove unused function prototype, struct
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a5c80bc8f782ce6d79f054844bcf9e6efb1aadb8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Jul 26 18:26:32 2012 +0300
+
+    monkey: Update README and add a pkg-config file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8ad6ebae873705beb928ec32c017d82c1dfa6656
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Jul 26 23:53:49 2012 +0300
+
+    plugins: Consolidate common build system parts, remove 63 lines of copy-paste
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 75e49628bfbfeb8116f6c6378329a97150f96142
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 16:57:43 2012 +0300
+
+    request: Remove unused code
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 12a4a6d7696ac5aa978d718cf83ecd20ee2f195a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 18:44:51 2012 +0300
+
+    header: Simplify the status_response array init, reorder the struct
+    
+    This saves 4 bytes per struct on x64. The size of the library drops 300 bytes due to
+    the big static array taking less space now.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c9effedfd11484678775631b878ae2ae849cc136
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:09:46 2012 +0300
+
+    iov: Mark _mk_iov_set_free as static (unused externally, and the _ prefix suggests it's meant to be private)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3c84846b0501953c322be926bf42200f96f9961a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 26 10:28:32 2012 -0600
+
+    Palm: initialize missing mk_pointer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ff5eb559922cbbc26cd07a653506fec131dbb27f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 26 10:26:04 2012 -0600
+
+    Dirlisting: initialize missing mk_pointers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2184262ec740510ce54cf042254ba248f17b8442
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 26 10:20:01 2012 -0600
+
+    Logger: fix warnings and missing mk_pointer
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4469aff433d9964238bb61165804fb2c173db052
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 18 19:23:08 2012 +0300
+
+    monkey: Properly use extern for the globals
+    
+    This drops the size of each plugin by about 2kb (they were getting the global variables
+    too!), and makes it easier to find unused global variables.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d39662dc100664065dafe78d1522b7dcb2908219
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 18 19:31:53 2012 +0300
+
+    mem: Remove unused struct
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0b3319649f59d7334834192b1c08d9fc23458cb9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 18 19:21:45 2012 +0300
+
+    cache: Remove unused define
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5acf61cd0343c71a059a0f22e97222f085c2cab3
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 17 17:20:31 2012 +0300
+
+    plugin: Mark register_stagemap* as static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a5fd3ec44995f5148b2e5ddad109f3af94e4882d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 11 22:09:24 2012 +0300
+
+    sched: Remove one unused thread key and its handling functions
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a4889ef726087deed9733911d8fef4d22f4679f0
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:26:54 2012 +0300
+
+    gitignore: Add lib-objs
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fae49241eb13fda7b514ffbb043bfa03699801c5
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 28 18:19:32 2012 +0300
+
+    plugin: API must be global (bug)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 259eb25b96f2f851fe4adc6127e615c0897abf4d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:30:42 2012 +0300
+
+    plugins: LDFLAGS only belongs in the linker command
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit efda62cc2802b7a28de89387c89f855aa5b86f2f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jul 18 19:36:16 2012 +0300
+
+    lib: Add some examples on how to use the library
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e15778ca68456f3ad159026d5ffc0f405dbf9cc9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jul 18 19:35:32 2012 +0300
+
+    lib: Add the test suite
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 646222a4a77e9ce4ae86cb3aff9d8776acddf3be
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jul 18 19:33:53 2012 +0300
+
+    lib: Add the generated man pages, plus the asciidoc sources
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a796e535776fc662a62b40db45ad6171c5d167a0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 26 05:52:27 2012 -0600
+
+    Epoll: remove unused variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c080d3d6ecf9c4da5e344ef51bc0451092f48dd5
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Jul 17 21:29:48 2012 +0200
+
+    http: Check if plugin set status in http_init.
+    
+    Checks if header status is set when MK_PLUGIN_RET_CLOSE_CONX is
+    returned in stage_30 and uses it instead of MK_CLIENT_FORBIDDEN.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dc464102ccafd5a8367e526908dcaa8bafd08ace
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jul 11 19:03:42 2012 +0300
+
+    configure: Mark CGI as disabled on android
+    
+    Android does not support regex. Using plain string matches is slower,
+    less flexible, and opens up a security hole. So rather than do that,
+    just disable cgi on android.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a6c0fd174a202e604bced7a9510c645d5b7c3b41
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jul 12 15:24:25 2012 -0600
+
+    epoll: epoll_states are linked in common linked list
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 762239e0bf284d7dde8e4fa59646255128e31732
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jul 6 14:49:25 2012 +0300
+
+    cgi: Pass headers through monkey, support chunked encoding
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ddbc9569dc5e54c9f7b4d4fd05d329a02b7b2633
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Jul 3 18:31:32 2012 +0200
+
+    configure: Ignore plugins without Makefile.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 954f28b8333e621f5da8698c0f0c48e35f084cb8
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Jul 3 16:41:40 2012 +0200
+
+    list: Add parenthesis around macro arguments.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 676d3a2d3491f482937f126c2166599992dd4be3
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jul 4 13:21:50 2012 +0300
+
+    Fully comment the CGI section
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1f5fb3a2533b433d6768dae24f510034b9b25728
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jul 2 16:59:03 2012 +0300
+
+    cgi: Add support for per-vhost configuration
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9f1ae9f124f9a7b7c06ec024cc01ce1f0f653ef5
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jul 2 16:53:58 2012 +0300
+
+    cgi: Correct the config example
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6b3b03373a1752098c2cfcd8d14c2a57e6a1c730
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 30 14:29:58 2012 -0600
+
+    epoll: event state declarations cleanup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5d5f8736224cb5f526016af4fd2b50332c025e05
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jun 30 13:03:35 2012 -0600
+
+    epoll: New epoll states
+    
+    The Monkey API allows third party components to hook file descriptors
+    into the main worker epoll loop and base on the events it triggers the
+    proper callbacks through the plugins interface, but Monkey did not
+    track the epoll mode flags as this was just known by the Kernel.
+    
+    This patch introduces the 'epoll states' mechanism which keeps track
+    of every file descriptor in the epoll loop into a user-space linked
+    list per worker using thread keys. In addition, this feature is the
+    base for new epoll modes implemented in the core: MK_EPOLL_SLEEP and
+    MK_EPOLL_WAKEUP.
+    
+    From now the core and plugins can set an epoll file descriptor in
+    sleep mode (do not trigger events) and wakeup mode to restore events
+    to the state before the sleep mode.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 36356c55450b4dc78e7d76e716ce1db284b34973
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 29 12:21:12 2012 -0600
+
+    Plugin: deprecate unused plugin_network_ip struct
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 79c098842a175491ed351e3032192e1c3dc5a4dd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 28 22:39:06 2012 -0600
+
+    epoll: new mode MK_EPOLL_DISABLE
+    
+    This new mode instruct the kernel to disable the events in the
+    file descriptor until the the events are set again.
+    
+    This is *not* a remove, just a sleep mode.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 61d04b5eb6fb5666eda60c42433815e211d6b8e8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 19 18:58:52 2012 +0300
+
+    conn: if there is no cs, return 0: otherwise it tries to close a closed FD
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d3acc00c3de1226d3495ede9965747ce7d51eefb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 28 19:58:07 2012 -0600
+
+    epoll: print errors just in trace mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 03926427b3fcafaf5d5cba7eb683841e834df1e5
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 24 11:40:51 2012 +0300
+
+    cgi: Some cleanups
+    
+    Removes unused variable, unneeded argument to do_cgi, some memory leaks,
+    and one malloc is replaced with a static array.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6b03a29e2fbab19b19998237031fd7c02395c516
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 18 12:08:11 2012 +0300
+
+    cgi: Update to an event model
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 528735a810fae6440f3c2ef4c2c67408a80286af
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Jun 18 14:20:52 2012 +0300
+
+    plugin: epoll_del is needed here too for stability
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f08531e48606827f5c30eb6340ec2cff559c463f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu May 24 15:04:48 2012 +0300
+
+    plugins: Properly control visibility, v2
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1b6300a0bca41b415f1fb055a2d9652c07fb8766
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 21 19:29:36 2012 +0300
+
+    includes: Guard global variables with hidden visibility, v3
+    
+    This makes every plugin load faster. Each plugin is also 3-4kb smaller.
+    
+    v2: Fix one goof
+    v3: Change to attributes.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b29d7301706d5b2172e452244a073a539827714f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 19 07:10:13 2012 -0600
+
+    Palm: remove bad code in the read routine
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5de725002103bb84ccb00fb9556c04c5f237228c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 18 10:26:00 2012 -0600
+
+    Mimetype: add JSON mimetype
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 605877fb845871d665469a59085fd86d0b63192d
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Jun 17 17:27:21 2012 +0200
+
+    iov: Fix initial zeroing of offset entries.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b5f057d9072ee29bc97e430198e6967a4c86617e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 15 16:40:01 2012 -0600
+
+    QA: new host_port_XX.htt scripts
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit bd4dd78cb5ac28f8651617d556b661534f7d36d6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 15 15:46:58 2012 -0600
+
+    Request: fix possible buffer overflow in Host header
+    
+    The Host header allow the input of the hostname plus the TCP
+    port used, e.g:
+    
+     GET / HTTP/1.1
+     Host: localhost:2001
+    
+    If the port length was higher than 6 bytes, it make monkey crash
+    due an overflow in the port buffer.
+    
+    This patch restrict the port length and also add a validation
+    to the port value so it just can hold numeric values.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 824ed68cad14f6b2ad72bf46e62d93babebc4770
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 14 14:17:01 2012 -0600
+
+    cgi: make the plugin OPTIONAL and README updated
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cdf94da5cc886b09b1eec7a5b43c3327f58febd0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 14 14:13:53 2012 -0600
+
+    cgi: set plugin disabled by default
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit af633500a3cac9659052c3c344d00baca8bf6a9c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 14 13:35:47 2012 -0600
+
+    Logger: adapt usage of worker_spawn()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ba96e4aca15685c48b7a5a10d6328c8518f6c0ec
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Jun 14 17:46:04 2012 +0300
+
+    cgi: Use worker_spawn to conserve thread resources (detached)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4ff00e6c16c5848200e3db0a1df731fcec2bcb08
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Jun 14 17:45:25 2012 +0300
+
+    utils: Make worker_spawn take the void *argument
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 87f98cec322967afb8f564ae1e172cb203e87507
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 12 23:41:14 2012 +0300
+
+    sched: We must call epoll_del here to work around kernel behavior
+    
+    If the fd is not removed from the epoll set, it keeps getting notified and then monkey tries
+    to close it - and since it now refers to some other file, errors ensue.
+    
+    This sounds exactly like http://osdir.com/ml/linux-kernel/2009-02/msg10362.html
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 229e717d0d1b9ae52cd50bf4bdb780baea7b4549
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 13 19:59:15 2012 +0300
+
+    plugins: New plugin: CGI, v2
+    
+    Updated file check, plus variables http_host, server_software, server_protocol
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e94e33367c32b70fb5ab89ad2ac9cd936ab936a7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Jun 12 12:27:13 2012 +0300
+
+    README: Say GCC 3.2 is needed.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 64fd21542d6cfbf9e3f723e432cecfdb8c3a7c44
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 21 19:58:48 2012 +0300
+
+    dirlisting: Remove some gcc warnings (signed-unsigned, always true if)
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 90f2925523fe77f23ae1aa11279b0963a85d36b9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 21 19:17:52 2012 +0300
+
+    plugins: General cleanup, make possible functions static
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3e8a8de131f428ced59bea91fe1b26c2d37a2765
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 12 00:01:18 2012 -0600
+
+    Utils: add missing mk_macros.h header
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2265b7ca8b4a9d2b146f0d798a48b2c95923c960
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:48:22 2012 +0300
+
+    dirlisting: Use correct printf formatter
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3c24fac36f7a09fd08b712c6cb6f5119e42af192
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:44:55 2012 +0300
+
+    logger: Use correct printf formatter
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0a8a90bb723808df87c650a7ae47c165d52f109b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 8 14:42:34 2012 +0300
+
+    header: Use the correct printf formatters
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6fcdf2372c2cd7cbf41ca8e22a26187598b81dd8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Jun 7 22:33:33 2012 +0300
+
+    headers: Enable printf warnings for the wrapped printf functions
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fb9b3e9bb41e1ac37e5eb76210ddb720a3ed4a70
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 19:10:51 2012 +0300
+
+    utils: If the passed date is current, we know it's not in cache
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 813c28d308840b8f9e06241478a64a959b259bdd
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Jun 6 16:30:10 2012 +0300
+
+    .gitignore: Add versioned libs and pkgconfig files
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8c716cc47444174de16b0de456854b3d41dd82ea
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Jun 1 16:37:05 2012 +0300
+
+    plugin: Check that the would-be-removed handler matches
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d5f5824fdde582392d39c904ed48ca917f2d8eb6
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 29 12:17:43 2012 +0300
+
+    request: Add a check for no index files
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6d585d7b6a103f166dc4f47e06bfbb9c9049c4cf
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 29 16:33:00 2012 +0300
+
+    config: Make use of the tolower function
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c2a48089b74edc5b23be15944d109e04de90c37f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 29 16:31:04 2012 +0300
+
+    string: Add a function to turn a string to lowercase
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ea01c897e88832fcf740e388ec47ea23f22f28ba
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 28 18:46:52 2012 +0300
+
+    sched: Return the worker thread id
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3ac3852528375cc5b56ed8a12040c4baeb15a959
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 28 17:25:39 2012 +0300
+
+    Export the thread_key init for the lib
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9c3658ec1b4df9bb54fad5148700294144fe1cdf
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 28 18:36:54 2012 +0300
+
+    config: Move default workers to config_init
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ace60526275964d1c44a4c72ed774a52d00ba4ef
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 11 12:09:00 2012 -0600
+
+    Scheduler: register new incoming sockets with MK_EPOLL_READ
+    
+    Previous this patch, the Scheduler used to register each new incoming
+    socket with the MK_EPOLL_WRITE flag, so when the connection was established
+    epoll_wait(2) triggered the write event, meaning 'the socket is ready to
+    write'. On that moment the Connection handler realised that no Scheduler
+    information exists for that socket and run the mk_sched_register_client()
+    function, then invoke epoll_ctl(2) to change the socket mode to
+    MK_EPOLL_READ, so it start to wait for the incoming request string.
+    
+    In HTTP the client always begins the communication sending the request, so
+    having a socket on MK_EPOLL_WRITE and then change it to MK_EPOLL_READ adds
+    a little overhead.
+    
+    This patch makes the initial socket be registered with MK_EPOLL_READ and
+    make the Connection handler identify this new connection in the
+    mk_conn_read() function, avoiding the extra system call described in the
+    previous behavior.
+    
+    Here is a little benchmark done with Valgrind/Callgrind:
+    
+      +------------------------+----------------+-----------------+--------+
+      | function()             | before patch   |  after patch    |  gain  |
+      +------------------------+------+---------+-----------------+--------+
+      |                        | self | called  |  self | called  |        |
+      +------------------------+------+---------+-------+---------+--------+
+      | epoll_ctl(2)           | 0.15 |  15000  |  0.10 | 10000   |  44%   |
+      +------------------------+------+---------+-------+---------+--------+
+      | mk_epoll_change_mode() | 0.57 |  10000  |  0.27 |  5000   |  63%   |
+      +------------------------+------+---------+-------+---------+--------+
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8a3890b241f2692acfd5ffba328aa84905b66f4c
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jun 10 19:27:28 2012 +0300
+
+    utils: speed up mk_utils_utime2gmt non-cache path by 25%
+    
+    Unsigned division is nicely faster than signed division.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d50dc1b4984d9d473e7886b833d9b8af7829195a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 10 15:20:44 2012 -0600
+
+    Configure: find: user -xtype instead of -type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cd22c840e76d84b032c75f2e80ae07b982780844
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Jun 10 15:18:03 2012 -0600
+
+    Development of v1.1 begins
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit dbd0f65089f1696f2395dbc178b3de8c3215815a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jun 5 16:38:37 2012 -0600
+
+    Monkey v1.0.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 87146aa7535061ff5e45ded5cd969a1eeb619de2
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Jun 5 16:37:21 2012 -0600
