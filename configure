@@ -2,7 +2,7 @@
 #
 #  Monkey HTTP Daemon
 #  ------------------
-#  Copyright (C) 2001-2011, Eduardo Silva P.
+#  Copyright (C) 2001-2012, Eduardo Silva P.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ fi
 
 }
 
+# Main function
 main()
 {
 	local_dirs
@@ -133,7 +134,10 @@ main()
         echo -e "\033[1m=== Plugins included ===\033[0m"
 
         find plugins/ -name Makefile -exec rm {} \;
-        create_makefile_plugins $plugdir $prefix $bindir $mandir $sysconfdir $datadir $logdir $sysconfdir $datadir $logdir $mandir
+
+        create_makefile_plugins $plugdir $prefix $bindir $mandir \
+            $sysconfdir $datadir $logdir $sysconfdir $datadir \
+            $logdir $mandir $enabled_plugins $disabled_plugins
 
         echo
         echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
@@ -277,51 +281,138 @@ distclean:
 EOF
 }
 
+# This function check if the plugin must be compiled/installed
+# or not based in the following rules:
+#
+#  #1 -> --enable-plugins
+#  #2 -> --disable-plugins
+#  #3 -> Plugin spec: MANDATORY, OPTIONAL, DISABLED & EXPERIMENTAL
+#
+#  return values: 0 = No
+#                 1 = Yes
+skip_plugin()
+{
+    #echo "skip_plugin($entry) '$enabled_plugins'  '$disabled_plugins'"
+
+    en_wildcard=0
+    if [ "$enabled_plugins" == '*' ]; then
+        en_wildcard=1
+    fi
+
+    di_wildcard=0
+    if [ "$disabled_plugins" == '*' ]; then
+        di_wildcard=1
+    fi
+
+    IFS=","
+    set -- $enabled_plugins
+    en_array=$@
+    set -- $disabled_plugins
+    di_array=$@
+
+    unset IFS
+
+    enabled=0
+    disabled=0
+
+    for e in $en_array;
+    do
+        if [ "$entry" == "$e" ]; then
+            enabled=1
+            break
+        fi
+    done
+
+    for d in $di_array;
+    do
+        if [ "$entry" == "$d" ]; then
+            disabled=1
+            break
+        fi
+    done
+
+
+    path="plugins/$entry"
+    if ! test -d $path; then
+        return 1
+    fi
+
+    # does it contains a proper Makefile.in ?
+    if test ! -e $path/Makefile.in ; then
+        return 1
+    fi
+
+    # Check enable wildcard */
+    if [ $en_wildcard -eq 1 ] && [ $disabled -eq 0 ]; then
+        return 0
+    fi
+
+    # Check disable wildcard */
+    if [ $di_wildcard -eq 1 ] && [ $enabled -eq 0 ]; then
+        return 1
+    fi
+
+    # disabled and not enforced
+    if [ $disabled -eq 1 ] && [ $enabled -eq 0 ]; then
+        return 1
+    fi
+
+    if [ $disabled -eq 0 ] && [ $enabled -eq 1 ]; then
+        return 0
+    fi
+
+    # Disabled by spec and not enforced
+    if test -e $path/DISABLED && [ $enabled -eq 0 ] ; then
+        return 1
+    fi
+
+    # Experimental and not enforced
+    if test -e $path/EXPERIMENTAL && [ $enabled -eq 1 ]; then
+        return 1
+    fi
+
+    # Optional plugin and not disabled
+    if test -e $path/OPTIONAL && [ $disabled -eq 0 ]; then
+        return 0
+    fi
+
+    # Mandatory plugin and not disabled
+    if test -e $path/MANDATORY && [ $disabled -eq 0 ]; then
+        return 0
+    fi
+
+    exit 0
+    # Return True by default
+    return 1
+}
+
 create_makefile1_install()
 {
-# Look for plugins and create list
-touch plugins.list
-for entry in plugins/*
-do
-    if [ ! -d $entry ] ; then
-        continue
-    fi
+    # remove old data
+    rm -rf plugins.conf plugins.list
 
-    enabled=`echo $enabled_plugins | grep -w $entry`
-    enabled=$?
-
-    disabled=`echo $disabled_plugins | grep -w $entry`
-    disabled=$?
-
-    if test -e $entry/DISABLED || [ $disabled -eq 0 ] ; then
-        continue
-    fi
-
-    if test -e $entry/EXPERIMENTAL || [ $disabled -eq 0 ]; then
-        if [ $enabled -eq 1 ] ; then
+    for e in conf/plugins/*
+    do
+        entry=`echo $e | awk -F "/" '{print $3}'`
+        skip_plugin $entry $enabled_plugins $disabled_plugins
+        if [ $? == 1 ]; then
             continue
-        else
-            comment="    # "
         fi
-    fi
+        echo -e "\tcp -r conf/plugins/$e \${SYSCONFDIR}/plugins/" >> plugins.conf
+    done
+    plgconf=`cat plugins.conf`
 
-    plugin_name=${entry##*/}
-    echo -e "\tinstall -s -m 644 $entry/*.so \${PLUGINDIR}" >> plugins.list
-done;
-plglist=`cat plugins.list`
-rm -rf plugins.list
+    for e in plugins/*
+    do
+        entry=`echo $e | awk -F "/" '{print $2}'`
+        skip_plugin $entry $enabled_plugins $disabled_plugins
+        if [ $? == 1 ]; then
+            continue
+        fi
+        echo -e "\tinstall -s -m 644 plugins/$entry/*.so \${PLUGINDIR}/" >> plugins.list
+    done
 
-# Look for plugins configuration
-touch plugins.conf
-for entry in conf/plugins/*
-do
-    basename=${entry##*/}
-    if [ -d $entry ] && [ -f "plugins/$basename/Makefile" ] ; then
-	echo -e "\tcp -r $entry \${SYSCONFDIR}/plugins/" >> plugins.conf
-    fi
-done;
-plgconf=`cat plugins.conf`
-rm -rf plugins.conf
+    plglist=`cat plugins.list`
 
 cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
@@ -364,12 +455,15 @@ install:
 	install -m 755 bin/* \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 $plgconf
-	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 $plglist
+	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 	install -m 644 ./man/*.1 \$(MANDIR)/man1
 	install -m 644 ./man/*.3 \$(MANDIR)/man3
-	install -m 644 ./htdocs/*.* \$(DATADIR)
-	install -m 644 ./htdocs/imgs/*.* \${DATADIR}/imgs
+	install -m 644 ./htdocs/index.html \$(DATADIR)
+	install -m 644 ./htdocs/404.html \$(DATADIR)
+	install -m 644 ./htdocs/favicon.ico \$(DATADIR)
+	install -d \$(DATADIR)/imgs
+	install -m 644 ./htdocs/imgs/monkey_logo.png \$(DATADIR)/imgs
 	$STRIP \$(BINDIR)/monkey
 	$STRIP \${PLUGINDIR}/*
 	@echo
@@ -436,10 +530,9 @@ EOF
 
 create_makefile_plugins()
 {
-    cd plugins
-
     dir=`pwd`
-    plugins_load="../conf/plugins.load"
+    makefile="plugins/Makefile"
+    plugins_load="conf/plugins.load"
     echo -n > $plugins_load
     echo "# Monkey Plugins Loader" >> $plugins_load
     echo "# =====================" >> $plugins_load
@@ -458,79 +551,63 @@ create_makefile_plugins()
         fi
     fi
 
-    for plugin_dir in `echo */ "" | sed "s/\/ /\n/g"`;
+    for plugin_dir in plugins/*;
     do
-        enabled=`echo $enabled_plugins | grep -w $plugin_dir`
-        enabled=$?
+        # Skip non-directories
+        if ! test -d "$plugin_dir" ; then
+            continue
+        fi
 
-        disabled=`echo $disabled_plugins | grep -w $plugin_dir`
+        # Get plugin name and check if we should skip it
+        entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
+        skip_plugin $entry $enabled_plugins $disabled_plugins
         disabled=$?
 
-        if test ! -e $plugin_dir/Makefile -a ! -e $plugin_dir/Makefile.in ; then
-                continue
+        if [ $disabled == 1 ]; then
+            continue
         fi
 
         comment="    "
-	if test -e $plugin_dir/DISABLED || [ $disabled -eq 0 ] ; then
-            if [ $enabled -eq 1 ] ; then
-                continue
-            fi
-	fi
-
-        if test -e $plugin_dir/EXPERIMENTAL || [ $disabled -eq 0 ]; then
-            if [ $enabled -eq 1 ] ; then
-                continue
-            else
-                comment="    # "
-            fi
-        fi
-
-        if test -e $plugin_dir/MANDATORY && [ $disabled -eq 1 ] ; then
-	    comment="    "
-        fi
-
-        if test -e $plugin_dir/OPTIONAL && [ $disabled -eq 1 ]; then
-            if [ $enabled -eq 1 ] ; then
-                comment="    # "
-            fi
-	fi
-
-        for i in $plugin_dir; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
+        for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
             echo -e "+ ${name}${i:1}";
         done
 
         # Create Makefile
-        MAKE_ALL="${MAKE_ALL}\t@(cd $plugin_dir && \$(MAKE) && cd ..)\n"
-        MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $plugin_dir && \$(MAKE) clean && cd ..)\n"
+        MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
+        MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
 
 
-        for d in `find . -xtype d`
+        for d in `find $plugin_dir -xtype d`
         do
             if [ -f "${d}/Makefile.in" ];
             then
                 sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $d/Makefile.in > $d/Makefile
             fi
-        done;
+        done
 
         # Add details to plugins.load using ABOUT file
         if test -e $plugin_dir/ABOUT ; then
-            cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> ../conf/plugins.load
-	    echo "    #" >> ../conf/plugins.load
+            cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
+	    echo "    #" >> $plugins_load
 	else
-	    echo "    #" >> ../conf/plugins.load
+	    echo "    #" >> $plugins_load
 	fi
+
+        if ! test -e $plugin_dir/MANDATORY ; then
+            comment="    # "
+        fi
 
 	if [ "$plugdir" != "" ]; then
-	    echo "${comment}Load $plugdir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+            echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
 	else
-	    echo "${comment}Load $dir/$plugin_dir/monkey-$plugin_dir.so" >> ../conf/plugins.load
+	    echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
 	fi
 
-	echo "" >> ../conf/plugins.load
+	echo "" >> $plugins_load
 
         # Copy specific plugin configuration files
         if test -e $plugin_dir/conf ; then
-           target="../conf/plugins/$plugin_dir/"
+           target="conf/plugins/$plugin_dir/"
            mkdir -p $target
            cp -r $plugin_dir/conf/* $target/
 
@@ -546,29 +623,34 @@ create_makefile_plugins()
 
         # Distribute binary scripts provided by plugins
         if test -e $plugin_dir/bin ; then
-            cp -r $plugin_dir/bin/* ../bin/
+            cp -r $plugin_dir/bin/* bin/
         fi
     done
 
-echo "all:" > Makefile
-echo -e $MAKE_ALL >> Makefile
-echo "" >> Makefile
-echo "clean:" >> Makefile
-echo -e $MAKE_CLEAN >> Makefile
+echo "all:" > $makefile
+echo -e $MAKE_ALL >> $makefile
+echo "" >> $makefile
+echo "clean:" >> $makefile
+echo -e $MAKE_CLEAN >> $makefile
 
 # Add 'install' option to Makefile if plugdir was specified
 if [ "$plugdir" != "" ]; then
-    echo -e "\ninstall:" >> Makefile
-    echo -e "\tinstall -d $plugdir" >> Makefile
+    echo -e "\ninstall:" >> $makefile
+    echo -e "\tinstall -d $plugdir" >> $makefile
 
+    for plugin_dir in plugins/*;
+    do
+        # Get plugin name and check if we should skip it
+        entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
+        skip_plugin $entry $enabled_plugins $disabled_plugins
+        disabled=$?
+        if [ $disabled == 1 ]; then
+            continue
+        fi
 
-    list=`echo */ "" | sed "s/\/ /\n/g"`
-    for i in $list;
-	do
-	      echo -e "\tinstall -m 644 $dir/$i/monkey-$i.so $plugdir/" >> Makefile
-	done
+	echo -e "\tinstall -m 644 $dir/$plugin_dir/monkey-$entry.so $plugdir/" >> $makefile
+    done
 fi
-    cd ..
 }
 
 # Creando include/mk_info.h
@@ -918,5 +1000,5 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 fi
 
 # Starting main function
-main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION
+main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION enabled_plugins disabled_plugins
 exit 0
