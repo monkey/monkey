@@ -22,8 +22,10 @@
 #ifndef MK_IOV_H
 #define MK_IOV_H
 
+#include <stdio.h>
 #include <sys/uio.h>
 #include "mk_utils.h"
+#include "mk_macros.h"
 
 #define MK_IOV_FREE_BUF 1
 #define MK_IOV_NOT_FREE_BUF 0
@@ -111,7 +113,15 @@ static inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
         _mk_iov_set_free(mk_io, buf);
     }
 
-    mk_bug(mk_io->iov_idx > mk_io->size);
+    /*
+     * Instead of trigger mk_bug() directly due to the problematic dependency
+     * of mk_print(), we do a similar approach with the common printf(3)
+     */
+    if (mk_unlikely((mk_io->iov_idx > mk_io->size) != 0)) {
+            printf("Bug found in %s() at %s:%d\n",
+                   __FUNCTION__, __FILE__, __LINE__);
+            abort();
+    }
 
     return mk_io->iov_idx;
 }
