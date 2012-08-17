@@ -1,3 +1,10 @@
+monkey (1.1.0-2) stable; urgency=low
+
+  * Add missing cgi plugin
+
+ -- Eduardo Silva <edsiper@gmail.com>  Fri, 17 Aug 2012 12:00:00 -0300
+
+
 monkey (1.1.0-1) stable; urgency=low
 
   * Update Monkey release to v1.1.0
