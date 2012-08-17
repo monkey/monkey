@@ -607,10 +607,11 @@ create_makefile_plugins()
 
         # Copy specific plugin configuration files
         if test -e $plugin_dir/conf ; then
-           target="conf/plugins/$plugin_dir/"
+           target="conf/$plugin_dir/"
            mkdir -p $target
            cp -r $plugin_dir/conf/* $target/
 
+           echo "target $plugin_dir/conf/* to $target"
            # Replace configuration variables:
            find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
            find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
