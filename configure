@@ -20,7 +20,7 @@
 
 __MONKEY__="1"
 __MONKEY_MINOR__="1"
-__MONKEY_PATCHLEVEL__="0"
+__MONKEY_PATCHLEVEL__="1"
 
 VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
@@ -392,7 +392,6 @@ skip_plugin()
         return 0
     fi
 
-    exit 0
     # Return True by default
     return 1
 }
