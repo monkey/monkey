@@ -1,3 +1,59 @@
+commit d509c17687f99f93b1fba67e48055a73995efd81
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 16:43:22 2012 -0600
+
+    Configure: fix installer on plugins Makefile
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b4d950df3c1518d4b979c86136657addd6e0c7a3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:20:23 2012 -0600
+
+    Configure: remove merge comment
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f3eefe14ab129397e09928f5ac2ef89360999379
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:18:20 2012 -0600
+
+    debian: update rules for v1.1.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 16c324ddec7a33ac92de0a6a4a497b73a30b4d6b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 08:39:46 2012 -0600
+
+    Dirlisting: add OPTIONAL file to the repository
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8bbb30982845e7f1e5cb5c999a5256d752056ac8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 08:36:16 2012 -0600
+
+    Logger: add MANDATORY file to the repository
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3ddbf16925619679b7c019bbf43b762c79a5ea3c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:16:08 2012 -0600
+
+    Configure: fix broken builder
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b827b96ff9dcf739004a0e87f72b985132b7061a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 10:58:57 2012 -0600
+
+    Monkey v1.1.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit c04cd225ca81977d80566e05087f86ea2f876dec
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Aug 17 10:16:03 2012 -0600
@@ -82,6 +138,33 @@ Date:   Sun Aug 12 09:09:22 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit fd0140287fad32d1ea53d9797a9f08bb815cb2f4
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Aug 12 13:16:35 2012 +0200
+
+    fastcgi: Add experimental FastCGI proxy plugin.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 028a523859da450476042a2ee2beacd6620077da
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 22:27:59 2012 +0300
+
+    build: Make sure the lib-objs also get header deps
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1aa037b55758a661b60477662939483ad3f5f681
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 16:54:42 2012 +0300
+
+    clock, epoll: Fix gcc warning "no return statement in function returning non-void"
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 4917a2491b0a1aa313830f9ffb41f630ddb4e37b
 Author: Lauri Kasanen <cand@gmx.com>
 Date:   Wed Aug 8 16:54:42 2012 +0300
@@ -132,6 +215,72 @@ Author: Lauri Kasanen <cand@gmx.com>
 Date:   Wed Aug 8 17:03:44 2012 +0300
 
     iov: Make iov_add_entry inline
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2f8313fb5d99446937f3f74b1fdf99cd938da9c7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:20:30 2012 +0300
+
+    mem: Inline pointer_reset, called ~3 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5179c23cd0ace9914306ff31a260cbe86add9baa
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:18:23 2012 +0300
+
+    sched: Inline get_request_list, called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a6ee405e9c0421782d610fc6b8d9a13173b498de
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:13:52 2012 +0300
+
+    cache: Inline cache_get, called ~4 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e2416acd1321bb74814c50f5f09eeaf2d13ae73a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:11:58 2012 +0300
+
+    sched: Inline sched_get_thread_conf, it's called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d6472cdb785e9ad9a8b22cb6b26ddc20ace0d24d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:03:44 2012 +0300
+
+    iov: Make iov_add_entry inline
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ba959a090bec37547a6f7a3feb0dd2e0848fec85
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Aug 7 16:35:09 2012 +0300
+
+    lib: Bring the bulk of lib over
+    
+    Some mime functions get exported, config init & reading is separated, and some functions are
+    moved around so that they can be ifdef'd out, to create a smaller library.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 633598061bd5a65d5758254d7091efe1a4b7f6e2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Aug 7 12:05:47 2012 +0300
+
+    cheetah: Remove some duplicated code by using worker_spawn
     
     Signed-off-by: Lauri Kasanen <cand@gmx.com>
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
