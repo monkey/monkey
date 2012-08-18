@@ -408,7 +408,7 @@ create_makefile1_install()
         if [ $? == 1 ]; then
             continue
         fi
-        echo -e "\tcp -r conf/plugins/$e \${SYSCONFDIR}/plugins/" >> plugins.conf
+        echo -e "\tcp -r conf/plugins/$entry \${SYSCONFDIR}/plugins/" >> plugins.conf
     done
     plgconf=`cat plugins.conf`
 
