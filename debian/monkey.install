@@ -11,6 +11,7 @@ debian/tmp/etc/monkey/sites/*
 debian/tmp/etc/monkey/plugins/auth/*
 debian/tmp/etc/monkey/plugins/cgi/*
 debian/tmp/etc/monkey/plugins/cheetah/*
+debian/tmp/etc/monkey/plugins/cgi/*
 debian/tmp/etc/monkey/plugins/dirlisting/*
 debian/tmp/etc/monkey/plugins/logger/*
 debian/tmp/etc/monkey/plugins/mandril/*
@@ -21,6 +22,7 @@ debian/tmp/etc/monkey/plugins/liana_ssl/*
 debian/tmp/usr/lib/monkey/monkey-auth.so
 debian/tmp/usr/lib/monkey/monkey-cgi.so
 debian/tmp/usr/lib/monkey/monkey-cheetah.so
+debian/tmp/usr/lib/monkey/monkey-cgi.so
 debian/tmp/usr/lib/monkey/monkey-logger.so
 debian/tmp/usr/lib/monkey/monkey-dirlisting.so
 debian/tmp/usr/lib/monkey/monkey-mandril.so
