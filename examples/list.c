@@ -69,8 +69,6 @@ static cb_data listf = list;
 
 int main() {
 
-	int ret;
-
 	// Bind to all interfaces, port 2001, default plugins, no directory.
 	// Lacking the directory means that no files can be accessed, just what we want.
 	// We use the data callback.

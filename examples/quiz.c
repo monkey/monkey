@@ -43,7 +43,7 @@ static void front() {
 	"<br><br><form action=/ method=post>"
 	"<input type=radio name=q1 value=yes>Why yes I have<br>"
 	"<input type=radio name=q1 value=no>No, who's he?<br>"
-	"<input type=radio name=q1 value=who>Canada<hr width='20%'>"
+	"<input type=radio name=q1 value=who>Canada<hr width='20%%'>"
 	"<input type=submit>"
 	"</form>"
 	"</center></body></html>");
@@ -71,7 +71,7 @@ static int list(const mklib_session *sr, const char *vhost, const char *url,
 		char *header) {
 
 	if (strcmp(url, "/image.png") == 0) {
-		*content = monkey_head_png;
+		*content = (char *) monkey_head_png;
 		*content_len = sizeof(monkey_head_png);
 		sprintf(header, "Content-type: image/png");
 
@@ -101,8 +101,6 @@ static int list(const mklib_session *sr, const char *vhost, const char *url,
 static cb_data listf = list;
 
 int main() {
-
-	int ret;
 
 	// Bind to all interfaces, port 2001, default plugins, no directory.
 	// Lacking the directory means that no files can be accessed, just what we want.
