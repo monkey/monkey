@@ -42,7 +42,7 @@ struct cgi_vhost_t {
     regex_t match;
 };
 
-static struct cgi_vhost_t *cgi_vhosts;
+static struct cgi_vhost_t *cgi_vhosts = NULL;
 
 int swrite(const int fd, const void *buf, const size_t count)
 {
@@ -383,7 +383,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     if (!sr->file_info.is_file || !sr->file_info.exec_access)
         return MK_PLUGIN_RET_NOT_ME;
 
-    if (regexec(&match_regex, url, 0, NULL, 0)) {
+    if (regexec(&match_regex, url, 0, NULL, 0) && cgi_vhosts) {
         // No global match; check for per-vhost
 
         unsigned int i;
