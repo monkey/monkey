@@ -48,61 +48,12 @@ struct plugin_api *mk_api;
 #define MK_LIANA_SSL_WARNING -1
 #define MK_LIANA_SSL_NO_ERROR 0
 
-sslKeys_t *keys;
+sslKeys_t *matrixssl_keys;
 char *cert_file;
 char *key_file;
 
 pthread_key_t _data;
 pthread_key_t _mkp_buffer_send_file;
-pthread_key_t _mkp_buffer_write;
-pthread_key_t _mkp_buffer_read;
-
-int liana_ssl_error(int ret, unsigned char *error, struct mk_liana_ssl *conn) {
-    unsigned long len;
-
-    if (ret == MATRIXSSL_RECEIVED_ALERT) {
-        if (*error == SSL_ALERT_LEVEL_FATAL) {
-#ifdef TRACE
-            PLUGIN_TRACE ("A fatal alert has raise, we must close the connection. Error %d", *(error + 1));
-#endif
-            ret = matrixSslProcessedData(conn->ssl, &error, (uint32 *)&len);
-
-            return MK_LIANA_SSL_FATAL;
-        } else if (*error == SSL_ALERT_LEVEL_WARNING) {
-            PLUGIN_TRACE ("A warning ocurred while reading. Error %d", *(error + 1));
-            ret = matrixSslProcessedData(conn->ssl, &error, (uint32 *)&len);
-
-            return MK_LIANA_SSL_WARNING;
-        }
-    }
-
-    return MK_LIANA_SSL_NO_ERROR;
-}
-
-int _mkp_network_io_close(int socket_fd)
-{
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr, *temp;
-    struct mk_liana_ssl *conn = NULL;
-
-    PLUGIN_TRACE("Locating socket on ssl connections list to close");
-
-    mk_list_foreach_safe(curr, temp, list_head) {
-        if (curr == NULL) break;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
-        if (conn->socket_fd == socket_fd) {
-            close(socket_fd);
-            return 0;
-        }
-        conn = NULL;
-    }
-
-    if (conn == NULL)
-        return -1;
-
-    return 0;
-}
-
 
 int liana_conf(char *confdir)
 {
@@ -148,93 +99,19 @@ int liana_conf(char *confdir)
     return ret;
 }
 
-int liana_ssl_handshake(struct mk_liana_ssl *conn)
+struct mk_liana_ssl *liana_ssl_get_connection(int socket_fd)
 {
-    unsigned char *buf = NULL;
-    unsigned char *buf_sent = NULL;
-    int len;
-    int ret = 0;
-    ssize_t bytes_read;
-    ssize_t bytes_sent;
+    struct mk_list *list_head = pthread_getspecific(_mkp_data);
+    struct mk_list *curr;
+    struct mk_liana_ssl *conn;
 
-    PLUGIN_TRACE("Trying to handshake");
-    while (ret != MATRIXSSL_HANDSHAKE_COMPLETE) {
-        len = matrixSslGetReadbuf(conn->ssl, &buf);
-
-        if (len == PS_ARG_FAIL) {
-            PLUGIN_TRACE("Error trying to read data for handshake");
-            return -1;
-        }
-
-        bytes_read = read(conn->socket_fd, (void *) buf, len);
-
-        if (bytes_read < 0) {
-            PLUGIN_TRACE("Error reading data from buffer");
-            return -1;
-        }
-
-        PLUGIN_TRACE("Read %d data for handshake", bytes_read);
-
-        ret =
-            matrixSslReceivedData(conn->ssl, bytes_read,
-                                  (unsigned char **) &buf, (uint32 *) & len);
-
-        PLUGIN_TRACE("LOOP ret=%i", ret);
-
-        if (ret == MATRIXSSL_REQUEST_RECV)
-            continue;
-
-        if (ret == PS_MEM_FAIL || ret == PS_ARG_FAIL || ret == PS_PROTOCOL_FAIL) {
-            PLUGIN_TRACE("An error occurred while trying to decode the ssl data");
-            return -1;
-        }
-
-        if (ret == MATRIXSSL_HANDSHAKE_COMPLETE) {
-            PLUGIN_TRACE("Ssl handshake complete!");
-            return 0;
-        }
-
-        if (ret == MATRIXSSL_REQUEST_SEND) {
-            PLUGIN_TRACE("The handshake needs to send data");
-            do {
-                len = matrixSslGetOutdata(conn->ssl, &buf_sent);
-
-                if (len == 0)
-                    break;
-
-                if (len == PS_ARG_FAIL) {
-                    PLUGIN_TRACE
-                        ("Error trying to send data during the handshake");
-                    return -1;
-                }
-
-                bytes_sent = write(conn->socket_fd, (void *) buf_sent, len);
-                if (bytes_sent == -1) {
-                    PLUGIN_TRACE("An error ocurred trying to send data");
-                    return -1;
-                }
-                PLUGIN_TRACE("Has sent %d of %d data to end the handshake ",
-                             bytes_sent, len);
-
-                ret = matrixSslSentData(conn->ssl, (uint32) bytes_sent);
-
-                if (ret == MATRIXSSL_REQUEST_CLOSE) {
-                    PLUGIN_TRACE("Success we should close the session, why?");
-                    return -1;
-                }
-
-                if (ret == PS_ARG_FAIL) {
-                    PLUGIN_TRACE("Error sending data during handshake");
-                    return -1;
-                }
-
-            } while (ret != MATRIXSSL_SUCCESS
-                     || ret != MATRIXSSL_HANDSHAKE_COMPLETE);
-        }
+    mk_list_foreach(curr, list_head) {
+	    conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
+	    if (socket_fd == conn->socket_fd) {
+		    return conn;
+	    }
     }
-
-    PLUGIN_TRACE("Handshake complete!");
-    return 0;
+    return NULL;
 }
 
 int liana_ssl_close(struct mk_liana_ssl *conn)
@@ -263,6 +140,21 @@ static void liana_ssl_version_error()
            MATRIXSSL_VERSION_MAJOR,
            MATRIXSSL_VERSION_MINOR,
            MATRIXSSL_VERSION_PATCH);
+}
+
+int _mkp_network_io_close(int socket_fd)
+{
+    struct mk_liana_ssl *conn = NULL;
+
+    conn = liana_ssl_get_connection(socket_fd);
+
+    if (conn == NULL) {
+        return -1;
+    }
+    else {
+        close(conn->socket_fd);
+        return 0;
+    }
 }
 
 int _mkp_init(struct plugin_api **api, char *confdir)
@@ -295,134 +187,316 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
 void _mkp_exit()
 {
+	matrixSslClose();
 }
 
 int _mkp_network_io_accept(int server_fd)
 {
     int remote_fd;
-    struct sockaddr_in sock_addr;
+    struct sockaddr sock_addr;
     socklen_t socket_size = sizeof(struct sockaddr);
 
-    PLUGIN_TRACE("Accepting Connection");
-
-    remote_fd =
-        accept(server_fd, &sock_addr, &socket_size);
-
-    if (remote_fd == -1) {
-        PLUGIN_TRACE("Error accepting connection");
-        return -1;
-    }
+#ifdef ACCEPT_GENERIC
+    remote_fd = accept(server_fd, &sock_addr, &socket_size);
+    mk_api->socket_set_nonblocking(remote_fd);
+#else
+    remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK);
+#endif
 
     return remote_fd;
 }
 
+int liana_ssl_handle_alert(struct mk_liana_ssl *conn)
+{
+	char alert_b0 = *(conn->buf_ssl + 0);
+	char alert_b1 = *(conn->buf_ssl + 1);
+
+	conn->buf_used += 2;
+
+	switch (alert_b0) {
+	case SSL_ALERT_LEVEL_WARNING:
+		switch (alert_b1) {
+		case 0:
+			PLUGIN_TRACE("[FD %d] Warning, client close.",
+					conn->socket_fd);
+			return 0;
+		default:
+			mk_warn("[liana_ssl] Warning %d on fd %d.",
+					alert_b1, conn->socket_fd);
+			return 0;
+		}
+	case SSL_ALERT_LEVEL_FATAL:
+		mk_err("[liana_ssl] Fatal error %d on fd %d.",
+				alert_b1, conn->socket_fd);
+		_mkp_network_io_close(conn->socket_fd);
+		return -1;
+	case SSL_ALERT_CLOSE_NOTIFY:
+		PLUGIN_TRACE("Received close notify.");
+		_mkp_network_io_close(conn->socket_fd);
+		return -1;
+	default:
+		mk_info("[liana_ssl] Unknown alert received: %d, %d on fd %d",
+				alert_b0, alert_b1, conn->socket_fd);
+		return 0;
+	}
+}
+
+int liana_ssl_handle_remain(struct mk_liana_ssl *conn,
+		unsigned char *buf,
+		uint32_t count)
+{
+	size_t remain = conn->buf_len - conn->buf_used;
+	remain = remain > count ? count : remain;
+
+	if (count == 0 || conn->buf_len <= conn->buf_used || remain == 0) {
+		return 0;
+	}
+	PLUGIN_TRACE("Read from already received buffer.");
+
+	memcpy(buf, conn->buf_ssl + conn->buf_used, remain);
+	conn->buf_used += remain;
+
+	return remain;
+}
+
+static int liana_ssl_handle_socket_read(struct mk_liana_ssl *conn)
+{
+	ssize_t bytes_read;
+	int ret;
+
+	if (conn->try_false_start) {
+		ret = matrixSslReceivedData(conn->ssl,
+				0,
+				&conn->buf_ssl,
+				&conn->buf_len);
+
+		if (ret < 0) {
+			mk_err("[liana_ssl] Failed to false start.");
+		}
+		else if (ret == PS_SUCCESS) {
+			PLUGIN_TRACE("[FD %d] No false start.",
+					conn->socket_fd);
+			conn->need_read = 1;
+		}
+		else {
+			PLUGIN_TRACE("[FD %d] Do false start.",
+					conn->socket_fd);
+			conn->need_read = 0;
+		}
+		conn->try_false_start = 0;
+	}
+
+	if (conn->need_read == 1) {
+		PLUGIN_TRACE("[FD %d] SSL connection needs more data.",
+				conn->socket_fd);
+
+		ret = matrixSslGetReadbuf(conn->ssl, &conn->buf_ssl);
+
+		if (ret == PS_ARG_FAIL) {
+			mk_err("[liana_ssl] Error locating SSL buffer.");
+			return ret;
+		}
+		else if (ret == 0) {
+			mk_err("[liana_ssl] SSL buffer space exhausted.");
+			return PS_MEM_FAIL;
+		}
+		else {
+			conn->buf_len = ret;
+			conn->buf_used = ret;
+		}
+
+		bytes_read = read(conn->socket_fd, conn->buf_ssl, conn->buf_len);
+
+		if (bytes_read == -1) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				PLUGIN_TRACE("[FD %d] EAGAIN.", conn->socket_fd);
+				return -1;
+			}
+			else {
+				mk_err("[liana_ssl] Socket error: %s.", strerror(errno));
+				return -1;
+			}
+		}
+		else if (bytes_read == 0) {
+			PLUGIN_TRACE("[FD %d] Connection done, force close.",
+					conn->socket_fd);
+			return -1;
+		}
+
+		PLUGIN_TRACE("[FD %d] Read %ld bytes.", conn->socket_fd, bytes_read);
+		ret = matrixSslReceivedData(conn->ssl,
+				bytes_read,
+				&conn->buf_ssl,
+				&conn->buf_len);
+
+		if (conn->ssl->flags & SSL_FLAGS_FALSE_START &&
+				!conn->handshake_complete) {
+			PLUGIN_TRACE("[FD %d] Just got a false start.",
+					conn->socket_fd);
+			conn->try_false_start = 1;
+		}
+
+		conn->buf_used = 0;
+		conn->need_read = 0;
+	}
+	else {
+		ret = matrixSslProcessedData(conn->ssl,
+				&conn->buf_ssl,
+				&conn->buf_len);
+		conn->buf_used = 0;
+	}
+	return ret;
+}
+
+int liana_ssl_handle_read(struct mk_liana_ssl *conn, unsigned char *buf, uint32_t count)
+{
+	ssize_t used = 0, remain;
+	int ret;
+
+	used += liana_ssl_handle_remain(conn, buf, count);
+
+	PLUGIN_TRACE("Remain used: %ld.", used);
+
+	do {
+		ret = liana_ssl_handle_socket_read(conn);
+
+		if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+			if (used > 0) {
+				goto end_read;
+			}
+			else {
+				return -1;
+			}
+		}
+		else if (ret == -1) {
+			return -1;
+		}
+
+		switch (ret) {
+		case PS_MEM_FAIL:
+		case PS_ARG_FAIL:
+			mk_err("[liana_ssl] MatrixSSL made a bo-bo on fd %d.",
+					conn->socket_fd);
+			return -1;
+
+		case PS_PROTOCOL_FAIL:
+			mk_err("[liana_ssl] SSL error no fd %d.",
+					conn->socket_fd);
+			_mkp_network_io_close(conn->socket_fd);
+			return -1;
+
+		case PS_SUCCESS:
+			PLUGIN_TRACE("[FD %d] SSL records all processed.",
+					conn->socket_fd);
+			conn->need_read = 1;
+			conn->buf_used = conn->buf_len;
+			goto end_read;
+
+
+		case MATRIXSSL_REQUEST_RECV:
+			PLUGIN_TRACE("[FD %d] Should receive next read.",
+					conn->socket_fd);
+			conn->need_read = 1;
+			break;
+
+		case MATRIXSSL_REQUEST_SEND:
+			PLUGIN_TRACE("[FD %d] Need to send ssl.",
+					conn->socket_fd);
+			conn->need_write = 1;
+			// Try to write, need_write will be unset on
+			// success.
+			_mkp_event_write(conn->socket_fd);
+			break;
+
+		case MATRIXSSL_HANDSHAKE_COMPLETE:
+			PLUGIN_TRACE("[FD %d] SSL normal handshake complete.",
+					conn->socket_fd);
+			conn->handshake_complete = 1;
+			break;
+
+		case MATRIXSSL_RECEIVED_ALERT:
+			PLUGIN_TRACE("[FD %d] Handle alert.",
+					conn->socket_fd);
+
+			ret = liana_ssl_handle_alert(conn);
+			if (ret == -1) {
+				return -1;
+			}
+			break;
+
+		case MATRIXSSL_APP_DATA:
+			PLUGIN_TRACE("[FD %d] Handle app data %d bytes.",
+					conn->socket_fd, conn->buf_len);
+			if (!conn->handshake_complete) {
+				PLUGIN_TRACE("[FD %d] Handshake complete.",
+						conn->socket_fd);
+				conn->handshake_complete = 1;
+			}
+			if (!buf) {
+				goto end_read;
+			}
+
+			remain = count - used;
+			remain = remain < conn->buf_len ? remain : conn->buf_len;
+
+			memcpy(buf + used, conn->buf_ssl, remain);
+			conn->buf_used += remain;
+
+			used += remain;
+			break;
+
+		default:
+			mk_err("[liana_ssl] Unknown record type on fd %d, ret %d.",
+					conn->socket_fd, ret);
+			return -1;
+		}
+	} while (count > used || !buf);
+
+end_read:
+	PLUGIN_TRACE("[FD %d] %d bytes read.", conn->socket_fd, used);
+	PLUGIN_TRACE("'''\n%.*s\n'''", used, buf);
+	return used;
+}
+
 int _mkp_network_io_read(int socket_fd, void *buf, int count)
 {
-    ssize_t bytes_read;
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr;
     struct mk_liana_ssl *conn = NULL;
-    int ret;
-    int len;
-    unsigned char *buf_ssl = NULL;
-    int pending = 0;
 
-    PLUGIN_TRACE("Locating socket on ssl connections list");
+    conn = liana_ssl_get_connection(socket_fd);
 
-    mk_list_foreach(curr, list_head) {
-        if (curr == NULL) break;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
-        if (conn->socket_fd == socket_fd)
-            break;
-        conn = NULL;
-    }
-    if (conn == NULL)
-        return -1;
-
-    PLUGIN_TRACE("Reading");
-
-    ret = ioctl(socket_fd, FIONREAD, &pending);
-
-    do {
-        len = matrixSslGetReadbuf(conn->ssl, &buf_ssl);
-
-        if( len == PS_ARG_FAIL) {
-            PLUGIN_TRACE ("Error locatting buffer to read");
-        }
-
-        if (len == 0) return 0;
-
-        bytes_read = read(socket_fd, (void *) buf_ssl, len);
-        PLUGIN_TRACE("Decoding data from ssl connection");
-
-        ret =
-            matrixSslReceivedData(conn->ssl, bytes_read,
-                                  (unsigned char **) &buf_ssl,
-                                  (uint32 *) & len);
-        if (ret == PS_MEM_FAIL || ret == PS_ARG_FAIL || ret == PS_PROTOCOL_FAIL) {
-            PLUGIN_TRACE
-                ("An error occurred while trying to decode the ssl data");
-
-            matrixSslProcessedData(conn->ssl, &buf_ssl, (uint32 *)&len);
-            _mkp_network_io_close(socket_fd);
-            return -1;
-        }
-
-    } while (ret == MATRIXSSL_REQUEST_RECV && ret != MATRIXSSL_RECEIVED_ALERT);
-
-    ret = liana_ssl_error(ret, buf_ssl, conn);
-
-    if (ret != MK_LIANA_SSL_NO_ERROR) {
+    if (conn == NULL) {
         return -1;
     }
-
-    if (ret == MATRIXSSL_REQUEST_SEND ) {
-        PLUGIN_TRACE ("We must sent data to the peer? that's odd");
-        len = matrixSslGetOutdata(conn->ssl, (unsigned char **)&buf_ssl);
+    else {
+        return liana_ssl_handle_read(conn, buf, count);
     }
-
-    if( buf_ssl == NULL) return 0;
-
-    strncpy((char *) buf, (const char *) buf_ssl, count);
-    bytes_read = len;
-
-    ret = matrixSslProcessedData(conn->ssl, &buf_ssl, (uint32 *)&len);
-
-    return bytes_read;
 }
 
 int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
 {
     ssize_t bytes_sent = -1;
-    ssize_t bytes_written;
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr;
     struct mk_liana_ssl *conn = NULL;
     char *buf_plain = NULL;
-    unsigned char *buf_ssl = NULL;
     int ret;
-    int len;
+    size_t len;
 
     if (buf == NULL)
         return 0;
 
     PLUGIN_TRACE("Write");
 
-    mk_list_foreach(curr, list_head) {
-        if (curr == NULL) break;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
-        if (conn->socket_fd == socket_fd)
-            break;
-        conn = NULL;
-    }
+    conn = liana_ssl_get_connection(socket_fd);
+
     if (conn == NULL)
         return -1;
 
-    len = matrixSslGetWritebuf(conn->ssl, (unsigned char **) &buf_plain, count);
+    ret = matrixSslGetWritebuf(conn->ssl, (unsigned char **) &buf_plain, count);
 
-    if (len == PS_MEM_FAIL || len == PS_ARG_FAIL || len == PS_FAILURE) {
+    if (ret == PS_MEM_FAIL || ret == PS_ARG_FAIL || ret == PS_FAILURE) {
         PLUGIN_TRACE("Can't allocate memory for plain content");
         return -1;
+    } else {
+	len = ret;
     }
 
     if( len < count ) {
@@ -433,58 +507,69 @@ int _mkp_network_io_write(int socket_fd, const void *buf, size_t count)
 
     buf_plain = memmove(buf_plain, buf, bytes_sent);
 
-    len = matrixSslEncodeWritebuf(conn->ssl, bytes_sent);
+    ret = matrixSslEncodeWritebuf(conn->ssl, bytes_sent);
 
-    if (len == PS_ARG_FAIL || len == PS_PROTOCOL_FAIL || len == PS_FAILURE) {
+    if (ret == PS_ARG_FAIL || ret == PS_PROTOCOL_FAIL || ret == PS_FAILURE) {
         PLUGIN_TRACE("Failed while encoding message");
         return -1;
     }
 
-    do {
-        len = matrixSslGetOutdata(conn->ssl, (unsigned char **) &buf_ssl);
-
-        if (len == PS_ARG_FAIL) {
-            PLUGIN_TRACE("Error encoding data to send");
-            return -1;
-        }
-
-        if (len == 0 ) {
-            PLUGIN_TRACE ("There's no left data to sent");
-            return bytes_sent;
-        }
-
-        bytes_written = write(socket_fd, buf_ssl, len);
-        ret = matrixSslSentData(conn->ssl, bytes_written);
-
-    } while(ret != MATRIXSSL_SUCCESS);
+    conn->need_write = 1;
+    _mkp_event_write(socket_fd);
 
     return bytes_sent;
 }
 
 int _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io)
 {
-    int i;
-    int count = 0;
-    ssize_t bytes_sent = -1;
-    char *buffer_write = (char *) pthread_getspecific(_mkp_buffer_write);
+    struct mk_liana_ssl *conn;
+    size_t pos = 0, size = 0;
+    unsigned char *buf_ssl;
+    int ret, i;
 
-    PLUGIN_TRACE("WriteV");
 
-    /* Move iov array data to string buffer */
-    for (i = 0; i < mk_io->iov_idx; i++) {
-        strncpy(buffer_write + count, mk_io->io[i].iov_base, mk_io->io[i].iov_len);
-        count += mk_io->io[i].iov_len;
+
+    conn = liana_ssl_get_connection(socket_fd);
+
+    if (!conn) {
+	    return -1;
     }
-    buffer_write[count] = '\0';
 
-    /* Debug */
-    PLUGIN_TRACE("preparing buffer of %i bytes", count);
+    for (i = 0; i < mk_io->iov_idx; i++) {
+	    size += mk_io->io[i].iov_len;
+    }
 
-    /* Write data */
-    bytes_sent = _mkp_network_io_write(socket_fd, buffer_write, count);
-    PLUGIN_TRACE("written %i bytes", bytes_sent);
+    PLUGIN_TRACE("Writev with %ld bytes.", size);
 
-    return bytes_sent;
+    if (size == 0) {
+	    return 0;
+    }
+
+    ret = matrixSslGetWritebuf(conn->ssl, &buf_ssl, size);
+
+    if (ret == PS_MEM_FAIL || ret == PS_ARG_FAIL || ret == PS_FAILURE) {
+	    mk_err("[liana_ssl] Failed to create write buffer.");
+	    return -1;
+    }
+
+    for (i = 0; i < mk_io->iov_idx; i++) {
+	    memcpy(buf_ssl + pos, mk_io->io[i].iov_base, mk_io->io[i].iov_len);
+	    pos += mk_io->io[i].iov_len;
+    }
+
+    if (pos != size) {
+	    mk_err("[liana_ssl] Counting is hard.");
+	    abort();
+    }
+
+    ret = matrixSslEncodeWritebuf(conn->ssl, size);
+
+    if (ret == PS_MEM_FAIL || ret == PS_ARG_FAIL || ret == PS_FAILURE) {
+	    mk_err("[liana_ssl] Failed to encode write buffer.");
+	    return -1;
+    }
+
+    return size;
 }
 
 int _mkp_network_io_create_socket(int domain, int type, int protocol)
@@ -546,6 +631,7 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t * file_offset,
     ssize_t bytes_written = -1;
     char *buffer_send_file = (char *) pthread_getspecific(_mkp_buffer_send_file);
     ssize_t len;
+    (void)file_count;
 
     PLUGIN_TRACE("Send file");
 
@@ -629,6 +715,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
 int _mkp_core_prctx(struct server_config *config)
 {
     struct file_info ssl_file_info;
+    (void)config;
 
     /* set Monkey transport layer type */
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
@@ -637,7 +724,7 @@ int _mkp_core_prctx(struct server_config *config)
     liana_conf(config_dir);
 
     /* Enable server safe event write */
-    config->safe_event_write = MK_TRUE;
+    //config->safe_event_write = MK_TRUE;
 
     if (matrixSslOpen() < 0) {
         mk_err("Liana_SSL: Can't start matrixSsl");
@@ -646,7 +733,7 @@ int _mkp_core_prctx(struct server_config *config)
 
     PLUGIN_TRACE("MatrixSsl Started");
 
-    if (matrixSslNewKeys(&keys) < 0) {
+    if (matrixSslNewKeys(&matrixssl_keys) < 0) {
         mk_err("MatrixSSL couldn't init the keys");
         exit(EXIT_FAILURE);
     }
@@ -666,7 +753,7 @@ int _mkp_core_prctx(struct server_config *config)
         exit(EXIT_FAILURE);
     }
 
-    if (matrixSslLoadRsaKeys(keys, cert_file, key_file, NULL, NULL) < 0) {
+    if (matrixSslLoadRsaKeys(matrixssl_keys, cert_file, key_file, NULL, NULL) < 0) {
         mk_err("Liana_SSL: MatrixSsl couldn't read the certificates");
         exit(EXIT_FAILURE);
     }
@@ -675,8 +762,6 @@ int _mkp_core_prctx(struct server_config *config)
 
     pthread_key_create(&_mkp_data, NULL);
     pthread_key_create(&_mkp_buffer_send_file, NULL);
-    pthread_key_create(&_mkp_buffer_write, NULL);
-    pthread_key_create(&_mkp_buffer_read, NULL);
 
 
     return 0;
@@ -686,92 +771,251 @@ void _mkp_core_thctx()
 {
     struct mk_list *list_head = mk_api->mem_alloc(sizeof(struct mk_list));
     char *buffer_send_file = mk_api->mem_alloc_z(MK_LIANA_SSL_BUFFER_PLAIN * sizeof(char));
-    char *buffer_write = mk_api->mem_alloc_z(MK_LIANA_SSL_BUFFER_PLAIN * sizeof(char));
-    char *buffer_read = mk_api->mem_alloc_z(MK_LIANA_SSL_BUFFER_PLAIN * sizeof(char));
 
     PLUGIN_TRACE ("Creating pthread keys");
     mk_list_init(list_head);
 
     pthread_setspecific(_mkp_data, list_head);
     pthread_setspecific(_mkp_buffer_send_file, buffer_send_file);
-    pthread_setspecific(_mkp_buffer_write, buffer_write);
-    pthread_setspecific(_mkp_buffer_read, buffer_read);
 
+}
+
+struct mk_liana_ssl *liana_ssl_new_connection(int socket_fd)
+{
+	struct mk_liana_ssl *conn;
+	int ret;
+
+	conn = malloc(sizeof(*conn));
+	if (!conn) {
+		mk_err("[liana_ssl] Malloc error: %s.", strerror(errno));
+		return NULL;
+	}
+
+	conn->buf_ssl = NULL;
+	conn->buf_len = 0;
+	conn->buf_used = 0;
+	conn->handshake_complete = 0;
+	conn->need_read = 1;
+	conn->need_write = 0;
+	conn->try_false_start = 0;
+	conn->socket_fd = socket_fd;
+
+	ret = matrixSslNewServerSession(&conn->ssl, matrixssl_keys, NULL);
+
+	switch (ret) {
+	case PS_SUCCESS:
+		break;
+	case PS_ARG_FAIL:
+		mk_err("[liana_ssl] Bad input argument for NewServerSession.");
+		free(conn);
+		return NULL;
+	case PS_FAILURE:
+		mk_err("[liana_ssl] Failed to create new server session.");
+		free(conn);
+		return NULL;
+	default:
+		mk_err("[liana_ssl] Unknown error creating new server session.");
+	}
+
+	return conn;
 }
 
 int _mkp_event_read(int socket_fd)
 {
-    int ret;
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr;
-    struct mk_liana_ssl *conn;
+	struct mk_list *list_head = pthread_getspecific(_mkp_data);
+	struct mk_liana_ssl *conn;
+	ssize_t ret = 0;
 
-    mk_list_foreach(curr, list_head) {
-        if (curr == NULL) return MK_PLUGIN_RET_EVENT_NEXT;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
+	conn = liana_ssl_get_connection(socket_fd);
 
-        if (conn->socket_fd == socket_fd)
-            return MK_PLUGIN_RET_EVENT_NEXT;
-    }
+	if (!conn) {
+		PLUGIN_TRACE("[FD %d] Creating new SSL server session.",
+				socket_fd);
+		conn = liana_ssl_new_connection(socket_fd);
+		mk_list_add(&conn->cons, list_head);
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
 
-    conn = (struct mk_liana_ssl *) malloc(sizeof(struct mk_liana_ssl));
+	if (!conn->handshake_complete) {
+		PLUGIN_TRACE("[FD %d] Event read.", socket_fd);
 
-    if ((ret = matrixSslNewServerSession(&conn->ssl, keys, NULL)) < 0) {
-        PLUGIN_TRACE("Error initiating the ssl session");
-        matrixSslDeleteSession(conn->ssl);
-        return MK_PLUGIN_RET_EVENT_CLOSE;
-    }
+		ret = liana_ssl_handle_read(conn, NULL, 0);
 
-    PLUGIN_TRACE("Ssl session started");
+		if (ret == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+			mk_err("[liana_ssl] Socket error on %d: %s.",
+					socket_fd, strerror(errno));
+			return MK_PLUGIN_RET_EVENT_CLOSE;
+		}
 
-    conn->socket_fd = socket_fd;
+		if (conn->need_write) {
+			_mkp_event_write(socket_fd);
 
-    mk_list_add(&conn->cons, list_head);
-    pthread_setspecific(_mkp_data, list_head);
-    ret = liana_ssl_handshake(conn);
+			if (conn->need_write) {
+				mk_api->event_socket_change_mode(conn->socket_fd,
+						MK_EPOLL_RW,
+						MK_EPOLL_LEVEL_TRIGGERED);
+			}
 
-    if (ret != 0) {
-        PLUGIN_TRACE("Error trying to handshake with the client");
-        return MK_PLUGIN_RET_EVENT_CLOSE;
-    }
+			/* If the handshake completed during write,
+			 * there is a high probability of FALSE_START
+			 * and we must preserve the event.
+			 */
+			if (conn->handshake_complete) {
+				return MK_PLUGIN_RET_EVENT_NEXT;
+			}
+		}
+		return MK_PLUGIN_RET_EVENT_OWNED;
+	}
+	else {
+		if (conn->need_write) {
+			mk_api->event_socket_change_mode(conn->socket_fd,
+					MK_EPOLL_RW,
+					MK_EPOLL_LEVEL_TRIGGERED);
+		}
 
-    return MK_PLUGIN_RET_EVENT_NEXT;
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
+}
+
+int _mkp_event_write(int socket_fd)
+{
+	struct mk_liana_ssl *conn;
+	ssize_t bytes_sent;
+	int32_t ret = 0;
+	unsigned char *buf_ssl;
+	uint32_t len;
+	int done = 0, should_close = 0;
+
+	conn = liana_ssl_get_connection(socket_fd);
+
+	if (!conn || !conn->need_write) {
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
+
+	do {
+		ret = matrixSslGetOutdata(conn->ssl, &buf_ssl);
+
+		if (ret == 0) {
+			PLUGIN_TRACE("No data needs to be written on fd %d.",
+					socket_fd);
+			conn->need_write = 0;
+			done = 1;
+			break;
+		}
+		else if (ret == PS_ARG_FAIL) {
+			mk_err("[liana_ssl] Bad argument for GetOutdata.");
+			should_close = 1;
+			done = 1;
+			break;
+		}
+
+		mk_api->socket_cork_flag(conn->socket_fd, MK_TRUE);
+		len = ret;
+		bytes_sent = write(conn->socket_fd, buf_ssl, len);
+		mk_api->socket_cork_flag(conn->socket_fd, MK_FALSE);
+
+		if (bytes_sent == -1) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				return MK_PLUGIN_RET_EVENT_CONTINUE;
+			}
+			mk_err("[liana_ssl] Socket error on fd %d: %s",
+					socket_fd, strerror(errno));
+			should_close = 1;
+			done = 1;
+			break;
+		}
+
+		ret = matrixSslSentData(conn->ssl, bytes_sent);
+
+		switch (ret) {
+		case MATRIXSSL_REQUEST_CLOSE:
+			PLUGIN_TRACE("[FD %d] SSL socket request close.",
+					conn->socket_fd);
+			conn->need_write = 0;
+			should_close = 1;
+			break;
+
+		case MATRIXSSL_REQUEST_SEND:
+			PLUGIN_TRACE("[FD %d] SSL socket request send.",
+					conn->socket_fd);
+			break;
+
+		case MATRIXSSL_HANDSHAKE_COMPLETE:
+			PLUGIN_TRACE("[FD %d] SSL handshake complete.",
+					conn->socket_fd);
+			conn->handshake_complete = 1;
+
+			mk_api->event_socket_change_mode(conn->socket_fd,
+					MK_EPOLL_READ,
+					MK_EPOLL_LEVEL_TRIGGERED);
+			done = 1;
+			break;
+
+		case MATRIXSSL_SUCCESS:
+			PLUGIN_TRACE("[FD %d] SSL output successfully sent.",
+					conn->socket_fd);
+			conn->need_write = 0;
+			if (!conn->handshake_complete) {
+				mk_api->event_socket_change_mode(socket_fd,
+						MK_EPOLL_READ,
+						MK_EPOLL_LEVEL_TRIGGERED);
+			}
+			done = 1;
+			break;
+
+		default:
+			mk_warn("[liana_ssl][FD %d] Unknown error.",
+					conn->socket_fd);
+			break;
+		}
+	} while (!done);
+
+	if (should_close) {
+		return MK_PLUGIN_RET_EVENT_CLOSE;
+	}
+	else if (!conn->handshake_complete) {
+		return MK_PLUGIN_RET_EVENT_OWNED;
+	}
+	else if (conn->try_false_start) {
+		return MK_PLUGIN_RET_EVENT_OWNED;
+	}
+	else {
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
+}
+
+int hangup(int socket_fd)
+{
+	struct mk_liana_ssl *conn = liana_ssl_get_connection(socket_fd);
+
+	if (!conn) {
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
+
+	liana_ssl_close(conn);
+
+	matrixSslDeleteSession(conn->ssl);
+
+	mk_list_del(&conn->cons);
+	free(conn);
+
+	return MK_PLUGIN_RET_EVENT_NEXT;
 }
 
 int _mkp_event_close(int socket_fd)
 {
-    struct mk_list *list_head = (struct mk_list *) pthread_getspecific(_mkp_data);
-    struct mk_list *curr, *temp;
-    struct mk_liana_ssl *conn = NULL;
-
-    PLUGIN_TRACE("Locating socket on ssl connections list");
-
-    mk_list_foreach_safe(curr, temp, list_head) {
-        if (curr == NULL) break;
-        conn = mk_list_entry(curr, struct mk_liana_ssl, cons);
-        if (conn->socket_fd == socket_fd) {
-
-            liana_ssl_close (conn);
-
-            matrixSslDeleteSession (conn->ssl);
-            mk_list_del(curr);
-            pthread_setspecific(_mkp_data, list_head);
-            return MK_PLUGIN_RET_EVENT_CONTINUE;
-        }
-    }
-
-    return MK_PLUGIN_RET_EVENT_CONTINUE;
+	PLUGIN_TRACE("[FD %d] Event close.", socket_fd);
+	return hangup(socket_fd);
 }
-
 
 int _mkp_event_timeout(int socket_fd)
 {
-    PLUGIN_TRACE ("Event timeout");
-    return MK_PLUGIN_RET_EVENT_CONTINUE;
+	PLUGIN_TRACE ("[FD %d] Event timeout", socket_fd);
+	return hangup(socket_fd);
 }
 
 int _mkp_event_error(int socket_fd)
 {
-    PLUGIN_TRACE ("Event error");
-    return MK_PLUGIN_RET_EVENT_CONTINUE;
+	PLUGIN_TRACE ("[FD %d] Event error", socket_fd);
+	return hangup(socket_fd);
 }

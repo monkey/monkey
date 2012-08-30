@@ -28,6 +28,13 @@
 struct mk_liana_ssl
 {
     ssl_t *ssl;
+    unsigned char *buf_ssl;
+    uint32_t buf_len;
+    uint32_t buf_used;
+    int handshake_complete;
+    int need_read;
+    int need_write;
+    int try_false_start;
     int socket_fd;
     struct mk_list cons;
 };
