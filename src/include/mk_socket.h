@@ -30,10 +30,6 @@
 #define SOCK_NONBLOCK 04000
 #endif
 
-/* Socket_Timeout() */
-#define ST_RECV 0
-#define ST_SEND 1
-
 #define TCP_CORK_ON 1
 #define TCP_CORK_OFF 0
 
@@ -43,7 +39,6 @@ int mk_socket_set_tcp_defer_accept(int sockfd);
 int mk_socket_set_nonblocking(int sockfd);
 
 int mk_socket_close(int socket);
-int mk_socket_timeout(int s, char *buf, int len, int timeout, int recv_send);
 
 int mk_socket_create(void);
 int mk_socket_connect(char *host, int port);
