@@ -65,7 +65,7 @@ struct sched_list_node
 #endif
 };
 
-extern struct sched_list_node *sched_list;
+struct sched_list_node *sched_list;
 
 /* Struct under thread context */
 typedef struct
@@ -78,7 +78,7 @@ typedef struct
 #endif
 } sched_thread_conf;
 
-extern pthread_key_t worker_sched_node;
+pthread_key_t MK_EXPORT worker_sched_node;
 
 extern pthread_mutex_t mutex_worker_init;
 
@@ -114,5 +114,5 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
                                                  *sched, int remote_fd);
 int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);
-
+struct sched_list_node *mk_sched_worker_info();
 #endif

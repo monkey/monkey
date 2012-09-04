@@ -391,6 +391,7 @@ void mk_plugin_init()
     /* Scheduler and Event callbacks */
     api->sched_get_connection = mk_sched_get_connection;
     api->sched_remove_client  = mk_plugin_sched_remove_client;
+    api->sched_worker_info    = mk_sched_worker_info;
 
     api->event_add = mk_plugin_event_add;
     api->event_del = mk_plugin_event_del;

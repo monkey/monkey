@@ -237,7 +237,6 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
     /* Plugin thread context calls */
     mk_epoll_state_init();
     mk_plugin_event_init_list();
-    mk_plugin_core_thread();
 
     /* Epoll event handlers */
     handler = mk_epoll_set_handlers((void *) mk_conn_read,
@@ -261,6 +260,7 @@ static void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Export known scheduler node to context thread */
     pthread_setspecific(worker_sched_node, (void *) thinfo);
+    mk_plugin_core_thread();
 
     __builtin_prefetch(thinfo);
     __builtin_prefetch(&worker_sched_node);
@@ -460,4 +460,9 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
     }
 
     return -1;
+}
+
+struct sched_list_node *mk_sched_worker_info()
+{
+    return pthread_getspecific(worker_sched_node);
 }

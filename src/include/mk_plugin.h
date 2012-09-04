@@ -260,6 +260,7 @@ struct plugin_api
     int (*sched_remove_client) (int);
     struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
                                                       int);
+    struct sched_list_node *(*sched_worker_info)();
 
     /* worker's functions */
     pthread_t (*worker_spawn) (void (*func) (void *), void *);
