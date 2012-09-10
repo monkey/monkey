@@ -33,7 +33,6 @@
  */
 #define MK_MAX_PID_LEN 10
 
-#include "mk_request.h"
 #include "mk_memory.h"
 #include "mk_list.h"
 
