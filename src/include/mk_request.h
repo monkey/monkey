@@ -213,6 +213,17 @@ struct session_request
     /* file descriptors */
     int fd_file;
 
+    /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
+     * triggers the plugin STAGE_30 to look for a plugin handler. In some
+     * cases the plugin would overwrite the real path of the requested file
+     * and make Monkey handle the new path for the static file. At this point
+     * we need to block STAGE_30 calls from mk_http_init().
+     *
+     * For short.. if a plugin overwrites the real_path, let Monkey handle that
+     * and do not trigger more STAGE_30's.
+     */
+    int stage30_blocked;
+
     /* Static file information */
     long loop;
     long bytes_to_send;

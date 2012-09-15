@@ -50,6 +50,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
         return -1;
     }
 
+    f_info->exists = MK_TRUE;
     f_info->is_file = MK_TRUE;
     f_info->is_link = MK_FALSE;
     f_info->is_directory = MK_FALSE;
