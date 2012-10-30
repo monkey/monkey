@@ -2,21 +2,22 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  This library is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ *  MA 02110-1301  USA
  */
 
 #include <stdio.h>
@@ -53,7 +54,7 @@ static struct mk_iov *prot_template()
     return iov;
 }
 
-/* 
+/*
  * Convert a request HTTP header into HTTP_ CGI style, e.g:
  *
  *   Accept-Charset:  ->  HTTP_ACCEPT_CHARSET
@@ -66,13 +67,13 @@ static int prot_header2cgi(const char *buf, int len, char **dest)
     char *p;
     const char *prefix = "HTTP_";
 
-    /* 
+    /*
      * There're two exception when the prefix HTTP_ must not
-     * be added: Content-Type and Content-Length headers, 
-     * i cannot find the reason for that so this belongs to a 
+     * be added: Content-Type and Content-Length headers,
+     * i cannot find the reason for that so this belongs to a
      * stupid way to work.
      */
-    if (strncasecmp(buf, "Content-", 8) == 0 || 
+    if (strncasecmp(buf, "Content-", 8) == 0 ||
         strncasecmp(buf, "Cookie-", 7) == 0) {
         offset = 0;
     }
@@ -152,12 +153,12 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     /* SERVER_PORT */
     prot_add_header(iov, mk_cgi_server_port, mk_server_port);
 
-    /* 
+    /*
      * SERVER_NAME
      * -----------
      *
      * Server name belongs to the value specified in the conf/sites/XYZ vhost file
-     * under key 'ServerName'. 
+     * under key 'ServerName'.
      */
     iov_temp.data = sr->host_alias->name;
     iov_temp.len = sr->host_alias->len;
@@ -166,10 +167,10 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     /* SERVER_PROTOCOL */
     prot_add_header(iov, mk_cgi_server_protocol, mk_server_protocol);
 
-    /* 
-     * SERVER_SIGNATURE 
+    /*
+     * SERVER_SIGNATURE
      * ----------------
-     * we use an offset of 8 bytes as each host signature is composed in 
+     * we use an offset of 8 bytes as each host signature is composed in
      * the following way:
      *
      *   server: Monkey/x.y.x
@@ -181,12 +182,12 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
     iov_temp.len = sr->host_conf->header_host_signature.len - 8;
     prot_add_header(iov, mk_cgi_server_signature, iov_temp);
 
-    /* 
+    /*
      * HTTP_*
      * --------
      *
-     * CGI spec specify that incomming HTTP headers by the client must be 
-     * converted to uppercase, replace '-' by '_' and prefix the 'HTTP_' 
+     * CGI spec specify that incomming HTTP headers by the client must be
+     * converted to uppercase, replace '-' by '_' and prefix the 'HTTP_'
      * string. e.g:
      *
      *   Accept-Encoding: -> HTTP_ACCEPT_ENCODING
@@ -270,17 +271,17 @@ struct mk_iov *mk_palm_protocol_request_new(struct client_session *cs,
         prot_add_header(iov, mk_cgi_query_string, sr->query_string);
     }
 
-    /* 
+    /*
      * POST_VARIABLES
      * --------------
-     * non-standard field of CGI, it just used by Palm protocol 
+     * non-standard field of CGI, it just used by Palm protocol
      */
     if (sr->content_length > 0 && sr->data.len > 0) {
         prot_add_header(iov, mk_cgi_post_vars, sr->data);
     }
 
     /* Ending CRLFCRLF (\r\n\r\n) */
-    mk_api->iov_add_entry(iov, 
+    mk_api->iov_add_entry(iov,
                           mk_iov_crlfcrlf.data, mk_iov_crlfcrlf.len,
                           mk_iov_none, MK_IOV_NOT_FREE_BUF);
 #ifdef TRACE

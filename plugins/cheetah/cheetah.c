@@ -2,21 +2,22 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  This library is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ *  MA 02110-1301  USA
  */
 
 /* System headers */
@@ -41,7 +42,7 @@ void mk_cheetah_welcome_msg()
 {
     CHEETAH_WRITE("\n%s%s***%s Welcome to %sCheetah!%s, the %sMonkey Shell %s:) %s***%s\n",
                   ANSI_BOLD, ANSI_YELLOW,
-                  ANSI_WHITE, ANSI_GREEN, 
+                  ANSI_WHITE, ANSI_GREEN,
                   ANSI_WHITE, ANSI_RED, ANSI_WHITE, ANSI_YELLOW, ANSI_RESET);
     CHEETAH_WRITE("\n      << %sType 'help' or '\\h' for help%s >>\n\n",
                   ANSI_BLUE, ANSI_RESET);
@@ -75,7 +76,7 @@ static void mk_cheetah_config(char *path)
     mk_api->mem_free(default_file);
 
     /* Listen directive */
-    listen = mk_api->config_section_getval(section, "Listen", 
+    listen = mk_api->config_section_getval(section, "Listen",
                                            MK_CONFIG_VAL_STR);
 
     if (strcasecmp(listen, LISTEN_STDIN_STR) == 0) {
@@ -114,7 +115,7 @@ static void mk_cheetah_init(void *args UNUSED_PARAM)
 }
 
 /* This function is called when the plugin is loaded, it must
- * return 
+ * return
  */
 int _mkp_init(struct plugin_api **api, char *confdir)
 {

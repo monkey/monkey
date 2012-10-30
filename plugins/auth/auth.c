@@ -2,21 +2,22 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P.
+ *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
+ *  This library is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ *  MA 02110-1301  USA
  */
 
 #include <stdio.h>
@@ -32,7 +33,7 @@
 #include "base64.h"
 
 MONKEY_PLUGIN("auth",              /* shortname */
-              "Authentication",    /* name */ 
+              "Authentication",    /* name */
               VERSION,             /* version */
               MK_PLUGIN_STAGE_30); /* hooks */
 
@@ -54,7 +55,7 @@ static int mk_auth_validate_user(struct users_file *users,
     }
 
     /* Validate 'basic' credential type */
-    if (strncmp(credentials, auth_header_basic.data, 
+    if (strncmp(credentials, auth_header_basic.data,
                 auth_header_basic.len) != 0) {
         return -1;
     }
@@ -73,7 +74,7 @@ static int mk_auth_validate_user(struct users_file *users,
     if (sep == -1 || sep == 0  || (unsigned int) sep == auth_len - 1) {
         return -1;
     }
-    
+
     /* Get SHA1 hash */
     SHA1_Init(&sha);
     SHA1_Update(&sha, (unsigned char *) decoded + sep + 1, auth_len - (sep + 1));
@@ -85,7 +86,7 @@ static int mk_auth_validate_user(struct users_file *users,
         if (strncmp(entry->user, (char *) decoded, sep) != 0) {
             continue;
         }
-        
+
         PLUGIN_TRACE("User match '%s'", entry->user);
 
         /* match password */
@@ -108,7 +109,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     mk_list_init(&vhosts_list);
     mk_list_init(&users_file_list);
     mk_auth_conf_init_users_list();
-  
+
     /* Set HTTP headers key */
     auth_header_request.data = MK_AUTH_HEADER_REQUEST;
     auth_header_request.len  = sizeof(MK_AUTH_HEADER_REQUEST) - 1;
@@ -129,12 +130,12 @@ void _mkp_core_thctx()
 
     /* Init thread buffer for given credentials */
     user = mk_api->mem_alloc(MK_AUTH_CREDENTIALS_LEN - 1);
-    pthread_setspecific(_mkp_data, (void *) user);    
+    pthread_setspecific(_mkp_data, (void *) user);
 }
 
 /* Object handler */
-int _mkp_stage_30(struct plugin *plugin, 
-                  struct client_session *cs, 
+int _mkp_stage_30(struct plugin *plugin,
+                  struct client_session *cs,
                   struct session_request *sr)
 {
     int val;
@@ -144,7 +145,7 @@ int _mkp_stage_30(struct plugin *plugin,
     struct mk_list *loc_head;
     struct vhost *vh_entry = NULL;
     struct location *loc_entry;
-    
+
     /* Match auth_vhost with global vhost */
     mk_list_foreach(vh_head, &vhosts_list) {
         vh_entry = mk_list_entry(vh_head, struct vhost, _head);
@@ -159,7 +160,7 @@ int _mkp_stage_30(struct plugin *plugin,
         if (sr->uri_processed.len < loc_entry->path.len) {
             continue;
         }
-        if (strncmp(sr->uri_processed.data, 
+        if (strncmp(sr->uri_processed.data,
                     loc_entry->path.data, loc_entry->path.len) == 0) {
             is_restricted = MK_TRUE;
             break;
@@ -172,7 +173,7 @@ int _mkp_stage_30(struct plugin *plugin,
     }
 
     /* Check authorization header */
-    res = mk_api->header_get(&sr->headers_toc, 
+    res = mk_api->header_get(&sr->headers_toc,
                              auth_header_request.data,
                              auth_header_request.len);
 
