@@ -41,6 +41,8 @@ MONKEY_PLUGIN("liana",         /* shortname */
 
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
+    (void) confdir;
+
     mk_api = *api;
     return 0;
 }
