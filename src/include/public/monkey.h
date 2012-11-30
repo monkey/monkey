@@ -180,6 +180,19 @@ struct mklib_mime MK_EXPORT **mklib_mimetype_list(mklib_ctx);
 /* Add a new mimetype */
 int MK_EXPORT mklib_mimetype_add(mklib_ctx, const char *, const char *);
 
+/* Get the value of a http header.
+ *
+ * The return value is 0 on successful execution else -1.
+ *
+ * If a key is found and it has a value set, the data will be duplicated
+ * and the value argument will be pointed at it.
+ * If the key isn't fond or the value is a zero length string the value
+ * argument will point at a NULL pointer.
+ *
+ * Please free *value when it isn't needed anymore.
+ */
+int mklib_get_request_header(const mklib_session *ms, const char *key, char **value);
+
 #define mklib_vhost_foreach(cur, list) for(cur = *list++; cur; cur = *list++)
 #define mklib_worker_info_foreach(cur, list) mklib_vhost_foreach(cur, list)
 #define mklib_mimetype_foreach(cur, list) mklib_vhost_foreach(cur, list)

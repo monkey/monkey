@@ -621,4 +621,59 @@ int mklib_mimetype_add(mklib_ctx ctx, const char *name, const char *type)
     return MKLIB_TRUE;
 }
 
+int mklib_get_request_header(const mklib_session *ms,
+      const char *key,
+      char **value)
+{
+   const struct session_request *sr = ms;
+   int i, n;
+   size_t len, key_len = strlen(key), value_len;
+   const struct header_toc_row *row;
+
+   if (!sr) {
+      mk_err("mklib_get_request_header: mklib_session is not set.");
+      return -1;
+   }
+
+   n = sr->headers_toc.length;
+   row = sr->headers_toc.rows;
+
+   for (i = 0; i < n; i++) {
+      if (!row[i].end || !row[i].init) {
+         continue;
+      }
+      if (row[i].end <= row[i].init) {
+         continue;
+      }
+      len = row[i].end - row[i].init;
+      // Expect at least 2 extra chars after key. "<key>: "
+      if (len < key_len + 2 || !!strncasecmp(key, row[i].init, key_len)) {
+         continue;
+      }
+
+      if (row[i].init[key_len] != ':') {
+         // Partial match, skip
+         continue;
+      }
+
+      value_len = len - (key_len + 2);
+      if (value_len == 0) {
+         // Value set to ""
+         *value = NULL;
+         return 0;
+      }
+
+      *value = mk_mem_malloc_z(value_len + 1);
+      if (*value == NULL) {
+         mk_err("mklib_get_request_header: Malloc failed.");
+         return -1;
+      }
+      memcpy(*value, row[i].init + key_len + 2, value_len);
+      return 0;
+   }
+
+   *value = NULL;
+   return 0;
+}
+
 #endif
