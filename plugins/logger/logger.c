@@ -116,6 +116,7 @@ static void mk_logger_worker_init(void *args)
     long slen;
     int timeout;
     char *target;
+    (void) args;
     struct mk_list *head;
     struct log_target *entry;
 
@@ -340,6 +341,7 @@ void _mkp_exit()
 
 int _mkp_core_prctx(struct server_config *config)
 {
+    (void) config;
     struct log_target *new;
     struct host *entry_host;
     struct mk_list *hosts = &mk_api->config->hosts;
