@@ -103,6 +103,8 @@ static int mk_auth_validate_user(struct users_file *users,
 
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
+    (void) confdir;
+
     mk_api = *api;
 
     /* Init and load global users list */
@@ -141,6 +143,7 @@ int _mkp_stage_30(struct plugin *plugin,
     int val;
     short int is_restricted = MK_FALSE;
     mk_pointer res;
+    (void) plugin;
     struct mk_list *vh_head;
     struct mk_list *loc_head;
     struct vhost *vh_entry = NULL;
