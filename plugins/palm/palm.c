@@ -183,6 +183,7 @@ int _mkp_core_prctx(struct server_config *config)
      * key so we do our own lookup.
      */
     int len;
+    (void) config;
 	struct sockaddr_in sin;
 	struct in_addr in;
 
