@@ -228,6 +228,8 @@ void _mkp_exit()
 
 int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 {
+    (void) conx;
+
     /* Validate ip address with Mandril rules */
     if (mk_security_check_ip(socket) != 0) {
         PLUGIN_TRACE("[FD %i] Mandril close connection", socket);
@@ -238,6 +240,8 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 
 int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
+    (void) cs;
+
     if (mk_security_check_url(sr->uri) < 0) {
         PLUGIN_TRACE("Close connection FD %i", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
