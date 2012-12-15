@@ -98,9 +98,15 @@ int _mkp_event_write(int socket)
 
         if (!r->all_headers_done)
         {
+            unsigned char advance = 4;
+
             // Write the rest of the headers without chunking
             char *end = strstr(outptr, MK_IOV_CRLFCRLF);
             if (!end) end = strstr(outptr, MK_IOV_LFLFLFLF);
+            if (!end) {
+                end = strstr(outptr, MK_IOV_LFLF);
+                advance = 2;
+            }
             if (!end)
             {
                 swrite(socket, outptr, r->in_len);
@@ -109,7 +115,7 @@ int _mkp_event_write(int socket)
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
 
-            end += 4;
+            end += advance;
 
             int len = end - outptr;
 
