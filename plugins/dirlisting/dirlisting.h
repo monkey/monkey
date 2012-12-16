@@ -34,7 +34,7 @@
 #define MK_DIRHTML_BUFFER_GROW 5
 
 #define MK_HEADER_CHUNKED "Transfer-Encoding: Chunked\r\n\r\n"
-#define MK_DIRHTML_FMOD_LEN 50
+#define MK_DIRHTML_FMOD_LEN 24
 
 /* Theme files */
 #define MK_DIRHTML_FILE_HEADER "header.theme"
@@ -62,12 +62,12 @@ struct plugin_api *mk_api;
 
 struct mk_f_list
 {
+    char ft_modif[MK_DIRHTML_FMOD_LEN];
+    struct file_info info;
     char *name;
     char *size;
-    char ft_modif[MK_DIRHTML_FMOD_LEN];
-    unsigned char type;
-    struct file_info info;
     struct mk_f_list *next;
+    unsigned char type;
 };
 
 /* Main configuration of dirhtml module */
