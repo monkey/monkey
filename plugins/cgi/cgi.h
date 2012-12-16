@@ -66,6 +66,7 @@ struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *s
 void cgi_req_add(struct cgi_request *r);
 int cgi_req_del(struct cgi_request *r);
 
+// Get the CGI request by the client socket
 static inline struct cgi_request *cgi_req_get(int socket)
 {
     struct cgi_request *r = requests_by_socket[socket];
@@ -73,6 +74,7 @@ static inline struct cgi_request *cgi_req_get(int socket)
     return r;
 }
 
+// Get the CGI request by the CGI app's fd
 static inline struct cgi_request *cgi_req_get_by_fd(int fd)
 {
     struct mk_list *list, *node;
