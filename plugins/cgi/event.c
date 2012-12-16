@@ -21,31 +21,111 @@
  */
 
 #include "cgi.h"
+#include <fcntl.h>
 
-static int hangup(int socket)
+/* Get the earliest break between headers and content.
+
+   The reason for this function is that some CGI apps
+   use LFLF and some use CRLFCRLF.
+
+   If that app then sends content that has the other break
+   in the beginning, monkey can accidentally send part of the
+   content as headers.
+*/
+static char *getearliestbreak(const char buf[], const unsigned bufsize,
+				unsigned char * const advance) {
+
+    char * const crend = memmem(buf, bufsize, MK_IOV_CRLFCRLF,
+				sizeof(MK_IOV_CRLFCRLF) - 1);
+    char * const lfend = memmem(buf, bufsize, MK_IOV_LFLF,
+				sizeof(MK_IOV_LFLF) - 1);
+
+    if (!crend && !lfend)
+        return NULL;
+
+    /* If only one found, return that one */
+    if (!crend) {
+        *advance = 2;
+        return lfend;
+    }
+    if (!lfend)
+        return crend;
+
+    /* Both found, return the earlier one - the latter one is part of content */
+    if (lfend < crend) {
+        *advance = 2;
+        return lfend;
+    }
+    return crend;
+}
+
+static void done(struct cgi_request * const r) {
+
+    if (!r)
+        return;
+
+    /* If the CGI app is fast, we might get a hangup event before
+     * a write event. Try to write things out first. */
+    _mkp_event_write(r->socket);
+
+    mk_api->event_del(r->fd);
+
+    if (r->chunked)
+    {
+        swrite(r->socket, "0\r\n\r\n", 5);
+    }
+
+    mk_api->http_request_end(r->socket);
+    mk_api->socket_close(r->fd);
+
+    /* XXX Fixme: this needs to be atomic */
+    requests_by_socket[r->socket] = NULL;
+
+
+    cgi_req_del(r);
+}
+
+static int hangup(const int socket)
 {
     struct cgi_request *r = cgi_req_get_by_fd(socket);
 
     if (r) {
-        /* If the CGI app is fast, we might get a hangup event before
-         * a write event. Try to write things out first. */
-        _mkp_event_write(r->socket);
+
+        /* This kind of sucks, but epoll can give a hangup while
+           we still have a lot of data to read.
+
+           At this point we must turn the socket to blocking, otherwise
+           the data won't get across fully.
+        */
+
+        fcntl(r->socket, F_SETFL, fcntl(r->socket, F_GETFD, 0) & ~O_NONBLOCK);
+        while (1) {
+            int ret = _mkp_event_read(socket);
+            if (ret == MK_PLUGIN_RET_EVENT_CLOSE) {
+                done(r);
+                break;
+            }
+
+            ret = _mkp_event_write(r->socket);
+            if (ret == MK_PLUGIN_RET_EVENT_CLOSE) {
+                done(r);
+                break;
+            }
+        }
+        mk_api->socket_set_nonblocking(r->socket);
+
+        return MK_PLUGIN_RET_EVENT_OWNED;
+
+    } else if ((r = cgi_req_get(socket))) {
 
         mk_api->event_del(r->fd);
-
-        if (r->chunked)
-        {
-            swrite(r->socket, "0\r\n\r\n", 5);
-        }
-
-        mk_api->http_request_end(r->socket);
         mk_api->socket_close(r->fd);
 
         /* XXX Fixme: this needs to be atomic */
         requests_by_socket[r->socket] = NULL;
 
-
         cgi_req_del(r);
+
         return MK_PLUGIN_RET_EVENT_OWNED;
     }
 
@@ -104,12 +184,7 @@ int _mkp_event_write(int socket)
             unsigned char advance = 4;
 
             // Write the rest of the headers without chunking
-            char *end = strstr(outptr, MK_IOV_CRLFCRLF);
-            if (!end) end = strstr(outptr, MK_IOV_LFLFLFLF);
-            if (!end) {
-                end = strstr(outptr, MK_IOV_LFLF);
-                advance = 2;
-            }
+            char *end = getearliestbreak(outptr, r->in_len, &advance);
             if (!end)
             {
                 swrite(socket, outptr, r->in_len);
