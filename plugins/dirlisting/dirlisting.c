@@ -104,7 +104,6 @@ static struct mk_f_list *mk_dirhtml_create_element(char *file,
                                             char *full_path,
                                             unsigned long *list_len)
 {
-    off_t size;
     int n;
     struct tm *st_time;
     struct mk_f_list *entry;
@@ -127,10 +126,8 @@ static struct mk_f_list *mk_dirhtml_create_element(char *file,
         return NULL;
     }
 
-    size = entry->info.size;
-
     if (type != DT_DIR) {
-        entry->size = mk_dirhtml_human_readable_size(size);
+        entry->size = mk_dirhtml_human_readable_size(entry->info.size);
     }
     else {
         entry->size = MK_DIRHTML_SIZE_DIR;
