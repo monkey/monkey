@@ -595,7 +595,7 @@ static int mk_dirhtml_entry_cmp(const void *a, const void *b)
     struct mk_f_list *const *f_a = a;
     struct mk_f_list *const *f_b = b;
 
-    return strcmp((*f_a)->name, (*f_b)->name);
+    return strcasecmp((*f_a)->name, (*f_b)->name);
 }
 
 static int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
