@@ -750,7 +750,7 @@ int mk_request_error(int http_status, struct client_session *cs,
 
             /* validate error file */
             ret = mk_file_get_info(entry->real_path, &finfo);
-            if (ret == -1 && finfo.size > 0) {
+            if (ret == -1) {
                 break;
             }
 
