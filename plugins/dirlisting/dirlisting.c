@@ -698,7 +698,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
                                           values_global, is_chunked);
 
     /* Creating table of contents and sorting */
-    toc = mk_api->mem_alloc(sizeof(struct mk_f_list) * list_len);
+    toc = mk_api->mem_alloc(sizeof(struct mk_f_list *) * list_len);
     entry = file_list;
     i = 0;
     while (entry) {
