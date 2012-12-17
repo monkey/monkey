@@ -37,14 +37,15 @@ int swrite(const int fd, const void *buf, const size_t count)
 
     while (pos > 0 && ret >= 0) {
         ret = write(fd, buf, pos);
+
+        if (ret < 0)
+            return ret;
+
         pos -= ret;
         buf += ret;
     }
 
-    if (ret < 0)
-        return 0;
-
-    return 1;
+    return count;
 }
 
 static void cgi_write_post(void *p)

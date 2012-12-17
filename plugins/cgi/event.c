@@ -135,14 +135,21 @@ int _mkp_event_write(int socket)
             }
         }
 
+        int ret;
+
         if (r->chunked)
         {
             char tmp[16];
             int len = snprintf(tmp, 16, "%x%s", r->in_len, MK_CRLF);
-            swrite(socket, tmp, len);
+            ret = swrite(socket, tmp, len);
+            if (ret < 0)
+                return MK_PLUGIN_RET_EVENT_CLOSE;
         }
 
-        swrite(socket, outptr, r->in_len);
+        ret = swrite(socket, outptr, r->in_len);
+        if (ret < 0)
+            return MK_PLUGIN_RET_EVENT_CLOSE;
+
         r->in_len = 0;
         mk_api->event_socket_change_mode(socket, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
         mk_api->event_socket_change_mode(r->fd, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
