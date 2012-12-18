@@ -132,13 +132,14 @@ struct plugin *mk_plugin_alloc(void *handler, const char *path)
     struct plugin *p;
     struct plugin_info *info;
 
-    p = mk_mem_malloc_z(sizeof(struct plugin));
     info = (struct plugin_info *) mk_plugin_load_symbol(handler, "_plugin_info");
 
     if (!info) {
         mk_warn("Plugin '%s' is not registering properly", path);
         return NULL;
     }
+
+    p = mk_mem_malloc_z(sizeof(struct plugin));
 
     p->shortname = (char *) (*info).shortname;
     p->name = (char *) (*info).name;

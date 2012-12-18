@@ -67,12 +67,12 @@ static int mk_auth_validate_user(struct users_file *users,
     decoded[auth_len] = '\0';
 
     if (auth_len <= 3) {
-        return -1;
+        goto error;
     }
 
     sep = mk_api->str_search_n((char *) decoded, ":", 1, auth_len);
     if (sep == -1 || sep == 0  || (unsigned int) sep == auth_len - 1) {
-        return -1;
+        goto error;
     }
 
     /* Get SHA1 hash */
@@ -92,12 +92,15 @@ static int mk_auth_validate_user(struct users_file *users,
         /* match password */
         if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
             PLUGIN_TRACE("User '%s' matched password");
+            free(decoded);
             return 0;
         }
         PLUGIN_TRACE("Invalid password");
         break;
     }
 
+    error:
+    free(decoded);
     return -1;
 }
 
