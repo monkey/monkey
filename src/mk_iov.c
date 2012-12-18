@@ -79,6 +79,8 @@ int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 
     if (!new_io || !new_buf) {
         MK_TRACE("could not reallocate IOV");
+        mk_mem_free(new_io);
+        mk_mem_free(new_buf);
         return -1;
     }
 

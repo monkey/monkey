@@ -853,8 +853,10 @@ int mk_request_error(int http_status, struct client_session *cs,
 
     mk_header_send(cs->socket, cs, sr);
 
-    if (page && sr->method != HTTP_METHOD_HEAD) {
-        mk_socket_send(cs->socket, page->data, page->len);
+    if (page) {
+        if (sr->method != HTTP_METHOD_HEAD)
+            mk_socket_send(cs->socket, page->data, page->len);
+
         mk_pointer_free(page);
         mk_mem_free(page);
     }
