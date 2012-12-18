@@ -430,7 +430,6 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
                 MK_TRACE("[FD %i] Scheduler, closing due to timeout (incomplete)",
                          cs_node->socket);
 
-                close(cs_node->socket);
                 mk_sched_remove_client(sched, cs_node->socket);
                 mk_session_remove(cs_node->socket);
             }
