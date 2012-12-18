@@ -171,10 +171,6 @@ static struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
             continue;
         }
 
-        if (!ent->d_name) {
-            puts("mk_dirhtml :: buffer error");
-        }
-
         mk_api->str_build(&full_path, &len, "%s%s", path, ent->d_name);
         entry = mk_dirhtml_create_element(ent->d_name,
                                           ent->d_type, full_path, list_len);
