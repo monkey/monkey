@@ -135,20 +135,23 @@ int _mkp_network_io_connect(char *host, int port)
         socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
-            mk_warn("Error creating client socket");
-            return -1;
+            mk_warn("Error creating client socket, retrying");
+            continue;
         }
 
         if (connect(socket_fd,
                     (struct sockaddr *) rp->ai_addr, rp->ai_addrlen) == -1) {
             close(socket_fd);
-            mk_err("Can't connect to %s", host);
-            return -1;
+            mk_err("Can't connect to %s, retrying", host);
+            continue;
         }
 
         break;
     }
     freeaddrinfo(res);
+
+    if (rp == NULL)
+        return -1;
 
     return socket_fd;
 }
@@ -216,8 +219,8 @@ int _mkp_network_io_server(int port, char *listen_addr)
         socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
-            mk_warn("Error creating server socket");
-            return -1;
+            mk_warn("Error creating server socket, retrying");
+            continue;
         }
 
         mk_api->socket_set_tcp_nodelay(socket_fd);
@@ -225,12 +228,15 @@ int _mkp_network_io_server(int port, char *listen_addr)
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
         if(ret == -1) {
-            mk_err("Port %i cannot be used\n", port);
-            return -1;
+            mk_err("Port %i cannot be used, retrying\n", port);
+            continue;
         }
         break;
     }
     freeaddrinfo(res);
+
+    if (rp == NULL)
+        return -1;
 
     return socket_fd;
 }
