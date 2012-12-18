@@ -107,7 +107,9 @@ static int get_port_by_socket(int fd)
     socklen_t len = sizeof(struct sockaddr_in);
     struct sockaddr_in m_addr;
 
-    getpeername(fd, (struct sockaddr *) &m_addr, &len);
+    int ret = getpeername(fd, (struct sockaddr *) &m_addr, &len);
+    if (ret < 0)
+        return ret;
     return (int) m_addr.sin_port;
 }
 
