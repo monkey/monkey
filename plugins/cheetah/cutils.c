@@ -49,11 +49,11 @@ void mk_cheetah_print_worker_memory_usage(pid_t pid)
     }
 
     buf = fgets(buf, s, f);
+    fclose(f);
     if (!buf) {
         CHEETAH_WRITE("Cannot format details\n");
         return;
     }
-    fclose(f);
 
     CHEETAH_WRITE("\n");
     return;

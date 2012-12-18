@@ -229,6 +229,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
         if(ret == -1) {
             mk_err("Port %i cannot be used, retrying\n", port);
+            close(socket_fd);
             continue;
         }
         break;
