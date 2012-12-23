@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Lauri Kasanen
@@ -41,6 +43,7 @@ static int hangup(int socket)
 
         /* XXX Fixme: this needs to be atomic */
         requests_by_socket[r->socket] = NULL;
+
 
         cgi_req_del(r);
         return MK_PLUGIN_RET_EVENT_OWNED;
