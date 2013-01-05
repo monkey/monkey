@@ -49,7 +49,7 @@ static struct plugin * fcgi_global_plugin;
 static struct fcgi_config fcgi_global_config;
 static struct fcgi_context_list fcgi_global_context_list;
 
-static __thread struct fcgi_context *fcgi_local_context;
+static pthread_key_t fcgi_local_context;
 
 #define UNUSED_VARIABLE(var) (void)(var)
 
@@ -126,8 +126,13 @@ static size_t fcgi_parse_cgi_headers(struct session_request *sr,
  */
 int fcgi_wake_connection(int location_id)
 {
-	struct fcgi_fd_list *fdl = &fcgi_local_context->fdl;
+	struct fcgi_context *cntx;
+	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	fdl = &cntx->fdl;
 
 	fd = fcgi_fd_list_get(fdl,
 			FCGI_FD_SLEEPING | FCGI_FD_READY,
@@ -144,6 +149,8 @@ int fcgi_wake_connection(int location_id)
 		fcgi_fd_set_state(fd, FCGI_FD_READY);
 	}
 	return 0;
+error:
+	return -1;
 }
 
 int fcgi_server_connect(const struct fcgi_server *server)
@@ -181,9 +188,14 @@ error:
 int fcgi_new_connection(int location_id)
 {
 	struct plugin *plugin = fcgi_global_plugin;
-	struct fcgi_fd_list *fdl = &fcgi_local_context->fdl;
+	struct fcgi_context *cntx;
+	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
 	struct fcgi_server *server;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	fdl = &cntx->fdl;
 
 	fd = fcgi_fd_list_get(fdl, FCGI_FD_AVAILABLE, location_id);
 	if (!fd) {
@@ -212,7 +224,8 @@ error:
 
 int fcgi_prepare_request(struct request *req)
 {
-	struct request_list *rl = &fcgi_local_context->rl;
+	struct fcgi_context *cntx;
+	struct request_list *rl;
 	uint16_t req_id = 0;
 
 	struct fcgi_begin_req_body b = {
@@ -227,6 +240,10 @@ int fcgi_prepare_request(struct request *req)
 	size_t len = 4096, pos = 0, tmp;
 	ssize_t ret;
 	uint8_t *buffer;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	rl = &cntx->rl;
 
 	buffer = mk_api->mem_alloc(len);
 	check_mem(buffer);
@@ -316,17 +333,23 @@ error:
 
 int fcgi_send_abort_request(struct request *req, struct fcgi_fd *fd)
 {
-	struct request_list *rl = &fcgi_local_context->rl;
+	struct fcgi_context *cntx;
+	struct request_list *rl;
 	struct fcgi_header h = {
 		.version  = FCGI_VERSION_1,
 		.type     = FCGI_ABORT_REQUEST,
-		.req_id   = request_list_index_of(rl, req),
+		.req_id   = 0,
 		.body_len = 0,
 		.body_pad = 0,
 	};
 	uint8_t buf[sizeof(h)];
 	ssize_t ret;
 
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	rl = &cntx->rl;
+
+	h.req_id = request_list_index_of(rl, req);
 	check(h.req_id > 0, "Bad request id: %d.", h.req_id);
 	fcgi_write_header(buf, &h);
 
@@ -627,12 +650,17 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 		struct session_request *sr)
 {
 	char *uri = NULL;
-	struct request_list *rl = &fcgi_local_context->rl;
+	struct fcgi_context *cntx;
+	struct request_list *rl;
 	struct request *req = NULL;
 	uint16_t req_id;
 	int location_id;
 
 	UNUSED_VARIABLE(plugin);
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	rl = &cntx->rl;
 
 	req = request_list_get_by_fd(rl, cs->socket);
 	if (req) {
@@ -703,6 +731,8 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 {
 	mk_api = *api;
 
+	pthread_key_create(&fcgi_local_context, NULL);
+
 	chunk_module_init(mk_api->mem_alloc, mk_api->mem_realloc, mk_api->mem_free);
 	request_module_init(mk_api->mem_alloc, mk_api->mem_free);
 	fcgi_fd_module_init(mk_api->mem_alloc, mk_api->mem_free);
@@ -756,13 +786,15 @@ error:
 void _mkp_core_thctx(void)
 {
 	int tid;
+	struct fcgi_context *cntx;
 
 	tid = fcgi_context_list_assign_thread_id(&fcgi_global_context_list);
 	check(tid != -1, "Failed to assign thread id.");
 
 	PLUGIN_TRACE("Thread assigned id %d.", tid);
 
-	fcgi_local_context = fcgi_context_list_get(&fcgi_global_context_list, tid);
+	cntx = fcgi_context_list_get(&fcgi_global_context_list, tid);
+	pthread_setspecific(fcgi_local_context, cntx);
 	return;
 error:
 	log_err("Failed to initiate thread context.");
@@ -771,12 +803,21 @@ error:
 
 static int hangup(int socket)
 {
-	struct fcgi_fd_list *fdl = &fcgi_local_context->fdl;
+	struct fcgi_context *cntx;
+	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
-	struct request_list *rl = &fcgi_local_context->rl;
+	struct request_list *rl;
 	struct request *req;
 	uint16_t req_id;
 	enum fcgi_fd_state state;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	if (!cntx) {
+		mk_err("No fcgi context on thread.");
+		return MK_PLUGIN_RET_EVENT_NEXT;
+	}
+	fdl = &cntx->fdl;
+	rl = &cntx->rl;
 
 	fd  = fcgi_fd_list_get_by_fd(fdl, socket);
 	req = fd ? NULL : request_list_get_by_fd(rl, socket);
@@ -829,12 +870,18 @@ static int hangup(int socket)
 int _mkp_event_write(int socket)
 {
 	uint16_t req_id = 0;
-	struct request_list *rl = &fcgi_local_context->rl;
+	struct fcgi_context *cntx;
+	struct request_list *rl;
 	struct request *req = NULL;
-	struct fcgi_fd_list *fdl = &fcgi_local_context->fdl;
+	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
 	struct fcgi_location *locp;
 	ssize_t ret;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	rl = &cntx->rl;
+	fdl = &cntx->fdl;
 
 	fd  = fcgi_fd_list_get_by_fd(fdl, socket);
 	req = fd ? NULL : request_list_get_by_fd(rl, socket);
@@ -966,10 +1013,17 @@ error:
 
 int _mkp_event_read(int socket)
 {
-	struct chunk_list *cl = &fcgi_local_context->cl;
-	struct request_list *rl = &fcgi_local_context->rl;
-	struct fcgi_fd_list *fdl = &fcgi_local_context->fdl;
+	struct fcgi_context *cntx;
+	struct chunk_list *cl;
+	struct request_list *rl;
+	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
+
+	cntx = pthread_getspecific(fcgi_local_context);
+	check(cntx, "No fcgi context on thread.");
+	cl = &cntx->cl;
+	rl = &cntx->rl;
+	fdl = &cntx->fdl;
 
 	fd = fcgi_fd_list_get_by_fd(fdl, socket);
 	if (!fd) {
@@ -988,7 +1042,7 @@ int _mkp_event_read(int socket)
 		return MK_PLUGIN_RET_EVENT_OWNED;
 	}
 error:
-	PLUGIN_TRACE("[FCGI_FD %d] Closing connection.", fd->fd);
+	PLUGIN_TRACE("[FCGI_FD %d] Closing connection.", socket);
 	return MK_PLUGIN_RET_EVENT_CLOSE;
 }
 
