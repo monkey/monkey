@@ -73,8 +73,7 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
 
     dlerror();
     s = dlsym(handler, symbol);
-    if ((err = dlerror()) != NULL) {
-        mk_warn("dlsym() %s", err);
+    if (dlerror() != NULL) {
         return NULL;
     }
 
