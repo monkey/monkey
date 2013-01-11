@@ -213,7 +213,7 @@ static int mk_sched_register_thread(int efd)
 }
 
 /* created thread, all this calls are in the thread context */
-static void *mk_sched_launch_worker_loop(void *thread_conf)
+void *mk_sched_launch_worker_loop(void *thread_conf)
 {
     char *thread_name = 0;
     unsigned long len;

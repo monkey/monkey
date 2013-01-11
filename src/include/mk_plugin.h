@@ -280,10 +280,8 @@ struct plugin_api
     void (*trace)(const char *, int, const char *, char *, int, const char *, ...);
     int (*errno_print) (int);
 #endif
-
-#ifdef DEBUG
     void (*stacktrace)(void);
-#endif
+
 };
 
 extern struct plugin_api *api;

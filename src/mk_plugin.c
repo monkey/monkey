@@ -411,10 +411,7 @@ void mk_plugin_init()
     api->errno_print = mk_utils_print_errno;
 #endif
 
-#ifdef DEBUG
     api->stacktrace = (void *) mk_utils_stacktrace;
-#endif
-
     api->plugins = config->plugins;
 }
 

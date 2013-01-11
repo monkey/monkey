@@ -1057,13 +1057,13 @@ fi
 
 [ -n "$relaxed_plugins" ] && DEFS="$DEFS -DRELAXED_PLUGINS"
 
+CLFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
 if test -z "$debug" ; then
-    CFLAGS="$CFLAGS -O2"
+    CFLAGS="$CFLAGS $CFLAGS_GEN -O2 -fvisibility=hidden"
 else
     DEFS="-DDEBUG -DSAFE_FREE"
-    CFLAGS="$CFLAGS -g"
+    CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
 fi
-CFLAGS="$CFLAGS -std=gnu99 -Wall -Wextra -fvisibility=hidden"
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
     echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"

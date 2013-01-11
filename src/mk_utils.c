@@ -31,12 +31,16 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/prctl.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 
+/* stacktrace */
+#include <dlfcn.h>
+#include <execinfo.h>
+
+/* local headers */
 #include "monkey.h"
 #include "mk_memory.h"
 #include "mk_utils.h"
@@ -622,24 +626,27 @@ int mk_utils_worker_rename(const char *title)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
 }
 
-#ifdef DEBUG
-#include <execinfo.h>
-
 void mk_utils_stacktrace(void)
 {
-    int i;
+    unsigned int i;
+    int ret;
     size_t size;
-    char **str;
     void *arr[10];
+    Dl_info d;
 
-    printf("\n%s[stack trace]%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("[stack trace]\n");
     size = backtrace(arr, 10);
-    str = backtrace_symbols(arr, size);
-    for (i = 0; i < size; i++) {
-        printf(" + %s\n", str[i]);
+
+    for (i = 1; i < size ; i++) {
+      ret = dladdr(arr[i], &d);
+      if (ret == 0 || !d.dli_sname) {
+          printf(" #%i  0x%016llx in \?\?\?\?\?\?\?()\n",
+                 (i - 1), (long long unsigned int) arr[i]);
+          continue;
+      }
+
+      printf(" #%i  0x%016llx in %s() from %s\n",
+             (i - 1), (long long unsigned int) arr[i], d.dli_sname, d.dli_fname);
     }
-
-    fflush(stdout);
-
 }
-#endif
+
