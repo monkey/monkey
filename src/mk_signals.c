@@ -37,6 +37,15 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
+
+/*
+ * Some old uclib versions do not implment the sys_siglist, this is mostly
+ * related to embedded environments with old toolchains
+ */
+#ifndef sys_siglist
+#include "contrib/uclib/sys_siglist.h"
+#endif
+
 /* when we catch a signal and want to exit we call this function
    to do it gracefully */
 static void mk_signal_exit()
