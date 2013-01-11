@@ -942,6 +942,9 @@ for arg in $*; do
 		--no-backtrace*)
 			no_backtrace=1
 			;;
+		--uclib-mode*)
+			uclib_mode=1
+			;;
 		--enable-shared*)
 			sharedlib=1
 			;;
@@ -992,6 +995,7 @@ for arg in $*; do
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
+			echo "  --uclib-mode            Enable uClib compatibility mode"
                         echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
 			echo
 			echo "Shared library options:"
@@ -1082,6 +1086,11 @@ fi
 
 if [ $trace ] ; then
     DEFS="$DEFS -DTRACE"
+fi
+
+if [ $uclib_mode ]; then
+    no_backtrace=1
+    DEFS="$DEFS -DUCLIB_MODE"
 fi
 
 if [ $no_backtrace ]; then

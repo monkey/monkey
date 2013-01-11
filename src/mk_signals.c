@@ -23,6 +23,7 @@
 /* If a library, do not interfere with the app's signals */
 #ifndef SHAREDLIB
 
+#include <features.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@
  * Some old uclib versions do not implment the sys_siglist, this is mostly
  * related to embedded environments with old toolchains
  */
-#ifndef sys_siglist
+#ifdef UCLIB_MODE
 #include "contrib/uclib/sys_siglist.h"
 #endif
 
