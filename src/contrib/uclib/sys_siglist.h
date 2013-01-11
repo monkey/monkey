@@ -13,7 +13,7 @@
 #ifndef UCLIB_SYS_SIGLIST
 #define UCLIB_SYS_SIGLIST
 
-extern const char _string_syssigmsgs[];
+const char _string_syssigmsgs[];
 const char *const sys_siglist[_NSIG] = {
 	[0] =				NULL,
 	[SIGHUP] =			_string_syssigmsgs + 1,

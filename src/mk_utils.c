@@ -38,7 +38,9 @@
 
 /* stacktrace */
 #include <dlfcn.h>
+#ifndef NO_BACKTRACE
 #include <execinfo.h>
+#endif
 
 /* local headers */
 #include "monkey.h"
@@ -626,6 +628,9 @@ int mk_utils_worker_rename(const char *title)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
 }
 
+#ifdef NO_BACKTRACE
+void mk_utils_stacktrace(void) {}
+#else
 void mk_utils_stacktrace(void)
 {
     unsigned int i;
@@ -649,4 +654,4 @@ void mk_utils_stacktrace(void)
              (i - 1), (long long unsigned int) arr[i], d.dli_sname, d.dli_fname);
     }
 }
-
+#endif
