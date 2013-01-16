@@ -702,8 +702,18 @@ int mk_plugin_stage_run(unsigned int hook,
         /* Data */
         while (clen > 0) {
             int remaining = api->socket_send(socket, content, clen);
-            if (remaining < 0) return -1;
-
+            if (remaining < 0) {
+                /*
+                 * FIXME: This is a temporal fix to send out the data,
+                 * this is working in blocking mode. This will be fixed
+                 * shortly once the 'pending buffers' interface is
+                 * implemented.
+                 */
+                if (errno == EAGAIN) {
+                    continue;
+                }
+                return -1;
+            }
             clen -= remaining;
         }
         mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
