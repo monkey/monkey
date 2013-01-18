@@ -642,16 +642,16 @@ void mk_utils_stacktrace(void)
     printf("[stack trace]\n");
     size = backtrace(arr, 10);
 
-    for (i = 1; i < size ; i++) {
+    for (i = 1; i < size && i < 10; i++) {
       ret = dladdr(arr[i], &d);
       if (ret == 0 || !d.dli_sname) {
-          printf(" #%i  0x%016llx in \?\?\?\?\?\?\?()\n",
-                 (i - 1), (long long unsigned int) arr[i]);
+          printf(" #%i  %p in \?\?\?\?\?\?\?()\n",
+                 (i - 1), arr[i]);
           continue;
       }
 
-      printf(" #%i  0x%016llx in %s() from %s\n",
-             (i - 1), (long long unsigned int) arr[i], d.dli_sname, d.dli_fname);
+      printf(" #%i  %p in %s() from %s\n",
+             (i - 1), arr[i], d.dli_sname, d.dli_fname);
     }
 }
 #endif
