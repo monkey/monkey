@@ -1067,7 +1067,7 @@ fi
 
 CLFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
 if test -z "$debug" ; then
-    CFLAGS="$CFLAGS $CFLAGS_GEN -O2 -fvisibility=hidden"
+    echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS $CFLAGS_GEN -O2 -fvisibility=hidden"
 else
     DEFS="-DDEBUG -DSAFE_FREE"
     CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
