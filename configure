@@ -1065,9 +1065,12 @@ fi
 
 [ -n "$relaxed_plugins" ] && DEFS="$DEFS -DRELAXED_PLUGINS"
 
-CLFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
+CFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
 if test -z "$debug" ; then
-    echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS $CFLAGS_GEN -O2 -fvisibility=hidden"
+    CFLAGS="$CFLAGS $CFLAGS_GEN -fvisibility=hidden"
+
+    # Only set -O2 if the user didn't include an -O level
+    echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
     DEFS="-DDEBUG -DSAFE_FREE"
     CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
