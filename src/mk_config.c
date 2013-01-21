@@ -417,7 +417,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                      "Workers",
                                                      MK_CONFIG_VAL_NUM);
     if (config->workers < 1) {
-        mk_config_print_error_msg("Workers", tmp);
+        config->workers = sysconf(_SC_NPROCESSORS_ONLN);
+        if (config->workers < 1) {
+            mk_config_print_error_msg("Workers", tmp);
+        }
     }
     /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
