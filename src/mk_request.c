@@ -651,15 +651,12 @@ int mk_handler_write(int socket, struct client_session *cs)
     mk_list_foreach(sr_head, sr_list) {
         sr_node = mk_list_entry(sr_head, struct session_request, _head);
 
-        /* Request not processed also no plugin has take some action */
-        /* Request with data to send by static file sender */
-        if (!sr_node->handled_by) {
-            if (sr_node->bytes_to_send > 0) {
-                final_status = mk_http_send_file(cs, sr_node);
-            }
-            else if (sr_node->bytes_to_send < 0) {
-                final_status = mk_request_process(cs, sr_node);
-            }
+        if (sr_node->bytes_to_send > 0) {
+            /* Request with data to send by static file sender */
+            final_status = mk_http_send_file(cs, sr_node);
+        }
+        else if (sr_node->bytes_to_send < 0) {
+            final_status = mk_request_process(cs, sr_node);
         }
 
         /*

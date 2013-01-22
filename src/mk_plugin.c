@@ -605,13 +605,12 @@ int mk_plugin_stage_run(unsigned int hook,
     if (hook & MK_PLUGIN_STAGE_30) {
         /* The request just arrived and is required to check who can
          * handle it */
-        if (!sr->handled_by){
-            stm = plg_stagemap->stage_30;
-            while (stm) {
-                /* Call stage */
-                MK_TRACE("[%s] STAGE 30", stm->p->shortname);
-                ret = stm->p->stage.s30(stm->p, cs, sr);
-                switch (ret) {
+        stm = plg_stagemap->stage_30;
+        while (stm) {
+            /* Call stage */
+            MK_TRACE("[%s] STAGE 30", stm->p->shortname);
+            ret = stm->p->stage.s30(stm->p, cs, sr);
+            switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_END:
@@ -622,10 +621,8 @@ int mk_plugin_stage_run(unsigned int hook,
                     mk_err("Plugin '%s' returns invalid value %i",
                            stm->p->shortname, ret);
                     exit(EXIT_FAILURE);
-                }
-
-                stm = stm->next;
             }
+            stm = stm->next;
         }
     }
 

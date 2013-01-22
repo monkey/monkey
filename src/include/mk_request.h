@@ -237,9 +237,6 @@ struct session_request
     /* Response headers */
     struct response_headers headers;
 
-    /* Plugin handlers */
-    struct plugin *handled_by;
-
     /* mk_list head node */
     struct mk_list _head;
 };
