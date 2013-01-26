@@ -93,6 +93,7 @@ static void mk_help(int rc)
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
     printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
+    printf("  -p, --port\t\tset listener TCP port (override config)\n");
     printf("  -v, --version\t\tshow version number\n");
     printf("  -h, --help\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
@@ -104,18 +105,21 @@ static void mk_help(int rc)
 /* MAIN */
 int main(int argc, char **argv)
 {
-    int opt, run_daemon = 0;
+    int opt;
+    int port_override = -1;
+    int run_daemon = 0;
     char *file_config = NULL;
 
     static const struct option long_opts[] = {
         { "configdir", required_argument, NULL, 'c' },
 		{ "daemon",	   no_argument,       NULL, 'D' },
+        { "port",      required_argument, NULL, 'p' },
         { "version",   no_argument,       NULL, 'v' },
 		{ "help",	   no_argument,       NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
 
-    while ((opt = getopt_long(argc, argv, "DSvhc:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "DSvhp:c:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'v':
             mk_version();
@@ -124,6 +128,9 @@ int main(int argc, char **argv)
             mk_help(EXIT_SUCCESS);
         case 'D':
             run_daemon = 1;
+            break;
+        case 'p':
+            port_override = atoi(optarg);
             break;
         case 'c':
             file_config = optarg;
@@ -160,6 +167,11 @@ int main(int argc, char **argv)
     mk_sched_init();
     mk_plugin_init();
     mk_plugin_read_config();
+
+    /* Override TCP port if it was set in the command line */
+    if (port_override > 0) {
+        config->serverport = port_override;
+    }
 
     /* Server listening socket */
     config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
