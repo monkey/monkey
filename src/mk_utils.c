@@ -30,6 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <inttypes.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -645,13 +646,13 @@ void mk_utils_stacktrace(void)
     for (i = 1; i < size && i < 10; i++) {
       ret = dladdr(arr[i], &d);
       if (ret == 0 || !d.dli_sname) {
-          printf(" #%i  %p in \?\?\?\?\?\?\?()\n",
-                 (i - 1), arr[i]);
+          printf(" #%i  0x%016" PRIxPTR " in \?\?\?\?\?\?\?()\n",
+                 (i - 1), (uintptr_t) arr[i]);
           continue;
       }
 
-      printf(" #%i  %p in %s() from %s\n",
-             (i - 1), arr[i], d.dli_sname, d.dli_fname);
+      printf(" #%i  0x%016" PRIxPTR " in %s() from %s\n",
+             (i - 1), (uintptr_t) arr[i], d.dli_sname, d.dli_fname);
     }
 }
 #endif
