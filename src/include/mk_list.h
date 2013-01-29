@@ -84,28 +84,11 @@ static inline int mk_list_is_empty(struct mk_list *head)
 
 #define mk_list_entry( ptr, type, member ) container_of( ptr, type, member )
 
-/*
- * First node of the list
- * ----------------------
- * Be careful with this Macro, its intended to be used when some node is already linked
- * to the list (ptr). If the list is empty it will return the list address as it points
- * to it self: list == list->prev == list->next.
- *
- * If exists some possiblity that your code handle an empty list, use mk_list_is_empty()
- * previously to check if its empty or not.
- */
+/* First node of the list */
 #define mk_list_entry_first(ptr, type, member) container_of((ptr)->next, type, member)
 
-/* Last node of the list
- * ---------------------
- * Be careful with this Macro, its intended to be used when some node is already linked
- * to the list (ptr). If the list is empty it will return the list address as it points
- * to it self: list == list->prev == list->next.
- *
- * If exists some possiblity that your code handle an empty list, use mk_list_is_empty()
- * previously to check if its empty or not.
- */
-#define mk_list_entry_last(ptr, type, member) container_of((ptr)->next, type, member);
+/* Last node of the list */
+#define mk_list_entry_last(ptr, type, member) container_of((ptr)->prev, type, member)
 
 /* Next node */
 #define mk_list_entry_next(ptr, type, member, head)                     \
