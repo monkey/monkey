@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "monkey.h"
 #include "mk_mimetype.h"
@@ -57,10 +58,13 @@ static int mime_cmp(const void *m1, const void *m2)
 }
 
 /* Match mime type for requested resource */
-inline struct mimetype *mk_mimetype_lookup(const char *name)
+inline struct mimetype *mk_mimetype_lookup(char *name)
 {
     int i;
+    char *p = name;
     struct mimetype tmp;
+
+    for ( ; *p; ++p) *p = tolower(*p);
 
     /*
      * Simple heuristic to guess which mime type to load,
@@ -71,7 +75,7 @@ inline struct mimetype *mk_mimetype_lookup(const char *name)
      * otherwise apply a binary search
      */
     for (i = 0; i < MIME_COMMON; i++) {
-        if (!strcasecmp(name, mimecommon[i].name)) {
+        if (!strcmp(name, mimecommon[i].name)) {
             return &mimecommon[i];
         }
     }
@@ -80,10 +84,15 @@ inline struct mimetype *mk_mimetype_lookup(const char *name)
     return bsearch(&tmp, mimearr, mime_nitem, sizeof(struct mimetype), mime_cmp);
 }
 
-int mk_mimetype_add(const char *name, const char *type, const int common)
+int mk_mimetype_add(char *name, const char *type, const int common)
 {
     int len = strlen(type) + 3;
+    char *p;
     struct mimetype new_mime;
+
+    /* make sure we register the extension in lower case */
+    p = name;
+    for ( ; *p; ++p) *p = tolower(*p);
 
     new_mime.name = mk_string_dup(name);
     new_mime.type.data = mk_mem_malloc(len);
