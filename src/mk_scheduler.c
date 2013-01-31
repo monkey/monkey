@@ -336,7 +336,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
      * on that.
      */
     mk_epoll_del(sched->epoll_fd, remote_fd);
-    close(remote_fd);
+    mk_socket_close(remote_fd);
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
@@ -375,7 +375,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
      */
     if (!sched) {
         MK_TRACE("[FD %i] No scheduler information", remote_fd);
-        close(remote_fd);
+        mk_socket_close(remote_fd);
         return NULL;
     }
 

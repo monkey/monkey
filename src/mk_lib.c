@@ -75,7 +75,7 @@ static void mklib_run(void *p)
         if (remote_fd == -1) continue;
 
         ret = mk_sched_add_client(remote_fd);
-        if (ret == -1) close(remote_fd);
+        if (ret == -1) mk_socket_close(remote_fd);
     }
 }
 

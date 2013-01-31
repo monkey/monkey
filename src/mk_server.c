@@ -117,7 +117,7 @@ void mk_server_loop(int server_fd)
         /* Assign socket to worker thread */
         ret = mk_sched_add_client(remote_fd);
         if (ret == -1) {
-            close(remote_fd);
+            mk_socket_close(remote_fd);
         }
     }
 }

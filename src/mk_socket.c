@@ -54,7 +54,6 @@ static void mk_socket_safe_event_write(int socket)
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
-
     MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
 
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
@@ -88,7 +87,7 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
 
 int mk_socket_close(int socket)
 {
-    return close(socket);
+    return plg_netiomap->close(socket);
 }
 
 int mk_socket_create()
