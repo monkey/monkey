@@ -66,6 +66,10 @@ static int mk_utils_gmt_cache_get(char **data, time_t date)
     unsigned int i;
     struct mk_gmt_cache *gcache = mk_cache_get(mk_cache_utils_gmt_text);
 
+    if (mk_unlikely(!gcache)) {
+        return MK_FALSE;
+    }
+
     for (i = 0; i < MK_GMT_CACHES; i++) {
         if (date == gcache[i].time) {
             memcpy(*data, gcache[i].text, 32);
