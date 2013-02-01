@@ -37,7 +37,7 @@
 #define MK_RH_INFO_SWITCH_PROTOCOL "HTTP/1.1 101 Switching Protocols\r\n"
 
 /* Successfull */
-#define MK_RH_HTTP_OK "HTTP/1.0 200 OK\r\n"
+#define MK_RH_HTTP_OK "HTTP/1.1 200 OK\r\n"
 #define MK_RH_HTTP_CREATED "HTTP/1.1 201 Created\r\n"
 #define MK_RH_HTTP_ACCEPTED "HTTP/1.1 202 Accepted\r\n"
 #define MK_RH_HTTP_NON_AUTH_INFO "HTTP/1.1 203 Non-Authoritative Information\r\n"
