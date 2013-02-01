@@ -413,15 +413,19 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Number of thread workers */
-    config->workers = (size_t) mk_config_section_getval(section,
-                                                     "Workers",
-                                                     MK_CONFIG_VAL_NUM);
+    if (config->workers == -1) {
+        config->workers = (size_t) mk_config_section_getval(section,
+                                                            "Workers",
+                                                            MK_CONFIG_VAL_NUM);
+    }
+
     if (config->workers < 1) {
         config->workers = sysconf(_SC_NPROCESSORS_ONLN);
         if (config->workers < 1) {
             mk_config_print_error_msg("Workers", tmp);
         }
     }
+
     /* Get each worker clients capacity based on FDs system limits */
     config->worker_capacity = mk_server_worker_capacity(config->workers);
 
@@ -762,7 +766,6 @@ void mk_config_set_init_values(void)
     config->open_flags = O_RDONLY | O_NONBLOCK;
     config->index_files = NULL;
     config->user_dir = NULL;
-    config->workers = MK_WORKERS_DEFAULT;
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),

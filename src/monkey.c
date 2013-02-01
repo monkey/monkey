@@ -89,11 +89,12 @@ static void mk_version(void)
 
 static void mk_help(int rc)
 {
-    printf("Usage : monkey [-c directory] [-p TCP_PORT ][-D] [-v] [-h]\n\n");
+    printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
     printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
-    printf("  -p, --port\t\tset listener TCP port (override config)\n");
+    printf("  -p, --port=PORT\tset listener TCP port (override config)\n");
+    printf("  -w, --workers=N\tset number of workers (override config)\n");
     printf("  -v, --version\t\tshow version number\n");
     printf("  -h, --help\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
@@ -107,6 +108,7 @@ int main(int argc, char **argv)
 {
     int opt;
     int port_override = -1;
+    int workers_override = -1;
     int run_daemon = 0;
     char *file_config = NULL;
 
@@ -114,12 +116,13 @@ int main(int argc, char **argv)
         { "configdir", required_argument, NULL, 'c' },
 		{ "daemon",	   no_argument,       NULL, 'D' },
         { "port",      required_argument, NULL, 'p' },
+        { "workers",   required_argument, NULL, 'w' },
         { "version",   no_argument,       NULL, 'v' },
 		{ "help",	   no_argument,       NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
 
-    while ((opt = getopt_long(argc, argv, "DSvhp:c:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "DSvhp:w:c:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'v':
             mk_version();
@@ -132,11 +135,13 @@ int main(int argc, char **argv)
         case 'p':
             port_override = atoi(optarg);
             break;
+        case 'w':
+            workers_override = atoi(optarg);
+            break;
         case 'c':
             file_config = optarg;
             break;
         case '?':
-            printf("Monkey: Invalid option or option needs an argument.\n");
             mk_help(EXIT_FAILURE);
         }
     }
@@ -163,6 +168,15 @@ int main(int argc, char **argv)
 
     mk_version();
     mk_signal_init();
+
+    /* Override number of thread workers */
+    if (workers_override >= 0) {
+        config->workers = workers_override;
+    }
+    else {
+        config->workers = -1;
+    }
+
     mk_config_start_configure();
     mk_sched_init();
     mk_plugin_init();
