@@ -144,6 +144,7 @@ void mk_iov_free_marked(struct mk_iov *mk_io)
 
     mk_io->iov_idx = 0;
     mk_io->buf_idx = 0;
+    mk_io->total_len = 0;
 }
 
 void mk_iov_print(struct mk_iov *mk_io)
