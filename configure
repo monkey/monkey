@@ -419,7 +419,7 @@ create_makefile1_install()
         if [ $? == 1 ]; then
             continue
         fi
-        echo -e "\tinstall -s -m 644 plugins/$entry/*.so \${PLUGINDIR}/" >> plugins.list
+        echo -e "\tinstall --strip-program=${STRIP} -s -m 644 plugins/$entry/*.so \${PLUGINDIR}/" >> plugins.list
     done
 
     plglist=`cat plugins.list`
