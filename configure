@@ -634,7 +634,7 @@ create_makefile_plugins()
         do
             if [ -f "${d}/Makefile.in" ];
             then
-                sed -e "s|\$CC|$CC|" -e "s/\$CFLAGS/$CFLAGS/" -e "s/\$LDFLAGS/$LDFLAGS/" -e "s/\$DEFS/$DEFS/" $d/Makefile.in > $d/Makefile
+                sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" $d/Makefile.in > $d/Makefile
             fi
         done
 
