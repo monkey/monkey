@@ -54,7 +54,7 @@ int mk_epoll_state_init()
     struct epoll_state_index *index;
 
     index = mk_mem_malloc_z(sizeof(struct epoll_state_index));
-    index->size  = MK_EPOLL_STATE_INDEX_CHUNK;
+    index->size  = config->worker_capacity;
     mk_list_init(&index->busy_queue);
     mk_list_init(&index->av_queue);
 
@@ -101,11 +101,11 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
         if (mk_list_is_empty(&index->av_queue) == 0) {
 
             /* We need to grow the epoll_states list */
+            es_tmp = mk_mem_malloc(sizeof(struct epoll_state) * MK_EPOLL_STATE_INDEX_CHUNK);
             for (i = 0; i < MK_EPOLL_STATE_INDEX_CHUNK; i++) {
-                es_tmp = mk_mem_malloc(sizeof(struct epoll_state));
-                mk_list_add(&es_tmp->_head, &index->av_queue);
+                mk_list_add(&es_tmp[i]._head, &index->av_queue);
             }
-            MK_TRACE("state index size=%i, grow from %i to %i",
+            MK_TRACE("state index grow from %i to %i\n",
                      index->size, index->size + MK_EPOLL_STATE_INDEX_CHUNK);
             index->size += MK_EPOLL_STATE_INDEX_CHUNK;
 
