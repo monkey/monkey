@@ -855,6 +855,7 @@ int mk_plugin_event_add(int socket, int mode,
 int mk_plugin_http_request_end(int socket)
 {
     int ret;
+    int con;
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", socket);
 
@@ -862,7 +863,13 @@ int mk_plugin_http_request_end(int socket)
     MK_TRACE(" ret = %i", ret);
 
     if (ret < 0) {
-        return mk_conn_close(socket);
+        con = mk_conn_close(socket);
+        if (con != 0) {
+            return con;
+        }
+        else {
+            return -1;
+        }
     }
 
     return 0;
