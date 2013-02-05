@@ -561,9 +561,7 @@ static ssl_context *context_new(int fd)
     }
     else {
         PLUGIN_TRACE("[polarssl %d] Reuse ssl context.", fd);
-
         ssl = &(*cur)->context;
-        ssl_session_reset(ssl);
     }
 
     (*cur)->fd = fd;
@@ -579,6 +577,7 @@ static int context_unset(int fd, ssl_context *ssl)
 
     if (head->fd == fd) {
         head->fd = -1;
+        ssl_session_reset(ssl);
     }
     else {
         mk_err("[polarssl %d] Context already unset.", fd);
