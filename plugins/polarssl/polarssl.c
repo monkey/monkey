@@ -353,7 +353,8 @@ static int polar_load_dh_param(const struct polar_config *conf)
     ret = x509parse_dhmfile(&server_context.dhm, conf->dh_param_file);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        mk_warn("[polarssl] Load DH parameters '%s' failed: %s",
+
+        mk_err("[polarssl] Load DH parameters '%s' failed: %s",
                 conf->dh_param_file,
                 err_buf);
 
@@ -570,7 +571,7 @@ static ssl_context *context_new(int fd)
     return ssl;
 }
 
-static int polar_unset_context(int fd, ssl_context *ssl)
+static int context_unset(int fd, ssl_context *ssl)
 {
     struct polar_context_head *head;
 
@@ -714,7 +715,7 @@ int _mkp_network_io_close(int fd)
 
     if (ssl) {
         ssl_close_notify(ssl);
-        polar_unset_context(fd, ssl);
+        context_unset(fd, ssl);
     }
 
     net_close(fd);
