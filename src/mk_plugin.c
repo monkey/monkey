@@ -68,7 +68,6 @@ void *mk_plugin_load(const char *path)
 
 void *mk_plugin_load_symbol(void *handler, const char *symbol)
 {
-    char *err;
     void *s;
 
     dlerror();
@@ -712,6 +711,7 @@ int mk_plugin_stage_run(unsigned int hook,
                 return -1;
             }
             clen -= remaining;
+            content += remaining;
         }
         mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
 
