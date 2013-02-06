@@ -22,6 +22,7 @@
 #include <stdio.h> /* sscanf */
 #include <ctype.h> /* toupper */
 #include <sys/socket.h> /* getsockname, getpeername */
+#include <arpa/inet.h> /* inet_ntop */
 
 #include "MKPlugin.h"
 
@@ -47,10 +48,6 @@ size_t fcgi_env_write(uint8_t *ptr,
 	unsigned int i, j;
 	char *hinit, *hend;
 	size_t hlen;
-
-	mk_api->pointer_set(&key,   "PATH_INFO");
-	mk_api->pointer_set(&value, "");
-	__write_param(ptr, len, pos, key, value);
 
 	mk_api->pointer_set(&key,   "GATEWAY_INTERFACE");
 	mk_api->pointer_set(&value, "CGI/1.1");
@@ -146,10 +143,18 @@ size_t fcgi_env_write(uint8_t *ptr,
 	value = sr->content_type;
 	__write_param(ptr, len, pos, key, value);
 
-	mk_api->pointer_set(&key,   "CONTENT_LENGTH");
-	snprintf(buffer, 128, "%d", sr->content_length);
-	mk_api->pointer_set(&value, buffer);
-	__write_param(ptr, len, pos, key, value);
+	if (sr->content_length > 0) {
+		mk_api->pointer_set(&key,   "CONTENT_LENGTH");
+		snprintf(buffer, 128, "%d", sr->content_length);
+		mk_api->pointer_set(&value, buffer);
+		__write_param(ptr, len, pos, key, value);
+	}
+
+	if (!strcmp(mk_api->config->transport, MK_TRANSPORT_HTTPS)) {
+		mk_api->pointer_set(&key, "HTTPS");
+		mk_api->pointer_set(&value, "on");
+		__write_param(ptr, len, pos, key, value);
+	}
 
 	strcpy(buffer, "HTTP_");
 

@@ -161,7 +161,7 @@ void chunk_list_stats(struct chunk_list *cm)
 		used = c->write;
 		free = c->size - used;
 
-		log_info("Chunk: %d, S: %ld B, U: %ld B, F: %ld B, R: %d",
+		log_info("Chunk: %d, S: %zu B, U: %zu B, F: %zu B, R: %d",
 			chunks,
 			c->size,
 			used,
@@ -174,7 +174,7 @@ void chunk_list_stats(struct chunk_list *cm)
 	}
 
 	log_info("Total");
-	log_info("Count: %d, Size: %ld B, Used: %ld B, Free: %ld B",
+	log_info("Count: %d, Size: %zu B, Used: %zu B, Free: %zu B",
 		chunks,
 		total_used + total_free,
 		total_used,
