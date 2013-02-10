@@ -237,7 +237,6 @@ struct session_request
     /* Response headers */
     struct response_headers headers;
 
-    /* mk_list head node */
     struct mk_list _head;
 };
 
@@ -264,7 +263,11 @@ struct client_session
 
     struct session_request sr_fixed;
     struct mk_list request_list;
-    struct mk_list _head;
+    //struct mk_list _head;
+
+    /* red-black tree head */
+    struct rb_node _rb_head;
+
 };
 
 extern pthread_key_t request_list;

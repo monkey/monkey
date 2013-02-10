@@ -55,6 +55,8 @@ int mk_epoll_state_init()
 
     index = mk_mem_malloc_z(sizeof(struct epoll_state_index));
     index->size  = config->worker_capacity;
+
+    index->rb_queue = RB_ROOT;
     mk_list_init(&index->busy_queue);
     mk_list_init(&index->av_queue);
 
@@ -64,6 +66,39 @@ int mk_epoll_state_init()
     }
 
     return pthread_setspecific(mk_epoll_state_k, (void *) index);
+}
+
+static struct epoll_state *mk_epoll_state_get(int efd, int fd)
+{
+    struct epoll_state_index *index;
+    struct epoll_state *es_entry;
+    struct mk_list *head, *tmp;
+
+    index = pthread_getspecific(mk_epoll_state_k);
+
+  	struct rb_node *node = index->rb_queue.rb_node;
+  	while (node) {
+  		es_entry = container_of(node, struct epoll_state, _rb_head);
+		if (fd < es_entry->fd)
+  			node = node->rb_left;
+		else if (fd > es_entry->fd)
+  			node = node->rb_right;
+		else {
+  			return es_entry;
+        }
+	}
+	return NULL;
+
+    /* Old mechanism
+    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
+        es_entry = mk_list_entry(head, struct epoll_state, _head);
+        if (es_entry->instance == efd && es_entry->fd == fd) {
+            return es_entry;
+        }
+    }
+
+    return NULL;
+    */
 }
 
 inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
@@ -86,17 +121,20 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
         return NULL;
     }
 
+    /* FIXME: not handler yet for specific efd */
+    es_entry = mk_epoll_state_get(0, fd);
+
+    /*
     mk_list_foreach(head, &index->busy_queue) {
         es_entry = mk_list_entry(head, struct epoll_state, _head);
         if (es_entry->instance == efd && es_entry->fd == fd) {
             break;
         }
         es_entry = NULL;
-    }
+        }*/
 
     /* Add new entry to the list */
     if (!es_entry) {
-
         /* check if we have available slots */
         if (mk_list_is_empty(&index->av_queue) == 0) {
 
@@ -123,6 +161,28 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
         mk_list_del(&es_entry->_head);
         mk_list_add(&es_entry->_head, &index->busy_queue);
 
+        /* Red-Black tree insert routine */
+        struct rb_node **new = &(index->rb_queue.rb_node);
+        struct rb_node *parent = NULL;
+
+        /* Figure out where to put new node */
+        while (*new) {
+            struct epoll_state *this = container_of(*new, struct epoll_state, _rb_head);
+
+            parent = *new;
+            if (es_entry->fd < this->fd)
+                new = &((*new)->rb_left);
+            else if (es_entry->fd > this->fd)
+                new = &((*new)->rb_right);
+            else {
+                break;
+            }
+        }
+
+        /* Add new node and rebalance tree. */
+        rb_link_node(&es_entry->_rb_head, parent, new);
+        rb_insert_color(&es_entry->_rb_head, &index->rb_queue);
+
         return es_entry;
     }
 
@@ -144,23 +204,6 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
     return es_entry;
 }
 
-static struct epoll_state *mk_epoll_state_get(int efd, int fd)
-{
-    struct epoll_state_index *index;
-    struct epoll_state *es_entry;
-    struct mk_list *head, *tmp;
-
-    index = pthread_getspecific(mk_epoll_state_k);
-    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
-        es_entry = mk_list_entry(head, struct epoll_state, _head);
-        if (es_entry->instance == efd && es_entry->fd == fd) {
-            return es_entry;
-        }
-    }
-
-    return NULL;
-}
-
 static int mk_epoll_state_del(int efd, int fd)
 {
     struct epoll_state_index *index;
@@ -168,6 +211,18 @@ static int mk_epoll_state_del(int efd, int fd)
     struct mk_list *head, *tmp;
 
     index = pthread_getspecific(mk_epoll_state_k);
+
+    es_entry = mk_epoll_state_get(0, fd);
+    if (es_entry) {
+        rb_erase(&es_entry->_rb_head, &index->rb_queue);
+        mk_list_del(&es_entry->_head);
+        mk_list_add(&es_entry->_head, &index->av_queue);
+        return 0;
+    }
+
+    return -1;
+
+
     mk_list_foreach_safe(head, tmp, &index->busy_queue) {
         es_entry = mk_list_entry(head, struct epoll_state, _head);
         if (es_entry->instance == efd && es_entry->fd == fd) {

@@ -889,7 +889,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 {
     struct client_session *cs;
     struct sched_connection *sc;
-    struct mk_list *cs_list;
+    struct rb_root *cs_list;
 
     sc = mk_sched_get_connection(sched, socket);
     if (!sc) {
@@ -926,7 +926,28 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs_list = mk_sched_get_request_list();
 
     /* Add node to list */
-    mk_list_add(&cs->_head, cs_list);
+    /* Red-Black tree insert routine */
+    struct rb_node **new = &(cs_list->rb_node);
+    struct rb_node *parent = NULL;
+
+    /* Figure out where to put new node */
+    while (*new) {
+        struct client_session *this = container_of(*new, struct client_session, _rb_head);
+
+        parent = *new;
+        if (cs->socket < this->socket)
+            new = &((*new)->rb_left);
+        else if (cs->socket > this->socket)
+            new = &((*new)->rb_right);
+        else {
+            break;
+        }
+    }
+    /* Add new node and rebalance tree. */
+    rb_link_node(&cs->_rb_head, parent, new);
+    rb_insert_color(&cs->_rb_head, cs_list);
+
+    //mk_list_add(&cs->_head, cs_list);
 
     /* Set again the global list */
     mk_sched_set_request_list(cs_list);
@@ -936,6 +957,27 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 
 struct client_session *mk_session_get(int socket)
 {
+    struct client_session *cs;
+    struct rb_root *cs_list;
+    struct rb_node *node;
+
+    cs_list = mk_sched_get_request_list();
+    node = cs_list->rb_node;
+
+  	while (node) {
+  		cs = container_of(node, struct client_session, _rb_head);
+		if (socket < cs->socket)
+  			node = node->rb_left;
+		else if (socket > cs->socket)
+  			node = node->rb_right;
+		else {
+  			return cs;
+        }
+	}
+	return NULL;
+
+
+    /*
     struct client_session *cs_node = NULL;
     struct mk_list *cs_list, *cs_head;
 
@@ -948,6 +990,7 @@ struct client_session *mk_session_get(int socket)
     }
 
     return NULL;
+    */
 }
 
 /*
@@ -957,10 +1000,24 @@ struct client_session *mk_session_get(int socket)
 void mk_session_remove(int socket)
 {
     struct client_session *cs_node;
-    struct mk_list *cs_list, *cs_head, *temp;
+    struct mk_list *cs_head, *temp;
+    struct rb_root *cs_list;
 
     cs_list = mk_sched_get_request_list();
 
+    cs_node = mk_session_get(socket);
+    if (cs_node) {
+        rb_erase(&cs_node->_rb_head, cs_list);
+        if (cs_node->body != cs_node->body_fixed) {
+            printf("free!");
+            mk_mem_free(cs_node->body);
+        }
+        mk_mem_free(cs_node);
+    }
+
+    return;
+
+    /*
     mk_list_foreach_safe(cs_head, temp, cs_list) {
         cs_node = mk_list_entry(cs_head, struct client_session, _head);
         if (cs_node->socket == socket) {
@@ -972,9 +1029,7 @@ void mk_session_remove(int socket)
             break;
         }
     }
-
-    /* Update thread index */
-    mk_sched_set_request_list(cs_list);
+    */
 }
 
 /* Return value of some variable sent in request */

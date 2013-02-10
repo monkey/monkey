@@ -26,6 +26,7 @@
 
 #include "mk_list.h"
 #include "mk_lib.h"
+#include "mk_rbtree.h"
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
@@ -36,12 +37,13 @@
 
 struct sched_connection
 {
-    int socket;           /* file descriptor   */
-    int status;           /* connection status */
-    uint32_t events;      /* epoll events      */
-    time_t arrive_time;   /* arrived time      */
+    int socket;              /* file descriptor     */
+    int status;              /* connection status   */
+    uint32_t events;         /* epoll events        */
+    time_t arrive_time;      /* arrived time        */
 
-    struct mk_list _head; /* list head         */
+    struct rb_node _rb_head; /* red-black tree head */
+    struct mk_list _head;    /* list head           */
 };
 
 /* Global struct */
@@ -90,12 +92,12 @@ struct sched_list_node *mk_sched_get_handler_owner(void);
 // Re-declared here, because we can't include mk_request.h
 extern pthread_key_t request_list;
 
-static inline struct mk_list *mk_sched_get_request_list()
+static inline struct rb_root *mk_sched_get_request_list()
 {
     return pthread_getspecific(request_list);
 }
 
-void mk_sched_set_request_list(struct mk_list *list);
+void mk_sched_set_request_list(struct rb_root *list);
 
 static inline struct sched_list_node *mk_sched_get_thread_conf()
 {

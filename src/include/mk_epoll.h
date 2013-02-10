@@ -20,6 +20,7 @@
  */
 
 #include <sys/epoll.h>
+#include "mk_rbtree.h"
 
 #ifndef MK_EPOLL_H
 #define MK_EPOLL_H
@@ -63,12 +64,15 @@ struct epoll_state
     uint8_t  behavior;      /* Triggered behavior                 */
     uint32_t events;        /* Events mask                        */
 
+    struct rb_node _rb_head;
     struct mk_list _head;
 };
 
 struct epoll_state_index
 {
     int size;
+
+    struct rb_root rb_queue;
     struct mk_list busy_queue;
     struct mk_list av_queue;
 };

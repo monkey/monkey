@@ -64,7 +64,7 @@ static void mk_signal_exit()
 #endif
 
     mk_info("Exiting... >:(");
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 void mk_signal_thread_sigpipe_safe()

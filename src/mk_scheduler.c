@@ -41,6 +41,7 @@
 #include "mk_plugin.h"
 #include "mk_utils.h"
 #include "mk_macros.h"
+#include "mk_rbtree.h"
 
 pthread_key_t worker_sched_node;
 
@@ -153,11 +154,13 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
 static void mk_sched_thread_lists_init()
 {
-    struct mk_list *cs_list;
+    //struct mk_list *cs_list;
+    struct rb_root *cs_list;
 
     /* client_session mk_list */
-    cs_list = mk_mem_malloc(sizeof(struct mk_list));
-    mk_list_init(cs_list);
+    cs_list = mk_mem_malloc_z(sizeof(struct rb_root));
+    //cs_list->rb_queue = RB_ROOT;
+    //mk_list_init(cs_list);
     mk_sched_set_request_list(cs_list);
 }
 
@@ -320,7 +323,7 @@ void mk_sched_init()
                                  config->workers);
 }
 
-void mk_sched_set_request_list(struct mk_list *list)
+void mk_sched_set_request_list(struct rb_root *list)
 {
     pthread_setspecific(request_list, (void *) list);
 }
@@ -395,7 +398,8 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     int client_timeout;
     struct client_session *cs_node;
     struct sched_connection *entry_conn;
-    struct mk_list *sched_head, *cs_list, *cs_head, *temp;
+    struct mk_list *sched_head, *cs_head, *temp;
+    struct rb_root *cs_list;
 
     /* PENDING CONN TIMEOUT */
     mk_list_foreach_safe(sched_head, temp, &sched->busy_queue) {
@@ -413,10 +417,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
     /* PROCESSING CONN TIMEOUT */
     cs_list = mk_sched_get_request_list();
+    struct rb_node *node;
 
-    mk_list_foreach_safe(cs_head, temp, cs_list) {
-        cs_node = mk_list_entry(cs_head, struct client_session, _head);
-
+    for (node = rb_first(cs_list); node; node = rb_next(node)) {
+        cs_node = rb_entry(node, struct client_session, _rb_head);
         if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
             if (cs_node->counter_connections == 0) {
                 client_timeout = cs_node->init_time + config->timeout;
