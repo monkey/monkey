@@ -229,9 +229,9 @@ struct plugin_api
     /* epoll functions */
     void *(*epoll_init) (int, mk_epoll_handlers *, int);
     int   (*epoll_create) (int);
-    int   (*epoll_add) (int, int, int, int);
+    int   (*epoll_add) (int, int, int, unsigned int);
     int   (*epoll_del) (int, int);
-    int   (*epoll_change_mode) (int, int, int, int);
+    int   (*epoll_change_mode) (int, int, int, unsigned int);
 
     /* socket functions */
     int (*socket_cork_flag) (int, int);
@@ -266,10 +266,10 @@ struct plugin_api
     int (*worker_rename) (const char *);
 
     /* event's functions */
-    int (*event_add) (int, int, struct plugin *, int);
+    int (*event_add) (int, int, struct plugin *, unsigned int);
     int (*event_del) (int);
 
-    int (*event_socket_change_mode) (int, int, int);
+    int (*event_socket_change_mode) (int, int, unsigned int);
 
     /* Time utils functions */
     int (*time_unix) ();
@@ -324,10 +324,10 @@ void mk_plugin_preworker_calls();
 /* Plugins events interface */
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        int behavior);
+                        unsigned int behavior);
 int mk_plugin_event_del(int socket);
 
-int mk_plugin_event_socket_change_mode(int socket, int mode, int behavior);
+int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior);
 
 /* Plugins event handlers */
 int mk_plugin_event_read(int socket);

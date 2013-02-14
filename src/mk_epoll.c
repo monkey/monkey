@@ -67,7 +67,7 @@ int mk_epoll_state_init()
 }
 
 inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
-                                              uint8_t  behavior,
+                                              unsigned int behavior,
                                               uint32_t events)
 {
     int i;
@@ -266,7 +266,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     return NULL;
 }
 
-int mk_epoll_add(int efd, int fd, int init_mode, int behavior)
+int mk_epoll_add(int efd, int fd, int init_mode, unsigned int behavior)
 {
     int ret;
     struct epoll_event event = {0, {0}};
@@ -326,7 +326,7 @@ int mk_epoll_del(int efd, int fd)
     return ret;
 }
 
-int mk_epoll_change_mode(int efd, int fd, int mode, int behavior)
+int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
 {
     int ret;
     struct epoll_event event = {0, {0}};
