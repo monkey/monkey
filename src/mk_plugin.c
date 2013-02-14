@@ -823,7 +823,7 @@ int mk_plugin_event_del(int socket)
 
 int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
-                        int behavior)
+                        unsigned int behavior)
 {
     struct sched_list_node *sched;
     struct plugin_event *event;
@@ -875,7 +875,7 @@ int mk_plugin_http_request_end(int socket)
     return 0;
 }
 
-int mk_plugin_event_socket_change_mode(int socket, int mode, int behavior)
+int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior)
 {
     struct sched_list_node *sched;
 
