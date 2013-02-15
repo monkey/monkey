@@ -68,11 +68,10 @@ int mk_epoll_state_init()
     return pthread_setspecific(mk_epoll_state_k, (void *) index);
 }
 
-static struct epoll_state *mk_epoll_state_get(int efd, int fd)
+static struct epoll_state *mk_epoll_state_get(int fd)
 {
     struct epoll_state_index *index;
     struct epoll_state *es_entry;
-    struct mk_list *head, *tmp;
 
     index = pthread_getspecific(mk_epoll_state_k);
 
@@ -88,27 +87,15 @@ static struct epoll_state *mk_epoll_state_get(int efd, int fd)
         }
 	}
 	return NULL;
-
-    /* Old mechanism
-    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
-        es_entry = mk_list_entry(head, struct epoll_state, _head);
-        if (es_entry->instance == efd && es_entry->fd == fd) {
-            return es_entry;
-        }
-    }
-
-    return NULL;
-    */
 }
 
-inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
+inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
                                               unsigned int behavior,
                                               uint32_t events)
 {
     int i;
     struct epoll_state_index *index;
     struct epoll_state *es_entry = NULL, *es_tmp;
-    struct mk_list *head;
 
     index = (struct epoll_state_index *) pthread_getspecific(mk_epoll_state_k);
 
@@ -121,17 +108,8 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
         return NULL;
     }
 
-    /* FIXME: not handler yet for specific efd */
-    es_entry = mk_epoll_state_get(0, fd);
-
-    /*
-    mk_list_foreach(head, &index->busy_queue) {
-        es_entry = mk_list_entry(head, struct epoll_state, _head);
-        if (es_entry->instance == efd && es_entry->fd == fd) {
-            break;
-        }
-        es_entry = NULL;
-        }*/
+    /* Lookup entry */
+    es_entry = mk_epoll_state_get(fd);
 
     /* Add new entry to the list */
     if (!es_entry) {
@@ -151,7 +129,6 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
 
         /* New entry */
         es_entry = mk_list_entry_first(&index->av_queue, struct epoll_state, _head);
-        es_entry->instance = efd;
         es_entry->fd       = fd;
         es_entry->mode     = mode;
         es_entry->behavior = behavior;
@@ -204,32 +181,19 @@ inline struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
     return es_entry;
 }
 
-static int mk_epoll_state_del(int efd, int fd)
+static int mk_epoll_state_del(int fd)
 {
     struct epoll_state_index *index;
     struct epoll_state *es_entry;
-    struct mk_list *head, *tmp;
 
     index = pthread_getspecific(mk_epoll_state_k);
 
-    es_entry = mk_epoll_state_get(0, fd);
+    es_entry = mk_epoll_state_get(fd);
     if (es_entry) {
         rb_erase(&es_entry->_rb_head, &index->rb_queue);
         mk_list_del(&es_entry->_head);
         mk_list_add(&es_entry->_head, &index->av_queue);
         return 0;
-    }
-
-    return -1;
-
-
-    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
-        es_entry = mk_list_entry(head, struct epoll_state, _head);
-        if (es_entry->instance == efd && es_entry->fd == fd) {
-            mk_list_del(&es_entry->_head);
-            mk_list_add(&es_entry->_head, &index->av_queue);
-            return 0;
-        }
     }
 
     return -1;
@@ -356,7 +320,7 @@ int mk_epoll_add(int efd, int fd, int init_mode, unsigned int behavior)
     }
 
     /* Add to event state list */
-    mk_epoll_state_set(efd, fd, init_mode, behavior, event.events);
+    mk_epoll_state_set(fd, init_mode, behavior, event.events);
 
     return ret;
 }
@@ -376,7 +340,7 @@ int mk_epoll_del(int efd, int fd)
 #endif
 
     /* remove epoll state */
-    mk_epoll_state_del(efd, fd);
+    mk_epoll_state_del(fd);
 
     return ret;
 }
@@ -408,7 +372,7 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
         event.events = 0;
         break;
     case MK_EPOLL_WAKEUP:
-        state = mk_epoll_state_get(efd, fd);
+        state = mk_epoll_state_get(fd);
         if (state && state->mode == MK_EPOLL_SLEEP) {
             event.events = state->events;
             behavior     = state->behavior;
@@ -434,6 +398,6 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
 #endif
 
     /* Update state */
-    mk_epoll_state_set(efd, fd, mode, behavior, event.events);
+    mk_epoll_state_set(fd, mode, behavior, event.events);
     return ret;
 }

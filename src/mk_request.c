@@ -1000,7 +1000,6 @@ struct client_session *mk_session_get(int socket)
 void mk_session_remove(int socket)
 {
     struct client_session *cs_node;
-    struct mk_list *cs_head, *temp;
     struct rb_root *cs_list;
 
     cs_list = mk_sched_get_request_list();
@@ -1009,27 +1008,10 @@ void mk_session_remove(int socket)
     if (cs_node) {
         rb_erase(&cs_node->_rb_head, cs_list);
         if (cs_node->body != cs_node->body_fixed) {
-            printf("free!");
             mk_mem_free(cs_node->body);
         }
         mk_mem_free(cs_node);
     }
-
-    return;
-
-    /*
-    mk_list_foreach_safe(cs_head, temp, cs_list) {
-        cs_node = mk_list_entry(cs_head, struct client_session, _head);
-        if (cs_node->socket == socket) {
-            mk_list_del(cs_head);
-            if (cs_node->body != cs_node->body_fixed) {
-                mk_mem_free(cs_node->body);
-            }
-            mk_mem_free(cs_node);
-            break;
-        }
-    }
-    */
 }
 
 /* Return value of some variable sent in request */

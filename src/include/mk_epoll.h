@@ -58,7 +58,6 @@ typedef struct
  */
 struct epoll_state
 {
-    int          instance;      /* Instance created by epoll_create() */
     int          fd;            /* File descriptor                    */
     uint8_t      mode;          /* Operation mode                     */
     uint32_t     events;        /* Events mask                        */
@@ -94,7 +93,7 @@ int mk_epoll_del(int efd, int fd);
 int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior);
 
 /* epoll state handlers */
-struct epoll_state *mk_epoll_state_set(int efd, int fd, uint8_t mode,
+struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
                                        unsigned int behavior,
                                        uint32_t events);
 int mk_epoll_state_init();

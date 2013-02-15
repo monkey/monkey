@@ -58,8 +58,7 @@ int mk_conn_read(int socket)
              * New connections are not registered yet into the epoll
              * event state list, we need to do it manually
              */
-            //printf("[fd %i] set!\n", socket);
-            mk_epoll_state_set(sched->epoll_fd, socket,
+            mk_epoll_state_set(socket,
                                MK_EPOLL_READ,
                                MK_EPOLL_LEVEL_TRIGGERED,
                                (EPOLLERR | EPOLLHUP | EPOLLRDHUP | EPOLLIN));

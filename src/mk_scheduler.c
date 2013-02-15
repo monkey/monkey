@@ -398,7 +398,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     int client_timeout;
     struct client_session *cs_node;
     struct sched_connection *entry_conn;
-    struct mk_list *sched_head, *cs_head, *temp;
+    struct mk_list *sched_head, *temp;
     struct rb_root *cs_list;
 
     /* PENDING CONN TIMEOUT */
