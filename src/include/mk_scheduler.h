@@ -52,6 +52,13 @@ struct sched_list_node
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
 
+    /*
+     * Red-Black tree queue to perform fast lookup over
+     * the scheduler busy queue
+     */
+    struct rb_root rb_queue;
+
+    /* Available and busy queue */
     struct mk_list busy_queue;
     struct mk_list av_queue;
 

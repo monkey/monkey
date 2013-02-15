@@ -975,22 +975,6 @@ struct client_session *mk_session_get(int socket)
         }
 	}
 	return NULL;
-
-
-    /*
-    struct client_session *cs_node = NULL;
-    struct mk_list *cs_list, *cs_head;
-
-    cs_list = mk_sched_get_request_list();
-    mk_list_foreach(cs_head, cs_list) {
-        cs_node = mk_list_entry(cs_head, struct client_session, _head);
-        if (cs_node->socket == socket) {
-            return cs_node;
-        }
-    }
-
-    return NULL;
-    */
 }
 
 /*

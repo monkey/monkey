@@ -263,7 +263,6 @@ struct client_session
 
     struct session_request sr_fixed;
     struct mk_list request_list;
-    //struct mk_list _head;
 
     /* red-black tree head */
     struct rb_node _rb_head;
