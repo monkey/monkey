@@ -175,14 +175,29 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     int ret;
 
     ret = bind(socket_fd, addr, addrlen);
-
     if( ret == -1 ) {
         mk_warn("Error binding socket");
         return ret;
     }
 
-    ret = listen(socket_fd, backlog);
+    /*
+     * Enable TCP_FASTOPEN by default: if for some reason this call fail,
+     * it will not affect the behavior of the server, in order to succeed,
+     * Monkey must be running in a Linux system with Kernel >= 3.7 and the
+     * tcp_fastopen flag enabled here:
+     *
+     *     # cat /proc/sys/net/ipv4/tcp_fastopen
+     *
+     * To enable this feature just do:
+     *
+     *     # echo 1 > /proc/sys/net/ipv4/tcp_fastopen
+     */
+    ret = mk_api->socket_set_tcp_fastopen(socket_fd);
+    if (ret != -1) {
+        mk_info("Linux TCP_FASTOPEN");
+    }
 
+    ret = listen(socket_fd, backlog);
     if(ret == -1 ) {
         mk_warn("Error setting up the listener");
         return -1;

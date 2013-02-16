@@ -71,6 +71,19 @@ int mk_socket_set_nonblocking(int sockfd)
     return 0;
 }
 
+/*
+ * Enable the TCP_FASTOPEN feature for server side implemented in Linux Kernel >= 3.7,
+ * for more details read here:
+ *
+ *  TCP Fast Open: expediting web services: http://lwn.net/Articles/508865/
+ */
+
+int mk_socket_set_tcp_fastopen(int sockfd)
+{
+    int qlen = 5;
+    return setsockopt(sockfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
+}
+
 int mk_socket_set_tcp_nodelay(int sockfd)
 {
     int on = 1;

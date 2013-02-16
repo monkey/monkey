@@ -377,6 +377,7 @@ void mk_plugin_init()
     api->socket_cork_flag = mk_socket_set_cork_flag;
     api->socket_connect = mk_socket_connect;
     api->socket_reset = mk_socket_reset;
+    api->socket_set_tcp_fastopen = mk_socket_set_tcp_fastopen;
     api->socket_set_tcp_nodelay = mk_socket_set_tcp_nodelay;
     api->socket_set_nonblocking = mk_socket_set_nonblocking;
     api->socket_create = mk_socket_create;

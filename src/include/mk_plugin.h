@@ -236,6 +236,7 @@ struct plugin_api
     /* socket functions */
     int (*socket_cork_flag) (int, int);
     int (*socket_reset) (int);
+    int (*socket_set_tcp_fastopen) (int);
     int (*socket_set_tcp_nodelay) (int);
     int (*socket_connect) (char *, int);
     int (*socket_set_nonblocking) (int);
