@@ -368,6 +368,11 @@ void mk_plugin_init()
     api->epoll_del = mk_epoll_del;
     api->epoll_change_mode = mk_epoll_change_mode;
 
+    /* Red-Black tree */
+    api->rb_insert_color = rb_insert_color;
+    api->rb_erase = rb_erase;
+    api->rb_link_node = rb_link_node;
+
     /* Socket callbacks */
     api->socket_cork_flag = mk_socket_set_cork_flag;
     api->socket_connect = mk_socket_connect;

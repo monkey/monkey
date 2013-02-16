@@ -247,6 +247,11 @@ struct plugin_api
     int (*socket_send_file) (int, int, off_t *, size_t);
     int (*socket_ip_str) (int, char **, int, unsigned long *);
 
+    /* red-black tree */
+    void (*rb_insert_color) (struct rb_node *, struct rb_root *);
+    void (*rb_erase) (struct rb_node *, struct rb_root *);
+    void (*rb_link_node) (struct rb_node *, struct rb_node *, struct rb_node **);
+
     /* configuration reader functions */
     struct mk_config *(*config_create) (const char *);
     void (*config_free) (struct mk_config *);
