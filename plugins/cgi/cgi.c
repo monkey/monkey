@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2012, Lauri Kasanen
+ *  Copyright (C) 2012-2013, Lauri Kasanen
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ struct post_t {
     unsigned long len;
 };
 
-struct cgi_vhost_match_t {
+struct cgi_match_t {
     regex_t match;
     char *bin;
     mk_pointer content_type;
@@ -54,6 +54,7 @@ struct cgi_vhost_t {
 };
 
 static struct cgi_vhost_t *cgi_vhosts = NULL;
+static struct mk_list cgi_global_matches;
 
 int swrite(const int fd, const void *buf, const size_t count)
 {
@@ -83,7 +84,7 @@ static int do_cgi(const char *const __restrict__ file,
                   const char *const __restrict__ url,
                   struct session_request *const sr,
                   struct client_session *const cs,
-                  struct cgi_vhost_match_t *match,
+                  struct cgi_match_t *match,
                   struct plugin *const plugin)
 {
     const int socket = cs->socket;
@@ -295,29 +296,86 @@ static void str_to_regex(char *str, regex_t *reg)
     }
 }
 
-static void cgi_read_config(const char * const path)
+static int cgi_link_matches(struct mk_config_section *section, struct mk_list *list)
 {
     int i;
+    int n = 0;
+    struct mk_list *head;
+    struct mk_list *line;
+    struct mk_list *head_match;
+    struct mk_config_entry *entry;
+    struct mk_string_line *entry_match;
+    struct cgi_match_t *match_line = NULL;
+
+    mk_list_foreach(head, &section->entries) {
+        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        if (strncasecmp(entry->key, "Match", strlen(entry->key)) == 0) {
+            line = mk_api->str_split_line(entry->val);
+            if (!line) {
+                continue;
+            }
+
+            /*
+             * The variable 'i' represent the position of each string
+             * component found in the Match configuration line:
+             *
+             *   0 = Regex expression
+             *   1 = Interpreter path
+             *   2 = Mime type
+             */
+            i = 0;
+            match_line = NULL;
+            mk_list_foreach(head_match, line) {
+                entry_match = mk_list_entry(head_match,
+                                            struct mk_string_line,
+                                            _head);
+                if (!entry_match) {
+                    mk_err("CGI: Invalid configuration key");
+                    exit(EXIT_FAILURE);
+                }
+
+                if (!match_line) {
+                    match_line = mk_api->mem_alloc(sizeof(struct cgi_match_t));
+                    mk_list_add(&match_line->_head, list);
+                }
+
+                switch (i) {
+                case 0: /* regex */
+                    str_to_regex(entry_match->val, &match_line->match);
+                    break;
+                case 1: /* interpreter */
+                    match_line->bin = strdup(entry_match->val);
+                    break;
+                case 2: /* mime type */
+                    match_line->content_type.data = strdup(entry_match->val);
+                    match_line->content_type.len = entry_match->len;
+                    break;
+                };
+
+                i++;
+            }
+            mk_list_add(&match_line->_head, list);
+            n++;
+        }
+    }
+
+    return n;
+}
+
+static void cgi_read_config(const char * const path)
+{
+    int ret;
     char *file = NULL;
     unsigned long len;
     struct mk_config *conf;
     struct mk_config_section *section;
-    struct mk_config_entry *entry;
-    struct mk_list *line;
 
     mk_api->str_build(&file, &len, "%scgi.conf", path);
     conf = mk_api->config_create(file);
     section = mk_api->config_section_get(conf, "CGI");
 
     if (section) {
-        char *match = mk_api->config_section_getval(section, "Match", MK_CONFIG_VAL_STR);
-        if (match) {
-//            printf("Got match %s\n", match);
-
-            str_to_regex(match, &match_regex);
-
-            free(match);
-        }
+        cgi_link_matches(section, &cgi_global_matches);
     }
 
     free(file);
@@ -327,11 +385,7 @@ static void cgi_read_config(const char * const path)
 
     struct mk_list *hosts = &mk_api->config->hosts;
     struct mk_list *head_host;
-    struct mk_list *head;
-    struct mk_list *head_match;
-    struct mk_string_line *entry_match;
     struct host *entry_host;
-    struct cgi_vhost_match_t *vmatch_line = NULL;
     unsigned short vhosts = 0;
 
     mk_list_foreach(head_host, hosts) {
@@ -363,59 +417,7 @@ static void cgi_read_config(const char * const path)
          * For each section found on every virtual host, lookup all 'Match'
          * keys and populate the list of scripting rules
          */
-        mk_list_foreach(head, &section->entries) {
-            entry = mk_list_entry(head, struct mk_config_entry, _head);
-            if (strncasecmp(entry->key, "Match", strlen(entry->key)) == 0) {
-                line = mk_api->str_split_line(entry->val);
-                if (!line) {
-                    continue;
-                }
-
-                /*
-                 * The variable 'i' represent the position of each string
-                 * component found in the Match configuration line:
-                 *
-                 *   0 = Regex expression
-                 *   1 = Interpreter path
-                 *   2 = Mime type
-                 */
-                i = 0;
-                vmatch_line = NULL;
-                mk_list_init(&cgi_vhosts[vhosts].matches);
-
-                mk_list_foreach(head_match, line) {
-                    entry_match = mk_list_entry(head_match,
-                                                struct mk_string_line,
-                                                _head);
-                    if (!entry_match) {
-                        mk_err("CGI: Invalid configuration key");
-                        exit(EXIT_FAILURE);
-                    }
-
-                    if (!vmatch_line) {
-                        vmatch_line = mk_api->mem_alloc(sizeof(struct cgi_vhost_match_t));
-                        mk_list_add(&vmatch_line->_head,
-                                    &cgi_vhosts[vhosts].matches);
-                    }
-
-                    switch (i) {
-                    case 0: /* regex */
-                        str_to_regex(entry_match->val, &vmatch_line->match);
-                        break;
-                    case 1: /* interpreter */
-                        vmatch_line->bin = strdup(entry_match->val);
-                        break;
-                    case 2: /* mime type */
-                        vmatch_line->content_type.data = strdup(entry_match->val);
-                        vmatch_line->content_type.len = entry_match->len;
-                        break;
-                    };
-
-                    i++;
-                }
-                mk_list_add(&vmatch_line->_head, &cgi_vhosts[vhosts].matches);
-            }
-        }
+        cgi_link_matches(section, &cgi_vhosts[vhosts].matches);
         vhosts++;
     }
 }
@@ -423,9 +425,11 @@ static void cgi_read_config(const char * const path)
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
+
+    mk_list_init(&cgi_global_matches);
     cgi_read_config(confdir);
 
-    pthread_key_create(&_mkp_data, NULL);
+    //pthread_key_create(&_mkp_data, NULL);
 
     struct rlimit lim;
     getrlimit(RLIMIT_NOFILE, &lim);
@@ -448,8 +452,9 @@ void _mkp_exit()
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
+    unsigned int i;
     char url[PATHLEN];
-    struct cgi_vhost_match_t *vmatch;
+    struct cgi_match_t *match_rule;
     struct mk_list *head_matches;
 
     if (sr->uri.len + 1 > PATHLEN)
@@ -460,43 +465,52 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
     const char *const file = sr->real_path.data;
 
-    if (!sr->file_info.is_file)
+    if (!sr->file_info.is_file) {
         return MK_PLUGIN_RET_NOT_ME;
+    }
 
-    if (regexec(&match_regex, url, 0, NULL, 0) && cgi_vhosts) {
-        /* No global match; check for per-vhost */
-
-        unsigned int i;
-        for (i = 0; cgi_vhosts[i].host; i++) {
-            if (sr->host_conf == cgi_vhosts[i].host) {
-                break;
-            }
-        }
-
-        /* No vhost matched */
-        if (!cgi_vhosts[i].host)
-            return MK_PLUGIN_RET_NOT_ME;
-
-        /* A vhost was found, check if its regex matches */
-        mk_list_foreach(head_matches, &cgi_vhosts[i].matches) {
-            vmatch = mk_list_entry(head_matches, struct cgi_vhost_match_t,
-                                   _head);
-
-            if (regexec(&vmatch->match, url, 0, NULL, 0)) {
-                return MK_PLUGIN_RET_NOT_ME;
-            }
-            else {
-                break;
-            }
+    /* Go around each global CGI Match entry and check if one of them applies */
+    mk_list_foreach(head_matches, &cgi_global_matches) {
+        printf("loop\n");
+        match_rule = mk_list_entry(head_matches, struct cgi_match_t,  _head);
+        if (regexec(&match_rule->match, url, 0, NULL, 0) == 0) {
+            printf("run CGI on general\n");
+            goto run_cgi;
         }
     }
+
+    /* Now check the rules under the proper virtual host */
+    for (i = 0; cgi_vhosts[i].host; i++) {
+        if (sr->host_conf == cgi_vhosts[i].host) {
+            break;
+        }
+    }
+
+    /* No vhost matched */
+    if (!cgi_vhosts[i].host) {
+        return MK_PLUGIN_RET_NOT_ME;
+    }
+
+    /* A vhost was found, check if its regex matches */
+    mk_list_foreach(head_matches, &cgi_vhosts[i].matches) {
+        match_rule = mk_list_entry(head_matches, struct cgi_match_t,  _head);
+        if (regexec(&match_rule->match, url, 0, NULL, 0) == 0) {
+            goto run_cgi;
+        }
+    }
+
+    /* If we reach this line means that not matches was found */
+    return MK_PLUGIN_RET_NOT_ME;
+
+ run_cgi:
+    printf("got match rule: %p\n", match_rule);
 
     if (cgi_req_get(cs->socket)) {
         printf("Error, someone tried to retry\n");
         return MK_PLUGIN_RET_CONTINUE;
     }
 
-    int status = do_cgi(file, url, sr, cs, vmatch, plugin);
+    int status = do_cgi(file, url, sr, cs, match_rule, plugin);
 
     /* These are just for the other plugins, such as logger; bogus data */
     mk_api->header_set_http_status(sr, status);
