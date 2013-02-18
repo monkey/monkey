@@ -22,6 +22,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+
 #include <dlfcn.h>
 #include <err.h>
 

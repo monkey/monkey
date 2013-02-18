@@ -178,7 +178,7 @@ struct mklib_worker_info MK_EXPORT **mklib_scheduler_worker_info(mklib_ctx);
 struct mklib_mime MK_EXPORT **mklib_mimetype_list(mklib_ctx);
 
 /* Add a new mimetype */
-int MK_EXPORT mklib_mimetype_add(mklib_ctx, const char *, const char *);
+int MK_EXPORT mklib_mimetype_add(mklib_ctx, char *, const char *);
 
 /* Get the value of a http header.
  *

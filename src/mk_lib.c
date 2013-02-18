@@ -608,7 +608,7 @@ struct mklib_mime **mklib_mimetype_list(mklib_ctx ctx)
 }
 
 /* Add a new mimetype */
-int mklib_mimetype_add(mklib_ctx ctx, const char *name, const char *type)
+int mklib_mimetype_add(mklib_ctx ctx, char *name, const char *type)
 {
     if (!ctx || !name || !type) return MKLIB_FALSE;
 
