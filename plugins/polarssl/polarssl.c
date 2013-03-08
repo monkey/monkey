@@ -829,6 +829,12 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
         return ret;
     }
 
+    /* Try TCP_FASTOPEN. */
+    ret = mk_api->socket_set_tcp_fastopen(socket_fd);
+    if (ret != -1) {
+        mk_info("Linux TCP_FASTOPEN enabled.");
+    }
+
     ret = listen(socket_fd, backlog);
 
     if(ret == -1 ) {
