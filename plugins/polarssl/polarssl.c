@@ -124,7 +124,8 @@ static struct polar_server_context server_context = {
     ._mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
-static char *my_dhm_P =
+#if (POLARSSL_VERSION_NUBER < 0x01020000)
+static const char *my_dhm_P =
     "E4004C1F94182000103D883A448B3F80" \
     "2CE4B44A83301270002C20D0321CFD00" \
     "11CCEF784C26A400F43DFB901BCA7538" \
@@ -134,7 +135,11 @@ static char *my_dhm_P =
     "01F76949A60BB7F00A40B1EAB64BDD48" \
     "E8A700D60B7F1200FA8E77B0A979DABF";
 
-static char *my_dhm_G = "4";
+static const char *my_dhm_G = "4";
+#else
+static const char *my_dhm_P = POLARSSL_DHM_RFC5114_MODP_1024_P;
+static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
+#endif
 
 #if (POLARSSL_VERSION_NUMBER < 0x01020000)
 static int my_ciphersuites[] =
@@ -373,6 +378,7 @@ static int polar_load_dh_param(const struct polar_config *conf)
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
 
+#if (POLARSSL_VERSION_NUMBER < 0x01020000)
         mk_err("[polarssl] Load DH parameters '%s' failed: %s",
                 conf->dh_param_file,
                 err_buf);
@@ -380,6 +386,7 @@ static int polar_load_dh_param(const struct polar_config *conf)
         mk_warn("[polarssl] Using built-in DH parameters, "
                 "please generate '%s' using 'opessl dhparam -out \"%s\" 1024'.",
                 conf->dh_param_file, conf->dh_param_file);
+#endif
         ret = mpi_read_string(&server_context.dhm.P, 16, my_dhm_P);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
