@@ -191,6 +191,13 @@ static void polar_debug(void *ctx, int level, const char *str)
 }
 #endif
 
+#if (!defined(POLARSSL_ERROR_C) && (POLARSSL_VERSION_NUMBER < 0x01020500))
+static void error_strerror(int errnum, char *buffer, size_t buflen)
+{
+    snprintf(buffer, buflen, "errnum %d", errnum);
+}
+#endif
+
 static int handle_return(int ret)
 {
 #if defined(TRACE)
