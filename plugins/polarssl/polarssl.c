@@ -163,8 +163,7 @@ static pthread_key_t local_context;
 static struct polar_context_head **local_contexts(void)
 {
     struct polar_thread_context *thctx = pthread_getspecific(local_context);
-    assert(thctx != NULL);
-    return &(thctx->contexts);
+    return (thctx ? &(thctx->contexts) : NULL);
 }
 
 static ctr_drbg_context *local_drbg_context(void)
@@ -523,11 +522,16 @@ static void polar_exit(void)
 #endif
 }
 
+/* Contexts may be requested from outside workers on exit so we should
+ * be prepared for an empty context.
+ */
 static ssl_context *context_get(int fd)
 {
     struct polar_context_head **cur = local_contexts();
 
-    assert(cur != NULL);
+    if (cur == NULL) {
+        return NULL;
+    }
 
     for (; *cur; cur = &(*cur)->_next) {
         if ((*cur)->fd == fd) {
