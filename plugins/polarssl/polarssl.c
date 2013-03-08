@@ -101,7 +101,6 @@ struct polar_context_head {
 };
 
 struct polar_thread_context {
-    entropy_context entropy;
     ctr_drbg_context ctr_drbg;
 
     struct polar_context_head *contexts;
@@ -115,6 +114,8 @@ struct polar_server_context {
     x509_cert srvcert;
     rsa_context rsa;
     dhm_context dhm;
+
+    entropy_context entropy;
 
     struct polar_thread_context threads;
 };
@@ -166,6 +167,17 @@ static ctr_drbg_context *local_drbg_context(void)
     struct polar_thread_context *thctx = pthread_getspecific(local_context);
     assert(thctx != NULL);
     return &thctx->ctr_drbg;
+}
+
+static int entropy_func_safe(void *data, unsigned char *output, size_t len)
+{
+    int ret;
+
+    pthread_mutex_lock(&server_context._mutex);
+    ret = entropy_func(data, output, len);
+    pthread_mutex_unlock(&server_context._mutex);
+
+    return ret;
 }
 
 #if (POLAR_DEBUG_LEVEL > 0)
@@ -394,6 +406,8 @@ static int polar_init(const struct polar_config *conf)
     memset(&server_context.srvcert, 0, sizeof(server_context.srvcert));
     memset(&server_context.dhm, 0, sizeof(server_context.dhm));
     rsa_init(&server_context.rsa, RSA_PKCS_V15, 0);
+    entropy_init(&server_context.entropy);
+
     pthread_mutex_unlock(&server_context._mutex);
 
     PLUGIN_TRACE("[polarssl] Load certificates.");
@@ -430,11 +444,8 @@ static int polar_thread_init(void)
     mk_list_add(&thctx->_head, &server_context.threads._head);
     pthread_mutex_unlock(&server_context._mutex);
 
-    PLUGIN_TRACE("[polarssl] Seed thread random number generator.");
-    entropy_init(&thctx->entropy);
-
     ret = ctr_drbg_init(&thctx->ctr_drbg,
-            entropy_func, &thctx->entropy,
+            entropy_func_safe, &server_context.entropy,
             NULL, 0);
     if (ret) {
         mk_err("crt_drbg_init failed: %d", ret);
