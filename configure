@@ -667,6 +667,7 @@ create_makefile_plugins()
            # Replace configuration variables:
            find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
            find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
+           find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
            find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
            find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
            find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
