@@ -150,6 +150,15 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     config->serverconf = strdup(MONKEY_PATH_CONF);
     mk_config_set_init_values();
+
+    /*
+     * If the worker numbers have not be set, set the number based on
+     * the number of CPU cores
+     */
+    if (config->workers < 1) {
+        config->workers = sysconf(_SC_NPROCESSORS_ONLN);
+    }
+
     mk_sched_init();
     mk_plugin_init();
 
@@ -207,14 +216,6 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->server_software.len = 0;
     config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     mk_mimetype_read_config();
-
-    /*
-     * If the worker numbers have not be set, set the number based on
-     * the number of CPU cores
-     */
-    if (config->workers < 1) {
-        config->workers = sysconf(_SC_NPROCESSORS_ONLN);
-    }
 
     config->worker_capacity = mk_server_worker_capacity(config->workers);
     config->max_load = (config->worker_capacity * config->workers);
