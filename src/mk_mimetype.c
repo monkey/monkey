@@ -54,7 +54,7 @@ static int mime_cmp(const void *m1, const void *m2)
     struct mimetype *mi1 = (struct mimetype *) m1;
     struct mimetype *mi2 = (struct mimetype *) m2;
 
-    return strcmp(mi1->name, mi2->name);
+    return strcasecmp(mi1->name, mi2->name);
 }
 
 /* Match mime type for requested resource */
@@ -63,8 +63,6 @@ inline struct mimetype *mk_mimetype_lookup(char *name)
     int i;
     char *p = name;
     struct mimetype tmp;
-
-    for ( ; *p; ++p) *p = tolower(*p);
 
     /*
      * Simple heuristic to guess which mime type to load,
@@ -75,7 +73,7 @@ inline struct mimetype *mk_mimetype_lookup(char *name)
      * otherwise apply a binary search
      */
     for (i = 0; i < MIME_COMMON; i++) {
-        if (!strcmp(name, mimecommon[i].name)) {
+        if (!strcasecmp(name, mimecommon[i].name)) {
             return &mimecommon[i];
         }
     }
@@ -163,17 +161,18 @@ void mk_mimearr_sort()
     qsort(mimearr, mime_nitem, sizeof(struct mimetype), mime_cmp);
 }
 
-struct mimetype *mk_mimetype_find(mk_pointer * filename)
+struct mimetype *mk_mimetype_find(mk_pointer *filename)
 {
     int j, len;
 
     j = len = filename->len;
 
     /* looking for extension */
-    while (filename->data[j] != '.' && j >= 0)
+    while (filename->data[j] != '.' && j >= 0) {
         j--;
+    }
 
-    if (j == 0) {
+    if (j <= 0) {
         return NULL;
     }
 
