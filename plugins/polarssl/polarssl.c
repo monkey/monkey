@@ -101,7 +101,6 @@ struct polar_context_head {
 };
 
 struct polar_thread_context {
-    entropy_context entropy;
     ctr_drbg_context ctr_drbg;
 
     struct polar_context_head *contexts;
@@ -116,6 +115,8 @@ struct polar_server_context {
     rsa_context rsa;
     dhm_context dhm;
 
+    entropy_context entropy;
+
     struct polar_thread_context threads;
 };
 
@@ -123,7 +124,8 @@ static struct polar_server_context server_context = {
     ._mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
-static char *my_dhm_P =
+#if (POLARSSL_VERSION_NUBER < 0x01020000)
+static const char *my_dhm_P =
     "E4004C1F94182000103D883A448B3F80" \
     "2CE4B44A83301270002C20D0321CFD00" \
     "11CCEF784C26A400F43DFB901BCA7538" \
@@ -133,7 +135,11 @@ static char *my_dhm_P =
     "01F76949A60BB7F00A40B1EAB64BDD48" \
     "E8A700D60B7F1200FA8E77B0A979DABF";
 
-static char *my_dhm_G = "4";
+static const char *my_dhm_G = "4";
+#else
+static const char *my_dhm_P = POLARSSL_DHM_RFC5114_MODP_1024_P;
+static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
+#endif
 
 #if (POLARSSL_VERSION_NUMBER < 0x01020000)
 static int my_ciphersuites[] =
@@ -157,8 +163,7 @@ static pthread_key_t local_context;
 static struct polar_context_head **local_contexts(void)
 {
     struct polar_thread_context *thctx = pthread_getspecific(local_context);
-    assert(thctx != NULL);
-    return &(thctx->contexts);
+    return (thctx ? &(thctx->contexts) : NULL);
 }
 
 static ctr_drbg_context *local_drbg_context(void)
@@ -166,6 +171,17 @@ static ctr_drbg_context *local_drbg_context(void)
     struct polar_thread_context *thctx = pthread_getspecific(local_context);
     assert(thctx != NULL);
     return &thctx->ctr_drbg;
+}
+
+static int entropy_func_safe(void *data, unsigned char *output, size_t len)
+{
+    int ret;
+
+    pthread_mutex_lock(&server_context._mutex);
+    ret = entropy_func(data, output, len);
+    pthread_mutex_unlock(&server_context._mutex);
+
+    return ret;
 }
 
 #if (POLAR_DEBUG_LEVEL > 0)
@@ -176,6 +192,13 @@ static void polar_debug(void *ctx, int level, const char *str)
     if (level < POLAR_DEBUG_LEVEL) {
         mk_warn("%s", str);
     }
+}
+#endif
+
+#if (!defined(POLARSSL_ERROR_C) && (POLARSSL_VERSION_NUMBER < 0x01020500))
+static void error_strerror(int errnum, char *buffer, size_t buflen)
+{
+    snprintf(buffer, buflen, "errnum %d", errnum);
 }
 #endif
 
@@ -353,13 +376,16 @@ static int polar_load_dh_param(const struct polar_config *conf)
     ret = x509parse_dhmfile(&server_context.dhm, conf->dh_param_file);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        mk_warn("[polarssl] Load DH parameters '%s' failed: %s",
+
+#if (POLARSSL_VERSION_NUMBER < 0x01020000)
+        mk_err("[polarssl] Load DH parameters '%s' failed: %s",
                 conf->dh_param_file,
                 err_buf);
 
         mk_warn("[polarssl] Using built-in DH parameters, "
                 "please generate '%s' using 'opessl dhparam -out \"%s\" 1024'.",
                 conf->dh_param_file, conf->dh_param_file);
+#endif
         ret = mpi_read_string(&server_context.dhm.P, 16, my_dhm_P);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
@@ -393,6 +419,8 @@ static int polar_init(const struct polar_config *conf)
     memset(&server_context.srvcert, 0, sizeof(server_context.srvcert));
     memset(&server_context.dhm, 0, sizeof(server_context.dhm));
     rsa_init(&server_context.rsa, RSA_PKCS_V15, 0);
+    entropy_init(&server_context.entropy);
+
     pthread_mutex_unlock(&server_context._mutex);
 
     PLUGIN_TRACE("[polarssl] Load certificates.");
@@ -429,11 +457,8 @@ static int polar_thread_init(void)
     mk_list_add(&thctx->_head, &server_context.threads._head);
     pthread_mutex_unlock(&server_context._mutex);
 
-    PLUGIN_TRACE("[polarssl] Seed thread random number generator.");
-    entropy_init(&thctx->entropy);
-
     ret = ctr_drbg_init(&thctx->ctr_drbg,
-            entropy_func, &thctx->entropy,
+            entropy_func_safe, &server_context.entropy,
             NULL, 0);
     if (ret) {
         mk_err("crt_drbg_init failed: %d", ret);
@@ -497,11 +522,16 @@ static void polar_exit(void)
 #endif
 }
 
+/* Contexts may be requested from outside workers on exit so we should
+ * be prepared for an empty context.
+ */
 static ssl_context *context_get(int fd)
 {
     struct polar_context_head **cur = local_contexts();
 
-    assert(cur != NULL);
+    if (cur == NULL) {
+        return NULL;
+    }
 
     for (; *cur; cur = &(*cur)->_next) {
         if ((*cur)->fd == fd) {
@@ -560,9 +590,7 @@ static ssl_context *context_new(int fd)
     }
     else {
         PLUGIN_TRACE("[polarssl %d] Reuse ssl context.", fd);
-
         ssl = &(*cur)->context;
-        ssl_session_reset(ssl);
     }
 
     (*cur)->fd = fd;
@@ -570,7 +598,7 @@ static ssl_context *context_new(int fd)
     return ssl;
 }
 
-static int polar_unset_context(int fd, ssl_context *ssl)
+static int context_unset(int fd, ssl_context *ssl)
 {
     struct polar_context_head *head;
 
@@ -578,6 +606,7 @@ static int polar_unset_context(int fd, ssl_context *ssl)
 
     if (head->fd == fd) {
         head->fd = -1;
+        ssl_session_reset(ssl);
     }
     else {
         mk_err("[polarssl %d] Context already unset.", fd);
@@ -645,6 +674,9 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
     unsigned char *buf;
     ssize_t used, remain = file_count, sent = 0;
     int ret;
+#if defined(TRACE)
+    char err_buf[72];
+#endif
 
     if (!ssl) {
         ssl = context_new(fd);
@@ -686,7 +718,20 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
         return sent;
     }
     else {
-        return handle_return(ret);
+#if defined(TRACE)
+        error_strerror(ret, err_buf, sizeof(err_buf));
+        PLUGIN_TRACE("[polarssl] SSL error: %s", err_buf);
+#endif
+        switch( ret )
+        {
+            case POLARSSL_ERR_NET_WANT_READ:
+            case POLARSSL_ERR_NET_WANT_WRITE:
+                errno = EAGAIN;
+            case POLARSSL_ERR_SSL_CONN_EOF:
+                return 0;
+            default:
+                return -1;
+        }
     }
 }
 
@@ -698,7 +743,7 @@ int _mkp_network_io_close(int fd)
 
     if (ssl) {
         ssl_close_notify(ssl);
-        polar_unset_context(fd, ssl);
+        context_unset(fd, ssl);
     }
 
     net_close(fd);
@@ -782,6 +827,12 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     if( ret == -1 ) {
         mk_warn("Error binding socket");
         return ret;
+    }
+
+    /* Try TCP_FASTOPEN. */
+    ret = mk_api->socket_set_tcp_fastopen(socket_fd);
+    if (ret != -1) {
+        mk_info("Linux TCP_FASTOPEN enabled.");
     }
 
     ret = listen(socket_fd, backlog);
