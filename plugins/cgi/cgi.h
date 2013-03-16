@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2012, Lauri Kasanen
+ *  Copyright (C) 2012-2013, Lauri Kasanen
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,33 @@ enum {
     SHORTLEN = 36
 };
 
+regex_t match_regex;
+
+struct cgi_request **requests_by_socket;
+
+struct post_t {
+    int fd;
+    void *buf;
+    unsigned long len;
+};
+
+struct cgi_match_t {
+    regex_t match;
+    char *bin;
+    mk_pointer content_type;
+
+    struct mk_list _head;
+};
+
+struct cgi_vhost_t {
+    struct host *host;
+    struct mk_list matches;
+};
+
+struct cgi_vhost_t *cgi_vhosts;
+struct mk_list cgi_global_matches;
+
+
 struct cgi_request {
 
     char in_buf[PATHLEN];
@@ -56,6 +83,9 @@ struct cgi_request {
     unsigned char all_headers_done;
     unsigned char chunked;
 };
+
+/* Global list per worker */
+pthread_key_t cgi_request_list;
 
 extern struct cgi_request **requests_by_socket;
 
@@ -80,7 +110,7 @@ static inline struct cgi_request *cgi_req_get_by_fd(int fd)
     struct mk_list *list, *node;
     struct cgi_request *r;
 
-    list = pthread_getspecific(_mkp_data);
+    list = pthread_getspecific(cgi_request_list);
     if (mk_list_is_empty(list) == 0)
         return NULL;
 

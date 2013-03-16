@@ -1,6 +1,6 @@
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2012, Lauri Kasanen
+ *  Copyright (C) 2012-2013, Lauri Kasanen
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -36,8 +36,9 @@ struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *s
 
 void cgi_req_add(struct cgi_request *r)
 {
-    struct mk_list *list = pthread_getspecific(_mkp_data);
+    struct mk_list *list = pthread_getspecific(cgi_request_list);
 
+    mk_bug(!list);
     mk_list_add(&r->_head, list);
 }
 
