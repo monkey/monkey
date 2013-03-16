@@ -30,31 +30,6 @@ MONKEY_PLUGIN("cgi",		/* shortname */
               VERSION,		/* version */
               MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX);	/* hooks */
 
-static regex_t match_regex;
-
-struct cgi_request **requests_by_socket;
-
-struct post_t {
-    int fd;
-    void *buf;
-    unsigned long len;
-};
-
-struct cgi_match_t {
-    regex_t match;
-    char *bin;
-    mk_pointer content_type;
-
-    struct mk_list _head;
-};
-
-struct cgi_vhost_t {
-    struct host *host;
-    struct mk_list matches;
-};
-
-static struct cgi_vhost_t *cgi_vhosts = NULL;
-static struct mk_list cgi_global_matches;
 
 int swrite(const int fd, const void *buf, const size_t count)
 {
@@ -287,7 +262,6 @@ static void str_to_regex(char *str, regex_t *reg)
         p++;
     }
 
-//    printf("Got match %s\n", str);
     int ret = regcomp(reg, str, REG_EXTENDED|REG_ICASE|REG_NOSUB);
     if (ret) {
         char tmp[80];
@@ -324,7 +298,9 @@ static int cgi_link_matches(struct mk_config_section *section, struct mk_list *l
              *   2 = Mime type
              */
             i = 0;
-            match_line = NULL;
+            match_line = mk_api->mem_alloc_z(sizeof(struct cgi_match_t));
+            mk_list_add(&match_line->_head, list);
+
             mk_list_foreach(head_match, line) {
                 entry_match = mk_list_entry(head_match,
                                             struct mk_string_line,
@@ -332,11 +308,6 @@ static int cgi_link_matches(struct mk_config_section *section, struct mk_list *l
                 if (!entry_match) {
                     mk_err("CGI: Invalid configuration key");
                     exit(EXIT_FAILURE);
-                }
-
-                if (!match_line) {
-                    match_line = mk_api->mem_alloc(sizeof(struct cgi_match_t));
-                    mk_list_add(&match_line->_head, list);
                 }
 
                 switch (i) {
@@ -354,7 +325,6 @@ static int cgi_link_matches(struct mk_config_section *section, struct mk_list *l
 
                 i++;
             }
-            mk_list_add(&match_line->_head, list);
             n++;
         }
     }
@@ -364,7 +334,6 @@ static int cgi_link_matches(struct mk_config_section *section, struct mk_list *l
 
 static void cgi_read_config(const char * const path)
 {
-    int ret;
     char *file = NULL;
     unsigned long len;
     struct mk_config *conf;
@@ -428,12 +397,10 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
     mk_list_init(&cgi_global_matches);
     cgi_read_config(confdir);
-
-    //pthread_key_create(&_mkp_data, NULL);
+    pthread_key_create(&cgi_request_list, NULL);
 
     struct rlimit lim;
     getrlimit(RLIMIT_NOFILE, &lim);
-//    printf("Allocating a cache for %lu fds\n", lim.rlim_cur);
     requests_by_socket = mk_api->mem_alloc_z(sizeof(struct cgi_request *) * lim.rlim_cur);
 
     /* Make sure we act good if the child dies */
@@ -471,15 +438,17 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
     /* Go around each global CGI Match entry and check if one of them applies */
     mk_list_foreach(head_matches, &cgi_global_matches) {
-        printf("loop\n");
         match_rule = mk_list_entry(head_matches, struct cgi_match_t,  _head);
         if (regexec(&match_rule->match, url, 0, NULL, 0) == 0) {
-            printf("run CGI on general\n");
             goto run_cgi;
         }
     }
 
     /* Now check the rules under the proper virtual host */
+    if (!cgi_vhosts) {
+        return MK_PLUGIN_RET_NOT_ME;
+    }
+
     for (i = 0; cgi_vhosts[i].host; i++) {
         if (sr->host_conf == cgi_vhosts[i].host) {
             break;
@@ -502,9 +471,9 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     /* If we reach this line means that not matches was found */
     return MK_PLUGIN_RET_NOT_ME;
 
- run_cgi:
-    printf("got match rule: %p\n", match_rule);
 
+ run_cgi:
+    /* start running the CGI */
     if (cgi_req_get(cs->socket)) {
         printf("Error, someone tried to retry\n");
         return MK_PLUGIN_RET_CONTINUE;
@@ -523,10 +492,10 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-void _mkp_core_thctx()
+void _mkp_core_thctx(void)
 {
     struct mk_list *list = mk_api->mem_alloc_z(sizeof(struct mk_list));
 
     mk_list_init(list);
-    pthread_setspecific(_mkp_data, list);
+    pthread_setspecific(cgi_request_list, (void *) list);
 }

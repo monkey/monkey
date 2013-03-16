@@ -36,9 +36,9 @@ struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *s
 
 void cgi_req_add(struct cgi_request *r)
 {
-    struct mk_list *list = pthread_getspecific(_mkp_data);
+    struct mk_list *list = pthread_getspecific(cgi_request_list);
 
-    printf("LIST: %p\n", list);
+    mk_bug(!list);
     mk_list_add(&r->_head, list);
 }
 

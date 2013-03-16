@@ -84,8 +84,8 @@ int MK_EXPORT _mkp_event_close(int sockfd);
 int MK_EXPORT _mkp_event_timeout(int sockfd);
 
 
-/* 
- * Redefine messages macros 
+/*
+ * Redefine messages macros
  */
 
 #undef  mk_info
