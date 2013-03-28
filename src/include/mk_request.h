@@ -48,7 +48,7 @@ extern const mk_pointer mk_endblock;
 #define RH_COOKIE "Cookie:"
 #define RH_CONTENT_LENGTH "Content-Length:"
 #define RH_CONTENT_RANGE "Content-Range:"
-#define RH_CONTENT_TYPE	"Content-type:"
+#define RH_CONTENT_TYPE	"Content-Type:"
 #define RH_IF_MODIFIED_SINCE "If-Modified-Since:"
 #define RH_HOST	"Host:"
 #define RH_LAST_MODIFIED "Last-Modified:"

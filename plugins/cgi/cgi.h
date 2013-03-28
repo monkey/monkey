@@ -35,7 +35,7 @@
 
 enum {
     PATHLEN = 1024,
-    SHORTLEN = 36
+    SHORTLEN = 64
 };
 
 struct cgi_request {
