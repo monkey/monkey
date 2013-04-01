@@ -11,4 +11,4 @@ OBJECTS = polarssl.o
 -include $(OBJECTS:.o=.d)
 
 monkey-polarssl.so: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+	$(CC) $(CFLAGS) $(DEFS) -shared -o $@ $^ -lc $(LDFLAGS)
