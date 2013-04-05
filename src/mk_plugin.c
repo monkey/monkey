@@ -156,7 +156,7 @@ struct plugin *mk_plugin_alloc(void *handler, const char *path)
     /* Core hooks */
     p->core.prctx = (int (*)()) mk_plugin_load_symbol(handler,
                                                       "_mkp_core_prctx");
-    p->core.thctx = (int (*)()) mk_plugin_load_symbol(handler,
+    p->core.thctx = (void (*)()) mk_plugin_load_symbol(handler,
                                                       "_mkp_core_thctx");
 
     /* Stage hooks */

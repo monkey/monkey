@@ -61,7 +61,6 @@ static int mime_cmp(const void *m1, const void *m2)
 inline struct mimetype *mk_mimetype_lookup(char *name)
 {
     int i;
-    char *p = name;
     struct mimetype tmp;
 
     /*

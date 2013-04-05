@@ -88,8 +88,8 @@
 /* Contexts: process/thread */
 struct plugin_core
 {
-    int (*prctx) (struct server_config *);
-    void	 (*thctx) ();
+    int  (*prctx) (struct server_config *);
+    void (*thctx) ();
 };
 
 struct plugin_stage
