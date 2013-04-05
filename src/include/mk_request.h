@@ -120,6 +120,9 @@ struct response_headers
     mk_pointer content_encoding;
     char *location;
 
+    /* Flag to track if the response headers were sent */
+    int sent;
+
     /*
      * This field allow plugins to add their own response
      * headers

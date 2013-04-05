@@ -331,6 +331,8 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     mk_header_iov_free(iov);
+    sh->sent = MK_TRUE;
+
     return 0;
 }
 
@@ -345,6 +347,7 @@ void mk_header_set_http_status(struct session_request *sr, int status)
 void mk_header_response_reset(struct response_headers *header)
 {
     header->status = 0;
+    header->sent = MK_FALSE;
     header->ranges[0] = -1;
     header->ranges[1] = -1;
     header->content_length = -1;

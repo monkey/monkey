@@ -617,10 +617,18 @@ int mk_plugin_stage_run(unsigned int hook,
             /* Call stage */
             MK_TRACE("[%s] STAGE 30", stm->p->shortname);
             ret = stm->p->stage.s30(stm->p, cs, sr);
+
             switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
                 case MK_PLUGIN_RET_END:
+                    /*
+                     * A plugin cannot say that have finish it works if the response
+                     * headers have not been send. If the intention is to close the
+                     * connection use MK_PLUGIN_RET_CLOSE_CONX.
+                     */
+                    mk_bug(sr->headers.sent == MK_FALSE);
+                    return ret;
                 case MK_PLUGIN_RET_CLOSE_CONX:
                 case MK_PLUGIN_RET_CONTINUE:
                     return ret;

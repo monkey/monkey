@@ -487,7 +487,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                           mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
     /* Access Log */
-    if (http_status < 400){
+    if (http_status < 400) {
         /* No access file defined */
         if (!target->file_access) {
             return 0;

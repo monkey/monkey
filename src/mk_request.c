@@ -673,7 +673,7 @@ int mk_handler_write(int socket, struct client_session *cs)
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
-                 if (sr_node->close_now == MK_TRUE) {
+                if (sr_node->close_now == MK_TRUE) {
                     return -1;
                 }
                 break;
