@@ -116,7 +116,7 @@ static struct mk_f_list *mk_dirhtml_create_element(char *file,
         return NULL;
     }
 
-    entry->name = file;
+    strcpy(entry->name, file);
     entry->type = type;
     entry->next = NULL;
 
@@ -559,6 +559,7 @@ static void mk_dirhtml_tag_free_list(struct dirhtml_value **list)
             prev = target;
             target = (*target).next;
         }
+
         mk_api->mem_free(target);
 
         if (target == *list) {
