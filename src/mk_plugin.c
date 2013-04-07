@@ -872,8 +872,18 @@ int mk_plugin_http_request_end(int socket)
 {
     int ret;
     int con;
+    struct client_session *cs;
+    struct session_request *sr;
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", socket);
+
+    cs = mk_session_get(socket);
+    if (!mk_list_is_empty(&cs->request_list)) {
+        mk_err("[FD %i] Tried to end non-existing request.", socket);
+        return -1;
+    }
+    sr = mk_list_entry_last(&cs->request_list, struct session_request, _head);
+    mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
 
     ret = mk_http_request_end(socket);
     MK_TRACE(" ret = %i", ret);
