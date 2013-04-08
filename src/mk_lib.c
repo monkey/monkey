@@ -496,6 +496,7 @@ int mklib_stop(mklib_ctx ctx)
     free(config);
 #endif
 
+    free(ctx->workers);
     free(ctx);
 
     return MKLIB_TRUE;
