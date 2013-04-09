@@ -64,7 +64,7 @@ struct mk_f_list
 {
     char ft_modif[MK_DIRHTML_FMOD_LEN];
     struct file_info info;
-    char name[NAME_MAX];
+    char name[NAME_MAX + 1]; /* The name can be up to NAME_MAX long; include NULL. */
     char *size;
     struct mk_f_list *next;
     unsigned char type;
