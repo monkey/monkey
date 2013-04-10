@@ -25,6 +25,7 @@
 
 #include "cgi.h"
 
+
 MONKEY_PLUGIN("cgi",		/* shortname */
               "CGI handler",	/* name */
               VERSION,		/* version */
@@ -147,7 +148,7 @@ static int do_cgi(const char *const __restrict__ file,
     }
 
     if (sr->content_type.len) {
-        snprintf(content_type, SHORTLEN, "CONTENT_TYPE=%s", sr->content_type.data);
+        snprintf(content_type, SHORTLEN, "CONTENT_TYPE=%.*s", (int)sr->content_type.len, sr->content_type.data);
         env[envpos++] = content_type;
     }
 
