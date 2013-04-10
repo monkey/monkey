@@ -17,8 +17,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "mk_memory.h"
-
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
@@ -48,6 +46,8 @@
 #define HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
+#include "mk_memory.h"
+
 extern const mk_pointer mk_http_method_get_p;
 extern const mk_pointer mk_http_method_post_p;
 extern const mk_pointer mk_http_method_head_p;
@@ -61,7 +61,6 @@ extern const mk_pointer mk_http_protocol_11_p;
 extern const mk_pointer mk_http_protocol_null_p;
 
 #include "mk_request.h"
-#include "mk_memory.h"
 
 int mk_http_method_check(mk_pointer method);
 mk_pointer mk_http_method_check_str(int method);
