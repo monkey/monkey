@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 if [ "$1" = "configure" ]; then
 	mkdir -p /var/log/monkey
