@@ -347,7 +347,8 @@ int _mkp_core_prctx(struct server_config *config)
     struct mk_list *hosts = &mk_api->config->hosts;
     struct mk_list *head_host;
     struct mk_config_section *section;
-    struct mk_config_entry *access_entry, *error_entry;
+    char *access_file_name = NULL;
+    char *error_file_name = NULL;
 
     /* Restore STDOUT if we are in background mode */
     if (mk_logger_master_path != NULL && mk_api->config->is_daemon == MK_TRUE) {
@@ -367,30 +368,32 @@ int _mkp_core_prctx(struct server_config *config)
         section = mk_api->config_section_get(entry_host->config, "LOGGER");
         if (section) {
             /* Read configuration entries */
-            access_entry = mk_api->config_section_getval(section, "AccessLog",
-                                                         MK_CONFIG_VAL_STR);
-            error_entry = mk_api->config_section_getval(section, "ErrorLog",
-                                                        MK_CONFIG_VAL_STR);
+            access_file_name = (char *) mk_api->config_section_getval(section,
+                                                                      "AccessLog",
+                                                                      MK_CONFIG_VAL_STR);
+            error_file_name = (char *) mk_api->config_section_getval(section,
+                                                                     "ErrorLog",
+                                                                     MK_CONFIG_VAL_STR);
 
-            if (access_entry || error_entry) {
+            if (access_file_name || error_file_name) {
                 new = mk_api->mem_alloc(sizeof(struct log_target));
                 /* Set access pipe */
-                if (access_entry) {
+                if (access_file_name) {
                     if (pipe(new->fd_access) < 0) {
                         mk_err("Could not create pipe");
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
-                    new->file_access = (char *) access_entry;
+                    new->file_access = access_file_name;
                 }
                 /* Set error pipe */
-                if (error_entry) {
+                if (error_file_name) {
                     if (pipe(new->fd_error) < 0) {
                         mk_err("Could not create pipe");
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
-                    new->file_error = (char *) error_entry;
+                    new->file_error = error_file_name;
                 }
 
                 new->host = entry_host;
