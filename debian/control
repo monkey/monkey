@@ -2,7 +2,7 @@ Source: monkey
 Section: httpd
 Priority: optional
 Maintainer: Eduardo Silva <edsiper@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libpolarssl-dev
 Standards-Version: 3.9.1
 Homepage: http://monkey-project.com
 Vcs-Git: git://git.monkey-project.com/monkey
@@ -10,7 +10,7 @@ Vcs-Browser: http://git.monkey-project.com/?p=monkey
 
 Package: monkey
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmatrixssl3.2 (>= 3.2)
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Fast and lightweight Web Server for Linux.
  Monkey HTTP Daemon has been designed to be very scalable with low memory 
  and CPU consumption, the perfect solution for embedded environments. It 
