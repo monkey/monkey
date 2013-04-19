@@ -114,7 +114,7 @@
 #define MK_NET_NETWORK(addr,net) (addr & MK_NET_NETMASK(addr,net))
 #define MK_NET_WILDCARD(addr,net) (MK_NET_BROADCAST(addr,net) ^ MK_NET_NETWORK(addr,net))
 #define MK_NET_HOSTMIN(addr,net) net == 31 ? MK_NET_NETWORK(addr,net) : (MK_NET_NETWORK(addr,net) + 0x01000000)
-#define MK_NET_HOSTMAX(addr,net) net == 31 ? MK_NET_BROADCAST(addr,net) : (MK_NET_BROADCAST(addr,net) - 0x01000000);
+#define MK_NET_HOSTMAX(addr,net) net == 31 ? MK_NET_BROADCAST(addr,net) : (MK_NET_BROADCAST(addr,net) - 0x01000000)
 
 #if __GNUC__ >= 4
  #define MK_EXPORT __attribute__ ((visibility ("default")))
