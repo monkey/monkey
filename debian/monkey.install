@@ -8,27 +8,10 @@ debian/tmp/etc/monkey/monkey.mime
 debian/tmp/etc/monkey/sites/*
 
 # Plugins setup
-debian/tmp/etc/monkey/plugins/auth/*
-debian/tmp/etc/monkey/plugins/cgi/*
-debian/tmp/etc/monkey/plugins/cheetah/*
-debian/tmp/etc/monkey/plugins/cgi/*
-debian/tmp/etc/monkey/plugins/dirlisting/*
-debian/tmp/etc/monkey/plugins/logger/*
-debian/tmp/etc/monkey/plugins/mandril/*
-debian/tmp/etc/monkey/plugins/palm/*
-debian/tmp/etc/monkey/plugins/liana_ssl/*
+debian/tmp/etc/monkey/plugins/*
 
 # Plugins / Libraries
-debian/tmp/usr/lib/monkey/monkey-auth.so
-debian/tmp/usr/lib/monkey/monkey-cgi.so
-debian/tmp/usr/lib/monkey/monkey-cheetah.so
-debian/tmp/usr/lib/monkey/monkey-cgi.so
-debian/tmp/usr/lib/monkey/monkey-logger.so
-debian/tmp/usr/lib/monkey/monkey-dirlisting.so
-debian/tmp/usr/lib/monkey/monkey-mandril.so
-debian/tmp/usr/lib/monkey/monkey-liana.so
-debian/tmp/usr/lib/monkey/monkey-palm.so
-debian/tmp/usr/lib/monkey/monkey-liana_ssl.so
+debian/tmp/usr/lib/monkey/*.so
 
 # WWW Data
 debian/tmp/var/www/monkey/index.html
