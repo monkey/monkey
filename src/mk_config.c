@@ -93,7 +93,7 @@ static void mk_config_entry_add(struct mk_config *conf,
 {
     struct mk_config_section *section;
     struct mk_config_entry *new;
-    struct mk_list *head = &conf->sections;;
+    struct mk_list *head = &conf->sections;
 
     if (mk_list_is_empty(&conf->sections) == 0) {
         mk_err("Error: there are not sections available!");
