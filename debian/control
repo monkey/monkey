@@ -16,6 +16,13 @@ Description: Fast and lightweight Web Server for Linux.
  and CPU consumption, the perfect solution for embedded environments. It 
  also provides a flexible API and plugins interface.
 
+Package: monkey-cheetah
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: Shell interface plugin for Monkey Web Server.
+ Cheetah! is a shell interface to query the server about setup and different
+ internal statuses. It can run in a Unix or TCP socket.
+
 Package: monkey-liana
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey

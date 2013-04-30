@@ -9,7 +9,6 @@ debian/tmp/etc/monkey/sites/*
 
 # Plugins / Libraries
 debian/tmp/usr/lib/monkey/monkey-auth.so
-debian/tmp/usr/lib/monkey/monkey-cheetah.so
 debian/tmp/usr/lib/monkey/monkey-dirlisting.so
 debian/tmp/usr/lib/monkey/monkey-mandril.so
 
