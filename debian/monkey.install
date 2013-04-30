@@ -7,9 +7,6 @@ debian/tmp/etc/monkey/plugins.load
 debian/tmp/etc/monkey/monkey.mime
 debian/tmp/etc/monkey/sites/*
 
-# Plugins setup
-debian/tmp/etc/monkey/plugins/*
-
 # Plugins / Libraries
 debian/tmp/usr/lib/monkey/monkey-auth.so
 debian/tmp/usr/lib/monkey/monkey-cheetah.so
