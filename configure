@@ -466,7 +466,7 @@ install:
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
-	install -d \$(DATADIR)
+	install -d \${DATADIR}
 	install -d \${DATADIR}/imgs
 	install -d \${DATADIR}/php
 	install -d \${DATADIR}/docs

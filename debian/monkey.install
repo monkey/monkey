@@ -14,12 +14,13 @@ debian/tmp/etc/monkey/plugins/*
 debian/tmp/usr/lib/monkey/monkey-auth.so
 debian/tmp/usr/lib/monkey/monkey-cheetah.so
 debian/tmp/usr/lib/monkey/monkey-dirlisting.so
-debian/tmp/usr/lib/monkey/monkey-liana.so
 debian/tmp/usr/lib/monkey/monkey-logger.so
 debian/tmp/usr/lib/monkey/monkey-mandril.so
 
 # WWW Data
-debian/tmp/var/www/monkey/index.html
-debian/tmp/var/www/monkey/favicon.ico
-debian/tmp/var/www/monkey/imgs/monkey_logo.png
+debian/tmp/usr/share/monkey/index.html
+debian/tmp/usr/share/monkey/favicon.ico
+debian/tmp/usr/share/monkey/imgs/monkey_logo.png
 
+# Manpage
+debian/tmp/usr/share/man/man1/monkey.1

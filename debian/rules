@@ -8,7 +8,7 @@ override_dh_auto_configure:
 		--bindir=/usr/sbin		\
 		--mandir=/usr/share/man		\
 		--sysconfdir=/etc/monkey	\
-		--datadir=/var/www/monkey	\
+		--datadir=/usr/share/monkey	\
 		--logdir=/var/log/monkey	\
 		--default-user=www-data 	\
 		--plugdir=/usr/lib/monkey	\

@@ -20,22 +20,31 @@ Package: monkey-liana
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: Networking layer for Monkey Web Server.
+ Monkey as a small core requires a plugin that provides the transport or
+ networking capabilities. Liana plugin provides a transport layer based in
+ plain sockets.
 
 Package: monkey-cgi
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: CGI support/plugin for Monkey Web Server.
+ This plugin add CGI support to Monkey, it allows the execution binary 
+ programs or scripting files through a specified interpreter. 
 
 Package: monkey-fastcgi
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: FastCGI support/plugin for Monkey Web Server.
+ This plugin add FastCGI support to Monkey allowing the execution of remote
+ binaries or scripts programs based in a FastCGI server. Consider this plugin
+ a FastCGI client.
 
 Package: monkey-polarssl
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: SSL transport layer for Monkey Web Server based in PolarSSL.
-
+ This plugin enable Monkey Web Server with SSL encryption through the third 
+ party PolarSSL library.
 
 Package: monkey-dev
 Architecture: any
