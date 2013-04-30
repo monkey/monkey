@@ -10,7 +10,7 @@ Vcs-Browser: http://git.monkey-project.com/?p=monkey
 
 Package: monkey
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, monkey-liana
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey-liana, monkey-logger
 Description: Fast and lightweight Web Server for Linux.
  Monkey HTTP Daemon has been designed to be very scalable with low memory 
  and CPU consumption, the perfect solution for embedded environments. It 
@@ -23,6 +23,14 @@ Description: Networking layer for Monkey Web Server.
  Monkey as a small core requires a plugin that provides the transport or
  networking capabilities. Liana plugin provides a transport layer based in
  plain sockets.
+
+Package: monkey-logger
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: Logger plugin for Monkey Web Server.
+ The logger plugin allows to register the access and errors produced for 
+ specific HTTP requests. It also implements a feature called MasterLog
+ to register server events in the file system.
 
 Package: monkey-cgi
 Architecture: any
