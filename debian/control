@@ -16,14 +16,21 @@ Description: Fast and lightweight Web Server for Linux.
  and CPU consumption, the perfect solution for embedded environments. It 
  also provides a flexible API and plugins interface.
 
+Package: monkey-cgi
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: CGI support/plugin for Monkey Web Server.
+
+Package: monkey-fastcgi
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: FastCGI support/plugin for Monkey Web Server.
+
 Package: monkey-polarssl
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
-Description: SSL layer for Monkey Web Server based in PolarSSL.
- Monkey HTTP Daemon has been designed to be very scalable with low memory
- and CPU consumption, the perfect solution for embedded environments. It
- also provides a flexible API and plugins interface. This plugin adds SSL
- capabilities to Monkey.
+Description: SSL transport layer for Monkey Web Server based in PolarSSL.
+
 
 Package: monkey-dev
 Architecture: any
