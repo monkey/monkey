@@ -7,9 +7,6 @@ debian/tmp/etc/monkey/plugins.load
 debian/tmp/etc/monkey/monkey.mime
 debian/tmp/etc/monkey/sites/*
 
-# Plugins / Libraries
-debian/tmp/usr/lib/monkey/monkey-mandril.so
-
 # WWW Data
 debian/tmp/usr/share/monkey/index.html
 debian/tmp/usr/share/monkey/favicon.ico

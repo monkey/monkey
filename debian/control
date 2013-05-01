@@ -23,6 +23,13 @@ Description: Basic Authentication plugin for Monkey Web Server.
  This plugin add Basic Authentication support to Monkey Web Server, it also
  includes the mk_passwd utility to generate password files.
 
+Package: monkey-cgi
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: CGI support/plugin for Monkey Web Server.
+ This plugin add CGI support to Monkey, it allows the execution binary 
+ programs or scripting files through a specified interpreter. 
+
 Package: monkey-cheetah
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
@@ -38,8 +45,17 @@ Description: Directory Listing plugin for Monkey Web Server.
  directory is the target request, it will create and index page with the 
  directory content.
 
+Package: monkey-fastcgi
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
+Description: FastCGI support/plugin for Monkey Web Server.
+ This plugin add FastCGI support to Monkey allowing the execution of remote
+ binaries or scripts programs based in a FastCGI server. Consider this plugin
+ a FastCGI client.
+
 Package: monkey-liana
 Architecture: any
+Suggests: monkey-polarssl
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: Networking layer for Monkey Web Server.
  Monkey as a small core requires a plugin that provides the transport or
@@ -54,20 +70,13 @@ Description: Logger plugin for Monkey Web Server.
  specific HTTP requests. It also implements a feature called MasterLog
  to register server events in the file system.
 
-Package: monkey-cgi
+Package: monkey-mandril
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
-Description: CGI support/plugin for Monkey Web Server.
- This plugin add CGI support to Monkey, it allows the execution binary 
- programs or scripting files through a specified interpreter. 
-
-Package: monkey-fastcgi
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
-Description: FastCGI support/plugin for Monkey Web Server.
- This plugin add FastCGI support to Monkey allowing the execution of remote
- binaries or scripts programs based in a FastCGI server. Consider this plugin
- a FastCGI client.
+Description: Security plugin for Monkey Web Server.
+ Mandril provides security rules to Monkey Web Server allowing to restrict
+ by incoming connections from specified sub-networks or by matching the HTTP
+ request string.
 
 Package: monkey-polarssl
 Architecture: any
