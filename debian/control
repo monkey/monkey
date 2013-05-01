@@ -66,9 +66,9 @@ Package: monkey-logger
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: Logger plugin for Monkey Web Server.
- The logger plugin allows to register the access and errors produced for 
- specific HTTP requests. It also implements a feature called MasterLog
- to register server events in the file system.
+ The logger plugin allow to register every access and error events under 
+ a specific HTTP request. It also implements a feature called MasterLog
+ to register the server output into the file system.
 
 Package: monkey-mandril
 Architecture: any
@@ -94,6 +94,7 @@ Description: Monkey HTTP Daemon development files
  also provides a flexible API and plugins interface.
 
 Package: monkey-doc
+Section: doc
 Architecture: all
 Description: Monkey documentation
  Monkey HTTP Daemon documentation.
