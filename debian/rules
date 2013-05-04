@@ -10,6 +10,7 @@ override_dh_auto_configure:
 		--sysconfdir=/etc/monkey	\
 		--datadir=/usr/share/monkey	\
 		--logdir=/var/log/monkey	\
+		--incdir=/usr/include/monkey    \
 		--default-user=www-data 	\
 		--plugdir=/usr/lib/monkey	\
 		--enable-plugins="auth,liana,mandril,cheetah,cgi,fastcgi,logger,dirlisting,polarssl"    \
