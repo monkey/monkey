@@ -98,3 +98,11 @@ Section: doc
 Architecture: all
 Description: Monkey documentation
  Monkey HTTP Daemon documentation.
+
+Package: libmonkey
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Monkey HTTP Daemon library
+ LibMonkey is the shared library version of Monkey HTTP daemon, it
+ can be linked by third party programs that requires to use a fast web server or
+ HTTP stack in their main program.

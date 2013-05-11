@@ -14,4 +14,6 @@ override_dh_auto_configure:
 		--default-user=www-data 	\
 		--plugdir=/usr/lib/monkey	\
 		--enable-plugins="auth,liana,mandril,cheetah,cgi,fastcgi,logger,dirlisting,polarssl"    \
-		--disable-plugins="*"
+		--disable-plugins="*"		\
+		--enable-shared
+
