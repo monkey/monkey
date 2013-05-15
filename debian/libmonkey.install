@@ -1,5 +1,6 @@
 # Library
 debian/tmp/usr/lib/libmonkey.so.1.2
+debian/tmp/usr/lib/libmonkey.so
 
 # Manpages
 debian/tmp/usr/share/man/man3/mklib_start.3

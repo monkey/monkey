@@ -1,6 +1,0 @@
-ln -sf /usr/lib/libmonkey.so.1.2 /usr/lib/libmonkey.so
-
-if [ "$1" = "configure" ]; then
-	ldconfig
-fi
-
