@@ -383,6 +383,7 @@ static void cgi_read_config(const char * const path)
 
         /* Set the host for this entry */
         cgi_vhosts[vhosts].host = entry_host;
+        mk_list_init(&cgi_vhosts[vhosts].matches);
 
         /*
          * For each section found on every virtual host, lookup all 'Match'
