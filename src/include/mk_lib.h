@@ -21,7 +21,7 @@
 #define MK_LIB_H
 
 #include "mk_macros.h"
-#include "public/monkey.h"
+#include "public/libmonkey.h"
 
 /* Data */
 

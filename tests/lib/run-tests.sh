@@ -1,7 +1,6 @@
 #!/bin/bash
 # Tests starting with x are expected to fail
 
-
 export LANG=C
 
 GREEN="$(echo -e '\033[1;32m')"
@@ -9,13 +8,14 @@ YELLOW="$(echo -e '\033[0;33m')"
 RED="$(echo -e '\033[1;31m')"
 NORMAL="$(echo -e '\033[0;39m')"
 
-CFLAGS="$CFLAGS -Wl,-rpath,\$ORIGIN/../../src -I ../../src/include/public"
-LDFLAGS="$LDFLAGS ../../src/libmonkey.so*"
+CFLAGS="$CFLAGS -I ../../src/include/public"
+LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey"
+
 [ -z "$CC" ] && CC=gcc
 
 
 # Check that we can run the tests
-if [ ! -f ../../src/libmonkey.so* ]; then
+if [ ! -f ../../src/libmonkey.so.1.2 ]; then
 	echo -e "\n${YELLOW}Please build and install the library first.\n"
 
 	echo "The tests will link against the source dir, but the library"
@@ -26,7 +26,7 @@ fi
 
 
 # Precompile the header for faster builds
-$CC ../../src/include/public/monkey.h
+$CC ../../src/include/public/libmonkey.h
 
 success=0
 fail=0
@@ -41,7 +41,8 @@ for src in *.c; do
 	case $test in x*) ret=1 ;; esac
 
 	echo -n "Building test $test... "
-	$CC $CFLAGS $LDFLAGS -o $test $src
+	$CC $CFLAGS $src -o $test $LDFLAGS
+
 	if [ $? -ne 0 ]; then
 		fail=$((fail + 1))
 		echo "${RED}Failed to build $NORMAL"
@@ -54,7 +55,7 @@ for src in *.c; do
 		echo "${RED}Failed $NORMAL"
 	else
 		success=$((success + 1))
-		echo
+		echo "$GREEN OK $NORMAL"
 		rm -f $log
 	fi
 
@@ -63,7 +64,7 @@ for src in *.c; do
 done
 
 # Remove the PCH
-rm ../../src/include/public/monkey.h.gch
+rm ../../src/include/public/libmonkey.h.gch
 
 
 echo

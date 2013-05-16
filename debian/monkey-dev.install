@@ -26,7 +26,6 @@ debian/tmp/usr/include/monkey/mk_iov.h
 debian/tmp/usr/include/monkey/mk_server.h
 debian/tmp/usr/include/monkey/mk_mimetype.h
 debian/tmp/usr/include/monkey/mk_plugin.h
-debian/tmp/usr/include/monkey/mk_lib.h
 debian/tmp/usr/include/monkey/mk_list.h
 debian/tmp/usr/include/monkey/mk_socket.h
 debian/tmp/usr/include/monkey/mk_utils.h

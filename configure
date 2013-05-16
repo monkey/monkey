@@ -425,7 +425,7 @@ create_makefile1_install()
     plglist=`cat plugins.list`
 
 if [ -n "$sharedlib" ]; then
-    incinstall="	install -m 644 src/include/public/* \$(INCDIR)"
+    incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
 fi
 
 cat > Makefile <<EOF

@@ -1,4 +1,4 @@
-#include <monkey.h>
+#include <libmonkey.h>
 #include <stdlib.h>
 
 // Make sure that an IP-ban works
