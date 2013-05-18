@@ -30,3 +30,8 @@ debian/tmp/usr/include/monkey/mk_list.h
 debian/tmp/usr/include/monkey/mk_socket.h
 debian/tmp/usr/include/monkey/mk_utils.h
 debian/tmp/usr/include/monkey/mk_connection.h
+
+# Library headers
+debian/tmp/usr/include/monkey/mk_lib.h
+debian/tmp/usr/include/monkey/libmonkey.h
+

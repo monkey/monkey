@@ -107,11 +107,3 @@ Description: Monkey HTTP Daemon library
  can be linked by third party programs that requires to use a fast web server or
  HTTP stack in their main program.
 
-Package: libmonkey-dev
-Section: libdevel
-Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, libmonkey
-Description: Monkey HTTP Daemon library development files
- This package contains the libmonkey C headers files required by third 
- party programs to use the library.
-
