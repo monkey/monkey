@@ -26,14 +26,32 @@
 #include <unistd.h>
 #include <string.h>
 #include <pwd.h>
+#include <ctype.h>
 
 #include "MKPlugin.h"
 #include "cheetah.h"
 #include "cutils.h"
 #include "cmd.h"
 
-int mk_cheetah_cmd(char *cmd)
+/* strip leading and trailing space from input command line. */
+static char *strip_whitespace(char *cmd)
 {
+    char *end;
+    while (isspace(*cmd))
+        cmd++;
+    if (*cmd == 0)
+        return cmd;
+    end = cmd + strlen(cmd) - 1;
+    while (end > cmd && isspace(*end))
+        end--;
+    end++;
+    *end = '\0';
+    return cmd;
+}
+
+int mk_cheetah_cmd(char *raw_cmd)
+{
+    char *cmd = strip_whitespace(raw_cmd);
     if (strcmp(cmd, MK_CHEETAH_CONFIG) == 0 ||
         strcmp(cmd, MK_CHEETAH_CONFIG_SC) == 0) {
         mk_cheetah_cmd_config();
