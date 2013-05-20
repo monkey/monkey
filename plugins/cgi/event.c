@@ -75,11 +75,12 @@ static void done(struct cgi_request * const r) {
         swrite(r->socket, "0\r\n\r\n", 5);
     }
 
-    mk_api->http_request_end(r->socket);
-    mk_api->socket_close(r->fd);
-
     /* XXX Fixme: this needs to be atomic */
     requests_by_socket[r->socket] = NULL;
+
+    /* Note: Must make sure we ignore the close event caused by this line */
+    mk_api->http_request_end(r->socket);
+    mk_api->socket_close(r->fd);
 
 
     cgi_req_del(r);
@@ -116,6 +117,10 @@ static int hangup(const int socket)
         return MK_PLUGIN_RET_EVENT_OWNED;
 
     } else if ((r = cgi_req_get(socket))) {
+
+        /* If this was closed by us, do nothing */
+        if (!requests_by_socket[r->socket])
+            return MK_PLUGIN_RET_EVENT_OWNED;
 
         mk_api->event_del(r->fd);
         mk_api->socket_close(r->fd);
