@@ -72,7 +72,10 @@ static int fcgi_handle_cgi_header(struct session_request *sr,
 	else if (!strncasecmp(entry, "Location: ", 10)) {
 		value = entry + 10;
 		value_len = len - 10 - (*(entry + len - 2) == '\r' ? 2 : 1);
-		sr->headers.location = strndup(value, value_len);
+		sr->headers.location = malloc(value_len + 1);
+		check_mem(sr->headers.location);
+		memcpy(sr->headers.location, value, value_len);
+		sr->headers.location[value_len] = '\0';
 	}
 	else if (!strncasecmp(entry, "Status: ", 8)) {
 		value = entry + 8;
