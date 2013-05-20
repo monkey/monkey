@@ -212,7 +212,7 @@ int fcgi_new_connection(int location_id)
 
 	mk_api->socket_set_nonblocking(fd->fd);
 	check(!mk_api->event_add(fd->fd,
-			MK_EPOLL_RW,
+			MK_EPOLL_WRITE,
 			plugin,
 			MK_EPOLL_LEVEL_TRIGGERED),
 		"[FD %d] Failed to add event.", fd->fd);
@@ -968,6 +968,10 @@ int _mkp_event_write(int socket)
 			fcgi_fd_set_state(fd, FCGI_FD_RECEIVING);
 			chunk_iov_reset(fd->begin_req);
 			fd->begin_req = NULL;
+
+			mk_api->event_socket_change_mode(fd->fd,
+					MK_EPOLL_READ,
+					MK_EPOLL_LEVEL_TRIGGERED);
 		} else {
 			chunk_iov_drop(fd->begin_req, ret);
 		}
@@ -998,6 +1002,7 @@ int _mkp_event_read(int socket)
 	struct request_list *rl;
 	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
+	struct fcgi_location *loc;
 
 	cntx = pthread_getspecific(fcgi_local_context);
 	check(cntx, "No fcgi context on thread.");
@@ -1010,16 +1015,30 @@ int _mkp_event_read(int socket)
 		return MK_PLUGIN_RET_EVENT_NEXT;
 	}
 	else {
+		loc = fcgi_config_get_location(&fcgi_global_config, fd->location_id);
+		check(loc, "No location for fcgi_fd.");
 		PLUGIN_TRACE("[FCGI_FD %d] Receiving data.", fd->fd);
 
 		check_debug(!fcgi_recv_response(fd, cl, rl, fcgi_handle_pkg),
 			"[FCGI_FD %d] Failed to receive response.", fd->fd);
 
-	        if (fd->state == FCGI_FD_CLOSING) {
-                        return MK_PLUGIN_RET_EVENT_CLOSE;
-                }
-
 		PLUGIN_TRACE("[FCGI_FD %d] Data received.", fd->fd);
+
+		if (fd->state == FCGI_FD_READY) {
+			if (loc->keep_alive) {
+				mk_api->event_socket_change_mode(fd->fd,
+						MK_EPOLL_WRITE,
+						MK_EPOLL_LEVEL_TRIGGERED);
+			}
+			else {
+				check(!fcgi_fd_set_state(fd, FCGI_FD_CLOSING),
+						"[FCGI_FD %d] State change failed.", fd->fd);
+				return MK_PLUGIN_RET_EVENT_CLOSE;
+			}
+		}
+		else if (fd->state == FCGI_FD_CLOSING) {
+			return MK_PLUGIN_RET_EVENT_CLOSE;
+		}
 
 		return MK_PLUGIN_RET_EVENT_OWNED;
 	}
