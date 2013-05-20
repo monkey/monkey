@@ -22,6 +22,9 @@
 
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 #include "cgi.h"
 
@@ -187,6 +190,14 @@ static int do_cgi(const char *const __restrict__ file,
             _exit(1);
         }
         close(readpipe[1]);
+
+        /* Our stderr goes to /dev/null */
+        const int devnull = open("/dev/null", O_WRONLY);
+        if (dup2(devnull, 2) < 0) {
+            mk_err("dup2 failed");
+            _exit(1);
+        }
+        close(devnull);
 
         char *argv[3] = { NULL };
 
