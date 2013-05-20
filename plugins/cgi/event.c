@@ -112,7 +112,6 @@ static int hangup(const int socket)
                 break;
             }
         }
-        mk_api->socket_set_nonblocking(r->socket);
 
         return MK_PLUGIN_RET_EVENT_OWNED;
 
