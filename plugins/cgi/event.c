@@ -139,7 +139,7 @@ static int hangup(const int socket)
 int _mkp_event_write(int socket)
 {
     struct cgi_request *r = cgi_req_get(socket);
-    if (!r) return MK_PLUGIN_RET_EVENT_CONTINUE;
+    if (!r) return MK_PLUGIN_RET_EVENT_NEXT;
 
     if (r->in_len > 0) {
 
