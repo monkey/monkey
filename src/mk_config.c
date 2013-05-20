@@ -697,7 +697,7 @@ struct host *mk_config_get_host(char *path)
             mk_string_build(&err_page->real_path, &len, "%s/%s",
                             host->documentroot.data, err_page->file);
 
-            MK_TRACE("ErrorPage: status %i -> %s", err_page->status, err_page->file);
+            MK_TRACE("Map error page: status %i -> %s", err_page->status, err_page->file);
 
             /* Link page to the error page list */
             mk_list_add(&err_page->_head, &host->error_pages);
