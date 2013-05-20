@@ -729,7 +729,7 @@ EOF
 sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-$INCDIR/public/monkey.h
+$INCDIR/public/libmonkey.h
 }
 
 create_conf()

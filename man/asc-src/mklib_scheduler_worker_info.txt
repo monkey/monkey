@@ -7,7 +7,7 @@ mklib_scheduler_worker_info - list all worker threads and their stats
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 [verse]
 *struct mklib_worker_info {

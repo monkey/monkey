@@ -7,7 +7,7 @@ mklib_config - configure your libmonkey instance
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 *int mklib_config(mklib_ctx 'ctx', ...);*
 

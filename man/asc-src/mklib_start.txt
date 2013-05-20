@@ -7,7 +7,7 @@ mklib_start, mklib_stop - start/stop a monkey server instance
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 *int mklib_start(mklib_ctx 'ctx');*
 

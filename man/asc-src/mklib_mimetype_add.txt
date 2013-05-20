@@ -7,7 +7,7 @@ mklib_mimetype_add, mklib_mimetype_list - add a mimetype, list the mimetypes
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 [verse]
 *struct mklib_mime {

@@ -7,7 +7,7 @@ mklib_init - sets up a libmonkey context
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 [verse]
 *mklib_ctx mklib_init(const char *'address', unsigned int 'port',

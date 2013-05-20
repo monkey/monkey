@@ -7,7 +7,7 @@ mklib_vhost_config - configure a new virtual host
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 *int mklib_vhost_config(mklib_ctx 'ctx', char *'name', ...);*
 

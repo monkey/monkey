@@ -7,7 +7,7 @@ mklib_vhost_list - list all existing virtual hosts
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 [verse]
 *struct mklib_vhost {

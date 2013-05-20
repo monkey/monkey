@@ -7,7 +7,7 @@ mklib_callback_set - sets up a callback function
 
 SYNOPSIS
 --------
-*#include <monkey.h>*
+*#include <libmonkey.h>*
 
 *int (*cb_ipcheck)(const char *'ip');*
 
