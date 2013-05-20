@@ -19,6 +19,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -64,7 +66,7 @@ int mk_socket_set_nonblocking(int sockfd)
 
     MK_TRACE("Socket, set FD %i to non-blocking", sockfd);
 
-    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK) == -1) {
+    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK | O_CLOEXEC) == -1) {
         mk_err("Can't set to non-blocking mode socket %i", sockfd);
         return -1;
     }

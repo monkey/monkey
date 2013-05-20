@@ -61,7 +61,7 @@ int _mkp_network_io_accept(int server_fd)
     remote_fd = accept(server_fd, &sock_addr, &socket_size);
     mk_api->socket_set_nonblocking(remote_fd);
 #else
-    remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK);
+    remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
 #endif
 
     return remote_fd;
