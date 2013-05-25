@@ -352,6 +352,10 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
     unsigned int size, bytes;
     char *buffer = 0;
 
+    if (pos_init > pos_end) {
+        return NULL;
+    }
+
     size = (unsigned int) (pos_end - pos_init) + 1;
     if (size <= 2)
         size = 4;
@@ -359,11 +363,6 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
     buffer = mk_mem_malloc(size);
 
     if (!buffer) {
-        return NULL;
-    }
-
-    if (pos_init > pos_end) {
-        mk_mem_free(buffer);
         return NULL;
     }
 
