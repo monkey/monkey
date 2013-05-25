@@ -101,6 +101,7 @@ int mk_conn_write(int socket)
     int ret = -1;
     struct client_session *cs;
     struct sched_list_node *sched;
+    struct sched_connection *conx;
 
      MK_TRACE("[FD %i] Connection Handler / write", socket);
 
@@ -118,6 +119,19 @@ int mk_conn_write(int socket)
     MK_TRACE("[FD %i] Normal connection write handling", socket);
 
     sched = mk_sched_get_thread_conf();
+    conx = mk_sched_get_connection(sched, socket);
+    if (!conx) {
+        MK_TRACE("[FD %i] Registering new connection");
+        if (mk_sched_register_client(socket, sched) == -1) {
+            MK_TRACE("[FD %i] Close requested", socket);
+            return -1;
+        }
+
+        mk_epoll_change_mode(sched->epoll_fd, socket,
+                             MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        return 0;
+    }
+
     mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
 
     /* Get node from schedule list node which contains
