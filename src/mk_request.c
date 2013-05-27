@@ -159,11 +159,21 @@ static int mk_request_header_process(struct session_request *sr)
     sr->method_p = mk_http_method_check_str(sr->method);
 
     /* Request URI */
-    uri_init = (index(sr->body.data, ' ') - sr->body.data) + 1;
-    fh_limit = (index(sr->body.data, '\n') - sr->body.data);
+    temp = index(sr->body.data, ' ');
+    if (mk_unlikely(!temp)) {
+        MK_TRACE("Error, invalid first header");
+        return -1;
+    }
+    uri_init = (temp - sr->body.data) + 1;
+
+    temp = index(sr->body.data, '\n');
+    if (mk_unlikely(!temp)) {
+        MK_TRACE("Error, invalid header CRLF");
+        return -1;
+    }
+    fh_limit = (temp - sr->body.data);
 
     uri_end = mk_string_char_search_r(sr->body.data, ' ', fh_limit) - 1;
-
     if (mk_unlikely(uri_end <= 0)) {
         MK_TRACE("Error, first header bad formed");
         return -1;
