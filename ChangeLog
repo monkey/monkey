@@ -1,3 +1,1878 @@
+commit 0176bede95ebcb8930e45c5a4fac40f0cd8b17cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 26 20:59:57 2013 -0600
+
+    Monkey v1.2.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d5369c55e1351cfeec7accf9a01823fffaaf70c6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 26 20:59:45 2013 -0600
+
+    configure: set new macro __MONKEY_GIT__ (devel/release)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9f32a0c56ab185651dc91a858ac5259f07ed9ad1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 26 18:24:08 2013 -0600
+
+    request: improve security over first HTTP request line.
+    
+    The HTTP parser did not evaluate probable invalid return values
+    for the index() glibc function. This patch force to verify the
+    value before to move forward with the next parsing instructions.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2fb4023627071cfbacd0ac7d3774191bb4fe742f
+Author: Zeying Xie <swpdtz@gmail.com>
+Date:   Sat May 25 13:53:04 2013 +0800
+
+    Config: Fix substring length for copy
+    
+    Signed-off-by: Zeying Xie <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f9b2c35fa4cfaceb4f6dbb149a0d5da16c2240a8
+Author: Zeying Xie <swpdtz@gmail.com>
+Date:   Sat May 25 13:50:23 2013 +0800
+
+    String: validate length of substring first.
+    
+    This patch makes to validate the substring string length
+    to avoid extra memory allocation and release.
+    
+    Signed-off-by: Zeying Xie <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8ea90d941448212398603e2a29c9dedd024e6686
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 24 20:13:21 2013 -0600
+
+    Scheduler: protect from zombie connections
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 94e3366912cc2bd8fb278c3fa8a8963041b25c42
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 20 12:39:17 2013 -0600
+
+    Debian: add missing 404.html file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 40bd68e22fec0ef075fe9a13a2095ce1a132d121
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 15:02:07 2013 +0300
+
+    cgi: Should return NEXT here
+
+commit 2e1b665ec4ee71d743b3ba53038a510e2aae8417
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 14:55:45 2013 +0300
+
+    cgi: Don't call close on self
+
+commit c0d904b3c666788cd39229cf50e24b0d9758ada8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 14:20:43 2013 +0300
+
+    cgi: Don't access freed memory
+
+commit c64107ab88ee8446d45485398d5d22b2d2234c39
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 14:03:30 2013 +0300
+
+    Set close-on-exec flag on new connections
+
+commit 7fa54197d6b3cd470170e5a9fd606e9d1a277236
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon May 20 14:05:47 2013 +0200
+
+    fastcgi: Remove use of strndup().
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit dac562ad1385e2cc5dda833a13e9be1fa07bcf88
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 13:53:22 2013 +0300
+
+    cgi: Make sure stderr is handled
+
+commit f7347aecdd0c35e99825f0826e08c636d04dfd12
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 13:46:31 2013 +0300
+
+    Fix some remaining places from the monkey.h > libmonkey.h rename
+    
+    Configure, man pages, and examples were not updated in
+    fd9c07d6ccc2fe8d37093bb213d375fbbd77cd29
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+
+commit 5c77a262bf69380b80937ab15bad4a974ffa74d1
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon May 20 10:27:20 2013 +0200
+
+    fastcgi: Change event mode of fcgi_fd correctly.
+    
+    Prevent fcgi_fd from causing error when write event occur when
+    receiving.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit cf95a901e99dd80fc174cdd8300b5d14be08953e
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Apr 7 20:07:41 2013 +0200
+
+    plugin: Invoke stage_40 in http_request_end().
+    
+    Fix a bug where stage_40 is never invoked if plugin ends request outside
+    of stage_* callbacks.
+    
+    Bug discovered by mchubby
+    (github.com/ksonny/fastcgi-monkey-plugin/issues/1).
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 20853846056a327c47cbf6693f3580b198593882
+Author: Zeying Xie <swpdtz@gmail.com>
+Date:   Sun May 19 22:25:47 2013 +0800
+
+    Cheetah: Add a funtion to strip leading and trailing whitespace of input command line
+    
+    Signed-off-by: Zeying Xie <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit df51b9ee3a4aab57abc01716cdcd82cb72c0d834
+Author: Zeying Xie <swpdtz@gmail.com>
+Date:   Thu Apr 25 14:34:13 2013 +0800
+
+    Config: remove unnecessary semicolon(;)
+    
+    Signed-off-by: Zeying Xie <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6dfecb2c6bc1577d5cd121ab711d338bef2c4fd3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 17 18:02:26 2013 -0600
+
+    Debian: dropped libmonkey-dev and fixes in monkey-dev
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fd9c07d6ccc2fe8d37093bb213d375fbbd77cd29
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 15 21:45:21 2013 -0600
+
+    Debian: new libmonkey-dev and library naming improvements
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ebec48b762776d951953eeaf8bf95f3dfac25514
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed May 15 16:48:51 2013 -0600
+
+    Debian: libmonkey now distributes libmonkey.so symbolic link
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a8ff795e6d068858ca237f7b0a629a49e6d184d3
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 17:10:11 2012 +0200
+
+    cgi: Fix behavior with high-performance CGI
+    
+    cgit is too fast for epoll, causing epoll to send a hangup event
+    even though there are still several kilobytes left to read.
+    
+    With this change, cgit can correctly send huge files on monkey.
+
+commit 0ca081c82d6e3c8a4b498c338dcb7ae0d199160d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed May 15 17:59:26 2013 +0300
+
+    cgi: Fix a crash due to uninitialized list
+
+commit be7bc69fd5c92f24a1cab5cd14125bf4361d05eb
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue May 14 12:15:34 2013 +0300
+
+    cgi: Make sure all mk_pointers are handled with length
+
+commit c91eb32fbb59a8376f49dcf088bb646e9b2e5724
+Author: Denis Mone <monedenis@gmail.com>
+Date:   Wed Apr 10 16:08:32 2013 +0300
+
+    Follow on Bug #172: content_type fixes.
+    
+    There is a problem with the sr data structure the
+    sr->content_type.data field  contains the content_type
+    value as well as the content_length value.This in combination
+    with the SHORTLEN value(64) leads wrong characters being copied
+    to the content_type ENV variable.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c6f86d70cc02277aa73335a5d72a847478b3968a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Dec 17 18:14:15 2012 +0200
+
+    cgi: More swrite error checks
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f2433e07d695bdb81b4724a7aaafd93e75965deb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 10 21:18:12 2013 -0600
+
+    Debian: new libmonkey package (still require some fixes)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 126a172f2428ae4a63003304aa143b1d2d62204d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 3 21:56:24 2013 -0600
+
+    Debian: monkey-dev now distribute Monkey headers
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8abf65df12ad9d4b810a68dfbdd346b46d7c0fad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 30 20:27:42 2013 -0600
+
+    Debian: few Lintian cleanups
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ed229dc7333162328bc3d5ee61b3fed4a3e3ba3e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 30 20:15:58 2013 -0600
+
+    Debian: add monkey-mandril package
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 968879437194bb51d6fc15538dcd72dfbc1d5683
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 30 20:06:26 2013 -0600
+
+    Debian: add monkey-dirlisting plugin
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fb071fe12611de2a5440346e340d746e26a1bb93
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 30 20:01:45 2013 -0600
+
+    Debian: add monkey-auth package
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d8cc0fe51c715c23a6fcf3c0b9240d15a0c0887f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 21:29:07 2013 -0600
+
+    Debian: new monkey-cheetah plugin
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 40f3f462a30f20a063116cc14261b7f6987ff61c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 20:48:09 2013 -0600
+
+    Debian: new monkey-logger plugin
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 84221c7ed8205a862df9c730b222605119a77913
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 20:37:16 2013 -0600
+
+    Logger: exit properly if config file cannot be found
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b6b08ae2217e777c53bb28a62c60a7779b27d981
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 20:23:03 2013 -0600
+
+    Debian: cleanup most of Lintian errors and warnings
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 32afbfe931094ea450af8b55ebcee4e3a9a9eae7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 18:44:45 2013 -0600
+
+    Debian: new monkey-liana
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit aeb58c3dc18bf4c3a1d696e36b6768e7e1adff3d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 18:41:28 2013 -0600
+
+    Debian: new monkey-cgi and monkey-fastcgi packages
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit de3533d990eb7412715651570967059a374db950
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 18:37:04 2013 -0600
+
+    Debian: make monkey-polarssl depends on monkey
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fd1e3276bc04e2f611373eec9ee6c88b19fc0037
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 18:33:40 2013 -0600
+
+    FastCGI: plugin is now OPTIONAL
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7ab566607c0e01d199ba931916d51fa59c3912a7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 18:33:20 2013 -0600
+
+    Debian: new monkey-polarssl and enable fastcgi
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 253a247f74204ac7f0e5c771b4e37d60bfb7336f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 29 16:47:48 2013 -0600
+
+    Debian: update package version to v1.2.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0a4a9d98db477bf70154cb9dbeae60a2b1ba1200
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Sat Apr 20 01:29:33 2013 -0700
+
+    Debian: install all plugins made available in the debian/tmp/ build tree
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b354b03baea8b0bb0237609d43888c4dedd140ad
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Wed Apr 17 01:18:35 2013 -0700
+
+    Debian: include polarssl plugin, remove reference to matrixssl in d/control
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 14ba00892735c44742519e5e6b15ff3b846dad58
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Mon Apr 15 02:21:17 2013 -0700
+
+    Debian: add watch file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f173c8a78bdd4ef8f6d1f25eb03ea2d0d887eb99
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Mon Apr 15 02:11:26 2013 -0700
+
+    Debian: update Format: field in d/copyright with DEP-5's successor
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c0b801dc98db2165f73278a9ebb5cf6ed6b9f2a6
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Mon Apr 15 02:09:02 2013 -0700
+
+    Debian: set -e is generally preferred (IIRC it's mentioned somewhere in Policy)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 30c797ecae404006a3a4505995eaad69dc0c33c7
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Mon Apr 15 02:08:30 2013 -0700
+
+    Debian: clean up rules file and take advantage of override targets provided by dh >= 7
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 525131518d4228fb62c5e9bb03ed80cc39419bb7
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Date:   Mon Apr 15 02:06:52 2013 -0700
+
+    Debian: remove redundant README file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d857e52237c82173e47584b98efa46d87cea61cc
+Author: swpd <swpdtz@gmail.com>
+Date:   Tue Apr 16 01:10:31 2013 +0800
+
+    Logger: fix type mismatch
+    
+    Signed-off-by: swpd <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1a4d0880bd8ad4d86571c38966b94718b218e5e3
+Author: swpd <swpdtz@gmail.com>
+Date:   Sat Apr 13 00:37:51 2013 +0800
+
+    Macro: remove semicolon(;) behind the MK_NET_HOSTMAX macro
+    
+    Signed-off-by: swpd <swpdtz@gmail.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1053f3be5c28f536537ca008579ed65284a8e745
+Author: swpd <swpdtz@gmail.com>
+Date:   Wed Apr 10 23:27:16 2013 +0800
+
+    HTTP: remove double inclusion in mk_http.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d1413bbfec6a2ede6de97bfb369c9369cbd98f89
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Apr 9 10:18:22 2013 +0300
+
+    dirlisting: Fix off-by-one
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ec0f09ba3b4c5264c64b91664a24f90833f3ff46
+Author: Bjorn Lindgren <nr@c64.org>
+Date:   Mon Apr 8 09:31:30 2013 +0200
+
+    Lib: fix minor memory leak
+    
+    Signed-off-by: Bjorn Lindgren <nr@c64.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e400659ccdcbd884f893f95e8a53e6a6bb887e67
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 6 14:35:09 2013 -0600
+
+    Dirlisting: file name entry is a static buffer now
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f9c7f9a36787fc0e3e817750b454a8d755a06856
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 5 14:17:33 2013 -0600
+
+    Core: fix minor data type mismatch
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c22fd25c0c33ebfb8a23d12b97c85244524428e5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 5 14:02:28 2013 -0600
+
+    HTTP/API: Fix #161: restrict and validate return of MK_PLUGIN_RET_END.
+    
+    This patch fix issue #161 where a plugin on stage_30 returns
+    MK_PLUGIN_RET_END without do nothing.
+    
+    From now a STAGE_30 plugin when sending MK_PLUGIN_RET_END requires
+    that response HTTP headers have been sent, otherwise it will fail
+    with a mk_bug() from the plugin caller.
+    
+    If the intention is to close the connection, use MK_PLUGIN_RET_CLOSE_CONX
+    instead.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 927b8870ebef817d25a8e0c6909c5cad4c386980
+Author: Denis Mone <monedenis@gmail.com>
+Date:   Thu Mar 28 20:34:37 2013 +0200
+
+    Fixed bug #172. The problem was that the CONTENT_TYPE enviromental variable had to be set to application/x-www-form-urlencoded for the POST array to be accesed.Because the SHORTLEN value was not big enough the value copied on CONTENT_TYPE was application/x-www-form.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b2a18cd9a5aea7f04d52009768a5f5848bbb01e6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 27 04:20:44 2013 -0600
+
+    PolarSSL: align configuration file indentation level
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e26011f4449ff534b2c21bd2d9ca35ecb5de66a8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 25 22:30:21 2013 -0600
+
+    PolarSSL: Fix makefile to link polarssl library properly
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 844b0429ce3e64535a10b5cd7f144ff39bae4b7b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 16 12:07:05 2013 -0600
+
+    CGI: Fix #174 / unhandled global rules
+    
+    This patch Trac #174 problem, where the global rules for CGI
+    were not handled by the plugin. Now the plugin is able to run CGI
+    based scripts using rules from plugins/conf/cgi/cgi.conf.
+    
+    Tested with simple Perl and PHP scripts.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1aa1a711da6bc36a901514474ad9e24e803132c5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 15 15:45:42 2013 -0600
+
+    Configure: Fix #117: remove strip instructions
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3a14258510e016b15b2c28c1ce434a9c91a3d8e7
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Mar 12 22:32:27 2013 +0100
+
+    mconf: List polarssl as https transport layer.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit c9ce51ea18da423d1fee026ef16fa78226da3b5d
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 18:48:03 2013 +0100
+
+    polarssl: Add support for TCP_FASTOPEN.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 76211481835ca0e5e2a01bd9b49f53a32cef694b
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 17:41:40 2013 +0100
+
+    polarssl: Fix assert failure on exit.
+    
+    Return NULL if local contexts is requested outside worker threads.
+    Allows close calls from main process on exit.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 7d137885ee9611f3e2a5a0ce8b4741320835845b
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 17:14:46 2013 +0100
+
+    polarssl: Use DHM parameters from RFC5114 if available.
+    
+    Uses built-in parameters and removes warnings if polarssl version >
+    1.2.0.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 4573786c2f704385ae02f833c5c4a7a4faecb34e
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 17:07:39 2013 +0100
+
+    polarssl: Use dummy error_strerror() if not available.
+    
+    Includes a dummy version of error_strerror() if POLARSSL_ERROR_C is
+    undefined and version <1.2.5.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 364f63a107be7d298ea8ead1fc12c29b87c4c2a1
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 16:57:12 2013 +0100
+
+    polarssl: Use global entropy context.
+    
+    Move entropy from thread context to global context.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit d7147c3ee56e6d83760c1b0f6167f2bf21916ebf
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Feb 5 15:08:48 2013 +0100
+
+    polarssl: Reset session in context_unset.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit df144491b6cae55b4a906d57dea62cf0b39a7dbb
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Feb 5 15:08:26 2013 +0100
+
+    polarssl: Rename polar_context_unset to context_unset.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 594120113bfaf432acbed4bef02b828a0e4c73b7
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Mar 8 21:22:53 2013 +0100
+
+    polarssl: Don't return -1 from sendfile on EAGAIN.
+    
+    If no data is sent, but EAGAIN is set, return 0 instead of the usual -1.
+    This is a workaround as EAGAIN isn't checked when sendfile is used in
+    core.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 0dd4dfb6baeceb62e317bd4813773657f8e3b8e0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 11 20:20:37 2013 -0600
+
+    Mimetype: remove lower case lookup
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2bb5178ed74300a9b4e95b2cc1f960dde5b01dc9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Mar 11 20:31:45 2013 +0200
+
+    lib: Move the workers check to the right place, fixes crash
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73a011168e8c2c13e45dad0a4a705e6fa89d345b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 11 12:56:39 2013 -0600
+
+    Configure: add #LIBDIR# parser
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 82ab60f4f3ad1d23230c680a330ba62507eca48f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 7 08:23:23 2013 -0600
+
+    Lib: if config->workers is zero, set value based on number of CPU cores
+    
+    If the config->workers is zero, the number of worker threads is
+    determinated based on the number of CPU cores.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0198689376cad221b15129808196f2c2d21d08b4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 18 07:11:03 2013 -0600
+
+    Lib: add missing errno.h header and fix a mimetype point type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 62a9f2a08bb788f664402ffaf4cf2d4cff8f929a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 18 07:04:42 2013 -0600
+
+    CGI: implement global CGI match rules
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5a6696bf90a9b563c1a7c22752ac171102b13462
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 16 16:54:11 2013 -0600
+
+    TCP: Add support for Linux TCP_FASTOPEN (aka TFO)
+    
+    Recent Linux Kernels implements a new TCP feature
+    called TCP_FASTOPEN. This feature reduces the TCP
+    handshake roundtrip improving performance for new
+    connections. For more details refer to the following
+    articles:
+    
+     - http://lwn.net/Articles/508865/
+     - http://kernelnewbies.org/Linux_3.7#head-cd32b65674184083465d349ad6d772c828fbbd8b
+    
+    Requirements:
+    
+     - the client side must be running Kernel >= 3.6.
+     - the server side must be running Kernel >= 3.7.
+     - Besides the Kernel version, the client and the server
+       must request to use TCP_FASTOPEN/MSG_FASTOPEN in their
+       respective calls.
+     - the tcp_fastopen flag must be enabled:
+    
+          # echo 1 > /proc/sys/net/ipv4/tcp_fastopen
+    
+    The good thing of this feature is that no matters if
+    the client implements TFO or not, the server will work
+    anyways.
+    
+    This patch enable TCP_FASTOPEN by default in Liana plugin
+    and also export a new function mk_socket_set_tcp_fastopen()
+    for generic purposes.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fbc2a6b2c8828e6bbc1ae5a5c099905abc1c4263
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 16 13:50:47 2013 -0600
+
+    Liana_SSL: deprecate plugin based on MatrixSSL
+    
+    According to:
+    
+      http://lists.monkey-project.com/pipermail/monkey/2013-February/001785.html
+    
+    Liana provides the networking layer to Monkey and its _SSL version the
+    networking layer with SSL encryption capabilities. The first version of
+    this plugin was built on top of MatrixSSL library but this last one is not
+    well maintained and there is no community involved on that product, what
+    that means ? that nobody cares about it and integrate in a Linux
+    distribution is a pain so we cannot be stuck on that anymore. Jonathan
+    (zeus) from our community was doing a good job packaging the latest version
+    in our repository, but MatrixSSL continue be a problem.
+    
+    After review some open sourced SSL options, I found that PolarSSL is the
+    best one that fit our needs. Because of:
+    
+       - open source
+       - well maintained in Linux distributions
+       - lightweight so it fill well in embedded Linux environments
+       - years of work supported by a community
+    
+    Besides that, there is a concern about how that library can impact Duda I/O
+    (web services framework that runs on top of Monkey). Because the web
+    services created by people can be closed...  what happen if the service
+    links to PolarSSL through Duda LGPL code ? answer: nothing. As PolarSSL
+    works under Monkey and Monkey under Duda, there is no problem in linking
+    or licensing issues, this have been confirmed by PolarSSL team after talk
+    to their lawyer, so we are pretty good.
+    
+    Sonny Karlsson have provided yesterday a new plugin named PolarSSL (good
+    job!), so everything is ok for the next step.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 056b7fc2ebd889fa9e4d41db427301d31b57d34c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 16 13:45:20 2013 -0600
+
+    Palm: deprecate plugin. Its not you, its me.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e5f9bc8a4576c2e6870c5143cf2aaf958ae00bac
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 15 21:18:16 2013 -0600
+
+    Plugin: export red-black tree interfaces
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d6b00238a1c68a1428c4da370978f7a7ed5e5bdf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 15 16:48:44 2013 -0600
+
+    Scheduler: use red-black tree algorithm to handle connection nodes
+    
+    This patch replace the linear query over the busy queue to lookup
+    connection nodes by a red-black tree algorithm. This represents
+    a huge improvement in performance under a high load.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0665af623c3f6b74e268566bce81b9fcc16500d5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 14 23:33:46 2013 -0600
+
+    Epoll: remove instance field from epoll state nodes and code cleanups
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f64be99085b28f425ca81f7429396b967a244108
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 14 12:02:50 2013 -0600
+
+    Configure: link to mk_rbtree.o object
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fed3d4224cdbf2fed51c272dde6138df14916aad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 14 11:53:46 2013 -0600
+
+    Epoll: define behavior mask as unsigned int
+    
+    previous this patch the behavior mask for each file descriptor
+    state was defined as signed int, but EPOLLET value can take the
+    highest value available and this can lead to some problems when
+    mapping inside a signed value.
+    
+    This patch makes the behavior mask be defined as unsigned int.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 73f14a893bc1c1844f0afce1b53029cfc4f1b43c
+Author: Curtis Hall <curt@bluecherry.net>
+Date:   Mon Feb 11 14:18:54 2013 -0600
+
+    Added CONFIGURATION title to INSTALL
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ca69bc66ecba9827efbee88fd9fc1fe9e8cf140c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 10 16:31:22 2013 -0600
+
+    Core: add mk_rbtree.c and mk_rbtree.h
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e6bb1fb52f00ce7180a992a462da99a7abf0a906
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 10 16:30:55 2013 -0600
+
+    Core: initial implementation of red-black tree
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 831645824fc48ab97e59da06f63e94090a07c758
+Author: Neil Haran <neil.haran@inrom.co.uk>
+Date:   Wed Feb 6 14:20:06 2013 -0600
+
+    Plugin: fix offset of data content when sending out data
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b402b91f20f55570625e0fe0651bf481bd95ddd4
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Wed Feb 6 19:34:52 2013 +0100
+
+    fastcgi: Update plugin to v0.2.
+    
+    commit 03aec5b6d3a364625aa31c3bfef8605d0bdd44f9
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Wed Feb 6 19:23:06 2013 +0100
+    
+        fastcgi: Set version.
+    
+    commit 064822ac4a913cf067db34c374492243e9079981
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Wed Feb 6 19:21:24 2013 +0100
+    
+        fastcgi: Set HTTPS in cgi environment.
+    
+    commit 58585d06c37a5a1f1ca008b5bbba0bb1b64f877a
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Wed Feb 6 19:13:28 2013 +0100
+    
+        fastcgi: Compatibility with SSL transport.
+    
+        Use mk_api->socket* on client socket and unistd functions on fastcgi
+        socket.
+    
+    commit e8549387c228c45bc128844deaa27d97fc64cc3d
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Mon Jan 28 13:20:12 2013 +0100
+    
+        fastcgi: Fix conditional close of fastcgi connection.
+    
+    commit f5ebf5edc5062446313b99f6886cad8620df5b06
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Sun Jan 27 16:54:43 2013 +0100
+    
+        fastcgi: Update minimal libfcgi config example.
+    
+    commit ce56895c132c8b9769e9fd365b6662a2d8b47596
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Sun Jan 27 17:10:16 2013 +0100
+    
+        fastcgi: Indicate which variables are required in config.
+    
+    commit 46875aafb63897d75fc2398db381679d28d27ffb
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Sun Jan 27 17:08:57 2013 +0100
+    
+        fastcgi: Auto-generate LocationName if none given.
+    
+    commit 427a513223fc7fe5b70cc8657b147f6e86c5f48b
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Fri Jan 11 11:57:03 2013 +0100
+    
+        fastcgi: Let default for MaxConnections be 1.
+    
+    commit 6738f4baff43f4f8455b4606dc1f811e729d2802
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Fri Jan 11 11:52:57 2013 +0100
+    
+        fastcgi: Fixup of trace and debug messages.
+    
+        Fix format warning in printf.
+    
+        Check return from event_add.
+    
+        Check return of fcgi_fd state change.
+    
+        Remove some redundant trace messages.
+    
+    commit 3f5015ad04c60f286fa1bc998bb13bb334b9e841
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Mon Jan 7 12:23:25 2013 +0100
+    
+        fastcgi: Add inet_ntop include in fcgi_env.
+    
+    commit f3caaa99dee45405a3e4c993fd987287d6505971
+    Author: Sonny Karlsson <ksonny@lotrax.org>
+    Date:   Fri Jan 11 11:41:46 2013 +0100
+    
+        fastcgi: Don't set CONTENT_LENGTH unless needed.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cd07b9cd073e915f632929f6f4b5a9d0ff967a16
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Jan 18 08:50:13 2013 +0100
+
+    polarssl: Add HTTPS plugin.
+    
+    Adds HTTPS support using PolarSSL v1.*.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2942ec90beb9353cb45eff1ed26c0b67d74b3ac5
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Feb 3 12:48:02 2013 +0100
+
+    configure: Fix replacement of variables in Makefiles.
+    
+    Handle CFLAGS/LDFLAGS/DEFS containing '/' characters.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f6f18f4665c12a00e98923770bf9a4f9c6034ec1
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Feb 1 10:06:11 2013 +0100
+
+    iov: Reset total_len in mk_iov_free_marked.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4edf9a89ffbdc75e25fe424cf1f301ebb7986ae7
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Thu Jan 31 20:34:34 2013 +0100
+
+    socket: Use close from transport plugin.
+    
+    sched: Replace close call with mk_socket_close.
+    
+    server: Replace close call with mk_socket_close.
+    
+    lib: Replace close with mk_socket_close.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit eb250bf432bf9654e56380ef3c56dbf327b23e7f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Feb 3 20:55:05 2013 -0600
+
+    Plugin: fix return value for http_request_end() on mk_conn_close() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a08cf6b4bc9eb1be6b4767dc917cf68fc09279eb
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Feb 2 23:24:50 2013 -0600
+
+    Epoll: epoll states array size now its equal to worker capacity
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3ee55869f6ab1c27f28a191716ec170606324180
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 1 07:19:23 2013 -0600
+
+    Configure: use --strip-program argument for install command
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c8b8e3ae1ae0c84ae513e06e1f7ec9dd3f386e18
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 31 21:45:21 2013 -0600
+
+    README: update
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 573c43eeabff347a566a6d57bf7648ce9b941e5e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 31 21:31:08 2013 -0600
+
+    HTTP: fix protocol version
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit abf99c6a96c5111d269657681d25f3fc41686a3f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 31 21:27:49 2013 -0600
+
+    Core: new -w flag to specify number of workers from command line
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 601f9be93184ba3f74e3293122e95706b192a8ad
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jan 31 13:10:00 2013 -0600
+
+    Utils: check that gmt cache is being used properly
+    
+    If the gmtcache is invoked from a process context, this will end
+    in a segfault. This patch adds an mk_unlikely() validation to the
+    value returned by pthread_getspecific(). So if it was called from
+    an unexpected process context it will end up in a mk_bug().
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c35886f58c7f2a0d8af42e4b467bd3f0c3267dd7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 29 15:31:21 2013 -0600
+
+    Mimetype: do all extension cmp in lower case mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2754611600726f7baaa130d2c57578becfc22e1b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 28 23:08:21 2013 -0600
+
+    Memory: do not reset pointer when is setting data. not required
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6bf0f0c95f435e66aef06043b086dc570eeeb1aa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 28 18:53:10 2013 -0600
+
+    List: comment code for entry_first() and entry_last() (Fixed)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4f2f9445249eb0572df33b007c55e02a5a3a485a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 28 18:51:41 2013 -0600
+
+    Revert "List: comment code for entry_first() and entry_last()"
+    
+    This reverts commit 5e9971d539b80d87f00c3a41f45cd6fb1b3fea22.
+
+commit 5e9971d539b80d87f00c3a41f45cd6fb1b3fea22
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 28 18:38:25 2013 -0600
+
+    List: comment code for entry_first() and entry_last()
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 83003497f1794c955a5d522e824deff541044400
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 28 08:05:38 2013 -0600
+
+    utils: stacktrace add padding zeros to pointer addr
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9b8380de08fdf0f5d4c11972d2ec8049b017b4bf
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Jan 18 09:24:54 2013 +0100
+
+    utils: Stacktrace fixup.
+    
+    Fix loop condition in stacktrace.
+    
+    Use %p for printing pointers in stacktrace.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ff6ca37841b5747ba80dc7ddf3e6bf255082211e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 26 09:44:25 2013 -0600
+
+    Help: update banner
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b733d39c87b5ca5dbcce170167d5edb18177bf8c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Jan 26 09:42:46 2013 -0600
+
+    Core: new -p flag to specity TCP port
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fcd1c6f9d4183cac4b61cf3f281b964c05211725
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 16:41:01 2012 +0200
+
+    cgi: Document the request getters
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7ff63bb2feb3ce519125e23a7049e05bfa7e2ed2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 14:08:28 2012 +0200
+
+    dirlisting: Don't allocate unneeded memory, save 104 bytes per entry
+    
+    We need pointers, not full structs in toc.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5d74678e3de2f14dd995e1c2b81c5d3d5b8dd3bd
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jan 20 19:20:13 2013 +0200
+
+    configure: Fix a typo (CLFLAGS) and make sure the -O logic always sets the visibility
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5c688e274c8445c135b5db903a589136d59130c6
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Jan 22 21:49:13 2013 +0100
+
+    request: Remove handled_by member from session_request.
+    
+    Unused relic from old commit.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a6bdc1225fd34fac0da4f3af1e39e5b1ee07a1f3
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Jan 21 17:33:51 2013 +0100
+
+    config: If Workers is 0, launch one thread per processor.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1a1d04483290fcf1fc4463366d91e54b96978f1d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 15:11:58 2012 +0200
+
+    dirlisting/guineo: Compact the theme
+    
+    This saves about 270kb (29%) in a dir of about 3k entries, while looking the same.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9d9faba9e78eab1f7fc71b9e75353c450b4899d2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 14:55:27 2012 +0200
+
+    dirlisting: Fix failure in big directories
+    
+    Dirlisting is not designed to support event-based working, it is one-shot.
+    
+    So in a big directory, writev would return EAGAIN (EWOULDBLOCK) after
+    having written a partial entry.
+    
+    This would then confuse the client in chunked mode (you promise X bytes but
+    only send less), which closes the connection, leaving you with a partial listing.
+    
+    With this patch, dirlisting succeeds in a dir with 23k entries.
+    Without, it fails in a dir with little over 1k entries.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cbb879b5c54182744807d2eaed014c7e359e1a2b
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 14:20:59 2012 +0200
+
+    dirlisting: Use case-insensitive sort
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 712d22cf72893e03cea6de9efbc9148c58d8ff9d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 14:19:10 2012 +0200
+
+    dirlisting: Remove unnecessary variable
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9e938fee821167daf6ef03bd8ee8d74644b09431
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 14:16:07 2012 +0200
+
+    dirlisting: Mem-optimize mk_f_list, 112 -> 88 bytes
+    
+    The theoretical maximum of the strftime string is somewhere around 18 bytes.
+    Make it 24 to have some extra, and to be a nicely cacheable multiple.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3a06c0e85f9bb4e1594a35de4db2645ae214d223
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Dec 16 13:33:21 2012 +0200
+
+    request: If mk_file_get_info returns -1, size is not set. Found by valgrind
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 622dcd384f998c666d6fc0dc5779436d1127b9f1
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sun Jan 20 10:44:35 2013 -0600
+
+    configure: Conditionally set -O2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f80af9e2a62bb666c5d21b04eae17dddd2e7f7c3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 15 21:10:05 2013 -0600
+
+    lib: do not left stage30 until all content is sent
+    
+    If for some reason the send() call returns -1 because the socket
+    is not yet ready to receive more data (due to non-blocking mode),
+    the routine should not stop working and should try to send the
+    information over and over until is fully served.
+    
+    This is not an expected behavior in a non-blocking server, but is
+    a temporal fix until the 'pending buffers' interface is implemented.
+    
+    This problem was found due to #170.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 473ba999caf7d87cd815d0f4abe1efc89a994b0d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 15 21:00:40 2013 -0600
+
+    Headers: Fix #170: sr->headers._extra_rows keeps invalid reference
+    
+    Found a specific condition in Monkey core where after send
+    the headers, if the field sr->headers._extra_rows is set and
+    then freed, its not marked as NULL. If sub sequent calls
+    from the Plugin API takes place and this field is validated,
+    it fails in a segmentation fault.
+    
+    This patch set the structure field to NULL after is freed.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 97ba007c7ad14db2863a367c579eac44a9e32aca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 16:40:09 2013 -0600
+
+    Plugin: do not print out error messages if a symbol is not found
+    
+    The plugins interface try to load every known symbol from a loaded
+    plugin, not all plugins implements all of them so when dlerror()
+    returns NULL, it should not print errors to stdout.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b89c7dbb493da00d27327860f1ddedeb51baea33
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 15:34:31 2013 -0600
+
+    Liana: fix merge problem from coverity branch
+
+commit 7fc2395bd7e596978e4163c6be39d893017a718c
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:41:49 2012 +0200
+
+    palm: getpeername may fail, found by coverity
+
+commit 0054fc538aa0145b335f22277460b854db9903e7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:39:07 2012 +0200
+
+    dirlisting: Remove dead code, found by coverity
+
+commit 804b2dbc067c01e61aec70883aef2aed116f2a5e
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:29:58 2012 +0200
+
+    liana, cheetah: Fix fd leaks on error path, found by coverity
+
+commit d2f6e0b1ebf81773f93d31f88db9cb949cb379e5
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:24:27 2012 +0200
+
+    plugin, iov, auth, request: Remove mem leaks, found by coverity
+
+commit 5096a2332433b6c4141306711496e22575b9ac33
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:16:46 2012 +0200
+
+    liana: Fix non-looping loops, found by coverity
+
+commit 51161ddea1669f9412627ef319eaefb166078bb8
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:13:21 2012 +0200
+
+    plugin: Make use of the err variable, found by coverity
+
+commit 81761182e46d916608d985a7bb7b542de6cee57c
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:11:41 2012 +0200
+
+    sched: Remove double close, found by coverity
+
+commit 42e966e729f2e369df199c4c3d20c325f262b516
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sat Dec 15 21:51:03 2012 +0200
+
+    cgi: Support some non-compliant CGI programs (cgit uses LFLF after headers)
+
+commit 652fbf3c0232258263922b036f389948490bb65a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:41:49 2012 +0200
+
+    palm: getpeername may fail, found by coverity
+
+commit 1b41f2eaa67b9f228062c82be6288b8150ce5d38
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:39:07 2012 +0200
+
+    dirlisting: Remove dead code, found by coverity
+
+commit 2512bb30c1ea8d55780aad39db8cc6661cdaae27
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:29:58 2012 +0200
+
+    liana, cheetah: Fix fd leaks on error path, found by coverity
+
+commit 5f8efc9d465fd455c825693dae547ce077b80a51
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:24:27 2012 +0200
+
+    plugin, iov, auth, request: Remove mem leaks, found by coverity
+
+commit bbe12cbbe3dc98fd3ad45e8b4c79c5e42eaa26da
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:16:46 2012 +0200
+
+    liana: Fix non-looping loops, found by coverity
+
+commit 71db62aaecbae223d159def4608597ac5278c378
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:13:21 2012 +0200
+
+    plugin: Make use of the err variable, found by coverity
+
+commit 3b419e749e51311e3efd48d8c6942df46a58d973
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:11:41 2012 +0200
+
+    sched: Remove double close, found by coverity
+
+commit 62029e2df99c9bc349412b081bedf1a2f0b94e3a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sat Dec 15 21:51:03 2012 +0200
+
+    cgi: Support some non-compliant CGI programs (cgit uses LFLF after headers)
+
+commit ae4eb56a56bebac82806bfcd2255878d5ddb84cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 14:16:06 2013 -0600
+
+    Configure: new uClib mode through --uclib-mode
+    
+    This patch introduce the new parameter to enable uclib compatibility,
+    once is set it disable some specific GLIBC features.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3ff524cfbb5cc1eb5e2c3e83ea686d05cbad0cb7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 13:51:17 2013 -0600
+
+    Configure: new option --no-backtrace
+    
+    This patch introduce a new 'configure' script option --no-backtrace.
+    The backtrace(3) function is part of GNU extensions, mostly available
+    in glibc, on other C libraries like uClib is not implemented, for hence
+    we need a mechanism to disable the backtrace feature on demand.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4d01c9c4b564ef12c396f1b48f0a36690a205e45
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 13:33:10 2013 -0600
+
+    Signals: implement sys_siglist if symbol is not found
+    
+    When compiling with old toolchains for some ARM devices and
+    mostly related to old versions of uClib, the symbol sys_siglist
+    is not found and make the compilation process to fail.
+    
+    This patch introduce a header with the sys_siglist array defined
+    in the following file:
+    
+      src/contrib/uclib/sys_siglist.h
+    
+    If the symbol is not found, it includes the header.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 94b3e10b22e6956abc01322ac2bf12fea7db2d11
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 13:15:42 2013 -0600
+
+    Utils: improve stacktrace
+    
+    This patch adds a few useful features to the mk_utils_stacktrace()
+    function.
+    
+      - It adds the function name resolution and binary file associated
+      - The stacktrace is print on any compilation mode
+      - Function resolution names are only available on --debug mode
+      - If Monkey compiles with --debug mode, the compiler parameter
+        -fvisibility=hidden is turned off.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1da85f5567caa0d2f8e8d46249283bb1659e7912
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sat Jan 5 15:33:22 2013 +0100
+
+    fastcgi: Use pthread_key_t for thread local vars.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ac57d90a13025e510e12476d8e72c56b675bd6d6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Dec 23 07:28:56 2012 -0600
+
+    CGI: Allow to define interpreter and mimetypes for each match
+    
+    This patch expand the CGI plugin so now is possible to define
+    multiple Match rules plus define an optional interpreter and
+    mime type to assist scripting such as PHP, Python, Lua, etc.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9fcc2e8a32e26dbc7c2c89aa28d23cfffae6cbbe
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:41:49 2012 +0200
+
+    palm: getpeername may fail, found by coverity
+
+commit e0a39a6d058de6f8572713146d04df8a3c4685e1
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:39:07 2012 +0200
+
+    dirlisting: Remove dead code, found by coverity
+
+commit e4a73c3c12de66a7940f717742a69d72abf1b0b9
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:29:58 2012 +0200
+
+    liana, cheetah: Fix fd leaks on error path, found by coverity
+
+commit 72cb7769c9ce12a9b307daf16b95819bab13701f
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:24:27 2012 +0200
+
+    plugin, iov, auth, request: Remove mem leaks, found by coverity
+
+commit e61aedbad8722294eb669eff2a7a26050d7187ca
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:16:46 2012 +0200
+
+    liana: Fix non-looping loops, found by coverity
+
+commit 1d5e904579ccc41bcfaa4e39a2cc66b422cea155
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:13:21 2012 +0200
+
+    plugin: Make use of the err variable, found by coverity
+
+commit b9dba8467dd9c26fbadde4234116251c2da15c83
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Dec 18 14:11:41 2012 +0200
+
+    sched: Remove double close, found by coverity
+
+commit 79a86b16fe593d6d7e597e54c74861ee9661a9f2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Sat Dec 15 21:51:03 2012 +0200
+
+    cgi: Support some non-compliant CGI programs (cgit uses LFLF after headers)
+
+commit a44d623f7ef22769b1441ab95701851afd7682d6
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Nov 30 20:11:44 2012 +0100
+
+    lib: Add get_request_header.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c11795dd2946ca8162925bafb20d52d145fb144f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 30 12:42:06 2012 -0600
+
+    Palm: fix unused variables with void type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b7eb06ec76060a63157431f8db4c007c8ac99493
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 30 12:38:09 2012 -0600
+
+    Mandril: fix unused variables with void type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 28b0aaa3ac8bc2c0b8876599d3726e9d81b0818a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 30 12:37:08 2012 -0600
+
+    Logger: fix unused variables with void type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 40f57bb7cd2ae0b1a2bf2ba2306dbf86612a6c51
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 30 12:35:53 2012 -0600
+
+    Dirlisting: fix unused variables with void type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8a46a856a1128f3efb584318c9c18fce178f8489
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Nov 30 12:34:44 2012 -0600
+
+    Auth: fix unused variables with void type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9100a131a80251c8a2fa91d1386335af6c47c15c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 6 20:27:48 2012 -0600
+
+    Liana: set confdir variable as unused
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d46f2223e0e6ffbd0acac380877aea80eedd6943
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 30 07:49:17 2012 -0600
+
+    Plugins: Fix license headers from GPL to LGPL
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9e7b283a26b3e5505b647eff4259a9d29cc606f8
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Thu Aug 30 19:44:35 2012 +0200
+
+    liana_ssl: Handle multiple SSL records and false start.
+    
+    In io_read, handle as many records as possible. Use non-blocking sockets
+    for IO. Most of the handshake is done in events, may cause troubles.
+    Tested with Safari, Chrome and Firefox.
+    
+    Known problems:
+    * First request by Chrome browsers fail, one byte is missing every
+      time, may be a bug in matrixssl.
+    * Generates occasional socket errors in event_read, may fail
+      requests.
+    * SSL closure notifications are sometimes ignored.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5f6087e3d69f076bb3d4a98d628e18b672f1ce13
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 15 09:50:01 2012 -0600
+
+    Request: new stage30_blocked flag
+    
+    This patch introduces a new flag in the session_request struct
+    named 'stage30_blocked'. In mk_http_init() when the file is not found,
+    it triggers the plugin STAGE_30 to look for a plugin handler. In some
+    cases the plugin would overwrite the real path of the requested file
+    and make Monkey handle the new path for the static file. At this point
+    we need to block the extra STAGE_30 calls from mk_http_init().
+    
+    For short.. if a plugin overwrites the real_path, let Monkey handle that
+    and do not trigger more STAGE_30's.
+    
+          int stage30_blocked;
+    
+    The default value is MK_FALSE.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d7dd615bf51b0e3c3943fcb76fadfae9dc2c9fe2
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Sep 10 15:12:25 2012 +0200
+
+    util: Remove mk_request.h include from header.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit db5f3a06f14a311c934b9153e1bd091be2b051dd
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Sep 3 13:28:03 2012 +0200
+
+    socket: Remove mk_socket_timeout prototype.
+    
+    The associated definition does not exist.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 657423bcfe7f04afc93ced37a178d28fbf602b46
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Sep 6 07:51:08 2012 -0600
+
+    Logger: Fix #163 - fake consuming when the log file is not accessible
+    
+    If the log file cannot be open for writting, we should perform a
+    'fake consuming' of the pipe data, otherwise we will get consecutive
+    epoll notifications as the data is still there.
+    
+    This patchs forces to consume the data if the log file cannot be
+    updated.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2cc2dc269858f2e2534f6b7cfb023ac6a493e7e9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Sep 4 13:05:58 2012 -0600
+
+    API: new sched_worker_info() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 35cafeb4f2adcf2191c8645b511be4ede756160c
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Aug 24 13:38:02 2012 +0300
+
+    cgi: Mention PHP in the README
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c4ad986ab9fc529dae90ed1dc2788bfb215b5921
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Fri Aug 24 13:34:15 2012 +0300
+
+    cgi: Don't check for vhosts if none are configured
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 75af537c2c7cf3c6343bc65b9fa0197690737c35
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Aug 23 16:46:14 2012 +0300
+
+    examples: Add a Makefile
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 43f59ced23f8d53980eca3682b2ba5848eb452ee
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Thu Aug 23 16:38:23 2012 +0300
+
+    examples: Remove unused variables, fix two warnings
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d509c17687f99f93b1fba67e48055a73995efd81
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 16:43:22 2012 -0600
+
+    Configure: fix installer on plugins Makefile
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b4d950df3c1518d4b979c86136657addd6e0c7a3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:20:23 2012 -0600
+
+    Configure: remove merge comment
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f3eefe14ab129397e09928f5ac2ef89360999379
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:18:20 2012 -0600
+
+    debian: update rules for v1.1.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 16c324ddec7a33ac92de0a6a4a497b73a30b4d6b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 08:39:46 2012 -0600
+
+    Dirlisting: add OPTIONAL file to the repository
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8bbb30982845e7f1e5cb5c999a5256d752056ac8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 08:36:16 2012 -0600
+
+    Logger: add MANDATORY file to the repository
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3ddbf16925619679b7c019bbf43b762c79a5ea3c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 09:16:08 2012 -0600
+
+    Configure: fix broken builder
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e0102badb6201794ae240ad2378fba8fd33d0026
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Aug 13 20:30:39 2012 +0200
+
+    configure: Use gnu99 as default C dialect.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 323e1fa8766366b8ece812bafddd7ae9df6358de
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Aug 13 20:07:56 2012 +0200
+
+    epoll: Remove inline from mk_epoll_state_set declaration.
+    
+    Allows calls to function from outside translation unit under C99
+    inlining rules.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c0be18929778c456b38b59854e10e967d1568042
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Aug 13 20:02:04 2012 +0200
+
+    scheduler: Remove inline from mk_scheduler_add_client declaration.
+    
+    Fixes incompatibilities with C99 inlining rules.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0ff3e5a20fbe909dc4a0c51f5e8b34c09043c83a
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Mon Aug 13 19:57:17 2012 +0200
+
+    mk_memory: Make mem_ functions static inline.
+    
+    Use static inline for mem_malloc, mem_malloc_z, mem_realloc and
+    mem_free. This will assure that calls to these functions from monkey
+    core is inlined. Fixes incompatibilities with C99 inlining rules.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9cb8335a8f6c50b345800e9842cb64b686cf8d67
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Tue Aug 14 14:45:36 2012 +0200
+
+    mimetype: Remove inline from mk_mimetype_lookup declaration.
+    
+    Allows calls to function from outside translation unit under C99
+    inlining rules.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 416a323905df9b347b20eaea6ef0b15e70c1785e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 15:42:32 2012 -0600
+
+    IOV: iov_add_entry: mk_bug() is back
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5097c86433d4125e3827710bf84200b0525abfbe
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon Aug 13 12:50:57 2012 +0300
+
+    iov, utils: Fix build with trace
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8da883be5bc80e7510920700a5b02ffedd50849b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 15:37:04 2012 -0600
+
+    IOV: on add_entry, validate with mk_unlikely() directly instead of mk_bug
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5dacea2f8c0f796a7d268beda97541c7c729eec5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 15:05:04 2012 -0600
+
+    Configure: remove merge comments
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 828cdfe961c903d9a23f00601314852659f95cc1
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Aug 12 15:50:50 2012 +0200
+
+    configure: Fix accept4() check.
+    
+    Builds check.c with -Wimplitic to detect when accept4 is absent. Also
+    adds _GNU_SOURCE define so accept4 is actually declared.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7b677516d904780b0dca483a7817076d3e543b62
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 15:01:55 2012 -0600
+
+    Debian: fix cgi stuff 1.1.0-2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a8210cd4ecf6bc24900d1af3078fda1b2b7803d8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 11:09:34 2012 -0600
+
+    Monkey v1.2.0 dev
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b827b96ff9dcf739004a0e87f72b985132b7061a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 10:58:57 2012 -0600
+
+    Monkey v1.1.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit c04cd225ca81977d80566e05087f86ea2f876dec
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Aug 17 10:16:03 2012 -0600
@@ -82,6 +1957,33 @@ Date:   Sun Aug 12 09:09:22 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit fd0140287fad32d1ea53d9797a9f08bb815cb2f4
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Sun Aug 12 13:16:35 2012 +0200
+
+    fastcgi: Add experimental FastCGI proxy plugin.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 028a523859da450476042a2ee2beacd6620077da
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 22:27:59 2012 +0300
+
+    build: Make sure the lib-objs also get header deps
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 1aa037b55758a661b60477662939483ad3f5f681
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 16:54:42 2012 +0300
+
+    clock, epoll: Fix gcc warning "no return statement in function returning non-void"
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 4917a2491b0a1aa313830f9ffb41f630ddb4e37b
 Author: Lauri Kasanen <cand@gmx.com>
 Date:   Wed Aug 8 16:54:42 2012 +0300
@@ -132,6 +2034,72 @@ Author: Lauri Kasanen <cand@gmx.com>
 Date:   Wed Aug 8 17:03:44 2012 +0300
 
     iov: Make iov_add_entry inline
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2f8313fb5d99446937f3f74b1fdf99cd938da9c7
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:20:30 2012 +0300
+
+    mem: Inline pointer_reset, called ~3 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 5179c23cd0ace9914306ff31a260cbe86add9baa
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:18:23 2012 +0300
+
+    sched: Inline get_request_list, called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a6ee405e9c0421782d610fc6b8d9a13173b498de
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:13:52 2012 +0300
+
+    cache: Inline cache_get, called ~4 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e2416acd1321bb74814c50f5f09eeaf2d13ae73a
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:11:58 2012 +0300
+
+    sched: Inline sched_get_thread_conf, it's called 4-5 times per request
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d6472cdb785e9ad9a8b22cb6b26ddc20ace0d24d
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Wed Aug 8 17:03:44 2012 +0300
+
+    iov: Make iov_add_entry inline
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit ba959a090bec37547a6f7a3feb0dd2e0848fec85
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Aug 7 16:35:09 2012 +0300
+
+    lib: Bring the bulk of lib over
+    
+    Some mime functions get exported, config init & reading is separated, and some functions are
+    moved around so that they can be ifdef'd out, to create a smaller library.
+    
+    Signed-off-by: Lauri Kasanen <cand@gmx.com>
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 633598061bd5a65d5758254d7091efe1a4b7f6e2
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Tue Aug 7 12:05:47 2012 +0300
+
+    cheetah: Remove some duplicated code by using worker_spawn
     
     Signed-off-by: Lauri Kasanen <cand@gmx.com>
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
