@@ -19,9 +19,9 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 __MONKEY__="1"
-__MONKEY_MINOR__="2"
+__MONKEY_MINOR__="3"
 __MONKEY_PATCHLEVEL__="0"
-__MONKEY_GIT__="release"
+__MONKEY_GIT__="devel"
 
 VERSION="$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
