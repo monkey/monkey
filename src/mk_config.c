@@ -213,7 +213,7 @@ struct mk_config *mk_config_create(const char *path)
         /* Get key and val */
         i = mk_string_char_search(buf + indent_len, ' ', len - indent_len);
         key = mk_string_copy_substr(buf + indent_len, 0, i);
-        val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len);
+        val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len - i);
 
         if (!key || !val || i < 0) {
             mk_config_error(path, line, "Each key must have a value");
