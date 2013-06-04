@@ -38,7 +38,7 @@ MONKEY_PLUGIN("auth",              /* shortname */
               MK_PLUGIN_STAGE_30); /* hooks */
 
 static int mk_auth_validate_user(struct users_file *users,
-                          const char *credentials, unsigned int len)
+                                 const char *credentials, unsigned int len)
 {
     int sep;
     size_t auth_len;
@@ -152,10 +152,15 @@ int _mkp_stage_30(struct plugin *plugin,
     struct vhost *vh_entry = NULL;
     struct location *loc_entry;
 
+    PLUGIN_TRACE("[FD %i] Handler received request");
+
     /* Match auth_vhost with global vhost */
     mk_list_foreach(vh_head, &vhosts_list) {
         vh_entry = mk_list_entry(vh_head, struct vhost, _head);
         if (vh_entry->host == sr->host_conf) {
+            PLUGIN_TRACE("[FD %i] host matched %s",
+                         cs->socket,
+                         vh_entry->host->host_signature);
             break;
         }
     }
@@ -169,6 +174,9 @@ int _mkp_stage_30(struct plugin *plugin,
         if (strncmp(sr->uri_processed.data,
                     loc_entry->path.data, loc_entry->path.len) == 0) {
             is_restricted = MK_TRUE;
+            PLUGIN_TRACE("[FD %i] Location matched %s",
+                         cs->socket,
+                         loc_entry->path.data);
             break;
         }
     }
@@ -188,11 +196,15 @@ int _mkp_stage_30(struct plugin *plugin,
         val = mk_auth_validate_user(loc_entry->users, res.data, res.len);
         if (val == 0) {
             /* user validated, success */
+            PLUGIN_TRACE("[FD %i] user validated!", cs->socket);
             return MK_PLUGIN_RET_NOT_ME;
         }
     }
 
     /* Restricted access: requires auth */
+    PLUGIN_TRACE("[FD %i] unauthorized user, credentials required",
+                 cs->socket);
+
     sr->headers.content_length = 0;
     mk_api->header_set_http_status(sr, MK_CLIENT_UNAUTH);
     mk_api->header_add(sr,
