@@ -470,6 +470,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 
                 mk_sched_remove_client(sched, cs_node->socket);
                 mk_session_remove(cs_node->socket);
+
+                /* This removal invalidated our iterator. Start over from the beginning. */
+                node = rb_first(cs_list);
+                if (!node) break;
             }
         }
     }
