@@ -1,3 +1,44 @@
+commit 76109f4a61db3c85e7d5729212b51d8b154634b2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 6 11:49:52 2013 -0600
+
+    Monkey v1.2.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a7d12d394c49cfeb28d437f85082fed7b1f985cd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 6 11:49:43 2013 -0600
+
+    Debian: update version to v1.2.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2ba47cddf062cfc722c6c2611b6aa907e377a5da
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 6 11:38:54 2013 -0600
+
+    Fix #182: DoS bug on headers parser.
+    
+    This patch fix the root cause for a problem described in Ticket #182,
+    actually if a header is malformed like a Header Key without a value, the
+    ToC parser used to continue processing the next header line.
+    
+    The solution applied is to improve the ToC generator where it adds extra
+    validations for at least one colon and forcing each header line to contain
+    a value or empty space, otherwise the server will trigger a Bad Request
+    response to the client and close the connection.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 894b9ae667b7a54e22392501f1572c84d89737bd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 26 20:59:57 2013 -0600
+
+    Update ChangeLog for v1.2.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 0176bede95ebcb8930e45c5a4fac40f0cd8b17cd
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sun May 26 20:59:57 2013 -0600
