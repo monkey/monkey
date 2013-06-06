@@ -45,16 +45,25 @@
 
 long int mk_method_validate_content_length(const char *body, int body_len)
 {
+    int crlf;
     struct headers_toc toc;
     long int len;
     mk_pointer tmp;
+
+    crlf = mk_string_search(body, MK_CRLF, MK_STR_INSENSITIVE);
+    if (crlf < 0) {
+        return -1;
+    }
 
     /*
      * obs: Table of Content (toc) is created when the full
      * request has arrived, this function cannot be used from
      * mk_http_pending_request().
      */
-    mk_request_header_toc_parse(&toc, body, body_len);
+    if (mk_request_header_toc_parse(&toc, body + crlf + mk_crlf.len,
+                                    body_len - mk_crlf.len - crlf) < 0) {
+        return -1;
+    }
     tmp = mk_request_header_get(&toc,
                                 mk_rh_content_length.data,
                                 mk_rh_content_length.len);
