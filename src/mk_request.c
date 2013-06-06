@@ -121,25 +121,64 @@ static void mk_request_free(struct session_request *sr)
 
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len)
 {
-    int i;
+    int i = 0;
+    int header_len;
+    int colon;
+    char *q;
     char *p = (char *) data;
-    char *l = 0;
+    char *l = p;
 
     toc->length = 0;
+
     for (i = 0; l < (data + len) && p && i < MK_HEADERS_TOC_LEN; i++) {
-        l = strstr(p, MK_CRLF);
-        if (l) {
-            toc->rows[i].init = p;
-            toc->rows[i].end = l;
-            toc->rows[i].status = 0;
-            p = (l + mk_crlf.len);
-            toc->length++;
+        if (*p == '\r') goto out;
+
+        /* Locate the colon character and the end of the line by CRLF */
+        colon = -1;
+        for (q = p; *q != 0x0D; ++q) {
+            if (*q == ':' && colon == -1) {
+                colon = (q - p);
+            }
         }
-        else {
+
+        /* it must be a LF after CR */
+        if (*(q + 1) != 0x0A) {
+            return -1;
+        }
+
+        /*
+         * Check if we reach the last header, take in count the first one can
+         * be also the last.
+         */
+        if (data + len == (q - 1) && colon == -1) {
             break;
         }
+
+        /*
+         * By this version we force that after the colon must exists a white
+         * space before the value field
+         */
+        if (*(p + colon + 1) != 0x20) {
+            return -1;
+        }
+
+
+        /* Each header key must have a value */
+        header_len = q - p - colon - 2;
+        if (header_len == 0) {
+            return -1;
+        }
+
+        /* Register the entry */
+        toc->rows[i].init = p;
+        toc->rows[i].end = q;
+        toc->rows[i].status = 0;
+        p = (q + mk_crlf.len);
+        l = p;
+        toc->length++;
     }
 
+ out:
     return toc->length;
 }
 
@@ -237,13 +276,15 @@ static int mk_request_header_process(struct session_request *sr)
 
     /* Creating Table of Content (index) for HTTP headers */
     sr->headers_len = sr->body.len - (prot_end + mk_crlf.len);
-    mk_request_header_toc_parse(&sr->headers_toc, headers, sr->headers_len);
+    if (mk_request_header_toc_parse(&sr->headers_toc, headers, sr->headers_len) < 0) {
+        MK_TRACE("Invalid headers");
+        return -1;
+    }
 
     /* Host */
     host = mk_request_header_get(&sr->headers_toc,
                                  mk_rh_host.data,
                                  mk_rh_host.len);
-
     if (host.data) {
         if ((pos_sep = mk_string_char_search_r(host.data, ':', host.len)) >= 0) {
             /* TCP port should not be higher than 65535 */
@@ -321,8 +362,8 @@ static int mk_request_header_process(struct session_request *sr)
             sr->keep_alive = MK_TRUE;
             sr->close_now = MK_FALSE;
         }
-        else if(mk_string_search_n(sr->connection.data, "Close",
-                                   MK_STR_INSENSITIVE, sr->connection.len) >= 0) {
+        else if (mk_string_search_n(sr->connection.data, "Close",
+                                    MK_STR_INSENSITIVE, sr->connection.len) >= 0) {
             sr->keep_alive = MK_FALSE;
             sr->close_now = MK_TRUE;
         }
