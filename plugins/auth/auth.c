@@ -83,6 +83,9 @@ static int mk_auth_validate_user(struct users_file *users,
     mk_list_foreach(head, &users->_users) {
         entry = mk_list_entry(head, struct user, _head);
         /* match user */
+        if (strlen(entry->user) != (unsigned int) sep) {
+            continue;
+        }
         if (strncmp(entry->user, (char *) decoded, sep) != 0) {
             continue;
         }
@@ -90,7 +93,7 @@ static int mk_auth_validate_user(struct users_file *users,
         PLUGIN_TRACE("User match '%s'", entry->user);
 
         /* match password */
-        if (memcmp(entry->passwd_decoded, digest, 20) == 0) {
+        if (memcmp(entry->passwd_decoded, digest, SHA1_DIGEST_LEN) == 0) {
             PLUGIN_TRACE("User '%s' matched password");
             free(decoded);
             return 0;
