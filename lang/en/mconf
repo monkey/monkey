@@ -6,8 +6,8 @@ cat > conf/monkey.conf <<EOF
 # to the configuration of the different types of directives.
 
 [SERVER]
-    # Port :
-    # ------
+    # Port:
+    # -----
     # Port is the number of the door in which Monkey will be listened through
     # connections and petitions. This number can have any value between 1 and
     # 65535. If the specified number is less than or equal to 1024, only root
@@ -34,8 +34,8 @@ cat > conf/monkey.conf <<EOF
 
     Workers 0
 
-    # Timeout :
-    # ---------
+    # Timeout:
+    # --------
     # The largest span of time, expressed in seconds, during which you should
     # wait to receive the information or waiting time for the remote host to
     # accept an answer. (Timeout > 0)
@@ -55,14 +55,14 @@ cat > conf/monkey.conf <<EOF
 
     UserDir public_html
 
-    # Indexfile :
-    # -----------
+    # Indexfile:
+    # ----------
     # Number of the initial file of aperture when calling a directory.
 
     Indexfile index.html index.htm index.php
 
-    # HideVersion :
-    # -------------
+    # HideVersion:
+    # ------------
     # For security reasons, sometimes people want to hide the version of his
     # own webserver to clients (values on/off).
 
@@ -75,8 +75,8 @@ cat > conf/monkey.conf <<EOF
 
     Resume on
 
-    # User :
-    # ------
+    # User:
+    # -----
     # If you want the webserver to run as a process of a defined user, you can
     # define it in this variable. For the change of user to work, it's necessary
     # to execute Monkey with root privileges. If it's started by a user that
@@ -89,8 +89,8 @@ cat > conf/monkey.conf <<EOF
     # -----------------
     # Just change the next variables if you know what are you doing.
 
-    # KeepAlive :
-    # -----------
+    # KeepAlive:
+    # ----------
     # Allow persistent connections. (on/off)
 
     KeepAlive on
@@ -102,14 +102,14 @@ cat > conf/monkey.conf <<EOF
 
     KeepAliveTimeout 5
 
-    # MaxKeepAliveRequest
-    # -------------------
+    # MaxKeepAliveRequest:
+    # --------------------
     # Maximum number of requests per connection. (value > 0)
 
     MaxKeepAliveRequest 1000
 
-    # MaxRequestSize
-    # ----------------
+    # MaxRequestSize:
+    # ---------------
     # When a request arrives, Monkey allocs a 'chunk' of memory space
     # to receive the incoming data. As many times the incoming data
     # size is undeterminated, Monkey increases the buffer as required. This
@@ -120,14 +120,14 @@ cat > conf/monkey.conf <<EOF
 
     MaxRequestSize 32
 
-    # SymLink
-    # -------
+    # SymLink:
+    # --------
     # Allow request to symbolic link files.
 
     SymLink Off
 
-    # TransportLayer
-    # --------------
+    # TransportLayer:
+    # ---------------
     # Define which network I/O plugin provides the transport layer. The
     # value of the key belongs to the shortname of the plugin. Make sure
     # the plugin is loaded by 'plugins.load' file.
@@ -137,8 +137,8 @@ cat > conf/monkey.conf <<EOF
 
     TransportLayer liana
 
-    # DefaultMimeType
-    # ---------------
+    # DefaultMimeType:
+    # ----------------
     # If a static content is requested and it does not contain a known extension,
     # Monkey will send the mime type specified on this directive.
 
