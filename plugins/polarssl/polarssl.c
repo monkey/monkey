@@ -902,7 +902,8 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
     // Evil global config stuff.
     mk_api = *api;
-    if (strcmp(mk_api->config->transport_layer, "polarssl")) {
+    if (mk_api->config->transport_layer &&
+        strcmp(mk_api->config->transport_layer, "polarssl")) {
         PLUGIN_TRACE("[polarssl] Not used as transport layer, unload.");
         return -1;
     }
