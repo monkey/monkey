@@ -242,7 +242,7 @@ int _mkp_network_io_server(int port, char *listen_addr)
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
         if(ret == -1) {
-            mk_err("Port %i cannot be used, retrying\n", port);
+            mk_err("Cannot listen on %s:%i\n", listen_addr, port);
             continue;
         }
         break;
