@@ -42,7 +42,7 @@ static int mk_auth_validate_user(struct users_file *users,
 {
     int sep;
     size_t auth_len;
-    unsigned char *decoded;
+    unsigned char *decoded = NULL;
     unsigned char digest[SHA1_DIGEST_LEN];
     struct mk_list *head;
     struct user *entry;
@@ -64,6 +64,11 @@ static int mk_auth_validate_user(struct users_file *users,
     decoded = base64_decode((unsigned char *) credentials + auth_header_basic.len,
                             len - auth_header_basic.len,
                             &auth_len);
+    if (decoded == NULL) {
+        PLUGIN_TRACE("Failed to decode credentials.");
+        goto error;
+    }
+
     decoded[auth_len] = '\0';
 
     if (auth_len <= 3) {
@@ -100,7 +105,9 @@ static int mk_auth_validate_user(struct users_file *users,
     }
 
     error:
-    free(decoded);
+    if (decoded) {
+        free(decoded);
+    }
     return -1;
 }
 
