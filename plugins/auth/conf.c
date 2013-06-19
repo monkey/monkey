@@ -88,7 +88,7 @@ static struct users_file *mk_auth_conf_add_users(char *users_path)
             cred = mk_api->mem_alloc(sizeof(struct user));
 
             /* Copy username */
-            strncpy(cred->user, buf + offset, offset + sep);
+            strncpy(cred->user, buf + offset, sep);
             cred->user[sep] = '\0';
 
             /* Copy raw password */
