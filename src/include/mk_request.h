@@ -200,9 +200,6 @@ struct session_request
     /* Query string: ?.... */
     mk_pointer query_string;
 
-    /* virtual user */
-    char *virtual_user;
-
     /* is keep-alive request ? */
     int keep_alive;
 
