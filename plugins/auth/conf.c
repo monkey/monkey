@@ -85,6 +85,18 @@ static struct users_file *mk_auth_conf_add_users(char *users_path)
     for (i = 0; i < len; i++) {
         if (buf[i] == '\n' || (i) == len -1) {
             sep = mk_api->str_search(buf + offset, ":", 1);
+
+            if (sep >= (int)sizeof(cred->user)) {
+                mk_warn("Auth: username too long");
+                offset = i + 1;
+                continue;
+            }
+            if (i - offset - sep - 1 - 5 >= (int)sizeof(cred->passwd_raw)) {
+                mk_warn("Auth: password hash too long");
+                offset = i + 1;
+                continue;
+            }
+
             cred = mk_api->mem_alloc(sizeof(struct user));
 
             /* Copy username */
