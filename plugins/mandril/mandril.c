@@ -67,7 +67,7 @@ static int mk_security_conf(char *confdir)
         entry = mk_list_entry(head, struct mk_config_entry, _head);
 
         /* Passing to internal struct */
-        if (strcasecmp(entry->key, "Deny_IP") == 0) {
+        if (strcasecmp(entry->key, "IP") == 0) {
             new_ip = mk_api->mem_alloc(sizeof(struct mk_secure_ip_t));
             n = mk_api->str_search(entry->val, "/", 1);
 
@@ -137,7 +137,7 @@ static int mk_security_conf(char *confdir)
                 }
             }
         }
-        else if (strcasecmp(entry->key, "Deny_URL") == 0) {
+        else if (strcasecmp(entry->key, "URL") == 0) {
             /* simple allcotion and data association */
             new_url = mk_api->mem_alloc(sizeof(struct mk_secure_url_t));
             new_url->criteria = entry->val;
@@ -159,8 +159,9 @@ static int mk_security_check_ip(int socket)
     struct in_addr addr_t, *addr = &addr_t;
     socklen_t len = sizeof(addr);
 
-    if (getpeername(socket, (struct sockaddr *)&addr_t, &len) < 0)
+    if (getpeername(socket, (struct sockaddr *)&addr_t, &len) < 0) {
         return -1;
+    }
 
     PLUGIN_TRACE("[FD %i] Mandril validating IP address", socket);
     mk_list_foreach(head, &mk_secure_ip) {
@@ -196,12 +197,10 @@ static int mk_security_check_url(mk_pointer url)
     struct mk_list *head;
     struct mk_secure_url_t *entry;
 
-    PLUGIN_TRACE("[FD %i] Mandril validating URL", socket);
     mk_list_foreach(head, &mk_secure_url) {
         entry = mk_list_entry(head, struct mk_secure_url_t, _head);
         n = mk_api->str_search_n(url.data, entry->criteria, MK_STR_INSENSITIVE, url.len);
         if (n >= 0) {
-            PLUGIN_TRACE("[FD %i] Mandril closing by rule in URL match", socket);
             return -1;
         }
     }
@@ -242,11 +241,13 @@ int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
 {
     (void) cs;
 
+    PLUGIN_TRACE("[FD %i] Mandril validating URL", cs->socket);
     if (mk_security_check_url(sr->uri) < 0) {
-        PLUGIN_TRACE("Close connection FD %i", cs->socket);
+        PLUGIN_TRACE("[FD %i] close connection by URL match", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
+    PLUGIN_TRACE("[FD %i] URL passed", cs->socket);
     return MK_PLUGIN_RET_CONTINUE;
 }
