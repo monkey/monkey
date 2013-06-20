@@ -129,15 +129,13 @@ static int mk_http_range_set(struct session_request *sr, long file_size)
             sr->bytes_offset = file_size - sh->ranges[1];
         }
 
-        if (sr->bytes_offset > file_size || sr->bytes_to_send > file_size) {
+        if (sr->bytes_offset >= file_size || sr->bytes_to_send > file_size) {
             return -1;
         }
 
         lseek(sr->fd_file, sr->bytes_offset, SEEK_SET);
     }
     return 0;
-
-
 }
 
 static int mk_http_range_parse(struct session_request *sr)
@@ -184,7 +182,7 @@ static int mk_http_range_parse(struct session_request *sr)
         sh->ranges[1] = (unsigned long) atol(buffer);
         mk_mem_free(buffer);
 
-        if (sh->ranges[1] <= 0 || (sh->ranges[0] > sh->ranges[1])) {
+        if (sh->ranges[1] < 0 || (sh->ranges[0] > sh->ranges[1])) {
             return -1;
         }
 
@@ -534,26 +532,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     sr->headers.content_length = sr->file_info.size;
     sr->headers.real_length = sr->file_info.size;
 
-    /* Process methods */
-    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
-        sr->headers.content_type = mime->type;
-        /* Range */
-        if (sr->range.data != NULL && config->resume == MK_TRUE) {
-            if (mk_http_range_parse(sr) < 0) {
-                return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-            }
-            if (sr->headers.ranges[0] >= 0 || sr->headers.ranges[1] >= 0) {
-                mk_header_set_http_status(sr, MK_HTTP_PARTIAL);
-            }
-        }
-    }
-    else {
-        /* without content-type */
-        mk_pointer_reset(&sr->headers.content_type);
-    }
-
-
-
     /* Open file */
     if (mk_likely(sr->file_info.size > 0)) {
         sr->fd_file = open(sr->real_path.data, sr->file_info.flags_read_only);
@@ -561,6 +539,36 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             MK_TRACE("open() failed");
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
+        sr->bytes_to_send = sr->file_info.size;
+    }
+
+    /* Process methods */
+    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
+        sr->headers.content_type = mime->type;
+
+        /* HTTP Ranges */
+        if (sr->range.data != NULL && config->resume == MK_TRUE) {
+            if (mk_http_range_parse(sr) < 0) {
+                sr->headers.ranges[0] = -1;
+                sr->headers.ranges[1] = -1;
+                return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+            }
+            if (sr->headers.ranges[0] >= 0 || sr->headers.ranges[1] >= 0) {
+                mk_header_set_http_status(sr, MK_HTTP_PARTIAL);
+            }
+
+            /* Calc bytes to send & offset */
+            if (mk_http_range_set(sr, sr->file_info.size) != 0) {
+                sr->headers.content_length = -1;
+                sr->headers.ranges[0] = -1;
+                sr->headers.ranges[1] = -1;
+                return mk_request_error(MK_CLIENT_REQUESTED_RANGE_NOT_SATISF, cs, sr);
+            }
+        }
+    }
+    else {
+        /* without content-type */
+        mk_pointer_reset(&sr->headers.content_type);
     }
 
     /* Send headers */
@@ -570,13 +578,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return 0;
     }
 
-    /* Send file content*/
+    /* Send file content */
     if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
-        /* Calc bytes to send & offset */
-        if (mk_http_range_set(sr, sr->file_info.size) != 0) {
-            return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        }
-
         bytes = mk_http_send_file(cs, sr);
     }
 
@@ -599,7 +602,15 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 
     sr->loop++;
 
-    if (mk_unlikely(nbytes < 0)) {
+    /*
+     * In some circumstances when writing data the connection can get broken,
+     * so we must be aware of that.
+     *
+     * Also, if for some reason the file that is being serve change it size
+     * we can get a zero bytes send as return value. We need to validate the
+     * return values <= zero
+     */
+    if (mk_unlikely(nbytes <= 0)) {
         MK_TRACE("sendfile() = -1;");
         return EXIT_ABORT;
     }
