@@ -22,12 +22,12 @@
 
 #include "mk_memory.h"
 
-/* 
+/*
  * - New macro names and structure by Monkey Dev Team
  * - Initial HTTP Status provided by Juan C. Inostroza <jci@codemonkey.cl>
  */
 
-/* Monkey allow plugins to set their customized status */ 
+/* Monkey allow plugins to set their customized status */
 #define MK_CUSTOM_STATUS                          7
 
 /* Informational status */
@@ -68,6 +68,7 @@
 #define MK_CLIENT_REQUEST_ENTITY_TOO_LARGE	413
 #define MK_CLIENT_REQUEST_URI_TOO_LONG		414
 #define MK_CLIENT_UNSUPPORTED_MEDIA		415
+#define MK_CLIENT_REQUESTED_RANGE_NOT_SATISF    416
 
 /* Server Errors */
 #define MK_SERVER_INTERNAL_ERROR		500

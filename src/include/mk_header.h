@@ -67,10 +67,12 @@
 #define MK_RH_CLIENT_GONE "HTTP/1.1 410 Gone\r\n"
 #define MK_RH_CLIENT_LENGTH_REQUIRED "HTTP/1.1 411 Length Required\r\n"
 #define MK_RH_CLIENT_PRECOND_FAILED "HTTP/1.1 412 Precondition Failed\r\n"
-#define MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE \
-  "HTTP/1.1 413 Request Entity Too Large\r\n"
+#define MK_RH_CLIENT_REQUEST_ENTITY_TOO_LARGE   \
+    "HTTP/1.1 413 Request Entity Too Large\r\n"
 #define MK_RH_CLIENT_REQUEST_URI_TOO_LONG "HTTP/1.1 414 Request-URI Too Long\r\n"
 #define MK_RH_CLIENT_UNSUPPORTED_MEDIA  "HTTP/1.1 415 Unsupported Media Type\r\n"
+#define MK_RH_CLIENT_REQUESTED_RANGE_NOT_SATISF \
+    "HTTP/1.1 416 Requested Range Not Satisfiable\r\n"
 
 /* Server side errors */
 #define MK_RH_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error\r\n"
