@@ -1,3 +1,95 @@
+commit 06f2defef59a33217868ed0c5add27f90296db80
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 21 11:45:03 2013 -0600
+
+    Monkey v1.2.2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f2d1e00497b9fc3bafef218f37bb0ef6822d43e6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jun 21 11:44:34 2013 -0600
+
+    debian: update changelog to v1.2.2
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 17991456cfd6233065625b97e1e136a3e47ad360
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 19 19:35:13 2013 -0600
+
+    QA: add HTTP range tests 04 and 05
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0d3ad70883f4fcb45fa34c998e303a9c0bb7fbc2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 19 19:30:28 2013 -0600
+
+    HTTP: ranges fixes and implement 416 status code (fix #184)
+    
+    The ranges parser did not validate properly the maximum offset
+    allowed, so if a requester set limit offset equal to file size it
+    continue processing, internally the sendfile(2) did not failed
+    returning always zero, this condition was not handled and for hence
+    that connections keeps running without ending, it could lead to a
+    DoS.
+    
+    This patch improves the range headers validation, fix the validation
+    of mk_http_send_file() routine and when the range is not satisfied, it
+    will return the status code 416:
+    
+          HTTP/1.1 416 Requested Range Not Satisfiable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0165d05dba5c0020446aa4e4b41dc70c0297acaa
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 19 15:33:10 2013 -0600
+
+    mandril: fix rule names
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9c23cadb11e50f0feeaf68eb3dedaf446574dff3
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Wed Jun 19 15:11:41 2013 +0200
+
+    auth: Ignore too large user entries.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit cb39ad67ef983a9eddc794ee85732f0f9fc2277b
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Wed Jun 19 15:01:32 2013 +0200
+
+    auth: Fix buffer overflow when loading user file.
+    
+    The third parameter of strncpy(3) was badly calculated.
+    For each entry in the users file the parameter was the length from start
+    of file until end of username, when it should be calculated from current
+    buffer position.
+    This causes writes outside buffer when the user file is larger than 2 *
+    sizeof(struct user).
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 1f04900d6f26369629c582ae2aed3dd3aa58a95f
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Wed Jun 19 14:29:16 2013 +0200
+
+    auth: Fix bug where failed base64_decode() cause segfault.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 6a128612c0e230be214e736c5f01e97505a3e133
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 6 11:49:52 2013 -0600
+
+    Update ChangeLog for v1.2.1
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit 76109f4a61db3c85e7d5729212b51d8b154634b2
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Jun 6 11:49:52 2013 -0600
