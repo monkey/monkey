@@ -99,7 +99,7 @@ static int hangup(const int socket)
            the data won't get across fully.
         */
 
-        fcntl(r->socket, F_SETFL, fcntl(r->socket, F_GETFD, 0) & ~O_NONBLOCK);
+        fcntl(r->socket, F_SETFL, fcntl(r->socket, F_GETFL, 0) & ~O_NONBLOCK);
         while (1) {
             int ret = _mkp_event_read(socket);
             if (ret == MK_PLUGIN_RET_EVENT_CLOSE) {
