@@ -499,7 +499,7 @@ int mk_utils_register_pid()
         unlink(filepath);
     }
 
-    if ((fd = open(filepath, O_RDWR | O_CREAT, 0444)) < 0) {
+    if ((fd = open(filepath, O_WRONLY | O_CREAT | O_CLOEXEC, 0444)) < 0) {
         mk_err("Error: I can't log pid of monkey");
         exit(EXIT_FAILURE);
     }
