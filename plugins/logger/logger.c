@@ -389,6 +389,8 @@ int _mkp_core_prctx(struct server_config *config)
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
+                    fcntl(new->fd_access[0], F_SETFD, FD_CLOEXEC);
+                    fcntl(new->fd_access[1], F_SETFD, FD_CLOEXEC);
                     new->file_access = access_file_name;
                 }
                 /* Set error pipe */
@@ -398,6 +400,8 @@ int _mkp_core_prctx(struct server_config *config)
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
+                    fcntl(new->fd_error[0], F_SETFD, FD_CLOEXEC);
+                    fcntl(new->fd_error[1], F_SETFD, FD_CLOEXEC);
                     new->file_error = error_file_name;
                 }
 
