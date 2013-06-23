@@ -442,8 +442,8 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 
 	switch (h.type) {
 	case FCGI_STDERR:
-		log_err("[REQ_ID %d] Recevied stderr, len %d.", h.req_id, h.body_len);
-		log_err("[REQ_ID %d] %.*s", h.req_id, h.body_len, read.data + sizeof(h));
+		PLUGIN_TRACE("[REQ_ID %d] Recevied stderr, len %d.", h.req_id, h.body_len);
+		PLUGIN_TRACE("[REQ_ID %d] %.*s", h.req_id, h.body_len, read.data + sizeof(h));
 		break;
 
 	case FCGI_STDOUT:
@@ -805,7 +805,9 @@ static int hangup(int socket)
 	struct fcgi_fd *fd;
 	struct request_list *rl;
 	struct request *req;
+#ifdef TRACE
 	uint16_t req_id;
+#endif
 	enum fcgi_fd_state state;
 
 	cntx = pthread_getspecific(fcgi_local_context);
@@ -840,9 +842,10 @@ static int hangup(int socket)
 		return MK_PLUGIN_RET_EVENT_OWNED;
 	}
 	else if (req) {
+#ifdef TRACE
 		req_id = request_list_index_of(rl, req);
-
-		log_warn("[REQ_ID %d] Hangup event.", req_id);
+		PLUGIN_TRACE("[REQ_ID %d] Hangup event.", req_id);
+#endif
 
 		if (req->state != REQ_FAILED) {
 			request_set_state(req, REQ_FAILED);

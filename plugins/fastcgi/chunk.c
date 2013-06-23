@@ -189,7 +189,7 @@ void chunk_list_free_chunks(struct chunk_list *cm)
 	struct chunk *c;
 
 	if (!mk_list_is_empty(&cm->chunks._head)) {
-		log_info("No chunks to free in manager.");
+		PLUGIN_TRACE("No chunks to free in manager.");
 		return;
 	}
 

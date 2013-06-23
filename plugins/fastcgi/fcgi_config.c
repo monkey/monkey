@@ -79,7 +79,7 @@ static int fcgi_validate_conf(struct fcgi_config *config)
 	unsigned int i, j;
 	struct fcgi_location *locp;
 	struct fcgi_server *srvp;
-	ptrdiff_t srv_i;
+	size_t srv_i;
 	uint8_t used_servers[config->server_count];
 
 	check(config->server_count > 0, "No servers configured.");
