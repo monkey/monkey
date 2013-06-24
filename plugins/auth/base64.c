@@ -115,7 +115,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 	if (count == 0 || count % 4)
 		return NULL;
 
-	olen = count / 4 * 3;
+	olen = (count / 4 * 3) + 1;
 	pos = out = malloc(olen);
 	if (out == NULL)
 		return NULL;
@@ -149,6 +149,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 			}
 		}
 	}
+        *pos = '\0';
 
 	*out_len = pos - out;
 	return out;

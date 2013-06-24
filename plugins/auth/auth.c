@@ -69,8 +69,6 @@ static int mk_auth_validate_user(struct users_file *users,
         goto error;
     }
 
-    decoded[auth_len] = '\0';
-
     if (auth_len <= 3) {
         goto error;
     }
