@@ -66,10 +66,12 @@ int mk_socket_set_nonblocking(int sockfd)
 
     MK_TRACE("Socket, set FD %i to non-blocking", sockfd);
 
-    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK | O_CLOEXEC) == -1) {
+    if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
         mk_err("Can't set to non-blocking mode socket %i", sockfd);
         return -1;
     }
+    fcntl(sockfd, F_SETFD, FD_CLOEXEC);
+
     return 0;
 }
 

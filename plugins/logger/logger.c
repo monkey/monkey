@@ -195,7 +195,7 @@ static void mk_logger_worker_init(void *args)
 
             timeout = clk + mk_logger_timeout;
 
-            flog = open(target, O_WRONLY | O_CREAT, 0644);
+            flog = open(target, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
             if (mk_unlikely(flog == -1)) {
                 mk_warn("Could not open logfile '%s'", target);
 
@@ -313,7 +313,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
     /* Check masterlog */
     if (mk_logger_master_path) {
-        fd = open(mk_logger_master_path, O_WRONLY | O_CREAT, 0644);
+        fd = open(mk_logger_master_path, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
         if (fd == -1) {
             mk_err("Could not open/create master logfile %s", mk_logger_master_path);
             exit(EXIT_FAILURE);
@@ -357,8 +357,8 @@ int _mkp_core_prctx(struct server_config *config)
 
     /* Restore STDOUT if we are in background mode */
     if (mk_logger_master_path != NULL && mk_api->config->is_daemon == MK_TRUE) {
-        mk_logger_master_stdout = freopen(mk_logger_master_path, "a+", stdout);
-        mk_logger_master_stderr = freopen(mk_logger_master_path, "a+", stderr);
+        mk_logger_master_stdout = freopen(mk_logger_master_path, "ae", stdout);
+        mk_logger_master_stderr = freopen(mk_logger_master_path, "ae", stderr);
         mk_logger_print_details();
     }
 
@@ -389,6 +389,8 @@ int _mkp_core_prctx(struct server_config *config)
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_access[1], F_SETFL, O_NONBLOCK);
+                    fcntl(new->fd_access[0], F_SETFD, FD_CLOEXEC);
+                    fcntl(new->fd_access[1], F_SETFD, FD_CLOEXEC);
                     new->file_access = access_file_name;
                 }
                 /* Set error pipe */
@@ -398,6 +400,8 @@ int _mkp_core_prctx(struct server_config *config)
                         exit(EXIT_FAILURE);
                     }
                     fcntl(new->fd_error[1], F_SETFL, O_NONBLOCK);
+                    fcntl(new->fd_error[0], F_SETFD, FD_CLOEXEC);
+                    fcntl(new->fd_error[1], F_SETFD, FD_CLOEXEC);
                     new->file_error = error_file_name;
                 }
 

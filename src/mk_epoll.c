@@ -227,6 +227,8 @@ int mk_epoll_create(int max_events)
         mk_err("epoll_create() failed");
     }
 
+    fcntl(efd, F_SETFD, FD_CLOEXEC);
+
     return efd;
 }
 

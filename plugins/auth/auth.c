@@ -69,8 +69,6 @@ static int mk_auth_validate_user(struct users_file *users,
         goto error;
     }
 
-    decoded[auth_len] = '\0';
-
     if (auth_len <= 3) {
         goto error;
     }
@@ -99,7 +97,7 @@ static int mk_auth_validate_user(struct users_file *users,
 
         /* match password */
         if (memcmp(entry->passwd_decoded, digest, SHA1_DIGEST_LEN) == 0) {
-            PLUGIN_TRACE("User '%s' matched password");
+            PLUGIN_TRACE("User '%s' matched password", entry->user);
             free(decoded);
             return 0;
         }

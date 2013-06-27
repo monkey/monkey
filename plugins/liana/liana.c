@@ -103,7 +103,12 @@ int _mkp_network_io_create_socket(int domain, int type, int protocol)
 {
     int socket_fd;
 
+#ifdef SOCK_CLOEXEC
+    socket_fd = socket(domain, type | SOCK_CLOEXEC, protocol);
+#else
     socket_fd = socket(domain, type, protocol);
+    fcntl(socket_fd, F_SETFD, FD_CLOEXEC);
+#endif
 
     return socket_fd;
 }
