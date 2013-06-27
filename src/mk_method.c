@@ -123,16 +123,29 @@ int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
+    /*
+     * RFC2616: 7.2.1 Type:
+     * --------------------
+     * Note: according to the RFC we should not force the content-type.
+     *
+     * .....
+     * Any HTTP/1.1 message containing an entity-body SHOULD include a
+     * Content-Type header field defining the media type of that body. If
+     * and only if the media type is not given by a Content-Type field, the
+     * recipient MAY attempt to guess the media type via inspection of its
+     * content and/or the name extension(s) of the URI used to identify the
+     * resource. If the media type remains unknown, the recipient SHOULD
+     * treat it as type "application/octet-stream".
+     */
     tmp = mk_request_header_get(&sr->headers_toc,
                                 mk_rh_content_type.data,
                                 mk_rh_content_type.len);
-    if (!tmp.data) {
-        mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        return -1;
+    if (tmp.data) {
+        sr->content_type = tmp;
     }
-    sr->content_type = tmp;
-    sr->content_length = content_length_post;
 
+    /* Set the content-length */
+    sr->content_length = content_length_post;
     return 0;
 }
 
