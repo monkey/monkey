@@ -47,7 +47,14 @@ struct mk_secure_url_t
     struct mk_list _head;
 };
 
+struct mk_secure_deny_hotlink_t
+{
+    char *criteria;
+    struct mk_list _head;
+};
+
 struct mk_list mk_secure_ip;
 struct mk_list mk_secure_url;
+struct mk_list mk_secure_deny_hotlink;
 
 #endif

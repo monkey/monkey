@@ -52,6 +52,7 @@ static int mk_security_conf(char *confdir)
 
     struct mk_secure_ip_t *new_ip;
     struct mk_secure_url_t *new_url;
+    struct mk_secure_deny_hotlink_t *new_deny_hotlink;
 
     struct mk_config_section *section;
     struct mk_config_entry *entry;
@@ -145,6 +146,12 @@ static int mk_security_conf(char *confdir)
             /* link node with main list */
             mk_list_add(&new_url->_head, &mk_secure_url);
         }
+        else if (strcasecmp(entry->key, "deny_hotlink") == 0) {
+            new_deny_hotlink = mk_api->mem_alloc(sizeof(*new_deny_hotlink));
+            new_deny_hotlink->criteria = entry->val;
+
+            mk_list_add(&new_deny_hotlink->_head, &mk_secure_deny_hotlink);
+        }
     }
 
     mk_api->mem_free(conf_path);
@@ -208,6 +215,103 @@ static int mk_security_check_url(mk_pointer url)
     return 0;
 }
 
+mk_pointer parse_referer_host(mk_pointer ref)
+{
+    unsigned int i, beginHost, endHost;
+    mk_pointer host;
+
+    host.data = NULL;
+    host.len = 0;
+
+    // Find end of "protocol://"
+    for (i = 0; i < ref.len && !(ref.data[i] == '/' && ref.data[i+1] == '/'); i++);
+    if (i == ref.len) {
+        goto error;
+    }
+    beginHost = i + 2;
+
+    // Find end of any "user:password@"
+    for (; i < ref.len && ref.data[i] != '@'; i++);
+    if (i < ref.len) {
+        beginHost = i + 1;
+    }
+
+    // Find end of "host", (beginning of :port or /path)
+    for (i = beginHost; i < ref.len && ref.data[i] != ':' && ref.data[i] != '/'; i++);
+    endHost = i;
+
+    host.data = ref.data + beginHost;
+    host.len = endHost - beginHost;
+    return host;
+error:
+    host.data = NULL;
+    host.len = 0;
+    return host;
+}
+
+static int mk_security_check_hotlink(mk_pointer url, mk_pointer host,
+        mk_pointer referer)
+{
+    mk_pointer ref_host = parse_referer_host(referer);
+    unsigned int domains_matched = 0;
+    int i = 0;
+    const char *curA, *curB;
+    struct mk_list *head;
+    struct mk_secure_deny_hotlink_t *entry;
+
+    if (ref_host.data == NULL) {
+        return 0;
+    }
+    else if (host.data == NULL) {
+        mk_err("No host data.");
+        return -1;
+    }
+
+    mk_list_foreach(head, &mk_secure_url) {
+        entry = mk_list_entry(head, struct mk_secure_deny_hotlink_t, _head);
+        i = mk_api->str_search_n(url.data, entry->criteria, MK_STR_INSENSITIVE, url.len);
+        if (i >= 0) {
+            break;
+        }
+    }
+    if (i < 0) {
+        return 0;
+    }
+
+    curA = host.data + host.len;
+    curB = ref_host.data + ref_host.len;
+
+    // Match backwards from root domain.
+    while (curA > host.data && curB > ref_host.data) {
+        i++;
+        curA--;
+        curB--;
+
+        if ((*curA == '.' && *curB == '.') ||
+                curA == host.data || curB == ref_host.data) {
+            if (i < 1) {
+                break;
+            }
+            else if (curA == host.data &&
+                    !(curB == ref_host.data || *(curB - 1) == '.')) {
+                break;
+            }
+            else if (curB == ref_host.data &&
+                    !(curA == host.data || *(curA - 1) == '.')) {
+                break;
+            }
+            else if (strncasecmp(curA, curB, i)) {
+                break;
+            }
+            domains_matched += 1;
+            i = 0;
+        }
+    }
+
+    // Block connection if none or only top domain matched.
+    return domains_matched >= 2 ? 0 : -1;
+}
+
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
@@ -215,6 +319,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     /* Init security lists */
     mk_list_init(&mk_secure_ip);
     mk_list_init(&mk_secure_url);
+    mk_list_init(&mk_secure_deny_hotlink);
 
     /* Read configuration */
     mk_security_conf(confdir);
@@ -241,16 +346,24 @@ int _mkp_stage_30(struct plugin *p,
         struct client_session *cs,
         struct session_request *sr)
 {
+    mk_pointer referer;
     (void) p;
     (void) cs;
 
     PLUGIN_TRACE("[FD %i] Mandril validating URL", cs->socket);
     if (mk_security_check_url(sr->uri) < 0) {
-        PLUGIN_TRACE("[FD %i] close connection by URL match", cs->socket);
+        PLUGIN_TRACE("[FD %i] Close connection, blocked URL", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
 
-    PLUGIN_TRACE("[FD %i] URL passed", cs->socket);
+    PLUGIN_TRACE("[FD %d] Mandril validating hotlinking", cs->socket);
+    referer = mk_api->header_get(&sr->headers_toc, "Referer", strlen("Referer"));
+    if (mk_security_check_hotlink(sr->uri_processed, sr->host, referer) < 0) {
+        PLUGIN_TRACE("[FD %i] Close connection, deny hotlinking.", cs->socket);
+        mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
+        return MK_PLUGIN_RET_CLOSE_CONX;
+    }
+
     return MK_PLUGIN_RET_NOT_ME;
 }
