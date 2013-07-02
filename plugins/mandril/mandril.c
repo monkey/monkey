@@ -37,7 +37,7 @@
 MONKEY_PLUGIN("mandril",  /* shortname */
               "Mandril",  /* name */
               VERSION,    /* version */
-              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_20); /* hooks */
+              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_30); /* hooks */
 
 static struct mk_config *conf;
 
@@ -237,8 +237,11 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
+int _mkp_stage_30(struct plugin *p,
+        struct client_session *cs,
+        struct session_request *sr)
 {
+    (void) p;
     (void) cs;
 
     PLUGIN_TRACE("[FD %i] Mandril validating URL", cs->socket);
@@ -249,5 +252,5 @@ int _mkp_stage_20(struct client_session *cs, struct session_request *sr)
     }
 
     PLUGIN_TRACE("[FD %i] URL passed", cs->socket);
-    return MK_PLUGIN_RET_CONTINUE;
+    return MK_PLUGIN_RET_NOT_ME;
 }
