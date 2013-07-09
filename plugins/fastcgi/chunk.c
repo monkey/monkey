@@ -117,12 +117,11 @@ int chunk_release(struct chunk *c)
 {
 	c->refs -= 1;
 
-	check_debug(c->refs > 0, "Free chunk.");
-
-	return 0;
-error:
-	chunk_free(c);
-	return 1;
+	if (c->refs == 0) {
+            chunk_free(c);
+            return 1;
+        }
+        return 0;
 }
 
 void chunk_list_init(struct chunk_list *cm)
@@ -309,7 +308,9 @@ int chunk_iov_add(struct chunk_iov *iov, struct chunk_ptr cp)
 	struct chunk_ref *cr;
 	struct iovec *io;
 
-	check_debug(iov->index < iov->size, "chunk_iov is full.");
+	if (iov->index >= iov->size) {
+            return -1;
+        }
 	check(cp.len > 0, "tried to add empty chunk_ptr");
 
 	cr = iov->held_refs + iov->index;
