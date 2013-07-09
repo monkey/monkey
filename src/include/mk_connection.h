@@ -20,12 +20,6 @@
 #ifndef MK_CONNECTION_H
 #define MK_CONNECTION_H
 
-#define MK_CONN_SWITCH_READ 0
-#define MK_CONN_SWITCH_WRITE 1
-
-int mk_conn_switch(int action, int socket);
-int mk_conn_switch_error(int socket);
-
 int mk_conn_read(int socket);
 int mk_conn_write(int socket);
 int mk_conn_error(int socket);
