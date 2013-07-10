@@ -199,7 +199,7 @@ time_t mk_utils_gmt2utime(char *date)
         return -1;
     }
 
-    new_unix_time = mktime((struct tm *) &t_data);
+    new_unix_time = timegm((struct tm *) &t_data);
 
     return (new_unix_time);
 }
