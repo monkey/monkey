@@ -193,25 +193,13 @@ time_t mk_utils_gmt2utime(char *date)
 {
     time_t new_unix_time;
     struct tm t_data;
-    char *tz;
     memset(&t_data, 0, sizeof(struct tm));
 
     if (!strptime(date, GMT_DATEFORMAT, (struct tm *) &t_data)) {
         return -1;
     }
 
-    tz = getenv("TZ");
-    setenv("TZ", "", 1);
-    tzset();
-
-    new_unix_time = mktime(&t_data);
-
-    if (tz) {
-        setenv("TZ", tz, 1);
-    }
-    else {
-        unsetenv("TZ");
-    }
+    new_unix_time = mktime((struct tm *) &t_data);
 
     return (new_unix_time);
 }
