@@ -101,11 +101,7 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 #endif
 
         mk_err("%s (%d), code=%d, addr=%p",
-#ifdef MUSL_MODE
-        strsignal(signo), signo, si->si_code, si->si_addr);
-#else
-        sys_siglist[signo], signo, si->si_code, si->si_addr);
-#endif
+               strsignal(signo), signo, si->si_code, si->si_addr);
         pthread_exit(NULL);
     default:
         /* let the kernel handle it */
