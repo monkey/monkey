@@ -18,8 +18,10 @@
  *  MA 02110-1301  USA.
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <sys/uio.h> /* struct iovec, writev */
+#include <limits.h>
 
 #include "dbg.h"
 #include "chunk.h"
@@ -201,7 +203,7 @@ void chunk_list_free_chunks(struct chunk_list *cm)
 
 int chunk_iov_init(struct chunk_iov *iov, int size)
 {
-	check(size <= UIO_MAXIOV, "New iov size is larger then UIO_MAXIOV.");
+	check(size <= IOV_MAX, "New iov size is larger then IOV_MAX.");
 
 	iov->held_refs = mem_alloc(size * sizeof(*iov->held_refs));
 	check_mem(iov->held_refs);
@@ -224,7 +226,7 @@ int chunk_iov_resize(struct chunk_iov *iov, int size)
 
 	check(iov->io, "iovec in iov not allocated.");
 	check(iov->held_refs, "held refs in iov is not allocated.");
-	check(size <= UIO_MAXIOV, "New iov size is larger then UIO_MAXIOV.");
+	check(size <= IOV_MAX, "New iov size is larger then IOV_MAX.");
 
 	tio = mem_realloc(iov->io, size * sizeof(*iov->io));
 	check(tio, "Failed to realloc iovec in iov.");
