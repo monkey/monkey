@@ -99,8 +99,13 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 #ifdef DEBUG
         mk_utils_stacktrace();
 #endif
+
         mk_err("%s (%d), code=%d, addr=%p",
-               sys_siglist[signo], signo, si->si_code, si->si_addr);
+#ifdef MUSL_MODE
+        strsignal(signo), signo, si->si_code, si->si_addr);
+#else
+        sys_siglist[signo], signo, si->si_code, si->si_addr);
+#endif
         pthread_exit(NULL);
     default:
         /* let the kernel handle it */

@@ -21,6 +21,7 @@
 #define MK_MONKEY_H
 
 #include <pthread.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include "mk_memory.h"
 

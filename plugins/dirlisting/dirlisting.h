@@ -20,6 +20,8 @@
  *  MA 02110-1301  USA.
  */
 
+#include <limits.h>
+
 /* dir_html.c */
 #ifndef MK_DIRHTML_H
 #define MK_DIRHTML_H
