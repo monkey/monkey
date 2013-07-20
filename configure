@@ -132,6 +132,17 @@ main()
 	    check_pthread_lib lang
         fi
 
+        if test -z $no_backtrace ; then
+	    echo -n "+ Checking for backtrace support.... "
+	    check_backtrace
+
+	    if [ $result -ne 0 ]; then
+		echo -en $RED$BOLD"No"$END_COLOR"\n"
+		no_backtrace=1
+	    else
+		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
+	    fi
+        fi
         echo
         echo -e "\033[1m=== Plugins included ===\033[0m"
 
@@ -236,6 +247,26 @@ else
     result=0
 fi
 rm -rf check* configure.log a.out
+}
+
+check_backtrace()
+{
+	cat > check.c << EOF
+#define _GNU_SOURCE
+#include <execinfo.h>
+int main(int argc, char **argv) {
+	return 0;
+}
+EOF
+
+$CC -Wimplicit check.c &>/dev/null
+result=$?
+if [[ $result -ne 0 ]]; then
+	result=-1
+else
+	result=0
+fi
+rm -f check.c a.out
 }
 
 # Check pthreads lib
@@ -1096,12 +1127,10 @@ if [ $trace ] ; then
 fi
 
 if [ $uclib_mode ]; then
-    no_backtrace=1
     DEFS="$DEFS -DUCLIB_MODE"
 fi
 
 if [ $musl_mode ]; then
-    no_backtrace=1
     DEFS="$DEFS -DMUSL_MODE"
 fi
 
@@ -1115,5 +1144,5 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 fi
 
 # Starting main function
-main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION enabled_plugins disabled_plugins
+main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION enabled_plugins disabled_plugins no_backtrace
 exit 0
