@@ -104,7 +104,7 @@ main()
 
 	# Check for accept4()
 	if [ $only_accept4 -eq 1 ]; then
-		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)" ""
 		if [ $result = -1 ]; then
 			exit 1
 		fi
@@ -113,14 +113,14 @@ main()
 		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
 		DEFS="$DEFS -DACCEPT_GENERIC"
 	else
-		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)" ""
 		if [ $result -ne 0 ]; then
 			DEFS="$DEFS -DACCEPT_GENERIC"
 		fi
 	fi
 
 	if [ $platform == "generic" ]; then
-		check_generic "pthread headers" "pthread.h" ""
+		check_generic "pthread headers" "pthread.h" "pthread_t self = pthread_self()" "-lpthread"
 	fi
 
 	if test -z $no_backtrace ; then
@@ -211,6 +211,11 @@ main()
 	echo "#endif" >> src/include/mk_env.h
 }
 
+# Test if compiling a file with a given feature will work.
+# $1: Description of the feature
+# $2: List of needed #includes, separated by spaces
+# $3: A function call, e.g. "printf("Hello, world\n")
+# $4: A list of libraries, e.g. "-lrt -lpthread"
 check_generic() {
 	printf "+ Checking for %s ... " "$1"
 	echo -n "" > check.c
@@ -218,7 +223,7 @@ check_generic() {
 		printf "#include <%s>\n" "$inc" >> check.c
 	done
 	printf "int main(int argc, char *argv) { %s; return 0; }\n" "$3" >> check.c
-	$CC -D_GNU_SOURCE check.c &> configure.log
+	$CC -D_GNU_SOURCE -Wimplicit -Werror $4 check.c &> configure.log
 	if [ $? -ne 0 ]; then
 		result=-1
 		echo -en $RED$BOLD"No"$END_COLOR"\n"
