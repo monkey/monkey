@@ -104,44 +104,31 @@ main()
 
         # Check for accept4()
         if [ $only_accept4 -eq 1 ]; then
-            echo -n "+ Checking for accept4() function... "
-            check_accept4_func result
-            if [ $result != 0 ]; then
-                echo -en $RED$BOLD"No"$END_COLOR"\n"
-                exit 1
-            else
-                echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-            fi
+			check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+			if [ $result = -1 ]; then
+				exit 1
+			fi
         elif [ $only_accept -eq 1 ]; then
             echo -n "+ Using generic accept()............ "
             echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
             DEFS="$DEFS -DACCEPT_GENERIC"
         else
-            echo -n "+ Checking for accept4() function... "
-            check_accept4_func result
-            if [ $result == 0 ]; then
-                echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-            else
-                echo -en $RED$BOLD"No"$END_COLOR"\n"
+			check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+            if [ $result -ne 0 ]; then
                 DEFS="$DEFS -DACCEPT_GENERIC"
             fi
         fi
 
         if [ $platform == "generic" ]; then
-	    echo -n "+ Checking for pthreads lib......... "
-	    check_pthread_lib lang
+			check_generic "pthread headers" "pthread.h" ""
         fi
 
         if test -z $no_backtrace ; then
-	    echo -n "+ Checking for backtrace support.... "
-	    check_backtrace
-
-	    if [ $result -ne 0 ]; then
-		echo -en $RED$BOLD"No"$END_COLOR"\n"
-		no_backtrace=1
-	    else
-		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-	    fi
+			check_generic "backtrace support" "execinfo.h" ""
+			
+			if [ $result -ne 0 ]; then
+				no_backtrace=1
+			fi
         fi
         echo
         echo -e "\033[1m=== Plugins included ===\033[0m"
@@ -225,69 +212,23 @@ main()
 	echo "#endif" >> src/include/mk_env.h
 }
 
-# Check accept4() function
-check_accept4_func()
-{
-cat > check.c <<EOF
-#define _GNU_SOURCE
-#include <sys/socket.h>
-
-int main()
-{
-   accept4(0, 0, 0, 0);
-   return 0;
+check_generic() {
+    printf "+ Checking for %s ... " "$1"
+	echo -n "" > check.c
+	for inc in $2; do
+		printf "#include <%s>\n" "$inc" >> check.c
+	done
+	printf "int main(int argc, char *argv) { %s; return 0; }\n" "$3" >> check.c
+	$CC -D_GNU_SOURCE check.c &> configure.log
+	if [ $? -ne 0 ]; then
+		result=-1
+		echo -en $RED$BOLD"No"$END_COLOR"\n"
+	else
+		result=0
+		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
+	fi
+	rm -f check.c configure.log a.out
 }
-EOF
-
-functest=`$CC -Wimplicit check.c &>configure.log`
-funcstatus=`cat configure.log`
-if test -n "$funcstatus" ; then
-    result=-1
-else
-    result=0
-fi
-rm -rf check* configure.log a.out
-}
-
-check_backtrace()
-{
-	cat > check.c << EOF
-#define _GNU_SOURCE
-#include <execinfo.h>
-int main(int argc, char **argv) {
-	return 0;
-}
-EOF
-
-$CC -Wimplicit check.c &>/dev/null
-result=$?
-if [[ $result -ne 0 ]]; then
-	result=-1
-else
-	result=0
-fi
-rm -f check.c a.out
-}
-
-# Check pthreads lib
-check_pthread_lib()
-{
-cat > check.c <<EOF
-#include <pthread.h>
-int main(){ return 0;}
-EOF
-
-libtest=`$CC check.c -pthread &>configure.log`
-libstatus=`cat configure.log`
-if  test -n "$libstatus"  ; then
-	echo -en $GREEN$BOLD"No"$END_COLOR"\n"
-	rm -fr check* configure.log
-	exit 1
-fi
-echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-rm -fr check* configure.log a.out
-}
-
 
 # Create Makefile
 create_makefile1()
