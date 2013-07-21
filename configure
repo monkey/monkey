@@ -39,32 +39,32 @@ BLUE="\033[0;34m"
 # Create configuration files under 'conf/'
 make_conf()
 {
-cat $INCDIR/config.path lang/$lang/mconf lang/$lang/sites/default > makeconf.sh
-sed -i "s/#PORT#/$default_port/g" makeconf.sh
-sed -i "s/#USER#/$default_user/g" makeconf.sh
-chmod 755 makeconf.sh
-./makeconf.sh
-rm makeconf.sh
-rm $INCDIR/config.path
+	cat $INCDIR/config.path lang/$lang/mconf lang/$lang/sites/default > makeconf.sh
+	sed -i "s/#PORT#/$default_port/g" makeconf.sh
+	sed -i "s/#USER#/$default_user/g" makeconf.sh
+	chmod 755 makeconf.sh
+	./makeconf.sh
+	rm makeconf.sh
+	rm $INCDIR/config.path
 }
 
 local_dirs()
 {
-bin="bin"
-logs="logs"
-sites="conf/sites"
+	bin="bin"
+	logs="logs"
+	sites="conf/sites"
 
-if [ ! -d $bin ]; then
-    mkdir $bin
-fi
+	if [ ! -d $bin ]; then
+		mkdir $bin
+	fi
 
-if [ ! -d $logs ]; then
-    mkdir $logs
-fi
+	if [ ! -d $logs ]; then
+		mkdir $logs
+	fi
 
-if [ ! -d $sites ]; then
-    mkdir $sites
-fi
+	if [ ! -d $sites ]; then
+		mkdir $sites
+	fi
 
 }
 
@@ -76,71 +76,70 @@ main()
 	actual_path=`pwd`
 
 	if [ "$prefix" != "$actual_path" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-	    dir=1
+		dir=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-	    dir=1
+		dir=1
 	fi
 
-        if [ "$mandir" != "$actual_path/man" ]; then
-            dir=1
-        fi
+	if [ "$mandir" != "$actual_path/man" ]; then
+		dir=1
+	fi
 
-        echo
+	echo
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
-        # Check for accept4()
-        if [ $only_accept4 -eq 1 ]; then
-			check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
-			if [ $result = -1 ]; then
-				exit 1
-			fi
-        elif [ $only_accept -eq 1 ]; then
-            echo -n "+ Using generic accept()............ "
-            echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
-            DEFS="$DEFS -DACCEPT_GENERIC"
-        else
-			check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
-            if [ $result -ne 0 ]; then
-                DEFS="$DEFS -DACCEPT_GENERIC"
-            fi
-        fi
+	# Check for accept4()
+	if [ $only_accept4 -eq 1 ]; then
+		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+		if [ $result = -1 ]; then
+			exit 1
+		fi
+	elif [ $only_accept -eq 1 ]; then
+		echo -n "+ Using generic accept()............ "
+		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
+		DEFS="$DEFS -DACCEPT_GENERIC"
+	else
+		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)"
+		if [ $result -ne 0 ]; then
+			DEFS="$DEFS -DACCEPT_GENERIC"
+		fi
+	fi
 
-        if [ $platform == "generic" ]; then
-			check_generic "pthread headers" "pthread.h" ""
-        fi
+	if [ $platform == "generic" ]; then
+		check_generic "pthread headers" "pthread.h" ""
+	fi
 
-        if test -z $no_backtrace ; then
-			check_generic "backtrace support" "execinfo.h" ""
-			
-			if [ $result -ne 0 ]; then
-				no_backtrace=1
-			fi
-        fi
-        echo
-        echo -e "\033[1m=== Plugins included ===\033[0m"
+	if test -z $no_backtrace ; then
+		check_generic "backtrace support" "execinfo.h" ""
+		if [ $result -ne 0 ]; then
+			no_backtrace=1
+		fi
+	fi
 
-        find plugins/ -name Makefile -exec rm {} \;
+	echo
+	echo -e "\033[1m=== Plugins included ===\033[0m"
+	find plugins/ -name Makefile -exec rm {} \;
 
-        create_makefile_plugins $plugdir $prefix $bindir $mandir \
-            $sysconfdir $datadir $logdir $sysconfdir $datadir \
-            $logdir $mandir $enabled_plugins $disabled_plugins
+	create_makefile_plugins $plugdir $prefix $bindir $mandir \
+		$sysconfdir $datadir $logdir $sysconfdir $datadir \
+		$logdir $mandir $enabled_plugins $disabled_plugins
 
-        echo
-        echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
+	echo
+	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
 	echo "+ Creating conf/monkey.conf"
 	create_conf prefix
@@ -149,7 +148,7 @@ main()
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform
 
-        echo "+ Creating src/include/mk_info.h"
+	echo "+ Creating src/include/mk_info.h"
 	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__
 
 	echo "+ Creating bin/banana script"
@@ -162,16 +161,16 @@ main()
 		create_makefile1_install prefix bindir mandir sysconfdir datadir logdir
 	fi
 
-        echo
-        echo -e "\033[1m=== Monkey Configuration ===\033[0m"
-        echo -e "Platform\t= $platform"
-        echo -e "Compiler\t= $CC"
-        echo -e "CFLAGS\t\t= $CFLAGS"
-        echo -e "LDFLAGS\t\t= $LDFLAGS"
+	echo
+	echo -e "\033[1m=== Monkey Configuration ===\033[0m"
+	echo -e "Platform\t= $platform"
+	echo -e "Compiler\t= $CC"
+	echo -e "CFLAGS\t\t= $CFLAGS"
+	echo -e "LDFLAGS\t\t= $LDFLAGS"
 
 	if [ "$DEFS" != "" ]; then
-            echo -e "DEFS\t\t= $DEFS"
-        fi
+		echo -e "DEFS\t\t= $DEFS"
+	fi
 
 	echo
 
@@ -181,22 +180,22 @@ main()
 	echo -en "Relaxed plugins\t= "
 	[ -n "$relaxed_plugins" ] && echo "enabled" || echo "disabled"
 
-        echo
-        echo -e "Prefix\t\t= $prefix"
-        echo -e "Bindir\t\t= $bindir"
-        echo -e "Libdir\t\t= $libdir"
-        echo -e "Incdir\t\t= $incdir"
-        echo -e "Sysconfdir\t= $sysconfdir"
-        echo -e "Datadir\t\t= $datadir"
-        echo -e "Mandir\t\t= $mandir"
-        echo -e "Logdir\t\t= $logdir"
+	echo
+	echo -e "Prefix\t\t= $prefix"
+	echo -e "Bindir\t\t= $bindir"
+	echo -e "Libdir\t\t= $libdir"
+	echo -e "Incdir\t\t= $incdir"
+	echo -e "Sysconfdir\t= $sysconfdir"
+	echo -e "Datadir\t\t= $datadir"
+	echo -e "Mandir\t\t= $mandir"
+	echo -e "Logdir\t\t= $logdir"
 
 	if [ "$plugdir" != "" ]; then
-            echo -e "Plugdir\t\t= $plugdir"
-        fi
+		echo -e "Plugdir\t\t= $plugdir"
+	fi
 
-        echo
-        echo "--"
+	echo
+	echo "--"
 	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, to build type 'make"
 	if [ "$dir" = 1 ]; then
 		echo -n " && make install' "
@@ -204,7 +203,7 @@ main()
 		echo "' "
 	fi
 	echo -n "Have fun! ;)"
-        echo
+	echo
 
 	echo "#ifndef MK_ENV_H" > src/include/mk_env.h
 	echo "#define MK_ENV_H" >> src/include/mk_env.h
@@ -213,7 +212,7 @@ main()
 }
 
 check_generic() {
-    printf "+ Checking for %s ... " "$1"
+	printf "+ Checking for %s ... " "$1"
 	echo -n "" > check.c
 	for inc in $2; do
 		printf "#include <%s>\n" "$inc" >> check.c
@@ -233,7 +232,7 @@ check_generic() {
 # Create Makefile
 create_makefile1()
 {
-cat > Makefile << EOF
+	cat > Makefile << EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
 
@@ -274,134 +273,133 @@ EOF
 #
 #  return values: 0 = No
 #                 1 = Yes
-skip_plugin()
-{
-    #echo "skip_plugin($entry) '$enabled_plugins'  '$disabled_plugins'"
+skip_plugin() {
+#echo "skip_plugin($entry) '$enabled_plugins'  '$disabled_plugins'"
 
-    en_wildcard=0
-    if [ "$enabled_plugins" == '*' ]; then
-        en_wildcard=1
-    fi
+	en_wildcard=0
+	if [ "$enabled_plugins" == '*' ]; then
+		en_wildcard=1
+	fi
 
-    di_wildcard=0
-    if [ "$disabled_plugins" == '*' ]; then
-        di_wildcard=1
-    fi
+	di_wildcard=0
+	if [ "$disabled_plugins" == '*' ]; then
+		di_wildcard=1
+	fi
 
-    IFS=","
-    set -- $enabled_plugins
-    en_array=$@
-    set -- $disabled_plugins
-    di_array=$@
+	IFS=","
+	set -- $enabled_plugins
+	en_array=$@
+	set -- $disabled_plugins
+	di_array=$@
 
-    unset IFS
+	unset IFS
 
-    enabled=0
-    disabled=0
+	enabled=0
+	disabled=0
 
-    for e in $en_array;
-    do
-        if [ "$entry" == "$e" ]; then
-            enabled=1
-            break
-        fi
-    done
+	for e in $en_array;
+	do
+		if [ "$entry" == "$e" ]; then
+			enabled=1
+			break
+		fi
+	done
 
-    for d in $di_array;
-    do
-        if [ "$entry" == "$d" ]; then
-            disabled=1
-            break
-        fi
-    done
+	for d in $di_array;
+	do
+		if [ "$entry" == "$d" ]; then
+			disabled=1
+			break
+		fi
+	done
 
 
-    path="plugins/$entry"
-    if ! test -d $path; then
-        return 1
-    fi
+	path="plugins/$entry"
+	if ! test -d $path; then
+		return 1
+	fi
 
-    # does it contains a proper Makefile.in ?
-    if test ! -e $path/Makefile.in ; then
-        return 1
-    fi
+	# does it contains a proper Makefile.in ?
+	if test ! -e $path/Makefile.in ; then
+		return 1
+	fi
 
-    # Check enable wildcard */
-    if [ $en_wildcard -eq 1 ] && [ $disabled -eq 0 ]; then
-        return 0
-    fi
+	# Check enable wildcard */
+	if [ $en_wildcard -eq 1 ] && [ $disabled -eq 0 ]; then
+		return 0
+	fi
 
-    # Check disable wildcard */
-    if [ $di_wildcard -eq 1 ] && [ $enabled -eq 0 ]; then
-        return 1
-    fi
+	# Check disable wildcard */
+	if [ $di_wildcard -eq 1 ] && [ $enabled -eq 0 ]; then
+		return 1
+	fi
 
-    # disabled and not enforced
-    if [ $disabled -eq 1 ] && [ $enabled -eq 0 ]; then
-        return 1
-    fi
+	# disabled and not enforced
+	if [ $disabled -eq 1 ] && [ $enabled -eq 0 ]; then
+		return 1
+	fi
 
-    if [ $disabled -eq 0 ] && [ $enabled -eq 1 ]; then
-        return 0
-    fi
+	if [ $disabled -eq 0 ] && [ $enabled -eq 1 ]; then
+		return 0
+	fi
 
-    # Disabled by spec and not enforced
-    if test -e $path/DISABLED && [ $enabled -eq 0 ] ; then
-        return 1
-    fi
+	# Disabled by spec and not enforced
+	if test -e $path/DISABLED && [ $enabled -eq 0 ] ; then
+		return 1
+	fi
 
-    # Experimental and not enforced
-    if test -e $path/EXPERIMENTAL && [ $enabled -eq 1 ]; then
-        return 1
-    fi
+	# Experimental and not enforced
+	if test -e $path/EXPERIMENTAL && [ $enabled -eq 1 ]; then
+		return 1
+	fi
 
-    # Optional plugin and not disabled
-    if test -e $path/OPTIONAL && [ $disabled -eq 0 ]; then
-        return 0
-    fi
+	# Optional plugin and not disabled
+	if test -e $path/OPTIONAL && [ $disabled -eq 0 ]; then
+		return 0
+	fi
 
-    # Mandatory plugin and not disabled
-    if test -e $path/MANDATORY && [ $disabled -eq 0 ]; then
-        return 0
-    fi
+	# Mandatory plugin and not disabled
+	if test -e $path/MANDATORY && [ $disabled -eq 0 ]; then
+		return 0
+	fi
 
-    # Return True by default
-    return 1
+	# Return True by default
+	return 1
 }
 
 create_makefile1_install()
 {
-    # remove old data
-    rm -rf plugins.conf plugins.list
+	# remove old data
+	rm -rf plugins.conf plugins.list
 
-    for e in conf/plugins/*
-    do
-        entry=`echo $e | awk -F "/" '{print $3}'`
-        skip_plugin $entry $enabled_plugins $disabled_plugins
-        if [ $? == 1 ]; then
-            continue
-        fi
-        echo -e "\tcp -r conf/plugins/$entry \${SYSCONFDIR}/plugins/" >> plugins.conf
-    done
-    plgconf=`cat plugins.conf`
+	for e in conf/plugins/*
+	do
+		entry=`echo $e | awk -F "/" '{print $3}'`
+		skip_plugin $entry $enabled_plugins $disabled_plugins
+		if [ $? == 1 ]; then
+			continue
+		fi
+		echo -e "\tcp -r conf/plugins/$entry \${SYSCONFDIR}/plugins/" >> plugins.conf
+	done
+	plgconf=`cat plugins.conf`
 
-    for e in plugins/*
-    do
-        entry=`echo $e | awk -F "/" '{print $2}'`
-        skip_plugin $entry $enabled_plugins $disabled_plugins
-        if [ $? == 1 ]; then
-            continue
-        fi
-        echo -e "\tinstall -m 644 plugins/$entry/*.so \${PLUGINDIR}/" >> plugins.list
-    done
+	for e in plugins/*
+	do
+		entry=`echo $e | awk -F "/" '{print $2}'`
+		skip_plugin $entry $enabled_plugins $disabled_plugins
+		if [ $? == 1 ]; then
+			continue
+		fi
+		echo -e "\tinstall -m 644 plugins/$entry/*.so \${PLUGINDIR}/" >> plugins.list
+	done
 
-    plglist=`cat plugins.list`
+	plglist=`cat plugins.list`
 
-if [ -n "$sharedlib" ]; then
-    incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
-fi
+	if [ -n "$sharedlib" ]; then
+		incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
+	fi
 
-cat > Makefile <<EOF
+	cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
 export monkey_root=\$(CURDIR)
@@ -474,7 +472,7 @@ $incinstall
 
 monkey.pc:
 	@sed -e "s@PREFIX@$prefix@" -e "s@LIBDIR@$libdir@" -e "s@INCDIR@$incdir@" \
-	    -e "s@VERSION@$VERSION@" monkey.pc.in > monkey.pc
+		-e "s@VERSION@$VERSION@" monkey.pc.in > monkey.pc
 
 EOF
 }
@@ -483,35 +481,35 @@ EOF
 create_makefile2()
 {
 
-if [ $platform == "generic" ]; then
-    libs="-pthread"
-elif [ $platform == "android" ]; then
-    libs=""
-fi
+	if [ $platform == "generic" ]; then
+		libs="-pthread"
+	elif [ $platform == "android" ]; then
+		libs=""
+	fi
 
-if [ -n "$sharedlib" ]; then
-	alltarget="../bin/monkey lib"
-else
-	alltarget="../bin/monkey"
-fi
+	if [ -n "$sharedlib" ]; then
+		alltarget="../bin/monkey lib"
+	else
+		alltarget="../bin/monkey"
+	fi
 
-cat > src/Makefile<<EOF
+	cat > src/Makefile<<EOF
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
-CC	= @echo "  CC   \$(_PATH)/\$@"; $CC
+CC      = @echo "  CC   \$(_PATH)/\$@"; $CC
 CC_QUIET= @echo -n; $CC
-CFLAGS	= $CFLAGS
+CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ./include
-LDFLAGS	= $LDFLAGS
-DESTDIR	= ../bin/monkey
-LIBS	= -ldl $libs
-OBJ	= monkey.o mk_method.o mk_mimetype.o mk_request.o \\
-	mk_header.o mk_config.o mk_signals.o \\
-	mk_user.o mk_utils.o mk_epoll.o mk_scheduler.o \\
-	mk_string.o mk_memory.o mk_connection.o mk_iov.o mk_http.o \\
-	mk_file.o mk_socket.o mk_clock.o mk_cache.o \\
-	mk_server.o mk_rbtree.o mk_plugin.o mk_lib.o
+LDFLAGS = $LDFLAGS
+DESTDIR = ../bin/monkey
+LIBS    = -ldl $libs
+OBJ     = monkey.o mk_method.o mk_mimetype.o mk_request.o \\
+          mk_header.o mk_config.o mk_signals.o \\
+          mk_user.o mk_utils.o mk_epoll.o mk_scheduler.o \\
+          mk_string.o mk_memory.o mk_connection.o mk_iov.o mk_http.o \\
+          mk_file.o mk_socket.o mk_clock.o mk_cache.o \\
+          mk_server.o mk_rbtree.o mk_plugin.o mk_lib.o
 LIBOBJ  = \$(OBJ:.o=.lo)
 
 .PHONY: clean distclean lib
@@ -552,134 +550,134 @@ EOF
 
 create_makefile_plugins()
 {
-    dir=`pwd`
-    makefile="plugins/Makefile"
-    plugins_load="conf/plugins.load"
-    echo -n > $plugins_load
-    echo "# Monkey Plugins Loader" >> $plugins_load
-    echo "# =====================" >> $plugins_load
-    echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
-    echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
-    echo "# the absolute path for the desired plugin." >> $plugins_load
-    echo "#" >> $plugins_load
-    echo "# Please check the following list of available plugins:" >> $plugins_load
-    echo "" >> $plugins_load
-    echo "[PLUGINS]" >> $plugins_load
-    echo "" >> $plugins_load
-
-    if [ $platform == "android" ]; then
-        if test -z $disabled_plugins; then
-            disabled_plugins="cheetah,palm,logger,cgi"
-        fi
-    fi
-
-    for plugin_dir in plugins/*;
-    do
-        # Skip non-directories
-        if ! test -d "$plugin_dir" ; then
-            continue
-        fi
-
-        # Get plugin name and check if we should skip it
-        entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
-        skip_plugin $entry $enabled_plugins $disabled_plugins
-        disabled=$?
-
-        if [ $disabled == 1 ]; then
-            continue
-        fi
-
-        comment="    "
-        for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
-            echo -e "+ ${name}${i:1}";
-        done
-
-        # Create Makefile
-        MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
-        MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
-
-
-        for d in `find $plugin_dir -xtype d`
-        do
-            if [ -f "${d}/Makefile.in" ];
-            then
-                sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" $d/Makefile.in > $d/Makefile
-            fi
-        done
-
-        # Add details to plugins.load using ABOUT file
-        if test -e $plugin_dir/ABOUT ; then
-            cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
-	    echo "    #" >> $plugins_load
-	else
-	    echo "    #" >> $plugins_load
-	fi
-
-        if ! test -e $plugin_dir/MANDATORY ; then
-            comment="    # "
-        fi
-
-	if [ "$plugdir" != "" ]; then
-            echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
-	else
-	    echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
-	fi
-
+	dir=`pwd`
+	makefile="plugins/Makefile"
+	plugins_load="conf/plugins.load"
+	echo -n > $plugins_load
+	echo "# Monkey Plugins Loader" >> $plugins_load
+	echo "# =====================" >> $plugins_load
+	echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
+	echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
+	echo "# the absolute path for the desired plugin." >> $plugins_load
+	echo "#" >> $plugins_load
+	echo "# Please check the following list of available plugins:" >> $plugins_load
+	echo "" >> $plugins_load
+	echo "[PLUGINS]" >> $plugins_load
 	echo "" >> $plugins_load
 
-        # Copy specific plugin configuration files
-        if test -e $plugin_dir/conf ; then
-           target="conf/$plugin_dir/"
-           mkdir -p $target
-           cp -r $plugin_dir/conf/* $target/
+	if [ $platform == "android" ]; then
+		if test -z $disabled_plugins; then
+			disabled_plugins="cheetah,palm,logger,cgi"
+		fi
+	fi
 
-           # Replace configuration variables:
-           find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
-           find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
-        fi
+	for plugin_dir in plugins/*;
+	do
+		# Skip non-directories
+		if ! test -d "$plugin_dir" ; then
+			continue
+		fi
 
-        # Distribute binary scripts provided by plugins
-        if test -e $plugin_dir/bin ; then
-            cp -r $plugin_dir/bin/* bin/
-        fi
-    done
+		# Get plugin name and check if we should skip it
+		entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
+		skip_plugin $entry $enabled_plugins $disabled_plugins
+		disabled=$?
 
-echo "all:" > $makefile
-echo -e $MAKE_ALL >> $makefile
-echo "" >> $makefile
-echo "clean:" >> $makefile
-echo -e $MAKE_CLEAN >> $makefile
+		if [ $disabled == 1 ]; then
+			continue
+		fi
+
+		comment="    "
+		for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
+			echo -e "+ ${name}${i:1}";
+		done
+
+		# Create Makefile
+		MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
+		MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
+
+
+		for d in `find $plugin_dir -xtype d`
+		do
+			if [ -f "${d}/Makefile.in" ];
+			then
+				sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" $d/Makefile.in > $d/Makefile
+			fi
+		done
+
+		# Add details to plugins.load using ABOUT file
+		if test -e $plugin_dir/ABOUT ; then
+			cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
+			echo "    #" >> $plugins_load
+		else
+			echo "    #" >> $plugins_load
+		fi
+
+		if ! test -e $plugin_dir/MANDATORY ; then
+			comment="    # "
+		fi
+
+		if [ "$plugdir" != "" ]; then
+			echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
+		else
+			echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
+		fi
+
+		echo "" >> $plugins_load
+
+		# Copy specific plugin configuration files
+		if test -e $plugin_dir/conf ; then
+			target="conf/$plugin_dir/"
+			mkdir -p $target
+			cp -r $plugin_dir/conf/* $target/
+
+		   # Replace configuration variables:
+			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
+		fi
+
+		# Distribute binary scripts provided by plugins
+		if test -e $plugin_dir/bin ; then
+			cp -r $plugin_dir/bin/* bin/
+		fi
+	done
+
+	echo "all:" > $makefile
+	echo -e $MAKE_ALL >> $makefile
+	echo "" >> $makefile
+	echo "clean:" >> $makefile
+	echo -e $MAKE_CLEAN >> $makefile
 
 # Add 'install' option to Makefile if plugdir was specified
-if [ "$plugdir" != "" ]; then
-    echo -e "\ninstall:" >> $makefile
-    echo -e "\tinstall -d $plugdir" >> $makefile
+	if [ "$plugdir" != "" ]; then
+		echo -e "\ninstall:" >> $makefile
+		echo -e "\tinstall -d $plugdir" >> $makefile
 
-    for plugin_dir in plugins/*;
-    do
-        # Get plugin name and check if we should skip it
-        entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
-        skip_plugin $entry $enabled_plugins $disabled_plugins
-        disabled=$?
-        if [ $disabled == 1 ]; then
-            continue
-        fi
+		for plugin_dir in plugins/*;
+		do
+		# Get plugin name and check if we should skip it
+			entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
+			skip_plugin $entry $enabled_plugins $disabled_plugins
+			disabled=$?
+			if [ $disabled == 1 ]; then
+				continue
+			fi
 
-	echo -e "\tinstall -m 644 $dir/$plugin_dir/monkey-$entry.so $plugdir/" >> $makefile
-    done
-fi
+			echo -e "\tinstall -m 644 $dir/$plugin_dir/monkey-$entry.so $plugdir/" >> $makefile
+		done
+	fi
 }
 
 # Creando include/mk_info.h
 create_info()
 {
-cat > $INCDIR/mk_info.h <<EOF
+	cat > $INCDIR/mk_info.h <<EOF
 #ifndef MK_INFO_H
 #define MK_INFO_H
 
@@ -690,8 +688,8 @@ cat > $INCDIR/mk_info.h <<EOF
 #define __MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__
 
 #define MONKEY_VERSION (__MONKEY__ * 10000 \\
-                                __MONKEY_MINOR__ * 100 \\
-                                __MONKEY_PATCHLEVEL__)
+                        __MONKEY_MINOR__ * 100 \\
+                        __MONKEY_PATCHLEVEL__)
 #define VERSION "$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
 #define MONKEY_PATH_CONF "$sysconfdir"
 #define PLUGDIR "$plugdir"
@@ -699,15 +697,15 @@ cat > $INCDIR/mk_info.h <<EOF
 #endif
 EOF
 
-sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
--e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
--e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-$INCDIR/public/libmonkey.h
+	sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
+	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
+	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
+	    $INCDIR/public/libmonkey.h
 }
 
 create_conf()
 {
-cat > $INCDIR/config.path <<EOF
+	cat > $INCDIR/config.path <<EOF
 #!/bin/sh
 prefix=$prefix
 bindir=$bindir
@@ -721,7 +719,7 @@ EOF
 
 create_banana_script()
 {
-cat > bin/banana << EOF
+	cat > bin/banana << EOF
 #!/bin/sh
 #
 # Monkey HTTP Daemon - Banana Script
@@ -735,11 +733,11 @@ cat > bin/banana << EOF
 #
 # Options available to banana:
 #
-#	start	->	start monkey
-#	restart	->	restart monkey
-#	stop	->	stop monkey if this is running
-#	status  ->	check if monkey is running
-#	help	->	what do u think ?
+#    start   -> start monkey
+#    restart -> restart monkey
+#    stop    -> stop monkey if this is running
+#    status  -> check if monkey is running
+#    help    -> what do u think ?
 
 CONFDIR="$sysconfdir"
 BINMONKEY="$bindir/monkey"
@@ -810,11 +808,11 @@ for arg in \$*; do
 			fi
 			;;
 		status)
-                        if  [ "\$STATUS" = "yes" ]; then
+				if  [ "\$STATUS" = "yes" ]; then
 				echo "Monkey is running... (PID=\$PIDMONKEY)"
 			else
-                                echo "Monkey is not running... "
-                        fi
+				echo "Monkey is not running... "
+				fi
 			exit 0
 			;;
 		*)
@@ -827,7 +825,7 @@ echo "Use : banana [start|stop|restart|status|help]"
 
 exit 0
 EOF
-chmod 755 bin/banana
+	chmod 755 bin/banana
 }
 
 #---------------------------#
@@ -864,7 +862,8 @@ for arg in $*; do
 	case "$arg" in
 		-*=*)
 			optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
-		   *) optarg= ;;
+		*)
+			optarg= ;;
 	esac
 
 	case "$arg" in
@@ -873,18 +872,18 @@ for arg in $*; do
 			bindir="$optarg/bin"
 			libdir="$optarg/lib"
 			incdir="$optarg/include"
-                        mandir="$optarg/man"
+			mandir="$optarg/man"
 			sysconfdir="$optarg/conf"
 			datadir="$optarg/htdocs"
 			logdir="$optarg/logs"
-                        plugdir="$optarg/plugins"
+			plugdir="$optarg/plugins"
 			;;
 		--bindir*)
 			bindir=$optarg
 			;;
-                --mandir*)
-                        mandir=$optarg
-                        ;;
+		--mandir*)
+			mandir=$optarg
+			;;
 		--sysconfdir*)
 			sysconfdir=$optarg
 			;;
@@ -900,9 +899,9 @@ for arg in $*; do
 		--logdir*)
 			logdir=$optarg
 			;;
-                --plugdir*)
-                        plugdir=$optarg
-                        ;;
+		--plugdir*)
+			plugdir=$optarg
+			;;
 		--debug*)
 			debug=1
 			;;
@@ -924,30 +923,30 @@ for arg in $*; do
 		--enable-relaxed-plugins*)
 			relaxed_plugins=1
 			;;
-                --enable-plugins*)
-                	enabled_plugins=$optarg
-                        ;;
-                --disable-plugins*)
-                	disabled_plugins=$optarg
-                        ;;
-                --only-accept)
-                        only_accept=1
-                        ;;
-                --only-accept4)
-                        only_accept4=1
-                        ;;
-                --safe-free*)
-                        safe_free=1
-                        ;;
-                --platform*)
-                        platform=$optarg
-                        ;;
-                --default-port*)
-                        default_port=$optarg
-                        ;;
-                --default-user*)
-                        default_user=$optarg
-                        ;;
+		--enable-plugins*)
+			enabled_plugins=$optarg
+			;;
+		--disable-plugins*)
+			disabled_plugins=$optarg
+			;;
+		--only-accept)
+			only_accept=1
+			;;
+		--only-accept4)
+			only_accept4=1
+			;;
+		--safe-free*)
+			safe_free=1
+			;;
+		--platform*)
+			platform=$optarg
+			;;
+		--default-port*)
+			default_port=$optarg
+			;;
+		--default-user*)
+			default_user=$optarg
+			;;
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
@@ -963,39 +962,39 @@ for arg in $*; do
 			echo "Optional Commands: "
 			echo "  --help        Display this help and exit"
 			echo "  --version     Display version information and exit"
-                        echo
-                        echo "Compiler and debug Features:"
+			echo
+			echo "Compiler and debug Features:"
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
-                        echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
+			echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
 			echo
 			echo "Shared library options:"
-                        echo "  --enable-shared         Build Monkey as a shared library in addition to a stand-alone server"
-                        echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
-                        echo "                          WARNING security risk, do not enable in distro packages!"
+			echo "  --enable-shared         Build Monkey as a shared library in addition to a stand-alone server"
+			echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
+			echo "                          WARNING security risk, do not enable in distro packages!"
 			echo
-                        echo "Installation Directories:"
+			echo "Installation Directories:"
 			echo "  --prefix=PREFIX         Root prefix directory"
 			echo "  --bindir=BINDIR         Binary files (executables)"
 			echo "  --libdir=LIBDIR         Libraries"
 			echo "  --incdir=INCDIR         Header install path"
 			echo "  --sysconfdir=SYSCONFDIR Configuration files"
 			echo "  --datadir=DATADIR       Specific Monkey data files"
-                        echo "  --mandir=MANDIR         Manpages - documentation"
+			echo "  --mandir=MANDIR         Manpages - documentation"
 			echo "  --logdir=LOGDIR         Log files"
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
-                        echo "  --enable-plugins=a,b    Enable the listed plugins"
-                        echo "  --disable-plugins=a,b   Disable the listed plugins"
-                        echo "  --only-accept           Use only accept(2)"
-                        echo "  --only-accept4          Use only accept4(2) (default and preferred)"
-                        echo "  --safe-free             Force Monkey to free resources before exit"
-                        echo
-                        echo "Override Server Configuration:"
-                        echo "  --default-port=PORT     Override default TCP port (default: 2001)"
-                        echo "  --default-user=USER     Override default web user (default: nobody)"
+			echo "  --enable-plugins=a,b    Enable the listed plugins"
+			echo "  --disable-plugins=a,b   Disable the listed plugins"
+			echo "  --only-accept           Use only accept(2)"
+			echo "  --only-accept4          Use only accept4(2) (default and preferred)"
+			echo "  --safe-free             Force Monkey to free resources before exit"
+			echo
+			echo "Override Server Configuration:"
+			echo "  --default-port=PORT     Override default TCP port (default: 2001)"
+			echo "  --default-user=USER     Override default web user (default: nobody)"
 			echo
 			exit 1
 			;;
@@ -1022,66 +1021,66 @@ lang="en"
 
 # Configure environment
 if test -z "$CC" ; then
-    gcc_path=`which gcc`
-    if test -x "$gcc_path" ; then
-        CC="gcc"
-    else
-        echo
-        echo
-        echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler!"
-        exit 1
-    fi
+	gcc_path=`which gcc`
+	if test -x "$gcc_path" ; then
+		CC="gcc"
+	else
+		echo
+		echo
+		echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler!"
+		exit 1
+	fi
 fi
 
 # STRIP support have been removed, just keep this
 # variable for future changes or changes.
 if test -z "$STRIP" ; then
-    STRIP="strip"
+	STRIP="strip"
 fi
 
 [ -n "$relaxed_plugins" ] && DEFS="$DEFS -DRELAXED_PLUGINS"
 
 CFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
 if test -z "$debug" ; then
-    CFLAGS="$CFLAGS $CFLAGS_GEN -fvisibility=hidden"
+	CFLAGS="$CFLAGS $CFLAGS_GEN -fvisibility=hidden"
 
-    # Only set -O2 if the user didn't include an -O level
-    echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
+	# Only set -O2 if the user didn't include an -O level
+	echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
-    DEFS="-DDEBUG -DSAFE_FREE"
-    CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
+	DEFS="-DDEBUG -DSAFE_FREE"
+	CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
 fi
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
-    echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"
-    exit 1
+	echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"
+	exit 1
 fi
 
 if test -n "$safe_free" ; then
-    if test -z "$debug" ; then
-        DEFS="$DEFS -DSAFE_FREE"
-    fi
+	if test -z "$debug" ; then
+		DEFS="$DEFS -DSAFE_FREE"
+	fi
 fi
 
 if [ $trace ] ; then
-    DEFS="$DEFS -DTRACE"
+	DEFS="$DEFS -DTRACE"
 fi
 
 if [ $uclib_mode ]; then
-    DEFS="$DEFS -DUCLIB_MODE"
+	DEFS="$DEFS -DUCLIB_MODE"
 fi
 
 if [ $musl_mode ]; then
-    DEFS="$DEFS -DMUSL_MODE"
+	DEFS="$DEFS -DMUSL_MODE"
 fi
 
 if [ $no_backtrace ]; then
-    DEFS="$DEFS -DNO_BACKTRACE"
+	DEFS="$DEFS -DNO_BACKTRACE"
 fi
 
 if [ $platform != "generic" ] && [ $platform != "android" ]; then
-    echo -e "\nError: invalid platform $platform\n"
-    exit 1
+	echo -e "\nError: invalid platform $platform\n"
+	exit 1
 fi
 
 # Starting main function
