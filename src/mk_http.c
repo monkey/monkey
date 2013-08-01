@@ -51,6 +51,7 @@ const mk_pointer mk_http_method_post_p = mk_pointer_init(HTTP_METHOD_POST_STR);
 const mk_pointer mk_http_method_head_p = mk_pointer_init(HTTP_METHOD_HEAD_STR);
 const mk_pointer mk_http_method_put_p = mk_pointer_init(HTTP_METHOD_PUT_STR);
 const mk_pointer mk_http_method_delete_p = mk_pointer_init(HTTP_METHOD_DELETE_STR);
+const mk_pointer mk_http_method_options_p = mk_pointer_init(HTTP_METHOD_OPTIONS_STR);
 const mk_pointer mk_http_method_null_p = { NULL, 0 };
 
 const mk_pointer mk_http_protocol_09_p = mk_pointer_init(HTTP_PROTOCOL_09_STR);
@@ -81,6 +82,10 @@ int mk_http_method_check(mk_pointer method)
         return HTTP_METHOD_DELETE;
     }
 
+    if (strncmp(method.data, HTTP_METHOD_OPTIONS_STR, method.len) == 0) {
+        return HTTP_METHOD_OPTIONS;
+    }
+
     return HTTP_METHOD_UNKNOWN;
 }
 
@@ -89,16 +94,16 @@ mk_pointer mk_http_method_check_str(int method)
     switch (method) {
     case HTTP_METHOD_GET:
         return mk_http_method_get_p;
-
     case HTTP_METHOD_POST:
         return mk_http_method_post_p;
-
     case HTTP_METHOD_HEAD:
         return mk_http_method_head_p;
     case HTTP_METHOD_PUT:
         return mk_http_method_put_p;
     case HTTP_METHOD_DELETE:
         return mk_http_method_delete_p;
+    case HTTP_METHOD_OPTIONS:
+        return mk_http_method_options_p;
     }
     return mk_http_method_null_p;
 }
@@ -205,11 +210,11 @@ static int mk_http_range_parse(struct session_request *sr)
 int mk_http_method_get(char *body)
 {
     int int_method, pos = 0;
-    int max_len_method = 7;
+    int max_len_method = 8;
     mk_pointer method;
 
-    /* Max method length is 6 (GET/POST/HEAD/PUT/DELETE) */
-    pos = mk_string_char_search(body, ' ', 7);
+    /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
+    pos = mk_string_char_search(body, ' ', max_len_method);
     if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
         return HTTP_METHOD_UNKNOWN;
     }
@@ -483,6 +488,31 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
+    /* counter connections */
+    sr->headers.pconnections_left = (int)
+        (config->max_keep_alive_request - cs->counter_connections);
+
+    /* Set default value */
+    mk_header_set_http_status(sr, MK_HTTP_OK);
+    sr->headers.location = NULL;
+    sr->headers.content_length = 0;
+
+    /*
+     * For OPTIONS method, we let the plugin handle it and
+     * return without any content.
+     */
+    if ( sr->method == HTTP_METHOD_OPTIONS ) {
+        sr->headers.allow_methods.data = HTTP_METHOD_AVAILABLE;
+        sr->headers.allow_methods.len = strlen(HTTP_METHOD_AVAILABLE);
+
+        mk_pointer_reset(&sr->headers.content_type);
+        mk_header_send(cs->socket, cs, sr);
+        return EXIT_NORMAL;
+    }
+    else {
+        mk_pointer_reset(&sr->headers.allow_methods);
+    }
+
     /* read permissions and check file */
     if (sr->file_info.read_access == MK_FALSE) {
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
@@ -503,11 +533,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
-    /* counter connections */
-    sr->headers.pconnections_left = (int)
-        (config->max_keep_alive_request - cs->counter_connections);
-
-
     sr->headers.last_modified = sr->file_info.last_modification;
 
     if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
@@ -525,8 +550,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             return EXIT_NORMAL;
         }
     }
-    mk_header_set_http_status(sr, MK_HTTP_OK);
-    sr->headers.location = NULL;
 
     /* Object size for log and response headers */
     sr->headers.content_length = sr->file_info.size;

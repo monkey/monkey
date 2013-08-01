@@ -30,12 +30,20 @@
 #define HTTP_METHOD_HEAD            2
 #define HTTP_METHOD_PUT             3
 #define HTTP_METHOD_DELETE          4
+#define HTTP_METHOD_OPTIONS         5
 
 #define HTTP_METHOD_GET_STR         "GET"
 #define HTTP_METHOD_POST_STR        "POST"
 #define HTTP_METHOD_HEAD_STR        "HEAD"
 #define HTTP_METHOD_PUT_STR         "PUT"
 #define HTTP_METHOD_DELETE_STR      "DELETE"
+#define HTTP_METHOD_OPTIONS_STR     "OPTIONS"
+
+/* Available methods */
+#define HTTP_METHOD_AVAILABLE   \
+    HTTP_METHOD_GET_STR "," HTTP_METHOD_POST_STR "," HTTP_METHOD_HEAD_STR ","  \
+    HTTP_METHOD_PUT_STR "," HTTP_METHOD_DELETE_STR "," HTTP_METHOD_OPTIONS_STR \
+    MK_CRLF
 
 #define HTTP_PROTOCOL_UNKNOWN (-1)
 #define HTTP_PROTOCOL_09 (9)
@@ -53,6 +61,7 @@ extern const mk_pointer mk_http_method_post_p;
 extern const mk_pointer mk_http_method_head_p;
 extern const mk_pointer mk_http_method_put_p;
 extern const mk_pointer mk_http_method_delete_p;
+extern const mk_pointer mk_http_method_options_p;
 extern const mk_pointer mk_http_method_null_p;
 
 extern const mk_pointer mk_http_protocol_09_p;

@@ -96,6 +96,9 @@ struct header_status_response {
 /* Accept ranges */
 #define MK_HEADER_ACCEPT_RANGES "Accept-Ranges: bytes" MK_CRLF
 
+/* Allowed methods */
+#define MK_HEADER_ALLOWED_METHODS "Allow: "
+
 #define MK_HEADER_CONN_KA "Connection: Keep-Alive" MK_CRLF
 #define MK_HEADER_CONN_CLOSE "Connection: Close" MK_CRLF
 #define MK_HEADER_CONTENT_LENGTH "Content-Length: "

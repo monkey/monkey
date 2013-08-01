@@ -116,6 +116,7 @@ struct response_headers
     int connection;
 
     time_t last_modified;
+    mk_pointer allow_methods;
     mk_pointer content_type;
     mk_pointer content_encoding;
     char *location;

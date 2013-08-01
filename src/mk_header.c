@@ -42,6 +42,7 @@
 const mk_pointer mk_header_short_date = mk_pointer_init(MK_HEADER_SHORT_DATE);
 const mk_pointer mk_header_short_location = mk_pointer_init(MK_HEADER_SHORT_LOCATION);
 const mk_pointer mk_header_short_ct = mk_pointer_init(MK_HEADER_SHORT_CT);
+const mk_pointer mk_header_allow = mk_pointer_init(MK_HEADER_ALLOWED_METHODS);
 
 const mk_pointer mk_header_conn_ka = mk_pointer_init(MK_HEADER_CONN_KA);
 const mk_pointer mk_header_conn_close = mk_pointer_init(MK_HEADER_CONN_CLOSE);
@@ -226,6 +227,14 @@ int mk_header_send(int fd, struct client_session *cs,
         mk_iov_add_entry(iov,
                          sh->location,
                          strlen(sh->location), mk_iov_crlf, MK_IOV_FREE_BUF);
+    }
+
+    /* allowed methods */
+    if (sh->allow_methods.len > 0) {
+        mk_iov_add_entry(iov,
+                         mk_header_allow.data,
+                         mk_header_allow.len,
+                         sh->allow_methods, MK_IOV_NOT_FREE_BUF) ;
     }
 
     /* Content type */
