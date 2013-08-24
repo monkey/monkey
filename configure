@@ -149,7 +149,8 @@ main()
 	create_makefile2 mod_libs mod_obj make_script platform
 
 	echo "+ Creating src/include/mk_info.h"
-	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__
+	create_info sysconfdir SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
+                    cmd uname
 
 	echo "+ Creating bin/banana script"
 	create_banana_script bindir logdir default_port
@@ -695,7 +696,9 @@ create_info()
 #define MONKEY_VERSION (__MONKEY__ * 10000 \\
                         __MONKEY_MINOR__ * 100 \\
                         __MONKEY_PATCHLEVEL__)
-#define VERSION "$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
+#define VERSION          "$__MONKEY__.$__MONKEY_MINOR__.$__MONKEY_PATCHLEVEL__"
+#define MK_BUILD_CMD     "$cmd"
+#define MK_BUILD_UNAME   "$uname"
 #define MONKEY_PATH_CONF "$sysconfdir"
 #define PLUGDIR "$plugdir"
 
@@ -1088,6 +1091,14 @@ if [ $platform != "generic" ] && [ $platform != "android" ]; then
 	exit 1
 fi
 
+# Build variables
+cmd=$@
+uname=`uname -a`
+
 # Starting main function
-main prefix lang bindir mandir  sysconfdir datadir logdir plugdir platform only_accept only_accept4 SYSNAME VERSION enabled_plugins disabled_plugins no_backtrace
+main prefix lang bindir mandir  sysconfdir datadir \
+     logdir plugdir platform only_accept only_accept4 \
+     SYSNAME VERSION enabled_plugins disabled_plugins \
+     no_backtrace cmd uname
+
 exit 0

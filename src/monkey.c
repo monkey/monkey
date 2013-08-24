@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -87,6 +87,22 @@ static void mk_version(void)
     fflush(stdout);
 }
 
+static void mk_build_info(void)
+{
+    mk_version();
+
+    printf("\n");
+    printf("%s[system: %s]%s\n", ANSI_BOLD, OS, ANSI_RESET);
+    printf(MK_BUILD_UNAME);
+
+    printf("\n\n%s[configure]%s\n", ANSI_BOLD, ANSI_RESET);
+    printf(MK_BUILD_CMD);
+
+    printf("\n\n%s[setup]%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("configuration dir: %s\n", MONKEY_PATH_CONF);
+    printf("\n\n");
+}
+
 static void mk_help(int rc)
 {
     printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
@@ -94,7 +110,9 @@ static void mk_help(int rc)
     printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
     printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
     printf("  -p, --port=PORT\tset listener TCP port (override config)\n");
-    printf("  -w, --workers=N\tset number of workers (override config)\n");
+    printf("  -w, --workers=N\tset number of workers (override config)\n\n");
+    printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("  -b, --build\t\tprint build information\n");
     printf("  -v, --version\t\tshow version number\n");
     printf("  -h, --help\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
@@ -114,6 +132,7 @@ int main(int argc, char **argv)
 
     static const struct option long_opts[] = {
         { "configdir", required_argument, NULL, 'c' },
+        { "build",     no_argument,       NULL, 'b' },
 		{ "daemon",	   no_argument,       NULL, 'D' },
         { "port",      required_argument, NULL, 'p' },
         { "workers",   required_argument, NULL, 'w' },
@@ -122,8 +141,11 @@ int main(int argc, char **argv)
 		{ NULL, 0, NULL, 0 }
 	};
 
-    while ((opt = getopt_long(argc, argv, "DSvhp:w:c:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:", long_opts, NULL)) != -1) {
         switch (opt) {
+        case 'b':
+            mk_build_info();
+            exit(EXIT_SUCCESS);
         case 'v':
             mk_version();
             exit(EXIT_SUCCESS);
