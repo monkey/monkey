@@ -380,8 +380,8 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
             behavior     = state->behavior;
         }
         else {
-            mk_err("[FD %i] MK_EPOLL_WAKEUP error", fd);
-            exit(EXIT_FAILURE);
+            mk_warn("[FD %i] MK_EPOLL_WAKEUP error", fd);
+            return -1;
         }
         break;
     }
