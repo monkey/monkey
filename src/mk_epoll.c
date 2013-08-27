@@ -375,12 +375,18 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
         break;
     case MK_EPOLL_WAKEUP:
         state = mk_epoll_state_get(fd);
-        if (state && state->mode == MK_EPOLL_SLEEP) {
+        if (!state) {
+            mk_warn("[FD %i] MK_EPOLL_WAKEUP error, invalid connection",
+                    fd);
+            return -1;
+        }
+        else if (state->mode == MK_EPOLL_SLEEP) {
             event.events = state->events;
             behavior     = state->behavior;
         }
         else {
-            mk_warn("[FD %i] MK_EPOLL_WAKEUP error", fd);
+            mk_warn("[FD %i] MK_EPOLL_WAKEUP error, current mode is %i",
+                    fd, state->mode);
             return -1;
         }
         break;
