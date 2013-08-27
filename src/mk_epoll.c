@@ -68,7 +68,7 @@ int mk_epoll_state_init()
     return pthread_setspecific(mk_epoll_state_k, (void *) index);
 }
 
-static struct epoll_state *mk_epoll_state_get(int fd)
+struct epoll_state *mk_epoll_state_get(int fd)
 {
     struct epoll_state_index *index;
     struct epoll_state *es_entry;
