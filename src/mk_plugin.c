@@ -1009,6 +1009,16 @@ int mk_plugin_event_read(int socket)
 
     MK_TRACE("[FD %i] Read Event", socket);
 
+    /*
+     * Before to process this socket, we need to make sure
+     * that is still an active connection and was not closed
+     * in the middle by a timeout.
+     */
+    if (!mk_epoll_state_get(socket)) {
+        MK_TRACE("[FD %i] Connection already closed", socket);
+        return -1;
+    }
+
     /* Socket registered by plugin */
     event = mk_plugin_event_get(socket);
     if (event) {
@@ -1048,6 +1058,16 @@ int mk_plugin_event_write(int socket)
     struct plugin_event *event;
 
     MK_TRACE("[FD %i] Plugin event write", socket);
+
+    /*
+     * Before to process this socket, we need to make sure
+     * that is still an active connection and was not closed
+     * in the middle by a timeout.
+     */
+    if (!mk_epoll_state_get(socket)) {
+        MK_TRACE("[FD %i] Connection already closed", socket);
+        return -1;
+    }
 
     event = mk_plugin_event_get(socket);
     if (event) {

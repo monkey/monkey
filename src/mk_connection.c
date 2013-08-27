@@ -32,16 +32,6 @@ int mk_conn_read(int socket)
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
 
-    /*
-     * Before to process this socket, we need to make sure
-     * that is still an active connection and was not closed
-     * in the middle by a timeout.
-     */
-    if (!mk_epoll_state_get(socket)) {
-        MK_TRACE("[FD %i] Connection already closed", socket);
-        return -1;
-    }
-
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
 
@@ -114,16 +104,6 @@ int mk_conn_write(int socket)
     struct sched_connection *conx;
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
-
-    /*
-     * Before to process this socket, we need to make sure
-     * that is still an active connection and was not closed
-     * in the middle by a timeout.
-     */
-    if (!mk_epoll_state_get(socket)) {
-        MK_TRACE("[FD %i] Connection already closed", socket);
-        return -1;
-    }
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);
