@@ -102,7 +102,8 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 
         mk_err("%s (%d), code=%d, addr=%p",
                strsignal(signo), signo, si->si_code, si->si_addr);
-        pthread_exit(NULL);
+        /* DISABLED by now: pthread_exit(NULL); */
+        abort();
     default:
         /* let the kernel handle it */
         kill(getpid(), signo);
