@@ -332,7 +332,7 @@ int mk_epoll_del(int efd, int fd)
     int ret;
 
     ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
-    MK_TRACE("Epoll, removing fd %i from efd %i", fd, efd);
+    MK_TRACE("[FD %i] Epoll, remove from QUEUE_FD=%i", fd, efd);
 
 #ifdef TRACE
     if (ret < 0) {
