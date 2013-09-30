@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *  Copyright (C) 2011 Davidlohr Bueso <dave@gnu.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,68 +38,73 @@
 #include "mk_macros.h"
 
 struct mimetype *mimetype_default;
-struct mimetype *mimecommon = NULL; /* old top used mime types */
-struct mimetype *mimearr = NULL; /* old the rest of the mime types */
-int mime_nitem = 0; /* amount of available mime types */
-
-/* add an item to the mimecommon or mimearr variables */
-#define add_mime(item, m) ({                                            \
-    m = (mime_nitem==0) ? mk_mem_malloc(sizeof(struct mimetype)) :           \
-        mk_mem_realloc(m, (mime_nitem + 1) * (sizeof(struct mimetype)));     \
-    m[mime_nitem++] = item;                                                  \
-})
-
-static int mime_cmp(const void *m1, const void *m2)
-{
-    struct mimetype *mi1 = (struct mimetype *) m1;
-    struct mimetype *mi2 = (struct mimetype *) m2;
-
-    return strcasecmp(mi1->name, mi2->name);
-}
+struct mimetype *mimearr = NULL; /* array of the mime types */
 
 /* Match mime type for requested resource */
 inline struct mimetype *mk_mimetype_lookup(char *name)
 {
-    int i;
-    struct mimetype tmp;
+    int cmp;
+  	struct rb_node *node = mimetype_head.rb_node;
 
-    /*
-     * Simple heuristic to guess which mime type to load,
-     * based on the type, let's face it, most of the time you
-     * are requesting html/css/ or images!
-     *
-     * First apply lineal search to the 10 most used mimes,
-     * otherwise apply a binary search
-     */
-    for (i = 0; i < MIME_COMMON; i++) {
-        if (!strcasecmp(name, mimecommon[i].name)) {
-            return &mimecommon[i];
+  	while (node) {
+  		struct mimetype *entry = container_of(node, struct mimetype, _rb_head);
+
+        cmp = strcmp(name, entry->name);
+		if (cmp < 0)
+  			node = node->rb_left;
+		else if (cmp > 0)
+  			node = node->rb_right;
+		else {
+  			return entry;
         }
-    }
-
-    tmp.name = name;
-    return bsearch(&tmp, mimearr, mime_nitem, sizeof(struct mimetype), mime_cmp);
+	}
+	return NULL;
 }
 
-int mk_mimetype_add(char *name, const char *type, const int common)
+int mk_mimetype_add(char *name, const char *type)
 {
+    int cmp;
     int len = strlen(type) + 3;
     char *p;
-    struct mimetype new_mime;
+    struct mimetype *new_mime;
+    struct rb_node **new;
+    struct rb_node *parent = NULL;
 
     /* make sure we register the extension in lower case */
     p = name;
     for ( ; *p; ++p) *p = tolower(*p);
 
-    new_mime.name = mk_string_dup(name);
-    new_mime.type.data = mk_mem_malloc(len);
-    new_mime.type.len = len - 1;
-    strcpy(new_mime.type.data, type);
-    strcat(new_mime.type.data, MK_CRLF);
-    new_mime.type.data[len-1] = '\0';
+    new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
+    new_mime->name = mk_string_dup(name);
+    new_mime->type.data = mk_mem_malloc(len);
+    new_mime->type.len = len - 1;
+    strcpy(new_mime->type.data, type);
+    strcat(new_mime->type.data, MK_CRLF);
+    new_mime->type.data[len-1] = '\0';
 
-    /* add the newly created item to the end of the array */
-    common ? add_mime(new_mime, mimecommon) : add_mime(new_mime, mimearr);
+    /* Red-Black tree insert routine */
+    new = &(mimetype_head.rb_node);
+
+    /* Figure out where to put new node */
+    while (*new) {
+        struct mimetype *this = container_of(*new, struct mimetype, _rb_head);
+
+        parent = *new;
+        cmp = strcmp(new_mime->name, this->name);
+        if (cmp < 0) {
+            new = &((*new)->rb_left);
+        }
+        else if (cmp > 0) {
+            new = &((*new)->rb_right);
+        }
+        else {
+            return -1;
+        }
+    }
+
+    /* Add new node and rebalance tree. */
+    rb_link_node(&new_mime->_rb_head, parent, new);
+    rb_insert_color(&new_mime->_rb_head, &mimetype_head);
 
     return 0;
 }
@@ -108,11 +113,13 @@ int mk_mimetype_add(char *name, const char *type, const int common)
 void mk_mimetype_read_config()
 {
     char path[MAX_PATH];
-    int i = 0;
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
     struct mk_list *head;
+
+    /* Initialize the head */
+    mimetype_head = RB_ROOT;
 
     /* Read mime types configuration file */
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
@@ -128,23 +135,10 @@ void mk_mimetype_read_config()
     mk_list_foreach(head, &section->entries) {
         entry = mk_list_entry(head, struct mk_config_entry, _head);
 
-        if (i < MIME_COMMON) {
-            if (mk_mimetype_add(entry->key, entry->val, 1) != 0) {
-                mk_err("Error loading Mime Types");
-            }
+        if (mk_mimetype_add(entry->key, entry->val) != 0) {
+            mk_err("Error loading Mime Types");
         }
-        else {
-            if (i == MIME_COMMON) {
-                mime_nitem = 0; /* reset counter */
-            }
-            if (mk_mimetype_add(entry->key, entry->val, 0) != 0) {
-                mk_err("Error loading Mime Types");
-            }
-        }
-        i++;
     }
-
-    mk_mimearr_sort();
 
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
@@ -152,12 +146,6 @@ void mk_mimetype_read_config()
     mk_pointer_set(&mimetype_default->type, config->default_mimetype);
 
     mk_config_free(cnf);
-}
-
-void mk_mimearr_sort()
-{
-    /* sort ascendingly for later binary search */
-    qsort(mimearr, mime_nitem, sizeof(struct mimetype), mime_cmp);
 }
 
 struct mimetype *mk_mimetype_find(mk_pointer *filename)

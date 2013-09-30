@@ -1,5 +1,4 @@
 [MIMETYPES]
-    # This is the top 10 list of mostly used MIMEs
     html text/html
     jpg image/jpeg
     png image/png
@@ -10,7 +9,6 @@
     flv video/x-flv
     jpe image/jpeg
 
-    # Other not so used types
     jpeg image/jpeg
     htm text/html
     bmp image/bmp

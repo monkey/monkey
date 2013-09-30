@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 #include "mk_memory.h"
 #include "mk_list.h"
+#include "mk_rbtree.h"
 
 #ifndef MK_MIMETYPE_H
 #define MK_MIMETYPE_H
@@ -32,16 +33,15 @@ struct mimetype
 {
     const char *name;
     mk_pointer type;
+    struct rb_node _rb_head;
 };
 
-/* amount of the top used mime types */
-enum {
-    MIME_COMMON=10
-};
+/* Head for RBT */
+struct rb_root mimetype_head;
 
 extern struct mimetype *mimetype_default;
 
-int mk_mimetype_add(char *name, const char *type, const int common);
+int mk_mimetype_add(char *name, const char *type);
 void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_pointer * filename);
 struct mimetype *mk_mimetype_lookup(char *name);
