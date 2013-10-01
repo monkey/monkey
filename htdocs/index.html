@@ -1,52 +1,166 @@
-<HTML>
-<HEAD>
-	<TITLE>Monkey HTTP Daemon</TITLE>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Monkey HTTP Server</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css" media="screen">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="../bower_components/bootstrap/assets/js/html5shiv.js"></script>
+      <script src="../bower_components/bootstrap/assets/js/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript">
 
-                <STYLE type="text/css">
-                H1.header {
-                            text-align: center;
-                            color: #4a77a0;
-                            font-size: 12pt;
-                            font-weight: bold;
-                            }
-                .row {color: #6c95bc; font-size: 10pt; }
-                .text {color: #73787c; font-size: 10pt;}
+    </script>
+  </head>
+  <body>
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="../" class="navbar-brand">Monkey HTTP Server</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="http://blog.monkey-project.com" target="_blank">Blog</a>
+            </li>
+            <li>
+              <a href="http://monkey-project.com/documentation" target="_blank">Help</a>
+            </li>
+          </ul>
 
-                a:link {
-                        color: #475f7e;
-			font-size: 10pt;
-                }
-                a:visited {
-                        color: #ac7a2a;
-			font-size: 10pt;
-                }
-                a:hover {
-                        color: #475f7e;
-                        background-color: #dbdbdb;
-                        text-decoration: none;
-			font-size: 10pt;
-                }
-                a:active {
-                        color: #333333;
-                }
-                </STYLE>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="http://monkey-project.com" target="_blank">monkey-project.com</a></li>
+          </ul>
 
-</HEAD>
-<BODY bgcolor="#ffffff" text="#000000" link="#172354" vlink="#172354" alink="#172354">
-<br><br>
-<center>
-<BR><BR>
-<CENTER>
-	<img src="imgs/monkey_logo.png">
-</CENTER>
-<br>
-<FONT class="text">
-Monkey HTTP Daemon is running in your system, smile and be happy :)
-</FONT>
+        </div>
+      </div>
+    </div>
 
-<BR><BR>
-<a href="http://www.monkey-project.com">http://www.monkey-project.com</a>
-<BR><BR>
-</CENTER>
-</BODY>
-</HTML>
+
+    <div class="container">
+
+      <div class="page-header" id="banner">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="page-header">
+              <img src="imgs/monkey_logo_small.png">
+            </div>
+            <div>
+              <p class="lead">
+                About
+              </p>
+
+              <p>
+                <a href="http://monkey-project.com">Monkey</a> is a small, fast and lightweight
+                open source Web Server for GNU/Linux. It has been designed with focus in embedded
+                devices, therefore its scalable by nature having a low memory and CPU consumption
+                and an excellent performance.
+              </p>
+              <p>
+                Monkey is properly supported on ARM, x86 and x64, being able to work in any architecture and device capable to run a Linux Kernel.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6" style="padding: 25px 25px 15px 25px;">
+            <div class="well">
+              <a href="http://en.wikipedia.org/wiki/Golden_monkey">
+                <span style="float: left; margin-right: 15px;">
+                  <img src="imgs/info_pic.jpg" width="200px" height="193px">
+                </span>
+              </a>
+                <div style="font-weight: bold; margin-bottom: 1em;">Golden Monkey</div>
+                <div class="clearfix">
+                  <p>
+                    Due to its diet the golden monkey prefers a habitat with abundant fruit and bamboo. The
+                    golden monkey will move in between areas depending on the season. During the season
+                    where ripe fruit is available they will remain in those areas.
+                  </p>
+                  <p>
+                    <ul class="nav navbar-nav navbar-right">
+                      <a href="http://en.wikipedia.org/wiki/Golden_monkey">
+                        read more...
+                      </a>
+                    </ul>
+                  </p>
+                </div>
+            </div>
+
+              <p class="lead">
+                Monkey v1.3.0: Release notes
+              </p>
+              <p>
+                This new version called <i>Golden Monkey</i>, brings exciting core and performance improvements,
+                as well a set of generic fixes for plugins such as SSL, CGI, FastCGI, Auth, Logger, etc.
+              </p>
+              <p>
+                For more details about the changes, please refer to the <a>announcement page</a>.
+              </p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="bs-docs-section clearfix">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="">
+              <p class="lead">
+                DRAFT - Design goals and Architecture
+              </p>
+              <p>
+                More than a simple web server, <a href="http://monkey-project.com">Monkey</a> is a complete event-driven HTTP framework. It
+                have been designed as a small core capable to extend it behavior through the plugin interface. Having as a main focus
+                Embedded Linux environments, it optimize resources usage with low memory and CPU consumption.
+              </p>
+              </div>
+          </div>
+        </div>
+      </div>
+
+
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+              <p class="lead">
+                License
+              </p>
+
+            <div class="well">
+              <div style="font-weight: bold; margin-bottom: 1em;">GNU General Public License, version 2</div>
+                <div class="clearfix">
+                  <p>
+                    This program is free software; you can redistribute it and/or modify
+                    it under the terms of the GNU General Public License as published by
+                    the Free Software Foundation; either version 2 of the License, or
+                    (at your option) any later version.
+                  </p>
+                  <p>
+                    This program is distributed in the hope that it will be useful,
+                    but WITHOUT ANY WARRANTY; without even the implied warranty of
+                    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                    GNU Library General Public License for more details.
+                  </p>
+                  <p>
+                    <ul class="nav navbar-nav navbar-right">
+                      <a href="http://www.gnu.org/licenses/gpl-2.0.html">
+                        read more...
+                      </a>
+                    </ul>
+                  </p>
+                </div>
+            </div>
+
+
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
