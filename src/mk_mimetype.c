@@ -44,7 +44,7 @@ struct mimetype *mimearr = NULL; /* array of the mime types */
 inline struct mimetype *mk_mimetype_lookup(char *name)
 {
     int cmp;
-  	struct rb_node *node = mimetype_head.rb_node;
+  	struct rb_node *node = mimetype_rb_head.rb_node;
 
   	while (node) {
   		struct mimetype *entry = container_of(node, struct mimetype, _rb_head);
@@ -83,7 +83,7 @@ int mk_mimetype_add(char *name, const char *type)
     new_mime->type.data[len-1] = '\0';
 
     /* Red-Black tree insert routine */
-    new = &(mimetype_head.rb_node);
+    new = &(mimetype_rb_head.rb_node);
 
     /* Figure out where to put new node */
     while (*new) {
@@ -104,7 +104,7 @@ int mk_mimetype_add(char *name, const char *type)
 
     /* Add new node and rebalance tree. */
     rb_link_node(&new_mime->_rb_head, parent, new);
-    rb_insert_color(&new_mime->_rb_head, &mimetype_head);
+    rb_insert_color(&new_mime->_rb_head, &mimetype_rb_head);
 
     return 0;
 }
@@ -118,8 +118,9 @@ void mk_mimetype_read_config()
     struct mk_config_entry *entry;
     struct mk_list *head;
 
-    /* Initialize the head */
-    mimetype_head = RB_ROOT;
+    /* Initialize the heads */
+    mk_list_init(&mimetype_list);
+    mimetype_rb_head = RB_ROOT;
 
     /* Read mime types configuration file */
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
@@ -137,7 +138,10 @@ void mk_mimetype_read_config()
 
         if (mk_mimetype_add(entry->key, entry->val) != 0) {
             mk_err("Error loading Mime Types");
+            exit(EXIT_FAILURE);
         }
+
+        mk_list_add(&entry->_head, &mimetype_list);
     }
 
     /* Set default mime type */

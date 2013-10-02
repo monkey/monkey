@@ -39,7 +39,7 @@
 
 /* These are only needed here, not public for all of monkey */
 extern int mime_nitem;
-extern struct mimetype *mimecommon, *mimearr;
+extern struct mimetype *mimearr;
 
 static struct host *mklib_host_find(const char *name)
 {
@@ -588,7 +588,7 @@ struct mklib_mime **mklib_mimetype_list(mklib_ctx ctx)
 
     static struct mklib_mime **lst = NULL;
     unsigned int i;
-    const unsigned int total = mime_nitem + MIME_COMMON;
+    const unsigned int total = mime_nitem ;
 
     if (lst) {
         for (i = 0; i < total; i++) {
@@ -602,16 +602,8 @@ struct mklib_mime **mklib_mimetype_list(mklib_ctx ctx)
 
     for (i = 0; i < total; i++) {
         lst[i] = mk_mem_malloc_z(sizeof(struct mklib_mime));
-
-        if (i < MIME_COMMON) {
-            lst[i]->name = mimecommon[i].name;
-            lst[i]->type = mimecommon[i].type.data;
-        }
-        else {
-            const unsigned int m = i - MIME_COMMON;
-            lst[i]->name = mimearr[m].name;
-            lst[i]->type = mimearr[m].type.data;
-        }
+        lst[i]->name = mimearr[i].name;
+        lst[i]->type = mimearr[i].type.data;
     }
 
     return lst;
@@ -625,7 +617,7 @@ int mklib_mimetype_add(mklib_ctx ctx, char *name, const char *type)
     /* Is it added already? */
     if (mk_mimetype_lookup(name)) return MKLIB_FALSE;
 
-    mk_mimetype_add(name, type, 0);
+    mk_mimetype_add(name, type);
     mk_mimearr_sort();
 
     return MKLIB_TRUE;

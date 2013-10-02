@@ -33,11 +33,14 @@ struct mimetype
 {
     const char *name;
     mk_pointer type;
+
+    struct mk_list _head;
     struct rb_node _rb_head;
 };
 
 /* Head for RBT */
-struct rb_root mimetype_head;
+struct mk_list mimetype_list;
+struct rb_root mimetype_rb_head;
 
 extern struct mimetype *mimetype_default;
 
