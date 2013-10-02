@@ -12,6 +12,8 @@ debian/tmp/usr/share/monkey/404.html
 debian/tmp/usr/share/monkey/index.html
 debian/tmp/usr/share/monkey/favicon.ico
 debian/tmp/usr/share/monkey/imgs/monkey_logo.png
+debian/tmp/usr/share/monkey/imgs/info_pic.jpg
+debian/tmp/usr/share/monkey/css/bootstrap.min.css
 
 # Manpage
 debian/tmp/usr/share/man/man1/monkey.1

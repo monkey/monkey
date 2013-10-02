@@ -467,6 +467,9 @@ $incinstall
 	install -m 644 ./htdocs/favicon.ico \$(DATADIR)
 	install -d \$(DATADIR)/imgs
 	install -m 644 ./htdocs/imgs/monkey_logo.png \$(DATADIR)/imgs
+	install -m 644 ./htdocs/imgs/info_pic.jpg \$(DATADIR)/imgs
+	install -d \$(DATADIR)/css
+	install -m 644 ./htdocs/css/bootstrap.min.css \$(DATADIR)/css
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
