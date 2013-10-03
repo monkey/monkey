@@ -93,10 +93,10 @@ static void mk_build_info(void)
 
     printf("\n");
     printf("%s[system: %s]%s\n", ANSI_BOLD, OS, ANSI_RESET);
-    printf(MK_BUILD_UNAME);
+    printf("%s", MK_BUILD_UNAME);
 
     printf("\n\n%s[configure]%s\n", ANSI_BOLD, ANSI_RESET);
-    printf(MK_BUILD_CMD);
+    printf("%s", MK_BUILD_CMD);
 
     printf("\n\n%s[setup]%s\n", ANSI_BOLD, ANSI_RESET);
     printf("configuration dir: %s\n", MONKEY_PATH_CONF);

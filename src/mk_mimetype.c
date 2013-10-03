@@ -106,6 +106,9 @@ int mk_mimetype_add(char *name, const char *type)
     rb_link_node(&new_mime->_rb_head, parent, new);
     rb_insert_color(&new_mime->_rb_head, &mimetype_rb_head);
 
+    /* Add to linked list head */
+    mk_list_add(&new_mime->_head, &mimetype_list);
+
     return 0;
 }
 
@@ -135,13 +138,14 @@ void mk_mimetype_read_config()
 
     mk_list_foreach(head, &section->entries) {
         entry = mk_list_entry(head, struct mk_config_entry, _head);
+        if (!entry->key || !entry->val) {
+            continue;
+        }
 
         if (mk_mimetype_add(entry->key, entry->val) != 0) {
             mk_err("Error loading Mime Types");
             exit(EXIT_FAILURE);
         }
-
-        mk_list_add(&entry->_head, &mimetype_list);
     }
 
     /* Set default mime type */
