@@ -1,8 +1,8 @@
-Ideas and roadmap for Monkey v1.3
+Ideas and roadmap for Monkey v1.4
 =================================
 
 This is just a draft of ideas to implement in the development phase of
-Monkey v1.3.
+Monkey v1.4.
 
 Core
 ------------
