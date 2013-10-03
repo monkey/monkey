@@ -123,7 +123,7 @@ __rb_change_child(struct rb_node *old, struct rb_node *new,
 extern void __rb_erase_color(struct rb_node *parent, struct rb_root *root,
 	void (*augment_rotate)(struct rb_node *old, struct rb_node *new));
 
-static __attribute__((always_inline)) struct rb_node *
+static inline __attribute__((always_inline)) struct rb_node *
 __rb_erase_augmented(struct rb_node *node, struct rb_root *root,
 		     const struct rb_augment_callbacks *augment)
 {
@@ -218,15 +218,6 @@ __rb_erase_augmented(struct rb_node *node, struct rb_root *root,
 
 	augment->propagate(tmp, NULL);
 	return rebalance;
-}
-
-static __attribute__((always_inline)) void
-rb_erase_augmented(struct rb_node *node, struct rb_root *root,
-		   const struct rb_augment_callbacks *augment)
-{
-	struct rb_node *rebalance = __rb_erase_augmented(node, root, augment);
-	if (rebalance)
-		__rb_erase_color(rebalance, root, augment->rotate);
 }
 
 #endif	/* _LINUX_RBTREE_AUGMENTED_H */
