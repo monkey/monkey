@@ -35,6 +35,7 @@
 #include "mk_clock.h"
 #include "mk_plugin.h"
 #include "mk_macros.h"
+#include "mk_mimetype.h"
 
 enum {
     bufsize = 256
@@ -374,6 +375,9 @@ void mk_plugin_init()
     api->rb_insert_color = rb_insert_color;
     api->rb_erase = rb_erase;
     api->rb_link_node = rb_link_node;
+
+    /* Mimetype */
+    api->mimetype_lookup = mk_mimetype_lookup;
 
     /* Socket callbacks */
     api->socket_cork_flag = mk_socket_set_cork_flag;

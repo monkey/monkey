@@ -233,6 +233,9 @@ struct plugin_api
     int   (*epoll_del) (int, int);
     int   (*epoll_change_mode) (int, int, int, unsigned int);
 
+    /* Mime type */
+    struct mimetype *(*mimetype_lookup) (char *);
+
     /* socket functions */
     int (*socket_cork_flag) (int, int);
     int (*socket_reset) (int);
