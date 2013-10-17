@@ -570,6 +570,9 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             return 0;
         }
 
+        /* For unknown errors. Needs to exist until iov_send. */
+        char err_str[80];
+
         switch (http_status) {
         case MK_CLIENT_BAD_REQUEST:
             mk_api->iov_add_entry(iov,
@@ -650,7 +653,6 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             break;
         default:
             {
-            char err_str[80];
             int len = snprintf(err_str, 80, "[error %u] (no description)", http_status);
             err_str[79] = '\0';
             if (len > 79) len = 79;
@@ -663,6 +665,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             }
             break;
         }
+
         /* Write iov array to pipe */
         mk_api->iov_send(target->fd_error[1], iov);
     }
