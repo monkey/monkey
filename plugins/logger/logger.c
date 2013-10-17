@@ -648,6 +648,20 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                                   error_msg_505.len,
                                   mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
             break;
+        default:
+            {
+            char err_str[80];
+            int len = snprintf(err_str, 80, "[error %u] (no description)", http_status);
+            err_str[79] = '\0';
+            if (len > 79) len = 79;
+
+            mk_api->iov_add_entry(iov,
+                                  err_str,
+                                  len,
+                                  mk_logger_iov_lf, MK_IOV_NOT_FREE_BUF);
+
+            }
+            break;
         }
         /* Write iov array to pipe */
         mk_api->iov_send(target->fd_error[1], iov);
