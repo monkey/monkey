@@ -23,6 +23,8 @@
 /* If a library, do not interfere with the app's signals */
 #ifndef SHAREDLIB
 
+#define _GNU_SOURCE
+
 #include <features.h>
 #include <pthread.h>
 #include <stdio.h>
