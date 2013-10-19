@@ -285,7 +285,7 @@ static void mk_logger_print_details(void)
     current = localtime(&now);
     printf("[%i/%02i/%02i %02i:%02i:%02i] Monkey Started\n",
            current->tm_year + 1900,
-           current->tm_mon,
+           current->tm_mon + 1,
            current->tm_mday,
            current->tm_hour,
            current->tm_min,
