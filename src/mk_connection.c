@@ -139,6 +139,11 @@ int mk_conn_write(int socket)
      */
     cs = mk_session_get(socket);
     if (!cs) {
+        /* This is a ghost connection that doesn't exist anymore.
+         * Closing it could accidentally close some other thread's
+         * socket, so we only remove it from our epoll.
+         */
+        mk_epoll_del(sched->epoll_fd, socket);
         return 0;
     }
 
