@@ -499,7 +499,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     mk_api->header_set_http_status(sr, status);
 
     if (status != 200)
-        return MK_PLUGIN_RET_END;
+        return MK_PLUGIN_RET_CLOSE_CONX;
 
     sr->headers.cgi = SH_CGI;
 
