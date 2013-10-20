@@ -197,7 +197,7 @@ static void mk_logger_worker_init(void *args)
 
             flog = open(target, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
             if (mk_unlikely(flog == -1)) {
-                mk_warn("Could not open logfile '%s'", target);
+                mk_warn("Could not open logfile '%s' (%s)", target, strerror(errno));
 
                 int consumed = 0;
                 char buf[255];
