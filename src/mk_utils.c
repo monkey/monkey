@@ -553,11 +553,11 @@ void mk_print(int type, const char *format, ...)
     time_t now;
     struct tm *current;
 
-    char *header_color = NULL;
-    char *header_title = NULL;
-    char *bold_color = ANSI_BOLD;
-    char *reset_color = ANSI_RESET;
-    char *white_color = ANSI_WHITE;
+    const char *header_color = NULL;
+    const char *header_title = NULL;
+    const char *bold_color = ANSI_BOLD;
+    const char *reset_color = ANSI_RESET;
+    const char *white_color = ANSI_WHITE;
     va_list args;
 
     va_start(args, format);
