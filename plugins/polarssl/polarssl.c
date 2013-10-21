@@ -43,9 +43,13 @@
 #include <polarssl/certs.h>
 #include <polarssl/x509.h>
 
-#if (POLARSSL_VERSION_NUMBER > 0x01020000)
+#if (POLARSSL_VERSION_NUMBER >= 0x01020000)
 #include <polarssl/ssl_cache.h>
 #endif // POLARSSL_VERSION_NUMBER
+
+#if (POLARSSL_VERSION_NUMBER >= 0x01030000)
+#include <polarssl/pk.h>
+#endif
 
 #include "MKPlugin.h"
 
@@ -111,8 +115,13 @@ struct polar_thread_context {
 struct polar_server_context {
     pthread_mutex_t _mutex;
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     x509_cert srvcert;
     rsa_context rsa;
+#else
+    x509_crt srvcert;
+    pk_context pkey;
+#endif
     dhm_context dhm;
 
     entropy_context entropy;
@@ -290,7 +299,11 @@ static int polar_load_certs(const struct polar_config *conf)
 
     assert(conf->cert_file != NULL);
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     ret = x509parse_crtfile(&server_context.srvcert, conf->cert_file);
+#else
+    ret = x509_crt_parse_file(&server_context.srvcert, conf->cert_file);
+#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
         mk_err("[polarssl] Load cert '%s' failed: %s",
@@ -301,19 +314,16 @@ static int polar_load_certs(const struct polar_config *conf)
         mk_warn("[polarssl] Using test certificates, "
                 "please set 'CertificateFile' in polarssl.conf");
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
         ret = x509parse_crt(&server_context.srvcert,
                 (unsigned char *)test_srv_crt, strlen(test_srv_crt));
+#else
+        ret = x509_crt_parse(&server_context.srvcert,
+                (unsigned char *)test_srv_crt, strlen(test_srv_crt));
+#endif
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_err("[polarssl] Load built-in cert failed: %s", err_buf);
-            return -1;
-        }
-
-        ret = x509parse_crt(&server_context.srvcert,
-                (unsigned char *)test_ca_crt, strlen(test_ca_crt));
-        if (ret) {
-            error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load built-in ca cert failed: %s", err_buf);
             return -1;
         }
 #else
@@ -321,8 +331,13 @@ static int polar_load_certs(const struct polar_config *conf)
 #endif // defined(POLARSSL_CERTS_C)
     }
     else if (conf->cert_chain_file != NULL) {
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
         ret = x509parse_crtfile(&server_context.srvcert,
                 conf->cert_chain_file);
+#else
+	ret = x509_crt_parse_file(&server_context.srvcert,
+		conf->cert_chain_file);
+#endif
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_warn("[polarssl] Load cert chain '%s' failed: %s",
@@ -341,7 +356,11 @@ static int polar_load_key(const struct polar_config *conf)
 
     assert(conf->key_file);
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     ret = x509parse_keyfile(&server_context.rsa, conf->key_file, NULL);
+#else
+    ret = pk_parse_keyfile(&server_context.pkey, conf->key_file, NULL);
+#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
         mk_err("[polarssl] Load key '%s' failed: %s",
@@ -352,8 +371,13 @@ static int polar_load_key(const struct polar_config *conf)
         mk_warn("[polarssl] Using test RSA key, "
                 "please set 'RSAKeyFile' in polarssl.conf");
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
         ret = x509parse_key(&server_context.rsa,
                 (unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
+#else
+	ret = pk_parse_key(&server_context.pkey,
+		(unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
+#endif
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_err("[polarssl] Failed to load built-in RSA key: %s", err_buf);
@@ -373,7 +397,11 @@ static int polar_load_dh_param(const struct polar_config *conf)
 
     assert(conf->dh_param_file);
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     ret = x509parse_dhmfile(&server_context.dhm, conf->dh_param_file);
+#else
+    ret = dhm_parse_dhmfile(&server_context.dhm, conf->dh_param_file);
+#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
 
@@ -418,7 +446,11 @@ static int polar_init(const struct polar_config *conf)
 
     memset(&server_context.srvcert, 0, sizeof(server_context.srvcert));
     memset(&server_context.dhm, 0, sizeof(server_context.dhm));
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     rsa_init(&server_context.rsa, RSA_PKCS_V15, 0);
+#else
+    pk_init(&server_context.pkey);
+#endif
     entropy_init(&server_context.entropy);
 
     pthread_mutex_unlock(&server_context._mutex);
@@ -505,8 +537,13 @@ static void polar_exit(void)
     struct mk_list *cur, *tmp;
     struct polar_thread_context *thctx;
 
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
     x509_free(&server_context.srvcert);
     rsa_free(&server_context.rsa);
+#else
+    x509_crt_free(&server_context.srvcert);
+    pk_free(&server_context.pkey);
+#endif
     dhm_free(&server_context.dhm);
 
     mk_list_foreach_safe(cur, tmp, &server_context.threads._head) {
@@ -583,7 +620,11 @@ static ssl_context *context_new(int fd)
 #endif
 
         ssl_set_ca_chain(ssl, server_context.srvcert.next, NULL, NULL);
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
         ssl_set_own_cert(ssl, &server_context.srvcert, &server_context.rsa);
+#else
+        ssl_set_own_cert(ssl, &server_context.srvcert, &server_context.pkey);
+#endif
         ssl_set_dh_param_ctx(ssl, &server_context.dhm);
 
         ssl_set_bio(ssl, net_recv, &(*cur)->fd, net_send, &(*cur)->fd);
