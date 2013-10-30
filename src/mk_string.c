@@ -39,7 +39,8 @@
  * the case sensitive feature and also allow to specify a haystack len
  * Get position of a substring.
  */
-static int _mk_string_search(const char *string, const char *search, int sensitive, int len)
+static int _mk_string_search(const char *string, const char *search,
+                             int sensitive, int len)
 {
     int i = 0;
     char *p = NULL, *q = NULL;
