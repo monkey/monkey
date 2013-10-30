@@ -37,7 +37,6 @@ char *mk_logger_master_path;
 FILE *mk_logger_master_stdout;
 FILE *mk_logger_master_stderr;
 
-pthread_key_t timer;
 pthread_key_t cache_content_length;
 pthread_key_t cache_status;
 pthread_key_t cache_ip_str;

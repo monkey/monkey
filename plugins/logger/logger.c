@@ -197,7 +197,7 @@ static void mk_logger_worker_init(void *args)
 
             flog = open(target, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
             if (mk_unlikely(flog == -1)) {
-                mk_warn("Could not open logfile '%s'", target);
+                mk_warn("Could not open logfile '%s' (%s)", target, strerror(errno));
 
                 int consumed = 0;
                 char buf[255];
@@ -285,7 +285,7 @@ static void mk_logger_print_details(void)
     current = localtime(&now);
     printf("[%i/%02i/%02i %02i:%02i:%02i] Monkey Started\n",
            current->tm_year + 1900,
-           current->tm_mon,
+           current->tm_mon + 1,
            current->tm_mday,
            current->tm_hour,
            current->tm_min,
