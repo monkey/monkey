@@ -364,7 +364,6 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
      * on that.
      */
     mk_epoll_del(sched->epoll_fd, remote_fd);
-    mk_socket_close(remote_fd);
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
@@ -384,6 +383,15 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         /* Unlink from busy queue and put it in available queue again */
         mk_list_del(&sc->_head);
         mk_list_add(&sc->_head, &sched->av_queue);
+
+        /* Only close if this was our connection.
+         *
+         * This has to happen _after_ the busy list removal,
+         * otherwise we could get a new client accept()ed with
+         * the same FD before we do the removal from the busy list,
+         * causing ghosts.
+         */
+        mk_socket_close(remote_fd);
 
         return 0;
     }
