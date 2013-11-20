@@ -824,7 +824,12 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
     fcntl(cs->socket, F_SETFL, fcntl(cs->socket, F_GETFL, 0) & ~O_NONBLOCK);
 
     PLUGIN_TRACE("Dirlisting attending socket %i", cs->socket);
-    mk_dirhtml_init(cs, sr);
+    if (mk_dirhtml_init(cs, sr)) {
+        /* If we failed here, we cannot return RET_END - that causes a mk_bug.
+           dirhtml_init only fails if opendir fails. Usually we're at full
+           capacity then and can't open new files. */
+        return MK_PLUGIN_RET_CLOSE_CONX;
+    }
 
     mk_api->socket_set_nonblocking(cs->socket);
 
