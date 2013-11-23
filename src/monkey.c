@@ -197,6 +197,10 @@ int main(int argc, char **argv)
     mk_version();
     mk_signal_init();
 
+#ifdef LINUX_TRACE
+    mk_info("Linux Trace enabled");
+#endif
+
     /* Override number of thread workers */
     if (workers_override >= 0) {
         config->workers = workers_override;

@@ -92,6 +92,7 @@ void mk_server_loop(int server_fd)
 
     /* Rename worker */
     mk_utils_worker_rename("monkey: server");
+
     mk_info("HTTP Server started");
 
     while (1) {
