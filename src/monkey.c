@@ -25,6 +25,11 @@
 #include <getopt.h>
 #include <pthread.h>
 
+#ifdef LINUX_TRACE
+#define TRACEPOINT_DEFINE
+#include "mk_linuxtrace_provider.h"
+#endif
+
 #include "monkey.h"
 #include "mk_socket.h"
 #include "mk_user.h"

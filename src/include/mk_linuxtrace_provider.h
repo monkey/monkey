@@ -17,28 +17,27 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef MK_MONKEY_H
-#define MK_MONKEY_H
+#undef  TRACEPOINT_PROVIDER
+#define TRACEPOINT_PROVIDER mk_linuxtrace
 
-#include <pthread.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include "mk_memory.h"
+#if !defined(_MK_LINUXTRACE_PROVIDER_H) || defined(TRACEPOINT_HEADER_MULTI_READ)
+#define _MK_LINUXTRACE_PROVIDER_H
+#include <lttng/tracepoint.h>
 
-/* Max Path lenth */
-#define MAX_PATH 1024
+TRACEPOINT_EVENT(
+                 mk_linuxtrace,
+                 message,
+                 TP_ARGS(char *, text),
+                 TP_FIELDS(ctf_string(message, text))
+                 )
 
-/* Send_Header(...,int cgi) */
-#define SH_NOCGI 0
-#define SH_CGI 1
-
-/* Monkey Protocol */
-extern const mk_pointer mk_monkey_protocol;
-
-/* Process UID/GID */
-extern gid_t EGID;
-extern gid_t EUID;
-
-void mk_thread_keys_init();
-
+TRACEPOINT_LOGLEVEL(
+                    mk_linuxtrace,
+                    message,
+                    TRACE_WARNING)
 #endif
+
+#undef  TRACEPOINT_INCLUDE
+#define TRACEPOINT_INCLUDE "./mk_linuxtrace_provider.h"
+
+#include <lttng/tracepoint-event.h>
