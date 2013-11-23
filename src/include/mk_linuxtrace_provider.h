@@ -18,26 +18,58 @@
  */
 
 #undef  TRACEPOINT_PROVIDER
-#define TRACEPOINT_PROVIDER mk_linuxtrace
+#define TRACEPOINT_PROVIDER monkey
 
 #if !defined(_MK_LINUXTRACE_PROVIDER_H) || defined(TRACEPOINT_HEADER_MULTI_READ)
 #define _MK_LINUXTRACE_PROVIDER_H
 #include <lttng/tracepoint.h>
 
+/* Trace point for epoll(2) events */
 TRACEPOINT_EVENT(
-                 mk_linuxtrace,
-                 message,
+                 monkey,
+                 epoll,
+                 TP_ARGS(int, fd,
+                         char *, text),
+                 TP_FIELDS(
+                           ctf_integer(int, fd, fd)
+                           ctf_string(event, text)
+                           )
+                 )
+
+TRACEPOINT_EVENT(
+                 monkey,
+                 epoll_state,
+                 TP_ARGS(int, fd,
+                         int, mode,
+                         char *, text),
+                 TP_FIELDS(
+                           ctf_integer(int, fd, fd)
+                           ctf_string(event, text)
+                           )
+                 )
+
+TRACEPOINT_EVENT(
+                 monkey,
+                 scheduler,
                  TP_ARGS(char *, text),
                  TP_FIELDS(ctf_string(message, text))
                  )
 
-TRACEPOINT_LOGLEVEL(
-                    mk_linuxtrace,
-                    message,
-                    TRACE_WARNING)
 #endif
 
 #undef  TRACEPOINT_INCLUDE
 #define TRACEPOINT_INCLUDE "./mk_linuxtrace_provider.h"
 
 #include <lttng/tracepoint-event.h>
+
+/* Monkey Linux Trace helper macros */
+#ifdef LINUX_TRACE
+#define MK_LT_EPOLL(fd, event) tracepoint(monkey, epoll, fd, event)
+#define MK_LT_EPOLL_STATE(fd, mode, event) \
+  tracepoint(monkey, epoll_state, fd, mode, event)
+#define MK_LT_SCHED(fd, event) tracepoint(monkey, scheduler, fd, event)
+#else
+#define MK_LT_EPOLL(fd, event) do {} while(0)
+#define MK_LT_EPOLL_STATE(fd, mode, event) do{} while(0)
+#define MK_LT_SCHED(fd, event) do {} while(0)
+#endif

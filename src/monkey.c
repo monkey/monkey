@@ -26,6 +26,7 @@
 #include <pthread.h>
 
 #ifdef LINUX_TRACE
+#define TRACEPOINT_CREATE_PROBES
 #define TRACEPOINT_DEFINE
 #include "mk_linuxtrace_provider.h"
 #endif

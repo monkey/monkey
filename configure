@@ -1105,7 +1105,7 @@ if [ $no_backtrace ]; then
 fi
 
 if [ $linux_trace ]; then
-        libs="$libs -llttng-ust"
+        libs="$libs -llttng-ust -lurcu-bp"
 	DEFS="$DEFS -DLINUX_TRACE"
 fi
 
