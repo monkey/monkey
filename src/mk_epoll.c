@@ -39,6 +39,7 @@
 #include "mk_epoll.h"
 #include "mk_utils.h"
 #include "mk_macros.h"
+#include "mk_linuxtrace_provider.h"
 
 pthread_key_t mk_epoll_state_k;
 
@@ -83,9 +84,12 @@ struct epoll_state *mk_epoll_state_get(int fd)
 		else if (fd > es_entry->fd)
   			node = node->rb_right;
 		else {
+            MK_LT_EPOLL_STATE(fd, es_entry->mode, "GET");
   			return es_entry;
         }
 	}
+
+    MK_LT_EPOLL_STATE(fd, 0, "GET: NOT FOUND");
 	return NULL;
 }
 
@@ -124,7 +128,6 @@ inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
             MK_TRACE("state index grow from %i to %i\n",
                      index->size, index->size + MK_EPOLL_STATE_INDEX_CHUNK);
             index->size += MK_EPOLL_STATE_INDEX_CHUNK;
-
         }
 
         /* New entry */
@@ -160,6 +163,7 @@ inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
         rb_link_node(&es_entry->_rb_head, parent, new);
         rb_insert_color(&es_entry->_rb_head, &index->rb_queue);
 
+        MK_LT_EPOLL_STATE(fd, es_entry->mode, "SET: NEW");
         return es_entry;
     }
 
@@ -177,7 +181,7 @@ inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
 
     /* Update current mode */
     es_entry->mode = mode;
-
+    MK_LT_EPOLL_STATE(fd, es_entry->mode, "SET: CHANGE");
     return es_entry;
 }
 
@@ -193,9 +197,12 @@ static int mk_epoll_state_del(int fd)
         rb_erase(&es_entry->_rb_head, &index->rb_queue);
         mk_list_del(&es_entry->_head);
         mk_list_add(&es_entry->_head, &index->av_queue);
+
+        MK_LT_EPOLL_STATE(fd, es_entry->mode, "DELETE");
         return 0;
     }
 
+    MK_LT_EPOLL_STATE(fd, 0, "DELETE: NOT FOUND");
     return -1;
 }
 
@@ -259,19 +266,29 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
             fd = events[i].data.fd;
 
             if (events[i].events & EPOLLIN) {
+                MK_LT_EPOLL(fd, "EPOLLIN");
                 MK_TRACE("[FD %i] EPoll Event READ", fd);
+
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {
+                MK_LT_EPOLL(fd, "EPOLLOUT");
                 MK_TRACE("[FD %i] EPoll Event WRITE", fd);
+
                 ret = (*handler->write) (fd);
             }
             else if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+#ifdef LINUX_TRACE
+                if (events[i].events & (EPOLLHUP))   MK_LT_EPOLL(fd, "EPOLLHUP");
+                if (events[i].events & (EPOLLERR))   MK_LT_EPOLL(fd, "EPOLLERR");
+                if (events[i].events & (EPOLLRDHUP)) MK_LT_EPOLL(fd, "EPOLLRDHUP");
+#endif
                 MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLER", fd);
                 ret = (*handler->error) (fd);
             }
 
             if (ret < 0) {
+                MK_LT_EPOLL(fd, "FORCED CLOSE");
                 MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
                 (*handler->close) (fd);
             }
@@ -279,6 +296,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
 
         /* Check timeouts and update next one */
         if (log_current_utime >= fds_timeout) {
+            MK_LT_EPOLL(0, "TIMEOUT CHECK");
             mk_sched_check_timeouts(sched);
             fds_timeout = log_current_utime + config->timeout;
         }

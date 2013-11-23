@@ -25,6 +25,12 @@
 #include <getopt.h>
 #include <pthread.h>
 
+#ifdef LINUX_TRACE
+#define TRACEPOINT_CREATE_PROBES
+#define TRACEPOINT_DEFINE
+#include "mk_linuxtrace_provider.h"
+#endif
+
 #include "monkey.h"
 #include "mk_socket.h"
 #include "mk_user.h"
@@ -190,6 +196,10 @@ int main(int argc, char **argv)
 
     mk_version();
     mk_signal_init();
+
+#ifdef LINUX_TRACE
+    mk_info("Linux Trace enabled");
+#endif
 
     /* Override number of thread workers */
     if (workers_override >= 0) {

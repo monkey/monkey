@@ -130,6 +130,17 @@ main()
 		fi
 	fi
 
+	if test $linux_trace ; then
+                check_generic "Linux Trace Toolkit (UST)" "lttng/tracepoint.h"
+                if [ $result -ne 0 ]; then
+                        echo
+                        echo -n "Error: Linux Trace Toolkit (lttng) is not available "
+                        echo    "in your system"
+                        echo
+                        exit 1
+                fi
+        fi
+
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
 	find plugins/ -name Makefile -exec rm {} \;
@@ -491,9 +502,9 @@ create_makefile2()
 {
 
 	if [ $platform == "generic" ]; then
-		libs="-pthread"
+		libs="$libs -pthread"
 	elif [ $platform == "android" ]; then
-		libs=""
+		libs="$libs "
 	fi
 
 	if [ -n "$sharedlib" ]; then
@@ -922,6 +933,9 @@ for arg in $*; do
 		--no-backtrace*)
 			no_backtrace=1
 			;;
+                --linux-trace*)
+                        linux_trace=1
+                        ;;
 		--uclib-mode*)
 			uclib_mode=1
 			;;
@@ -961,9 +975,9 @@ for arg in $*; do
 		--version*)
 			echo "Monkey HTTP Daemon v$VERSION"
 			echo "-------------------------"
-			echo "Copyright 2001-2012 - Monkey Development Team"
+			echo "Copyright 2001-2013 - Monkey Development Team"
 			echo "Written by Eduardo Silva P. <edsiper@gmail.com>"
-			echo "Monkey Home   : http://www.monkey-project.com"
+			echo "Monkey Home   : http://monkey-project.com"
 			echo
 			exit 1
 			;;
@@ -978,6 +992,7 @@ for arg in $*; do
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
+			echo "  --linux-trace           Enable Linux Trace Toolkit"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
 			echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
@@ -1014,7 +1029,7 @@ done
 
 echo -en $RED"********************************************\n"
 echo -en $GREEN$BOLD"        Monkey HTTP Daemon v$VERSION        \n"
-echo -en $RED"*"$YELLOW"         www.monkey-project.com           "$RED"*\n"
+echo -en $RED"*"$YELLOW"           monkey-project.com             "$RED"*\n"
 echo -en "*"$BLUE" ---------------------------------------- "$RED"*\n"
 echo -en "*"$YELLOW"  We need beta testers, developers and    "$RED"*\n"
 echo -en "*"$YELLOW" translators!, if you want to contribute  "$RED"*\n"
@@ -1089,6 +1104,11 @@ if [ $no_backtrace ]; then
 	DEFS="$DEFS -DNO_BACKTRACE"
 fi
 
+if [ $linux_trace ]; then
+        libs="$libs -llttng-ust -lurcu-bp"
+	DEFS="$DEFS -DLINUX_TRACE"
+fi
+
 if [ $platform != "generic" ] && [ $platform != "android" ]; then
 	echo -e "\nError: invalid platform $platform\n"
 	exit 1
@@ -1102,6 +1122,6 @@ uname=`uname -a`
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
-     no_backtrace cmd uname
+     no_backtrace linux_trace cmd uname
 
 exit 0
