@@ -215,7 +215,7 @@ main()
         if [ $malloc_jemalloc -eq 1 ]; then
                 echo
                 echo -e "\033[1m=== Configuring Memory Allocator ===\033[0m"
-                cd deps/jemalloc
+                cd deps/jemalloc > /dev/null 2>&1
                 ./configure --with-jemalloc-prefix=je_ \
                             --enable-cc-silence \
                             CFLAGS="-std=gnu99 -Wall -pipe -g3 -O3 -funroll-loops " \

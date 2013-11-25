@@ -484,8 +484,7 @@ malloc_conf_init(void)
 			}
 			break;
 		} default:
-			/* NOTREACHED */
-			assert(false);
+			not_reached();
 			buf[0] = '\0';
 			opts = buf;
 		}
@@ -522,14 +521,15 @@ malloc_conf_init(void)
 					    "Invalid conf value",	\
 					    k, klen, v, vlen);		\
 				} else if (clip) {			\
-					if (um < min)			\
+					if (min != 0 && um < min)	\
 						o = min;		\
 					else if (um > max)		\
 						o = max;		\
 					else				\
 						o = um;			\
 				} else {				\
-					if (um < min || um > max) {	\
+					if ((min != 0 && um < min) ||	\
+					    um > max) {			\
 						malloc_conf_error(	\
 						    "Out-of-range "	\
 						    "conf value",	\
@@ -695,17 +695,6 @@ malloc_init_hard(void)
 
 	malloc_conf_init();
 
-#if (!defined(JEMALLOC_MUTEX_INIT_CB) && !defined(JEMALLOC_ZONE) \
-    && !defined(_WIN32))
-	/* Register fork handlers. */
-	if (pthread_atfork(jemalloc_prefork, jemalloc_postfork_parent,
-	    jemalloc_postfork_child) != 0) {
-		malloc_write("<jemalloc>: Error in pthread_atfork()\n");
-		if (opt_abort)
-			abort();
-	}
-#endif
-
 	if (opt_stats_print) {
 		/* Print statistics at exit. */
 		if (atexit(stats_print_atexit) != 0) {
@@ -745,8 +734,10 @@ malloc_init_hard(void)
 		return (true);
 	}
 
-	if (malloc_mutex_init(&arenas_lock))
+	if (malloc_mutex_init(&arenas_lock)) {
+		malloc_mutex_unlock(&init_lock);
 		return (true);
+	}
 
 	/*
 	 * Create enough scaffolding to allow recursive allocation in
@@ -792,9 +783,25 @@ malloc_init_hard(void)
 		return (true);
 	}
 
-	/* Get number of CPUs. */
 	malloc_mutex_unlock(&init_lock);
+	/**********************************************************************/
+	/* Recursive allocation may follow. */
+
 	ncpus = malloc_ncpus();
+
+#if (!defined(JEMALLOC_MUTEX_INIT_CB) && !defined(JEMALLOC_ZONE) \
+    && !defined(_WIN32))
+	/* LinuxThreads's pthread_atfork() allocates. */
+	if (pthread_atfork(jemalloc_prefork, jemalloc_postfork_parent,
+	    jemalloc_postfork_child) != 0) {
+		malloc_write("<jemalloc>: Error in pthread_atfork()\n");
+		if (opt_abort)
+			abort();
+	}
+#endif
+
+	/* Done recursively allocating. */
+	/**********************************************************************/
 	malloc_mutex_lock(&init_lock);
 
 	if (mutex_boot()) {
@@ -841,6 +848,7 @@ malloc_init_hard(void)
 
 	malloc_initialized = true;
 	malloc_mutex_unlock(&init_lock);
+
 	return (false);
 }
 

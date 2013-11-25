@@ -423,7 +423,7 @@ prof_backtrace(prof_bt_t *bt, unsigned nignore)
 {
 
 	cassert(config_prof);
-	assert(false);
+	not_reached();
 }
 #endif
 
@@ -511,7 +511,7 @@ prof_lookup(prof_bt_t *bt)
 			assert(ret.v != NULL);
 			if (ckh_remove(&prof_tdata->bt2cnt, ret.p->ctx->bt,
 			    NULL, NULL))
-				assert(false);
+				not_reached();
 			ql_remove(&prof_tdata->lru_ql, ret.p, lru_link);
 			prof_ctx_merge(ret.p->ctx, ret.p);
 			/* ret can now be re-used. */
@@ -695,7 +695,7 @@ prof_ctx_destroy(prof_ctx_t *ctx)
 		assert(ctx->cnt_merged.accumbytes == 0);
 		/* Remove ctx from bt2ctx. */
 		if (ckh_remove(&bt2ctx, ctx->bt, NULL, NULL))
-			assert(false);
+			not_reached();
 		prof_leave(prof_tdata);
 		/* Destroy ctx. */
 		malloc_mutex_unlock(ctx->lock);
@@ -794,6 +794,7 @@ prof_dump_ctx(bool propagate_err, prof_ctx_t *ctx, prof_bt_t *bt)
 static bool
 prof_dump_maps(bool propagate_err)
 {
+	bool ret;
 	int mfd;
 	char filename[PATH_MAX + 1];
 
@@ -806,24 +807,34 @@ prof_dump_maps(bool propagate_err)
 		ssize_t nread;
 
 		if (prof_write(propagate_err, "\nMAPPED_LIBRARIES:\n") &&
-		    propagate_err)
-			return (true);
+		    propagate_err) {
+			ret = true;
+			goto label_return;
+		}
 		nread = 0;
 		do {
 			prof_dump_buf_end += nread;
 			if (prof_dump_buf_end == PROF_DUMP_BUFSIZE) {
 				/* Make space in prof_dump_buf before read(). */
-				if (prof_flush(propagate_err) && propagate_err)
-					return (true);
+				if (prof_flush(propagate_err) &&
+				    propagate_err) {
+					ret = true;
+					goto label_return;
+				}
 			}
 			nread = read(mfd, &prof_dump_buf[prof_dump_buf_end],
 			    PROF_DUMP_BUFSIZE - prof_dump_buf_end);
 		} while (nread > 0);
-		close(mfd);
-	} else
-		return (true);
+	} else {
+		ret = true;
+		goto label_return;
+	}
 
-	return (false);
+	ret = false;
+label_return:
+	if (mfd != -1)
+		close(mfd);
+	return (ret);
 }
 
 static bool
@@ -884,7 +895,7 @@ prof_dump(bool propagate_err, const char *filename, bool leakcheck)
 			goto label_error;
 	}
 
-	/* Dump  per ctx profile stats. */
+	/* Dump per ctx profile stats. */
 	for (tabind = 0; ckh_iter(&bt2ctx, &tabind, &bt.v, &ctx.v)
 	    == false;) {
 		if (prof_dump_ctx(propagate_err, ctx.p, bt.p))
@@ -1245,10 +1256,10 @@ prof_prefork(void)
 	if (opt_prof) {
 		unsigned i;
 
-		malloc_mutex_lock(&bt2ctx_mtx);
-		malloc_mutex_lock(&prof_dump_seq_mtx);
+		malloc_mutex_prefork(&bt2ctx_mtx);
+		malloc_mutex_prefork(&prof_dump_seq_mtx);
 		for (i = 0; i < PROF_NCTX_LOCKS; i++)
-			malloc_mutex_lock(&ctx_locks[i]);
+			malloc_mutex_prefork(&ctx_locks[i]);
 	}
 }
 

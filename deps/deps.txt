@@ -1,1 +1,3 @@
-Jemalloc v3.4.1: http://www.canonware.com/download/jemalloc/jemalloc-3.4.1/
+1) Jemalloc v3.4.1-d6df91438a1cf25ea248c3897da463c51709c580
+
+   https://github.com/jemalloc/jemalloc
