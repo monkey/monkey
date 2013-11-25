@@ -217,7 +217,8 @@ main()
                 echo -e "\033[1m=== Configuring Memory Allocator ===\033[0m"
                 cd deps/jemalloc
                 autoconf
-                ./configure --with-jemalloc-prefix=je_ \
+                ./configure $JEMALLOC_OPTS \
+                            --with-jemalloc-prefix=je_ \
                             --enable-cc-silence \
                             CFLAGS="-std=gnu99 -Wall -pipe -g3 -O3 -funroll-loops " \
                             LDFLAGS="" > jemalloc.config 2>&1
@@ -590,6 +591,7 @@ create_makefile2()
 
         if [ $malloc_jemalloc -eq 1 ]; then
                 extra="../deps/jemalloc/lib/libjemalloc.a"
+                libs="$libs -lm"
         fi
 
 	cat > src/Makefile<<EOF
@@ -621,7 +623,7 @@ lib: $SONAME
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
-	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj \$(LIBS) $extra
+	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj $extra \$(LIBS)
 
 $SONAME: \$(LIBOBJ)
 	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ \$(LIBOBJ) $mod_obj \$(LIBS)
