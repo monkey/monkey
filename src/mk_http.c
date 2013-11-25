@@ -426,7 +426,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             if (sr->real_path.data != sr->real_path_static) {
                 mk_pointer_free(&sr->real_path);
                 sr->real_path = index_file;
-                sr->real_path.data = strdup(index_file.data);
+                sr->real_path.data = mk_string_dup(index_file.data);
             }
             /* If it's static, and still fits */
             else if (index_file.len < MK_PATH_BASE) {
@@ -437,7 +437,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             /* It was static, but didn't fit */
             else {
                 sr->real_path = index_file;
-                sr->real_path.data = strdup(index_file.data);
+                sr->real_path.data = mk_string_dup(index_file.data);
             }
 
             mk_file_get_info(sr->real_path.data, &sr->file_info);

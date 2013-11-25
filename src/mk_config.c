@@ -276,8 +276,8 @@ void mk_config_free(struct mk_config *conf)
         mk_mem_free(section->name);
         mk_mem_free(section);
     }
-    mk_mem_free(conf->file);
-    mk_mem_free(conf);
+    if (conf->file) mk_mem_free(conf->file);
+    if (conf) mk_mem_free(conf);
 }
 
 void mk_config_free_entries(struct mk_config_section *section)

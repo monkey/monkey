@@ -149,10 +149,18 @@ char *mk_string_casestr(char *heystack, char *needle)
 
 char *mk_string_dup(const char *s)
 {
+    size_t len;
+    char *p;
+
     if (!s)
         return NULL;
 
-    return strdup(s);
+    len = strlen(s);
+    p = mk_mem_malloc(len + 1);
+    memcpy(p, s, len);
+    p[len] = '\0';
+
+    return p;
 }
 
 struct mk_list *mk_string_split_line(const char *line)
@@ -376,7 +384,7 @@ char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
 
 char *mk_string_tolower(const char *in)
 {
-    char *out = strdup(in);
+    char *out = mk_string_dup(in);
     const char *ip = in;
     char *op = out;
 

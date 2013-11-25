@@ -148,7 +148,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config = mk_mem_malloc_z(sizeof(struct server_config));
     if (!config) goto out;
 
-    config->serverconf = strdup(MONKEY_PATH_CONF);
+    config->serverconf = mk_stringdup(MONKEY_PATH_CONF);
     mk_config_set_init_values();
 
     /*
@@ -167,12 +167,12 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     char tmppath[PATH_MAX];
 
     if (plugins & MKLIB_LIANA_SSL) {
-        config->transport_layer = strdup("liana_ssl");
+        config->transport_layer = mk_string_dup("liana_ssl");
         snprintf(tmppath, PATH_MAX, "%s/monkey-liana_ssl.so", a->plugdir);
         if (!load_networking(tmppath)) goto out_config;
     }
     else {
-        config->transport_layer = strdup("liana");
+        config->transport_layer = mk_string_dup("liana");
         snprintf(tmppath, PATH_MAX, "%s/monkey-liana.so", a->plugdir);
         if (!load_networking(tmppath)) goto out_config;
     }
@@ -181,13 +181,13 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     mk_plugin_preworker_calls();
 
     if (port) config->serverport = port;
-    if (address) config->listen_addr = strdup(address);
-    else config->listen_addr = strdup(config->listen_addr);
+    if (address) config->listen_addr = mk_string_dup(address);
+    else config->listen_addr = mk_string_dup(config->listen_addr);
 
     unsigned long len;
     struct host *host = mk_mem_malloc_z(sizeof(struct host));
     /* We hijack this field for the vhost name */
-    host->file = strdup("default");
+    host->file = mk_string_dup("default");
     mk_list_init(&host->error_pages);
     mk_list_init(&host->server_names);
     mk_string_build(&host->host_signature, &len, "libmonkey");
@@ -196,7 +196,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
                     "Server: %s", host->host_signature);
 
     struct host_alias *alias = mk_mem_malloc_z(sizeof(struct host_alias));
-    alias->name = strdup(config->listen_addr);
+    alias->name = mk_string_dup(config->listen_addr);
     alias->len = strlen(config->listen_addr);
     mk_list_add(&alias->_head, &host->server_names);
 
@@ -204,11 +204,11 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->nhosts++;
 
     if (documentroot) {
-        host->documentroot.data = strdup(documentroot);
-        host->documentroot.len = strlen(documentroot);
+        host->documentroot.data = mk_string_dup(documentroot);
+        host->documentroot.len = mk_string_dup(documentroot);
     }
     else {
-        host->documentroot.data = strdup("/dev/null");
+        host->documentroot.data = mk_string_dup("/dev/null");
         host->documentroot.len = sizeof("/dev/null") - 1;
     }
 
@@ -275,7 +275,7 @@ int mklib_config(mklib_ctx ctx, ...)
             case MKC_USERDIR:
                 s = va_arg(va, char *);
                 if (config->user_dir) free(config->user_dir);
-                config->user_dir = strdup(s);
+                config->user_dir = mk_string_dup(s);
             break;
             case MKC_INDEXFILE:
                 s = va_arg(va, char *);
@@ -303,7 +303,7 @@ int mklib_config(mklib_ctx ctx, ...)
                 free(def->header_host_signature.data);
                 def->header_host_signature.data = NULL;
 
-                def->host_signature = strdup(config->server_software.data);
+                def->host_signature = mk_string_dup(config->server_software.data);
                 mk_string_build(&def->header_host_signature.data,
                                 &def->header_host_signature.len,
                                 "Server: %s", def->host_signature);
@@ -366,9 +366,9 @@ int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
 
 
     h = mk_mem_malloc_z(sizeof(struct host));
-    h->file = strdup(name);
+    h->file = mk_string_dup(name);
 
-    h->documentroot.data = strdup("/dev/null");
+    h->documentroot.data = mk_string_dup("/dev/null");
     h->documentroot.len = sizeof("/dev/null") - 1;
 
     mk_list_init(&h->error_pages);
@@ -409,7 +409,7 @@ int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
             case MKV_DOCUMENTROOT:
                 s = va_arg(va, char *);
                 free(h->documentroot.data);
-                h->documentroot.data = strdup(s);
+                h->documentroot.data = mk_string_dup(s);
                 h->documentroot.len = strlen(s);
             break;
             default:
@@ -420,8 +420,8 @@ int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
         i = va_arg(va, int);
     }
 
-    h->host_signature = strdup(defaulth->host_signature);
-    h->header_host_signature.data = strdup(defaulth->header_host_signature.data);
+    h->host_signature = mk_string_dup(defaulth->host_signature);
+    h->header_host_signature.data = mk_string_dup(defaulth->header_host_signature.data);
     h->header_host_signature.len = defaulth->header_host_signature.len;
 
     mk_list_add(&h->_head, &config->hosts);

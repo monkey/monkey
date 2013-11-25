@@ -23,6 +23,16 @@
 #define MK_MEM_H
 
 #include <stdio.h>
+
+#ifdef MALLOC_JEMALLOC
+#include "../../deps/jemalloc/include/jemalloc/jemalloc.h"
+#define malloc(size) je_malloc(size)
+#define calloc(count,size) je_calloc(count,size)
+#define realloc(ptr,size) je_realloc(ptr,size)
+#define free(ptr) je_free(ptr)
+#define zmalloc_size(p) je_malloc_usable_size(p)
+#endif
+
 #include "mk_macros.h"
 
 typedef struct
