@@ -205,7 +205,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     if (documentroot) {
         host->documentroot.data = mk_string_dup(documentroot);
-        host->documentroot.len = mk_string_dup(documentroot);
+        host->documentroot.len = strlen(documentroot);
     }
     else {
         host->documentroot.data = mk_string_dup("/dev/null");
