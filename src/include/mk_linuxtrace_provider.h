@@ -17,6 +17,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifdef LINUX_TRACE
+
 #undef  TRACEPOINT_PROVIDER
 #define TRACEPOINT_PROVIDER monkey
 
@@ -63,13 +65,15 @@ TRACEPOINT_EVENT(
 #include <lttng/tracepoint-event.h>
 
 /* Monkey Linux Trace helper macros */
-#ifdef LINUX_TRACE
 #define MK_LT_EPOLL(fd, event) tracepoint(monkey, epoll, fd, event)
 #define MK_LT_EPOLL_STATE(fd, mode, event) \
   tracepoint(monkey, epoll_state, fd, mode, event)
 #define MK_LT_SCHED(fd, event) tracepoint(monkey, scheduler, fd, event)
-#else
+
+#else /* NO LINUX_TRACE */
+
 #define MK_LT_EPOLL(fd, event) do {} while(0)
 #define MK_LT_EPOLL_STATE(fd, mode, event) do{} while(0)
 #define MK_LT_SCHED(fd, event) do {} while(0)
+
 #endif
