@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 #include "mk_rbtree.h"
+#include "mk_linuxtrace_provider.h"
 
 pthread_key_t worker_sched_node;
 
@@ -102,6 +103,7 @@ int mk_sched_add_client(int remote_fd)
 
     if (mk_unlikely(t == -1)) {
         MK_TRACE("[FD %i] Over Capacity, drop!", remote_fd);
+        MK_LT_SCHED(remote_fd, "OVER_CAPACITY");
         return -1;
     }
 
@@ -117,6 +119,7 @@ int mk_sched_add_client(int remote_fd)
         sched->accepted_connections++;
     }
 
+    MK_LT_SCHED(remote_fd, "ADD_CLIENT");
     return r;
 }
 
@@ -140,6 +143,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         mk_conn_close(remote_fd);
+        MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return -1;
     }
 
@@ -174,6 +178,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     mk_list_del(&sched_conn->_head);
     mk_list_add(&sched_conn->_head, &sched->busy_queue);
 
+    MK_LT_SCHED(remote_fd, "REGISTERED");
     return 0;
 }
 
@@ -392,11 +397,12 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
          * causing ghosts.
          */
         mk_socket_close(remote_fd);
-
+        MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
         return 0;
     }
     else {
         MK_TRACE("[FD %i] Not found", remote_fd);
+        MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
     }
     return -1;
 }
@@ -427,11 +433,13 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
 		else if (remote_fd > this->socket)
   			node = node->rb_right;
 		else {
+            MK_LT_SCHED(remote_fd, "GET_CONNECTION");
   			return this;
         }
 	}
 
     MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
+    MK_LT_SCHED(remote_fd, "GET_FAILED");
     return NULL;
 }
 
@@ -452,6 +460,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
             /* Check timeout */
             if (client_timeout <= log_current_utime) {
                 MK_TRACE("Scheduler, closing fd %i due TIMEOUT", entry_conn->socket);
+                MK_LT_SCHED(entry_conn->socket, "TIMEOUT_CONN_PENDING");
                 mk_sched_remove_client(sched, entry_conn->socket);
             }
         }
@@ -475,7 +484,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
             if (client_timeout <= log_current_utime) {
                 MK_TRACE("[FD %i] Scheduler, closing due to timeout (incomplete)",
                          cs_node->socket);
-
+                MK_LT_SCHED(cs_node->socket, "TIMEOUT_REQ_INCOMPLETE");
                 mk_sched_remove_client(sched, cs_node->socket);
                 mk_session_remove(cs_node->socket);
 
