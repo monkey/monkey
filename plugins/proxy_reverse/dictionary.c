@@ -31,8 +31,7 @@ static uint32_t hash(const char *string, size_t size)
 {
     uint32_t result = 0;
     size_t i;
-    for(i = 0; i < size; ++i)
-    {
+    for (i = 0; i < size; ++i) {
         result = string[i] + (result << 6) + (result << 16) - result;
     }
     return result;
@@ -66,30 +65,27 @@ static uint32_t hash(const char *string, size_t size)
 }*/
 
 /* Initializes dictionary iterator. */
-const struct dict_item *dict_first(struct dict_iterator *it, const struct dict *d)
+const struct dict_item *dict_first(struct dict_iterator *it,
+                                   const struct dict *d)
 {
-    for(it->index = 0; it->index < d->size; ++it->index)
-    {
-        if (d->items[it->index])
-        {
+    for (it->index = 0; it->index < d->size; ++it->index) {
+        if (d->items[it->index]) {
             return it->item = d->items[it->index];
         }
     }
     return 0;
 }
 
-const struct dict_item *dict_next(struct dict_iterator *it, const struct dict *d)
+const struct dict_item *dict_next(struct dict_iterator *it,
+                                  const struct dict *d)
 {
     /* If there are more items in the curren slot, return the next one. Update the iterator. */
-    if (it->item->_next)
-    {
+    if (it->item->_next) {
         return it->item = it->item->_next;
     }
 
-    for(it->index += 1; it->index < d->size; ++it->index)
-    {
-        if (d->items[it->index])
-        {
+    for (it->index += 1; it->index < d->size; ++it->index) {
+        if (d->items[it->index]) {
             return it->item = d->items[it->index];
         }
     }
@@ -98,11 +94,10 @@ const struct dict_item *dict_next(struct dict_iterator *it, const struct dict *d
 }
 
 // TODO: is the second argument really necessary
-bool dict_init(struct dict *dict, size_t size)
+bool dict_init(struct dict * dict, size_t size)
 {
     dict->items = calloc(size, sizeof(struct dict_item *));
-    if (!dict->items)
-    {
+    if (!dict->items) {
         return false;
     }
     dict->count = 0;
@@ -110,52 +105,52 @@ bool dict_init(struct dict *dict, size_t size)
     return true;
 }
 
-int dict_set(struct dict *dict, const struct string *key, void *value, void **result)
+int dict_set(struct dict *dict, const struct string *key, void *value,
+             void **result)
 {
     struct dict_item **items, *item;
 
     /* Look for the requested key among the items with the corresponding hash. Compare only keys with the same length. */
-    for(items = ITEMS_SLOT(dict, key->data, key->length); (item = *items); items = &(*items)->_next)
-    {
-        if ((key->length == item->key_size) && !memcmp(key->data, item->key_data, item->key_size))
-        {
+    for (items = ITEMS_SLOT(dict, key->data, key->length); (item = *items);
+         items = &(*items)->_next) {
+        if ((key->length == item->key_size)
+            && !memcmp(key->data, item->key_data, item->key_size)) {
             /* Overwrite value if specified. Otherwise return error. */
-            if (result)
-            {
+            if (result) {
                 *result = item->value;
                 item->value = value;
                 return 0;
             }
-            else
-            {
+            else {
                 return ERROR_EXIST;
             }
         }
     }
-    
+
     /* Allocate a single memory slot for dict_item and key data. */
-    struct /* same as struct dict_item except key is not const */
+    struct                      /* same as struct dict_item except key is not const */
     {
         size_t key_size;
         char *key_data;
         void *value;
         struct dict_item *_next;
-    } *slot = mk_api->mem_alloc(sizeof(struct dict_item) + sizeof(char) * (key->length + 1));
-    if (!slot)
-    {
+    }     *slot =
+        mk_api->mem_alloc(sizeof(struct dict_item) +
+                          sizeof(char) * (key->length + 1));
+    if (!slot) {
         return ERROR_MEMORY;
     }
-    
+
     /* Initialize the allocated memory. */
     slot->key_size = key->length;
-    slot->key_data = (char *)(slot + 1);
+    slot->key_data = (char *) (slot + 1);
     memcpy(slot->key_data, key->data, key->length);
     slot->key_data[key->length] = 0;
     slot->value = value;
     slot->_next = 0;
 
     /* Add the item to the dictionary. */
-    *items = (struct dict_item *)slot;
+    *items = (struct dict_item *) slot;
     dict->count += 1;
     return 0;
 }
@@ -164,10 +159,10 @@ void *dict_get(const struct dict *dict, const struct string *key)
 {
     /* Look for the requested key among the items with the corresponding hash. Compare only keys with the same length. */
     struct dict_item *item;
-    for(item = *ITEMS_SLOT(dict, key->data, key->length); item; item = item->_next)
-    {
-        if ((key->length == item->key_size) && !memcmp(key->data, item->key_data, item->key_size))
-        {
+    for (item = *ITEMS_SLOT(dict, key->data, key->length); item;
+         item = item->_next) {
+        if ((key->length == item->key_size)
+            && !memcmp(key->data, item->key_data, item->key_size)) {
             return item->value; /* This is the item we are looking for. */
         }
     }
@@ -179,10 +174,10 @@ void *dict_remove(struct dict *dict, const struct string *key)
     struct dict_item **items, *item;
 
     /* Look for the requested key among the items with the corresponding hash. Compare only keys with the same length. */
-    for(items = ITEMS_SLOT(dict, key->data, key->length); (item = *items); items = &(*items)->_next)
-    {
-        if ((key->length == item->key_size) && !memcmp(key->data, item->key_data, item->key_size))
-        {
+    for (items = ITEMS_SLOT(dict, key->data, key->length); (item = *items);
+         items = &(*items)->_next) {
+        if ((key->length == item->key_size)
+            && !memcmp(key->data, item->key_data, item->key_size)) {
             /* This is the item we are looking for. */
             void *value = item->value;
             *items = item->_next;
@@ -202,17 +197,14 @@ void dict_term(struct dict *dict)
     struct dict_item *prev = 0;
 
     /* Free each item in each slot of the dictionary. */
-    for(it.index = 0; it.index < dict->size; ++it.index)
-    {
-        if (dict->items[it.index])
-        {
+    for (it.index = 0; it.index < dict->size; ++it.index) {
+        if (dict->items[it.index]) {
             it.item = dict->items[it.index];
-            do
-            {
+            do {
                 prev = it.item;
                 it.item = it.item->_next;
 
-                mk_api->mem_free(prev->value); // TODO: this should be done by the user
+                mk_api->mem_free(prev->value);  // TODO: this should be done by the user
                 mk_api->mem_free(prev);
             } while (it.item);
         }

@@ -38,7 +38,7 @@
  * Base function for search routines, it accept modifiers to enable/disable
  * the case sensitive feature and also allow to specify a haystack len
  * Get position of a substring.
- */
+*/
 static int _mk_string_search(const char *string, const char *search,
                              int sensitive, int len)
 {

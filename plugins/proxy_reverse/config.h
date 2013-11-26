@@ -9,9 +9,9 @@ enum balancer_type
     LockingRoundRobin,
     LeastConnections,
     /*Hash=1,
-    FirstAlive,
-    RoundRobin,
-    WRoundRobin*/
+       FirstAlive,
+       RoundRobin,
+       WRoundRobin */
 };
 
 struct proxy_server_entry
@@ -48,7 +48,7 @@ struct proxy_entry
     struct match_regex_array *regex_array;
     int count;
     int timeout;
-    char *stats_url; // May be to make better structure, and not to make stats_url for every entry
+    char *stats_url;            // May be to make better structure, and not to make stats_url for every entry
 };
 
 struct proxy_entry_array

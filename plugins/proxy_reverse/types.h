@@ -49,7 +49,7 @@ struct dict
         const char *key_data;
         void *value;
         struct dict_item *_next;
-    } **items;
+    }       **items;
     size_t count, size;
 };
 
@@ -60,14 +60,17 @@ struct dict_iterator
 };
 
 /* Initializes dictionary iterator and returns the first item. */
-const struct dict_item *dict_first(struct dict_iterator *it, const struct dict *d);
+const struct dict_item *dict_first(struct dict_iterator *it,
+                                   const struct dict *d);
 /* Returns next item in a dictionary iterator. */
-const struct dict_item *dict_next(struct dict_iterator *it, const struct dict *d);
+const struct dict_item *dict_next(struct dict_iterator *it,
+                                  const struct dict *d);
 
 /* WARNING: size must be a power of 2 */
 bool dict_init(struct dict *dict, size_t size);
 
-int dict_set(struct dict *dict, const struct string *key, void *value, void **result);
+int dict_set(struct dict *dict, const struct string *key, void *value,
+             void **result);
 #define dict_add(dict, key, value) dict_set((dict), (key), (value), 0)
 
 void *dict_get(const struct dict *dict, const struct string *key);
