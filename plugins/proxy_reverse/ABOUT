@@ -1,4 +1,5 @@
-Proxy reverse
-===
-Enables using monkey as a reverse proxy server.
-Each arriving request is handled by a slave server.
+Proxy Reverse
+=============
+This plugin provides proxy reverse capabilities to Monkey to
+route back incoming connections to backend servers based on
+configuration rules.
