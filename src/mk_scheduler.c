@@ -42,7 +42,7 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 #include "mk_rbtree.h"
-#include "mk_linuxtrace_provider.h"
+#include "mk_linuxtrace.h"
 
 pthread_key_t worker_sched_node;
 

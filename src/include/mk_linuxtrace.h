@@ -62,7 +62,7 @@ TRACEPOINT_EVENT(
 #endif
 
 #undef  TRACEPOINT_INCLUDE
-#define TRACEPOINT_INCLUDE "./mk_linuxtrace_provider.h"
+#define TRACEPOINT_INCLUDE "./mk_linuxtrace.h"
 
 #include <lttng/tracepoint-event.h>
 
