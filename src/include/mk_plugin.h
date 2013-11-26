@@ -202,6 +202,7 @@ struct plugin_api
     char *(*str_dup) (const char *);
     char *(*str_copy_substr) (const char *, int, int);
     struct mk_list *(*str_split_line) (const char *);
+    void  (*str_split_free) (struct mk_list *);
 
     /* file functions */
     char *(*file_to_buffer) (const char *);

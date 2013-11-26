@@ -343,6 +343,7 @@ void mk_plugin_init()
     api->str_copy_substr = mk_string_copy_substr;
     api->str_itop = mk_string_itop;
     api->str_split_line = mk_string_split_line;
+    api->str_split_free = mk_string_split_free;
 
     /* File Callbacks */
     api->file_to_buffer = mk_file_to_buffer;
