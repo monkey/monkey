@@ -216,7 +216,6 @@ main()
                 echo
                 echo -e "\033[1m=== Configuring Memory Allocator ===\033[0m"
                 cd deps/jemalloc
-                autoconf
                 ./configure $JEMALLOC_OPTS \
                             --with-jemalloc-prefix=je_ \
                             --enable-cc-silence \
