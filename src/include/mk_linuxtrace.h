@@ -53,14 +53,16 @@ TRACEPOINT_EVENT(
 TRACEPOINT_EVENT(
                  monkey,
                  scheduler,
-                 TP_ARGS(char *, text),
-                 TP_FIELDS(ctf_string(message, text))
+                 TP_ARGS(int, fd,
+                         char *, text),
+                 TP_FIELDS(ctf_integer(int, fd, fd)
+                           ctf_string(event, text))
                  )
 
 #endif
 
 #undef  TRACEPOINT_INCLUDE
-#define TRACEPOINT_INCLUDE "./mk_linuxtrace_provider.h"
+#define TRACEPOINT_INCLUDE "./mk_linuxtrace.h"
 
 #include <lttng/tracepoint-event.h>
 

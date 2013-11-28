@@ -39,7 +39,7 @@
 #include "mk_epoll.h"
 #include "mk_utils.h"
 #include "mk_macros.h"
-#include "mk_linuxtrace_provider.h"
+#include "mk_linuxtrace.h"
 
 static __thread struct epoll_state_index mk_epoll_state_k;
 

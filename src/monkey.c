@@ -28,7 +28,7 @@
 #ifdef LINUX_TRACE
 #define TRACEPOINT_CREATE_PROBES
 #define TRACEPOINT_DEFINE
-#include "mk_linuxtrace_provider.h"
+#include "mk_linuxtrace.h"
 #endif
 
 #include "monkey.h"
