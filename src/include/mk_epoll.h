@@ -76,8 +76,6 @@ struct epoll_state_index
     struct mk_list av_queue;
 };
 
-extern pthread_key_t mk_epoll_state_k;
-
 /* Monkey epoll calls */
 int mk_epoll_create(int max_events);
 void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events);

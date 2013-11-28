@@ -41,7 +41,7 @@
 #include "mk_macros.h"
 #include "mk_linuxtrace_provider.h"
 
-pthread_key_t mk_epoll_state_k;
+static __thread struct epoll_state_index mk_epoll_state_k;
 
 /*
  * Initialize the epoll state index per worker thread, every index struct contains
@@ -52,9 +52,9 @@ int mk_epoll_state_init()
 {
     int i;
     struct epoll_state *es;
-    struct epoll_state_index *index;
+    struct epoll_state_index *index = &mk_epoll_state_k;
 
-    index = mk_mem_malloc_z(sizeof(struct epoll_state_index));
+    memset(index, '\0', sizeof(struct epoll_state_index));
     index->size  = config->worker_capacity;
 
     index->rb_queue = RB_ROOT;
@@ -66,17 +66,16 @@ int mk_epoll_state_init()
         mk_list_add(&es->_head, &index->av_queue);
     }
 
-    return pthread_setspecific(mk_epoll_state_k, (void *) index);
+    return 0;
 }
 
 struct epoll_state *mk_epoll_state_get(int fd)
 {
-    struct epoll_state_index *index;
+  	struct rb_node *node;
     struct epoll_state *es_entry;
+    const struct epoll_state_index *index = &mk_epoll_state_k;
 
-    index = pthread_getspecific(mk_epoll_state_k);
-
-  	struct rb_node *node = index->rb_queue.rb_node;
+    node = index->rb_queue.rb_node;
   	while (node) {
   		es_entry = container_of(node, struct epoll_state, _rb_head);
 		if (fd < es_entry->fd)
@@ -98,17 +97,15 @@ inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
                                               uint32_t events)
 {
     int i;
-    struct epoll_state_index *index;
+    struct epoll_state_index *index = &mk_epoll_state_k;
     struct epoll_state *es_entry = NULL, *es_tmp;
-
-    index = (struct epoll_state_index *) pthread_getspecific(mk_epoll_state_k);
 
     /*
      * Lets check if we are in the thread context, if dont, this can be the
      * situation when the file descriptor is new and comes from the parent
      * server loop and is just being assigned to the worker thread
      */
-    if (mk_unlikely(!index)) {
+    if (mk_unlikely(index->size <= 0)) {
         return NULL;
     }
 
@@ -187,10 +184,8 @@ inline struct epoll_state *mk_epoll_state_set(int fd, uint8_t mode,
 
 static int mk_epoll_state_del(int fd)
 {
-    struct epoll_state_index *index;
     struct epoll_state *es_entry;
-
-    index = pthread_getspecific(mk_epoll_state_k);
+    struct epoll_state_index *index = &mk_epoll_state_k;
 
     es_entry = mk_epoll_state_get(fd);
     if (es_entry) {
