@@ -249,7 +249,7 @@ static int config_parse(const char *confdir, struct polar_config *conf)
 
     mk_api->str_build(&conf_path, &len, "%spolarssl.conf", confdir);
     conf_head = mk_api->config_create(conf_path);
-    free(conf_path);
+    mk_api->mem_free(conf_path);
 
     if (conf_head == NULL) {
         goto fallback;
@@ -478,7 +478,7 @@ static int polar_thread_init(void)
 
     PLUGIN_TRACE("[polarssl] Init thread context.");
 
-    thctx = malloc(sizeof(*thctx));
+    thctx = mk_api->mem_alloc(sizeof(*thctx));
     if (thctx == NULL) {
         return -1;
     }
@@ -494,7 +494,7 @@ static int polar_thread_init(void)
             NULL, 0);
     if (ret) {
         mk_err("crt_drbg_init failed: %d", ret);
-        free(thctx);
+        mk_api->mem_free(thctx);
         return -1;
     }
 
@@ -515,21 +515,21 @@ static void contexts_free(struct polar_context_head *ctx)
         for (; next; cur = next, next = next->_next) {
             ssl_free(&cur->context);
             memset(cur, 0, sizeof(*cur));
-            free(cur);
+            mk_api->mem_free(cur);
         }
 
         ssl_free(&cur->context);
         memset(cur, 0, sizeof(*cur));
-        free(cur);
+        mk_api->mem_free(cur);
     }
 }
 
 static void config_free(struct polar_config *conf)
 {
-    if (conf->cert_file) free(conf->cert_file);
-    if (conf->cert_chain_file) free(conf->cert_chain_file);
-    if (conf->key_file) free(conf->key_file);
-    if (conf->dh_param_file) free(conf->dh_param_file);
+    if (conf->cert_file) mk_api->mem_free(conf->cert_file);
+    if (conf->cert_chain_file) mk_api->mem_free(conf->cert_chain_file);
+    if (conf->key_file) mk_api->mem_free(conf->key_file);
+    if (conf->dh_param_file) mk_api->mem_free(conf->dh_param_file);
 }
 
 static void polar_exit(void)
@@ -549,7 +549,7 @@ static void polar_exit(void)
     mk_list_foreach_safe(cur, tmp, &server_context.threads._head) {
         thctx = mk_list_entry(cur, struct polar_thread_context, _head);
         contexts_free(thctx->contexts);
-        free(thctx);
+        mk_api->mem_free(thctx);
     }
     pthread_mutex_destroy(&server_context._mutex);
 
@@ -595,7 +595,7 @@ static ssl_context *context_new(int fd)
     if (*cur == NULL) {
         PLUGIN_TRACE("[polarssl %d] New ssl context.", fd);
 
-        *cur = malloc(sizeof(**cur));
+        *cur = mk_api->mem_alloc(sizeof(**cur));
         if (*cur == NULL) {
             return NULL;
         }
@@ -690,7 +690,7 @@ int _mkp_network_io_writev(int fd, struct mk_iov *mk_io)
         ssl = context_new(fd);
     }
 
-    buf = malloc(len);
+    buf = mk_api->mem_alloc(len);
     if (buf == NULL) {
         mk_err("malloc failed: %s", strerror(errno));
         return -1;
@@ -703,7 +703,7 @@ int _mkp_network_io_writev(int fd, struct mk_iov *mk_io)
 
     assert(used == len);
     ret = ssl_write(ssl, buf, len);
-    free(buf);
+    mk_api->mem_free(buf);
 
     return handle_return(ret);
 }
@@ -723,7 +723,7 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
         ssl = context_new(fd);
     }
 
-    buf = malloc(SENDFILE_BUF_SIZE);
+    buf = mk_api->mem_alloc(SENDFILE_BUF_SIZE);
     if (buf == NULL) {
         return -1;
     }
@@ -753,7 +753,7 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
         }
     } while (ret > 0);
 
-    free(buf);
+    mk_api->mem_free(buf);
 
     if (sent > 0) {
         return sent;
@@ -937,7 +937,6 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
-    char *cwd;
     int fail = 0;
     struct polar_config conf;
 
@@ -950,19 +949,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     }
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
 
-    cwd = getcwd(NULL, 0);
-    if (cwd == NULL) {
-        mk_err("[polarssl] Malloc failed: %s",
-                strerror(errno));
-        return -1;
-    }
-    if (chdir(confdir)) {
-        mk_err("[polarssl] Failed to change working directory: %s",
-                strerror(errno));
-        free(cwd);
-        return -1;
-    }
-
     memset(&conf, 0, sizeof(conf));
     if (config_parse(confdir, &conf)) {
         fail = -1;
@@ -972,8 +958,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     }
 
     config_free(&conf);
-    chdir(cwd);
-    free(cwd);
     return fail;
 }
 
