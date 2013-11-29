@@ -89,7 +89,8 @@ struct server_config
     char *user;
     char *user_dir;
     char *pid_file_path;        /* pid of server */
-    char *file_config;
+    char *path_config;
+    char *server_config;
     char **request_headers_allowed;
 
     int serverport;             /* port */

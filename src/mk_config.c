@@ -385,7 +385,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     cnf = mk_config_create(tmp);
     if (!cnf) {
-        mk_err("Cannot read 'monkey.conf'");
+        mk_err("Cannot read '%s'", config->server_config);
         exit(EXIT_FAILURE);
     }
     section = mk_config_section_get(cnf, "SERVER");
@@ -725,7 +725,7 @@ void mk_config_start_configure(void)
     unsigned long len;
 
     mk_config_set_init_values();
-    mk_config_read_files(config->file_config, M_DEFAULT_CONFIG_FILE);
+    mk_config_read_files(config->path_config, config->server_config);
 
     /* Load mimes */
     mk_mimetype_read_config();
@@ -857,7 +857,7 @@ void mk_config_sanity_check()
     int fd, flags = config->open_flags;
 
     flags |= O_NOATIME;
-    fd = open(config->file_config, flags);
+    fd = open(config->path_config, flags);
 
     if (fd > -1) {
         config->open_flags = flags;

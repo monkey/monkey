@@ -113,6 +113,7 @@ static void mk_help(int rc)
     printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
+    printf("  -s, --serverconf=FILE\tspecify main server configuration file\n");
     printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
     printf("  -p, --port=PORT\tset listener TCP port (override config)\n");
     printf("  -w, --workers=N\tset number of workers (override config)\n\n");
@@ -133,10 +134,12 @@ int main(int argc, char **argv)
     int port_override = -1;
     int workers_override = -1;
     int run_daemon = 0;
-    char *file_config = NULL;
+    char *path_config = NULL;
+    char *server_config = NULL;
 
     static const struct option long_opts[] = {
         { "configdir", required_argument, NULL, 'c' },
+        { "serverconf",required_argument, NULL, 's' },
         { "build",     no_argument,       NULL, 'b' },
 		{ "daemon",	   no_argument,       NULL, 'D' },
         { "port",      required_argument, NULL, 'p' },
@@ -146,7 +149,7 @@ int main(int argc, char **argv)
 		{ NULL, 0, NULL, 0 }
 	};
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -166,7 +169,10 @@ int main(int argc, char **argv)
             workers_override = atoi(optarg);
             break;
         case 'c':
-            file_config = optarg;
+            path_config = optarg;
+            break;
+        case 's':
+            server_config = optarg;
             break;
         case '?':
             mk_help(EXIT_FAILURE);
@@ -176,10 +182,21 @@ int main(int argc, char **argv)
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));
 
-    if (!file_config)
-        config->file_config = MONKEY_PATH_CONF;
-    else
-        config->file_config = file_config;
+    /* set configuration path */
+    if (!path_config) {
+        config->path_config = MONKEY_PATH_CONF;
+    }
+    else {
+        config->path_config = path_config;
+    }
+
+    /* set target configuration file for the server */
+    if (!server_config) {
+        config->server_config = M_DEFAULT_CONFIG_FILE;
+    }
+    else {
+        config->server_config = server_config;
+    }
 
     if (run_daemon)
         config->is_daemon = MK_TRUE;
