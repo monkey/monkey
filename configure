@@ -193,7 +193,7 @@ main()
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
-                         malloc_system malloc_jemalloc
+                         malloc_libc malloc_jemalloc
 
 	echo "+ Creating src/include/mk_info.h"
 	create_info sysconfdir \
@@ -961,7 +961,7 @@ only_accept=0
 only_accept4=0
 
 # memory allocator
-malloc_system=0
+malloc_libc=0
 malloc_jemalloc=1
 
 for arg in $*; do
@@ -1021,8 +1021,8 @@ for arg in $*; do
                 --linux-trace*)
                         linux_trace=1
                         ;;
-                --malloc-system*)
-                        malloc_system=1
+                --malloc-libc*)
+                        malloc_libc=1
                         malloc_jemalloc=0
                         ;;
 		--uclib-mode*)
@@ -1084,7 +1084,7 @@ for arg in $*; do
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
-                        echo "  --malloc-system         Use system default memory allocator (default is jemalloc)"
+                        echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
 			echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
 			echo
 			echo -e $bldwht"Shared library options:" $txtrst
@@ -1199,8 +1199,8 @@ if [ $linux_trace ]; then
 	DEFS="$DEFS -DLINUX_TRACE"
 fi
 
-if [ $malloc_system -eq 1 ]; then
-        DEFS="$DEFS -DMALLOC_SYSTEM"
+if [ $malloc_libc -eq 1 ]; then
+        DEFS="$DEFS -DMALLOC_LIBC"
 else
         DEFS="$DEFS -DMALLOC_JEMALLOC"
 fi
@@ -1218,6 +1218,6 @@ uname=`uname -a`
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
-     no_backtrace linux_trace malloc_system malloc_jemalloc cmd uname
+     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname
 
 exit 0
