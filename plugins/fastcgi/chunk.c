@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Sonny Karlsson
@@ -26,24 +28,11 @@
 #include "dbg.h"
 #include "chunk.h"
 
-static void *(*mem_alloc)(const size_t) = &malloc;
-static void (*mem_free)(void *) = &free;
-static void *(*mem_realloc)(void *, const size_t) = &realloc;
-
-void chunk_module_init(void *(*mem_alloc_f)(const size_t),
-		void *(*mem_realloc_f)(void *, const size_t),
-		void (*mem_free_f)(void *))
-{
-	mem_alloc = mem_alloc_f;
-	mem_realloc = mem_realloc_f;
-	mem_free = mem_free_f;
-}
-
 struct chunk *chunk_new(size_t size)
 {
 	struct chunk *tmp = NULL;
 
-	tmp = mem_alloc(size);
+	tmp = mk_api->mem_alloc(size);
 	check_mem(tmp);
 
 	mk_list_init(&tmp->_head);
@@ -53,9 +42,9 @@ struct chunk *chunk_new(size_t size)
 	tmp->size  = CHUNK_SIZE(size);
 
 	return tmp;
-error:
+ error:
 	if (tmp) {
-		mem_free(tmp);
+        mk_api->mem_free(tmp);
 	}
 	return NULL;
 }
@@ -107,7 +96,7 @@ error:
 void chunk_free(struct chunk *c)
 {
 	mk_list_del(&c->_head);
-	mem_free(c);
+	mk_api->mem_free(c);
 }
 
 void chunk_retain(struct chunk *c)
@@ -205,10 +194,10 @@ int chunk_iov_init(struct chunk_iov *iov, int size)
 {
 	check(size <= IOV_MAX, "New iov size is larger then IOV_MAX.");
 
-	iov->held_refs = mem_alloc(size * sizeof(*iov->held_refs));
+	iov->held_refs = mk_api->mem_alloc(size * sizeof(*iov->held_refs));
 	check_mem(iov->held_refs);
 
-	iov->io = mem_alloc(size * sizeof(*iov->io));
+	iov->io = mk_api->mem_alloc(size * sizeof(*iov->io));
 	check_mem(iov->io);
 
 	iov->size = size;
@@ -228,10 +217,10 @@ int chunk_iov_resize(struct chunk_iov *iov, int size)
 	check(iov->held_refs, "held refs in iov is not allocated.");
 	check(size <= IOV_MAX, "New iov size is larger then IOV_MAX.");
 
-	tio = mem_realloc(iov->io, size * sizeof(*iov->io));
+	tio = mk_api->mem_realloc(iov->io, size * sizeof(*iov->io));
 	check(tio, "Failed to realloc iovec in iov.");
 
-	trefs = mem_realloc(iov->held_refs, size * sizeof(*iov->held_refs));
+	trefs = mk_api->mem_realloc(iov->held_refs, size * sizeof(*iov->held_refs));
 	check(trefs, "Failed to realloc held refs in iov.");
 
 	iov->io = tio;
@@ -379,7 +368,7 @@ static void chunk_iov_free_refs(struct chunk_iov *iov)
 			cr->u.chunk = NULL;
 		}
 		else if (cr->t == CHUNK_REF_UINT8) {
-			mem_free(cr->u.ptr);
+			mk_api->mem_free(cr->u.ptr);
 			cr->u.ptr = NULL;
 		}
 
@@ -398,11 +387,11 @@ void chunk_iov_free(struct chunk_iov *iov)
 	chunk_iov_free_refs(iov);
 
 	if (iov->io) {
-		mem_free(iov->io);
+		mk_api->mem_free(iov->io);
 		iov->io = NULL;
 	}
 	if (iov->held_refs) {
-		mem_free(iov->held_refs);
+		mk_api->mem_free(iov->held_refs);
 		iov->held_refs = NULL;
 	}
 

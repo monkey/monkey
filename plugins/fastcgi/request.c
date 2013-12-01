@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Sonny Karlsson
@@ -25,9 +27,6 @@
 
 #include "request.h"
 
-static void *(*mem_alloc)(const size_t) = &malloc;
-static void (*mem_free)(void *) = free;
-
 /* Calculate next power of two for 16 bit integers, modified version of
  * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
@@ -49,13 +48,6 @@ uint16_t next_power_of_2(uint16_t v)
 uint16_t is_power_of_2(uint16_t v)
 {
 	return ((v != 0) && !(v & (v - 1)));
-}
-
-void request_module_init(void *(*mem_alloc_p)(const size_t),
-		void (*mem_free_p)(void *))
-{
-	mem_alloc = mem_alloc_p;
-	mem_free  = mem_free_p;
 }
 
 int request_init(struct request *req, int iov_n)
@@ -226,7 +218,7 @@ ssize_t request_add_pkg(struct request *req,
 	return pkg_length;
 error:
 	return -1;
-	
+
 }
 
 void request_free(struct request *req)
@@ -356,14 +348,14 @@ int request_list_init(struct request_list *rl,
 
 	request_cache_init(&rl->cache);
 
-	clock_hands = mem_alloc(clock_count * sizeof(*clock_hands));
+	clock_hands = mk_api->mem_alloc(clock_count * sizeof(*clock_hands));
 	check_mem(clock_hands);
 
 	for (i = 0; i < clock_count; i++) {
 		clock_hands[i] = 0;
 	}
 
-	tmp = mem_alloc(size * sizeof(*tmp));
+	tmp = mk_api->mem_alloc(size * sizeof(*tmp));
 	check_mem(tmp);
 
 	for (i = 0; i < size; i++) {
@@ -385,7 +377,7 @@ error:
 			request_free(tmp + i);
 		}
 	}
-	if (tmp) mem_free(tmp);
+	if (tmp) mk_api->mem_free(tmp);
 	return -1;
 }
 
@@ -531,7 +523,7 @@ void request_list_free(struct request_list *rl)
 	for (i = 0; i < rl->size; i++) {
 		request_free(rl->rs + i);
 	}
-	mem_free(rl->rs);
+	mk_api->mem_free(rl->rs);
 	rl->size = 0;
 	rl->rs = NULL;
 }

@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Sonny Karlsson
@@ -25,16 +27,6 @@
 
 #include "dbg.h"
 #include "fcgi_fd.h"
-
-static void *(*mem_alloc)(const size_t) = &malloc;
-static void (*mem_free)(void *) = free;
-
-void fcgi_fd_module_init(void *(*mem_alloc_p)(const size_t),
-		void (*mem_free_p)(void *))
-{
-	mem_alloc = mem_alloc_p;
-	mem_free  = mem_free_p;
-}
 
 void fcgi_fd_init(struct fcgi_fd *fd,
 		enum fcgi_fd_type type,
@@ -187,7 +179,7 @@ int fcgi_fd_list_init(struct fcgi_fd_list *fdl,
 	fdl->n = fd_count;
 	fdl->fds = NULL;
 
-	fdl->fds = mem_alloc(fd_count * sizeof(*fdl->fds));
+	fdl->fds = mk_api->mem_alloc(fd_count * sizeof(*fdl->fds));
 	check_mem(fdl->fds);
 
 	for (i = 0; i < fdm.server_count; i++) {
@@ -209,7 +201,7 @@ int fcgi_fd_list_init(struct fcgi_fd_list *fdl,
 error:
 	fdl->n = 0;
 	if (fdl->fds) {
-		mem_free(fdl->fds);
+		mk_api->mem_free(fdl->fds);
 		fdl->fds = NULL;
 	}
 	return -1;
@@ -217,7 +209,7 @@ error:
 
 void fcgi_fd_list_free(struct fcgi_fd_list *fdl)
 {
-	mem_free(fdl->fds);
+	mk_api->mem_free(fdl->fds);
 }
 
 struct fcgi_fd *fcgi_fd_list_get(struct fcgi_fd_list *fdl,

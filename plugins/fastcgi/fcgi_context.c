@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Sonny Karlsson
@@ -25,16 +27,6 @@
 #include "fcgi_context.h"
 
 #include "dbg.h"
-
-static void *(*mem_alloc)(const size_t) = &malloc;
-static void (*mem_free)(void *) = &free;
-
-void fcgi_context_module_init(void *(*mem_alloc_p)(const size_t),
-		void (*mem_free_p)(void *))
-{
-	mem_alloc = mem_alloc_p;
-	mem_free  = mem_free_p;
-}
 
 void fcgi_context_free(struct fcgi_context *tdata)
 {
@@ -80,10 +72,10 @@ void fcgi_context_list_free(struct fcgi_context_list *tdlist)
 			continue;
 		}
 		fcgi_context_free(tdlist->tds[i]);
-		mem_free(tdlist->tds[i]);
+		mk_api->mem_free(tdlist->tds[i]);
 	}
 
-	mem_free(tdlist->tds);
+	mk_api->mem_free(tdlist->tds);
 	tdlist->n = 0;
 	tdlist->tds = NULL;
 }
@@ -104,12 +96,12 @@ int fcgi_context_list_init(struct fcgi_context_list *tdlist,
 	tdlist->thread_id_counter = 0;
 	pthread_mutex_init(&tdlist->thread_id_counter_mutex, NULL);
 
-	tdlist->tds = mem_alloc(workers * sizeof(*tdlist->tds));
+	tdlist->tds = mk_api->mem_alloc(workers * sizeof(*tdlist->tds));
 	check_mem(tdlist->tds);
 	tdlist->n = workers;
 
 	for (i = 0; i < workers; i++) {
-		tdata = mem_alloc(sizeof(*tdata));
+        tdata = mk_api->mem_alloc(sizeof(*tdata));
 		check_mem(tdata);
 		tdlist->tds[i] = tdata;
 

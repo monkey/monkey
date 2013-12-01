@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*  Monkey HTTP Daemon
  *  ------------------
  *  Copyright (C) 2012, Sonny Karlsson
@@ -18,10 +20,10 @@
  *  MA 02110-1301  USA.
  */
 
-#include <stdio.h> /* sscanf */
+#include <stdio.h>  /* sscanf */
 #include <string.h> /* memcpy */
 #include <sys/un.h> /* sockaddr_un */
-#include <regex.h> /* regex_t, regcomp */
+#include <regex.h>  /* regex_t, regcomp */
 
 #include "MKPlugin.h"
 
@@ -54,8 +56,8 @@ static pthread_key_t fcgi_local_context;
 #define UNUSED_VARIABLE(var) (void)(var)
 
 static int fcgi_handle_cgi_header(struct session_request *sr,
-		char *entry,
-		size_t len)
+                                  char *entry,
+                                  size_t len)
 {
 	size_t value_len;
 	char *value;
@@ -72,7 +74,7 @@ static int fcgi_handle_cgi_header(struct session_request *sr,
 	else if (!strncasecmp(entry, "Location: ", 10)) {
 		value = entry + 10;
 		value_len = len - 10 - (*(entry + len - 2) == '\r' ? 2 : 1);
-		sr->headers.location = malloc(value_len + 1);
+		sr->headers.location = mk_api->mem_alloc(value_len + 1);
 		check_mem(sr->headers.location);
 		memcpy(sr->headers.location, value, value_len);
 		sr->headers.location[value_len] = '\0';
@@ -80,27 +82,27 @@ static int fcgi_handle_cgi_header(struct session_request *sr,
 	else if (!strncasecmp(entry, "Status: ", 8)) {
 		value = entry + 8;
 		check(sscanf(value, "%d", &status) == 1,
-			"Could not scan status from FastCGI return.");
+              "Could not scan status from FastCGI return.");
 		mk_api->header_set_http_status(sr, status);
 	} else {
 		if (!sr->headers._extra_rows) {
 			sr->headers._extra_rows = mk_api->iov_create(
-					MK_PLUGIN_HEADER_EXTRA_ROWS * 2,
-					0);
+                                                         MK_PLUGIN_HEADER_EXTRA_ROWS * 2,
+                                                         0);
 		}
 		mk_api->iov_add_entry(sr->headers._extra_rows,
-				entry,
-				len,
-				mk_iov_none,
-				0);
+                              entry,
+                              len,
+                              mk_iov_none,
+                              0);
 	}
 	return 0;
-error:
+ error:
 	return -1;
 }
 
 static size_t fcgi_parse_cgi_headers(struct session_request *sr,
-		struct chunk_iov *iov)
+                                     struct chunk_iov *iov)
 {
 	size_t cnt = 0, entry_len, i, len = iov->io[0].iov_len;
 	char *p = iov->io[0].iov_base, *q = NULL;
@@ -116,9 +118,7 @@ static size_t fcgi_parse_cgi_headers(struct session_request *sr,
 		}
 
 		entry_len = q - p + 1;
-
 		fcgi_handle_cgi_header(sr, p, entry_len);
-
 		p = q + 1;
 	}
 	return cnt;
@@ -138,8 +138,8 @@ int fcgi_wake_connection(int location_id)
 	fdl = &cntx->fdl;
 
 	fd = fcgi_fd_list_get(fdl,
-			FCGI_FD_SLEEPING | FCGI_FD_READY,
-			location_id);
+                          FCGI_FD_SLEEPING | FCGI_FD_READY,
+                          location_id);
 	if (!fd) {
 		return -1;
 	}
@@ -147,13 +147,13 @@ int fcgi_wake_connection(int location_id)
 
 		PLUGIN_TRACE("[FCGI_FD %d] Waking up connection.", fd->fd);
 		mk_api->event_socket_change_mode(fd->fd,
-				MK_EPOLL_WAKEUP,
-				MK_EPOLL_LEVEL_TRIGGERED);
+                                         MK_EPOLL_WAKEUP,
+                                         MK_EPOLL_LEVEL_TRIGGERED);
 		check(!fcgi_fd_set_state(fd, FCGI_FD_READY),
-                        "[FCGI_FD %d]  State change failed.", fd->fd);
+              "[FCGI_FD %d]  State change failed.", fd->fd);
 	}
 	return 0;
-error:
+ error:
 	return -1;
 }
 
@@ -169,12 +169,12 @@ int fcgi_server_connect(const struct fcgi_server *server)
 
 		addr.sun_family = AF_UNIX;
 		check(sizeof(addr.sun_path) > strlen(server->path) + 1,
-			"Socket path too long.");
+              "Socket path too long.");
 		strcpy(addr.sun_path, server->path);
 
 		addr_len = sizeof(addr.sun_family) + strlen(addr.sun_path);
 		check(connect(sock_fd, (struct sockaddr *)&addr, addr_len) != -1,
-			"Failed to connect unix socket.");
+              "Failed to connect unix socket.");
 	}
 	else if (server->addr) {
 		sock_fd = mk_api->socket_connect(server->addr, server->port);
@@ -182,7 +182,8 @@ int fcgi_server_connect(const struct fcgi_server *server)
 	}
 
 	return sock_fd;
-error:
+
+ error:
 	if (sock_fd != -1) {
 		mk_api->socket_close(sock_fd);
 	}
@@ -215,15 +216,15 @@ int fcgi_new_connection(int location_id)
 
 	mk_api->socket_set_nonblocking(fd->fd);
 	check(!mk_api->event_add(fd->fd,
-			MK_EPOLL_WRITE,
-			plugin,
-			MK_EPOLL_LEVEL_TRIGGERED),
-		"[FD %d] Failed to add event.", fd->fd);
+                             MK_EPOLL_WRITE,
+                             plugin,
+                             MK_EPOLL_LEVEL_TRIGGERED),
+          "[FD %d] Failed to add event.", fd->fd);
 
 	fcgi_fd_set_state(fd, FCGI_FD_READY);
 
 	return 0;
-error:
+ error:
 	return -1;
 }
 
@@ -236,10 +237,12 @@ int fcgi_prepare_request(struct request *req)
 	struct fcgi_begin_req_body b = {
 		.role  = FCGI_RESPONDER,
 	};
+
 	struct fcgi_header h = {
 		.version  = FCGI_VERSION_1,
 		.body_pad = 0,
 	};
+
 	struct fcgi_location *location;
 
 	size_t len = 4096, pos = 0, tmp;
@@ -302,12 +305,12 @@ int fcgi_prepare_request(struct request *req)
 		pos += ret;
 
 		check(!chunk_iov_add_ptr(&req->iov, buffer, pos, 1),
-			"Adding data to iov failed.");
+              "Adding data to iov failed.");
 
 		check(!chunk_iov_add_ptr(&req->iov,
-					req->sr->data.data,
-					req->sr->data.len, 0),
-			"Adding data to iov failed.");
+                                 req->sr->data.data,
+                                 req->sr->data.len, 0),
+              "Adding data to iov failed.");
 
 		tmp = pos;
 		pos += h.body_len + h.body_pad;
@@ -319,7 +322,7 @@ int fcgi_prepare_request(struct request *req)
 		pos += ret;
 
 		check(!chunk_iov_add_ptr(&req->iov, buffer + tmp, pos, 0),
-			"Adding data to iov failed.");
+              "Adding data to iov failed.");
 	}
 	else {
 		h.body_len = 0;
@@ -328,10 +331,11 @@ int fcgi_prepare_request(struct request *req)
 		pos += ret;
 
 		check(!chunk_iov_add_ptr(&req->iov, buffer, pos, 1),
-			"Adding data to iov failed.");
+              "Adding data to iov failed.");
 	}
 	return 0;
-error:
+
+ error:
 	chunk_iov_reset(&req->iov);
 	return -1;
 }
@@ -362,7 +366,8 @@ int fcgi_send_abort_request(struct request *req, struct fcgi_fd *fd)
 	check(ret != -1, "Socket error.");
 
 	return 0;
-error:
+
+ error:
 	return -1;
 }
 
@@ -378,11 +383,11 @@ int fcgi_send_response_headers(struct request *req)
 	req->sr->headers.cgi = SH_NOCGI;
 
 	PLUGIN_TRACE("[FD %d] Length prior to removing headers is %ld.",
-			req->fd, chunk_iov_length(&req->iov));
+                 req->fd, chunk_iov_length(&req->iov));
 
 	headers_offset = fcgi_parse_cgi_headers(req->sr, &req->iov);
 	check(!chunk_iov_drop(&req->iov, headers_offset),
-		"Failed to drop from req->iov.");
+          "Failed to drop from req->iov.");
 	req->sr->headers.content_length = chunk_iov_length(&req->iov);
 
 	mk_api->header_send(req->fd, req->cs, req->sr);
@@ -391,7 +396,8 @@ int fcgi_send_response_headers(struct request *req)
 	request_set_flag(req, REQ_HEADERS_SENT);
 
 	return 0;
-error:
+
+ error:
 	return -1;
 }
 
@@ -402,12 +408,12 @@ int fcgi_send_response(struct request *req)
 	struct mk_iov mkiov;
 
 	check(request_get_flag(req, REQ_HEADERS_SENT),
-		"Headers not yet sent for request.");
+          "Headers not yet sent for request.");
 
-        memset(&mkiov, 0, sizeof(mkiov));
-        mkiov.io = req->iov.io;
-        mkiov.iov_idx = req->iov.index;
-        mkiov.total_len = chunk_iov_length(&req->iov);
+    memset(&mkiov, 0, sizeof(mkiov));
+    mkiov.io = req->iov.io;
+    mkiov.iov_idx = req->iov.index;
+    mkiov.total_len = chunk_iov_length(&req->iov);
 	ret = mk_api->socket_sendv(fd, &mkiov);
 
 	PLUGIN_TRACE("[FD %d] Wrote %ld bytes.", fd, ret);
@@ -415,7 +421,7 @@ int fcgi_send_response(struct request *req)
 
 	if (ret == (ssize_t)chunk_iov_length(&req->iov)) {
 		check(!request_set_state(req, REQ_FINISHED),
-			"Failed to set request state.");
+              "Failed to set request state.");
 		request_recycle(req);
 
 		mk_api->socket_cork_flag(fd, TCP_CORK_OFF);
@@ -423,18 +429,19 @@ int fcgi_send_response(struct request *req)
 	}
 	else {
 		check(!chunk_iov_drop(&req->iov, ret),
-			"Failed to drop data from chunk.");
+              "Failed to drop data from chunk.");
 	}
 
 	return 0;
-error:
+
+ error:
 	return -1;
 }
 
 static int fcgi_handle_pkg(struct fcgi_fd *fd,
-		struct request *req,
-		struct fcgi_header h,
-		struct chunk_ptr read)
+                           struct request *req,
+                           struct fcgi_header h,
+                           struct chunk_ptr read)
 {
 	struct fcgi_end_req_body b;
 
@@ -449,20 +456,20 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 	case FCGI_STDOUT:
 		if (req->state == REQ_FAILED) {
 			PLUGIN_TRACE("[REQ_ID %d] Ignoring stdout to failed req, len %d",
-				h.req_id, h.body_len);
+                         h.req_id, h.body_len);
 		}
 		else if (h.body_len == 0) {
 			PLUGIN_TRACE("[REQ_ID %d] Recevied stdout, end-of-stream.",
-				h.req_id);
+                         h.req_id);
 			check(!request_set_state(req, REQ_STREAM_CLOSED),
-				"Failed to set request state.");
+                  "Failed to set request state.");
 		}
 		else {
 			PLUGIN_TRACE("[REQ_ID %d] Recevied stdout, len %d",
-				h.req_id, h.body_len);
+                         h.req_id, h.body_len);
 			check(request_add_pkg(req, h, read) > 0,
-				"[REQ_ID %d] Failed to add stdout package.",
-				h.req_id);
+                  "[REQ_ID %d] Failed to add stdout package.",
+                  h.req_id);
 		}
 		break;
 
@@ -475,7 +482,7 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 			break;
 		case EXIT_FAILURE:
 			log_warn("[REQ_ID %d] Application exit failure.",
-				h.req_id);
+                     h.req_id);
 			break;
 		}
 
@@ -487,29 +494,29 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 		case FCGI_UNKNOWN_ROLE:
 		default:
 			log_warn("[REQ_ID %d] Protocol status: %s",
-				h.req_id,
-				FCGI_PROTOCOL_STATUS_STR(b.protocol_status));
+                     h.req_id,
+                     FCGI_PROTOCOL_STATUS_STR(b.protocol_status));
 		}
 
 		request_set_fcgi_fd(req, -1);
 
 		check(!fcgi_fd_set_state(fd, FCGI_FD_READY),
-			"[FCGI_FD %d] Failed to set FCGI_FD_READY state.",
-			fd->fd);
+              "[FCGI_FD %d] Failed to set FCGI_FD_READY state.",
+              fd->fd);
 
 		if (req->fd == -1) {
 			request_recycle(req);
 		}
 		else if (req->state != REQ_FAILED) {
 			PLUGIN_TRACE("[REQ_ID %d] Ending request.",
-				h.req_id);
+                         h.req_id);
 			check(!request_set_state(req, REQ_ENDED),
-				"[REQ_ID %d] Failed to set request state.",
-				h.req_id);
+                  "[REQ_ID %d] Failed to set request state.",
+                  h.req_id);
 			if (request_get_flag(req, REQ_SLEEPING)) {
 				mk_api->event_socket_change_mode(req->fd,
-					MK_EPOLL_WAKEUP,
-					MK_EPOLL_LEVEL_TRIGGERED);
+                                                 MK_EPOLL_WAKEUP,
+                                                 MK_EPOLL_LEVEL_TRIGGERED);
 				request_unset_flag(req, REQ_SLEEPING);
 			}
 		}
@@ -519,18 +526,18 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 		break;
 	default:
 		log_info("[REQ_ID %d] Ignore package type: %s",
-			h.req_id,
-			FCGI_MSG_TYPE_STR(h.type));
+                 h.req_id,
+                 FCGI_MSG_TYPE_STR(h.type));
 	}
 
 	return 0;
-error:
+ error:
 	if (req) {
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-				MK_EPOLL_WAKEUP,
-				MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EPOLL_WAKEUP,
+                                             MK_EPOLL_LEVEL_TRIGGERED);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -539,11 +546,11 @@ error:
 
 int fcgi_recv_response(struct fcgi_fd *fd,
 		struct chunk_list *cl,
-		struct request_list *rl,
-		int (*handle_pkg)(struct fcgi_fd *fd,
-			struct request *req,
-			struct fcgi_header h,
-			struct chunk_ptr rcp))
+                       struct request_list *rl,
+                       int (*handle_pkg)(struct fcgi_fd *fd,
+                                         struct request *req,
+                                         struct fcgi_header h,
+                                         struct chunk_ptr rcp))
 {
 	size_t pkg_size = 0, inherit = 0;
 	ssize_t ret = 0;
@@ -566,8 +573,8 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 	do {
 		if (inherit > 0 || wcp.len < sizeof(h)) {
 			PLUGIN_TRACE("[FCGI_FD %d] New chunk, inherit %ld.",
-					fd->fd,
-					inherit);
+                         fd->fd,
+                         inherit);
 			if (pkg_size > CHUNK_SIZE(8192)) {
 				c = chunk_new(SIZE_CHUNK(pkg_size));
 			} else {
@@ -576,7 +583,7 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 			check_mem(c);
 			chunk_list_add(cl, c);
 			check(!fcgi_fd_set_chunk(fd, c, inherit),
-				"[FCGI_FD %d] Failed to add chunk.", fd->fd);
+                  "[FCGI_FD %d] Failed to add chunk.", fd->fd);
 			wcp = chunk_write_ptr(c);
 			inherit = 0;
 		}
@@ -585,7 +592,7 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 
 		if (ret == 0) {
 			check(!fcgi_fd_set_state(fd, FCGI_FD_CLOSING),
-				"Failed to set fd state.");
+                  "Failed to set fd state.");
 			done = 1;
 		} else if (ret == -1) {
 			if (errno == EAGAIN) {
@@ -598,7 +605,7 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 			wcp.data += ret;
 			wcp.len  -= ret;
 			check(!chunk_set_write_ptr(c, wcp),
-				"Failed to set new write ptr.");
+                  "Failed to set new write ptr.");
 			rcp = chunk_read_ptr(c);
 		}
 
@@ -616,8 +623,8 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 			} else {
 				req = request_list_get(rl, h.req_id);
 				check_debug(!handle_pkg(fd, req, h, rcp),
-					"[REQ_ID %d] Failed to handle pkg.",
-					h.req_id);
+                            "[REQ_ID %d] Failed to handle pkg.",
+                            h.req_id);
 				ret = pkg_size;
 			}
 
@@ -627,20 +634,21 @@ int fcgi_recv_response(struct fcgi_fd *fd,
 
 		if (rcp.parent == c) {
 			check(!chunk_set_read_ptr(c, rcp),
-				"Failed to set new read ptr.");
+                  "Failed to set new read ptr.");
 		}
 	} while (!done);
 
 	PLUGIN_TRACE("[FCGI_FD %d] Response received successfully.", fd->fd);
 
 	return 0;
-error:
+
+ error:
 	fcgi_fd_set_state(fd, FCGI_FD_CLOSING);
 	return -1;
 }
 
 static int regex_match_location(const struct fcgi_config *config,
-		const char *uri)
+                                const char *uri)
 {
 	unsigned int i;
 	regex_t *regp;
@@ -655,7 +663,7 @@ static int regex_match_location(const struct fcgi_config *config,
 }
 
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
-		struct session_request *sr)
+                  struct session_request *sr)
 {
 	char *uri = NULL;
 	struct fcgi_context *cntx;
@@ -675,7 +683,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 #ifdef TRACE
 		req_id = request_list_index_of(rl, req);
 		PLUGIN_TRACE("[FD %d] Ghost event on req_id %d.",
-			cs->socket, req_id);
+                     cs->socket, req_id);
 #endif
 		return MK_PLUGIN_RET_CONTINUE;
 	}
@@ -695,34 +703,35 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 	req_id = request_list_index_of(rl, req);
 
 	check(!request_assign(req, cs->socket, location_id, cs, sr),
-		"[REQ_ID %d] Failed to assign request for fd %d.",
-		req_id, cs->socket);
+          "[REQ_ID %d] Failed to assign request for fd %d.",
+          req_id, cs->socket);
 	check(!fcgi_prepare_request(req),
-		"[REQ_ID %d] Failed to prepare request.", req_id);
+          "[REQ_ID %d] Failed to prepare request.", req_id);
 
 	PLUGIN_TRACE("[FD %d] Assigned to req_id %d.", cs->socket, req_id);
 
 	if (fcgi_wake_connection(location_id)) {
 		PLUGIN_TRACE("[REQ_ID %d] Create new fcgi connection.", req_id);
 		check_debug(!fcgi_new_connection(location_id),
-			"New connection failed seriously.");
+                    "New connection failed seriously.");
 	}
 
 	request_set_flag(req, REQ_SLEEPING);
 	mk_api->event_socket_change_mode(req->fd,
-			MK_EPOLL_SLEEP,
-			MK_EPOLL_LEVEL_TRIGGERED);
+                                     MK_EPOLL_SLEEP,
+                                     MK_EPOLL_LEVEL_TRIGGERED);
 
 
 	return MK_PLUGIN_RET_CONTINUE;
-error:
+
+ error:
 	if (req) {
 		PLUGIN_TRACE("[REQ_ID %d] Request failed in stage_30.", req_id);
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-					MK_EPOLL_WAKEUP,
-					MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EPOLL_WAKEUP,
+                                             MK_EPOLL_LEVEL_TRIGGERED);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -735,18 +744,14 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
 	pthread_key_create(&fcgi_local_context, NULL);
 
-	chunk_module_init(mk_api->mem_alloc, mk_api->mem_realloc, mk_api->mem_free);
-	request_module_init(mk_api->mem_alloc, mk_api->mem_free);
-	fcgi_fd_module_init(mk_api->mem_alloc, mk_api->mem_free);
-	fcgi_context_module_init(mk_api->mem_alloc, mk_api->mem_free);
-
 	check(!fcgi_validate_struct_sizes(),
-		"Validating struct sizes failed.");
+          "Validating struct sizes failed.");
 	check(!fcgi_config_read(&fcgi_global_config, confdir),
-		"Failed to read config.");
+          "Failed to read config.");
 
 	return 0;
-error:
+
+ error:
 	return -1;
 }
 
@@ -762,10 +767,10 @@ int _mkp_core_prctx(struct server_config *config)
 	struct plugin *p;
 
 	check(!fcgi_context_list_init(&fcgi_global_context_list,
-				&fcgi_global_config,
-				config->workers,
-				config->worker_capacity),
-			"Failed to init thread data list.");
+                                  &fcgi_global_config,
+                                  config->workers,
+                                  config->worker_capacity),
+          "Failed to init thread data list.");
 
 	mk_list_foreach(h, config->plugins) {
 
@@ -777,7 +782,8 @@ int _mkp_core_prctx(struct server_config *config)
 	}
 
 	return 0;
-error:
+
+ error:
 	return -1;
 }
 
@@ -793,7 +799,7 @@ void _mkp_core_thctx(void)
 	pthread_setspecific(fcgi_local_context, cntx);
 
 	return;
-error:
+ error:
 	log_err("Failed to initiate thread context.");
 	abort();
 }
@@ -893,9 +899,9 @@ int _mkp_event_write(int socket)
 		PLUGIN_TRACE("[REQ_ID %d] Request ended.", req_id);
 
 		check(!fcgi_send_response_headers(req),
-			"[REQ_ID %d] Failed to send response headers.", req_id);
+              "[REQ_ID %d] Failed to send response headers.", req_id);
 		check(!fcgi_send_response(req),
-			"[REQ_ID %d] Failed to send response.", req_id);
+              "[REQ_ID %d] Failed to send response.", req_id);
 
 		return MK_PLUGIN_RET_EVENT_OWNED;
 	}
@@ -905,7 +911,7 @@ int _mkp_event_write(int socket)
 #endif
 
 		mk_api->http_request_error(MK_SERVER_INTERNAL_ERROR,
-				req->cs, req->sr);
+                                   req->cs, req->sr);
 
 		if (req->fcgi_fd == -1) {
 			request_recycle(req);
@@ -922,14 +928,14 @@ int _mkp_event_write(int socket)
 			request_set_fcgi_fd(req, fd->fd);
 
 			check(!request_set_state(req, REQ_SENT),
-				"[REQ_ID %d] Failed to set sent state.",
-				req_id);
+                  "[REQ_ID %d] Failed to set sent state.",
+                  req_id);
 			check(!fcgi_fd_set_begin_req_iov(fd, &req->iov),
-				"[FCGI_FD %d] Failed to set begin_req_iov.",
-				fd->fd);
+                  "[FCGI_FD %d] Failed to set begin_req_iov.",
+                  fd->fd);
 			check(!fcgi_fd_set_state(fd, FCGI_FD_SENDING),
-				"[FCGI_FD %d] Failed to set sending state.",
-				fd->fd);
+                  "[FCGI_FD %d] Failed to set sending state.",
+                  fd->fd);
 
 			if (fd->type == FCGI_FD_INET) {
 				mk_api->socket_cork_flag(fd->fd, TCP_CORK_ON);
@@ -941,10 +947,10 @@ int _mkp_event_write(int socket)
 			PLUGIN_TRACE("[FCGI_FD %d] Sleep.", fd->fd);
 
 			mk_api->event_socket_change_mode(fd->fd,
-				MK_EPOLL_SLEEP,
-				MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EPOLL_SLEEP,
+                                             MK_EPOLL_LEVEL_TRIGGERED);
 			check(!fcgi_fd_set_state(fd, FCGI_FD_SLEEPING),
-				"Failed to set fd state.");
+                  "Failed to set fd state.");
 
 			return MK_PLUGIN_RET_EVENT_OWNED;
 		}
@@ -954,7 +960,7 @@ int _mkp_event_write(int socket)
 		PLUGIN_TRACE("[FCGI_FD %d] Sending request.", fd->fd);
 
 		check(fd->begin_req,
-			"[FCGI_FD %d] No begin_req attached.", fd->fd);
+              "[FCGI_FD %d] No begin_req attached.", fd->fd);
 
 		ret = chunk_iov_sendv(fd->fd, fd->begin_req);
 		if (ret == -1) {
@@ -976,8 +982,8 @@ int _mkp_event_write(int socket)
 			fd->begin_req = NULL;
 
 			mk_api->event_socket_change_mode(fd->fd,
-					MK_EPOLL_READ,
-					MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EPOLL_READ,
+                                             MK_EPOLL_LEVEL_TRIGGERED);
 		} else {
 			chunk_iov_drop(fd->begin_req, ret);
 		}
@@ -987,14 +993,14 @@ int _mkp_event_write(int socket)
 	else {
 		return MK_PLUGIN_RET_EVENT_CONTINUE;
 	}
-error:
+ error:
 	if (req) {
 		PLUGIN_TRACE("[REQ_ID %d] Request failed in event_write.", req_id);
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-					MK_EPOLL_WAKEUP,
-					MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EPOLL_WAKEUP,
+                                             MK_EPOLL_LEVEL_TRIGGERED);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -1026,19 +1032,19 @@ int _mkp_event_read(int socket)
 		PLUGIN_TRACE("[FCGI_FD %d] Receiving data.", fd->fd);
 
 		check_debug(!fcgi_recv_response(fd, cl, rl, fcgi_handle_pkg),
-			"[FCGI_FD %d] Failed to receive response.", fd->fd);
+                    "[FCGI_FD %d] Failed to receive response.", fd->fd);
 
 		PLUGIN_TRACE("[FCGI_FD %d] Data received.", fd->fd);
 
 		if (fd->state == FCGI_FD_READY) {
 			if (loc->keep_alive) {
 				mk_api->event_socket_change_mode(fd->fd,
-						MK_EPOLL_WRITE,
-						MK_EPOLL_LEVEL_TRIGGERED);
+                                                 MK_EPOLL_WRITE,
+                                                 MK_EPOLL_LEVEL_TRIGGERED);
 			}
 			else {
 				check(!fcgi_fd_set_state(fd, FCGI_FD_CLOSING),
-						"[FCGI_FD %d] State change failed.", fd->fd);
+                      "[FCGI_FD %d] State change failed.", fd->fd);
 				return MK_PLUGIN_RET_EVENT_CLOSE;
 			}
 		}
@@ -1048,6 +1054,7 @@ int _mkp_event_read(int socket)
 
 		return MK_PLUGIN_RET_EVENT_OWNED;
 	}
+
 error:
 	return MK_PLUGIN_RET_EVENT_CLOSE;
 }
