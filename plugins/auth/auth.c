@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -98,7 +98,7 @@ static int mk_auth_validate_user(struct users_file *users,
         /* match password */
         if (memcmp(entry->passwd_decoded, digest, SHA1_DIGEST_LEN) == 0) {
             PLUGIN_TRACE("User '%s' matched password", entry->user);
-            free(decoded);
+            mk_api->mem_free(decoded);
             return 0;
         }
         PLUGIN_TRACE("Invalid password");
@@ -107,7 +107,7 @@ static int mk_auth_validate_user(struct users_file *users,
 
     error:
     if (decoded) {
-        free(decoded);
+        mk_api->mem_free(decoded);
     }
     return -1;
 }
