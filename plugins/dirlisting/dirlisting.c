@@ -606,7 +606,7 @@ static int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *da
     unsigned long len;
     char *buf = 0;
 
-    if (sr->protocol >= HTTP_PROTOCOL_11) {
+    if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
         /* Chunk header */
         mk_api->str_build(&buf, &len, "%lx\r\n", data->total_len - 2);
 
@@ -671,7 +671,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     sr->headers.content_type = mk_dirhtml_default_mime;
     sr->headers.content_length = -1;
 
-    if (sr->protocol >= HTTP_PROTOCOL_11) {
+    if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
         sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
         is_chunked = MK_TRUE;
     }
@@ -775,7 +775,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     n = mk_dirhtml_send(cs->socket, sr, iov_footer);
     mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
 
-    if (sr->protocol >= HTTP_PROTOCOL_11 && n >= 0) {
+    if (sr->protocol >= MK_HTTP_PROTOCOL_11 && n >= 0) {
         mk_dirhtml_send_chunked_end(cs->socket);
     }
 
