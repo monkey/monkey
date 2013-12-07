@@ -106,10 +106,10 @@ static int do_cgi(const char *const __restrict__ file,
     env[envpos++] = http_host;
 
     char *protocol;
-    if (sr->protocol == HTTP_PROTOCOL_11)
-        protocol = HTTP_PROTOCOL_11_STR;
+    if (sr->protocol == MK_HTTP_PROTOCOL_11)
+        protocol = MK_HTTP_PROTOCOL_11_STR;
     else
-        protocol = HTTP_PROTOCOL_10_STR;
+        protocol = MK_HTTP_PROTOCOL_10_STR;
 
     snprintf(server_protocol, SHORTLEN, "SERVER_PROTOCOL=%s", protocol);
     env[envpos++] = server_protocol;
@@ -246,7 +246,7 @@ static int do_cgi(const char *const __restrict__ file,
     struct cgi_request *r = cgi_req_create(readpipe[0], socket, sr, cs);
     if (!r) return 403;
 
-    if (r->sr->protocol >= HTTP_PROTOCOL_11 &&
+    if (r->sr->protocol >= MK_HTTP_PROTOCOL_11 &&
         (r->sr->headers.status < MK_REDIR_MULTIPLE ||
          r->sr->headers.status > MK_REDIR_USE_PROXY))
     {
