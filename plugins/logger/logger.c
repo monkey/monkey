@@ -540,7 +540,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* Content Length */
-        if (sr->method != HTTP_METHOD_HEAD) {
+        if (sr->method != MK_HTTP_METHOD_HEAD) {
             /* Int to mk_pointer */
             content_length = pthread_getspecific(cache_content_length);
 
