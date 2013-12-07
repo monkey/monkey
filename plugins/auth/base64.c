@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "MKPlugin.h"
 #include "base64.h"
 
 static const unsigned char base64_table[65] =
@@ -39,7 +40,7 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 	olen++; /* nul termination */
 	if (olen < len)
 		return NULL; /* integer overflow */
-	out = malloc(olen);
+	out = mk_api->mem_alloc(olen);
 	if (out == NULL)
 		return NULL;
 
@@ -116,7 +117,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 		return NULL;
 
 	olen = (count / 4 * 3) + 1;
-	pos = out = malloc(olen);
+	pos = out = mk_api->mem_alloc(olen);
 	if (out == NULL)
 		return NULL;
 
@@ -142,7 +143,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 					pos -= 2;
 				else {
 					/* Invalid padding */
-					free(out);
+					mk_api->mem_free(out);
 					return NULL;
 				}
 				break;
