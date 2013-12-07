@@ -852,6 +852,9 @@ int mk_plugin_event_add(int socket, int mode,
     struct mk_list *list;
 
     sched = mk_sched_get_thread_conf();
+    if (!sched) {
+        return -1;
+    }
 
     if (sched && handler) {
         /* Event node (this list exist at thread level */
