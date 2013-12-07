@@ -209,7 +209,7 @@ mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
 {
     mk_epoll_handlers *handler;
 
-    handler = malloc(sizeof(mk_epoll_handlers));
+    handler = mk_mem_malloc(sizeof(mk_epoll_handlers));
     handler->read = (void *) read;
     handler->write = (void *) write;
     handler->error = (void *) error;

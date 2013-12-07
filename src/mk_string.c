@@ -255,7 +255,7 @@ char *mk_string_build(char **buffer, unsigned long *len,
     }
 
     if ((unsigned int) length >= alloc) {
-        ptr = realloc(*buffer, length + 1);
+        ptr = mk_mem_realloc(*buffer, length + 1);
         if (!ptr) {
             return NULL;
         }

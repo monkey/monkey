@@ -26,11 +26,6 @@
 
 #ifdef MALLOC_JEMALLOC
 #include "../../deps/jemalloc/include/jemalloc/jemalloc.h"
-#define malloc(size) je_malloc(size)
-#define calloc(count,size) je_calloc(count,size)
-#define realloc(ptr,size) je_realloc(ptr,size)
-#define free(ptr) je_free(ptr)
-#define zmalloc_size(p) je_malloc_usable_size(p)
 #endif
 
 #include "mk_macros.h"
@@ -50,7 +45,11 @@ typedef struct
 static inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc(const size_t size)
 {
+#ifdef MALLOC_JEMALLOC
+    void *aux = je_malloc(size);
+#else
     void *aux = malloc(size);
+#endif
 
     if (mk_unlikely(!aux && size)) {
         perror("malloc");
@@ -63,7 +62,12 @@ void *mk_mem_malloc(const size_t size)
 static inline ALLOCSZ_ATTR(1)
 void *mk_mem_malloc_z(const size_t size)
 {
+#ifdef MALLOC_JEMALLOC
+    void *buf = je_calloc(1, size);
+#else
     void *buf = calloc(1, size);
+#endif
+
     if (mk_unlikely(!buf)) {
         return NULL;
     }
@@ -74,7 +78,11 @@ void *mk_mem_malloc_z(const size_t size)
 static inline ALLOCSZ_ATTR(2)
 void *mk_mem_realloc(void *ptr, const size_t size)
 {
+#ifdef MALLOC_JEMALLOC
+    void *aux = je_realloc(ptr, size);
+#else
     void *aux = realloc(ptr, size);
+#endif
 
     if (mk_unlikely(!aux && size)) {
         perror("realloc");
@@ -86,7 +94,11 @@ void *mk_mem_realloc(void *ptr, const size_t size)
 
 static inline void mk_mem_free(void *ptr)
 {
+#ifdef MALLOC_JEMALLOC
+    je_free(ptr);
+#else
     free(ptr);
+#endif
 }
 
 void mk_mem_free(void *ptr);
