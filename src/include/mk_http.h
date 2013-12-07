@@ -21,38 +21,39 @@
 #define MK_HTTP_H
 
 /* Hard coded restrictions */
-#define HTTP_DIRECTORY_BACKWARD ".."
+#define MK_HTTP_DIRECTORY_BACKWARD ".."
 
 /* Methods */
-#define HTTP_METHOD_UNKNOWN        -1
-#define HTTP_METHOD_GET             0
-#define HTTP_METHOD_POST            1
-#define HTTP_METHOD_HEAD            2
-#define HTTP_METHOD_PUT             3
-#define HTTP_METHOD_DELETE          4
-#define HTTP_METHOD_OPTIONS         5
+#define MK_HTTP_METHOD_UNKNOWN      -1
+#define MK_HTTP_METHOD_GET           0
+#define MK_HTTP_METHOD_POST          1
+#define MK_HTTP_METHOD_HEAD          2
+#define MK_HTTP_METHOD_PUT           3
+#define MK_HTTP_METHOD_DELETE        4
+#define MK_HTTP_METHOD_OPTIONS       5
 
-#define HTTP_METHOD_GET_STR         "GET"
-#define HTTP_METHOD_POST_STR        "POST"
-#define HTTP_METHOD_HEAD_STR        "HEAD"
-#define HTTP_METHOD_PUT_STR         "PUT"
-#define HTTP_METHOD_DELETE_STR      "DELETE"
-#define HTTP_METHOD_OPTIONS_STR     "OPTIONS"
+#define MK_HTTP_METHOD_GET_STR       "GET"
+#define MK_HTTP_METHOD_POST_STR      "POST"
+#define MK_HTTP_METHOD_HEAD_STR      "HEAD"
+#define MK_HTTP_METHOD_PUT_STR       "PUT"
+#define MK_HTTP_METHOD_DELETE_STR    "DELETE"
+#define MK_HTTP_METHOD_OPTIONS_STR   "OPTIONS"
 
 /* Available methods */
-#define HTTP_METHOD_AVAILABLE   \
-    HTTP_METHOD_GET_STR "," HTTP_METHOD_POST_STR "," HTTP_METHOD_HEAD_STR ","  \
-    HTTP_METHOD_PUT_STR "," HTTP_METHOD_DELETE_STR "," HTTP_METHOD_OPTIONS_STR \
+#define MK_HTTP_METHOD_AVAILABLE   \
+    MK_HTTP_METHOD_GET_STR "," MK_HTTP_METHOD_POST_STR "," \
+    MK_HTTP_METHOD_HEAD_STR "," MK_HTTP_METHOD_PUT_STR "," \
+    MK_HTTP_METHOD_DELETE_STR "," MK_HTTP_METHOD_OPTIONS_STR  \
     MK_CRLF
 
-#define HTTP_PROTOCOL_UNKNOWN (-1)
-#define HTTP_PROTOCOL_09 (9)
-#define HTTP_PROTOCOL_10 (10)
-#define HTTP_PROTOCOL_11 (11)
+#define MK_HTTP_PROTOCOL_UNKNOWN (-1)
+#define MK_HTTP_PROTOCOL_09 (9)
+#define MK_HTTP_PROTOCOL_10 (10)
+#define MK_HTTP_PROTOCOL_11 (11)
 
-#define HTTP_PROTOCOL_09_STR "HTTP/0.9"
-#define HTTP_PROTOCOL_10_STR "HTTP/1.0"
-#define HTTP_PROTOCOL_11_STR "HTTP/1.1"
+#define MK_HTTP_PROTOCOL_09_STR "HTTP/0.9"
+#define MK_HTTP_PROTOCOL_10_STR "HTTP/1.0"
+#define MK_HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
 #include "mk_memory.h"
 

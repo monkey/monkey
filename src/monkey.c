@@ -49,7 +49,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-const mk_pointer mk_monkey_protocol = mk_pointer_init(HTTP_PROTOCOL_11_STR);
+const mk_pointer mk_monkey_protocol = mk_pointer_init(MK_HTTP_PROTOCOL_11_STR);
 gid_t EGID;
 gid_t EUID;
 

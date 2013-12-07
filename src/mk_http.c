@@ -46,63 +46,63 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 
-const mk_pointer mk_http_method_get_p = mk_pointer_init(HTTP_METHOD_GET_STR);
-const mk_pointer mk_http_method_post_p = mk_pointer_init(HTTP_METHOD_POST_STR);
-const mk_pointer mk_http_method_head_p = mk_pointer_init(HTTP_METHOD_HEAD_STR);
-const mk_pointer mk_http_method_put_p = mk_pointer_init(HTTP_METHOD_PUT_STR);
-const mk_pointer mk_http_method_delete_p = mk_pointer_init(HTTP_METHOD_DELETE_STR);
-const mk_pointer mk_http_method_options_p = mk_pointer_init(HTTP_METHOD_OPTIONS_STR);
+const mk_pointer mk_http_method_get_p = mk_pointer_init(MK_HTTP_METHOD_GET_STR);
+const mk_pointer mk_http_method_post_p = mk_pointer_init(MK_HTTP_METHOD_POST_STR);
+const mk_pointer mk_http_method_head_p = mk_pointer_init(MK_HTTP_METHOD_HEAD_STR);
+const mk_pointer mk_http_method_put_p = mk_pointer_init(MK_HTTP_METHOD_PUT_STR);
+const mk_pointer mk_http_method_delete_p = mk_pointer_init(MK_HTTP_METHOD_DELETE_STR);
+const mk_pointer mk_http_method_options_p = mk_pointer_init(MK_HTTP_METHOD_OPTIONS_STR);
 const mk_pointer mk_http_method_null_p = { NULL, 0 };
 
-const mk_pointer mk_http_protocol_09_p = mk_pointer_init(HTTP_PROTOCOL_09_STR);
-const mk_pointer mk_http_protocol_10_p = mk_pointer_init(HTTP_PROTOCOL_10_STR);
-const mk_pointer mk_http_protocol_11_p = mk_pointer_init(HTTP_PROTOCOL_11_STR);
+const mk_pointer mk_http_protocol_09_p = mk_pointer_init(MK_HTTP_PROTOCOL_09_STR);
+const mk_pointer mk_http_protocol_10_p = mk_pointer_init(MK_HTTP_PROTOCOL_10_STR);
+const mk_pointer mk_http_protocol_11_p = mk_pointer_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_pointer mk_http_protocol_null_p = { NULL, 0 };
 
 
 int mk_http_method_check(mk_pointer method)
 {
-    if (strncmp(method.data, HTTP_METHOD_GET_STR, method.len) == 0) {
-        return HTTP_METHOD_GET;
+    if (strncmp(method.data, MK_HTTP_METHOD_GET_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_GET;
     }
 
-    if (strncmp(method.data, HTTP_METHOD_POST_STR, method.len) == 0) {
-        return HTTP_METHOD_POST;
+    if (strncmp(method.data, MK_HTTP_METHOD_POST_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_POST;
     }
 
-    if (strncmp(method.data, HTTP_METHOD_HEAD_STR, method.len) == 0) {
-        return HTTP_METHOD_HEAD;
+    if (strncmp(method.data, MK_HTTP_METHOD_HEAD_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_HEAD;
     }
 
-    if (strncmp(method.data, HTTP_METHOD_PUT_STR, method.len) == 0) {
-        return HTTP_METHOD_PUT;
+    if (strncmp(method.data, MK_HTTP_METHOD_PUT_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_PUT;
     }
 
-    if (strncmp(method.data, HTTP_METHOD_DELETE_STR, method.len) == 0) {
-        return HTTP_METHOD_DELETE;
+    if (strncmp(method.data, MK_HTTP_METHOD_DELETE_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_DELETE;
     }
 
-    if (strncmp(method.data, HTTP_METHOD_OPTIONS_STR, method.len) == 0) {
-        return HTTP_METHOD_OPTIONS;
+    if (strncmp(method.data, MK_HTTP_METHOD_OPTIONS_STR, method.len) == 0) {
+        return MK_HTTP_METHOD_OPTIONS;
     }
 
-    return HTTP_METHOD_UNKNOWN;
+    return MK_HTTP_METHOD_UNKNOWN;
 }
 
 mk_pointer mk_http_method_check_str(int method)
 {
     switch (method) {
-    case HTTP_METHOD_GET:
+    case MK_HTTP_METHOD_GET:
         return mk_http_method_get_p;
-    case HTTP_METHOD_POST:
+    case MK_HTTP_METHOD_POST:
         return mk_http_method_post_p;
-    case HTTP_METHOD_HEAD:
+    case MK_HTTP_METHOD_HEAD:
         return mk_http_method_head_p;
-    case HTTP_METHOD_PUT:
+    case MK_HTTP_METHOD_PUT:
         return mk_http_method_put_p;
-    case HTTP_METHOD_DELETE:
+    case MK_HTTP_METHOD_DELETE:
         return mk_http_method_delete_p;
-    case HTTP_METHOD_OPTIONS:
+    case MK_HTTP_METHOD_OPTIONS:
         return mk_http_method_options_p;
     }
     return mk_http_method_null_p;
@@ -216,7 +216,7 @@ int mk_http_method_get(char *body)
     /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
     pos = mk_string_char_search(body, ' ', max_len_method);
     if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
-        return HTTP_METHOD_UNKNOWN;
+        return MK_HTTP_METHOD_UNKNOWN;
     }
 
     method.data = body;
@@ -229,28 +229,28 @@ int mk_http_method_get(char *body)
 
 int mk_http_protocol_check(char *protocol, int len)
 {
-    if (strncmp(protocol, HTTP_PROTOCOL_11_STR, len) == 0) {
-        return HTTP_PROTOCOL_11;
+    if (strncmp(protocol, MK_HTTP_PROTOCOL_11_STR, len) == 0) {
+        return MK_HTTP_PROTOCOL_11;
     }
-    if (strncmp(protocol, HTTP_PROTOCOL_10_STR, len) == 0) {
-        return HTTP_PROTOCOL_10;
+    if (strncmp(protocol, MK_HTTP_PROTOCOL_10_STR, len) == 0) {
+        return MK_HTTP_PROTOCOL_10;
     }
-    if (strncmp(protocol, HTTP_PROTOCOL_09_STR, len) == 0) {
-        return HTTP_PROTOCOL_09;
+    if (strncmp(protocol, MK_HTTP_PROTOCOL_09_STR, len) == 0) {
+        return MK_HTTP_PROTOCOL_09;
     }
 
-    return HTTP_PROTOCOL_UNKNOWN;
+    return MK_HTTP_PROTOCOL_UNKNOWN;
 }
 
 mk_pointer mk_http_protocol_check_str(int protocol)
 {
-    if (protocol == HTTP_PROTOCOL_11) {
+    if (protocol == MK_HTTP_PROTOCOL_11) {
         return mk_http_protocol_11_p;
     }
-    if (protocol == HTTP_PROTOCOL_10) {
+    if (protocol == MK_HTTP_PROTOCOL_10) {
         return mk_http_protocol_10_p;
     }
-    if (protocol == HTTP_PROTOCOL_09) {
+    if (protocol == MK_HTTP_PROTOCOL_09) {
         return mk_http_protocol_09_p;
     }
 
@@ -373,7 +373,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Check backward directory request */
     if (memmem(sr->uri_processed.data, sr->uri_processed.len,
-               HTTP_DIRECTORY_BACKWARD, sizeof(HTTP_DIRECTORY_BACKWARD) - 1)) {
+               MK_HTTP_DIRECTORY_BACKWARD,
+               sizeof(MK_HTTP_DIRECTORY_BACKWARD) - 1)) {
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
@@ -483,8 +484,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
      * HEAD, but it does not care about them, so if any plugin did not worked
      * on it, Monkey will return error 501 (501 Not Implemented).
      */
-    if (sr->method == HTTP_METHOD_PUT || sr->method == HTTP_METHOD_DELETE ||
-        sr->method == HTTP_METHOD_UNKNOWN) {
+    if (sr->method == MK_HTTP_METHOD_PUT || sr->method == MK_HTTP_METHOD_DELETE ||
+        sr->method == MK_HTTP_METHOD_UNKNOWN) {
         return mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
@@ -501,9 +502,9 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
      * For OPTIONS method, we let the plugin handle it and
      * return without any content.
      */
-    if ( sr->method == HTTP_METHOD_OPTIONS ) {
-        sr->headers.allow_methods.data = HTTP_METHOD_AVAILABLE;
-        sr->headers.allow_methods.len = strlen(HTTP_METHOD_AVAILABLE);
+    if (sr->method == MK_HTTP_METHOD_OPTIONS) {
+        sr->headers.allow_methods.data = MK_HTTP_METHOD_AVAILABLE;
+        sr->headers.allow_methods.len = strlen(MK_HTTP_METHOD_AVAILABLE);
 
         mk_pointer_reset(&sr->headers.content_type);
         mk_header_send(cs->socket, cs, sr);
@@ -535,7 +536,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     sr->headers.last_modified = sr->file_info.last_modification;
 
-    if (sr->if_modified_since.data && sr->method == HTTP_METHOD_GET) {
+    if (sr->if_modified_since.data && sr->method == MK_HTTP_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
         time_t date_file_server;  /* Date server file */
 
@@ -566,7 +567,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Process methods */
-    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_HEAD) {
+    if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_HEAD) {
         sr->headers.content_type = mime->type;
 
         /* HTTP Ranges */
@@ -602,7 +603,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /* Send file content */
-    if (sr->method == HTTP_METHOD_GET || sr->method == HTTP_METHOD_POST) {
+    if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_POST) {
         bytes = mk_http_send_file(cs, sr);
     }
 
@@ -661,12 +662,12 @@ int mk_http_keepalive_check(struct client_session *cs)
     }
 
     /* Old client without Connection header */
-    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->connection.len <= 0) {
+    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 && sr_node->connection.len <= 0) {
         return -1;
     }
 
     /* Old client and content length to send is unknown */
-    if (sr_node->protocol < HTTP_PROTOCOL_11 && sr_node->headers.content_length <= 0) {
+    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 && sr_node->headers.content_length <= 0) {
         return -1;
     }
 
@@ -716,11 +717,11 @@ int mk_http_pending_request(struct client_session *cs)
         }
     }
 
-    if (cs->first_method == HTTP_METHOD_UNKNOWN) {
+    if (cs->first_method == MK_HTTP_METHOD_UNKNOWN) {
         cs->first_method = mk_http_method_get(cs->body);
     }
 
-    if (cs->first_method == HTTP_METHOD_POST || cs->first_method == HTTP_METHOD_PUT) {
+    if (cs->first_method == MK_HTTP_METHOD_POST || cs->first_method == MK_HTTP_METHOD_PUT) {
         if (cs->body_pos_end > 0) {
             int content_length;
             int current;

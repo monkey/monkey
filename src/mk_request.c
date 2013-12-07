@@ -87,7 +87,7 @@ static void mk_request_init(struct session_request *request)
     memset(request, 0, sizeof(struct session_request));
 
     request->status = MK_TRUE;
-    request->method = HTTP_METHOD_UNKNOWN;
+    request->method = MK_HTTP_METHOD_UNKNOWN;
 
     request->file_info.size = -1;
 
@@ -345,11 +345,11 @@ static int mk_request_header_process(struct session_request *sr)
                                                   mk_rh_if_modified_since.len);
 
     /* Default Keepalive is off */
-    if (sr->protocol == HTTP_PROTOCOL_10) {
+    if (sr->protocol == MK_HTTP_PROTOCOL_10) {
         sr->keep_alive = MK_FALSE;
         sr->close_now = MK_TRUE;
     }
-    else if(sr->protocol == HTTP_PROTOCOL_11) {
+    else if(sr->protocol == MK_HTTP_PROTOCOL_11) {
         sr->keep_alive = MK_TRUE;
         sr->close_now = MK_FALSE;
     }
@@ -424,7 +424,7 @@ static int mk_request_parse(struct client_session *cs)
         }
 
         /* Looking for POST data */
-        if (sr_node->method == HTTP_METHOD_POST) {
+        if (sr_node->method == MK_HTTP_METHOD_POST) {
             int offset;
             offset = end + mk_endblock.len;
             sr_node->data = mk_method_get_data(cs->body + offset,
@@ -459,8 +459,8 @@ static int mk_request_parse(struct client_session *cs)
         mk_list_foreach(sr_head, sr_list) {
             sr_node = mk_list_entry(sr_head, struct session_request, _head);
             /* Pipelining request must use GET or HEAD methods */
-            if (sr_node->method != HTTP_METHOD_GET &&
-                sr_node->method != HTTP_METHOD_HEAD) {
+            if (sr_node->method != MK_HTTP_METHOD_GET &&
+                sr_node->method != MK_HTTP_METHOD_HEAD) {
                 return -1;
             }
         }
@@ -538,13 +538,13 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     }
 
     /* HTTP/1.1 needs Host header */
-    if (!sr->host.data && sr->protocol == HTTP_PROTOCOL_11) {
+    if (!sr->host.data && sr->protocol == MK_HTTP_PROTOCOL_11) {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
 
     /* Validating protocol version */
-    if (sr->protocol == HTTP_PROTOCOL_UNKNOWN) {
+    if (sr->protocol == MK_HTTP_PROTOCOL_UNKNOWN) {
         mk_request_error(MK_SERVER_HTTP_VERSION_UNSUP, cs, sr);
         return EXIT_ABORT;
     }
@@ -570,7 +570,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     }
 
     /* Handling method requested */
-    if (sr->method == HTTP_METHOD_POST || sr->method == HTTP_METHOD_PUT) {
+    if (sr->method == MK_HTTP_METHOD_POST || sr->method == MK_HTTP_METHOD_PUT) {
         if ((status = mk_method_parse_data(cs, sr)) != 0) {
             return status;
         }
@@ -900,7 +900,7 @@ int mk_request_error(int http_status, struct client_session *cs,
     mk_header_send(cs->socket, cs, sr);
 
     if (page) {
-        if (sr->method != HTTP_METHOD_HEAD)
+        if (sr->method != MK_HTTP_METHOD_HEAD)
             mk_socket_send(cs->socket, page->data, page->len);
 
         mk_pointer_free(page);
@@ -966,7 +966,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->body_length = 0;
 
     cs->body_pos_end = -1;
-    cs->first_method = HTTP_METHOD_UNKNOWN;
+    cs->first_method = MK_HTTP_METHOD_UNKNOWN;
 
     /* Init session request list */
     mk_list_init(&cs->request_list);
