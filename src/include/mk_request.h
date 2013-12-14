@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -94,6 +94,9 @@ struct response_headers
 {
     int status;
 
+    /* Connection flag, if equal -1, the connection header is ommited */
+    int connection;
+
     /*
      * If some plugins wants to set a customized HTTP status, here
      * is the 'how and where'
@@ -108,12 +111,12 @@ struct response_headers
 
     int cgi;
     int pconnections_left;
-    int ranges[2];
-    int transfer_encoding;
     int breakline;
 
-    /* Connection flag, if equal -1, the connection header is ommited */
-    int connection;
+    int transfer_encoding;
+
+    int ranges[2];
+
 
     time_t last_modified;
     mk_pointer allow_methods;
@@ -121,14 +124,15 @@ struct response_headers
     mk_pointer content_encoding;
     char *location;
 
-    /* Flag to track if the response headers were sent */
-    int sent;
-
     /*
      * This field allow plugins to add their own response
      * headers
      */
     struct mk_iov *_extra_rows;
+
+    /* Flag to track if the response headers were sent */
+    int sent;
+
 };
 
 struct header_toc_row
@@ -140,21 +144,28 @@ struct header_toc_row
 
 struct headers_toc
 {
-    int length;
     struct header_toc_row rows[MK_HEADERS_TOC_LEN];
+    int length;
 };
 
 struct session_request
 {
     int status;
+    int protocol;
+    /* is keep-alive request ? */
+    int keep_alive;
 
-    mk_pointer body;
+    /* is it serving a user's home directory ? */
+    int user_home;
 
-    /* HTTP Headers Table of Content */
-    struct headers_toc headers_toc;
+    /*-Connection-*/
+    long port;
+    /*------------*/
+
+    /* file descriptors */
+    int fd_file;
 
     int headers_len;
-
 
     /*----First header of client request--*/
     int method;
@@ -162,8 +173,13 @@ struct session_request
     mk_pointer uri;                  /* original request */
     mk_pointer uri_processed;        /* processed request (decoded) */
 
-    int protocol;
     mk_pointer protocol_p;
+
+    mk_pointer body;
+
+
+
+
 
     /* If request specify Connection: close, Monkey will
      * close the connection after send the response, by
@@ -201,18 +217,6 @@ struct session_request
     /* Query string: ?.... */
     mk_pointer query_string;
 
-    /* is keep-alive request ? */
-    int keep_alive;
-
-    /* is it serving a user's home directory ? */
-    int user_home;
-
-    /*-Connection-*/
-    long port;
-    /*------------*/
-
-    /* file descriptors */
-    int fd_file;
 
     /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
      * triggers the plugin STAGE_30 to look for a plugin handler. In some
@@ -239,6 +243,9 @@ struct session_request
     struct response_headers headers;
 
     struct mk_list _head;
+    /* HTTP Headers Table of Content */
+    struct headers_toc headers_toc;
+
 };
 
 struct client_session
@@ -248,26 +255,24 @@ struct client_session
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
 
-    /* request body buffer */
-    char *body;
-
-    /* Initial fixed size buffer for small requests */
-    char body_fixed[MK_REQUEST_CHUNK];
-
     unsigned int body_size;
     unsigned int body_length;
 
     int body_pos_end;
     int first_method;
 
-    time_t init_time;
-
-    struct session_request sr_fixed;
-    struct mk_list request_list;
-
     /* red-black tree head */
     struct rb_node _rb_head;
+    struct mk_list request_list;
 
+    time_t init_time;
+
+    /* request body buffer */
+    char *body;
+
+    /* Initial fixed size buffer for small requests */
+    char body_fixed[MK_REQUEST_CHUNK];
+    struct session_request sr_fixed;
 };
 
 extern pthread_key_t request_list;

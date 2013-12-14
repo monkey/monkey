@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Daemon
  *  ------------------
- *  Copyright (C) 2001-2012, Eduardo Silva P. <edsiper@gmail.com>
+ *  Copyright (C) 2001-2013, Eduardo Silva P. <edsiper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,13 +37,13 @@
 
 struct sched_connection
 {
+    struct rb_node _rb_head; /* red-black tree head */
+
     int socket;              /* file descriptor     */
     int status;              /* connection status   */
-    uint32_t events;         /* epoll events        */
     time_t arrive_time;      /* arrived time        */
-
-    struct rb_node _rb_head; /* red-black tree head */
     struct mk_list _head;    /* list head           */
+    uint32_t events;         /* epoll events        */
 };
 
 /* Global struct */
@@ -63,10 +63,11 @@ struct sched_list_node
     struct mk_list av_queue;
 
     short int idx;
+    unsigned char initialized;
+    int epoll_fd;
+
     pthread_t tid;
     pid_t pid;
-    int epoll_fd;
-    unsigned char initialized;
 
     struct client_session *request_handler;
 #ifdef SHAREDLIB
