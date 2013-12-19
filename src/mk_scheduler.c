@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/epoll.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <string.h>
@@ -83,10 +84,96 @@ static inline int _next_target()
      */
     if (mk_unlikely(cur >= config->worker_capacity)) {
         MK_TRACE("Too many clients: %i", config->worker_capacity * config->workers);
+
+        /*
+         * ULONG_MAX BUG
+         * =============
+         * This is a workaround for a specific Bug that we still not find the
+         * root cause for it. The conditions are:
+         *
+         *  - for some reason closed_connections > active_connections
+         *  - when performing (active_connections - closed_connections it will
+         *    return UMAX_LONG, which is OK but *not* for our case
+         *
+         * - if cur (current connections) is greater than worker capacity it will
+         *   fail all new incoming connections, and as it may have ULONG_MAX that
+         *   would case a very very bad behavior
+         *
+         * The temporal workaround is to when facing that we are over capacity,
+         * check if we have a ULONG_MAX value in 'cur', on that moment signal
+         * our workers so they can start performing a synchronization of their
+         * counters. This workaround will not generate overhead but we must
+         * solve the root cause.
+         */
+
+        uint64_t val;
+        uint64_t accepted;
+        uint64_t closed;
+
+        for (i = 0; i < config->workers; i++) {
+            accepted = sched_list[i].accepted_connections;
+            closed   = sched_list[i].closed_connections;
+
+            if (closed > accepted) {
+                /* Ok, let everybody know about this... */
+                MK_LT_SCHED(0, "ULONG_MAX BUG!");
+                mk_warn("ULONG_MAX BUG: Performing synchronization");
+
+                val = MK_SCHEDULER_SIGNAL_DEADBEEF;
+                write(sched_list[i].signal_channel, &val, sizeof(val));
+            }
+        }
+        /*
+         * take a short nap, nobody will die...: we need to
+         * to give some time to the workers to update their
+         * counters, of course it will not take more than a few
+         * microseconds...
+         */
+        sleep(1);
+
+        /* Instruct to close the connection anyways, we lie, it will die */
         return -1;
     }
 
     return target;
+}
+
+/*
+ * This function synchronize the worker scheduler counters in case
+ * we face the ULONG_MAX bug, this is an unexpected behavior but
+ * until it become fixed this routine must run with mutual exclusion
+ * to avoid data corruption.
+ */
+int mk_sched_sync_counters()
+{
+    uint64_t n = 0;
+    struct mk_list *head;
+    struct sched_list_node *sched;
+
+
+    MK_LT_SCHED(sched_signal_channel, "SYNC COUNTERS");
+
+    /* we only aim to fix the value of closed_connections */
+    pthread_mutex_lock(&mutex_sched_init);
+    sched = mk_sched_get_thread_conf();
+
+    if (sched->closed_connections > sched->accepted_connections) {
+        /* Count the real number of active connections */
+        mk_list_foreach(head, &sched->busy_queue) {
+            n++;
+        }
+
+        /*
+         * At this point we have N active connections in the busy
+         * queue, lets assume that we need to close N to reach the number
+         * of accepted connections.
+         */
+        sched->accepted_connections = n;
+        sched->closed_connections   = 0;
+    }
+    pthread_mutex_unlock(&mutex_sched_init);
+
+    return 0;
 }
 
 /*
@@ -237,7 +324,6 @@ static int mk_sched_register_thread(int efd)
         sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
         sched_conn->socket = -1;
         sched_conn->arrive_time = 0;
-
         mk_list_add(&sched_conn->_head, &sl->av_queue);
     }
     sl->request_handler = NULL;
@@ -248,12 +334,14 @@ static int mk_sched_register_thread(int efd)
 /* created thread, all this calls are in the thread context */
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
+    int ret;
     char *thread_name = 0;
     unsigned long len;
     sched_thread_conf *thconf = thread_conf;
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     mk_epoll_handlers *handler;
+    struct epoll_event event = {0, {0}};
 
 #ifndef SHAREDLIB
     /* Avoid SIGPIPE signals */
@@ -279,6 +367,28 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
                                     (void *) mk_conn_timeout);
 
     thinfo = &sched_list[wid];
+
+    /*
+     * Register the scheduler channel to signal active
+     * workers, we do this directly here to avoid to have
+     * an entry on the epoll_states.
+     */
+    thinfo->signal_channel = eventfd(0, 0);
+    event.data.fd = thinfo->signal_channel;
+    event.events  = EPOLLIN;
+    ret = epoll_ctl(thinfo->epoll_fd, EPOLL_CTL_ADD, thinfo->signal_channel, &event);
+    if (ret != 0) {
+        perror("epoll_ctl");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * ULONG_MAX BUG test only
+     * =======================
+     * to test the workaround we can use the following value:
+     *
+     *  thinfo->closed_connections = 1000;
+     */
 
 #ifdef SHAREDLIB
     thinfo->ctx = thconf->ctx;
@@ -312,7 +422,7 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
 {
     int efd;
     pthread_t tid;
-     pthread_attr_t attr;
+    pthread_attr_t attr;
     sched_thread_conf *thconf;
 
     /* Creating epoll file descriptor */
@@ -321,9 +431,10 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
         return -1;
     }
 
+    /* Thread data */
     thconf = mk_mem_malloc_z(sizeof(sched_thread_conf));
     thconf->epoll_fd = efd;
-    thconf->epoll_max_events = max_events*2;
+    thconf->epoll_max_events = (max_events * 2);
     thconf->max_events = max_events;
 #ifdef SHAREDLIB
     thconf->ctx = ctx;

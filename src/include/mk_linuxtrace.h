@@ -77,5 +77,4 @@ TRACEPOINT_EVENT(
 #define MK_LT_EPOLL(fd, event) do {} while(0)
 #define MK_LT_EPOLL_STATE(fd, mode, event) do{} while(0)
 #define MK_LT_SCHED(fd, event) do {} while(0)
-
 #endif

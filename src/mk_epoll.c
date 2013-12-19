@@ -264,6 +264,17 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
                 MK_LT_EPOLL(fd, "EPOLLIN");
                 MK_TRACE("[FD %i] EPoll Event READ", fd);
 
+                if (mk_unlikely(fd == sched->signal_channel)) {
+                    uint64_t val = 0;
+                    ret = read(fd, &val, sizeof(val));
+                    if (ret > 0) {
+                        if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
+                            mk_sched_sync_counters();
+                            continue;
+                        }
+                    }
+                }
+
                 ret = (*handler->read) (fd);
             }
             else if (events[i].events & EPOLLOUT) {

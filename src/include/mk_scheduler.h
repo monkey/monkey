@@ -31,9 +31,10 @@
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
 
-#define MK_SCHEDULER_CONN_AVAILABLE -1
-#define MK_SCHEDULER_CONN_PENDING 0
-#define MK_SCHEDULER_CONN_PROCESS 1
+#define MK_SCHEDULER_CONN_AVAILABLE  -1
+#define MK_SCHEDULER_CONN_PENDING     0
+#define MK_SCHEDULER_CONN_PROCESS     1
+#define MK_SCHEDULER_SIGNAL_DEADBEEF  0xDEADBEEF
 
 struct sched_connection
 {
@@ -69,11 +70,21 @@ struct sched_list_node
     unsigned char initialized;
 
     struct client_session *request_handler;
+
+    /*
+     * This variable is used to signal the active workers,
+     * just available because of ULONG_MAX bug described
+     * on mk_scheduler.c .
+     */
+    int signal_channel;
+
 #ifdef SHAREDLIB
     mklib_ctx ctx;
 #endif
 };
 
+
+/* global scheduler list */
 struct sched_list_node *sched_list;
 
 /* Struct under thread context */
@@ -82,13 +93,13 @@ typedef struct
     int epoll_fd;
     int epoll_max_events;
     int max_events;
+
 #ifdef SHAREDLIB
     mklib_ctx ctx;
 #endif
 } sched_thread_conf;
 
 pthread_key_t MK_EXPORT worker_sched_node;
-
 extern pthread_mutex_t mutex_worker_init;
 
 void mk_sched_init();
@@ -124,4 +135,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
 int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);
 struct sched_list_node *mk_sched_worker_info();
+
+int mk_sched_sync_counters();
+
 #endif
