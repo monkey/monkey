@@ -174,6 +174,21 @@ extern struct plugin_network_io *plg_netiomap;
 /* API functions exported to plugins */
 struct plugin_api
 {
+    /* socket functions */
+    int (*socket_cork_flag) (int, int);
+    int (*socket_reset) (int);
+    int (*socket_set_tcp_fastopen) (int);
+    int (*socket_set_tcp_nodelay) (int);
+    int (*socket_connect) (char *, int);
+    int (*socket_set_nonblocking) (int);
+    int (*socket_create) ();
+    int (*socket_close) (int);
+    int (*socket_sendv) (int, struct mk_iov *);
+    int (*socket_send) (int, const void *, size_t);
+    int (*socket_read) (int, void *, int);
+    int (*socket_send_file) (int, int, off_t *, size_t);
+    int (*socket_ip_str) (int, char **, int, unsigned long *);
+
     struct server_config *config;
     struct mk_list *plugins;
     struct sched_list_node *sched_list;
@@ -236,21 +251,6 @@ struct plugin_api
 
     /* Mime type */
     struct mimetype *(*mimetype_lookup) (char *);
-
-    /* socket functions */
-    int (*socket_cork_flag) (int, int);
-    int (*socket_reset) (int);
-    int (*socket_set_tcp_fastopen) (int);
-    int (*socket_set_tcp_nodelay) (int);
-    int (*socket_connect) (char *, int);
-    int (*socket_set_nonblocking) (int);
-    int (*socket_create) ();
-    int (*socket_close) (int);
-    int (*socket_sendv) (int, struct mk_iov *);
-    int (*socket_send) (int, const void *, size_t);
-    int (*socket_read) (int, void *, int);
-    int (*socket_send_file) (int, int, off_t *, size_t);
-    int (*socket_ip_str) (int, char **, int, unsigned long *);
 
     /* red-black tree */
     void (*rb_insert_color) (struct rb_node *, struct rb_root *);
