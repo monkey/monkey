@@ -69,7 +69,7 @@ void mk_thread_keys_init(void)
 }
 
 #ifndef SHAREDLIB
-static void mk_details(void)
+void mk_details(void)
 {
     printf("* Process ID is %i", getpid());
     printf("\n* Server socket listening on Port %i", config->serverport);

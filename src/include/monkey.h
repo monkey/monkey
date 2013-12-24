@@ -39,6 +39,7 @@ extern const mk_pointer mk_monkey_protocol;
 extern gid_t EGID;
 extern gid_t EUID;
 
+void mk_details(void);
 void mk_thread_keys_init();
 
 #endif
