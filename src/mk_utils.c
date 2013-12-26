@@ -471,7 +471,8 @@ int mk_utils_set_daemon()
         exit(EXIT_FAILURE);
 	}
 
-    /* Our last STDOUT message */
+    /* Our last STDOUT messages */
+    mk_details();
     mk_info("Background mode ON");
 
     fclose(stderr);
