@@ -128,6 +128,9 @@ void mk_mimetype_read_config()
     /* Read mime types configuration file */
     snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
     cnf = mk_config_create(path);
+    if (!cnf) {
+        exit(EXIT_FAILURE);
+    }
 
     /* Get MimeTypes tag */
     section = mk_config_section_get(cnf, "MIMETYPES");
