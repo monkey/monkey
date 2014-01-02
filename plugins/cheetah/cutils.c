@@ -91,12 +91,12 @@ void mk_cheetah_print_running_user()
         bufsize = 16384;
     }
 
-    buf = malloc(bufsize);
+    buf = mk_api->mem_alloc_z(bufsize);
     uid = getuid();
     getpwuid_r(uid, &pwd, buf, bufsize, &result);
 
     CHEETAH_WRITE("%s\n", pwd.pw_name);
-    free(buf);
+    mk_api->mem_free(buf);
 }
 
 int mk_cheetah_write(const char *format, ...)
