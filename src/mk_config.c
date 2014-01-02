@@ -603,6 +603,10 @@ struct host *mk_config_get_host(char *path)
 
     /* Read configuration file */
     cnf = mk_config_create(path);
+    if (!cnf) {
+        mk_err("Configuration error, aborting.");
+        exit(EXIT_FAILURE);
+    }
 
     /* Read tag 'HOST' */
     section_host = mk_config_section_get(cnf, "HOST");

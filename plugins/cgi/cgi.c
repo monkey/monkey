@@ -201,11 +201,11 @@ static int do_cgi(const char *const __restrict__ file,
 
         char *argv[3] = { NULL };
 
-        char *tmp = api->str_dup(file);
+        char *tmp = mk_api->str_dup(file);
         if (chdir(dirname(tmp)))
             _exit(1);
 
-        char *tmp2 = api->str_dup(file);
+        char *tmp2 = mk_api->str_dup(file);
         argv[0] = basename(tmp2);
 
         /* Restore signals for the child */
@@ -328,10 +328,10 @@ static int cgi_link_matches(struct mk_config_section *section, struct mk_list *l
                     str_to_regex(entry_match->val, &match_line->match);
                     break;
                 case 1: /* interpreter */
-                    match_line->bin = api->str_dup(entry_match->val);
+                    match_line->bin = mk_api->str_dup(entry_match->val);
                     break;
                 case 2: /* mime type */
-                    match_line->content_type.data = api->str_dup(entry_match->val);
+                    match_line->content_type.data = mk_api->str_dup(entry_match->val);
                     match_line->content_type.len = entry_match->len;
                     break;
                 };
@@ -360,7 +360,7 @@ static void cgi_read_config(const char * const path)
         cgi_link_matches(section, &cgi_global_matches);
     }
 
-    free(file);
+    mk_api->mem_free(file);
     mk_api->config_free(conf);
 
     // Plugin config done. Then check for virtual hosts

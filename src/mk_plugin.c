@@ -449,7 +449,7 @@ void mk_plugin_read_config()
     cnf = mk_config_create(path);
 
     if (!cnf) {
-        mk_err("Plugins configuration file could not be readed");
+        mk_err("Configuration error, aborting.");
         mk_mem_free(path);
         exit(EXIT_FAILURE);
     }
