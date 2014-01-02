@@ -233,7 +233,7 @@ struct mk_config *mk_config_create(const char *path)
         n_keys++;
     }
 
-    if (n_keys == 0) {
+    if (section && n_keys == 0) {
         mk_config_error(path, line, "Section do not have keys");
     }
 
