@@ -47,7 +47,7 @@ int cgi_req_del(struct cgi_request *r)
     if (!r) return 1;
 
     mk_list_del(&r->_head);
-    free(r);
+    mk_api->mem_free(r);
 
     return 0;
 }
