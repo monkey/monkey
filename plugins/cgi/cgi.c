@@ -133,7 +133,7 @@ static int do_cgi(const char *const __restrict__ file,
     if (query) {
         snprintf(query_string, PATHLEN, "QUERY_STRING=%s", query);
         env[envpos++] = query_string;
-        free(query);
+        mk_api->mem_free(query);
     }
 
     unsigned long len;
@@ -427,7 +427,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 void _mkp_exit()
 {
     regfree(&match_regex);
-    free(requests_by_socket);
+    mk_api->mem_free(requests_by_socket);
 }
 
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
