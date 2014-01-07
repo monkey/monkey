@@ -9,6 +9,7 @@
     flv video/x-flv
     jpe image/jpeg
 
+    deb application/x-debian-package
     jpeg image/jpeg
     htm text/html
     bmp image/bmp
