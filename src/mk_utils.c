@@ -325,15 +325,14 @@ void mk_utils_trace(const char *component, int color, const char *function,
                     char *file, int line, const char* format, ...)
 {
     va_list args;
-    char *color_function = NULL;
-    char *color_fileline = NULL;
+    char *color_function  = NULL;
+    char *color_fileline  = NULL;
+    char *color_component = NULL;
 
-    char *reset_color = ANSI_RESET;
-    char *bold_color = ANSI_BOLD;
-    char *magenta_color = ANSI_MAGENTA;
-    char *red_color = ANSI_RED;
-    char *green_color = ANSI_GREEN;
-    char *cyan_color = ANSI_CYAN;
+    char *reset_color   = ANSI_RESET;
+    char *magenta_color = ANSI_RESET ANSI_BOLD_MAGENTA;
+    char *red_color     = ANSI_RESET ANSI_BOLD_RED;
+    char *cyan_color    = ANSI_RESET ANSI_CYAN;
 
     struct timeval tv;
     struct timezone tz;
@@ -356,27 +355,31 @@ void mk_utils_trace(const char *component, int color, const char *function,
         bgcolortype = "dark";
     }
 
-    if (!strcmp(bgcolortype,"light")) {
+    if (!strcmp(bgcolortype, "light")) {
         switch(color) {
         case MK_TRACE_CORE:
-            color_function = ANSI_MAGENTA;
-            color_fileline = ANSI_GREEN;
+            color_component = ANSI_BOLD_GREEN;
+            color_function  = ANSI_BOLD_MAGENTA;
+            color_fileline  = ANSI_GREEN;
             break;
-        case MK_TRACE_PLUGIN:
-            color_function = ANSI_BLUE;
-            color_fileline = ANSI_GREEN;
+        case MK_TRACE_PLUGIN: 
+            color_component = ANSI_BOLD_GREEN;
+            color_function  = ANSI_BLUE;
+            color_fileline  = ANSI_GREEN;
             break;
         }
     }
     else { /* covering 'dark' and garbage values defaulting to 'dark' cases */
         switch(color) {
         case MK_TRACE_CORE:
-            color_function = ANSI_YELLOW;
-            color_fileline = ANSI_WHITE;
+            color_component = ANSI_BOLD_GREEN;
+            color_function  = ANSI_YELLOW;
+            color_fileline  = ANSI_BOLD_WHITE;
             break;
         case MK_TRACE_PLUGIN:
-            color_function = ANSI_BLUE;
-            color_fileline = ANSI_WHITE;
+            color_component = ANSI_BOLD_BLUE;
+            color_function  = ANSI_BLUE;
+            color_fileline  = ANSI_BOLD_WHITE;
             break;
         }
     }
@@ -385,20 +388,17 @@ void mk_utils_trace(const char *component, int color, const char *function,
     if (!isatty(STDOUT_FILENO)) {
         color_function = "";
         color_fileline = "";
-        reset_color = "";
-        bold_color = "";
-        magenta_color = "";
-        red_color = "";
-        green_color = "";
-        cyan_color = "";
+        reset_color    = "";
+        magenta_color  = "";
+        red_color      = "";
+        cyan_color     = "";
     }
 
     va_start( args, format );
 
-    printf("~ %s%2i.%i%s %s%s[%s%s%s%s%s|%s:%i%s] %s%s():%s ",
-           cyan_color, (int) (tv.tv_sec - monkey_init_time), (int) tv.tv_usec, reset_color,
-           magenta_color, bold_color,
-           reset_color, bold_color, green_color, component, color_fileline, file,
+    printf("~ %s%2lu.%lu%s %s[%s%s%s|%s:%i%s] %s%s()%s ",
+           cyan_color, (tv.tv_sec - monkey_init_time), tv.tv_usec, reset_color,
+           magenta_color, color_component, component, color_fileline, file,
            line, magenta_color,
            color_function, function, red_color);
     vprintf(format, args );
