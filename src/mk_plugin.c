@@ -371,6 +371,7 @@ void mk_plugin_init()
     api->epoll_add = mk_epoll_add;
     api->epoll_del = mk_epoll_del;
     api->epoll_change_mode = mk_epoll_change_mode;
+    api->epoll_state_get = mk_epoll_state_get;
 
     /* Red-Black tree */
     api->rb_insert_color = rb_insert_color;
@@ -408,6 +409,7 @@ void mk_plugin_init()
 
     api->event_add = mk_plugin_event_add;
     api->event_del = mk_plugin_event_del;
+    api->event_get = mk_plugin_event_get;
     api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
 
     /* Worker functions */

@@ -248,6 +248,7 @@ struct plugin_api
     int   (*epoll_add) (int, int, int, unsigned int);
     int   (*epoll_del) (int, int);
     int   (*epoll_change_mode) (int, int, int, unsigned int);
+    struct epoll_state *(*epoll_state_get) (int);
 
     /* Mime type */
     struct mimetype *(*mimetype_lookup) (char *);
@@ -278,6 +279,7 @@ struct plugin_api
     /* event's functions */
     int (*event_add) (int, int, struct plugin *, unsigned int);
     int (*event_del) (int);
+    struct plugin_event *(*event_get) (int);
 
     int (*event_socket_change_mode) (int, int, unsigned int);
 
@@ -336,6 +338,7 @@ int mk_plugin_event_add(int socket, int mode,
                         struct plugin *handler,
                         unsigned int behavior);
 int mk_plugin_event_del(int socket);
+struct plugin_event *mk_plugin_event_get(int socket);
 
 int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior);
 
