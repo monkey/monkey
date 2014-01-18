@@ -229,7 +229,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_conn_close(remote_fd);
+        mk_conn_close(remote_fd, MK_EP_SOCKET_CLOSED);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return -1;
     }
@@ -340,7 +340,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     sched_thread_conf *thconf = thread_conf;
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
-    mk_epoll_handlers *handler;
     struct epoll_event event = {0, {0}};
 
 #ifndef SHAREDLIB
@@ -358,13 +357,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     /* Plugin thread context calls */
     mk_epoll_state_init();
     mk_plugin_event_init_list();
-
-    /* Epoll event handlers */
-    handler = mk_epoll_set_handlers((void *) mk_conn_read,
-                                    (void *) mk_conn_write,
-                                    (void *) mk_conn_error,
-                                    (void *) mk_conn_close,
-                                    (void *) mk_conn_timeout);
 
     thinfo = &sched_list[wid];
 
@@ -409,7 +401,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     __builtin_prefetch(&worker_sched_node);
 
     /* Init epoll_wait() loop */
-    mk_epoll_init(thinfo->epoll_fd, handler, epoll_max_events);
+    mk_epoll_init(thinfo->epoll_fd, epoll_max_events);
 
     return 0;
 }
@@ -426,7 +418,7 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
     sched_thread_conf *thconf;
 
     /* Creating epoll file descriptor */
-    efd = mk_epoll_create(max_events);
+    efd = mk_epoll_create();
     if (efd < 1) {
         return -1;
     }

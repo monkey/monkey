@@ -25,6 +25,7 @@
 #ifndef MK_EPOLL_H
 #define MK_EPOLL_H
 
+/* Epoll States */
 #define MK_EPOLL_READ     0
 #define MK_EPOLL_WRITE    1
 #define MK_EPOLL_RW       2
@@ -37,6 +38,15 @@
 #define MK_EPOLL_LEVEL_TRIGGERED 2        /* default */
 #define MK_EPOLL_EDGE_TRIGGERED  EPOLLET
 
+/*
+ * Once a connection is dropped, define
+ * a reason.
+ */
+#define MK_EP_SOCKET_CLOSED   0
+#define MK_EP_SOCKET_ERROR    1
+#define MK_EP_SOCKET_TIMEOUT  2
+
+/* Just in case RHDUP is not defined */
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP 0x2000
 #endif
@@ -47,9 +57,7 @@ typedef struct
 {
     int (*read) (int);
     int (*write) (int);
-    int (*error) (int);
-    int (*close) (int);
-    int (*timeout) (int);
+    int (*close) (int, int);
 } mk_epoll_handlers;
 
 /*
@@ -77,15 +85,9 @@ struct epoll_state_index
 };
 
 /* Monkey epoll calls */
-int mk_epoll_create(int max_events);
-void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events);
+int mk_epoll_create();
+void *mk_epoll_init(int efd, int max_events);
 struct epoll_state *mk_epoll_state_get(int fd);
-
-mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
-                                         void (*write) (int),
-                                         void (*error) (int),
-                                         void (*close) (int),
-                                         void (*timeout) (int));
 
 int mk_epoll_add(int efd, int fd, int mode, unsigned int behavior);
 int mk_epoll_del(int efd, int fd);

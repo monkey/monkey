@@ -171,78 +171,27 @@ int mk_conn_write(int socket)
     return -1;
 }
 
-int mk_conn_error(int socket)
+int mk_conn_close(int socket, int event)
 {
-    int ret = -1;
-    struct client_session *cs;
-    struct sched_list_node *sched;
-
-    MK_TRACE("Connection Handler, error on FD %i", socket);
-
-    /* Plugin hook */
-    ret = mk_plugin_event_error(socket);
-    switch(ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break; /* just return controller to invoker */
-    }
-
-    sched = mk_sched_get_thread_conf();
-    mk_sched_remove_client(sched, socket);
-    cs = mk_session_get(socket);
-    if (cs) {
-        mk_session_remove(socket);
-    }
-
-    return 0;
-}
-
-int mk_conn_close(int socket)
-{
-    int ret = -1;
     struct sched_list_node *sched;
 
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
 
-    /* Plugin hook */
-    ret = mk_plugin_event_close(socket);
-    switch(ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break; /* just return controller to invoker */
+    /* Plugin hook: this is a wrap-workaround to do not
+     * break plugins until the whole interface events and
+     * return values are re-worked.
+     */
+    if (event == MK_EP_SOCKET_CLOSED)
+        mk_plugin_event_close(socket);
+    else if (event == MK_EP_SOCKET_ERROR) {
+        mk_plugin_event_error(socket);
+    }
+    else if (event == MK_EP_SOCKET_TIMEOUT) {
+        mk_plugin_event_timeout(socket);
     }
 
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
-    return 0;
-}
-
-int mk_conn_timeout(int socket)
-{
-    int ret = -1;
-    struct sched_list_node *sched;
-
-    MK_TRACE("[FD %i] Connection Handler, timeout", socket);
-
-    /* Plugin hook */
-    ret = mk_plugin_event_timeout(socket);
-    switch(ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break; /* just return controller to invoker */
-    }
-
-    sched = mk_sched_get_thread_conf();
-    mk_sched_check_timeouts(sched);
 
     return 0;
 }

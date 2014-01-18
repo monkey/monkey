@@ -31,6 +31,7 @@
 #include <sys/epoll.h>
 
 #include "monkey.h"
+#include "mk_connection.h"
 #include "mk_socket.h"
 #include "mk_clock.h"
 #include "mk_request.h"
@@ -201,40 +202,19 @@ static int mk_epoll_state_del(int fd)
     return -1;
 }
 
-mk_epoll_handlers *mk_epoll_set_handlers(void (*read) (int),
-                                         void (*write) (int),
-                                         void (*error) (int),
-                                         void (*close) (int),
-                                         void (*timeout) (int))
-{
-    mk_epoll_handlers *handler;
-
-    handler = mk_mem_malloc(sizeof(mk_epoll_handlers));
-    handler->read = (void *) read;
-    handler->write = (void *) write;
-    handler->error = (void *) error;
-    handler->close = (void *) close;
-    handler->timeout = (void *) timeout;
-
-    return handler;
-}
-
-int mk_epoll_create(int max_events)
+int mk_epoll_create()
 {
     int efd;
 
-    efd = epoll_create(max_events);
+    efd = epoll_create1(EPOLL_CLOEXEC);
     if (efd == -1) {
         perror("epoll_create");
         mk_err("epoll_create() failed");
     }
-
-    fcntl(efd, F_SETFD, FD_CLOEXEC);
-
     return efd;
 }
 
-void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
+void *mk_epoll_init(int efd, int max_events)
 {
     int i, fd, ret = -1;
     int num_fds;
@@ -247,7 +227,7 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
     sched = mk_sched_get_thread_conf();
 
     fds_timeout = log_current_utime + config->timeout;
-    events = mk_mem_malloc_z(max_events*sizeof(struct epoll_event));
+    events = mk_mem_malloc_z(max_events * sizeof(struct epoll_event));
 
     pthread_mutex_lock(&mutex_worker_init);
     sched->initialized = 1;
@@ -275,13 +255,13 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
                     }
                 }
 
-                ret = (*handler->read) (fd);
+                ret = mk_conn_read(fd);
             }
             else if (events[i].events & EPOLLOUT) {
                 MK_LT_EPOLL(fd, "EPOLLOUT");
                 MK_TRACE("[FD %i] EPoll Event WRITE", fd);
 
-                ret = (*handler->write) (fd);
+                ret = mk_conn_write(fd);
             }
             else if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
 #ifdef LINUX_TRACE
@@ -290,13 +270,14 @@ void *mk_epoll_init(int efd, mk_epoll_handlers * handler, int max_events)
                 if (events[i].events & (EPOLLRDHUP)) MK_LT_EPOLL(fd, "EPOLLRDHUP");
 #endif
                 MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLER", fd);
-                ret = (*handler->error) (fd);
+                mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
+                ret = 0;
             }
 
             if (ret < 0) {
                 MK_LT_EPOLL(fd, "FORCED CLOSE");
                 MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
-                (*handler->close) (fd);
+                mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
             }
         }
 
