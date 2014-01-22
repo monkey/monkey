@@ -370,7 +370,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     event.events  = EPOLLIN;
     ret = epoll_ctl(thinfo->epoll_fd, EPOLL_CTL_ADD, thinfo->signal_channel, &event);
     if (ret != 0) {
-        perror("epoll_ctl");
+        mk_libc_error("epoll_ctl");
         exit(EXIT_FAILURE);
     }
 
@@ -436,7 +436,7 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     if (pthread_create(&tid, &attr, mk_sched_launch_worker_loop,
                        (void *) thconf) != 0) {
-        perror("pthread_create");
+        mk_libc_error("pthread_create");
         return -1;
     }
 

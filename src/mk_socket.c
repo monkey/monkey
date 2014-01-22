@@ -112,7 +112,7 @@ int mk_socket_create()
     int sockfd;
 
     if ((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
-        perror("client: socket");
+        mk_libc_error("socket");
         return -1;
     }
 
@@ -132,9 +132,8 @@ int mk_socket_reset(int socket)
 {
     int status = 1;
 
-    if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &status, sizeof(int)) ==
-        -1) {
-        perror("setsockopt");
+    if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &status, sizeof(int)) == -1) {
+        mk_libc_error("socket");
         exit(EXIT_FAILURE);
     }
 

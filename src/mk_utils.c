@@ -623,7 +623,7 @@ pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg)
     pthread_attr_init(&thread_attr);
     pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
     if (pthread_create(&tid, &thread_attr, (void *) func, arg) < 0) {
-        perror("pthread_create");
+        mk_libc_error("pthread_create");
         exit(EXIT_FAILURE);
     }
 

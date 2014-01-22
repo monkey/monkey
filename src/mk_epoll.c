@@ -208,8 +208,7 @@ int mk_epoll_create()
 
     efd = epoll_create1(EPOLL_CLOEXEC);
     if (efd == -1) {
-        perror("epoll_create");
-        mk_err("epoll_create() failed");
+        mk_libc_error("epoll_create");
     }
     return efd;
 }
@@ -341,8 +340,8 @@ int mk_epoll_del(int efd, int fd)
 
 #ifdef TRACE
     if (ret < 0) {
+        mk_libc_error("epoll_ctl");
         MK_TRACE("[FD %i] epoll_ctl() = %i", fd, ret);
-        perror("epoll_ctl");
     }
 #endif
 
@@ -405,8 +404,8 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
     ret = epoll_ctl(efd, EPOLL_CTL_MOD, fd, &event);
 #ifdef TRACE
     if (ret < 0) {
+        mk_libc_error("epoll_ctl");
         MK_TRACE("[FD %i] epoll_ctl() = %i", fd, ret);
-        perror("epoll_ctl");
     }
 #endif
 
