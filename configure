@@ -604,7 +604,7 @@ INCDIR  = ./include
 LDFLAGS = $LDFLAGS
 DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
-OBJ     = monkey.o mk_method.o mk_mimetype.o mk_request.o \\
+OBJ     = monkey.o mk_method.o mk_mimetype.o mk_vhost.o mk_request.o \\
           mk_header.o mk_config.o mk_signals.o \\
           mk_user.o mk_utils.o mk_epoll.o mk_scheduler.o \\
           mk_string.o mk_memory.o mk_connection.o mk_iov.o mk_http.o \\

@@ -58,6 +58,7 @@
 #include "mk_clock.h"
 #include "mk_plugin.h"
 #include "mk_macros.h"
+#include "mk_vhost.h"
 
 const mk_pointer mk_crlf = mk_pointer_init(MK_CRLF);
 const mk_pointer mk_endblock = mk_pointer_init(MK_ENDBLOCK);
@@ -555,7 +556,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
                                          struct host_alias, _head);
 
     if (sr->host.data) {
-        mk_config_host_find(sr->host, &sr->host_conf, &sr->host_alias);
+        mk_vhost_get(sr->host, &sr->host_conf, &sr->host_alias);
     }
 
     /* Is requesting an user home directory ? */

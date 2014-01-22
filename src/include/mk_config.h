@@ -202,11 +202,4 @@ int mk_config_get_bool(char *value);
 void mk_config_read_hosts(char *path);
 void mk_config_sanity_check(void);
 
-struct host *mk_config_get_host(char *path);
-int mk_config_host_find(mk_pointer host, struct host **vhost, struct host_alias **alias);
-
-#ifdef SAFE_FREE
-void mk_config_host_free_all();
-#endif
-
 #endif
