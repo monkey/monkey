@@ -102,16 +102,16 @@ pthread_key_t mk_utils_error_key;
     char *buf = pthread_getspecific(mk_utils_error_key);              \
     strerror_r(_err, buf, MK_UTILS_ERROR_SIZE);
 
-static inline void mk_utils_libc_error(char *file, int line)
+static inline void mk_utils_libc_error(char *caller, char *file, int line)
 {
     MK_UTILS_LIBC_ERRNO_BUFFER();
-    mk_err("%s, errno=%i at %s:%i", buf, _err, file, line);
+    mk_err("%s: %s, errno=%i at %s:%i", caller, buf, _err, file, line);
 }
 
-static inline void mk_utils_libc_warning(char *file, int line)
+static inline void mk_utils_libc_warning(char *caller, char *file, int line)
 {
     MK_UTILS_LIBC_ERRNO_BUFFER();
-    mk_warn("%s, errno=%i at %s:%i", buf, _err, file, line);
+    mk_warn("%s: %s, errno=%i at %s:%i", caller, buf, _err, file, line);
 }
 
 #endif

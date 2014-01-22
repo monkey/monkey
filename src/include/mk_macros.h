@@ -131,7 +131,7 @@
 #endif
 
 /* Wrapper (mk_utils) libc error helpers */
-#define mk_libc_error()    mk_utils_libc_error(__FILE__, __LINE__)
-#define mk_libc_warning()  mk_utils_libc_warning(__FILE__, __LINE__)
+#define mk_libc_error(c)    mk_utils_libc_error(c, __FILE__, __LINE__)
+#define mk_libc_warning(c)  mk_utils_libc_warning(c, __FILE__, __LINE__)
 
 #endif
