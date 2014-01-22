@@ -42,6 +42,7 @@
 #include "mk_macros.h"
 #include "mk_env.h"
 #include "mk_http.h"
+#include "mk_utils.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -66,6 +67,7 @@ void mk_thread_keys_init(void)
     pthread_key_create(&mk_cache_utils_gmtime, NULL);
     pthread_key_create(&mk_cache_utils_gmt_text, NULL);
     pthread_key_create(&mk_plugin_event_k, NULL);
+    pthread_key_create(&mk_utils_error_key, NULL);
 }
 
 #ifndef SHAREDLIB

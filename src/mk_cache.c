@@ -42,6 +42,7 @@ pthread_key_t mk_cache_utils_gmt_text;
 /* This function is called when a thread is created */
 void mk_cache_thread_init()
 {
+    char *cache_error;
     mk_pointer *cache_header_lm;
     mk_pointer *cache_header_cl;
     mk_pointer *cache_header_ka;
@@ -87,4 +88,8 @@ void mk_cache_thread_init()
     /* Cache the most used text representations of utime2gmt */
     cache_utils_gmt_text = mk_mem_malloc_z(sizeof(struct mk_gmt_cache) * MK_GMT_CACHES);
     pthread_setspecific(mk_cache_utils_gmt_text, (void *) cache_utils_gmt_text);
+
+    /* Cache buffer for strerror_r(2) */
+    cache_error = mk_mem_malloc(MK_UTILS_ERROR_SIZE);
+    pthread_setspecific(mk_utils_error_key, (void *) cache_error);
 }

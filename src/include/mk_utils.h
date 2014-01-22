@@ -22,6 +22,8 @@
 #ifndef MK_UTILS_H
 #define MK_UTILS_H
 
+#include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -84,5 +86,32 @@ void mk_print(int type, const char *format, ...) PRINTF_WARNINGS(2,3);
 pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg);
 int mk_utils_worker_rename(const char *title);
 void mk_utils_stacktrace(void);
+
+/* Thread key to hold a re-entrant buffer for strerror formatting */
+#define MK_UTILS_ERROR_SIZE          128
+pthread_key_t mk_utils_error_key;
+
+
+/*
+ * Helpers to format and print out common errno errors, we use thread
+ * keys to hold a buffer per thread so strerror_r(2) can be used without
+ * a memory allocation.
+ */
+#define MK_UTILS_LIBC_ERRNO_BUFFER()                                  \
+    int _err  = errno;                                                \
+    char *buf = pthread_getspecific(mk_utils_error_key);              \
+    strerror_r(_err, buf, MK_UTILS_ERROR_SIZE);
+
+static inline void mk_utils_libc_error(char *file, int line)
+{
+    MK_UTILS_LIBC_ERRNO_BUFFER();
+    mk_err("%s, errno=%i at %s:%i", buf, _err, file, line);
+}
+
+static inline void mk_utils_libc_warning(char *file, int line)
+{
+    MK_UTILS_LIBC_ERRNO_BUFFER();
+    mk_warn("%s, errno=%i at %s:%i", buf, _err, file, line);
+}
 
 #endif
