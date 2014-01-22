@@ -27,6 +27,7 @@
 #include <pthread.h>
 
 #include "mk_list.h"
+#include "mk_vhost.h"
 #include "mk_utils.h"
 #include "mk_macros.h"
 #include "mk_config.h"

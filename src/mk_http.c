@@ -45,6 +45,7 @@
 #include "mk_epoll.h"
 #include "mk_plugin.h"
 #include "mk_macros.h"
+#include "mk_vhost.h"
 
 const mk_pointer mk_http_method_get_p = mk_pointer_init(MK_HTTP_METHOD_GET_STR);
 const mk_pointer mk_http_method_post_p = mk_pointer_init(MK_HTTP_METHOD_POST_STR);

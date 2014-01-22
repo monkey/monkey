@@ -27,6 +27,7 @@
 
 /* Monkey Headers */
 #include "mk_plugin.h"
+#include "mk_vhost.h"
 #include "mk_list.h"
 #include "mk_http.h"
 #include "mk_file.h"

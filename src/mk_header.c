@@ -37,7 +37,7 @@
 #include "mk_http.h"
 #include "mk_string.h"
 #include "mk_macros.h"
-
+#include "mk_vhost.h"
 
 const mk_pointer mk_header_short_date = mk_pointer_init(MK_HEADER_SHORT_DATE);
 const mk_pointer mk_header_short_location = mk_pointer_init(MK_HEADER_SHORT_LOCATION);

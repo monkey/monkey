@@ -142,41 +142,6 @@ struct server_config
 
 extern struct server_config *config;
 
-/* Custom error page */
-struct error_page {
-    short int status;
-    char *file;
-    char *real_path;
-    struct mk_list _head;
-};
-
-struct host
-{
-    char *file;                   /* configuration file */
-    struct mk_list server_names;  /* host names (a b c...) */
-
-    mk_pointer documentroot;
-
-    char *host_signature;
-    mk_pointer header_host_signature;
-
-    /* source configuration */
-    struct mk_config *config;
-
-    /* custom error pages */
-    struct mk_list error_pages;
-
-    /* link node */
-    struct mk_list _head;
-};
-
-struct host_alias
-{
-    char *name;
-    unsigned int len;
-
-    struct mk_list _head;
-};
 
 /* Functions */
 void mk_config_start_configure(void);
