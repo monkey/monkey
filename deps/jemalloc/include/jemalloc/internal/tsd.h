@@ -81,7 +81,7 @@ extern __thread a_type	a_name##_tls;					\
 extern pthread_key_t	a_name##_tsd;					\
 extern bool		a_name##_booted;
 #elif (defined(_WIN32))
-#define malloc_tsd_externs(a_name, a_type)				\
+#define	malloc_tsd_externs(a_name, a_type)				\
 extern DWORD		a_name##_tsd;					\
 extern bool		a_name##_booted;
 #else
@@ -348,7 +348,7 @@ a_name##_tsd_get_wrapper(void)						\
 		wrapper = tsd_init_check_recursion(			\
 		    &a_name##_tsd_init_head, &block);			\
 		if (wrapper)						\
-		    return wrapper;					\
+		    return (wrapper);					\
 		wrapper = (a_name##_tsd_wrapper_t *)			\
 		    malloc_tsd_malloc(sizeof(a_name##_tsd_wrapper_t));	\
 		block.data = wrapper;					\
