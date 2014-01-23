@@ -100,7 +100,9 @@ pthread_key_t mk_utils_error_key;
 #define MK_UTILS_LIBC_ERRNO_BUFFER()                                  \
     int _err  = errno;                                                \
     char *buf = pthread_getspecific(mk_utils_error_key);              \
-    strerror_r(_err, buf, MK_UTILS_ERROR_SIZE);
+    if (!strerror_r(_err, buf, MK_UTILS_ERROR_SIZE)) {                \
+        mk_err("strerror_r() failed");                                \
+    }
 
 static inline void mk_utils_libc_error(char *caller, char *file, int line)
 {

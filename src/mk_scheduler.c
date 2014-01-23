@@ -59,6 +59,7 @@ pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 static inline int _next_target()
 {
     int i;
+    int ret;
     int target = 0;
     unsigned long long tmp = 0, cur = 0;
 
@@ -120,7 +121,10 @@ static inline int _next_target()
                 mk_warn("ULONG_MAX BUG: Performing synchronization");
 
                 val = MK_SCHEDULER_SIGNAL_DEADBEEF;
-                write(sched_list[i].signal_channel, &val, sizeof(val));
+                ret = write(sched_list[i].signal_channel, &val, sizeof(val));
+                if (ret <= 0) {
+                    mk_libc_error("write");
+                }
             }
         }
         /*
