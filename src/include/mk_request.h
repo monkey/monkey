@@ -236,6 +236,9 @@ struct session_request
     struct file_info file_info;
 
     /* Vhost */
+    int vhost_fdt_id;
+    unsigned int vhost_fdt_hash;
+
     struct host       *host_conf;     /* root vhost config */
     struct host_alias *host_alias;    /* specific vhost matched */
 
