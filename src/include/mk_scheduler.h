@@ -36,6 +36,8 @@
 #define MK_SCHEDULER_CONN_PROCESS     1
 #define MK_SCHEDULER_SIGNAL_DEADBEEF  0xDEADBEEF
 
+extern __thread struct rb_root *cs_list;
+
 struct sched_connection
 {
     struct rb_node _rb_head; /* red-black tree head */
@@ -113,10 +115,8 @@ extern pthread_key_t request_list;
 
 static inline struct rb_root *mk_sched_get_request_list()
 {
-    return pthread_getspecific(request_list);
+    return cs_list;
 }
-
-void mk_sched_set_request_list(struct rb_root *list);
 
 static inline struct sched_list_node *mk_sched_get_thread_conf()
 {

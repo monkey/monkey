@@ -939,7 +939,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 {
     struct client_session *cs;
     struct sched_connection *sc;
-    struct rb_root *cs_list;
 
     sc = mk_sched_get_connection(sched, socket);
     if (!sc) {
@@ -973,7 +972,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     mk_list_init(&cs->request_list);
 
     /* Add this SESSION to the thread list */
-    cs_list = mk_sched_get_request_list();
 
     /* Add node to list */
     /* Red-Black tree insert routine */
@@ -997,23 +995,15 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     rb_link_node(&cs->_rb_head, parent, new);
     rb_insert_color(&cs->_rb_head, cs_list);
 
-    //mk_list_add(&cs->_head, cs_list);
-
-    /* Set again the global list */
-    mk_sched_set_request_list(cs_list);
-
     return cs;
 }
 
 struct client_session *mk_session_get(int socket)
 {
     struct client_session *cs;
-    struct rb_root *cs_list;
     struct rb_node *node;
 
-    cs_list = mk_sched_get_request_list();
     node = cs_list->rb_node;
-
   	while (node) {
   		cs = container_of(node, struct client_session, _rb_head);
 		if (socket < cs->socket)
@@ -1034,9 +1024,6 @@ struct client_session *mk_session_get(int socket)
 void mk_session_remove(int socket)
 {
     struct client_session *cs_node;
-    struct rb_root *cs_list;
-
-    cs_list = mk_sched_get_request_list();
 
     cs_node = mk_session_get(socket);
     if (cs_node) {

@@ -86,6 +86,7 @@ void mk_print(int type, const char *format, ...) PRINTF_WARNINGS(2,3);
 pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg);
 int mk_utils_worker_rename(const char *title);
 void mk_utils_stacktrace(void);
+
 unsigned int mk_utils_gen_hash(const void *key, int len);
 
 /* Thread key to hold a re-entrant buffer for strerror formatting */

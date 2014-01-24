@@ -52,6 +52,8 @@ struct sched_list_node *sched_list;
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 
+__thread struct rb_root *cs_list;
+
 /*
  * Returns the worker id which should take a new incomming connection,
  * it returns the worker id with less active connections
@@ -270,17 +272,14 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     mk_list_add(&sched_conn->_head, &sched->busy_queue);
 
     MK_LT_SCHED(remote_fd, "REGISTERED");
+
     return 0;
 }
 
 static void mk_sched_thread_lists_init()
 {
-    //struct mk_list *cs_list;
-    struct rb_root *cs_list;
-
     /* client_session mk_list */
     cs_list = mk_mem_malloc_z(sizeof(struct rb_root));
-    mk_sched_set_request_list(cs_list);
 }
 
 /* Register thread information. The caller thread is the thread information's owner */
@@ -462,7 +461,7 @@ void mk_sched_init()
 
 void mk_sched_set_request_list(struct rb_root *list)
 {
-    pthread_setspecific(request_list, (void *) list);
+    cs_list = list;
 }
 
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
@@ -556,7 +555,6 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     struct client_session *cs_node;
     struct sched_connection *entry_conn;
     struct mk_list *sched_head, *temp;
-    struct rb_root *cs_list;
 
     /* PENDING CONN TIMEOUT */
     mk_list_foreach_safe(sched_head, temp, &sched->busy_queue) {
@@ -574,7 +572,6 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     }
 
     /* PROCESSING CONN TIMEOUT */
-    cs_list = mk_sched_get_request_list();
     struct rb_node *node;
 
     for (node = rb_first(cs_list); node; node = rb_next(node)) {
