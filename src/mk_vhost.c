@@ -239,11 +239,14 @@ static inline int mk_vhost_fdt_close(struct session_request *sr)
 int mk_vhost_open(struct session_request *sr)
 {
     int id;
+    int off;
     unsigned int hash;
 
     //return open(sr->real_path.data, sr->file_info.flags_read_only);
 
-    hash = mk_utils_gen_hash(sr->real_path.data, sr->real_path.len);
+    off = sr->host_conf->documentroot.len;
+    hash = mk_utils_gen_hash(sr->real_path.data + off,
+                             sr->real_path.len - off);
     id   = (hash % VHOST_FDT_HASHTABLE_SIZE);
 
     return mk_vhost_fdt_open(id, hash, sr);
