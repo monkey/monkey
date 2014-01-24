@@ -102,7 +102,7 @@ static void mk_request_init(struct session_request *request)
 static void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
-        close(sr->fd_file);
+        mk_vhost_close(sr);
     }
 
     if (sr->headers.location) {

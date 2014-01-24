@@ -25,6 +25,8 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <fcntl.h>
+
 
 #include "mk_list.h"
 #include "mk_vhost.h"
@@ -33,9 +35,228 @@
 #include "mk_config.h"
 #include "mk_string.h"
 #include "mk_http_status.h"
+#include "mk_memory.h"
+#include "mk_request.h"
 #include "mk_info.h"
 
-/* 
+/* Initialize Virtual Host FDT mutex */
+pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static __thread struct mk_list *mk_vhost_fdt_key;
+
+/*
+ * This function is triggered upon thread creation (inside the thread
+ * context), here we configure per-thread data.
+ */
+int mk_vhost_fdt_worker_init()
+{
+    int i;
+    int j;
+    struct host *h;
+    struct mk_list *list;
+    struct mk_list *head;
+    struct vhost_fdt_host *fdt;
+    struct vhost_fdt_hash_table *ht;
+    struct vhost_fdt_hash_chain *hc;
+
+    /*
+     * We are under a thread context and the main configuration is
+     * already in place. Now for every existent virtual host we are
+     * going to create the File Descriptor Table (FDT) which aims to
+     * hold references of 'open and shared' file descriptors under
+     * the Virtual Host context.
+     */
+
+    /*
+     * Under an initialization context we need to protect this critical
+     * section
+     */
+    pthread_mutex_lock(&mk_vhost_fdt_mutex);
+
+    /*
+     * Initialize the thread FDT/Hosts list and create an entry per
+     * existent virtual host
+     */
+    list = mk_mem_malloc_z(sizeof(struct mk_list));
+    mk_list_init(list);
+
+    mk_list_foreach(head, &config->hosts) {
+        h = mk_list_entry(head, struct host, _head);
+
+        fdt = mk_mem_malloc(sizeof(struct vhost_fdt_host));
+        fdt->host = h;
+
+        /* Initialize hash table */
+        for (i = 0; i < VHOST_FDT_HASHTABLE_SIZE; i++) {
+            ht = &fdt->hash_table[i];
+            ht->av_slots = VHOST_FDT_HASHTABLE_CHAINS;
+
+            /* for each chain under the hash table, set the fd */
+            for (j = 0; j < VHOST_FDT_HASHTABLE_CHAINS; j++) {
+                hc = &ht->chain[j];
+                hc->fd      = -1;
+                hc->hash    =  0;
+                hc->readers =  0;
+            }
+        }
+        mk_list_add(&fdt->_head, list);
+    }
+
+    mk_vhost_fdt_key = list;
+    pthread_mutex_unlock(&mk_vhost_fdt_mutex);
+
+    return 0;
+}
+
+static inline
+struct vhost_fdt_hash_table *mk_vhost_fdt_table_lookup(int id, struct host *host)
+{
+    struct mk_list *head;
+    struct mk_list *vhost_list;
+    struct vhost_fdt_host *fdt_host;
+    struct vhost_fdt_hash_table *ht = NULL;
+
+    vhost_list = mk_vhost_fdt_key;
+    mk_list_foreach(head, vhost_list) {
+        fdt_host = mk_list_entry(head, struct vhost_fdt_host, _head);
+        if (fdt_host->host == host) {
+            ht = &fdt_host->hash_table[id];
+            return ht;
+        }
+    }
+
+    return ht;
+}
+
+static inline
+struct vhost_fdt_hash_chain
+*mk_vhost_fdt_chain_lookup(unsigned int hash, struct vhost_fdt_hash_table *ht)
+{
+    int i;
+    struct vhost_fdt_hash_chain *hc = NULL;
+
+    for (i = 0; i < VHOST_FDT_HASHTABLE_CHAINS; i++) {
+        hc = &ht->chain[i];
+        if (hc->hash == hash) {
+            return hc;
+        }
+    }
+
+    return NULL;
+}
+
+
+static inline int mk_vhost_fdt_open(int id, unsigned int hash,
+                                    struct session_request *sr)
+{
+    int i;
+    int fd;
+    struct vhost_fdt_hash_table *ht = NULL;
+    struct vhost_fdt_hash_chain *hc;
+
+    ht = mk_vhost_fdt_table_lookup(id, sr->host_conf);
+    if (mk_unlikely(!ht)) {
+        return open(sr->real_path.data, sr->file_info.flags_read_only);
+    }
+
+    /* We got the hash table, now look around the chains array */
+    hc = mk_vhost_fdt_chain_lookup(hash, ht);
+    if (hc) {
+        /* Increment the readers and return the shared FD */
+        hc->readers++;
+        return hc->fd;
+    }
+
+    /*
+     * Get here means that no entry exists in the hash table for the
+     * requested file descriptor and hash, we must try to open the file
+     * and register the entry in the table.
+     */
+    fd = open(sr->real_path.data, sr->file_info.flags_read_only);
+    if (fd == -1) {
+        return -1;
+    }
+
+    /* If chains are full, just return the new FD, bad luck... */
+    if (ht->av_slots <= 0) {
+        return fd;
+    }
+
+    /* Register the new entry in an available slot */
+    for (i = 0; i < VHOST_FDT_HASHTABLE_CHAINS; i++) {
+        hc = &ht->chain[i];
+        if (hc->fd == -1) {
+            hc->fd   = fd;
+            hc->hash = hash;
+            hc->readers++;
+            ht->av_slots--;
+
+            sr->vhost_fdt_id   = id;
+            sr->vhost_fdt_hash = hash;
+
+            return fd;
+        }
+    }
+
+    return -1;
+}
+
+static inline int mk_vhost_fdt_close(struct session_request *sr)
+{
+    int id;
+    unsigned int hash;
+    struct vhost_fdt_hash_table *ht = NULL;
+    struct vhost_fdt_hash_chain *hc;
+
+    id   = sr->vhost_fdt_id;
+    hash = sr->vhost_fdt_hash;
+
+    ht = mk_vhost_fdt_table_lookup(id, sr->host_conf);
+    if (mk_unlikely(!ht)) {
+        return close(sr->fd_file);
+    }
+
+    /* We got the hash table, now look around the chains array */
+    hc = mk_vhost_fdt_chain_lookup(hash, ht);
+    if (hc) {
+        /* Increment the readers and check if we should close */
+        hc->readers--;
+        if (hc->readers == 0) {
+            hc->fd   = -1;
+            hc->hash = 0;
+            ht->av_slots++;
+            return close(sr->fd_file);
+        }
+        else {
+            return 0;
+        }
+    }
+
+    return close(sr->fd_file);
+}
+
+
+int mk_vhost_open(struct session_request *sr)
+{
+    int id;
+    unsigned int hash;
+
+    //return open(sr->real_path.data, sr->file_info.flags_read_only);
+
+    hash = mk_utils_gen_hash(sr->real_path.data, sr->real_path.len);
+    id   = (hash % VHOST_FDT_HASHTABLE_SIZE);
+
+    return mk_vhost_fdt_open(id, hash, sr);
+}
+
+int mk_vhost_close(struct session_request *sr)
+{
+    //return close(sr->fd_file);
+
+    return mk_vhost_fdt_close(sr);
+}
+
+/*
  * Open a virtual host configuration file and return a structure with
  * definitions.
  */
