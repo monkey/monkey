@@ -529,6 +529,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         mk_mem_free(tmp);
     }
 
+    /* File Descriptor Table (FDT) */
+    config->fdt = (size_t) mk_config_section_getval(section,
+                                                    "FDT",
+                                                    MK_CONFIG_VAL_BOOL);
     mk_vhost_init(path_conf);
 }
 

@@ -144,4 +144,16 @@ cat > conf/monkey.conf <<EOF
 
     DefaultMimeType text/plain
 
+    # FDT:
+    # ----
+    # The File Descriptor Table (FDT) it's an internal mechanism to share open
+    # file descriptors under specific threads and virtual host context. When 
+    # enabled, it helps to reduce the number of opened file descriptors for the 
+    # same resource and the number of required system calls to open and close 
+    # files.
+    #
+    # The overhead in memory of this feature is around ~5KB per worker.
+
+    FDT On
+
 EOF

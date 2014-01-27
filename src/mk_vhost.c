@@ -59,6 +59,10 @@ int mk_vhost_fdt_worker_init()
     struct vhost_fdt_hash_table *ht;
     struct vhost_fdt_hash_chain *hc;
 
+    if (config->fdt == MK_FALSE) {
+        return -1;
+    }
+
     /*
      * We are under a thread context and the main configuration is
      * already in place. Now for every existent virtual host we are
@@ -154,6 +158,10 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
+    if (config->fdt == MK_FALSE) {
+        return open(sr->real_path.data, sr->file_info.flags_read_only);
+    }
+
     ht = mk_vhost_fdt_table_lookup(id, sr->host_conf);
     if (mk_unlikely(!ht)) {
         return open(sr->real_path.data, sr->file_info.flags_read_only);
@@ -207,6 +215,10 @@ static inline int mk_vhost_fdt_close(struct session_request *sr)
     unsigned int hash;
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
+
+    if (config->fdt == MK_FALSE) {
+        return close(sr->fd_file);
+    }
 
     id   = sr->vhost_fdt_id;
     hash = sr->vhost_fdt_hash;

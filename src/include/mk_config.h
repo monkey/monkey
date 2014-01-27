@@ -73,15 +73,16 @@ struct mk_config_entry
 /* Base struct of server */
 struct server_config
 {
-    int server_fd;              /* server socket file descriptor */
+    int server_fd;                /* server socket file descriptor */
     unsigned int worker_capacity; /* how many clients per thread... */
-    unsigned int max_load;      /* max number of clients (worker_capacity * workers) */
-    short int workers;          /* number of worker threads */
+    unsigned int max_load;        /* max number of clients (worker_capacity * workers) */
+    short int workers;            /* number of worker threads */
 
+    int8_t fdt;                   /* is FDT enabled ? */
     int8_t is_daemon;
     int8_t is_seteuid;
-    char *serverconf;           /* path to configuration files */
 
+    char *serverconf;             /* path to configuration files */
     char *listen_addr;
     mk_pointer server_addr;
     mk_pointer server_software;
