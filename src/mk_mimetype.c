@@ -115,7 +115,7 @@ int mk_mimetype_add(char *name, const char *type)
 /* Load the two mime arrays into memory */
 void mk_mimetype_read_config()
 {
-    char path[MAX_PATH];
+    char path[MK_MAX_PATH];
     struct mk_config *cnf;
     struct mk_config_section *section;
     struct mk_config_entry *entry;
@@ -126,7 +126,7 @@ void mk_mimetype_read_config()
     mimetype_rb_head = RB_ROOT;
 
     /* Read mime types configuration file */
-    snprintf(path, MAX_PATH, "%s/monkey.mime", config->serverconf);
+    snprintf(path, MK_MAX_PATH, "%s/monkey.mime", config->serverconf);
     cnf = mk_config_create(path);
     if (!cnf) {
         exit(EXIT_FAILURE);
