@@ -28,7 +28,7 @@
 #include "mk_memory.h"
 
 /* Max Path lenth */
-#define MAX_PATH 1024
+#define MK_MAX_PATH 1024
 
 /* Send_Header(...,int cgi) */
 #define SH_NOCGI 0

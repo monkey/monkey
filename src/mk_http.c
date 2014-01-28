@@ -421,8 +421,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         /* looking for a index file */
         mk_pointer index_file;
-        char tmppath[MAX_PATH];
-        index_file = mk_request_index(sr->real_path.data, tmppath, MAX_PATH);
+        char tmppath[MK_MAX_PATH];
+        index_file = mk_request_index(sr->real_path.data, tmppath, MK_MAX_PATH);
 
         if (index_file.data) {
             if (sr->real_path.data != sr->real_path_static) {
@@ -453,8 +453,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         }
         else {
             int n;
-            char linked_file[MAX_PATH];
-            n = readlink(sr->real_path.data, linked_file, MAX_PATH);
+            char linked_file[MK_MAX_PATH];
+            n = readlink(sr->real_path.data, linked_file, MK_MAX_PATH);
             if (n < 0) {
                 return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
