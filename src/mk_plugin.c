@@ -36,6 +36,7 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 #include "mk_mimetype.h"
+#include "mk_vhost.h"
 
 enum {
     bufsize = 256

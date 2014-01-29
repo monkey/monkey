@@ -34,6 +34,7 @@
 #include <mk_clock.h>
 #include <mk_mimetype.h>
 #include <mk_server.h>
+#include <mk_vhost.h>
 #include <stdarg.h>
 #include <limits.h>
 
@@ -148,7 +149,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config = mk_mem_malloc_z(sizeof(struct server_config));
     if (!config) goto out;
 
-    config->serverconf = mk_stringdup(MONKEY_PATH_CONF);
+    config->serverconf = mk_string_dup(MONKEY_PATH_CONF);
     mk_config_set_init_values();
 
     /*
