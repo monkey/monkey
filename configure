@@ -21,7 +21,7 @@
 __MONKEY__="1"
 __MONKEY_MINOR__="4"
 __MONKEY_PATCHLEVEL__="0"
-__MONKEY_GIT__="devel"
+__MONKEY_GIT__="release"
 
 VERSION="1.4.0"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
