@@ -51,10 +51,10 @@ MONKEY_PLUGIN("dirlisting",          /* shortname */
               VERSION,              /* version */
               MK_PLUGIN_STAGE_30);   /* hooks */
 
-const mk_pointer mk_dirhtml_default_mime = mk_pointer_init(MK_DIRHTML_DEFAULT_MIME);
-const mk_pointer mk_iov_dash = mk_pointer_init("-");
-const mk_pointer mk_iov_none = mk_pointer_init("");
-const mk_pointer mk_iov_slash = mk_pointer_init("/");
+const mk_ptr_t mk_dirhtml_default_mime = mk_ptr_t_init(MK_DIRHTML_DEFAULT_MIME);
+const mk_ptr_t mk_iov_dash = mk_ptr_t_init("-");
+const mk_ptr_t mk_iov_none = mk_ptr_t_init("");
+const mk_ptr_t mk_iov_slash = mk_ptr_t_init("/");
 
 /* DIR_HTML logic:
  * ---------------
@@ -510,7 +510,7 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
 }
 
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
-                                            int tag_id, mk_pointer sep,
+                                            int tag_id, mk_ptr_t sep,
                                             char *value, char **tags)
 {
     struct dirhtml_value *check, *aux = 0;
@@ -648,7 +648,7 @@ int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
     unsigned int i = 0;
     int is_chunked = MK_FALSE, n;
     char *title = 0;
-    mk_pointer sep;
+    mk_ptr_t sep;
 
     /* file info */
     unsigned long list_len = 0;

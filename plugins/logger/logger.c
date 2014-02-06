@@ -418,9 +418,9 @@ int _mkp_core_prctx(struct server_config *config)
 void _mkp_core_thctx()
 {
     struct mk_iov *iov_log;
-    mk_pointer *content_length;
-    mk_pointer *status;
-    mk_pointer *ip_str;
+    mk_ptr_t *content_length;
+    mk_ptr_t *status;
+    mk_ptr_t *ip_str;
 
     PLUGIN_TRACE("Creating thread cache");
 
@@ -429,19 +429,19 @@ void _mkp_core_thctx()
     pthread_setspecific(_mkp_data, (void *) iov_log);
 
     /* Cache content length */
-    content_length = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    content_length = mk_api->mem_alloc_z(sizeof(mk_ptr_t));
     content_length->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     content_length->len = -1;
     pthread_setspecific(cache_content_length, (void *) content_length);
 
     /* Cahe status */
-    status = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    status = mk_api->mem_alloc_z(sizeof(mk_ptr_t));
     status->data = mk_api->mem_alloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     status->len = -1;
     pthread_setspecific(cache_status, (void *) status);
 
     /* Cache IP address */
-    ip_str = mk_api->mem_alloc_z(sizeof(mk_pointer));
+    ip_str = mk_api->mem_alloc_z(sizeof(mk_ptr_t));
     ip_str->data = mk_api->mem_alloc_z(INET6_ADDRSTRLEN + 1);
     ip_str->len  = -1;
     pthread_setspecific(cache_ip_str, (void *) ip_str);
@@ -453,10 +453,10 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
     int array_len = ARRAY_SIZE(response_codes);
     struct log_target *target;
     struct mk_iov *iov;
-    mk_pointer *date;
-    mk_pointer *content_length;
-    mk_pointer *ip_str;
-    mk_pointer status;
+    mk_ptr_t *date;
+    mk_ptr_t *content_length;
+    mk_ptr_t *ip_str;
+    mk_ptr_t status;
 
     /* Set response status */
     http_status = sr->headers.status;
@@ -541,7 +541,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
 
         /* Content Length */
         if (sr->method != MK_HTTP_METHOD_HEAD) {
-            /* Int to mk_pointer */
+            /* Int to mk_ptr_t */
             content_length = pthread_getspecific(cache_content_length);
 
             tmp = sr->headers.content_length;

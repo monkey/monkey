@@ -41,7 +41,7 @@ MONKEY_PLUGIN("fastcgi",		/* shortname */
               "0.2",			/* version */
               MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_CORE_PRCTX);
 
-const mk_pointer mk_iov_none = {
+const mk_ptr_t mk_iov_none = {
 	.data = "",
 	.len = 0,
 };
@@ -66,7 +66,7 @@ static int fcgi_handle_cgi_header(struct session_request *sr,
 	if (!strncasecmp(entry, "Content-type: ", 14)) {
 		value = entry + 14;
 		value_len = len - 14;
-		sr->headers.content_type = (mk_pointer){
+		sr->headers.content_type = (mk_ptr_t){
 			.data = value,
 			.len = value_len,
 		};

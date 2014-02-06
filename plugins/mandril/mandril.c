@@ -198,7 +198,7 @@ static int mk_security_check_ip(int socket)
 }
 
 /* Check if the incoming URL is restricted for some rule */
-static int mk_security_check_url(mk_pointer url)
+static int mk_security_check_url(mk_ptr_t url)
 {
     int n;
     struct mk_list *head;
@@ -215,10 +215,10 @@ static int mk_security_check_url(mk_pointer url)
     return 0;
 }
 
-mk_pointer parse_referer_host(mk_pointer ref)
+mk_ptr_t parse_referer_host(mk_ptr_t ref)
 {
     unsigned int i, beginHost, endHost;
-    mk_pointer host;
+    mk_ptr_t host;
 
     host.data = NULL;
     host.len = 0;
@@ -249,10 +249,10 @@ error:
     return host;
 }
 
-static int mk_security_check_hotlink(mk_pointer url, mk_pointer host,
-        mk_pointer referer)
+static int mk_security_check_hotlink(mk_ptr_t url, mk_ptr_t host,
+        mk_ptr_t referer)
 {
-    mk_pointer ref_host = parse_referer_host(referer);
+    mk_ptr_t ref_host = parse_referer_host(referer);
     unsigned int domains_matched = 0;
     int i = 0;
     const char *curA, *curB;
@@ -346,7 +346,7 @@ int _mkp_stage_30(struct plugin *p,
         struct client_session *cs,
         struct session_request *sr)
 {
-    mk_pointer referer;
+    mk_ptr_t referer;
     (void) p;
     (void) cs;
 

@@ -80,8 +80,8 @@ struct dirhtml_config
 };
 
 
-extern const mk_pointer mk_dirhtml_default_mime;
-extern const mk_pointer mk_iov_dash;
+extern const mk_ptr_t mk_dirhtml_default_mime;
+extern const mk_ptr_t mk_iov_dash;
 
 /* Global config */
 struct dirhtml_config *dirhtml_conf;
@@ -104,7 +104,7 @@ struct dirhtml_template *mk_dirhtml_tpl_footer;
 struct dirhtml_value
 {
     int tag_id;
-    mk_pointer sep;             /* separator code after value */
+    mk_ptr_t sep;             /* separator code after value */
 
     /* string data */
     int len;
@@ -139,7 +139,7 @@ int mk_dirhtml_theme_load();
 int mk_dirhtml_theme_debug(struct dirhtml_template **st_tpl);
 
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
-                                            int tag_id, mk_pointer sep,
+                                            int tag_id, mk_ptr_t sep,
                                             char *value, char **tags);
 
 struct f_list *get_dir_content(struct session_request *sr, char *path);

@@ -68,7 +68,7 @@ static int log;
 
 static struct proxy_entry_array *proxy_config;
 
-const mk_pointer mk_proxy_default_mime = mk_pointer_init("text/html\r\n");
+const mk_ptr_t mk_proxy_default_mime = mk_ptr_t_init("text/html\r\n");
 
 static int response_buffer_adjust(struct proxy_peer *peer, size_t size)
 {

@@ -105,8 +105,8 @@ fcgi_write_begin_req_body(uint8_t *p, const struct fcgi_begin_req_body *b);
 
 size_t
 fcgi_param_write(uint8_t *p,
-	mk_pointer key,
-	mk_pointer value);
+	mk_ptr_t key,
+	mk_ptr_t value);
 
 /**
  * fcgi_param_entry_init(3) - Setup an entry from buffer.
@@ -132,16 +132,16 @@ int fcgi_param_entry_next(struct fcgi_param_entry *e);
  *
  * Searches from entry position and forward for entry with matching key.
  */
-int fcgi_param_entry_search(struct fcgi_param_entry *e, mk_pointer key);
+int fcgi_param_entry_search(struct fcgi_param_entry *e, mk_ptr_t key);
 
 /**
  * fcgi_param_entry_key(1) - Returns current key.
  */
-mk_pointer fcgi_param_entry_key(struct fcgi_param_entry *e);
+mk_ptr_t fcgi_param_entry_key(struct fcgi_param_entry *e);
 
 /**
  * fcgi_param_entry_value(1) - Returns current value.
  */
-mk_pointer fcgi_param_entry_value(struct fcgi_param_entry *e);
+mk_ptr_t fcgi_param_entry_value(struct fcgi_param_entry *e);
 
 #endif // _FCGI_PROTOCOL_H_

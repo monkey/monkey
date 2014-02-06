@@ -149,8 +149,8 @@ static size_t write_length(uint8_t *p, size_t len)
 }
 
 size_t fcgi_param_write(uint8_t *p,
-	mk_pointer key,
-	mk_pointer value)
+	mk_ptr_t key,
+	mk_ptr_t value)
 {
 	size_t ret, cnt;
 
@@ -214,9 +214,9 @@ void fcgi_param_entry_reset(struct fcgi_param_entry *e)
 	fcgi_param_entry_next(e);
 }
 
-int fcgi_param_entry_search(struct fcgi_param_entry *e, mk_pointer key)
+int fcgi_param_entry_search(struct fcgi_param_entry *e, mk_ptr_t key)
 {
-	mk_pointer e_key;
+	mk_ptr_t e_key;
 
 	do {
 		e_key = fcgi_param_entry_key(e);
@@ -228,17 +228,17 @@ int fcgi_param_entry_search(struct fcgi_param_entry *e, mk_pointer key)
 	return -1;
 }
 
-mk_pointer fcgi_param_entry_key(struct fcgi_param_entry *e)
+mk_ptr_t fcgi_param_entry_key(struct fcgi_param_entry *e)
 {
-	return (mk_pointer){
+	return (mk_ptr_t){
 		.data = (char *)e->base + e->position,
 		.len  = e->key_len,
 	};
 }
 
-mk_pointer fcgi_param_entry_value(struct fcgi_param_entry *e)
+mk_ptr_t fcgi_param_entry_value(struct fcgi_param_entry *e)
 {
-	return (mk_pointer){
+	return (mk_ptr_t){
 		.data = (char *)e->base + e->position + e->key_len,
 		.len  = e->value_len,
 	};

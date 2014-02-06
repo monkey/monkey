@@ -42,21 +42,21 @@
 #define MK_LOGGER_IOV_EMPTY "-"
 
 /* mk pointers for errors */
-extern const mk_pointer error_msg_400;
-extern const mk_pointer error_msg_403;
-extern const mk_pointer error_msg_404;
-extern const mk_pointer error_msg_405;
-extern const mk_pointer error_msg_408;
-extern const mk_pointer error_msg_411;
-extern const mk_pointer error_msg_413;
-extern const mk_pointer error_msg_500;
-extern const mk_pointer error_msg_501;
-extern const mk_pointer error_msg_505;
+extern const mk_ptr_t error_msg_400;
+extern const mk_ptr_t error_msg_403;
+extern const mk_ptr_t error_msg_404;
+extern const mk_ptr_t error_msg_405;
+extern const mk_ptr_t error_msg_408;
+extern const mk_ptr_t error_msg_411;
+extern const mk_ptr_t error_msg_413;
+extern const mk_ptr_t error_msg_500;
+extern const mk_ptr_t error_msg_501;
+extern const mk_ptr_t error_msg_505;
 
 /* mk pointer for IOV */
-extern const mk_pointer mk_logger_iov_dash;
-extern const mk_pointer mk_logger_iov_space;
-extern const mk_pointer mk_logger_iov_lf;
-extern const mk_pointer mk_logger_iov_empty;
+extern const mk_ptr_t mk_logger_iov_dash;
+extern const mk_ptr_t mk_logger_iov_space;
+extern const mk_ptr_t mk_logger_iov_lf;
+extern const mk_ptr_t mk_logger_iov_empty;
 
 #endif

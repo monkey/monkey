@@ -250,7 +250,7 @@ function calls:
   int iov_add_entry(struct mk_iov *mk_io,              | Add an entry to the iov structure
                     char *buf,                         |
                     int len,                           |
-                    mk_pointer sep,                    |
+                    mk_ptr_t sep,                    |
                     int free)                          |
 -------------------------------------------------------+---------------------------------------------------------
   int iov_set_entry(struct mk_iov *mk_io,              | Add an entry to the iov structure in a specific position
@@ -264,9 +264,9 @@ function calls:
 -------------------------------------------------------+---------------------------------------------------------
   void iov_print(struct mk_iov *mk_io)                 | Print iov structure content
 -------------------------------------------------------+---------------------------------------------------------
-  void pointer_set(mk_pointer *p, char *data)          | Set values to a Monkey pointer
+  void pointer_set(mk_ptr_t *p, char *data)          | Set values to a Monkey pointer
 -------------------------------------------------------+---------------------------------------------------------
-  void pointer_print(mk_pointer *p)                    | Print to stdout the data contained in a Monkey pointer
+  void pointer_print(mk_ptr_t *p)                    | Print to stdout the data contained in a Monkey pointer
 -------------------------------------------------------+---------------------------------------------------------
   int socket_cork_flag(int sockfd, int state)          | Enable/Disable socket CORK_FLAG
 -------------------------------------------------------+---------------------------------------------------------

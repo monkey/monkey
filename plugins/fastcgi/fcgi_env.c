@@ -41,7 +41,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 		struct client_session *cs,
 		struct session_request *sr)
 {
-	mk_pointer key, value;
+	mk_ptr_t key, value;
 	char buffer[128];
 	char *tmpuri = NULL;
 	size_t pos = 0;
@@ -177,8 +177,8 @@ size_t fcgi_env_write(uint8_t *ptr,
 			}
 		}
 
-		key = (mk_pointer){.len = 5 + j, .data = buffer};
-		value = (mk_pointer){.len = hlen - j - 2, .data = hinit + j + 2};
+		key = (mk_ptr_t){.len = 5 + j, .data = buffer};
+		value = (mk_ptr_t){.len = hlen - j - 2, .data = hinit + j + 2};
 
 		__write_param(ptr, len, pos, key, value);
 	}

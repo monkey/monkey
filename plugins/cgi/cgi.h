@@ -51,7 +51,7 @@ struct post_t {
 struct cgi_match_t {
     regex_t match;
     char *bin;
-    mk_pointer content_type;
+    mk_ptr_t content_type;
 
     struct mk_list _head;
 };

@@ -24,22 +24,22 @@
 #include "pointers.h"
 #include "mk_plugin.h"
 
-const mk_pointer mk_iov_none = mk_pointer_init("");
+const mk_ptr_t mk_iov_none = mk_ptr_t_init("");
 
 /* Writter helpers */
-const mk_pointer mk_logger_iov_dash = mk_pointer_init(MK_LOGGER_IOV_DASH);
-const mk_pointer mk_logger_iov_space = mk_pointer_init(MK_IOV_SPACE);
-const mk_pointer mk_logger_iov_lf = mk_pointer_init(MK_IOV_LF);
-const mk_pointer mk_logger_iov_empty = mk_pointer_init(MK_LOGGER_IOV_EMPTY);
+const mk_ptr_t mk_logger_iov_dash = mk_ptr_t_init(MK_LOGGER_IOV_DASH);
+const mk_ptr_t mk_logger_iov_space = mk_ptr_t_init(MK_IOV_SPACE);
+const mk_ptr_t mk_logger_iov_lf = mk_ptr_t_init(MK_IOV_LF);
+const mk_ptr_t mk_logger_iov_empty = mk_ptr_t_init(MK_LOGGER_IOV_EMPTY);
 
 /* Error messages */
-const mk_pointer error_msg_400 = mk_pointer_init(ERROR_MSG_400);
-const mk_pointer error_msg_403 = mk_pointer_init(ERROR_MSG_403);
-const mk_pointer error_msg_404 = mk_pointer_init(ERROR_MSG_404);
-const mk_pointer error_msg_405 = mk_pointer_init(ERROR_MSG_405);
-const mk_pointer error_msg_408 = mk_pointer_init(ERROR_MSG_408);
-const mk_pointer error_msg_411 = mk_pointer_init(ERROR_MSG_411);
-const mk_pointer error_msg_413 = mk_pointer_init(ERROR_MSG_413);
-const mk_pointer error_msg_500 = mk_pointer_init(ERROR_MSG_500);
-const mk_pointer error_msg_501 = mk_pointer_init(ERROR_MSG_501);
-const mk_pointer error_msg_505 = mk_pointer_init(ERROR_MSG_505);
+const mk_ptr_t error_msg_400 = mk_ptr_t_init(ERROR_MSG_400);
+const mk_ptr_t error_msg_403 = mk_ptr_t_init(ERROR_MSG_403);
+const mk_ptr_t error_msg_404 = mk_ptr_t_init(ERROR_MSG_404);
+const mk_ptr_t error_msg_405 = mk_ptr_t_init(ERROR_MSG_405);
+const mk_ptr_t error_msg_408 = mk_ptr_t_init(ERROR_MSG_408);
+const mk_ptr_t error_msg_411 = mk_ptr_t_init(ERROR_MSG_411);
+const mk_ptr_t error_msg_413 = mk_ptr_t_init(ERROR_MSG_413);
+const mk_ptr_t error_msg_500 = mk_ptr_t_init(ERROR_MSG_500);
+const mk_ptr_t error_msg_501 = mk_ptr_t_init(ERROR_MSG_501);
+const mk_ptr_t error_msg_505 = mk_ptr_t_init(ERROR_MSG_505);

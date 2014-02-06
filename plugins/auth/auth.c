@@ -153,7 +153,7 @@ int _mkp_stage_30(struct plugin *plugin,
 {
     int val;
     short int is_restricted = MK_FALSE;
-    mk_pointer res;
+    mk_ptr_t res;
     (void) plugin;
     struct mk_list *vh_head;
     struct mk_list *loc_head;

@@ -65,9 +65,9 @@ struct vhost {
  * of allowed users
  */
 struct location {
-    mk_pointer path;
-    mk_pointer title;
-    mk_pointer auth_http_header;
+    mk_ptr_t path;
+    mk_ptr_t title;
+    mk_ptr_t auth_http_header;
 
     struct users_file *users;
     struct mk_list _head;
@@ -102,8 +102,8 @@ struct user {
 struct mk_list users_file_list;
 
 /* Thread key */
-mk_pointer auth_header_request;
-mk_pointer auth_header_basic;
+mk_ptr_t auth_header_request;
+mk_ptr_t auth_header_basic;
 
 #define SHA1_DIGEST_LEN 20
 
