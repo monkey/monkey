@@ -34,7 +34,7 @@ typedef struct
 {
     char *data;
     unsigned long len;
-} mk_pointer;
+} mk_ptr_t;
 
 #if ((__GNUC__ * 100 + __GNUC__MINOR__) > 430)  /* gcc version > 4.3 */
 # define ALLOCSZ_ATTR(x,...) __attribute__ ((alloc_size(x, ##__VA_ARGS__)))
