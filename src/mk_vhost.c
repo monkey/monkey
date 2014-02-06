@@ -343,7 +343,7 @@ struct host *mk_vhost_read(char *path)
     }
     mk_string_split_free(list);
 
-    /* Lookup document root handled by a mk_pointer */
+    /* Lookup document root handled by a mk_ptr_t */
     host->documentroot.data = mk_config_section_getval(section_host,
                                                        "DocumentRoot",
                                                        MK_CONFIG_VAL_STR);
@@ -470,7 +470,7 @@ void mk_vhost_init(char *path)
 
 
 /* Lookup a registered virtual host based on the given 'host' input */
-int mk_vhost_get(mk_pointer host, struct host **vhost, struct host_alias **alias)
+int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
 {
     struct host *entry_host;
     struct host_alias *entry_alias;
@@ -515,9 +515,9 @@ void mk_vhost_free_all()
             mk_mem_free(host_alias);
         }
 
-        mk_pointer_free(&host->documentroot);
+        mk_ptr_t_free(&host->documentroot);
         mk_mem_free(host->host_signature);
-        mk_pointer_free(&host->header_host_signature);
+        mk_ptr_t_free(&host->header_host_signature);
 
         /* Free source configuration */
         if (host->config) mk_config_free(host->config);

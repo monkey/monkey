@@ -205,12 +205,12 @@ struct plugin_api
     void *(*mem_alloc_z) (const size_t size);
     void *(*mem_realloc) (void *, const size_t size);
     void  (*mem_free) (void *);
-    void  (*pointer_set) (mk_pointer *, char *);
-    void  (*pointer_print) (mk_pointer);
-    char *(*pointer_to_buf) (mk_pointer);
+    void  (*pointer_set) (mk_ptr_t *, char *);
+    void  (*pointer_print) (mk_ptr_t);
+    char *(*pointer_to_buf) (mk_ptr_t);
 
     /* string functions */
-    int   (*str_itop) (int, mk_pointer *);
+    int   (*str_itop) (int, mk_ptr_t *);
     int   (*str_search) (const char *, const char *, int);
     int   (*str_search_n) (const char *, const char *, int, int);
     char *(*str_build) (char **, unsigned long *, const char *, ...) PRINTF_WARNINGS(3,4);
@@ -225,7 +225,7 @@ struct plugin_api
 
     /* header */
     int  (*header_send) (int, struct client_session *, struct session_request *);
-    mk_pointer (*header_get) (struct headers_toc *, const char *key_name, int key_len);
+    mk_ptr_t (*header_get) (struct headers_toc *, const char *key_name, int key_len);
     int  (*header_add) (struct session_request *, char *row, int len);
     void (*header_set_http_status) (struct session_request *, int);
 
@@ -234,7 +234,7 @@ struct plugin_api
     int (*iov_realloc) (struct mk_iov *, int);
     void (*iov_free) (struct mk_iov *);
     void (*iov_free_marked) (struct mk_iov *);
-    int (*iov_add_entry) (struct mk_iov *, char *, int, mk_pointer, int);
+    int (*iov_add_entry) (struct mk_iov *, char *, int, mk_ptr_t, int);
     int (*iov_set_entry) (struct mk_iov *, char *, int, int, int);
     ssize_t (*iov_send) (int, struct mk_iov *);
     void (*iov_print) (struct mk_iov *);
@@ -286,7 +286,7 @@ struct plugin_api
     /* Time utils functions */
     int (*time_unix) ();
     int (*time_to_gmt) (char **, time_t);
-    mk_pointer *(*time_human) ();
+    mk_ptr_t *(*time_human) ();
 
 #ifdef TRACE
     void (*trace)(const char *, int, const char *, char *, int, const char *, ...);
@@ -362,13 +362,13 @@ struct plugin *mk_plugin_alloc(void *handler, const char *path);
 void mk_plugin_free(struct plugin *p);
 
 int mk_plugin_time_now_unix();
-mk_pointer *mk_plugin_time_now_human();
+mk_ptr_t *mk_plugin_time_now_human();
 
 int mk_plugin_sched_remove_client(int socket);
 
 int mk_plugin_header_add(struct session_request *sr, char *row, int len);
 int mk_plugin_header_get(struct session_request *sr,
-                         mk_pointer query,
-                         mk_pointer *result);
+                         mk_ptr_t query,
+                         mk_ptr_t *result);
 
 #endif

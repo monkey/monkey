@@ -59,27 +59,27 @@
 
 #include "mk_memory.h"
 
-extern const mk_pointer mk_http_method_get_p;
-extern const mk_pointer mk_http_method_post_p;
-extern const mk_pointer mk_http_method_head_p;
-extern const mk_pointer mk_http_method_put_p;
-extern const mk_pointer mk_http_method_delete_p;
-extern const mk_pointer mk_http_method_options_p;
-extern const mk_pointer mk_http_method_null_p;
+extern const mk_ptr_t mk_http_method_get_p;
+extern const mk_ptr_t mk_http_method_post_p;
+extern const mk_ptr_t mk_http_method_head_p;
+extern const mk_ptr_t mk_http_method_put_p;
+extern const mk_ptr_t mk_http_method_delete_p;
+extern const mk_ptr_t mk_http_method_options_p;
+extern const mk_ptr_t mk_http_method_null_p;
 
-extern const mk_pointer mk_http_protocol_09_p;
-extern const mk_pointer mk_http_protocol_10_p;
-extern const mk_pointer mk_http_protocol_11_p;
-extern const mk_pointer mk_http_protocol_null_p;
+extern const mk_ptr_t mk_http_protocol_09_p;
+extern const mk_ptr_t mk_http_protocol_10_p;
+extern const mk_ptr_t mk_http_protocol_11_p;
+extern const mk_ptr_t mk_http_protocol_null_p;
 
 #include "mk_request.h"
 
-int mk_http_method_check(mk_pointer method);
-mk_pointer mk_http_method_check_str(int method);
+int mk_http_method_check(mk_ptr_t method);
+mk_ptr_t mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
 
 int mk_http_protocol_check(char *protocol, int len);
-mk_pointer mk_http_protocol_check_str(int protocol);
+mk_ptr_t mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct client_session *cs, struct session_request *sr);
 int mk_http_keepalive_check(struct client_session *cs);

@@ -45,36 +45,36 @@ pthread_key_t mk_utils_error_key;
 void mk_cache_thread_init()
 {
     char *cache_error;
-    mk_pointer *cache_header_lm;
-    mk_pointer *cache_header_cl;
-    mk_pointer *cache_header_ka;
-    mk_pointer *cache_header_ka_max;
+    mk_ptr_t *cache_header_lm;
+    mk_ptr_t *cache_header_cl;
+    mk_ptr_t *cache_header_ka;
+    mk_ptr_t *cache_header_ka_max;
 
     struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
     struct mk_gmt_cache *cache_utils_gmt_text;
 
     /* Cache header request -> last modified */
-    cache_header_lm = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_lm = mk_mem_malloc_z(sizeof(mk_ptr_t));
     cache_header_lm->data = mk_mem_malloc_z(32);
     cache_header_lm->len = -1;
     pthread_setspecific(mk_cache_header_lm, (void *) cache_header_lm);
 
     /* Cache header request -> content length */
-    cache_header_cl = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_cl = mk_mem_malloc_z(sizeof(mk_ptr_t));
     cache_header_cl->data = mk_mem_malloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
     cache_header_cl->len = -1;
     pthread_setspecific(mk_cache_header_cl, (void *) cache_header_cl);
 
     /* Cache header response -> keep-alive */
-    cache_header_ka = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_ka = mk_mem_malloc_z(sizeof(mk_ptr_t));
     mk_string_build(&cache_header_ka->data, &cache_header_ka->len,
                     "Keep-Alive: timeout=%i, max=",
                     config->keep_alive_timeout);
     pthread_setspecific(mk_cache_header_ka, (void *) cache_header_ka);
 
     /* Cache header response -> max=%i */
-    cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_pointer));
+    cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_ptr_t));
     cache_header_ka_max->data = mk_mem_malloc_z(64);
     cache_header_ka_max->len  = 0;
     pthread_setspecific(mk_cache_header_ka_max, (void *) cache_header_ka_max);

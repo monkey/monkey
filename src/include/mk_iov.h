@@ -43,12 +43,12 @@
 
 #include "mk_memory.h"
 
-extern const mk_pointer mk_iov_crlf;
-extern const mk_pointer mk_iov_lf;
-extern const mk_pointer mk_iov_space;
-extern const mk_pointer mk_iov_slash;
-extern const mk_pointer mk_iov_none;
-extern const mk_pointer mk_iov_equal;
+extern const mk_ptr_t mk_iov_crlf;
+extern const mk_ptr_t mk_iov_lf;
+extern const mk_ptr_t mk_iov_space;
+extern const mk_ptr_t mk_iov_slash;
+extern const mk_ptr_t mk_iov_none;
+extern const mk_ptr_t mk_iov_equal;
 
 struct mk_iov
 {
@@ -63,14 +63,14 @@ struct mk_iov
 struct mk_iov *mk_iov_create(int n, int offset);
 int mk_iov_realloc(struct mk_iov *mk_io, int new_size);
 
-int mk_iov_add_separator(struct mk_iov *mk_io, mk_pointer sep);
+int mk_iov_add_separator(struct mk_iov *mk_io, mk_ptr_t sep);
 
 ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
 
 void mk_iov_free(struct mk_iov *mk_io);
 
 int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
-                mk_pointer sep, int free, int idx);
+                mk_ptr_t sep, int free, int idx);
 
 int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
                      int free, int idx);
@@ -86,7 +86,7 @@ static inline void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
 }
 
 static inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
-                                   mk_pointer sep, int free)
+                                   mk_ptr_t sep, int free)
 {
     mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
     mk_io->io[mk_io->iov_idx].iov_len = len;

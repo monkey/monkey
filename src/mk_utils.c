@@ -97,7 +97,7 @@ static void mk_utils_gmt_cache_add(char *data, time_t time)
 }
 
 /*
- *This function given a unix time, set in a mk_pointer
+ *This function given a unix time, set in a mk_ptr_t
  * the date in the RFC1123 format like:
  *
  *    Wed, 23 Jun 2010 22:32:01 GMT
@@ -185,7 +185,7 @@ int mk_utils_utime2gmt(char **data, time_t date)
     /* Add new entry to the cache */
     mk_utils_gmt_cache_add(*data, date);
 
-    /* Set mk_pointer data len */
+    /* Set mk_ptr_t data len */
     return size;
 }
 
@@ -204,7 +204,7 @@ time_t mk_utils_gmt2utime(char *date)
     return (new_unix_time);
 }
 
-int mk_buffer_cat(mk_pointer *p, char *buf1, int len1, char *buf2, int len2)
+int mk_buffer_cat(mk_ptr_t *p, char *buf1, int len1, char *buf2, int len2)
 {
     /* Validate lengths */
     if (mk_unlikely(len1 < 0 || len2 < 0)) {
@@ -260,7 +260,7 @@ int mk_utils_hex2int(char *hex, int len)
 /* If the URI contains hexa format characters it will return
  * convert the Hexa values to ASCII character
  */
-char *mk_utils_url_decode(mk_pointer uri)
+char *mk_utils_url_decode(mk_ptr_t uri)
 {
     int tmp, hex_result;
     unsigned int i;

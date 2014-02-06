@@ -84,8 +84,8 @@ struct server_config
 
     char *serverconf;             /* path to configuration files */
     char *listen_addr;
-    mk_pointer server_addr;
-    mk_pointer server_software;
+    mk_ptr_t server_addr;
+    mk_ptr_t server_software;
 
     char *user;
     char *user_dir;

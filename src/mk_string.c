@@ -329,7 +329,7 @@ int mk_string_trim(char **str)
     return 0;
 }
 
-int mk_string_itop(int value, mk_pointer *p)
+int mk_string_itop(int value, mk_ptr_t *p)
 {
     char aux;
     char *wstr = p->data;

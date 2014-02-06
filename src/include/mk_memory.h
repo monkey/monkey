@@ -104,20 +104,20 @@ static inline void mk_mem_free(void *ptr)
 void mk_mem_free(void *ptr);
 void mk_mem_pointers_init(void);
 
-/* mk_pointer_* */
-mk_pointer mk_pointer_create(char *buf, long init, long end);
-void mk_pointer_free(mk_pointer * p);
-void mk_pointer_print(mk_pointer p);
-char *mk_pointer_to_buf(mk_pointer p);
-void mk_pointer_set(mk_pointer * p, char *data);
+/* mk_ptr_t_* */
+mk_ptr_t mk_ptr_t_create(char *buf, long init, long end);
+void mk_ptr_t_free(mk_ptr_t * p);
+void mk_ptr_t_print(mk_ptr_t p);
+char *mk_ptr_t_to_buf(mk_ptr_t p);
+void mk_ptr_t_set(mk_ptr_t * p, char *data);
 
-static inline void mk_pointer_reset(mk_pointer * p)
+static inline void mk_ptr_t_reset(mk_ptr_t * p)
 {
     p->data = NULL;
     p->len = 0;
 }
 
 
-#define mk_pointer_init(a) {a, sizeof(a) - 1}
+#define mk_ptr_t_init(a) {a, sizeof(a) - 1}
 
 #endif

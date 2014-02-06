@@ -36,8 +36,8 @@
 #define MK_CRLF "\r\n"
 #define MK_ENDBLOCK "\r\n\r\n"
 
-extern const mk_pointer mk_crlf;
-extern const mk_pointer mk_endblock;
+extern const mk_ptr_t mk_crlf;
+extern const mk_ptr_t mk_endblock;
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
@@ -57,22 +57,22 @@ extern const mk_pointer mk_endblock;
 #define RH_RANGE "Range:"
 #define RH_USER_AGENT "User-Agent:"
 
-extern const mk_pointer mk_rh_accept;
-extern const mk_pointer mk_rh_accept_charset;
-extern const mk_pointer mk_rh_accept_encoding;
-extern const mk_pointer mk_rh_accept_language;
-extern const mk_pointer mk_rh_connection;
-extern const mk_pointer mk_rh_cookie;
-extern const mk_pointer mk_rh_content_length;
-extern const mk_pointer mk_rh_content_range;
-extern const mk_pointer mk_rh_content_type;
-extern const mk_pointer mk_rh_if_modified_since;
-extern const mk_pointer mk_rh_host;
-extern const mk_pointer mk_rh_last_modified;
-extern const mk_pointer mk_rh_last_modified_since;
-extern const mk_pointer mk_rh_referer;
-extern const mk_pointer mk_rh_range;
-extern const mk_pointer mk_rh_user_agent;
+extern const mk_ptr_t mk_rh_accept;
+extern const mk_ptr_t mk_rh_accept_charset;
+extern const mk_ptr_t mk_rh_accept_encoding;
+extern const mk_ptr_t mk_rh_accept_language;
+extern const mk_ptr_t mk_rh_connection;
+extern const mk_ptr_t mk_rh_cookie;
+extern const mk_ptr_t mk_rh_content_length;
+extern const mk_ptr_t mk_rh_content_range;
+extern const mk_ptr_t mk_rh_content_type;
+extern const mk_ptr_t mk_rh_if_modified_since;
+extern const mk_ptr_t mk_rh_host;
+extern const mk_ptr_t mk_rh_last_modified;
+extern const mk_ptr_t mk_rh_last_modified_since;
+extern const mk_ptr_t mk_rh_referer;
+extern const mk_ptr_t mk_rh_range;
+extern const mk_ptr_t mk_rh_user_agent;
 
 /* String limits */
 #define MAX_REQUEST_METHOD 10
@@ -101,7 +101,7 @@ struct response_headers
      * If some plugins wants to set a customized HTTP status, here
      * is the 'how and where'
      */
-    mk_pointer custom_status;
+    mk_ptr_t custom_status;
 
     /* Length of the content to send */
     long content_length;
@@ -119,9 +119,9 @@ struct response_headers
 
 
     time_t last_modified;
-    mk_pointer allow_methods;
-    mk_pointer content_type;
-    mk_pointer content_encoding;
+    mk_ptr_t allow_methods;
+    mk_ptr_t content_type;
+    mk_ptr_t content_encoding;
     char *location;
 
     /*
@@ -169,13 +169,13 @@ struct session_request
 
     /*----First header of client request--*/
     int method;
-    mk_pointer method_p;
-    mk_pointer uri;                  /* original request */
-    mk_pointer uri_processed;        /* processed request (decoded) */
+    mk_ptr_t method_p;
+    mk_ptr_t uri;                  /* original request */
+    mk_ptr_t uri_processed;        /* processed request (decoded) */
 
-    mk_pointer protocol_p;
+    mk_ptr_t protocol_p;
 
-    mk_pointer body;
+    mk_ptr_t body;
 
 
 
@@ -190,23 +190,23 @@ struct session_request
     /*---Request headers--*/
     int content_length;
 
-    mk_pointer content_type;
-    mk_pointer connection;
+    mk_ptr_t content_type;
+    mk_ptr_t connection;
 
-    mk_pointer host;
-    mk_pointer host_port;
-    mk_pointer if_modified_since;
-    mk_pointer last_modified_since;
-    mk_pointer range;
+    mk_ptr_t host;
+    mk_ptr_t host_port;
+    mk_ptr_t if_modified_since;
+    mk_ptr_t last_modified_since;
+    mk_ptr_t range;
 
     /*---------------------*/
 
     /* POST/PUT data */
-    mk_pointer data;
+    mk_ptr_t data;
     /*-----------------*/
 
     /*-Internal-*/
-    mk_pointer real_path;        /* Absolute real path */
+    mk_ptr_t real_path;        /* Absolute real path */
 
     /*
      * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
@@ -215,7 +215,7 @@ struct session_request
     char real_path_static[MK_PATH_BASE];
 
     /* Query string: ?.... */
-    mk_pointer query_string;
+    mk_ptr_t query_string;
 
 
     /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
@@ -289,8 +289,8 @@ struct handler
 };
 
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len);
-mk_pointer mk_request_index(char *pathfile, char *file_aux, const unsigned int flen);
-mk_pointer mk_request_header_get(struct headers_toc *toc,
+mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int flen);
+mk_ptr_t mk_request_header_get(struct headers_toc *toc,
                                  const char *key_name, int key_len);
 
 int mk_request_error(int http_status, struct client_session *cs,

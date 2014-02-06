@@ -30,8 +30,8 @@
 extern time_t log_current_utime;
 extern time_t monkey_init_time;
 
-extern mk_pointer log_current_time;
-extern mk_pointer header_current_time;
+extern mk_ptr_t log_current_time;
+extern mk_ptr_t header_current_time;
 
 #define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
 #define HEADER_TIME_BUFFER_SIZE 32

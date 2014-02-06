@@ -39,18 +39,18 @@
 #include "mk_macros.h"
 #include "mk_vhost.h"
 
-const mk_pointer mk_header_short_date = mk_pointer_init(MK_HEADER_SHORT_DATE);
-const mk_pointer mk_header_short_location = mk_pointer_init(MK_HEADER_SHORT_LOCATION);
-const mk_pointer mk_header_short_ct = mk_pointer_init(MK_HEADER_SHORT_CT);
-const mk_pointer mk_header_allow = mk_pointer_init(MK_HEADER_ALLOWED_METHODS);
+const mk_ptr_t mk_header_short_date = mk_ptr_t_init(MK_HEADER_SHORT_DATE);
+const mk_ptr_t mk_header_short_location = mk_ptr_t_init(MK_HEADER_SHORT_LOCATION);
+const mk_ptr_t mk_header_short_ct = mk_ptr_t_init(MK_HEADER_SHORT_CT);
+const mk_ptr_t mk_header_allow = mk_ptr_t_init(MK_HEADER_ALLOWED_METHODS);
 
-const mk_pointer mk_header_conn_ka = mk_pointer_init(MK_HEADER_CONN_KA);
-const mk_pointer mk_header_conn_close = mk_pointer_init(MK_HEADER_CONN_CLOSE);
-const mk_pointer mk_header_content_length = mk_pointer_init(MK_HEADER_CONTENT_LENGTH);
-const mk_pointer mk_header_content_encoding = mk_pointer_init(MK_HEADER_CONTENT_ENCODING);
-const mk_pointer mk_header_accept_ranges = mk_pointer_init(MK_HEADER_ACCEPT_RANGES);
-const mk_pointer mk_header_te_chunked = mk_pointer_init(MK_HEADER_TE_CHUNKED);
-const mk_pointer mk_header_last_modified = mk_pointer_init(MK_HEADER_LAST_MODIFIED);
+const mk_ptr_t mk_header_conn_ka = mk_ptr_t_init(MK_HEADER_CONN_KA);
+const mk_ptr_t mk_header_conn_close = mk_ptr_t_init(MK_HEADER_CONN_CLOSE);
+const mk_ptr_t mk_header_content_length = mk_ptr_t_init(MK_HEADER_CONTENT_LENGTH);
+const mk_ptr_t mk_header_content_encoding = mk_ptr_t_init(MK_HEADER_CONTENT_ENCODING);
+const mk_ptr_t mk_header_accept_ranges = mk_ptr_t_init(MK_HEADER_ACCEPT_RANGES);
+const mk_ptr_t mk_header_te_chunked = mk_ptr_t_init(MK_HEADER_TE_CHUNKED);
+const mk_ptr_t mk_header_last_modified = mk_ptr_t_init(MK_HEADER_LAST_MODIFIED);
 
 #define status_entry(num, str) {num, sizeof(str) - 1, str}
 
@@ -118,8 +118,8 @@ static const struct header_status_response status_response[] = {
 static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_pointer data,
-                            mk_pointer sep, int free)
+static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_ptr_t data,
+                            mk_ptr_t sep, int free)
 {
     return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
 }
@@ -141,7 +141,7 @@ int mk_header_send(int fd, struct client_session *cs,
     int i=0;
     unsigned long len = 0;
     char *buffer = 0;
-    mk_pointer response;
+    mk_ptr_t response;
     struct response_headers *sh;
     struct mk_iov *iov;
 
@@ -183,7 +183,7 @@ int mk_header_send(int fd, struct client_session *cs,
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
-        mk_pointer *lm;
+        mk_ptr_t *lm;
         lm = mk_cache_get(mk_cache_header_lm);
         lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
 
@@ -196,9 +196,9 @@ int mk_header_send(int fd, struct client_session *cs,
     if (sh->connection == 0) {
         if (mk_http_keepalive_check(cs) == 0) {
             if (sr->connection.len > 0) {
-                /* Get cached mk_pointers */
-                mk_pointer *ka_format = mk_cache_get(mk_cache_header_ka);
-                mk_pointer *ka_header = mk_cache_get(mk_cache_header_ka_max);
+                /* Get cached mk_ptr_ts */
+                mk_ptr_t *ka_format = mk_cache_get(mk_cache_header_ka);
+                mk_ptr_t *ka_header = mk_cache_get(mk_cache_header_ka_max);
 
                 /* Compose header and add entries to iov */
                 mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);
@@ -273,7 +273,7 @@ int mk_header_send(int fd, struct client_session *cs,
     /* Content-Length */
     if (sh->content_length >= 0) {
         /* Map content length to MK_POINTER */
-        mk_pointer *cl;
+        mk_ptr_t *cl;
         cl = mk_cache_get(mk_cache_header_cl);
         mk_string_itop(sh->content_length, cl);
 
@@ -366,8 +366,8 @@ void mk_header_response_reset(struct response_headers *header)
     header->transfer_encoding = -1;
     header->last_modified = -1;
     header->cgi = SH_NOCGI;
-    mk_pointer_reset(&header->content_type);
-    mk_pointer_reset(&header->content_encoding);
+    mk_ptr_t_reset(&header->content_type);
+    mk_ptr_t_reset(&header->content_encoding);
     header->location = NULL;
     header->_extra_rows = NULL;
 }

@@ -327,9 +327,9 @@ void mk_plugin_init()
     api->http_request_error = mk_request_error;
 
     /* Memory callbacks */
-    api->pointer_set = mk_pointer_set;
-    api->pointer_print = mk_pointer_print;
-    api->pointer_to_buf = mk_pointer_to_buf;
+    api->pointer_set = mk_ptr_t_set;
+    api->pointer_print = mk_ptr_t_print;
+    api->pointer_to_buf = mk_ptr_t_to_buf;
     api->plugin_load_symbol = mk_plugin_load_symbol;
     api->mem_alloc = mk_mem_malloc;
     api->mem_alloc_z = mk_mem_malloc_z;
@@ -1236,7 +1236,7 @@ int mk_plugin_time_now_unix()
     return log_current_utime;
 }
 
-mk_pointer *mk_plugin_time_now_human()
+mk_ptr_t *mk_plugin_time_now_human()
 {
     return &log_current_time;
 }

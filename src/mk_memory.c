@@ -35,9 +35,9 @@
 #include "mk_user.h"
 #include "mk_macros.h"
 
-mk_pointer mk_pointer_create(char *buf, long init, long end)
+mk_ptr_t mk_ptr_t_create(char *buf, long init, long end)
 {
-    mk_pointer p;
+    mk_ptr_t p;
 
     p.data = buf + init;
 
@@ -51,13 +51,13 @@ mk_pointer mk_pointer_create(char *buf, long init, long end)
     return p;
 }
 
-void mk_pointer_free(mk_pointer * p)
+void mk_ptr_t_free(mk_ptr_t * p)
 {
     mk_mem_free(p->data);
     p->len = 0;
 }
 
-char *mk_pointer_to_buf(mk_pointer p)
+char *mk_ptr_t_to_buf(mk_ptr_t p)
 {
     char *buf;
 
@@ -70,7 +70,7 @@ char *mk_pointer_to_buf(mk_pointer p)
     return (char *) buf;
 }
 
-void mk_pointer_print(mk_pointer p)
+void mk_ptr_t_print(mk_ptr_t p)
 {
     unsigned int i;
 
@@ -82,7 +82,7 @@ void mk_pointer_print(mk_pointer p)
     fflush(stdout);
 }
 
-void mk_pointer_set(mk_pointer *p, char *data)
+void mk_ptr_t_set(mk_ptr_t *p, char *data)
 {
     p->data = data;
     p->len = strlen(data);

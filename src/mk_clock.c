@@ -32,17 +32,17 @@
 time_t log_current_utime;
 time_t monkey_init_time;
 
-mk_pointer log_current_time = { NULL, LOG_TIME_BUFFER_SIZE - 2 };
-mk_pointer header_current_time = { NULL, HEADER_TIME_BUFFER_SIZE - 1 };
+mk_ptr_t log_current_time = { NULL, LOG_TIME_BUFFER_SIZE - 2 };
+mk_ptr_t header_current_time = { NULL, HEADER_TIME_BUFFER_SIZE - 1 };
 
 static char *log_time_buffers[2];
 static char *header_time_buffers[2];
 
-/* The mk_pointers have two buffers for avoid in half-way access from
+/* The mk_ptr_ts have two buffers for avoid in half-way access from
  * another thread while a buffer is being modified. The function below returns
  * one of two buffers to work with.
  */
-static inline char *_next_buffer(mk_pointer *pointer, char **buffers)
+static inline char *_next_buffer(mk_ptr_t *pointer, char **buffers)
 {
     if(pointer->data == buffers[0]) {
         return buffers[1];

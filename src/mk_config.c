@@ -315,7 +315,7 @@ void mk_config_free_all()
 
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
-    if (config->server_software.len) mk_pointer_free(&config->server_software);
+    if (config->server_software.len) mk_ptr_t_free(&config->server_software);
     mk_mem_free(config);
 }
 #endif
@@ -547,7 +547,7 @@ void mk_config_start_configure(void)
     /* Load mimes */
     mk_mimetype_read_config();
 
-    mk_pointer_reset(&config->server_software);
+    mk_ptr_t_reset(&config->server_software);
 
     /* Basic server information */
     if (config->hideversion == MK_FALSE) {

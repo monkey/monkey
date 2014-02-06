@@ -154,12 +154,12 @@ void mk_mimetype_read_config()
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
-    mk_pointer_set(&mimetype_default->type, config->default_mimetype);
+    mk_ptr_t_set(&mimetype_default->type, config->default_mimetype);
 
     mk_config_free(cnf);
 }
 
-struct mimetype *mk_mimetype_find(mk_pointer *filename)
+struct mimetype *mk_mimetype_find(mk_ptr_t *filename)
 {
     int j, len;
 

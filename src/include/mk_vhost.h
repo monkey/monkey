@@ -39,10 +39,10 @@ struct host
     char *file;                   /* configuration file */
     struct mk_list server_names;  /* host names (a b c...) */
 
-    mk_pointer documentroot;
+    mk_ptr_t documentroot;
 
     char *host_signature;
-    mk_pointer header_host_signature;
+    mk_ptr_t header_host_signature;
 
     /* source configuration */
     struct mk_config *config;
@@ -87,7 +87,7 @@ struct vhost_fdt_host {
 pthread_mutex_t mk_vhost_fdt_mutex;
 
 struct host *mk_vhost_read(char *path);
-int mk_vhost_get(mk_pointer host, struct host **vhost, struct host_alias **alias);
+int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias);
 void mk_vhost_init(char *path);
 int mk_vhost_fdt_worker_init();
 int mk_vhost_open(struct session_request *sr);

@@ -48,7 +48,7 @@ long int mk_method_validate_content_length(const char *body, int body_len)
     int crlf;
     struct headers_toc toc;
     long int len;
-    mk_pointer tmp;
+    mk_ptr_t tmp;
 
     crlf = mk_string_search(body, MK_CRLF, MK_STR_INSENSITIVE);
     if (crlf < 0) {
@@ -100,7 +100,7 @@ long int mk_method_validate_content_length(const char *body, int body_len)
 /* It parse data sent by POST or PUT methods */
 int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
 {
-    mk_pointer tmp;
+    mk_ptr_t tmp;
     long content_length_post = 0;
 
     content_length_post = mk_method_validate_content_length(cs->body, cs->body_length);
@@ -150,9 +150,9 @@ int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
 }
 
 /* Return POST variables sent in request */
-mk_pointer mk_method_get_data(void *data, int size)
+mk_ptr_t mk_method_get_data(void *data, int size)
 {
-    mk_pointer p;
+    mk_ptr_t p;
 
     p.data = data;
     p.len = size;
