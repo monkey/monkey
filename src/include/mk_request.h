@@ -25,6 +25,7 @@
 #include "mk_memory.h"
 #include "mk_scheduler.h"
 #include "mk_limits.h"
+#include "mk_stream.h"
 
 #ifndef MK_REQUEST_H
 #define MK_REQUEST_H
@@ -152,6 +153,7 @@ struct session_request
 {
     int status;
     int protocol;
+
     /* is keep-alive request ? */
     int keep_alive;
 
@@ -176,10 +178,6 @@ struct session_request
     mk_ptr_t protocol_p;
 
     mk_ptr_t body;
-
-
-
-
 
     /* If request specify Connection: close, Monkey will
      * close the connection after send the response, by
@@ -253,10 +251,12 @@ struct session_request
 
 struct client_session
 {
-    int pipelined;              /* Pipelined request */
     int socket;
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
+    int pipelined;              /* Pipelined request */
+
+    mk_channel_t channel;
 
     unsigned int body_size;
     unsigned int body_length;

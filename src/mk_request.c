@@ -954,10 +954,14 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->socket = socket;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
 
+    /* Stream channel */
+    cs->channel.type = MK_CHANNEL_SOCKET;
+    cs->channel.fd   = socket;
+
     /* creation time in unix time */
     cs->init_time = sc->arrive_time;
 
-    /* alloc space for body content */
+    /* alloc space foxr body content */
     cs->body = cs->body_fixed;
 
     /* Buffer size based in Chunk bytes */
