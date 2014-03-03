@@ -26,11 +26,12 @@
 #define MK_EPOLL_H
 
 /* Epoll States */
-#define MK_EPOLL_READ     0
-#define MK_EPOLL_WRITE    1
-#define MK_EPOLL_RW       2
-#define MK_EPOLL_SLEEP    3
-#define MK_EPOLL_WAKEUP   4
+#define MK_EPOLL_HANGUP   0        /* just report connection error issues */
+#define MK_EPOLL_READ     1        /* read only                           */
+#define MK_EPOLL_WRITE    2        /* write only                          */
+#define MK_EPOLL_RW       3        /* read/write                          */
+#define MK_EPOLL_SLEEP    4        /* sleep mode, no events triggered     */
+#define MK_EPOLL_WAKEUP   5        /* restore status previous sleep mode  */
 
 /* Epoll timeout is 3 seconds */
 #define MK_EPOLL_WAIT_TIMEOUT 3000

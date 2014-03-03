@@ -316,6 +316,8 @@ int mk_epoll_add(int efd, int fd, int init_mode, unsigned int behavior)
     case MK_EPOLL_SLEEP:
         event.events = 0;
         break;
+    case MK_EPOLL_HANGUP:
+        break;
     }
 
     /* Add to epoll queue */
@@ -361,6 +363,9 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
     event.data.fd = fd;
 
     switch (mode) {
+    case MK_EPOLL_HANGUP:
+        MK_TRACE("[FD %i] Epoll chaning mode to HANGUP", fd);
+        break;
     case MK_EPOLL_READ:
         MK_TRACE("[FD %i] EPoll changing mode to READ", fd);
         event.events |= EPOLLIN;
