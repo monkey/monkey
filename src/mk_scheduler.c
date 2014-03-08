@@ -156,12 +156,11 @@ int mk_sched_sync_counters()
     struct mk_list *head;
     struct sched_list_node *sched;
 
-
-    MK_LT_SCHED(sched_signal_channel, "SYNC COUNTERS");
-
     /* we only aim to fix the value of closed_connections */
     pthread_mutex_lock(&mutex_sched_init);
     sched = mk_sched_get_thread_conf();
+
+    MK_LT_SCHED(sched->signal_channel, "SYNC COUNTERS");
 
     if (sched->closed_connections > sched->accepted_connections) {
         /* Count the real number of active connections */
