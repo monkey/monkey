@@ -48,6 +48,5 @@ int mk_mimetype_add(char *name, const char *type);
 void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_ptr_t * filename);
 struct mimetype *mk_mimetype_lookup(char *name);
-void mk_mimearr_sort();
 
 #endif

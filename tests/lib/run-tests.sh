@@ -71,12 +71,12 @@ echo
 
 total=$((fail + success))
 percentage=$(awk "BEGIN{print $success/$total * 100}")
-percentage=$(printf '%.2f' $percentage)
+fpercentage=$(printf '%.2f' $percentage)
 
 num=${percentage//.*/}
 
 [ $fail -eq 0 ] && echo "$GREEN	All tests passed!"
-[ $fail -ne 0 -a $num -ge 60 ] && echo "$YELLOW	$percentage% passed, $fail/$total fails"
-[ $num -lt 60 ] && echo "$RED	$percentage% passed, $fail/$total fails"
+[ $fail -ne 0 -a $percentage -ge 60 ] && echo "$YELLOW	$fpercentage% passed, $fail/$total fails"
+[ $percentage -lt 60 ] && echo "$RED	$fpercentage% passed, $fail/$total fails"
 
 echo $NORMAL

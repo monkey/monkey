@@ -77,6 +77,14 @@ static inline int mk_list_is_empty(struct mk_list *head)
     else return -1;
 }
 
+static inline int mk_list_size(struct mk_list *head)
+{
+    int ret = 0;
+    struct mk_list *it;
+    for (it = head->next; it != head; it = it->next, ret++);
+    return ret;
+}
+
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
 #define mk_list_foreach_safe(curr, n, head) \
     for (curr = (head)->next, n = curr->next; curr != (head); curr = n, n = curr->next)

@@ -590,6 +590,7 @@ create_makefile2()
 
         if [ $malloc_jemalloc -eq 1 ]; then
                 extra="../deps/jemalloc/lib/libjemalloc.a"
+                extraso="-Wl,--whole-archive ../deps/jemalloc/lib/libjemalloc_pic.a -Wl,--no-whole-archive"
                 libs="$libs -lm"
         fi
 
@@ -625,12 +626,13 @@ lib: $SONAME
 	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj $extra \$(LIBS)
 
 $SONAME: \$(LIBOBJ)
-	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ \$(LIBOBJ) $mod_obj \$(LIBS)
+	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ $extraso \$(LIBOBJ) $mod_obj \$(LIBS)
+	ln -sf $SONAME libmonkey.so
 
 \$(LIBOBJ): \$(OBJ)
 
 clean:
-	rm -rf *.[od] $SONAME *.lo
+	rm -rf *.[od] $SONAME libmonkey.so *.lo
 	rm -rf ../bin/monkey
 
 distclean:
@@ -949,7 +951,7 @@ mandir="$aux/man"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
-plugdir=""
+plugdir="$aux/plugins"
 platform="generic"
 
 # Generic default values for monkey.conf
@@ -1202,7 +1204,7 @@ fi
 if [ $malloc_libc -eq 1 ]; then
         DEFS="$DEFS -DMALLOC_LIBC"
 else
-        DEFS="$DEFS -DMALLOC_JEMALLOC"
+        DEFS="$DEFS -DMALLOC_JEMALLOC -DJEMALLOC_MANGLE"
 fi
 
 if [ $platform != "generic" ] && [ $platform != "android" ]; then
