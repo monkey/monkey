@@ -118,7 +118,7 @@ int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
     }
 
     /* Content length too large */
-    if (content_length_post >= cs->body_size) {
+    if ((unsigned)content_length_post >= cs->body_size) {
         mk_request_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
         return -1;
     }
