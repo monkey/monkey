@@ -32,6 +32,15 @@
 #define MK_STREAM_RAW     0  /* raw data from buffer */
 #define MK_STREAM_IOV     1  /* mk_iov struct        */
 #define MK_STREAM_FILE    2  /* opened file          */
+#define MK_STREAM_SOCKET  3  /* socket, scared..     */
+
+
+/* Channel return values for write event */
+#define MK_CHANNEL_EMPTY   0  /* no streams available         */
+#define MK_CHANNEL_FLUSH   1  /* channel flushed some data    */
+#define MK_CHANNEL_DONE    2  /* channel consumed all streams */
+#define MK_CHANNEL_ERROR   3  /* exception when flusing data  */
+#define MK_CHANNEL_UNKNOWN 4  /* unhandled                    */
 
 /*
  * Channel types: by default the only channel supported
@@ -53,11 +62,33 @@ typedef struct {
  * A stream represents an Input of data that can be consumed
  * from a specific resource given it's type.
  */
-typedef struct {
+typedef struct mk_stream {
     int type;
+    int fd;
+
+    /* bytes info */
+    unsigned long bytes_total;
+    off_t         bytes_offset;
+
+    /* the outgoing channel */
     mk_channel_t *channel;
 
+    /* callbacks */
+    void (*cb_finished) (struct mk_stream *);
+    void (*cb_ok) (struct mk_stream *);
+    void (*cb_bytes_consumed) (struct mk_stream *, long);
+    void (*cb_exception) (struct mk_stream *, int);
+
+    /* Link to the Channel parent */
     struct mk_list _head;
 } mk_stream_t;
+
+/* exported functions */
+mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+                           void (*cb_finished) (mk_stream_t *),
+                           void (*cb_bytes_consumed) (mk_stream_t *, long),
+                           void (*cb_exception) (mk_stream_t *, int));
+mk_channel_t *mk_channel_new(int type, int fd);
+int mk_channel_write(mk_channel_t *channel);
 
 #endif

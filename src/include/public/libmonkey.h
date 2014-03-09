@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 #define MONKEY__            1
-#define MONKEY_MINOR__      4
+#define MONKEY_MINOR__      5
 #define MONKEY_PATCHLEVEL__ 0
 
 /* ---------------------------------
