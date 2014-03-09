@@ -601,7 +601,7 @@ CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ./include
-LDFLAGS = $LDFLAGS
+LDFLAGS = -L${PWD}/deps/jemalloc/lib
 DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
 OBJ     = monkey.o mk_method.o mk_mimetype.o mk_vhost.o mk_request.o \\
@@ -625,7 +625,8 @@ lib: $SONAME
 	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj $extra \$(LIBS)
 
 $SONAME: \$(LIBOBJ)
-	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ \$(LIBOBJ) $mod_obj \$(LIBS)
+	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LIBOBJ) -shared -o \$@   -Wl,-soname,$SONAME,-rpath=${PWD}/deps/jemalloc/lib  \\
+	$mod_obj \$(LDFLAGS) \$(LIBS) -ljemalloc
 
 \$(LIBOBJ): \$(OBJ)
 
