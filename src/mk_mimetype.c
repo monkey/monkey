@@ -38,7 +38,6 @@
 #include "mk_macros.h"
 
 struct mimetype *mimetype_default;
-struct mimetype *mimearr = NULL; /* array of the mime types */
 
 /* Match mime type for requested resource */
 inline struct mimetype *mk_mimetype_lookup(char *name)
