@@ -166,6 +166,7 @@ struct session_request
 
     /* file descriptors */
     int fd_file;
+    mk_stream_t file_stream;
 
     int headers_len;
 
