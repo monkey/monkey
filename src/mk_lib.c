@@ -165,12 +165,12 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     if (plugins & MKLIB_LIANA_SSL) {
         config->transport_layer = mk_string_dup("liana_ssl");
-        snprintf(tmppath, PATH_MAX, "%s/liana/monkey-liana_ssl.so", a->plugdir);
+        snprintf(tmppath, PATH_MAX, "%s/monkey-liana_ssl.so", a->plugdir);
         if (!load_networking(tmppath)) goto out_config;
     }
     else {
         config->transport_layer = mk_string_dup("liana");
-        snprintf(tmppath, PATH_MAX, "%s/liana/monkey-liana.so", a->plugdir);
+        snprintf(tmppath, PATH_MAX, "%s/monkey-liana.so", a->plugdir);
         if (!load_networking(tmppath)) goto out_config;
     }
 
