@@ -38,10 +38,6 @@
 #include <stdarg.h>
 #include <limits.h>
 
-/* These are only needed here, not public for all of monkey */
-extern int mime_nitem;
-extern struct mimetype *mimearr;
-
 static struct host *mklib_host_find(const char *name)
 {
     struct host *entry_host;
@@ -589,23 +585,29 @@ struct mklib_mime **mklib_mimetype_list(mklib_ctx ctx)
 
     static struct mklib_mime **lst = NULL;
     unsigned int i;
-    const unsigned int total = mime_nitem ;
+    static unsigned n_mime_items = 0;
+    struct mk_list *head;
 
     if (lst) {
-        for (i = 0; i < total; i++) {
+        for (i = 0; i < n_mime_items; i++) {
             free(lst[i]);
         }
 
         free(lst);
     }
 
-    lst = mk_mem_malloc_z((total + 1) * sizeof(struct mklib_mime *));
+    lst = mk_mem_malloc_z((mk_list_size(&mimetype_list) + 1) * sizeof(struct mklib_mime *));
+    n_mime_items = 0;
 
-    for (i = 0; i < total; i++) {
-        lst[i] = mk_mem_malloc_z(sizeof(struct mklib_mime));
-        lst[i]->name = mimearr[i].name;
-        lst[i]->type = mimearr[i].type.data;
+    mk_list_foreach(head, &mimetype_list) {
+        struct mimetype *entry = mk_list_entry(head, struct mimetype, _head);
+
+        lst[n_mime_items] = mk_mem_malloc_z(sizeof(struct mklib_mime));
+        lst[n_mime_items]->name = entry->name;
+        lst[n_mime_items]->type = entry->type.data;
+        n_mime_items++;
     }
+    lst[n_mime_items] = NULL;
 
     return lst;
 }
@@ -619,7 +621,6 @@ int mklib_mimetype_add(mklib_ctx ctx, char *name, const char *type)
     if (mk_mimetype_lookup(name)) return MKLIB_FALSE;
 
     mk_mimetype_add(name, type);
-    mk_mimearr_sort();
 
     return MKLIB_TRUE;
 }
