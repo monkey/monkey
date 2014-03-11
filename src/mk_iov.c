@@ -162,7 +162,7 @@ void mk_iov_print(struct mk_iov *mk_io)
             printf("%c", c[j]);
             fflush(stdout);
         }
-        printf("'[end=%i]\n", j);
+        printf("'[end=%u]\n", j);
         fflush(stdout);
     }
 }

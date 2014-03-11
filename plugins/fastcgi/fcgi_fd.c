@@ -330,7 +330,7 @@ struct fcgi_fd_matrix fcgi_fd_matrix_create(const struct fcgi_config *config,
 	printf("fcgi_fd_matrix:\n");
 	for (i = 0; i < fdm.thread_count; i++) {
 		for (j = 0; j < fdm.server_count; j++) {
-			printf("%5d",
+			printf("%5u",
 				fdm.thread_server_fd[i * fdm.server_count + j]);
 		}
 		printf("\n");

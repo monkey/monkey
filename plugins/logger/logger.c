@@ -653,7 +653,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
             break;
         default:
             {
-            int len = snprintf(err_str, 80, "[error %u] (no description)", http_status);
+            int len = snprintf(err_str, 80, "[error %d] (no description)", http_status);
             err_str[79] = '\0';
             if (len > 79) len = 79;
 
