@@ -12,7 +12,10 @@ int md5_check(const char *right, const char *where) {
 	asprintf(&def, "wget --timeout=2 -t2 -q -O- %s | md5sum -", where);
 
 	FILE *f = popen(def, "r");
-	if (!f) return 0;
+	if (!f) {
+		free(def);
+		return 0;
+	}	
 
 	fgets(buf, 33, f);
 
