@@ -301,9 +301,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
                         config->transport, host, location);
     }
 
-#ifdef TRACE
     MK_TRACE("Redirecting to '%s'", real_location);
-#endif
 
     mk_mem_free(host);
 
@@ -334,9 +332,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int bytes = 0;
     struct mimetype *mime;
 
-#ifdef TRACE
     MK_TRACE("HTTP Protocol Init");
-#endif
 
     /* Request to root path of the virtualhost in question */
     if (sr->uri_processed.len == 1 && sr->uri_processed.data[0] == '/') {
@@ -368,9 +364,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                                 sr->uri_processed.len);
 
             if (ret < 0) {
-#ifdef TRACE
                 MK_TRACE("Error composing real path");
-#endif
                 return EXIT_ERROR;
             }
         }
@@ -389,9 +383,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
          * check if some plugin would like to handle it
          */
 
-#ifdef TRACE
         MK_TRACE("No file, look for handler plugin");
-#endif
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             if (sr->headers.status > 0) {
@@ -420,9 +412,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->file_info.is_directory == MK_TRUE) {
         /* Send redirect header if end slash is not found */
         if (mk_http_directory_redirect_check(cs, sr) == -1) {
-#ifdef TRACE
             MK_TRACE("Directory Redirect");
-#endif
 
             /* Redirect has been sent */
             return -1;
@@ -473,9 +463,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
         ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
-#ifdef TRACE
         MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
-#endif
         switch (ret) {
         case MK_PLUGIN_RET_CONTINUE:
             return MK_PLUGIN_RET_CONTINUE;
@@ -572,9 +560,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (mk_likely(sr->file_info.size > 0)) {
         sr->fd_file = mk_vhost_open(sr);
         if (sr->fd_file == -1) {
-#ifdef TRACE
             MK_TRACE("open() failed");
-#endif
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         sr->bytes_to_send = sr->file_info.size;
@@ -649,9 +635,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
      * return values <= zero
      */
     if (mk_unlikely(nbytes <= 0)) {
-#ifdef TRACE
         MK_TRACE("sendfile() = -1;");
-#endif
         return EXIT_ABORT;
     }
 
@@ -745,9 +729,7 @@ int mk_http_pending_request(struct client_session *cs)
             current = cs->body_length - cs->body_pos_end - mk_endblock.len;
             content_length = mk_method_validate_content_length(cs->body, current);
 
-#ifdef TRACE
             MK_TRACE("HTTP DATA %i/%i", current, content_length);
-#endif
 
             if (content_length >= config->max_request_size) {
                 return 0;
@@ -800,16 +782,12 @@ int mk_http_request_end(int socket)
     cs = mk_session_get(socket);
 
     if (!cs) {
-#ifdef TRACE
         MK_TRACE("[FD %i] Not found", socket);
-#endif
         return -1;
     }
 
     if (mk_unlikely(!sched)) {
-#ifdef TRACE
         MK_TRACE("Could not find sched list node :/");
-#endif
         return -1;
     }
 
@@ -822,9 +800,7 @@ int mk_http_request_end(int socket)
     mk_request_free_list(cs);
 
     if (ka < 0) {
-#ifdef TRACE
         MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
-#endif
         mk_session_remove(socket);
     }
     else {
