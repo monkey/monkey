@@ -133,7 +133,6 @@ struct response_headers
 
     /* Flag to track if the response headers were sent */
     int sent;
-
 };
 
 struct header_toc_row
@@ -166,6 +165,10 @@ struct session_request
 
     /* file descriptors */
     int fd_file;
+
+    /* Streams handling: headers and static file */
+    mk_stream_t headers_stream;
+    mk_stream_t headers_extra_stream;
     mk_stream_t file_stream;
 
     int headers_len;

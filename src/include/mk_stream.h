@@ -36,11 +36,15 @@
 
 
 /* Channel return values for write event */
+#define MK_CHANNEL_ERROR  -1  /* exception when flusing data  */
 #define MK_CHANNEL_EMPTY   0  /* no streams available         */
 #define MK_CHANNEL_FLUSH   1  /* channel flushed some data    */
 #define MK_CHANNEL_DONE    2  /* channel consumed all streams */
-#define MK_CHANNEL_ERROR   3  /* exception when flusing data  */
 #define MK_CHANNEL_UNKNOWN 4  /* unhandled                    */
+
+/* Channel status */
+#define MK_CHANNEL_DISABLED 0 /* channel is sleeping */
+#define MK_CHANNEL_ENABLED  1 /* channel enabled, have some data */
 
 /*
  * Channel types: by default the only channel supported
@@ -55,6 +59,7 @@
 typedef struct {
     int type;
     int fd;
+    int status;
     struct mk_list streams;
 } mk_channel_t;
 
@@ -70,8 +75,14 @@ typedef struct mk_stream {
     unsigned long bytes_total;
     off_t         bytes_offset;
 
-    /* the outgoing channel */
+    /* the outgoing channel, we do this for all streams */
     mk_channel_t *channel;
+
+    /*
+     * Based on the stream type, 'data' could reference a RAW buffer
+     * of a mk_iov struct.
+     */
+    void *data;
 
     /* callbacks */
     void (*cb_finished) (struct mk_stream *);
@@ -84,7 +95,46 @@ typedef struct mk_stream {
 } mk_stream_t;
 
 /* exported functions */
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+static inline void mk_channel_append_stream(mk_channel_t *channel, mk_stream_t *stream)
+{
+    mk_list_add(&stream->_head, &channel->streams);
+}
+
+static inline void mk_stream_set(mk_stream_t *stream, int type, mk_channel_t *channel,
+                                 void *data,
+                                 void (*cb_finished) (mk_stream_t *),
+                                 void (*cb_bytes_consumed) (mk_stream_t *, long),
+                                 void (*cb_exception) (mk_stream_t *, int))
+{
+    stream->type              = type;
+    stream->channel           = channel;
+
+    if (type == MK_STREAM_RAW || type == MK_STREAM_IOV) {
+        stream->data = data;
+    }
+    else {
+        stream->data = NULL;
+    }
+
+    stream->cb_finished       = cb_finished;
+    stream->cb_bytes_consumed = cb_bytes_consumed;
+    stream->cb_exception      = cb_exception;
+}
+
+static inline void mk_stream_unlink(mk_stream_t *stream)
+{
+    mk_list_del(&stream->_head);
+}
+
+/* Mark a specific number of bytes served (just on successfull flush) */
+static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
+{
+    if (stream->type == MK_STREAM_FILE) {
+        stream->bytes_total -= bytes;
+    }
+}
+
+mk_stream_t *mk_stream_new(int type, mk_channel_t *channel, void *data,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int));

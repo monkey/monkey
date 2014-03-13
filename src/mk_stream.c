@@ -25,7 +25,7 @@
 #include "mk_stream.h"
 
 /* Create a new stream instance */
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+mk_stream_t *mk_stream_new(int type, mk_channel_t *channel, void *data,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int))
@@ -33,27 +33,11 @@ mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
     mk_stream_t *stream;
 
     stream = mk_mem_malloc(sizeof(mk_stream_t));
-    stream->type              = type;
-    stream->channel           = channel;
-    stream->cb_finished       = cb_finished;
-    stream->cb_bytes_consumed = cb_bytes_consumed;
-    stream->cb_exception      = cb_exception;
+    mk_stream_set(stream, type, channel, data, cb_finished, cb_bytes_consumed, cb_exception);
 
     return stream;
 }
 
-static inline void mk_stream_unlink(mk_stream_t *stream)
-{
-    mk_list_del(&stream->_head);
-}
-
-/* Mark a specific number of bytes served (just on successfull flush) */
-static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
-{
-    if (stream->type == MK_STREAM_FILE) {
-        stream->bytes_total -= bytes;
-    }
-}
 
 /* Create a new channel */
 mk_channel_t *mk_channel_new(int type, int fd)
@@ -71,7 +55,8 @@ mk_channel_t *mk_channel_new(int type, int fd)
 
 int mk_channel_write(mk_channel_t *channel)
 {
-    size_t bytes;
+    size_t bytes = -1;
+    struct mk_iov *iov;
     mk_stream_t *stream;
 
     if (mk_list_is_empty(&channel->streams) == 0) {
@@ -87,36 +72,45 @@ int mk_channel_write(mk_channel_t *channel)
      */
     if (channel->type == MK_CHANNEL_SOCKET) {
         if (stream->type == MK_STREAM_FILE) {
-
             /* Direct write */
             bytes = mk_socket_send_file(channel->fd,
                                         stream->fd,
                                         &stream->bytes_offset,
                                         stream->bytes_total
                                         );
+        }
+        else if (stream->type == MK_STREAM_IOV) {
+            iov   = stream->data;
+            bytes = mk_socket_sendv(channel->fd, iov);
+
             if (bytes > 0) {
-                mk_stream_bytes_consumed(stream, bytes);
-
-                /* notification callback, optional */
-                if (stream->cb_bytes_consumed) {
-                    stream->cb_bytes_consumed(stream, bytes);
-                }
-
-                if (stream->bytes_total == 0) {
-                    if (stream->cb_finished) {
-                        stream->cb_finished(stream);
-                    }
-                    mk_stream_unlink(stream);
-                }
-
-                return MK_CHANNEL_FLUSH;
+                /* Perform the adjustment on mk_iov */
+                mk_iov_consume(iov, bytes);
             }
-            else if (bytes <= 0) {
-                if (stream->cb_exception) {
-                    stream->cb_exception(stream, errno);
-                }
-                return MK_CHANNEL_ERROR;
+        }
+
+        if (bytes > 0) {
+            mk_stream_bytes_consumed(stream, bytes);
+
+            /* notification callback, optional */
+            if (stream->cb_bytes_consumed) {
+                stream->cb_bytes_consumed(stream, bytes);
             }
+
+            if (stream->bytes_total == 0) {
+                if (stream->cb_finished) {
+                    stream->cb_finished(stream);
+                }
+                mk_stream_unlink(stream);
+            }
+
+            return MK_CHANNEL_FLUSH;
+        }
+        else if (bytes <= 0) {
+            if (stream->cb_exception) {
+                stream->cb_exception(stream, errno);
+            }
+            return MK_CHANNEL_ERROR;
         }
     }
 

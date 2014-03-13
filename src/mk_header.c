@@ -134,7 +134,7 @@ static void mk_header_iov_free(struct mk_iov *iov)
     mk_iov_free_marked(iov);
 }
 
-/* Send response headers */
+/* Send response headers: it create  */
 int mk_header_send(int fd, struct client_session *cs,
                    struct session_request *sr)
 {
@@ -342,6 +342,231 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     mk_header_iov_free(iov);
+    sh->sent = MK_TRUE;
+
+    return 0;
+}
+
+/* Send response headers: it create  */
+int mk_header_prepare(struct client_session *cs,
+                      struct session_request *sr)
+{
+    int i=0;
+    unsigned long len = 0;
+    char *buffer = 0;
+    mk_ptr_t response;
+    struct response_headers *sh;
+    struct mk_iov *iov;
+
+    sh = &sr->headers;
+
+    iov = mk_header_iov_get();
+
+    /* HTTP Status Code */
+    if (sh->status == MK_CUSTOM_STATUS) {
+        response.data = sh->custom_status.data;
+        response.len = sh->custom_status.len;
+    }
+    else {
+        for (i=0; i < status_response_len; i++) {
+            if (status_response[i].status == sh->status) {
+                response.data = status_response[i].response;
+                response.len  = status_response[i].length;
+                break;
+            }
+        }
+    }
+
+    /* Invalid status set */
+    mk_bug(i == status_response_len);
+
+    mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+
+    /* Server details */
+    mk_iov_add_entry(iov, sr->host_conf->header_host_signature.data,
+                     sr->host_conf->header_host_signature.len,
+                     mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+
+    /* Date */
+    mk_iov_add_entry(iov,
+                     mk_header_short_date.data,
+                     mk_header_short_date.len,
+                     header_current_time,
+                     MK_IOV_NOT_FREE_BUF);
+
+    /* Last-Modified */
+    if (sh->last_modified > 0) {
+        mk_ptr_t *lm;
+        lm = mk_cache_get(mk_cache_header_lm);
+        lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
+
+        mk_iov_add_entry(iov, mk_header_last_modified.data,
+                         mk_header_last_modified.len,
+                         *lm, MK_IOV_NOT_FREE_BUF);
+    }
+
+    /* Connection */
+    if (sh->connection == 0) {
+        if (mk_http_keepalive_check(cs) == 0) {
+            if (sr->connection.len > 0) {
+                /* Get cached mk_ptr_ts */
+                mk_ptr_t *ka_format = mk_cache_get(mk_cache_header_ka);
+                mk_ptr_t *ka_header = mk_cache_get(mk_cache_header_ka_max);
+
+                /* Compose header and add entries to iov */
+                mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);
+                mk_iov_add_entry(iov, ka_format->data, ka_format->len,
+                                 mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                mk_iov_add_entry(iov, ka_header->data, ka_header->len,
+                                 mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
+            }
+        }
+        else {
+            mk_iov_add_entry(iov,
+                             mk_header_conn_close.data,
+                             mk_header_conn_close.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+
+    }
+
+    /* Location */
+    if (sh->location != NULL) {
+        mk_iov_add_entry(iov,
+                         mk_header_short_location.data,
+                         mk_header_short_location.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+
+        mk_iov_add_entry(iov,
+                         sh->location,
+                         strlen(sh->location), mk_iov_crlf, MK_IOV_FREE_BUF);
+    }
+
+    /* allowed methods */
+    if (sh->allow_methods.len > 0) {
+        mk_iov_add_entry(iov,
+                         mk_header_allow.data,
+                         mk_header_allow.len,
+                         sh->allow_methods, MK_IOV_NOT_FREE_BUF) ;
+    }
+
+    /* Content type */
+    if (sh->content_type.len > 0) {
+        mk_iov_add_entry(iov,
+                         mk_header_short_ct.data,
+                         mk_header_short_ct.len,
+                         sh->content_type, MK_IOV_NOT_FREE_BUF);
+    }
+
+    /*
+     * Transfer Encoding: the transfer encoding header is just sent when
+     * the response has some content defined by the HTTP status response
+     */
+    if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
+        switch (sh->transfer_encoding) {
+        case MK_HEADER_TE_TYPE_CHUNKED:
+            mk_iov_add_entry(iov,
+                             mk_header_te_chunked.data,
+                             mk_header_te_chunked.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            break;
+        }
+    }
+
+    /* Content-Encoding */
+    if (sh->content_encoding.len > 0) {
+        mk_iov_add_entry(iov, mk_header_content_encoding.data,
+                         mk_header_content_encoding.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add_entry(iov, sh->content_encoding.data,
+                         sh->content_encoding.len,
+                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    }
+
+    /* Content-Length */
+    if (sh->content_length >= 0) {
+        /* Map content length to MK_POINTER */
+        mk_ptr_t *cl;
+        cl = mk_cache_get(mk_cache_header_cl);
+        mk_string_itop(sh->content_length, cl);
+
+        /* Set headers */
+        mk_iov_add_entry(iov, mk_header_content_length.data,
+                         mk_header_content_length.len,
+                         *cl, MK_IOV_NOT_FREE_BUF);
+    }
+
+    if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
+        config->resume == MK_TRUE) {
+        buffer = 0;
+
+        /* yyy- */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%ld/%ld",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0],
+                            (sh->real_length - 1), sh->real_length);
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+
+        /* yyy-xxx */
+        if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %d-%d/%ld",
+                            RH_CONTENT_RANGE,
+                            sh->ranges[0], sh->ranges[1], sh->real_length);
+
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+
+        /* -xxx */
+        if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
+            mk_string_build(&buffer,
+                            &len,
+                            "%s bytes %ld-%ld/%ld",
+                            RH_CONTENT_RANGE,
+                            (sh->real_length - sh->ranges[1]),
+                            (sh->real_length - 1), sh->real_length);
+            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+        }
+    }
+
+    //mk_socket_set_cork_flag(fd, TCP_CORK_ON);
+
+    if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
+        if (!sr->headers._extra_rows) {
+            mk_iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
+                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+        else {
+            mk_iov_add_entry(sr->headers._extra_rows, mk_iov_crlf.data,
+                             mk_iov_crlf.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        }
+    }
+
+    /* Configure the headers streams */
+
+
+    /* Reset callbacks for headers stream */
+    mk_stream_set(&sr->headers_stream,
+                  MK_STREAM_IOV, &cs->channel, iov,
+                  NULL, NULL, NULL);
+    mk_channel_append_stream(&cs->channel, &sr->headers_stream);
+
+    //mk_socket_sendv(fd, iov);
+    if (sr->headers._extra_rows) {
+        mk_stream_set(&sr->headers_extra_stream,
+                      MK_STREAM_IOV, &cs->channel, sr->headers._extra_rows,
+                      NULL, NULL, NULL);
+        //mk_socket_sendv(fd, sr->headers._extra_rows);
+        //mk_iov_free(sr->headers._extra_rows);
+        //sr->headers._extra_rows = NULL;
+    }
+
+    //mk_header_iov_free(iov);
     sh->sent = MK_TRUE;
 
     return 0;

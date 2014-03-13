@@ -691,6 +691,9 @@ int mk_handler_write(int socket, struct client_session *cs)
     struct session_request *sr_node;
     struct mk_list *sr_list, *sr_head;
 
+    /* Check if our embedded channel have some data to stream out */
+    mk_channel_write(&cs->channel);
+
     if (mk_list_is_empty(&cs->request_list) == 0) {
         if (mk_request_parse(cs) != 0) {
             return -1;
@@ -957,6 +960,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     /* Stream channel */
     cs->channel.type = MK_CHANNEL_SOCKET;
     cs->channel.fd   = socket;
+    mk_list_init(&cs->channel.streams);
 
     /* creation time in unix time */
     cs->init_time = sc->arrive_time;

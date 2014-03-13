@@ -331,7 +331,6 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
 int mk_http_init(struct client_session *cs, struct session_request *sr)
 {
     int ret;
-    int bytes = 0;
     struct mimetype *mime;
 
     MK_TRACE("HTTP Protocol Init");
@@ -596,19 +595,28 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         mk_ptr_t_reset(&sr->headers.content_type);
     }
 
-    /* Send headers */
-    mk_header_send(cs->socket, cs, sr);
+    /* Prepare outgoing headers */
+    mk_header_prepare(cs, sr);
 
     if (mk_unlikely(sr->headers.content_length == 0)) {
+        mk_vhost_close(sr);
         return 0;
     }
 
     /* Send file content */
     if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_POST) {
-        bytes = mk_http_send_file(cs, sr);
+
+        /* Stream setup */
+        sr->file_stream.fd           = sr->fd_file;
+        sr->file_stream.bytes_total  = sr->bytes_to_send;
+        sr->file_stream.bytes_offset = sr->bytes_offset;
+
+        /* Note: bytes and offsets are set after the Range check */
+        mk_channel_append_stream(&cs->channel, &sr->file_stream);
+        //bytes = mk_http_send_file(cs, sr);
     }
 
-    return bytes;
+    return mk_channel_write(&cs->channel);
 }
 
 int mk_http_send_file(struct client_session *cs, struct session_request *sr)
