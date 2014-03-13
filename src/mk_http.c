@@ -301,9 +301,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
                         config->transport, host, location);
     }
 
-#ifdef TRACE
     MK_TRACE("Redirecting to '%s'", real_location);
-#endif
 
     mk_mem_free(host);
 
@@ -384,6 +382,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         /* if the resource requested doesn't exists, let's
          * check if some plugin would like to handle it
          */
+
         MK_TRACE("No file, look for handler plugin");
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
