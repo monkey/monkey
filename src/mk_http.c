@@ -109,37 +109,35 @@ mk_ptr_t mk_http_method_check_str(int method)
     return mk_http_method_null_p;
 }
 
-static int mk_http_range_set(struct session_request *sr, long file_size)
+static int mk_http_range_set(struct session_request *sr, size_t file_size)
 {
     struct response_headers *sh = &sr->headers;
-
-    sr->bytes_to_send = file_size;
-    sr->bytes_offset = 0;
 
     if (config->resume == MK_TRUE && sr->range.data) {
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = file_size - sr->bytes_offset;
+            sr->file_stream.bytes_offset = sh->ranges[0];
+            sr->file_stream.bytes_total = file_size - sr->file_stream.bytes_offset;
         }
 
         /* yyy-xxx */
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = labs(sh->ranges[1] - sh->ranges[0]) + 1;
+            sr->file_stream.bytes_offset = sh->ranges[0];
+            sr->file_stream.bytes_total = labs(sh->ranges[1] - sh->ranges[0]) + 1;
         }
 
         /* -xxx */
         if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
-            sr->bytes_to_send = sh->ranges[1];
-            sr->bytes_offset = file_size - sh->ranges[1];
+            sr->file_stream.bytes_total = sh->ranges[1];
+            sr->file_stream.bytes_offset = file_size - sh->ranges[1];
         }
 
-        if (sr->bytes_offset >= file_size || sr->bytes_to_send > file_size) {
+        if (sr->file_stream.bytes_offset >= file_size ||
+            sr->file_stream.bytes_total > file_size) {
             return -1;
         }
 
-        lseek(sr->fd_file, sr->bytes_offset, SEEK_SET);
+        lseek(sr->file_stream.fd, sr->file_stream.bytes_offset, SEEK_SET);
     }
     return 0;
 }
@@ -316,7 +314,9 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     sr->headers.pconnections_left =
         (config->max_keep_alive_request - cs->counter_connections);
 
-    mk_header_send(cs->socket, cs, sr);
+    //mk_header_send(cs->socket, cs, sr);
+    mk_header_prepare(cs, sr);
+    mk_channel_write(&cs->channel);
     mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
 
     /*
@@ -507,8 +507,9 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         sr->headers.allow_methods.len = strlen(MK_HTTP_METHOD_AVAILABLE);
 
         mk_ptr_t_reset(&sr->headers.content_type);
-        mk_header_send(cs->socket, cs, sr);
-        return EXIT_NORMAL;
+        mk_header_prepare(cs, sr);
+        //return EXIT_NORMAL;
+        return mk_channel_write(&cs->channel);
     }
     else {
         mk_ptr_t_reset(&sr->headers.allow_methods);
@@ -547,7 +548,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             date_client <= log_current_utime) {
 
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
-            mk_header_send(cs->socket, cs, sr);
+            mk_header_prepare(cs, sr);
+            mk_channel_write(&cs->channel);
             return EXIT_NORMAL;
         }
     }
@@ -558,12 +560,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Open file */
     if (mk_likely(sr->file_info.size > 0)) {
-        sr->fd_file = mk_vhost_open(sr);
-        if (sr->fd_file == -1) {
+        sr->file_stream.fd = mk_vhost_open(sr);
+        if (sr->file_stream.fd == -1) {
             MK_TRACE("open() failed");
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
-        sr->bytes_to_send = sr->file_info.size;
+        sr->file_stream.bytes_total = sr->file_info.size;
     }
 
     /* Process methods */
@@ -597,7 +599,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* Prepare outgoing headers */
     mk_header_prepare(cs, sr);
-
     if (mk_unlikely(sr->headers.content_length == 0)) {
         mk_vhost_close(sr);
         return 0;
@@ -607,9 +608,9 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_POST) {
 
         /* Stream setup */
-        sr->file_stream.fd           = sr->fd_file;
-        sr->file_stream.bytes_total  = sr->bytes_to_send;
-        sr->file_stream.bytes_offset = sr->bytes_offset;
+        sr->file_stream.type         = MK_STREAM_FILE;
+        sr->file_stream.bytes_total  = sr->file_stream.bytes_total;
+        sr->file_stream.bytes_offset = sr->file_stream.bytes_offset;
 
         /* Note: bytes and offsets are set after the Range check */
         mk_channel_append_stream(&cs->channel, &sr->file_stream);
@@ -623,17 +624,15 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 {
     long int nbytes = 0;
 
-    nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
-                                 &sr->bytes_offset, sr->bytes_to_send);
+    nbytes = mk_socket_send_file(cs->socket, sr->file_stream.fd,
+                                 &sr->file_stream.bytes_offset, sr->file_stream.bytes_total);
 
     if (nbytes > 0) {
-        sr->bytes_to_send -= nbytes;
-        if (sr->bytes_to_send == 0) {
+        sr->file_stream.bytes_total -= nbytes;
+        if (sr->file_stream.bytes_total == 0) {
             mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
         }
     }
-
-    sr->loop++;
 
     /*
      * In some circumstances when writing data the connection can get broken,
@@ -648,7 +647,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
         return EXIT_ABORT;
     }
 
-    return sr->bytes_to_send;
+    return sr->file_stream.bytes_total;
 }
 
 /*

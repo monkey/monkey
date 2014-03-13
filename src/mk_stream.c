@@ -25,7 +25,8 @@
 #include "mk_stream.h"
 
 /* Create a new stream instance */
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel, void *data,
+mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+                           void *data, size_t size,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int))
@@ -33,7 +34,10 @@ mk_stream_t *mk_stream_new(int type, mk_channel_t *channel, void *data,
     mk_stream_t *stream;
 
     stream = mk_mem_malloc(sizeof(mk_stream_t));
-    mk_stream_set(stream, type, channel, data, cb_finished, cb_bytes_consumed, cb_exception);
+    mk_stream_set(stream, type, channel, data, size,
+                  cb_finished,
+                  cb_bytes_consumed,
+                  cb_exception);
 
     return stream;
 }
@@ -57,9 +61,13 @@ int mk_channel_write(mk_channel_t *channel)
 {
     size_t bytes = -1;
     struct mk_iov *iov;
+    mk_ptr_t *ptr;
     mk_stream_t *stream;
 
+    MK_TRACE("[CH %i] channel write", channel->fd);
+
     if (mk_list_is_empty(&channel->streams) == 0) {
+        MK_TRACE("[CH %i] channel is empty", channel->fd);
         return MK_CHANNEL_EMPTY;
     }
 
@@ -72,6 +80,9 @@ int mk_channel_write(mk_channel_t *channel)
      */
     if (channel->type == MK_CHANNEL_SOCKET) {
         if (stream->type == MK_STREAM_FILE) {
+            MK_TRACE("[CH %i] STREAM_FILE %i, bytes=%lu",
+                     channel->fd, stream->fd, stream->bytes_total);
+
             /* Direct write */
             bytes = mk_socket_send_file(channel->fd,
                                         stream->fd,
@@ -80,12 +91,25 @@ int mk_channel_write(mk_channel_t *channel)
                                         );
         }
         else if (stream->type == MK_STREAM_IOV) {
+            MK_TRACE("[CH %i] STREAM_IOV, bytes=%lu",
+                     channel->fd, stream->bytes_total);
+
             iov   = stream->data;
             bytes = mk_socket_sendv(channel->fd, iov);
 
             if (bytes > 0) {
                 /* Perform the adjustment on mk_iov */
                 mk_iov_consume(iov, bytes);
+            }
+        }
+        else if (stream->type == MK_STREAM_PTR) {
+            MK_TRACE("[CH %i] STREAM_PTR, bytes=%lu",
+                     channel->fd, stream->bytes_total);
+
+            ptr = stream->data;
+            bytes = mk_socket_send(channel->fd, ptr->data, ptr->len);
+            if (bytes > 0) {
+                /* FIXME OFFSET */
             }
         }
 

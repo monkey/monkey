@@ -351,7 +351,7 @@ void mk_plugin_init()
     api->file_get_info = mk_file_get_info;
 
     /* HTTP Callbacks */
-    api->header_send = mk_header_send;
+    //api->header_send = mk_header_send;
     api->header_add = mk_plugin_header_add;
     api->header_get = mk_request_header_get;
     api->header_set_http_status = mk_header_set_http_status;

@@ -19,6 +19,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "mk_iov.h"
 #include "mk_list.h"
 
 #ifndef MK_STREAM_H
@@ -31,8 +32,9 @@
  */
 #define MK_STREAM_RAW     0  /* raw data from buffer */
 #define MK_STREAM_IOV     1  /* mk_iov struct        */
-#define MK_STREAM_FILE    2  /* opened file          */
-#define MK_STREAM_SOCKET  3  /* socket, scared..     */
+#define MK_STREAM_PTR     2  /* mk_ptr               */
+#define MK_STREAM_FILE    3  /* opened file          */
+#define MK_STREAM_SOCKET  4  /* socket, scared..     */
 
 
 /* Channel return values for write event */
@@ -72,8 +74,8 @@ typedef struct mk_stream {
     int fd;
 
     /* bytes info */
-    unsigned long bytes_total;
-    off_t         bytes_offset;
+    size_t bytes_total;
+    off_t  bytes_offset;
 
     /* the outgoing channel, we do this for all streams */
     mk_channel_t *channel;
@@ -95,27 +97,38 @@ typedef struct mk_stream {
 } mk_stream_t;
 
 /* exported functions */
-static inline void mk_channel_append_stream(mk_channel_t *channel, mk_stream_t *stream)
+static inline void mk_channel_append_stream(mk_channel_t *channel,
+                                            mk_stream_t *stream)
 {
     mk_list_add(&stream->_head, &channel->streams);
 }
 
-static inline void mk_stream_set(mk_stream_t *stream, int type, mk_channel_t *channel,
+static inline void mk_stream_set(mk_stream_t *stream, int type,
+                                 mk_channel_t *channel,
                                  void *data,
+                                 size_t size,
                                  void (*cb_finished) (mk_stream_t *),
                                  void (*cb_bytes_consumed) (mk_stream_t *, long),
                                  void (*cb_exception) (mk_stream_t *, int))
 {
-    stream->type              = type;
-    stream->channel           = channel;
+    mk_ptr_t *ptr;
+    struct mk_iov *iov;
 
-    if (type == MK_STREAM_RAW || type == MK_STREAM_IOV) {
-        stream->data = data;
+    stream->type        = type;
+    stream->channel     = channel;
+    stream->bytes_total = size;
+    stream->data        = data;
+
+    if (type == MK_STREAM_IOV) {
+        iov = data;
+        stream->bytes_total = iov->total_len;
     }
-    else {
-        stream->data = NULL;
+    else if (type == MK_STREAM_PTR) {
+        ptr = data;
+        stream->bytes_total = ptr->len;
     }
 
+    /* callbacks */
     stream->cb_finished       = cb_finished;
     stream->cb_bytes_consumed = cb_bytes_consumed;
     stream->cb_exception      = cb_exception;
@@ -129,12 +142,30 @@ static inline void mk_stream_unlink(mk_stream_t *stream)
 /* Mark a specific number of bytes served (just on successfull flush) */
 static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
 {
-    if (stream->type == MK_STREAM_FILE) {
-        stream->bytes_total -= bytes;
+#ifdef TRACE
+    char *fmt;
+
+    if (stream->type == MK_STREAM_RAW) {
+        fmt = "[STREAM_RAW %p] bytes consumed %lu/%lu";
     }
+    else if (stream->type == MK_STREAM_IOV) {
+        fmt = "[STREAM_IOV %p] bytes consumed %lu/%lu";
+    }
+    else if (stream->type == MK_STREAM_FILE) {
+        fmt = "[STREAM_FILE %p] bytes consumed %lu/%lu";
+    }
+    else if (stream->type == MK_STREAM_SOCKET) {
+        fmt = "[STREAM_SOCK %p] bytes consumed %lu/%lu";
+    }
+
+    MK_TRACE(fmt, stream, stream->bytes_total, bytes);
+#endif
+
+    stream->bytes_total -= bytes;
 }
 
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel, void *data,
+mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+                           void *data, size_t size,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int));

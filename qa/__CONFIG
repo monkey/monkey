@@ -1,6 +1,6 @@
 # Global server settings
 SET HOST=localhost
-SET PORT=2001
+SET PORT=8080
 SET HTTPVER=HTTP/1.1
 SET HTTPVER10=HTTP/1.0
 

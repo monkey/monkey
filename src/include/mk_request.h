@@ -163,13 +163,11 @@ struct session_request
     long port;
     /*------------*/
 
-    /* file descriptors */
-    int fd_file;
-
     /* Streams handling: headers and static file */
     mk_stream_t headers_stream;
     mk_stream_t headers_extra_stream;
     mk_stream_t file_stream;
+    mk_stream_t page_stream;
 
     int headers_len;
 
@@ -219,7 +217,6 @@ struct session_request
     /* Query string: ?.... */
     mk_ptr_t query_string;
 
-
     /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
      * triggers the plugin STAGE_30 to look for a plugin handler. In some
      * cases the plugin would overwrite the real path of the requested file
@@ -232,9 +229,6 @@ struct session_request
     int stage30_blocked;
 
     /* Static file information */
-    long loop;
-    long bytes_to_send;
-    off_t bytes_offset;
     struct file_info file_info;
 
     /* Vhost */

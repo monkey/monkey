@@ -89,11 +89,9 @@ static void mk_request_init(struct session_request *request)
 
     request->status = MK_TRUE;
     request->method = MK_HTTP_METHOD_UNKNOWN;
-
     request->file_info.size = -1;
-
-    request->bytes_to_send = -1;
-    request->fd_file = -1;
+    request->file_stream.bytes_total = -1;
+    request->file_stream.bytes_offset = 0;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
@@ -101,7 +99,7 @@ static void mk_request_init(struct session_request *request)
 
 static void mk_request_free(struct session_request *sr)
 {
-    if (sr->fd_file > 0) {
+    if (sr->file_stream.fd > 0) {
         mk_vhost_close(sr);
     }
 
@@ -687,12 +685,10 @@ int mk_handler_read(int socket, struct client_session *cs)
 
 int mk_handler_write(int socket, struct client_session *cs)
 {
+    int ret;
     int final_status = 0;
     struct session_request *sr_node;
     struct mk_list *sr_list, *sr_head;
-
-    /* Check if our embedded channel have some data to stream out */
-    mk_channel_write(&cs->channel);
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
         if (mk_request_parse(cs) != 0) {
@@ -700,39 +696,44 @@ int mk_handler_write(int socket, struct client_session *cs)
         }
     }
 
-    sr_list = &cs->request_list;
-    mk_list_foreach(sr_head, sr_list) {
-        sr_node = mk_list_entry(sr_head, struct session_request, _head);
-
-        if (sr_node->bytes_to_send > 0) {
-            /* Request with data to send by static file sender */
-            final_status = mk_http_send_file(cs, sr_node);
-        }
-        else if (sr_node->bytes_to_send < 0) {
-            final_status = mk_request_process(cs, sr_node);
-        }
-
+    /* Check if our embedded channel have some data to stream out */
+    ret = mk_channel_write(&cs->channel);
+    if (ret == MK_CHANNEL_ERROR) {
+        return -1;
+    }
+    else if (ret == MK_CHANNEL_EMPTY) {
         /*
-         * If we got an error, we don't want to parse
-         * and send information for another pipelined request
+         * The channel do not have any pending outgoing data, check
+         * for possible pipelined requests
          */
-        if (final_status > 0) {
-            return final_status;
+        sr_list = &cs->request_list;
+        if (mk_list_is_empty(sr_list) == 0) {
+            return 0;
         }
-        else {
-            /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
-                                NULL, cs, sr_node);
-            switch (final_status) {
-            case EXIT_NORMAL:
-            case EXIT_ERROR:
-                if (sr_node->close_now == MK_TRUE) {
+
+        mk_list_foreach(sr_head, sr_list) {
+            sr_node = mk_list_entry(sr_head, struct session_request, _head);
+            final_status = mk_request_process(cs, sr_node);
+
+            if (final_status > 0) {
+                return final_status;
+            }
+            else {
+                /* STAGE_40, request has ended */
+                mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
+                                    NULL, cs, sr_node);
+                switch (final_status) {
+                case EXIT_NORMAL:
+                case EXIT_ERROR:
+                    if (sr_node->close_now == MK_TRUE) {
+                        return -1;
+                    }
+                    break;
+                case EXIT_ABORT:
                     return -1;
                 }
-                break;
-            case EXIT_ABORT:
-                  return -1;
             }
+
         }
     }
 
@@ -770,6 +771,14 @@ mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int fle
     }
 
     return f;
+}
+
+void cb_stream_page_finished(mk_stream_t *stream)
+{
+    mk_ptr_t *page = stream->data;
+
+    mk_ptr_t_free(page);
+    mk_mem_free(page);
 }
 
 /* Send error responses */
@@ -810,15 +819,20 @@ int mk_request_error(int http_status, struct client_session *cs,
                 break;
             }
 
-            sr->fd_file = fd;
-            sr->bytes_to_send = finfo.size;
+            /* Outgoing headers */
             sr->headers.content_length = finfo.size;
             sr->headers.real_length    = finfo.size;
+            mk_header_prepare(cs, sr);
 
+            /* Stream setup */
             memcpy(&sr->file_info, &finfo, sizeof(struct file_info));
+            sr->file_stream.type         = MK_STREAM_FILE;
+            sr->file_stream.fd           = fd;
+            sr->file_stream.bytes_total  = finfo.size;
+            sr->file_stream.bytes_offset = 0;
+            mk_channel_append_stream(&cs->channel, &sr->file_stream);
 
-            mk_header_send(cs->socket, cs, sr);
-            return mk_http_send_file(cs, sr);
+            return mk_channel_write(&cs->channel);
         }
     }
 
@@ -901,14 +915,21 @@ int mk_request_error(int http_status, struct client_session *cs,
         mk_ptr_t_set(&sr->headers.content_type, "text/html\r\n");
     }
 
-    mk_header_send(cs->socket, cs, sr);
+    mk_header_prepare(cs, sr);
 
     if (page) {
-        if (sr->method != MK_HTTP_METHOD_HEAD)
-            mk_socket_send(cs->socket, page->data, page->len);
+        if (sr->method != MK_HTTP_METHOD_HEAD) {
+            mk_stream_set(&sr->page_stream,
+                          MK_STREAM_PTR,
+                          &cs->channel,
+                          page,
+                          -1,
+                          cb_stream_page_finished, NULL, NULL);
 
-        mk_ptr_t_free(page);
-        mk_mem_free(page);
+            mk_channel_append_stream(&cs->channel, &sr->page_stream);
+            mk_channel_write(&cs->channel);
+            //mk_socket_send(cs->socket, page->data, page->len);
+        }
     }
 
     /* Turn off TCP_CORK */
