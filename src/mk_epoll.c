@@ -357,7 +357,7 @@ int mk_epoll_change_mode(int efd, int fd, int mode, unsigned int behavior)
     struct epoll_event event = {0, {0}};
     struct epoll_state *state;
 
-    event.events = EPOLLERR | EPOLLHUP;
+    event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     event.data.fd = fd;
 
     switch (mode) {
