@@ -36,8 +36,6 @@
 #include "mk_list.h"
 #include "mk_info.h"
 
-#define MK_PLUGIN_LOAD "plugins.load"
-
 #define MK_PLUGIN_ERROR -1      /* plugin execution error */
 #define MK_PLUGIN_
 

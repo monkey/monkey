@@ -386,7 +386,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     cnf = mk_config_create(tmp);
     if (!cnf) {
-        mk_err("Cannot read '%s'", config->server_config);
+        mk_err("Cannot read '%s'", config->server_conf_file);
         exit(EXIT_FAILURE);
     }
     section = mk_config_section_get(cnf, "SERVER");
@@ -542,7 +542,7 @@ void mk_config_start_configure(void)
     unsigned long len;
 
     mk_config_set_init_values();
-    mk_config_read_files(config->path_config, config->server_config);
+    mk_config_read_files(config->path_config, config->server_conf_file);
 
     /* Load mimes */
     mk_mimetype_read_config();

@@ -38,6 +38,7 @@
 #include "mk_memory.h"
 #include "mk_request.h"
 #include "mk_info.h"
+#include "mk_file.h"
 
 /* Initialize Virtual Host FDT mutex */
 pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -418,12 +419,23 @@ void mk_vhost_init(char *path)
     DIR *dir;
     unsigned long len;
     char *buf = 0;
+    char *sites = 0;
     char *file;
     struct host *p_host;     /* debug */
     struct dirent *ent;
+    struct file_info f_info;
+    int ret;
 
     /* Read default virtual host file */
-    mk_string_build(&buf, &len, "%s/sites/default", path);
+    mk_string_build(&sites, &len, "%s/%s/", path, config->sites_conf_dir);
+    ret = mk_file_get_info(sites, &f_info);
+    if (ret == -1 || f_info.is_directory == MK_FALSE) {
+        mk_mem_free(sites);
+        sites = config->sites_conf_dir;
+    }
+
+    mk_string_build(&buf, &len, "%s/default", sites);
+
     p_host = mk_vhost_read(buf);
     if (!p_host) {
         mk_err("Error parsing main configuration file 'default'");
@@ -435,13 +447,10 @@ void mk_vhost_init(char *path)
 
 
     /* Read all virtual hosts defined in sites/ */
-    mk_string_build(&buf, &len, "%s/sites/", path);
-    if (!(dir = opendir(buf))) {
-        mk_err("Could not open %s", buf);
-        mk_mem_free(buf);
+    if (!(dir = opendir(sites))) {
+        mk_err("Could not open %s", sites);
         exit(EXIT_FAILURE);
     }
-    mk_mem_free(buf);
 
     /* Reading content */
     while ((ent = readdir(dir)) != NULL) {
@@ -453,7 +462,7 @@ void mk_vhost_init(char *path)
             continue;
 
         file = NULL;
-        mk_string_build(&file, &len, "%s/sites/%s", path, ent->d_name);
+        mk_string_build(&file, &len, "%s/%s", sites, ent->d_name);
 
         p_host = mk_vhost_read(file);
         mk_mem_free(file);
