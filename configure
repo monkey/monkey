@@ -184,32 +184,34 @@ main()
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
 		$logdir $mandir $enabled_plugins $disabled_plugins
 
-	echo
-	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
+    if [ ! $upgrade ] ; then 
+	    echo
+    	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
-	echo "+ Creating conf/monkey.conf"
-	create_conf prefix
-	make_conf  $lang $default_port $default_user
+	    echo "+ Creating conf/monkey.conf"
+    	create_conf prefix
+	    make_conf  $lang $default_port $default_user
 
-	echo "+ Creating src/Makefile"
-	create_makefile2 mod_libs mod_obj make_script platform \
-                         malloc_libc malloc_jemalloc
+    	echo "+ Creating src/Makefile"
+    	create_makefile2 mod_libs mod_obj make_script platform \
+                             malloc_libc malloc_jemalloc
 
-	echo "+ Creating src/include/mk_info.h"
-	create_info sysconfdir \
-                    SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
-                    cmd uname
+    	echo "+ Creating src/include/mk_info.h"
+    	create_info sysconfdir \
+                        SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
+                        cmd uname
+    
+	    echo "+ Creating bin/banana script"
+    	create_banana_script bindir logdir default_port
 
-	echo "+ Creating bin/banana script"
-	create_banana_script bindir logdir default_port
-
-	echo -e "+ Creating Makefile"
-	if [ "$dir" = 0 ]; then
-		create_makefile1 bindir malloc_jemalloc
-	else
-		create_makefile1_install prefix bindir mandir sysconfdir \
-                datadir logdir malloc_jemalloc
-	fi
+    	echo -e "+ Creating Makefile"
+	    if [ "$dir" = 0 ]; then
+		    create_makefile1 bindir malloc_jemalloc
+    	else
+	    	create_makefile1_install prefix bindir mandir sysconfdir \
+                    datadir logdir malloc_jemalloc
+	    fi
+    fi
 
         # if the memory allocator is jemalloc, lets start configuring the dependency
         if [ $malloc_jemalloc -eq 1 ]; then
@@ -634,12 +636,19 @@ $SONAME: \$(LIBOBJ)
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so *.lo
 	rm -rf ../bin/monkey
+EOF
 
+if [ ! $upgrade ] ; then
+cat >> src/Makefile << EOF 
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
 	../conf/sites/* include/mk_info.h ../logs/*
 	find ../plugins -name Makefile -exec rm {} \;
+EOF
+fi
+
+cat >> src/Makefile << EOF
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
@@ -1017,6 +1026,9 @@ for arg in $*; do
 		--trace*)
 			trace=1
 			;;
+        --upgrade*)
+            upgrade=1
+            ;;
 		--no-backtrace*)
 			no_backtrace=1
 			;;
