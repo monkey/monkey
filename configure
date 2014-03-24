@@ -729,7 +729,7 @@ create_makefile_plugins()
 			comment="    # "
 		fi
 
-		if [ "$plugdir" != "" ]; then
+		if [ "$plugdir" != "$aux/plugins" ]; then
 			echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
 		else
 			echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
