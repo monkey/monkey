@@ -53,7 +53,7 @@ extern const mk_ptr_t mk_iov_equal;
 struct mk_iov
 {
     struct iovec *io;
-    char **buf_to_free;
+    void **buf_to_free;
     int iov_idx;
     int buf_idx;
     int size;
@@ -69,10 +69,10 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io);
 
 void mk_iov_free(struct mk_iov *mk_io);
 
-int _mk_iov_add(struct mk_iov *mk_io, char *buf, int len,
+int _mk_iov_add(struct mk_iov *mk_io, void *buf, int len,
                 mk_ptr_t sep, int free, int idx);
 
-int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
+int mk_iov_set_entry(struct mk_iov *mk_io, void *buf, int len,
                      int free, int idx);
 
 void mk_iov_separators_init(void);
@@ -85,7 +85,7 @@ static inline void _mk_iov_set_free(struct mk_iov *mk_io, char *buf)
     mk_io->buf_idx++;
 }
 
-static inline int mk_iov_add_entry(struct mk_iov *mk_io, char *buf, int len,
+static inline int mk_iov_add_entry(struct mk_iov *mk_io, void *buf, int len,
                                    mk_ptr_t sep, int free)
 {
     mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
