@@ -875,8 +875,7 @@ int mk_plugin_event_add(int socket, int mode,
      * The thread event info has been registered, now we need
      * to register the socket involved to the thread epoll array
      */
-    mk_epoll_add(sched->epoll_fd, socket, mode, behavior);
-    return 0;
+    return mk_epoll_add(sched->epoll_fd, socket, mode, behavior);
 }
 
 int mk_plugin_http_request_end(int socket)
