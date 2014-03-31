@@ -449,6 +449,9 @@ void mk_vhost_init(char *path)
             continue;
         if (strcmp((char *) ent->d_name, "..") == 0)
             continue;
+        if (ent->d_name[strlen(ent->d_name) - 1] ==  '~') {
+            continue;
+        }
         if (strcasecmp((char *) ent->d_name, "default") == 0)
             continue;
 

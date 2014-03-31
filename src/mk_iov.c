@@ -50,7 +50,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
     iov = mk_mem_malloc_z(sizeof(struct mk_iov));
     iov->iov_idx = offset;
     iov->io = mk_mem_malloc(n * sizeof(struct iovec));
-    iov->buf_to_free = mk_mem_malloc(n * sizeof(char *));
+    iov->buf_to_free = mk_mem_malloc(n * sizeof(void *));
     iov->buf_idx = 0;
     iov->total_len = 0;
     iov->size = n;
@@ -71,11 +71,11 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
 int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 {
-    char **new_buf;
+    void **new_buf;
     struct iovec *new_io;
 
     new_io  = mk_mem_realloc(mk_io->io, sizeof(struct iovec) * new_size) ;
-    new_buf = mk_mem_realloc(mk_io->buf_to_free, sizeof(char *) * new_size);
+    new_buf = mk_mem_realloc(mk_io->buf_to_free, sizeof(void *) * new_size);
 
     if (!new_io || !new_buf) {
         MK_TRACE("could not reallocate IOV");
@@ -93,7 +93,7 @@ int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
     return 0;
 }
 
-int mk_iov_set_entry(struct mk_iov *mk_io, char *buf, int len,
+int mk_iov_set_entry(struct mk_iov *mk_io, void *buf, int len,
                      int free, int idx)
 {
     mk_io->io[idx].iov_base = buf;
