@@ -203,6 +203,8 @@ main()
 	echo "+ Creating bin/banana script"
 	create_banana_script bindir logdir default_port
 
+	create_monkeyd_systemd_script bindir logdir default_port systemddir
+
 	echo -e "+ Creating Makefile"
 	if [ "$dir" = 0 ]; then
 		create_makefile1 bindir malloc_jemalloc
@@ -264,6 +266,8 @@ main()
 	if [ "$plugdir" != "" ]; then
 		echo -e "Plugdir\t\t= $plugdir"
 	fi
+
+	echo -e "Systemddir\t= $systemddir"
 
 	echo
 	echo "--"
@@ -488,6 +492,11 @@ create_makefile1_install()
 		incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
 	fi
 
+	ins_systemd=""
+	if [ $systemddir ]; then
+		ins_systemd="	install -m 644 monkeyd.service \$(SYSTEMDDIR)"
+	fi
+
 	cat > Makefile <<EOF
 # Monkey HTTP Daemon: Makefile
 # ============================
@@ -500,6 +509,7 @@ MANDIR=\$(DESTDIR)${mandir}
 SYSCONFDIR=\$(DESTDIR)${sysconfdir}
 DATADIR=\$(DESTDIR)${datadir}
 LOGDIR=\$(DESTDIR)${logdir}
+SYSTEMDDIR=$systemddir
 PLUGINDIR=\$(DESTDIR)${plugdir}
 VERSION=$VERSION
 
@@ -539,6 +549,7 @@ install:
 	install -m 755 bin/* \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 	install -m 644 src/include/*.h \$(INCDIR)
+$ins_systemd
 $plgconf
 $plglist
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
@@ -822,6 +833,28 @@ logdir=$logdir
 EOF
 }
 
+create_monkeyd_systemd_script()
+{
+	if [ $systemddir ]; then
+        echo "+ Creating systemd.service unit file"
+		cat > monkeyd.service << EOF
+[Unit]
+Description=Monkey HTTP Daemon
+Requires=network.target
+After=network.target
+
+[Service]
+Type=fork
+ExecStart=$bindir/monkey -D
+PIDFile=$logdir/monkey.pid.$default_port
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	fi
+}
+
 create_banana_script()
 {
 	cat > bin/banana << EOF
@@ -952,6 +985,7 @@ sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
 plugdir="$aux/plugins"
+systemddir=""
 platform="generic"
 
 # Generic default values for monkey.conf
@@ -1063,6 +1097,13 @@ for arg in $*; do
 		--default-user*)
 			default_user=$optarg
 			;;
+		--systemddir*)
+			if [ $optarg ] ; then
+				systemddir=$optarg
+			else
+				systemddir=/lib/systemd/system
+			fi
+			;;
 		--version*)
 			echo -e $bldgrn"Monkey HTTP Daemon v$VERSION" $txtrst
 			echo "Copyright 2001-2013 - Monkey Development Team"
@@ -1104,6 +1145,7 @@ for arg in $*; do
 			echo "  --mandir=MANDIR         Manpages - documentation"
 			echo "  --logdir=LOGDIR         Log files"
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
+			echo "  --systemddir[=DIR]      Systemd directory path"
 			echo "  --enable-plugins=a,b    Enable the listed plugins"
 			echo "  --disable-plugins=a,b   Disable the listed plugins"
 			echo "  --only-accept           Use only accept(2)"
