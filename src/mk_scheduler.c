@@ -617,8 +617,3 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
 
     return 0;
 }
-
-struct sched_list_node *mk_sched_worker_info()
-{
-    return pthread_getspecific(worker_sched_node);
-}

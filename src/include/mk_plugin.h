@@ -371,4 +371,6 @@ int mk_plugin_header_get(struct session_request *sr,
                          mk_ptr_t query,
                          mk_ptr_t *result);
 
+struct sched_list_node *mk_plugin_sched_get_thread_conf();
+
 #endif
