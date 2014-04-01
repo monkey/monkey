@@ -135,8 +135,6 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node
                                                      *sched, int remote_fd);
 int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);
-struct sched_list_node *mk_sched_worker_info();
-
 int mk_sched_sync_counters();
 
 #endif

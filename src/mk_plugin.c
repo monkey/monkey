@@ -406,7 +406,7 @@ void mk_plugin_init()
     /* Scheduler and Event callbacks */
     api->sched_get_connection = mk_sched_get_connection;
     api->sched_remove_client  = mk_plugin_sched_remove_client;
-    api->sched_worker_info    = mk_sched_worker_info;
+    api->sched_worker_info    = mk_plugin_sched_get_thread_conf;
 
     api->event_add = mk_plugin_event_add;
     api->event_del = mk_plugin_event_del;
@@ -1270,4 +1270,9 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
     mk_iov_add_entry(sr->headers._extra_rows, row, len,
                      mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     return 0;
+}
+
+struct sched_list_node *mk_plugin_sched_get_thread_conf()
+{
+    return pthread_getspecific(worker_sched_node);
 }
