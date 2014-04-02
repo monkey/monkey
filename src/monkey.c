@@ -43,6 +43,7 @@
 #include "mk_env.h"
 #include "mk_http.h"
 #include "mk_utils.h"
+#include "mk_config.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -114,11 +115,15 @@ static void mk_help(int rc)
 {
     printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
-    printf("  -s, --serverconf=FILE\tspecify main server configuration file\n");
-    printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
-    printf("  -p, --port=PORT\tset listener TCP port (override config)\n");
-    printf("  -w, --workers=N\tset number of workers (override config)\n\n");
+    printf("  -c, --configdir=DIR\t\t\tspecify configuration files directory\n");
+    printf("  -s, --serverconf=FILE\t\t\tspecify main server configuration file\n");
+    printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
+    printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
+    printf("  -w, --workers=N\t\t\tset number of workers (override config)\n");
+    printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
+    printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
+    printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
+    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n");
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -b, --build\t\tprint build information\n");
     printf("  -v, --version\t\tshow version number\n");
@@ -137,21 +142,29 @@ int main(int argc, char **argv)
     int workers_override = -1;
     int run_daemon = 0;
     char *path_config = NULL;
-    char *server_config = NULL;
+    char *server_conf_file = NULL;
+    char *plugin_load_conf_file = NULL;
+    char *sites_conf_dir = NULL;
+    char *plugins_conf_dir = NULL;
+    char *mimes_conf_file = NULL;
 
     static const struct option long_opts[] = {
-        { "configdir", required_argument, NULL, 'c' },
-        { "serverconf",required_argument, NULL, 's' },
-        { "build",     no_argument,       NULL, 'b' },
-		{ "daemon",	   no_argument,       NULL, 'D' },
-        { "port",      required_argument, NULL, 'p' },
-        { "workers",   required_argument, NULL, 'w' },
-        { "version",   no_argument,       NULL, 'v' },
-		{ "help",	   no_argument,       NULL, 'h' },
-		{ NULL, 0, NULL, 0 }
-	};
+        { "configdir",              required_argument,  NULL, 'c' },
+        { "serverconf",             required_argument,  NULL, 's' },
+        { "build",                  no_argument,        NULL, 'b' },
+        { "daemon",                 no_argument,        NULL, 'D' },
+        { "port",                   required_argument,  NULL, 'p' },
+        { "workers",                required_argument,  NULL, 'w' },
+        { "version",                no_argument,        NULL, 'v' },
+        { "help",                   no_argument,        NULL, 'h' },
+        { "mimes-conf-file",        required_argument,  NULL, 'm' },
+        { "plugin-load-conf-file",  required_argument,  NULL, 'l' },
+        { "plugins-conf-dir",       required_argument,  NULL, 'P' },
+        { "sites-conf-dir",         required_argument,  NULL, 'S' },
+        { NULL, 0, NULL, 0 }
+    };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -174,7 +187,19 @@ int main(int argc, char **argv)
             path_config = optarg;
             break;
         case 's':
-            server_config = optarg;
+            server_conf_file = optarg;
+            break;
+        case 'm':
+            mimes_conf_file = optarg;
+            break;
+        case 'P':
+            plugins_conf_dir = optarg;
+            break;
+        case 'S':
+            sites_conf_dir = optarg;
+            break;
+        case 'l':
+            plugin_load_conf_file = optarg;
             break;
         case '?':
             mk_help(EXIT_FAILURE);
@@ -193,17 +218,45 @@ int main(int argc, char **argv)
     }
 
     /* set target configuration file for the server */
-    if (!server_config) {
-        config->server_config = M_DEFAULT_CONFIG_FILE;
+    if (!server_conf_file) {
+        config->server_conf_file = M_DEFAULT_CONFIG_FILE;
     }
     else {
-        config->server_config = server_config;
+        config->server_conf_file = server_conf_file;
     }
 
     if (run_daemon)
         config->is_daemon = MK_TRUE;
     else
         config->is_daemon = MK_FALSE;
+
+    if (!mimes_conf_file) {
+        config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
+    }
+    else {
+        config->mimes_conf_file = mimes_conf_file;
+    }
+
+    if (!plugin_load_conf_file) {
+        config->plugin_load_conf_file = MK_DEFAULT_PLUGIN_LOAD_CONF_FILE;
+    }
+    else {
+        config->plugin_load_conf_file = plugin_load_conf_file;
+    }
+
+    if (!sites_conf_dir) {
+        config->sites_conf_dir = MK_DEFAULT_SITES_CONF_DIR;
+    }
+    else {
+        config->sites_conf_dir = sites_conf_dir;
+    }
+
+    if (!plugins_conf_dir) {
+        config->plugins_conf_dir = MK_DEFAULT_PLUGINS_CONF_DIR;
+    }
+    else {
+        config->plugins_conf_dir = plugins_conf_dir;
+    }
 
 #ifdef TRACE
     monkey_init_time = time(NULL);

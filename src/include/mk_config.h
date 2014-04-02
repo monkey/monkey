@@ -32,9 +32,13 @@
 #define O_NOATIME       01000000
 #endif
 
-#define M_DEFAULT_CONFIG_FILE	"monkey.conf"
-#define MK_DEFAULT_LISTEN_ADDR  "0.0.0.0"
-#define MK_WORKERS_DEFAULT 1
+#define M_DEFAULT_CONFIG_FILE               "monkey.conf"
+#define MK_DEFAULT_MIMES_CONF_FILE          "monkey.mime"
+#define MK_DEFAULT_PLUGIN_LOAD_CONF_FILE    "plugins.load"
+#define MK_DEFAULT_SITES_CONF_DIR           "sites/"
+#define MK_DEFAULT_PLUGINS_CONF_DIR         "plugins/"
+#define MK_DEFAULT_LISTEN_ADDR              "0.0.0.0"
+#define MK_WORKERS_DEFAULT                  1
 
 #define VALUE_ON "on"
 #define VALUE_OFF "off"
@@ -91,7 +95,11 @@ struct server_config
     char *user_dir;
     char *pid_file_path;        /* pid of server */
     char *path_config;
-    char *server_config;
+    char *server_conf_file;
+    char *mimes_conf_file;
+    char *plugin_load_conf_file;
+    char *sites_conf_dir;
+    char *plugins_conf_dir;
     char **request_headers_allowed;
 
     int serverport;             /* port */

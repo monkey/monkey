@@ -36,6 +36,7 @@
 #include "mk_request.h"
 #include "mk_list.h"
 #include "mk_macros.h"
+#include "mk_file.h"
 
 struct mimetype *mimetype_default;
 
@@ -119,13 +120,19 @@ void mk_mimetype_read_config()
     struct mk_config_section *section;
     struct mk_config_entry *entry;
     struct mk_list *head;
+    struct file_info f_info;
+    int ret;
 
     /* Initialize the heads */
     mk_list_init(&mimetype_list);
     mimetype_rb_head = RB_ROOT;
 
     /* Read mime types configuration file */
-    snprintf(path, MK_MAX_PATH, "%s/monkey.mime", config->serverconf);
+    snprintf(path, MK_MAX_PATH, "%s/%s", config->serverconf, config->mimes_conf_file);
+    ret = mk_file_get_info(path, &f_info);
+    if (ret == -1 || f_info.is_file == MK_FALSE)
+        snprintf(path, MK_MAX_PATH, "%s", config->mimes_conf_file);
+
     cnf = mk_config_create(path);
     if (!cnf) {
         exit(EXIT_FAILURE);

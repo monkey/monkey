@@ -445,10 +445,15 @@ void mk_plugin_read_config()
     struct mk_config_section *section;
     struct mk_config_entry *entry;
     struct mk_list *head;
+    struct file_info f_info;
 
     /* Read configuration file */
     path = mk_mem_malloc_z(1024);
-    snprintf(path, 1024, "%s/%s", config->serverconf, MK_PLUGIN_LOAD);
+    snprintf(path, 1024, "%s/%s", config->serverconf, config->plugin_load_conf_file);
+    ret = mk_file_get_info(path, &f_info);
+    if (ret == -1 || f_info.is_file == MK_FALSE)
+        snprintf(path, 1024, "%s", config->plugin_load_conf_file);
+
     cnf = mk_config_create(path);
 
     if (!cnf) {
@@ -456,6 +461,11 @@ void mk_plugin_read_config()
         mk_mem_free(path);
         exit(EXIT_FAILURE);
     }
+
+    snprintf(path, 1024, "%s/%s", config->serverconf, config->plugins_conf_dir);
+    ret = mk_file_get_info(path, &f_info);
+    if (ret == -1 || f_info.is_directory == MK_FALSE)
+        snprintf(path, 1024, "%s", config->plugins_conf_dir);
 
     /* Read section 'PLUGINS' */
     section = mk_config_section_get(cnf, "PLUGINS");
@@ -480,9 +490,9 @@ void mk_plugin_read_config()
 
             /* Build plugin configuration path */
             mk_string_build(&plugin_confdir,
-                            &len,
-                            "%s/plugins/%s/",
-                            config->serverconf, p->shortname);
+                    &len,
+                    "%s/%s/",
+                    path, p->shortname);
 
             MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
 
@@ -705,8 +715,8 @@ int mk_plugin_stage_run(unsigned int hook,
         ret = ctx->dataf(sr, sr->host_conf->file, buf,
                          get, get_len, post, post_len,
                          &status, &content, &clen, header);
-	mk_mem_free(get);
-	mk_mem_free(post);
+    mk_mem_free(get);
+    mk_mem_free(post);
 
         if (ret == MKLIB_FALSE) return -1;
 
