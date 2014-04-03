@@ -46,6 +46,8 @@
 #define TCP_CORK_ON 1
 #define TCP_CORK_OFF 0
 
+#define TCP_CORKING_PATH  "/proc/sys/net/ipv4/tcp_autocorking"
+
 int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_tcp_fastopen(int sockfd);
 int mk_socket_set_tcp_nodelay(int sockfd);
@@ -66,4 +68,6 @@ int mk_socket_read(int socket_fd, void *buf, int count);
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
                         size_t file_count);
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len);
+int mk_socket_tcp_autocorking();
+
 #endif

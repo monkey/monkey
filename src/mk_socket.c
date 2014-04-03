@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "monkey.h"
+#include "mk_file.h"
 #include "mk_socket.h"
 #include "mk_memory.h"
 #include "mk_utils.h"
@@ -56,6 +57,10 @@ static void mk_socket_safe_event_write(int socket)
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
+    if (config->corking == MK_FALSE) {
+        return 0;
+    }
+
     MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
 
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
@@ -233,4 +238,23 @@ int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 
     *len = strlen(*buf);
     return 0;
+}
+
+int mk_socket_tcp_autocorking()
+{
+    int ret = MK_FALSE;
+    char *buf;
+
+    buf = mk_file_to_buffer(TCP_CORKING_PATH);
+    if (!buf) {
+        ret = MK_FALSE;
+    }
+    else {
+        if (strncmp(buf, "1", 1) == 0) {
+            ret = MK_TRUE;
+        }
+        mk_mem_free(buf);
+    }
+
+    return ret;
 }

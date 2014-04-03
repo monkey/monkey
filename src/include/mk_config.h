@@ -81,6 +81,7 @@ struct server_config
     unsigned int worker_capacity; /* how many clients per thread... */
     unsigned int max_load;        /* max number of clients (worker_capacity * workers) */
     short int workers;            /* number of worker threads */
+    short int corking;            /* If enabled it will handle TCP_CORK */
 
     int8_t fdt;                   /* is FDT enabled ? */
     int8_t is_daemon;

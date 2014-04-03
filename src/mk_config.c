@@ -584,6 +584,14 @@ void mk_config_set_init_values(void)
     config->index_files = NULL;
     config->user_dir = NULL;
 
+    /* TCP Auto Corking */
+    if (mk_socket_tcp_autocorking() == MK_TRUE) {
+        config->corking = MK_FALSE;
+    }
+    else {
+        config->corking = MK_TRUE;
+    }
+
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
      * so we are setting a maximum request size to 32 KB */
