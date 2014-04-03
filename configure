@@ -178,7 +178,9 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find plugins/ -name Makefile -exec rm {} \;
+    if [ ! $upgrade ] ; then
+    	find plugins/ -name Makefile -exec rm {} \;
+    fi
 
 	create_makefile_plugins $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
@@ -187,9 +189,13 @@ main()
 	echo
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
-	echo "+ Creating conf/monkey.conf"
-	create_conf prefix
-	make_conf  $lang $default_port $default_user
+    if [ ! $upgrade ] ; then
+    	echo "+ Creating conf/monkey.conf"
+	    create_conf prefix
+    	make_conf  $lang $default_port $default_user
+    else
+        echo "+ Upgrading conf/monkey.conf"
+    fi
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
@@ -643,6 +649,11 @@ $SONAME: \$(LIBOBJ)
 
 \$(LIBOBJ): \$(OBJ)
 
+EOF
+
+    if [ ! $upgrade ] ; then
+        cat >> src/Makefile <<EOF
+
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so *.lo
 	rm -rf ../bin/monkey
@@ -652,6 +663,11 @@ distclean:
 	../Makefile ../conf/monkey.conf \\
 	../conf/sites/* include/mk_info.h ../logs/*
 	find ../plugins -name Makefile -exec rm {} \;
+
+EOF
+    fi
+
+    cat >> src/Makefile <<EOF
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
@@ -668,17 +684,19 @@ create_makefile_plugins()
 	dir=`pwd`
 	makefile="plugins/Makefile"
 	plugins_load="conf/plugins.load"
-	echo -n > $plugins_load
-	echo "# Monkey Plugins Loader" >> $plugins_load
-	echo "# =====================" >> $plugins_load
-	echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
-	echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
-	echo "# the absolute path for the desired plugin." >> $plugins_load
-	echo "#" >> $plugins_load
-	echo "# Please check the following list of available plugins:" >> $plugins_load
-	echo "" >> $plugins_load
-	echo "[PLUGINS]" >> $plugins_load
-	echo "" >> $plugins_load
+    if [ ! $upgrade ] ; then 
+	    echo -n > $plugins_load
+	    echo "# Monkey Plugins Loader" >> $plugins_load
+    	echo "# =====================" >> $plugins_load
+	    echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
+    	echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
+	    echo "# the absolute path for the desired plugin." >> $plugins_load
+    	echo "#" >> $plugins_load
+	    echo "# Please check the following list of available plugins:" >> $plugins_load
+    	echo "" >> $plugins_load
+	    echo "[PLUGINS]" >> $plugins_load
+    	echo "" >> $plugins_load
+    fi
 
 	if [ $platform == "android" ]; then
 		if test -z $disabled_plugins; then
@@ -720,54 +738,59 @@ create_makefile_plugins()
 			fi
 		done
 
-		# Add details to plugins.load using ABOUT file
-		if test -e $plugin_dir/ABOUT ; then
-			cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
-			echo "    #" >> $plugins_load
-		else
-			echo "    #" >> $plugins_load
-		fi
+        if [ ! $upgrade ] ; then 
 
-		if ! test -e $plugin_dir/MANDATORY ; then
-			comment="    # "
-		fi
+    		# Add details to plugins.load using ABOUT file
+	    	if test -e $plugin_dir/ABOUT ; then
+		    	cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
+			    echo "    #" >> $plugins_load
+    		else
+	    		echo "    #" >> $plugins_load
+		    fi
 
-		if [ "$plugdir" != "$aux/plugins" ]; then
-			echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
-		else
-			echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
-		fi
+    		if ! test -e $plugin_dir/MANDATORY ; then
+	    		comment="    # "
+		    fi
 
-		echo "" >> $plugins_load
+    		if [ "$plugdir" != "$aux/plugins" ]; then
+	    		echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
+    		else
+		    	echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
+	    	fi
 
-		# Copy specific plugin configuration files
-		if test -e $plugin_dir/conf ; then
-			target="conf/$plugin_dir/"
-			mkdir -p $target
-			cp -r $plugin_dir/conf/* $target/
+		    echo "" >> $plugins_load
 
-		   # Replace configuration variables:
-			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
-		fi
+    		# Copy specific plugin configuration files
+	    	if test -e $plugin_dir/conf ; then
+		    	target="conf/$plugin_dir/"
+			    mkdir -p $target
+    			cp -r $plugin_dir/conf/* $target/
 
-		# Distribute binary scripts provided by plugins
-		if test -e $plugin_dir/bin ; then
-			cp -r $plugin_dir/bin/* bin/
-		fi
+	    	   # Replace configuration variables:
+		    	find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
+			    find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
+    			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
+	    		find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
+		    	find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
+			    find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
+    			find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
+	    		find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
+		    fi
+
+    		# Distribute binary scripts provided by plugins
+	    	if test -e $plugin_dir/bin ; then
+		    	cp -r $plugin_dir/bin/* bin/
+    		fi  
+        fi
 	done
 
 	echo "all:" > $makefile
 	echo -e $MAKE_ALL >> $makefile
 	echo "" >> $makefile
-	echo "clean:" >> $makefile
-	echo -e $MAKE_CLEAN >> $makefile
+    if [ ! $upgrade ] ; then 
+    	echo "clean:" >> $makefile
+	    echo -e $MAKE_CLEAN >> $makefile
+    fi
 
 # Add 'install' option to Makefile if plugdir was specified
 	if [ "$plugdir" != "" ]; then
@@ -1052,6 +1075,9 @@ for arg in $*; do
 		--trace*)
 			trace=1
 			;;
+        --upgrade*)
+            upgrade=1
+            ;;
 		--no-backtrace*)
 			no_backtrace=1
 			;;
