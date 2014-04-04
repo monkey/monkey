@@ -631,7 +631,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
      * In some circumstances when writing data the connection can get broken,
      * so we must be aware of that.
      *
-     * Also, if for some reason the file that is being serve change it size
+     * Also, if for some reason the file that is being served changes it's size,
      * we can get a zero bytes send as return value. We need to validate the
      * return values <= zero
      */
