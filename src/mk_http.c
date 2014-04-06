@@ -268,8 +268,8 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     unsigned long len;
 
     /*
-     * We have to check if exist an slash to the end of
-     * this string, if doesn't exist we send a redirection header
+     * We have to check if there is a slash at the end of
+     * this string. If it doesn't exist, we send a redirection header.
      */
     if (sr->uri_processed.data[sr->uri_processed.len - 1] == '/') {
         return 0;
@@ -381,7 +381,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
 
     if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
-        /* if the resource requested doesn't exists, let's
+        /* if the requested resource doesn't exist,
          * check if some plugin would like to handle it
          */
         MK_TRACE("No file, look for handler plugin");
@@ -419,7 +419,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             return -1;
         }
 
-        /* looking for a index file */
+        /* looking for an index file */
         mk_ptr_t index_file;
         char tmppath[MK_MAX_PATH];
         index_file = mk_request_index(sr->real_path.data, tmppath, MK_MAX_PATH);
@@ -430,7 +430,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                 sr->real_path = index_file;
                 sr->real_path.data = mk_string_dup(index_file.data);
             }
-            /* If it's static, and still fits */
+            /* If it's static and it still fits */
             else if (index_file.len < MK_PATH_BASE) {
                 memcpy(sr->real_path_static, index_file.data, index_file.len);
                 sr->real_path_static[index_file.len] = '\0';
@@ -481,7 +481,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     /*
-     * Monkey listen for PUT and DELETE methods in addition to GET, POST and
+     * Monkey listens for PUT and DELETE methods in addition to GET, POST and
      * HEAD, but it does not care about them, so if any plugin did not worked
      * on it, Monkey will return error 501 (501 Not Implemented).
      */
@@ -628,10 +628,10 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     sr->loop++;
 
     /*
-     * In some circumstances when writing data the connection can get broken,
-     * so we must be aware of that.
+     * In some circumstances when writing data, the connection can get broken.
+     * So, we must be aware of that.
      *
-     * Also, if for some reason the file that is being serve change it size
+     * Also, if for some reason the file that is being served changes it's size
      * we can get a zero bytes send as return value. We need to validate the
      * return values <= zero
      */
@@ -644,8 +644,8 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 }
 
 /*
- * Check if a connection can continue open using as criteria
- * the keepalive headers vars and Monkey configuration
+ * Check if a connection can stay open using 
+ * the keepalive headers vars and Monkey configuration as criteria
  */
 int mk_http_keepalive_check(struct client_session *cs)
 {
@@ -686,10 +686,10 @@ int mk_http_keepalive_check(struct client_session *cs)
 }
 
 /*
- * Check if client request still has pending data
+ * Check if the client request still has pending data.
  *
- * Return 0 when all expected data has arrived or -1 when
- * the connection is on a pending status due to HTTP spec
+ * Return 0 when all parts of the expected data has arrived or -1 when
+ * the connection is on a pending status due to HTTP spec.
  *
  * This function is called from request.c :: mk_handler_read(..)
  */
@@ -743,7 +743,7 @@ int mk_http_pending_request(struct client_session *cs)
              */
             if ((unsigned int) cs->body_pos_end == cs->body_length - mk_endblock.len) {
                 /* Content-length is required, if is it not found,
-                 * we pass as successfull in order to raise the error
+                 * we pass as successful in order to raise the error
                  * later
                  */
                 if (content_length <= 0) {
