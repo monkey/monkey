@@ -178,7 +178,9 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find plugins/ -name Makefile -exec rm {} \;
+	if [ ! $upgrade ] ; then
+		find plugins/ -name Makefile -exec rm {} \;
+	fi
 
 	create_makefile_plugins $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
@@ -187,9 +189,13 @@ main()
 	echo
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
-	echo "+ Creating conf/monkey.conf"
-	create_conf prefix
-	make_conf  $lang $default_port $default_user
+	if [ ! $upgrade ] ; then
+		echo "+ Creating conf/monkey.conf"
+		create_conf prefix
+		make_conf  $lang $default_port $default_user
+	else 
+		echo "+ Upgrading conf/monkey.conf"
+	fi
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
@@ -538,6 +544,10 @@ install:
 	install -d \$(INCDIR)
 	install -d \$(MANDIR)/man1
 	install -d \$(MANDIR)/man3
+EOF
+	if [ $upgrade ] ; then
+		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then
+			cat >> Makefile <<EOF
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
@@ -545,15 +555,35 @@ install:
 	install -d \${DATADIR}/imgs
 	install -d \${DATADIR}/php
 	install -d \${DATADIR}/docs
+EOF
+		fi
+	fi
+	cat >> Makefile <<EOF
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
 	install -m 755 bin/* \$(BINDIR)
+EOF
+	if [ $upgrade ] ; then 
+		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then
+			cat >> Makefile <<EOF
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
+EOF
+		fi
+	fi
+	cat >> Makefile <<EOF
 	install -m 644 src/include/*.h \$(INCDIR)
 $ins_systemd
+EOF
+	if [ $upgrade ] ; then 
+		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then 
+			cat >> Makefile <<EOF
 $plgconf
 $plglist
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
+EOF
+		fi
+	fi
+	cat >> Makefile <<EOF
 	install -m 644 ./man/*.1 \$(MANDIR)/man1
 	install -m 644 ./man/*.3 \$(MANDIR)/man3
 $incinstall
@@ -642,6 +672,9 @@ $SONAME: \$(LIBOBJ)
 	ln -sf $SONAME libmonkey.so
 
 \$(LIBOBJ): \$(OBJ)
+EOF
+	if [ ! $upgrade ] ; then
+		cat >> src/Makefile <<EOF
 
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so *.lo
@@ -652,6 +685,9 @@ distclean:
 	../Makefile ../conf/monkey.conf \\
 	../conf/sites/* include/mk_info.h ../logs/*
 	find ../plugins -name Makefile -exec rm {} \;
+EOF
+	fi
+	cat >> src/Makefile<<EOF
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
@@ -1051,6 +1087,9 @@ for arg in $*; do
 			;;
 		--trace*)
 			trace=1
+			;;
+		--upgrade*)
+			upgrade=1
 			;;
 		--no-backtrace*)
 			no_backtrace=1
