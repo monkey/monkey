@@ -178,7 +178,9 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find plugins/ -name Makefile -exec rm {} \;
+	if [ ! $upgrade ] ; then
+		find plugins/ -name Makefile -exec rm {} \;
+	fi
 
 	create_makefile_plugins $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
@@ -187,9 +189,13 @@ main()
 	echo
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
-	echo "+ Creating conf/monkey.conf"
-	create_conf prefix
-	make_conf  $lang $default_port $default_user
+	if [ ! $upgrade ] ; then
+		echo "+ Creating conf/monkey.conf"
+		create_conf prefix
+		make_conf  $lang $default_port $default_user
+	else 
+		echo "+ Upgrading conf/monkey.conf"
+	fi
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
@@ -538,6 +544,9 @@ install:
 	install -d \$(INCDIR)
 	install -d \$(MANDIR)/man1
 	install -d \$(MANDIR)/man3
+EOF
+	if [ ! $upgrade ] ; then
+		cat >> Makefile <<EOF
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
@@ -545,22 +554,39 @@ install:
 	install -d \${DATADIR}/imgs
 	install -d \${DATADIR}/php
 	install -d \${DATADIR}/docs
+EOF
+	fi
+	cat >> Makefile <<EOF
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
 	install -m 755 bin/* \$(BINDIR)
+EOF
+	if [ ! $upgrade ] ; then 
+		cat >> Makefile <<EOF
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
+EOF
+	fi
+	cat >> Makefile <<EOF
 	install -m 644 src/include/*.h \$(INCDIR)
 $ins_systemd
+EOF
+	if [ ! $upgrade ] ; then 
+		cat >> Makefile <<EOF
 $plgconf
 $plglist
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
+EOF
+	fi
+	cat >> Makefile <<EOF
 	install -m 644 ./man/*.1 \$(MANDIR)/man1
 	install -m 644 ./man/*.3 \$(MANDIR)/man3
 $incinstall
 	-install -m 644 src/$SONAME \$(LIBDIR)
 	-install -m 644 monkey.pc \$(LIBDIR)/pkgconfig
 	-ln -sf $SONAME \$(LIBDIR)/libmonkey.so
-
+EOF
+	if [ ! $upgrade ] ; then
+		cat >> Makefile <<EOF
 	install -m 644 ./htdocs/index.html \$(DATADIR)
 	install -m 644 ./htdocs/404.html \$(DATADIR)
 	install -m 644 ./htdocs/favicon.ico \$(DATADIR)
@@ -569,6 +595,9 @@ $incinstall
 	install -m 644 ./htdocs/imgs/info_pic.jpg \$(DATADIR)/imgs
 	install -d \$(DATADIR)/css
 	install -m 644 ./htdocs/css/bootstrap.min.css \$(DATADIR)/css
+EOF
+	fi
+	cat >> Makefile <<EOF
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
@@ -642,6 +671,9 @@ $SONAME: \$(LIBOBJ)
 	ln -sf $SONAME libmonkey.so
 
 \$(LIBOBJ): \$(OBJ)
+EOF
+	if [ ! $upgrade ] ; then
+		cat >> src/Makefile <<EOF
 
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so *.lo
@@ -650,9 +682,11 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/sites/* include/mk_info.h ../logs/*
+	../conf/sites/* include/mk_info.h ../logs/* ../htdocs/*
 	find ../plugins -name Makefile -exec rm {} \;
-
+EOF
+	fi
+	cat >> src/Makefile<<EOF
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
 	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o \$*.d > /dev/null &2>&1
@@ -729,7 +763,7 @@ create_makefile_plugins()
 		fi
 
 		if ! test -e $plugin_dir/MANDATORY ; then
-			comment="    # "
+	    		comment="    # "
 		fi
 
 		if [ "$plugdir" != "$aux/plugins" ]; then
@@ -740,13 +774,13 @@ create_makefile_plugins()
 
 		echo "" >> $plugins_load
 
-		# Copy specific plugin configuration files
+    		# Copy specific plugin configuration files
 		if test -e $plugin_dir/conf ; then
-			target="conf/$plugin_dir/"
+		    	target="conf/$plugin_dir/"
 			mkdir -p $target
-			cp -r $plugin_dir/conf/* $target/
+    			cp -r $plugin_dir/conf/* $target/
 
-		   # Replace configuration variables:
+	    	   # Replace configuration variables:
 			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
@@ -757,10 +791,10 @@ create_makefile_plugins()
 			find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
 		fi
 
-		# Distribute binary scripts provided by plugins
-		if test -e $plugin_dir/bin ; then
-			cp -r $plugin_dir/bin/* bin/
-		fi
+    		# Distribute binary scripts provided by plugins
+	    	if test -e $plugin_dir/bin ; then
+		    	cp -r $plugin_dir/bin/* bin/
+    		fi  
 	done
 
 	echo "all:" > $makefile
@@ -1052,6 +1086,9 @@ for arg in $*; do
 		--trace*)
 			trace=1
 			;;
+		--upgrade*)
+			upgrade=1
+			;;
 		--no-backtrace*)
 			no_backtrace=1
 			;;
@@ -1124,6 +1161,7 @@ for arg in $*; do
 			echo -e $bldwht"Compiler and debug Features:"  $txtrst
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
+			echo "  --upgrade               Disable overwrite of configuration files and use previous version"
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
 			echo "  --musl-mode             Enable musl compatibility mode"
