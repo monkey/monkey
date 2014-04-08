@@ -178,21 +178,9 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-<<<<<<< HEAD
 	if [ ! $upgrade ] ; then
 		find plugins/ -name Makefile -exec rm {} \;
 	fi
-=======
-<<<<<<< HEAD
-	if [ ! $upgrade ] ; then
-		find plugins/ -name Makefile -exec rm {} \;
-	fi
-=======
-    if [ ! $upgrade ] ; then
-    	find plugins/ -name Makefile -exec rm {} \;
-    fi
->>>>>>> 0de7db8b6bbd5e1f9b0d01775dedd9402f33e9b0
->>>>>>> 399261c9651b41aecc9d08b7995d64dfcf1c1654
 
 	create_makefile_plugins $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
@@ -201,10 +189,6 @@ main()
 	echo
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 399261c9651b41aecc9d08b7995d64dfcf1c1654
 	if [ ! $upgrade ] ; then
 		echo "+ Creating conf/monkey.conf"
 		create_conf prefix
@@ -212,18 +196,6 @@ main()
 	else 
 		echo "+ Upgrading conf/monkey.conf"
 	fi
-<<<<<<< HEAD
-=======
-=======
-    if [ ! $upgrade ] ; then
-    	echo "+ Creating conf/monkey.conf"
-	    create_conf prefix
-    	make_conf  $lang $default_port $default_user
-    else
-        echo "+ Upgrading conf/monkey.conf"
-    fi
->>>>>>> 0de7db8b6bbd5e1f9b0d01775dedd9402f33e9b0
->>>>>>> 399261c9651b41aecc9d08b7995d64dfcf1c1654
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
