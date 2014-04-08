@@ -545,9 +545,8 @@ install:
 	install -d \$(MANDIR)/man1
 	install -d \$(MANDIR)/man3
 EOF
-	if [ $upgrade ] ; then
-		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then
-			cat >> Makefile <<EOF
+	if [ ! $upgrade ] ; then
+		cat >> Makefile <<EOF
 	install -d \$(SYSCONFDIR)
 	install -d \${SYSCONFDIR}/sites
 	install -d \${SYSCONFDIR}/plugins
@@ -556,32 +555,27 @@ EOF
 	install -d \${DATADIR}/php
 	install -d \${DATADIR}/docs
 EOF
-		fi
 	fi
 	cat >> Makefile <<EOF
 	install -d \${LOGDIR}
 	install -d \${PLUGINDIR}
 	install -m 755 bin/* \$(BINDIR)
 EOF
-	if [ $upgrade ] ; then 
-		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then
-			cat >> Makefile <<EOF
+	if [ ! $upgrade ] ; then 
+		cat >> Makefile <<EOF
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
 EOF
-		fi
 	fi
 	cat >> Makefile <<EOF
 	install -m 644 src/include/*.h \$(INCDIR)
 $ins_systemd
 EOF
-	if [ $upgrade ] ; then 
-		if [ ! -d $prefix -o ! -d $sysconfdir ] ; then 
-			cat >> Makefile <<EOF
+	if [ ! $upgrade ] ; then 
+		cat >> Makefile <<EOF
 $plgconf
 $plglist
 	install -m 644 ./conf/sites/* \${SYSCONFDIR}/sites
 EOF
-		fi
 	fi
 	cat >> Makefile <<EOF
 	install -m 644 ./man/*.1 \$(MANDIR)/man1
@@ -590,7 +584,9 @@ $incinstall
 	-install -m 644 src/$SONAME \$(LIBDIR)
 	-install -m 644 monkey.pc \$(LIBDIR)/pkgconfig
 	-ln -sf $SONAME \$(LIBDIR)/libmonkey.so
-
+EOF
+	if [ ! $upgrade ] ; then
+		cat >> Makefile <<EOF
 	install -m 644 ./htdocs/index.html \$(DATADIR)
 	install -m 644 ./htdocs/404.html \$(DATADIR)
 	install -m 644 ./htdocs/favicon.ico \$(DATADIR)
@@ -599,6 +595,9 @@ $incinstall
 	install -m 644 ./htdocs/imgs/info_pic.jpg \$(DATADIR)/imgs
 	install -d \$(DATADIR)/css
 	install -m 644 ./htdocs/css/bootstrap.min.css \$(DATADIR)/css
+EOF
+	fi
+	cat >> Makefile <<EOF
 	@echo
 	@echo  " Running Monkey :"
 	@echo  " ----------------"
@@ -683,7 +682,7 @@ clean:
 distclean:
 	rm -rf *.o ../bin/* Makefile \\
 	../Makefile ../conf/monkey.conf \\
-	../conf/sites/* include/mk_info.h ../logs/*
+	../conf/sites/* include/mk_info.h ../logs/* ../htdocs
 	find ../plugins -name Makefile -exec rm {} \;
 EOF
 	fi
@@ -1163,6 +1162,7 @@ for arg in $*; do
 			echo -e $bldwht"Compiler and debug Features:"  $txtrst
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
+			echo "  --upgrade		Disable overwrite of configuration files and use preserve configuration changes"
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
 			echo "  --musl-mode             Enable musl compatibility mode"
