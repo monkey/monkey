@@ -301,9 +301,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
                         config->transport, host, location);
     }
 
-#ifdef TRACE
     MK_TRACE("Redirecting to '%s'", real_location);
-#endif
 
     mk_mem_free(host);
 
