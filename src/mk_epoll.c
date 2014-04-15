@@ -268,7 +268,7 @@ void *mk_epoll_init(int efd, int max_events)
                 if (events[i].events & (EPOLLERR))   MK_LT_EPOLL(fd, "EPOLLERR");
                 if (events[i].events & (EPOLLRDHUP)) MK_LT_EPOLL(fd, "EPOLLRDHUP");
 #endif
-                MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLER", fd);
+                MK_TRACE("[FD %i] EPoll Event EPOLLHUP/EPOLLERR/EPOLLRDHUP", fd);
                 mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
                 ret = 0;
             }
