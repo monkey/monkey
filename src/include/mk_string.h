@@ -22,7 +22,7 @@
 #ifndef MK_STR_H
 #define MK_STR_H
 
-#include "memory.h"
+#include "mk_memory.h"
 #include "mk_list.h"
 #include "mk_macros.h"
 
