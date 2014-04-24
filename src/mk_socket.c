@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "monkey.h"
+#include "mk_kernel.h"
 #include "mk_file.h"
 #include "mk_socket.h"
 #include "mk_memory.h"
@@ -90,7 +91,12 @@ int mk_socket_set_nonblocking(int sockfd)
 int mk_socket_set_tcp_fastopen(int sockfd)
 {
     int qlen = 5;
-    return setsockopt(sockfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
+
+    if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 7, 0)) {
+        return setsockopt(sockfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
+    }
+
+    return -1;
 }
 
 int mk_socket_set_tcp_nodelay(int sockfd)

@@ -32,6 +32,7 @@
 #endif
 
 #include "monkey.h"
+#include "mk_kernel.h"
 #include "mk_socket.h"
 #include "mk_user.h"
 #include "mk_signals.h"
@@ -205,6 +206,9 @@ int main(int argc, char **argv)
             mk_help(EXIT_FAILURE);
         }
     }
+
+    /* Init Kernel version data */
+    mk_kernel_init();
 
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));

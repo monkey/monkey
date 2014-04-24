@@ -27,6 +27,12 @@
 #include "mk_string.h"
 #include "mk_utils.h"
 
+int mk_kernel_init()
+{
+    mk_kernel_runver = mk_kernel_version();
+    return 0;
+}
+
 int mk_kernel_version()
 {
     int a, b, c;
