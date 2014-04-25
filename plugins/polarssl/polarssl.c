@@ -185,14 +185,16 @@ static int handle_return(int ret)
         {
             case POLARSSL_ERR_NET_WANT_READ:
             case POLARSSL_ERR_NET_WANT_WRITE:
-                errno = EAGAIN;
-                break;
+                if (errno != EAGAIN)
+                    errno = EAGAIN;
+		return -1;
             case POLARSSL_ERR_SSL_CONN_EOF:
                 return 0;
             default:
-                break;
+                if (errno == EAGAIN)
+		    errno = 0;
+                return -1;
         }
-        return -1;
     }
     else {
         return ret;
@@ -660,9 +662,6 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
     unsigned char *buf;
     ssize_t used, remain = file_count, sent = 0;
     int ret;
-#if defined(TRACE)
-    char err_buf[72];
-#endif
 
     if (!ssl) {
         ssl = context_new(fd);
@@ -704,20 +703,7 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
         return sent;
     }
     else {
-#if defined(TRACE)
-        error_strerror(ret, err_buf, sizeof(err_buf));
-        PLUGIN_TRACE("[polarssl] SSL error: %s", err_buf);
-#endif
-        switch( ret )
-        {
-            case POLARSSL_ERR_NET_WANT_READ:
-            case POLARSSL_ERR_NET_WANT_WRITE:
-                errno = EAGAIN;
-            case POLARSSL_ERR_SSL_CONN_EOF:
-                return 0;
-            default:
-                return -1;
-        }
+        return handle_return(ret);
     }
 }
 
