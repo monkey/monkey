@@ -32,7 +32,7 @@
 #define O_NOATIME       01000000
 #endif
 
-#define M_DEFAULT_CONFIG_FILE               "monkey.conf"
+#define MK_DEFAULT_CONFIG_FILE              "monkey.conf"
 #define MK_DEFAULT_MIMES_CONF_FILE          "monkey.mime"
 #define MK_DEFAULT_PLUGIN_LOAD_CONF_FILE    "plugins.load"
 #define MK_DEFAULT_SITES_CONF_DIR           "sites/"
@@ -86,6 +86,7 @@ struct server_config
     int8_t fdt;                   /* is FDT enabled ? */
     int8_t is_daemon;
     int8_t is_seteuid;
+    int8_t scheduler_mode;        /* Scheduler balancing mode */
 
     char *serverconf;             /* path to configuration files */
     char *listen_addr;

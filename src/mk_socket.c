@@ -113,6 +113,12 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
     return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
 }
 
+int mk_socket_set_tcp_reuseport(int sockfd)
+{
+    int on = 1;
+    return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on));
+}
+
 int mk_socket_close(int socket)
 {
     return plg_netiomap->close(socket);
@@ -152,12 +158,11 @@ int mk_socket_reset(int socket)
 }
 
 /* Just IPv4 for now... */
-int mk_socket_server(int port, char *listen_addr)
+int mk_socket_server(int port, char *listen_addr, int reuse_port)
 {
     int socket_fd;
 
-    socket_fd = plg_netiomap->server(port, listen_addr);
-
+    socket_fd = plg_netiomap->server(port, listen_addr, reuse_port);
     if (socket_fd < 0) {
         exit(EXIT_FAILURE);
     }

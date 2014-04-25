@@ -56,7 +56,8 @@ __thread struct rb_root *cs_list;
 
 /*
  * Returns the worker id which should take a new incomming connection,
- * it returns the worker id with less active connections
+ * it returns the worker id with less active connections. Just used
+ * if config->scheduler_mode is MK_SCHEDULER_FAIR_BALANCING.
  */
 static inline int _next_target()
 {
@@ -206,12 +207,26 @@ int mk_sched_add_client(int remote_fd)
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
-    /* If epoll has failed, decrement the active connections counter */
     if (mk_likely(r == 0)) {
         sched->accepted_connections++;
     }
 
     MK_LT_SCHED(remote_fd, "ADD_CLIENT");
+    return r;
+}
+
+int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched)
+{
+    int r;
+
+    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
+                      MK_EPOLL_LEVEL_TRIGGERED);
+
+    if (mk_likely(r == 0)) {
+        sched->accepted_connections++;
+    }
+
+    MK_LT_SCHED(remote_fd, "ADD_CLIENT_REUSEPORT");
     return r;
 }
 
@@ -282,7 +297,7 @@ static void mk_sched_thread_lists_init()
 }
 
 /* Register thread information. The caller thread is the thread information's owner */
-static int mk_sched_register_thread(int efd)
+static int mk_sched_register_thread(int server_fd, int efd)
 {
     unsigned int i;
     struct sched_connection *sched_conn, *array;
@@ -298,6 +313,7 @@ static int mk_sched_register_thread(int efd)
     sl = &sched_list[wid];
     sl->idx = wid++;
     sl->tid = pthread_self();
+    sl->server_fd = server_fd;
 
     /*
      * Under Linux does not exists the difference between process and
@@ -337,6 +353,7 @@ static int mk_sched_register_thread(int efd)
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
     int ret;
+    int server_fd = -1;
     char *thread_name = 0;
     unsigned long len;
     sched_thread_conf *thconf = thread_conf;
@@ -354,7 +371,15 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_cache_thread_init();
 
     /* Register working thread */
-    wid = mk_sched_register_thread(thconf->epoll_fd);
+    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        pthread_mutex_lock(&mutex_port_init);
+        server_fd = mk_socket_server(config->serverport,
+                                     config->listen_addr,
+                                     MK_TRUE);
+        pthread_mutex_unlock(&mutex_port_init);
+    }
+    wid = mk_sched_register_thread(server_fd, thconf->epoll_fd);
+
 
     /* Plugin thread context calls */
     mk_epoll_state_init();
@@ -374,6 +399,13 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     if (ret != 0) {
         mk_libc_error("epoll_ctl");
         exit(EXIT_FAILURE);
+    }
+
+
+    if (server_fd > 0) {
+        event.data.fd = server_fd;
+        event.events = EPOLLIN;
+        ret = epoll_ctl(thinfo->epoll_fd, EPOLL_CTL_ADD, server_fd, &event);
     }
 
     /*
@@ -403,7 +435,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     __builtin_prefetch(&worker_sched_node);
 
     /* Init epoll_wait() loop */
-    mk_epoll_init(thinfo->epoll_fd, epoll_max_events);
+    mk_epoll_init(thinfo->server_fd, thinfo->epoll_fd, epoll_max_events);
 
     return 0;
 }

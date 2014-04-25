@@ -85,6 +85,11 @@ void mk_server_loop(int server_fd)
     int ret;
     int remote_fd;
 
+    /*
+
+     */
+    while (1) sleep(60);
+
     /* Activate TCP_DEFER_ACCEPT */
     if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
             mk_warn("TCP_DEFER_ACCEPT failed");

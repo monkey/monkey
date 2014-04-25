@@ -110,7 +110,7 @@ struct plugin_network_io
     int (*send_file) (int, int, off_t *, size_t);
     int (*create_socket) (int, int, int);
     int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
-    int (*server) (int, char *);
+    int (*server) (int, char *, int);
 };
 
 struct plugin
@@ -177,6 +177,7 @@ struct plugin_api
     int (*socket_reset) (int);
     int (*socket_set_tcp_fastopen) (int);
     int (*socket_set_tcp_nodelay) (int);
+    int (*socket_set_tcp_reuseport) (int);
     int (*socket_connect) (char *, int);
     int (*socket_set_nonblocking) (int);
     int (*socket_create) ();

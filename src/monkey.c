@@ -45,6 +45,7 @@
 #include "mk_http.h"
 #include "mk_utils.h"
 #include "mk_config.h"
+#include "mk_scheduler.h"
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
 
     /* set target configuration file for the server */
     if (!server_conf_file) {
-        config->server_conf_file = M_DEFAULT_CONFIG_FILE;
+        config->server_conf_file = MK_DEFAULT_CONFIG_FILE;
     }
     else {
         config->server_conf_file = server_conf_file;
@@ -268,6 +269,7 @@ int main(int argc, char **argv)
     env_trace_filter = getenv("MK_TRACE_FILTER");
     pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
 #endif
+    pthread_mutex_init(&mutex_port_init, (pthread_mutexattr_t *) NULL);
 
     mk_version();
     mk_signal_init();
@@ -300,8 +302,15 @@ int main(int argc, char **argv)
         config->serverport = port_override;
     }
 
-    /* Server listening socket */
-    config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
+    /* Server: listening socket */
+    if (config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
+        config->server_fd = mk_socket_server(config->serverport,
+                                             config->listen_addr,
+                                             MK_FALSE);
+    }
+    else {
+        config->server_fd = -1;
+    }
 
     /* Running Monkey as daemon */
     if (config->is_daemon == MK_TRUE) {

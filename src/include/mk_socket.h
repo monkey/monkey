@@ -32,6 +32,10 @@
 #define SOCK_NONBLOCK 04000
 #endif
 
+#ifndef SO_REUSEPORT
+#define SO_REUSEPORT  15
+#endif
+
 /*
  * TCP_FASTOPEN: as this is a very new option in the Linux Kernel, the value is
  * not yet exported and can be missing, lets make sure is available for all
@@ -52,6 +56,7 @@ int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_tcp_fastopen(int sockfd);
 int mk_socket_set_tcp_nodelay(int sockfd);
 int mk_socket_set_tcp_defer_accept(int sockfd);
+int mk_socket_set_tcp_reuseport(int sockfd);
 int mk_socket_set_nonblocking(int sockfd);
 
 int mk_socket_close(int socket);
@@ -59,7 +64,7 @@ int mk_socket_close(int socket);
 int mk_socket_create(void);
 int mk_socket_connect(char *host, int port);
 int mk_socket_reset(int socket);
-int mk_socket_server(int port, char *listen_addr);
+int mk_socket_server(int port, char *listen_addr, int reuse_port);
 
 int mk_socket_accept(int server_fd);
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io);

@@ -36,6 +36,20 @@
 #define MK_SCHEDULER_CONN_PROCESS     1
 #define MK_SCHEDULER_SIGNAL_DEADBEEF  0xDEADBEEF
 
+/*
+ * Scheduler balancing mode:
+ *
+ * - Fair Balancing: use a single socket and upon accept
+ *   new connections, lookup the less loaded thread and
+ *   assign the socket to that specific epoll queue.
+ *
+ * - ReusePort: Use new Linux Kernel 3.14 feature that
+ *   allows thread to share binded address on a lister
+ *   socket. We let the Kernel to decide how to balance.
+ */
+#define MK_SCHEDULER_FAIR_BALANCING   0
+#define MK_SCHEDULER_REUSEPORT        1
+
 extern __thread struct rb_root *cs_list;
 
 struct sched_connection
@@ -54,6 +68,9 @@ struct sched_list_node
 {
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
+
+    /* Just used on MK_SCHEDULER_REUSEPORT mode */
+    int server_fd;
 
     /*
      * Red-Black tree queue to perform fast lookup over
@@ -93,6 +110,7 @@ struct sched_list_node *sched_list;
 /* Struct under thread context */
 typedef struct
 {
+    int server_fd;
     int epoll_fd;
     int epoll_max_events;
     int max_events;
@@ -104,6 +122,7 @@ typedef struct
 
 pthread_key_t MK_EXPORT worker_sched_node;
 extern pthread_mutex_t mutex_worker_init;
+pthread_mutex_t mutex_port_init;
 
 void mk_sched_init();
 int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
@@ -129,6 +148,7 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 
 int mk_sched_check_timeouts(struct sched_list_node *sched);
 int mk_sched_add_client(int remote_fd);
+int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched);
 int mk_sched_register_client(int remote_fd, struct sched_list_node *sched);
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
 struct sched_connection *mk_sched_get_connection(struct sched_list_node

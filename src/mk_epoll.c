@@ -41,6 +41,7 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 #include "mk_linuxtrace.h"
+#include "mk_scheduler.h"
 
 static __thread struct epoll_state_index mk_epoll_state_k;
 
@@ -213,12 +214,12 @@ int mk_epoll_create()
     return efd;
 }
 
-void *mk_epoll_init(int efd, int max_events)
+void *mk_epoll_init(int server_fd, int efd, int max_events)
 {
     int i, fd, ret = -1;
     int num_fds;
     int fds_timeout;
-
+    int remote_fd;
     struct epoll_event *events;
     struct sched_list_node *sched;
 
@@ -254,6 +255,23 @@ void *mk_epoll_init(int efd, int max_events)
                     }
                 }
 
+                /* New connection under MK_SCHEDULER_REUSEPORT mode */
+                if (fd == server_fd) {
+                    remote_fd = mk_socket_accept(server_fd);
+                    if (mk_unlikely(remote_fd == -1)) {
+#ifdef TRACE
+                        MK_TRACE("Could not accept connection");
+#endif
+                        continue;
+                    }
+#ifdef TRACE
+                    MK_TRACE("New connection arrived: FD %i", remote_fd);
+#endif
+                    /* Register new connection into the scheduler */
+                    mk_sched_add_client_reuseport(remote_fd, sched);
+                    mk_sched_register_client(remote_fd, sched);
+                    fd = remote_fd;
+                }
                 ret = mk_conn_read(fd);
             }
             else if (events[i].events & EPOLLOUT) {

@@ -181,6 +181,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
 
     ret = bind(socket_fd, addr, addrlen);
     if( ret == -1 ) {
+        perror("bind");
         mk_warn("Error binding socket");
         return ret;
     }
@@ -211,7 +212,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     return ret;
 }
 
-int _mkp_network_io_server(int port, char *listen_addr)
+int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 {
     int socket_fd = -1;
     int ret;
@@ -244,8 +245,14 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
         mk_api->socket_set_tcp_nodelay(socket_fd);
         mk_api->socket_reset(socket_fd);
-        ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
+        /* Check if reuse port can be enabled on this socket */
+        if (reuse_port == MK_TRUE &&
+            mk_kernel_runver >= MK_KERNEL_VERSION(3, 9, 0)) {
+            mk_api->socket_set_tcp_reuseport(socket_fd);
+        }
+
+        ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
         if(ret == -1) {
             mk_err("Cannot listen on %s:%i\n", listen_addr, port);
             continue;
@@ -259,4 +266,3 @@ int _mkp_network_io_server(int port, char *listen_addr)
 
     return socket_fd;
 }
-

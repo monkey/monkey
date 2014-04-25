@@ -585,7 +585,15 @@ void mk_config_set_init_values(void)
     config->index_files = NULL;
     config->user_dir = NULL;
 
-    /* TCP Auto Corking: only available on Linux >= 3.14.0 */
+    /* TCP REUSEPORT: available on Linux >= 3.9 */
+    if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 9, 0)) {
+        config->scheduler_mode = MK_SCHEDULER_REUSEPORT;
+    }
+    else {
+        config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+    }
+
+    /* TCP Auto Corking: only available on Linux >= 3.14 */
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 14, 0) &&
         mk_socket_tcp_autocorking() == MK_TRUE) {
         config->corking = MK_FALSE;
