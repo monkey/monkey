@@ -35,6 +35,7 @@
 #include <ctype.h>
 
 #include "monkey.h"
+#include "mk_kernel.h"
 #include "mk_config.h"
 #include "mk_string.h"
 #include "mk_utils.h"
@@ -585,7 +586,7 @@ void mk_config_set_init_values(void)
     config->user_dir = NULL;
 
     /* TCP Auto Corking: only available on Linux >= 3.14.0 */
-    if (mk_kernel_run_ver >= MK_KERNEL_VERSION(3, 14, 0) &&
+    if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 14, 0) &&
         mk_socket_tcp_autocorking() == MK_TRUE) {
         config->corking = MK_FALSE;
     }
