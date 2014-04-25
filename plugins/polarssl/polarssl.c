@@ -93,13 +93,11 @@ struct polar_sessions {
 static struct polar_sessions global_sessions = {
     ._mutex = PTHREAD_MUTEX_INITIALIZER,
 };
+
 #endif
 
 struct polar_context_head {
     ssl_context context;
-#if (POLARSSL_VERSION_NUMBER < 0x01020000)
-    ssl_session session;
-#endif
     int fd;
     struct polar_context_head *_next;
 };
@@ -133,39 +131,8 @@ static struct polar_server_context server_context = {
     ._mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
-#if (POLARSSL_VERSION_NUBER < 0x01020000)
-static const char *my_dhm_P =
-    "E4004C1F94182000103D883A448B3F80" \
-    "2CE4B44A83301270002C20D0321CFD00" \
-    "11CCEF784C26A400F43DFB901BCA7538" \
-    "F2C6B176001CF5A0FD16D2C48B1D0C1C" \
-    "F6AC8E1DA6BCC3B4E1F96B0564965300" \
-    "FFA1D0B601EB2800F489AA512C4B248C" \
-    "01F76949A60BB7F00A40B1EAB64BDD48" \
-    "E8A700D60B7F1200FA8E77B0A979DABF";
-
-static const char *my_dhm_G = "4";
-#else
 static const char *my_dhm_P = POLARSSL_DHM_RFC5114_MODP_1024_P;
 static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
-#endif
-
-#if (POLARSSL_VERSION_NUMBER < 0x01020000)
-static int my_ciphersuites[] =
-{
-    SSL_EDH_RSA_AES_256_SHA,
-    SSL_EDH_RSA_CAMELLIA_256_SHA,
-    SSL_EDH_RSA_AES_128_SHA,
-    SSL_EDH_RSA_CAMELLIA_128_SHA,
-    SSL_RSA_AES_256_SHA,
-    SSL_RSA_CAMELLIA_256_SHA,
-    SSL_RSA_AES_128_SHA,
-    SSL_RSA_CAMELLIA_128_SHA,
-    SSL_RSA_RC4_128_SHA,
-    SSL_RSA_RC4_128_MD5,
-    0
-};
-#endif // POLARSSL_VERSION_NUMBER
 
 static pthread_key_t local_context;
 
@@ -201,13 +168,6 @@ static void polar_debug(void *ctx, int level, const char *str)
     if (level < POLAR_DEBUG_LEVEL) {
         mk_warn("%s", str);
     }
-}
-#endif
-
-#if (!defined(POLARSSL_ERROR_C) && (POLARSSL_VERSION_NUMBER < 0x01020500))
-static void error_strerror(int errnum, char *buffer, size_t buflen)
-{
-    snprintf(buffer, buflen, "errnum %d", errnum);
 }
 #endif
 
@@ -405,15 +365,6 @@ static int polar_load_dh_param(const struct polar_config *conf)
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
 
-#if (POLARSSL_VERSION_NUMBER < 0x01020000)
-        mk_err("[polarssl] Load DH parameters '%s' failed: %s",
-                conf->dh_param_file,
-                err_buf);
-
-        mk_warn("[polarssl] Using built-in DH parameters, "
-                "please generate '%s' using 'opessl dhparam -out \"%s\" 1024'.",
-                conf->dh_param_file, conf->dh_param_file);
-#endif
         ret = mpi_read_string(&server_context.dhm.P, 16, my_dhm_P);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
@@ -608,15 +559,9 @@ static ssl_context *context_new(int fd)
         ssl_set_authmode(ssl, SSL_VERIFY_NONE);
 
         ssl_set_rng(ssl, ctr_drbg_random, local_drbg_context());
+
 #if (POLAR_DEBUG_LEVEL > 0)
         ssl_set_dbg(ssl, polar_debug, 0);
-#endif
-
-#if (POLARSSL_VERSION_NUMBER < 0x01020000)
-        ssl_set_ciphersuites(ssl, my_ciphersuites);
-
-        ssl_set_session(ssl, 0, 0, &(*cur)->session);
-        memset(&(*cur)->session, 0, sizeof((*cur)->session));
 #endif
 
         ssl_set_ca_chain(ssl, server_context.srvcert.next, NULL, NULL);
