@@ -36,7 +36,7 @@
 
 MONKEY_PLUGIN("liana",         /* shortname */
               "Liana Network", /* name */
-              VERSION,        /* version */
+              VERSION,         /* version */
               MK_PLUGIN_NETWORK_IO); /* hooks */
 
 int _mkp_init(struct plugin_api **api, char *confdir)
@@ -248,8 +248,8 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
         /* Check if reuse port can be enabled on this socket */
         if (reuse_port == MK_TRUE &&
-            mk_kernel_runver >= MK_KERNEL_VERSION(3, 9, 0)) {
-            mk_api->socket_set_tcp_reuseport(socket_fd);
+            mk_api->kernel_version() >= MK_KERNEL_VERSION(3, 9, 0)) {
+            ret = mk_api->socket_set_tcp_reuseport(socket_fd);
         }
 
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);

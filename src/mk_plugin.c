@@ -429,6 +429,7 @@ void mk_plugin_init()
 #endif
 
     api->stacktrace = (void *) mk_utils_stacktrace;
+    api->kernel_version = mk_kernel_version;
     api->plugins = config->plugins;
 }
 

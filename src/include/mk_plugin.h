@@ -23,6 +23,7 @@
 #define MK_PLUGIN_H
 
 #include "monkey.h"
+#include "mk_kernel.h"
 #include "mk_config.h"
 #include "mk_request.h"
 #include "mk_memory.h"
@@ -242,7 +243,7 @@ struct plugin_api
     void *(*plugin_load_symbol) (void *, const char *);
 
     /* epoll functions */
-    void *(*epoll_init) (int, int);
+    void *(*epoll_init) (int, int, int);
     int   (*epoll_create) (int);
     int   (*epoll_add) (int, int, int, unsigned int);
     int   (*epoll_del) (int, int);
@@ -293,6 +294,8 @@ struct plugin_api
 #endif
     void (*stacktrace)(void);
 
+    /* kernel interfaces */
+    int (*kernel_version) ();
 };
 
 extern struct plugin_api *api;
