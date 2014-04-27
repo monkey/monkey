@@ -111,7 +111,6 @@ int mk_kernel_features_print(char *buffer, size_t size)
 {
     int offset = 0;
     int features = 0;
-    char *tmp;
 
     if (config->kernel_features & MK_KERNEL_TCP_FASTOPEN) {
         offset += snprintf(buffer, size - offset, "%s", "TCP_FASTOPEN ");
