@@ -406,9 +406,8 @@ void mk_cheetah_cmd_config()
 void mk_cheetah_cmd_status()
 {
     int nthreads = mk_api->config->workers;
+    char tmp[64];
 
-    /* FIXME */
-    //CHEETAH_WRITE("Cheetah Plugin v%s\n\n", _plugin_info->version);
     CHEETAH_WRITE("Monkey Version     : %s\n", VERSION);
     CHEETAH_WRITE("Configutarion path : %s\n", mk_api->config->serverconf);
 
@@ -425,9 +424,11 @@ void mk_cheetah_cmd_status()
     mk_cheetah_print_running_user();
 
     CHEETAH_WRITE("Server Port        : %i\n", mk_api->config->serverport);
-    CHEETAH_WRITE("Worker Threads     : %i (per configuration: %i)\n\n",
+    CHEETAH_WRITE("Worker Threads     : %i (per configuration: %i)\n",
            nthreads, mk_api->config->workers);
 
+    if (mk_api->kernel_features_print(tmp, sizeof(tmp)) > 0) {
+        CHEETAH_WRITE("Kernel Features    : %s\n", tmp);
+    }
+    CHEETAH_WRITE("\n");
 }
-
-
