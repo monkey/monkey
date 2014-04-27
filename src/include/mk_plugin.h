@@ -296,6 +296,7 @@ struct plugin_api
 
     /* kernel interfaces */
     int (*kernel_version) ();
+    int (*kernel_features_print) (char *, size_t);
 };
 
 extern struct plugin_api *api;
