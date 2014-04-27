@@ -85,10 +85,10 @@ void mk_server_loop(int server_fd)
     int ret;
     int remote_fd;
 
-    /*
-
-     */
-    while (1) sleep(60);
+    /* check balancing mode */
+    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        while (1) sleep(60);
+    }
 
     /* Activate TCP_DEFER_ACCEPT */
     if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {

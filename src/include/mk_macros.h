@@ -62,6 +62,10 @@
 #define ANSI_WHITE         "\033[37m"
 #define ANSI_BOLD_WHITE    ANSI_BOLD ANSI_WHITE
 
+/* Tags */
+#define MK_BANNER_ENTRY    ANSI_BOLD "[" ANSI_GREEN "+" ANSI_RESET ANSI_BOLD "] " \
+    ANSI_RESET
+
 /* Transport type */
 #define MK_TRANSPORT_HTTP  "http"
 #define MK_TRANSPORT_HTTPS "https"

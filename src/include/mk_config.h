@@ -78,10 +78,11 @@ struct mk_config_entry
 struct server_config
 {
     int server_fd;                /* server socket file descriptor */
+    int kernel_features;          /* Hold different server setup status */
     unsigned int worker_capacity; /* how many clients per thread... */
     unsigned int max_load;        /* max number of clients (worker_capacity * workers) */
     short int workers;            /* number of worker threads */
-    short int corking;            /* If enabled it will handle TCP_CORK */
+    short int manual_tcp_cork;    /* If enabled it will handle TCP_CORK */
 
     int8_t fdt;                   /* is FDT enabled ? */
     int8_t is_daemon;

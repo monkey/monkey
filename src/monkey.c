@@ -76,14 +76,22 @@ void mk_thread_keys_init(void)
 #ifndef SHAREDLIB
 void mk_details(void)
 {
-    printf("* Process ID is %i", getpid());
-    printf("\n* Server socket listening on Port %i", config->serverport);
-    printf("\n* %i threads, %i client connections per thread, total %i",
+    char tmp[64];
+
+    printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
+    printf(MK_BANNER_ENTRY "Server socket listening on Port %i\n",
+           config->serverport);
+    printf(MK_BANNER_ENTRY
+           "%i threads, %i client connections per thread, total %i\n",
            config->workers, config->worker_capacity,
            config->workers * config->worker_capacity);
-    printf("\n* Transport layer by %s in %s mode\n",
+    printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
            config->transport_layer_plugin->shortname,
            config->transport);
+
+    if (mk_kernel_features_print(tmp, sizeof(tmp)) > 0) {
+        printf(MK_BANNER_ENTRY "Linux Features: %s\n", tmp);
+    }
     fflush(stdout);
 }
 
@@ -208,11 +216,13 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Init Kernel version data */
-    mk_kernel_init();
-
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));
+
+
+    /* Init Kernel version data */
+    mk_kernel_init();
+    mk_kernel_features();
 
     /* set configuration path */
     if (!path_config) {
@@ -335,14 +345,14 @@ int main(int argc, char **argv)
     /* Configuration sanity check */
     mk_config_sanity_check();
 
-    /* Print server details */
-    mk_details();
-
     /* Invoke Plugin PRCTX hooks */
     mk_plugin_core_process();
 
     /* Launch monkey http workers */
     mk_server_launch_workers();
+
+    /* Print server details */
+    mk_details();
 
     /* Wait until all workers report as ready */
     while (1) {

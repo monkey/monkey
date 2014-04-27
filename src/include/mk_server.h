@@ -19,8 +19,21 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "mk_socket.h"
+#include "mk_config.h"
+
 #ifndef MK_SERVER_H
 #define MK_SERVER_H
+
+static inline int mk_server_cork_flag(int fd, int state)
+{
+    if (config->manual_tcp_cork == MK_FALSE) {
+        return 0;
+    }
+
+    return mk_socket_set_cork_flag(fd, state);
+}
+
 
 unsigned int mk_server_worker_capacity(unsigned short nworkers);
 void mk_server_launch_workers(void);

@@ -46,6 +46,7 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 #include "mk_vhost.h"
+#include "mk_server.h"
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);
@@ -619,7 +620,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
     if (nbytes > 0) {
         sr->bytes_to_send -= nbytes;
         if (sr->bytes_to_send == 0) {
-            mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
+            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
         }
     }
 
@@ -642,7 +643,7 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 }
 
 /*
- * Check if a connection can stay open using 
+ * Check if a connection can stay open using
  * the keepalive headers vars and Monkey configuration as criteria
  */
 int mk_http_keepalive_check(struct client_session *cs)

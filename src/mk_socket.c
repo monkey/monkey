@@ -58,10 +58,6 @@ static void mk_socket_safe_event_write(int socket)
  */
 int mk_socket_set_cork_flag(int fd, int state)
 {
-    if (config->corking == MK_FALSE) {
-        return 0;
-    }
-
     MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
 
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
@@ -253,19 +249,28 @@ int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 
 int mk_socket_tcp_autocorking()
 {
+    int fd;
     int ret = MK_FALSE;
-    char *buf;
+    char buf[2];
+    struct stat st;
 
-    buf = mk_file_to_buffer(TCP_CORKING_PATH);
-    if (!buf) {
-        ret = MK_FALSE;
-    }
-    else {
-        if (strncmp(buf, "1", 1) == 0) {
-            ret = MK_TRUE;
-        }
-        mk_mem_free(buf);
+    ret = stat(TCP_CORKING_PATH, &st);
+    if (ret == -1) {
+        return MK_FALSE;
     }
 
-    return ret;
+    fd = open(TCP_CORKING_PATH, O_RDONLY);
+    if (fd == -1) {
+        return MK_FALSE;
+    }
+
+    read(fd, buf, 1);
+    close(fd);
+    buf[2] = '\0';
+
+    if (strncmp(buf, "1", 1) == 0) {
+        return MK_TRUE;
+    }
+
+    return MK_FALSE;
 }

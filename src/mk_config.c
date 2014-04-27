@@ -594,12 +594,11 @@ void mk_config_set_init_values(void)
     }
 
     /* TCP Auto Corking: only available on Linux >= 3.14 */
-    if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 14, 0) &&
-        mk_socket_tcp_autocorking() == MK_TRUE) {
-        config->corking = MK_FALSE;
+    if (config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
+        config->manual_tcp_cork = MK_FALSE;
     }
     else {
-        config->corking = MK_TRUE;
+        config->manual_tcp_cork = MK_TRUE;
     }
 
     /* Max request buffer size allowed

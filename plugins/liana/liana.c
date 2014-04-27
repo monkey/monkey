@@ -181,7 +181,6 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
 
     ret = bind(socket_fd, addr, addrlen);
     if( ret == -1 ) {
-        perror("bind");
         mk_warn("Error binding socket");
         return ret;
     }
@@ -198,9 +197,11 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
      *
      *     # echo 1 > /proc/sys/net/ipv4/tcp_fastopen
      */
-    ret = mk_api->socket_set_tcp_fastopen(socket_fd);
-    if (ret != -1) {
-        mk_info("Linux TCP_FASTOPEN");
+    if (mk_api->config->kernel_features & MK_KERNEL_TCP_FASTOPEN) {
+        ret = mk_api->socket_set_tcp_fastopen(socket_fd);
+        if (ret == -1) {
+            mk_warn("Could not set TCP_FASTOPEN");
+        }
     }
 
     ret = listen(socket_fd, backlog);
@@ -248,8 +249,12 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
         /* Check if reuse port can be enabled on this socket */
         if (reuse_port == MK_TRUE &&
-            mk_api->kernel_version() >= MK_KERNEL_VERSION(3, 9, 0)) {
+            (mk_api->config->kernel_features & MK_KERNEL_SO_REUSEPORT)) {
             ret = mk_api->socket_set_tcp_reuseport(socket_fd);
+            if (ret == -1) {
+                mk_warn("Could not use SO_REUSEPORT, using fair balancing mode");
+                mk_api->config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+            }
         }
 
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);

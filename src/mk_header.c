@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "monkey.h"
+#include "mk_server.h"
 #include "mk_header.h"
 #include "mk_memory.h"
 #include "mk_request.h"
@@ -321,7 +322,7 @@ int mk_header_send(int fd, struct client_session *cs,
         }
     }
 
-    mk_socket_set_cork_flag(fd, TCP_CORK_ON);
+    mk_server_cork_flag(fd, TCP_CORK_ON);
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
