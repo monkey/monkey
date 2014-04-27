@@ -85,7 +85,7 @@ void mk_server_loop(int server_fd)
     int ret;
     int remote_fd;
 
-    /* check balancing mode */
+    /* check balancing mode, for reuse port just stay here forever */
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         while (1) sleep(60);
     }

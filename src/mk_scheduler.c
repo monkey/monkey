@@ -376,6 +376,11 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
         server_fd = mk_socket_server(config->serverport,
                                      config->listen_addr,
                                      MK_TRUE);
+
+        /* Activate TCP_DEFER_ACCEPT */
+        if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
+            mk_warn("TCP_DEFER_ACCEPT failed");
+        }
         pthread_mutex_unlock(&mutex_port_init);
     }
     wid = mk_sched_register_thread(server_fd, thconf->epoll_fd);
