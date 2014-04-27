@@ -316,7 +316,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
         (config->max_keep_alive_request - cs->counter_connections);
 
     mk_header_send(cs->socket, cs, sr);
-    mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
+    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
 
     /*
      *  we do not free() real_location

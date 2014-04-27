@@ -59,6 +59,7 @@
 #include "mk_plugin.h"
 #include "mk_macros.h"
 #include "mk_vhost.h"
+#include "mk_server.h"
 
 const mk_ptr_t mk_crlf = mk_ptr_t_init(MK_CRLF);
 const mk_ptr_t mk_endblock = mk_ptr_t_init(MK_ENDBLOCK);
@@ -909,7 +910,7 @@ int mk_request_error(int http_status, struct client_session *cs,
     }
 
     /* Turn off TCP_CORK */
-    mk_socket_set_cork_flag(cs->socket, TCP_CORK_OFF);
+    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
     return EXIT_ERROR;
 }
 
