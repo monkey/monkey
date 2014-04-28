@@ -40,7 +40,11 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 	olen++; /* nul termination */
 	if (olen < len)
 		return NULL; /* integer overflow */
-	out = mk_api->mem_alloc(olen);
+	if (mk_api != NULL) {
+		out = mk_api->mem_alloc(olen);
+	}
+	else
+		out = malloc(olen);
 	if (out == NULL)
 		return NULL;
 
