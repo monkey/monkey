@@ -266,7 +266,7 @@ int mk_socket_tcp_autocorking()
 
     read(fd, buf, 1);
     close(fd);
-    buf[2] = '\0';
+    buf[1] = '\0';
 
     if (strncmp(buf, "1", 1) == 0) {
         return MK_TRUE;
