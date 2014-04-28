@@ -48,6 +48,8 @@
 #include "mk_vhost.h"
 
 struct server_config *config;
+gid_t EGID;
+gid_t EUID;
 
 /* Raise a configuration schema error */
 void mk_config_error(const char *path, int line, const char *msg)
@@ -358,6 +360,27 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 }
 
 #ifndef SHAREDLIB
+
+void mk_details(void)
+{
+    char tmp[64];
+
+    printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
+    printf(MK_BANNER_ENTRY "Server socket listening on Port %i\n",
+           config->serverport);
+    printf(MK_BANNER_ENTRY
+           "%i threads, %i client connections per thread, total %i\n",
+           config->workers, config->worker_capacity,
+           config->workers * config->worker_capacity);
+    printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
+           config->transport_layer_plugin->shortname,
+           config->transport);
+
+    if (mk_kernel_features_print(tmp, sizeof(tmp)) > 0) {
+        printf(MK_BANNER_ENTRY "Linux Features: %s\n", tmp);
+    }
+    fflush(stdout);
+}
 
 /* Print a specific error */
 static void mk_config_print_error_msg(char *variable, char *path)

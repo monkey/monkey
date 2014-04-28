@@ -54,8 +54,6 @@ static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
 const mk_ptr_t mk_monkey_protocol = mk_ptr_t_init(MK_HTTP_PROTOCOL_11_STR);
-gid_t EGID;
-gid_t EUID;
 
 void mk_thread_keys_init(void)
 {
@@ -74,27 +72,6 @@ void mk_thread_keys_init(void)
 }
 
 #ifndef SHAREDLIB
-void mk_details(void)
-{
-    char tmp[64];
-
-    printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
-    printf(MK_BANNER_ENTRY "Server socket listening on Port %i\n",
-           config->serverport);
-    printf(MK_BANNER_ENTRY
-           "%i threads, %i client connections per thread, total %i\n",
-           config->workers, config->worker_capacity,
-           config->workers * config->worker_capacity);
-    printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
-           config->transport_layer_plugin->shortname,
-           config->transport);
-
-    if (mk_kernel_features_print(tmp, sizeof(tmp)) > 0) {
-        printf(MK_BANNER_ENTRY "Linux Features: %s\n", tmp);
-    }
-    fflush(stdout);
-}
-
 static void mk_version(void)
 {
     printf("Monkey HTTP Daemon %i.%i.%i\n",

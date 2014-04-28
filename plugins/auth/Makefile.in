@@ -1,9 +1,9 @@
-all: monkey-auth.so
+all: monkey-auth.so mk_passwd
 include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
-CFLAGS	= $CFLAGS 
+CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 OBJECTS = sha1.o base64.o conf.o auth.o
@@ -12,3 +12,7 @@ OBJECTS = sha1.o base64.o conf.o auth.o
 
 monkey-auth.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+
+mk_passwd: mk_passwd.o $(MONKEY_OBJECTS_N) sha1.o base64.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -o $@ $^ $(LIBS) -lpthread -ldl
+	cp $@ $(MONKEY_BIN_DIR)
