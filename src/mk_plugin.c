@@ -872,7 +872,7 @@ int mk_plugin_event_add(int socket, int mode,
         return -1;
     }
 
-    if (sched && handler) {
+    if (handler) {
         /* Event node (this list exist at thread level */
         event = mk_mem_malloc(sizeof(struct plugin_event));
         event->socket = socket;
