@@ -218,7 +218,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->max_load = (config->worker_capacity * config->workers);
 
     /* Server listening socket */
-    config->server_fd = mk_socket_server(config->serverport, config->listen_addr);
+    config->server_fd = mk_socket_server(config->serverport, config->listen_addr, MK_FALSE);
 
     /* Clock thread */
     mk_clock_sequential_init();
