@@ -22,7 +22,7 @@ You have to pay attention to the code indentation, tabs are 4 spaces, spaces on 
 When you commit your local changes in your repository (before to push to Github), we need you take care of the following:
 
  - Your principal commit message (one line subject) must be prefixed with the core section name, e.g: If you are adding a new but missing protocol feature it could be __HTTP: add new XYZ method__.
- - On most of cases we want full description about what your patch is doing, the patch description should be self descriptive.. like for dummies. Do not assume everybody knows what you are doing.
+ - On most of cases we want full description about what your patch is doing, the patch description should be self descriptive.. like for dummies. Do not assume everybody knows what you are doing and on each like do not exceed 80 characters.
  - When running the __git commit__ command, make sure you are using the __-s__ flag, that will add a Signed-off comment in the patch description.
 
 Expanding a bit the example feature message we could use the following command:
