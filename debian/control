@@ -5,15 +5,15 @@ Maintainer: Eduardo Silva <edsiper@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libpolarssl-dev
 Standards-Version: 3.9.1
 Homepage: http://monkey-project.com
-Vcs-Git: git://git.monkey-project.com/monkey
-Vcs-Browser: http://git.monkey-project.com/?p=monkey
+Vcs-Git: https://github.com/monkey/monkey.git
+Vcs-Browser: https://github.com/monkey/monkey
 
 Package: monkey
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey-liana, monkey-logger
 Description: Fast and lightweight Web Server for Linux.
- Monkey HTTP Daemon has been designed to be very scalable with low memory 
- and CPU consumption, the perfect solution for embedded environments. It 
+ Monkey HTTP Server has been designed to be very scalable with low memory
+ and CPU consumption, the perfect solution for embedded environments. It
  also provides a flexible API and plugins interface.
 
 Package: monkey-auth
@@ -27,8 +27,8 @@ Package: monkey-cgi
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: CGI support/plugin for Monkey Web Server.
- This plugin add CGI support to Monkey, it allows the execution binary 
- programs or scripting files through a specified interpreter. 
+ This plugin add CGI support to Monkey, it allows the execution binary
+ programs or scripting files through a specified interpreter.
 
 Package: monkey-cheetah
 Architecture: any
@@ -41,8 +41,8 @@ Package: monkey-dirlisting
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: Directory Listing plugin for Monkey Web Server.
- This plugin adds directory listing capabilities to the server when a 
- directory is the target request, it will create and index page with the 
+ This plugin adds directory listing capabilities to the server when a
+ directory is the target request, it will create and index page with the
  directory content.
 
 Package: monkey-fastcgi
@@ -66,7 +66,7 @@ Package: monkey-logger
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: Logger plugin for Monkey Web Server.
- The logger plugin allow to register every access and error events under 
+ The logger plugin allow to register every access and error events under
  a specific HTTP request. It also implements a feature called MasterLog
  to register the server output into the file system.
 
@@ -82,15 +82,15 @@ Package: monkey-polarssl
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
 Description: SSL transport layer for Monkey Web Server based in PolarSSL.
- This plugin enable Monkey Web Server with SSL encryption through the third 
+ This plugin enable Monkey Web Server with SSL encryption through the third
  party PolarSSL library.
 
 Package: monkey-dev
 Architecture: any
 Depends: ${misc:Depends}, monkey (= ${binary:Version})
 Description: Monkey HTTP Daemon development files
- This package distributes the C headers files required to perform 
- the development of a Monkey plugin. This package is not related to the 
+ This package distributes the C headers files required to perform
+ the development of a Monkey plugin. This package is not related to the
  library version of Monkey.
 
 Package: monkey-doc
@@ -106,4 +106,3 @@ Description: Monkey HTTP Daemon library
  LibMonkey is the shared library version of Monkey HTTP daemon, it
  can be linked by third party programs that requires to use a fast web server or
  HTTP stack in their main program.
-

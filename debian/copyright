@@ -3,17 +3,17 @@ Upstream-Name: monkey
 Source: http://monkey-project.com
 
 Files: *
-Copyright: 2001-2011 Eduardo Silva <edsiper@gmail.com>
+Copyright: 2001-2014 Eduardo Silva <edsiper@gmail.com>
            2010-2011 Jonathan Gonzalez <zeus@gnu.org>
            2009-2011 DavidLorh Bueso <dave@gnu.org>
 
-License: GPL-2.0+
+License: LGPL-2
 
 Files: debian/*
-Copyright: 2011 Eduardo Silva <edsiper@gmail.com>
-License: GPL-2.0+
+Copyright: 2001-2014 Eduardo Silva <edsiper@gmail.com>
+License: LGPL-2
 
-License: GPL-2.0+
+License: LGPL-2.0
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
