@@ -84,10 +84,8 @@ const mk_ptr_t mk_rh_user_agent = mk_ptr_t_init(RH_USER_AGENT);
 pthread_key_t request_list;
 
 /* Create a memory allocation in order to handle the request data */
-static void mk_request_init(struct session_request *request)
+static inline void mk_request_init(struct session_request *request)
 {
-    memset(request, 0, sizeof(struct session_request));
-
     request->status = MK_TRUE;
     request->method = MK_HTTP_METHOD_UNKNOWN;
 
@@ -100,7 +98,7 @@ static void mk_request_init(struct session_request *request)
     mk_header_response_reset(&request->headers);
 }
 
-static void mk_request_free(struct session_request *sr)
+static inline void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
         mk_vhost_close(sr);
@@ -407,9 +405,10 @@ static int mk_request_parse(struct client_session *cs)
         /* Allocating request block */
         if (blocks == 0) {
             sr_node = &cs->sr_fixed;
+            memset(sr_node, '\0', sizeof(struct session_request));
         }
         else {
-            sr_node = mk_mem_malloc(sizeof(struct session_request));
+            sr_node = mk_mem_malloc_z(sizeof(struct session_request));
         }
         mk_request_init(sr_node);
 
@@ -489,6 +488,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
      */
     if (mk_list_is_empty(sr_list) == 0) {
         sr = &cs->sr_fixed;
+        memset(sr, 0, sizeof(struct session_request));
         mk_request_init(sr);
         mk_list_add(&sr->_head, &cs->request_list);
     }
