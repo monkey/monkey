@@ -7,12 +7,15 @@
 
 #include "mk_list.h"
 #include "mk_macros.h"
-#include "mk_memory.h"
-#include "mk_string.h"
 #include "sha1.h"
 #include "base64.h"
 
 #define MAX_LINE_LEN 256
+
+struct mk_passwd_user {
+    char *row;
+    struct mk_list _head;
+};
 
 /* Store a file as a linked list of its lines */
 static struct mk_list passwd_file;
@@ -23,7 +26,7 @@ void read_file(char *filename, int create_file)
 {
     FILE *filein = fopen(filename, "r");
     char line[MAX_LINE_LEN];
-    struct mk_string_line *entry;
+    struct mk_passwd_user *entry;
 
     mk_list_init(&passwd_file);
 
@@ -39,9 +42,8 @@ void read_file(char *filename, int create_file)
     }
 
     while (fgets(line, MAX_LINE_LEN, filein) != NULL) {
-        entry = mk_mem_malloc(sizeof(*entry));
-        entry->val = mk_string_dup(line);
-        entry->len = strlen(line);
+        entry = malloc(sizeof(*entry));
+        entry->row = strdup(line);
         mk_list_add(&entry->_head, &passwd_file);
     }
     fclose(filein);
@@ -52,14 +54,14 @@ void dump_file(char *filename)
 {
     FILE *fileout = fopen(filename, "w");
     struct mk_list *it, *tmp;
-    struct mk_string_line *entry;
+    struct mk_passwd_user *entry;
 
     mk_list_foreach_safe(it, tmp, &passwd_file) {
-        entry = mk_list_entry(it, struct mk_string_line, _head);
-        fprintf(fileout, "%s", entry->val);
+        entry = mk_list_entry(it, struct mk_passwd_user, _head);
+        fprintf(fileout, "%s", entry->row);
         mk_list_del(&entry->_head);
-        mk_mem_free(entry->val);
-        mk_mem_free(entry);
+        free(entry->row);
+        free(entry);
     }
     fclose(fileout);
 }
@@ -82,15 +84,14 @@ unsigned char *sha1_hash(const char *password)
 void update_user(const char *username, const char *password, int create_user)
 {
     struct mk_list *it, *tmp;
-    struct mk_string_line *entry;
+    struct mk_passwd_user *entry;
     unsigned char *hash_passwd;
     int i;
-    unsigned long len;
 
     mk_list_foreach_safe(it, tmp, &passwd_file) {
-        entry = mk_list_entry(it, struct mk_string_line, _head);
-        for (i = 0; entry->val[i] != '\0' && entry->val[i] != ':' && username[i] != '\0' && entry->val[i] == username[i]; i++);
-        if (entry->val[i] != ':' || username[i] != '\0')
+        entry = mk_list_entry(it, struct mk_passwd_user, _head);
+        for (i = 0; entry->row[i] != '\0' && entry->row[i] != ':' && username[i] != '\0' && entry->row[i] == username[i]; i++);
+        if (entry->row[i] != ':' || username[i] != '\0')
             continue;
 
         /* Found a match */
@@ -99,17 +100,17 @@ void update_user(const char *username, const char *password, int create_user)
         if (create_user == MK_FALSE) {
             printf("[-] Deleting user %s\n", username);
             mk_list_del(&entry->_head);
-            mk_mem_free(entry->val);
-            mk_mem_free(entry);
+            free(entry->row);
+            free(entry);
             return;
         }
 
         /* Update user */
         printf("[+] Password changed for user %s\n", username);
         hash_passwd = sha1_hash(password);
-        mk_mem_free(entry->val);
-        entry->val = NULL;
-        mk_string_build(&entry->val, &len, "%s:{SHA1}%s", username, hash_passwd);
+        free(entry->row);
+        entry->row = malloc(512);
+        snprintf(entry->row, 512, "%s:{SHA1}%s", username, hash_passwd);
         free(hash_passwd);
 
         return;
@@ -118,10 +119,10 @@ void update_user(const char *username, const char *password, int create_user)
     /* Create user */
     if (create_user == MK_TRUE) {
         printf("[+] Adding user %s\n", username);
-        entry = mk_mem_malloc(sizeof(*entry));
-        entry->val = NULL;
+        entry = malloc(sizeof(struct mk_passwd_user));
+        entry->row = malloc(512);
         hash_passwd = sha1_hash(password);
-        mk_string_build(&entry->val, &len, "%s:{SHA1}%s", username, hash_passwd);
+        snprintf(entry->row, 512, "%s:{SHA1}%s", username, hash_passwd);
         free(hash_passwd);
 
         mk_list_add(&entry->_head, &passwd_file);

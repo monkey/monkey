@@ -12,6 +12,14 @@
 #include "MKPlugin.h"
 #include "base64.h"
 
+#ifdef MALLOC_JEMALLOC
+#define __mem_alloc    mk_api->mem_alloc
+#define __mem_free     mk_api->mem_free
+#else
+#define __mem_alloc    malloc
+#define __mem_free     free
+#endif
+
 static const unsigned char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -41,10 +49,12 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 	if (olen < len)
 		return NULL; /* integer overflow */
 	if (mk_api != NULL) {
-		out = mk_api->mem_alloc(olen);
+		out = __mem_alloc(olen);
 	}
-	else
-		out = malloc(olen);
+	else {
+		out = __mem_alloc(olen);
+        }
+
 	if (out == NULL)
 		return NULL;
 
@@ -121,7 +131,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 		return NULL;
 
 	olen = (count / 4 * 3) + 1;
-	pos = out = mk_api->mem_alloc(olen);
+	pos = out = __mem_alloc(olen);
 	if (out == NULL)
 		return NULL;
 
@@ -147,7 +157,7 @@ unsigned char * base64_decode(const unsigned char *src, size_t len,
 					pos -= 2;
 				else {
 					/* Invalid padding */
-					mk_api->mem_free(out);
+					__mem_free(out);
 					return NULL;
 				}
 				break;
