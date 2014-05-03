@@ -1,4 +1,4 @@
-all: clean_shared mk_passwd clean_shared monkey-auth.so
+all: mk_passwd monkey-auth.so
 include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
@@ -10,12 +10,8 @@ OBJECTS = sha1.o base64.o conf.o auth.o
 
 -include $(OBJECTS:.o=.d)
 
-clean_shared:
-	@rm -rf *.[od] mk_passwd
+mk_passwd:
+	@(cd tools && $(MAKE) && cd ..)
 
 monkey-auth.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
-
-mk_passwd: mk_passwd.o sha1.o base64.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) -ldl
-	@cp $@ $(MONKEY_BIN_DIR)

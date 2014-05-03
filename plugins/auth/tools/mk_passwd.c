@@ -131,11 +131,10 @@ void update_user(const char *username, const char *password, int create_user)
 
 static void print_help(int full_help)
 {
-    printf("Usage: mkpasswd [-c] -b filename username password\n\tCreate or update an mkpasswd file\n");
+    printf("Usage: mk_passwd [-c] [-D] filename username password\n");
     if (full_help == MK_TRUE) {
         printf("\nOptions:\n");
         printf("  -h, --help\tshow this help message and exit\n");
-        printf("  -b\t\tBatch mode; password is passed on the command line IN THE CLEAR.\n");
         printf("  -c\t\tCreate a new mkpasswd file, overwriting any existing file.\n");
         printf("  -D\t\tRemove the given user from the password file.\n");
     }
@@ -147,14 +146,12 @@ int main(int argc, char *argv[])
     int create_user = MK_TRUE;
     int create_file = MK_FALSE;
     int show_help = MK_FALSE;
-    int batch_mode = MK_FALSE;
     char *filename = NULL;
     char *username = NULL;
     char *password = NULL;
 
     /* Command line options */
     static const struct option long_opts[] = {
-        {"batch", no_argument, NULL, 'b'},
         {"create", no_argument, NULL, 'c'},
         {"delete_user", no_argument, NULL, 'D'},
         {"help", no_argument, NULL, 'h'},
@@ -163,9 +160,6 @@ int main(int argc, char *argv[])
     /* Parse options */
     while ((opt = getopt_long(argc, argv, "hbDc", long_opts, NULL)) != -1) {
         switch (opt) {
-            case 'b':
-                batch_mode = MK_TRUE;
-                break;
             case 'c':
                 create_file = MK_TRUE;
                 break;
@@ -196,11 +190,6 @@ int main(int argc, char *argv[])
     /* If delete_user option is provided, do not provide a password */
     if ((password != NULL) ^ (create_user == MK_TRUE)) {
         print_help(MK_FALSE);
-        exit(1);
-    }
-
-    if (batch_mode == MK_FALSE) {
-        printf("Only batch mode is supported\n");
         exit(1);
     }
 
