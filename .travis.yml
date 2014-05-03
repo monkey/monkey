@@ -3,8 +3,9 @@ compiler:
   - gcc
   - clang
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libpolarssl-dev
+# Disable SSL as the test box have a old PolarSSL version (Ubuntu 12.04)
+# before_install:
+#  - sudo apt-get update -qq
+#  - sudo apt-get install -y libpolarssl-dev
 
-script: ./configure --trace --enable-plugins=* && make
+script: ./configure --trace --enable-plugins=* --disable-plugins=polarssl && make
