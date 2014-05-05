@@ -67,7 +67,9 @@ static int do_cgi(const char *const __restrict__ file,
                   struct cgi_match_t *match,
                   struct plugin *const plugin)
 {
+    int ret;
     const int socket = cs->socket;
+    struct file_info finfo;
 
     char *env[30];
 
@@ -95,6 +97,17 @@ static int do_cgi(const char *const __restrict__ file,
     char server_software[SHORTLEN];
     char server_protocol[SHORTLEN];
     char http_host[SHORTLEN];
+
+    /* Check the interpreter exists */
+    if (match->bin) {
+        ret = mk_api->file_get_info(match->bin, &finfo);
+
+        if (ret == -1 ||
+            (finfo.is_file == MK_FALSE && finfo.is_link == MK_FALSE) ||
+            finfo.exec_access == MK_FALSE) {
+            return 500;
+        }
+    }
 
     snprintf(method, SHORTLEN, "REQUEST_METHOD=%.*s", (int) sr->method_p.len, sr->method_p.data);
     env[envpos++] = method;
