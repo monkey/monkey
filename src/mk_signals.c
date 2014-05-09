@@ -1,23 +1,20 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-/*  Monkey HTTP Daemon
- *  ------------------
- *  Copyright (C) 2001-2014, Eduardo Silva P. <edsiper@gmail.com>
- *  Copyright (C) 2010 Davidlohr Bueso <dave@gnu.org>
+/*  Monkey HTTP Server
+ *  ==================
+ *  Copyright 2001-2014 Monkey Software LLC <eduardo@monkey.io>
  *
- *  This program is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU Lesser General Public  License as published
- *  by the Free Software Foundation; either version 2.1 of the License, or
- *  (at your option) any later version.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- *  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- *  License for more details.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 /* If a library, do not interfere with the app's signals */
@@ -75,7 +72,7 @@ void mk_signal_thread_sigpipe_safe()
 
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
-    pthread_sigmask(SIG_BLOCK, &set, &old);
+    //pthread_sigmask(SIG_BLOCK, &set, &old);
 }
 
 
@@ -101,11 +98,15 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 #ifdef DEBUG
         mk_utils_stacktrace();
 #endif
-
         mk_err("%s (%d), code=%d, addr=%p",
                strsignal(signo), signo, si->si_code, si->si_addr);
-        /* DISABLED by now: pthread_exit(NULL); */
-        abort();
+
+        struct sched_list_node *sched;
+        sched = mk_sched_get_thread_conf();
+        printf("sched=%p\n", sched);
+        //close(sched->server_fd);
+        pthread_exit(NULL);
+        //abort();
     default:
         /* let the kernel handle it */
         kill(getpid(), signo);
