@@ -248,6 +248,7 @@ int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
 int mk_socket_tcp_autocorking()
 {
     int fd;
+    int read_ret;
     int ret = MK_FALSE;
     char buf[2];
     struct stat st;
@@ -262,7 +263,11 @@ int mk_socket_tcp_autocorking()
         return MK_FALSE;
     }
 
-    read(fd, buf, 1);
+    read_ret = read(fd, buf, 1);
+    if (read_ret == -1) {
+        return MK_FALSE;
+    }
+
     close(fd);
     buf[1] = '\0';
 
