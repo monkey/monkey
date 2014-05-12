@@ -555,7 +555,19 @@ static int mk_request_process(struct client_session *cs, struct session_request 
                                          struct host_alias, _head);
 
     if (sr->host.data) {
+        /* Match the virtual host */
         mk_vhost_get(sr->host, &sr->host_conf, &sr->host_alias);
+
+        /* Check if this virtual host have some redirection */
+        if (sr->host_conf->header_redirect.data) {
+            mk_header_set_http_status(sr, MK_REDIR_MOVED);
+            sr->headers.location = mk_string_dup(sr->host_conf->header_redirect.data);
+            sr->headers.content_length = 0;
+            mk_header_send(cs->socket, cs, sr);
+            sr->headers.location = NULL;
+            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+            return 0;
+        }
     }
 
     /* Is requesting an user home directory ? */
