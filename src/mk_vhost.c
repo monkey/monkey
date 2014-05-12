@@ -277,6 +277,7 @@ int mk_vhost_close(struct session_request *sr)
 struct host *mk_vhost_read(char *path)
 {
     unsigned long len = 0;
+    char *tmp;
     char *host_low;
     struct stat checkdir;
     struct host *host;
@@ -359,6 +360,19 @@ struct host *mk_vhost_read(char *path)
     if (mk_list_is_empty(&host->server_names) == 0) {
         mk_config_free(cnf);
         return NULL;
+    }
+
+    /* Check Virtual Host redirection */
+    host->header_redirect.data = NULL;
+    host->header_redirect.len  = 0;
+
+    tmp = mk_config_section_getval(section_host,
+                                   "Redirect",
+                                   MK_CONFIG_VAL_STR);
+    if (tmp) {
+        host->header_redirect.data = mk_string_dup(tmp);
+        host->header_redirect.len  = strlen(tmp);
+        mk_mem_free(tmp);
     }
 
     /* Error Pages */

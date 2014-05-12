@@ -660,12 +660,14 @@ int mk_http_keepalive_check(struct client_session *cs)
     }
 
     /* Old client without Connection header */
-    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 && sr_node->connection.len <= 0) {
+    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 &&
+        sr_node->connection.len <= 0) {
         return -1;
     }
 
     /* Old client and content length to send is unknown */
-    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 && sr_node->headers.content_length <= 0) {
+    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 &&
+        sr_node->headers.content_length < 0) {
         return -1;
     }
 

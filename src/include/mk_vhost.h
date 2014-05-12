@@ -41,6 +41,7 @@ struct host
 
     char *host_signature;
     mk_ptr_t header_host_signature;
+    mk_ptr_t header_redirect;
 
     /* source configuration */
     struct mk_config *config;
