@@ -68,7 +68,7 @@ static void mk_signal_exit()
 
 void mk_signal_thread_sigpipe_safe()
 {
-    sigset_t set, old;
+    sigset_t set;
 
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
