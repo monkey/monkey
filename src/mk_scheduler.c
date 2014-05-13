@@ -652,3 +652,38 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
 
     return 0;
 }
+
+/*
+ * This function aims to recover a dead worker that faced some SIGSEGV or
+ * SIGBUS, it requires the server be working on REUSEPORT mode. Old fashion
+ * mechanism is not supported by this recovery.
+ */
+int mk_sched_recovery()
+{
+    pid_t pid;
+    unsigned long tid;
+    pthread_t skip;
+    struct sched_list_node *sched;
+
+    /* Feature only available on Kernels that support SO_REUSEPORT */
+    if (!(config->kernel_features & MK_KERNEL_SO_REUSEPORT)) {
+        return -1;
+    }
+
+    /* check this is a running thread*/
+    sched = mk_sched_get_thread_conf();
+    if (!sched) {
+        return -1;
+    }
+
+    /* double-check main PID != Task ID */
+    pid = getpid();
+    tid = syscall(__NR_gettid);
+    if ((unsigned) pid == tid) {
+        return -1;
+    }
+    
+    mk_sched_launch_thread(config->worker_capacity, &skip, NULL);
+    printf("RESURRECTION!\n");
+    return 0;
+}

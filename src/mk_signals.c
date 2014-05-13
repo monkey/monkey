@@ -30,6 +30,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
 
 #include "monkey.h"
 #include "mk_signals.h"
@@ -72,12 +73,17 @@ void mk_signal_thread_sigpipe_safe()
 
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
+
+    //printf("sigpipe on %lu\n",  syscall(__NR_gettid));
     //pthread_sigmask(SIG_BLOCK, &set, &old);
 }
 
 
 static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PARAM)
 {
+    pid_t pid = getpid();
+    pthread_t tid = syscall(__NR_gettid);
+
     switch (signo) {
     case SIGTERM:
     case SIGINT:
@@ -103,12 +109,21 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 
         struct sched_list_node *sched;
         sched = mk_sched_get_thread_conf();
+        if (!sched) {
+            kill(getpid(), signo);
+        }
+
         printf("sched=%p\n", sched);
-        //close(sched->server_fd);
-        pthread_exit(NULL);
+        printf("Affected pid=%d thread=%lu\n", pid, tid);
+        close(sched->server_fd);
+        if (mk_sched_recovery() != 0) {
+            pthread_exit(NULL);
+        }
         //abort();
     default:
         /* let the kernel handle it */
+        sleep(50);
+        exit(1);
         kill(getpid(), signo);
     }
 
