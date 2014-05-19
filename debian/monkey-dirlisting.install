@@ -1,5 +1,0 @@
-# Plugins setup
-debian/tmp/etc/monkey/plugins/dirlisting/*
-
-# Plugins / Libraries
-debian/tmp/usr/lib/monkey/monkey-dirlisting.so

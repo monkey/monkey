@@ -17,3 +17,35 @@ debian/tmp/usr/share/monkey/css/bootstrap.min.css
 
 # Manpage
 debian/tmp/usr/share/man/man1/monkey.1
+
+# Auth Plugin
+debian/tmp/etc/monkey/plugins/auth/*
+debian/tmp/usr/lib/monkey/monkey-auth.so
+debian/tmp/usr/sbin/mk_passwd
+
+# CGI Plugin
+debian/tmp/etc/monkey/plugins/cgi/*
+debian/tmp/usr/lib/monkey/monkey-cgi.so
+
+# Cheetah Plugin
+debian/tmp/etc/monkey/plugins/cheetah/*
+debian/tmp/usr/lib/monkey/monkey-cheetah.so
+
+# Dirlisting Plugin
+debian/tmp/etc/monkey/plugins/dirlisting/*
+debian/tmp/usr/lib/monkey/monkey-dirlisting.so
+
+# FastCGI Plugin
+debian/tmp/etc/monkey/plugins/fastcgi/*
+debian/tmp/usr/lib/monkey/monkey-fastcgi.so
+
+# Liana Plugin
+debian/tmp/usr/lib/monkey/monkey-liana.so
+
+# Logger Plugin
+debian/tmp/etc/monkey/plugins/logger/*
+debian/tmp/usr/lib/monkey/monkey-logger.so
+
+# Mandril Plugin
+debian/tmp/etc/monkey/plugins/mandril/*
+debian/tmp/usr/lib/monkey/monkey-mandril.so
