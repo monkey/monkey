@@ -349,7 +349,8 @@ int _mkp_stage_30(struct plugin *p,
     (void) cs;
 
     PLUGIN_TRACE("[FD %i] Mandril validating URL", cs->socket);
-    if (mk_security_check_url(sr->uri) < 0) {
+
+    if (mk_security_check_url(sr->uri_processed) < 0) {
         PLUGIN_TRACE("[FD %i] Close connection, blocked URL", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
