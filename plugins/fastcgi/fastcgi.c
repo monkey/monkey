@@ -831,7 +831,6 @@ static int hangup(int socket)
 	else if (fd) {
 		PLUGIN_TRACE("[FCGI_FD %d] Hangup event.", fd->fd);
 
-		mk_api->event_del(fd->fd);
 		close(fd->fd);
 
 		state = fd->state;
