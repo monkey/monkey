@@ -354,12 +354,11 @@ int mk_epoll_del(int efd, int fd)
     int ret;
 
     ret = epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
-    MK_TRACE("[FD %i] Epoll, remove from QUEUE_FD=%i", fd, efd);
+    MK_TRACE("[FD %i] Epoll, remove from QUEUE_FD=%i, ret=%i", fd, efd, ret);
 
 #ifdef TRACE
     if (ret < 0) {
         mk_libc_error("epoll_ctl");
-        MK_TRACE("[FD %i] epoll_ctl() = %i", fd, ret);
     }
 #endif
 

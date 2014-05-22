@@ -175,21 +175,26 @@ int mk_conn_close(int socket, int event)
 
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
 
+    /*
+     * Remove the socket from the scheduler and make sure
+     * to disable all notifications.
+     */
+    sched = mk_sched_get_thread_conf();
+    mk_sched_remove_client(sched, socket);
+
     /* Plugin hook: this is a wrap-workaround to do not
      * break plugins until the whole interface events and
      * return values are re-worked.
      */
-    if (event == MK_EP_SOCKET_CLOSED)
+    if (event == MK_EP_SOCKET_CLOSED) {
         mk_plugin_event_close(socket);
+    }
     else if (event == MK_EP_SOCKET_ERROR) {
         mk_plugin_event_error(socket);
     }
     else if (event == MK_EP_SOCKET_TIMEOUT) {
         mk_plugin_event_timeout(socket);
     }
-
-    sched = mk_sched_get_thread_conf();
-    mk_sched_remove_client(sched, socket);
 
     return 0;
 }
