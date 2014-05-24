@@ -212,7 +212,6 @@ static int proxy_close(int fd)
     if (fd == peer->fd_client) {        /* the event is for the client socket */
         if (connected) {        /* the slave is still connected */
             proxy_peer_remove(&context->slave, peer->fd_slave);
-            mk_api->event_del(peer->fd_slave);
         }
 
         MK_TRACE("[FD %i] Closing client socket", fd);
@@ -224,14 +223,10 @@ static int proxy_close(int fd)
         setsockopt(peer->fd_slave, SOL_SOCKET, SO_LINGER, &linger,
                    sizeof(linger));
         mk_api->socket_close(peer->fd_slave);
-
-        mk_api->event_del(peer->fd_client);
     }
-    else {                      /* the event is for the slave socket */
+    else { /* the event is for the slave socket */
 
         MK_TRACE("[FD %i] Disabling slave socket", socket);
-
-        mk_api->event_del(peer->fd_slave);
         return MK_PLUGIN_RET_EVENT_OWNED;
     }
 
@@ -239,7 +234,6 @@ static int proxy_close(int fd)
     mk_api->mem_free(peer);
 
     return MK_PLUGIN_RET_EVENT_OWNED;
-    //return MK_PLUGIN_RET_EVENT_CLOSE;
 }
 
 int _mkp_init(struct plugin_api **api, char *confdir)
