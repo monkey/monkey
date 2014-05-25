@@ -1,3 +1,787 @@
+commit 2b0f84634272a3b695587dfb9b21a2ba792b98eb
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun May 25 17:12:28 2014 -0600
+
+    Debian: drop dependency of old packages
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9bf5eaf420f80bd130bc47168926d5bb48f0acee
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun May 25 15:31:32 2014 -0600
+
+    Configure: new argument to set PidFile in default monkey.conf
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1bd7c17e0ec88b9bd20c29f68759952f5cf02446
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat May 24 21:48:19 2014 -0600
+
+    Configure: bypass OpenEmbedded/Yocto arguments
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b3f21be68bca3f91857a49ceba4ed03245103462
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat May 24 21:09:52 2014 -0600
+
+    HTML: set release date
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a479b9cb852ee686d3ef2ecae8fe1d6d9a9f2fba
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat May 24 16:39:49 2014 -0600
+
+    HTML: codename 'Emperor Tamarin'
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c9314b429091cec6b25c726cb209b9554d02a8a3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat May 24 15:58:38 2014 -0600
+
+    Proxy Reverse: do not remove FD from event pool on hangup
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5aed3d31417d5b0efdd190570720647a679fcd85
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu May 22 11:59:57 2014 -0600
+
+    HTML: prepare home page for next version
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5f2c9addc7a3e3e9bf40a78b6558eaf7ea950ce4
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu May 22 11:40:57 2014 -0600
+
+    FastCGI: do not remove the FD event on hangup (Monkey already did)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 96b03a487b6731331f0092a98704f2c686b02241
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu May 22 11:28:50 2014 -0600
+
+    Connection: on close, remove FD from Scheduler first
+    
+    when a hangup or connection close event is raised, the core
+    was invoking plugins callback directly and at the end the Scheduler
+    for removal procedure.
+    
+    This behavior ended up in a problem as the core is not aware about
+    what a plugin is doing after a callback, the plugin may "open" a
+    new connection (new FD) and the Kernel "may" assign the previous FD
+    closed number again, ending in a new close from the caller, e.g:
+    
+     - Plugin request to hangup a connection.
+     - Core receive the event and invoke callbacks for closing stuff.
+     - Plugin after cleanup decides to create a new FD.
+     - The Kernel assign the same FD number than the recently closed.
+     - Core retakes the control and let the Scheduler close everything
+       related to the original FD.
+     - The Core is closing "the NEW FD" messing up everything.
+    
+    After this patch the behavior is:
+    
+     - Plugin request to hangup a connection.
+     - Core receive the close event, invoke the Scheduler.
+     - The Scheduler cleanup all references for this FD, also it make
+       sure to remove event notifications from the epoll(7) loop.
+     - The Core invoke callbacks for closing stuff.
+     - Everything gets clean properly.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5ab55cb77e27a0159a8323822897dc3910959cc8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed May 21 21:59:11 2014 -0600
+
+    Plugin: do not re-set event list
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 83bf013de38df051bbdf20de6cfc604cca20411d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed May 21 21:15:54 2014 -0600
+
+    Utils: fix return value check on libc_error() stuff
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 15f72c1ee5e0afad20232bdf0fcecab8d62a5d89
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue May 20 11:22:19 2014 -0600
+
+    Mandril: check decoded URI (fix #92)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f929f3e6dca9a0ff2e08dcd286346ef7e436c139
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon May 19 11:00:16 2014 -0600
+
+    Doc: update Contributing file (lines length)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1c9538ed901643a03af601115f88c37f98bbf066
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon May 19 10:55:50 2014 -0600
+
+    Debian: structure changes
+    
+    From now all plugins that do not depends on external dependencies are
+    distributed from the principal Monkey package. The only plugin that remains
+    as a separate package is monkey-polarssl.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5f998e189e293ab854e892012bd91b7710591734
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue May 13 18:58:25 2014 +0530
+
+    Signals: Removed unused variable 'old' in mk_signal_thread_sigpipe_safe()
+    
+    Removed the variable 'sigset_t old' in line 71 from function, 'void mk_signal_thread_sigpipe_safe()'. This patch removes the following warning caused during 'make':
+    
+    ------------------ WARNING ---------------------
+    mk_signals.c: In function ‘mk_signal_thread_sigpipe_safe’:
+    mk_signals.c:71:19: warning: unused variable ‘old’ [-Wunused-variable]
+    ------------------ WARNING ---------------------
+    
+    Signed-off-by: Savita TS <savita.seetaraman5@gmail.com>
+
+commit 58fe3faf2fb919a5a2ac7fd68b3770a3c781b149
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon May 12 00:17:43 2014 -0600
+
+    Virtual Host: add Redirect support (Fix #132).
+    
+    This patch implements a basic HTTP redirect functionality at
+    Virtual Host level, when the Redirect key is set on the Virtual
+    Host configuration file, for every incoming request the server
+    will perform a HTTP redirect. e.g:
+    
+    [SERVER]
+        Redirect  http://monkey-project.com
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 868d751d2cdfa2a00ad386b0085efd69f498c87c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon May 12 00:17:43 2014 -0600
+
+    Virtual Host: add Redirect support (Fix #132).
+    
+    This patch implements a basic HTTP redirect functionality at
+    Virtual Host level, when the Redirect key is set on the Virtual
+    Host configuration file, for every incoming request the server
+    will perform a HTTP redirect. e.g:
+    
+    [SERVER]
+        Redirect  http://monkey-project.com
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3df0f7ebc6fce3976edd7fc6fbabb8f7619748c7
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue May 13 19:05:17 2014 +0530
+
+    Socket: Added a variable to accept return value of read() in 'mk_socket_tcp_autocorking()'
+    
+    Added a variable to accept the return value of read() in line 266 in function 'mk_socket_tcp_autocorking()'. This patch removes the following warning that arises during 'make' :
+    
+    --------------- WARNING --------------------
+    mk_socket.c: In function ‘mk_socket_tcp_autocorking’:
+    mk_socket.c:265:9: warning: ignoring return value of ‘read’, declared with attribute warn_unused_result [-Wunused-result]
+    --------------- WARNING --------------------
+    
+    Signed-off-by: Savita TS <savita.seetaraman5@gmail.com>
+
+commit b08cdddb2e4383ac96689a4a3739713c570e3bb2
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue May 13 18:58:25 2014 +0530
+
+    Signals: Removed unused variable 'old' in mk_signal_thread_sigpipe_safe()
+    
+    Removed the variable 'sigset_t old' in line 71 from function, 'void mk_signal_thread_sigpipe_safe()'. This patch removes the following warning caused during 'make':
+    
+    ------------------ WARNING ---------------------
+    mk_signals.c: In function ‘mk_signal_thread_sigpipe_safe’:
+    mk_signals.c:71:19: warning: unused variable ‘old’ [-Wunused-variable]
+    ------------------ WARNING ---------------------
+    
+    Signed-off-by: Savita TS <savita.seetaraman5@gmail.com>
+
+commit 38f823e329a6a757a255f981a073edda7bad53c8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon May 12 00:17:43 2014 -0600
+
+    Virtual Host: add Redirect support (Fix #132).
+    
+    This patch implements a basic HTTP redirect functionality at
+    Virtual Host level, when the Redirect key is set on the Virtual
+    Host configuration file, for every incoming request the server
+    will perform a HTTP redirect. e.g:
+    
+    [SERVER]
+        Redirect  http://monkey-project.com
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 133c62d5635bd3c4181b3cf1fa8fc11640d3f684
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri May 9 14:50:54 2014 -0600
+
+    Doc: update INSTALL
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 84fa79eb42617d57207bba784157f5b48ce6c25d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri May 9 10:40:49 2014 -0600
+
+    License: core and plugins are now under the Apache License v2.0
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 50d34fca7dc3ff6af4e2de492ab06c5e6d136b83
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun May 4 19:58:35 2014 -0600
+
+    CGI: make sure the Interpreter can be used, otherwise use status 500
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d63286e36abce81f1e6aca261e1534d4e96edeb7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 3 17:18:33 2014 -0600
+
+    CI: enable IRC notifications
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0698068328e660270fc3d419bb8fc0142f398893
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 3 17:00:41 2014 -0600
+
+    CI: disable PolarSSL due to test box problem
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7882a48badc0fd22fc425d84deb673cfcda5744a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 3 16:54:43 2014 -0600
+
+    CI: add PolarSSL dependency and compile SSL Plugin
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 60296a159ab9f805d25daf8736b880b790503428
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat May 3 16:43:54 2014 -0600
+
+    CI: add Travis integration
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit df6f67ceff090c5202107060aba87212ff99ce0e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 2 21:29:31 2014 -0600
+
+    Auth: move mk_passwd code into tools/ for clean build
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a4225df6ff7e065ce9ee1a76846fef939106eb8b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri May 2 14:33:17 2014 -0600
+
+    Auth: make mk_passwd work without Monkey internals.
+    
+    This patch adds a few workarounds to make mk_passwd avoid Monkey
+    internals about memory allocations and string lines dependencies.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 4a4ae564079574fcf7ed81ac07808d9025f33c7b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 30 22:18:59 2014 -0600
+
+    Request: optimize initialization of session_request
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2371f385c9b89208a8724821d8988142599c1a79
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 29 16:42:12 2014 -0600
+
+    Lib: fix parameters for mk_socket_server() call
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit f1876018eb32cf3c1cf7cdf77e34fea203fdbad0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 29 16:35:30 2014 -0600
+
+    Debian: minor updates
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 409c5fb0e9636052acd4a41013694372739a1ba0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 28 21:12:28 2014 -0600
+
+    Doc: CONTRIBUTING.md: specify number of chars per line
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 8b97b01ef591186929b6d59dffef2988b4808526
+Author: Vladimir Cernov <gg.kaspersky@gmail.com>
+Date:   Tue Apr 29 00:00:36 2014 +0300
+
+    Auth: Rewrite mk_passwd in C (close #131).
+    
+    This patch drops the mk_passwd python script from auth plugin, by adding an
+    equivalent C implementation.
+    
+    The C implementation makes use of Monkey functions, whenever possible, so it
+    links with Monkey objects.
+    
+    In order to make the linking possible, some minor modifications had to be made
+    to the configure script, monkey.c and mk_config.c source files.
+    
+    Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
+
+commit 9e8444445daa2a2ad12d774250ec1bbe924e8362
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 28 10:12:43 2014 -0600
+
+    Socket: fix array index.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b4ef860e3f2edd1de6d0626c19a56730e7104428
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 28 10:05:48 2014 -0600
+
+    PolarSSL: Enable REUSEPORT feature
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e2ede773d0341f65e7be99887c699f8af206d6ee
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Apr 25 04:29:44 2014 +0200
+
+    PolarSSL: Enable session cache.
+    
+    Sets session cache on ssl context.
+    Moves pk_context to local thread context to allow use of polarssl
+    compiled without threading support.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit c51124d1ab2e1900b4eee4a9ef8adab58c59295b
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Apr 25 04:28:26 2014 +0200
+
+    PolarSSL: Fixes error where connection isn't terminated on error.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit 3b22521b6fed4d1f13a62f898a8b379168bde97e
+Author: Sonny Karlsson <ksonny@lotrax.org>
+Date:   Fri Apr 25 04:00:40 2014 +0200
+
+    PolarSSL: Drops polarssl v1.1 support.
+    
+    Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
+
+commit c8dba9b191784af72c82e4884520e4919b706661
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 23:21:52 2014 -0600
+
+    Scheduler: enable TCP_DEFER_ACCEPT on REUSEPORT mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0da162a6cae7c7c5616afda06b18973c9fcb643d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 23:06:54 2014 -0600
+
+    Cheetah: on status command, print new Kernel features
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a94fa2e04f8b4508e62f4c92950c951986c1b430
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 23:05:09 2014 -0600
+
+    Plugin API: export mk_kernel_features_print
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9a6ad8a67a09e72d96ca7b2d740569f39a1494dd
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 22:40:37 2014 -0600
+
+    HTTP/Server: use new server_cork_flag() interface
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7aed9dd5f4685a5481209e898a905918e1fb7759
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 22:36:11 2014 -0600
+
+    Config: check kernel_features flag for REUSEPORT
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit de083846ecece14949b66575851b66b411efd54f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 22:31:49 2014 -0600
+
+    Kernel: remove unused variable
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 9d7a8cda6b967abd24e34b0369dfcae1ded7885a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 22:24:05 2014 -0600
+
+    Kernel: new features interfaces and core flags
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fcfba4903f61b33e01124bbc8a60ea47f4d94b0a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 26 10:19:11 2014 -0600
+
+    Scheduler: Little improvements over REUSEPORT implementation.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d1da249a0b5e8f5765ea8031919fb32e93c57cb8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 24 22:57:43 2014 -0600
+
+    Scheduler: new REUSEPORT balancing method/architecture.
+    
+    Starting from Linux Kernel 3.9, there is a new TCP/UDP socket option which allows
+    to bind same port and address from multiples threads (or any instance under the
+    same process context).
+    
+    This patch implements the SO_REUSEPORT TCP Flag if the running Kernel is >= 3.9,
+    so on that mode each working thread create it own socket that bind the same address,
+    with this implementation we reduce the number of system calls involved when a new
+    connection arrives, avoid lookup the lowest loaded thread and also we allow the
+    Kernel to perform a better Scheduling on SMP systems that requires to scale.
+    
+    If the detected Kernel is lower than 3.9, it will use the old Fair Balancing
+    mechanism.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 27878547891bdac7456fbae2c60942434d40e065
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 24 19:51:57 2014 -0600
+
+    Config: fix typo in mk_kernel_runver
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 17df1070b417cca6d13ee3e863c3680830d27960
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 24 09:24:44 2014 -0600
+
+    Socket: TCP Auto Corking only on Linux >= 3.14.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 697341887751ac74f0e477754b18229e7c05d952
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 23 23:51:30 2014 -0600
+
+    Socket: enable TCP_FASTOPEN only on Kernel >= 3.7.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2c38ddb3178aefbe9122702309d2bfa183a11ac4
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 23 23:36:22 2014 -0600
+
+    Kernel: new interface to query Linux Kernel version.
+    
+    This patch implements two things:
+    
+      1. Macro MK_KERNEL_VERSION() to return an unique representative integer
+         of the Linux Kernel version given the 3 common values.
+      2. Function mk_kernel_version() that returns the Kernel version from
+         the running system.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 30c050b50f9940d9743c7b711fd10310764e3d04
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue Apr 15 17:21:56 2014 +0530
+
+    Reporting when event EPOLLRDHUP occurs in a file descriptor registered in an epoll instance
+
+commit d253f454ef2e0f313ebbcdd40bd45b36b6253516
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue Apr 8 17:54:38 2014 +0530
+
+    Removing unnecessary conditionals from src/mk_http.c
+
+commit 635c1304dd803e611e673521f6b3f389de6438e9
+Author: TamerTas <tamertas@outlook.com>
+Date:   Sun Apr 6 14:25:29 2014 +0300
+
+    HTTP: Fix comments' grammar and punctuation in mk_http.c
+
+commit ba0fb3326560c2d8ba0af7fabfe6bcdf4c0d60ca
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 2 23:31:17 2014 -0600
+
+    Socket: handle new Kernel 3.14 tcp_autocorking feature.
+    
+    the server use the TCP_CORK feature to instruct the Kernel to
+    wait for some data before dispatch it on the socket buffer. This
+    is a common approach when sending HTTP response headers and then
+    a content body (file data).
+    
+    The Linux Kernel 3.14 introduce a new feature called 'tcp autocorking',
+    it basically do TCP_CORK by default based on specific conditions of
+    each socket status. This is a good approach to let the Kernel to decide
+    when it can be used and also it avoid user space to invoke two system
+    calls to enable/disable the TCP_CORK.
+    
+    This patch makes the Server to validate if the new feature exists on the
+    running Kernel and if is enabled, it will disable all manual corking done,
+    for more details about how it works at Kernel level refer to the following
+    patch:
+    
+        http://goo.gl/AMFIuI
+    
+    Note: on an older Kernel it will continue working as usual.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7ddf7f99126487a94064e559edfd570c7e92b745
+Author: Vladimir Cernov <gg.kaspersky@gmail.com>
+Date:   Mon Mar 31 23:40:46 2014 +0300
+
+    Systemd: add unit file monkey.service
+    
+    This patch adds a unit file for systemd init system, as described in issue #39.
+    The installation of the unit file is triggered by the "--systemddir" passed to configure script, in the following way:
+    $ ./configure                           # no systemd unit file deployed
+    $ ./configure --systemddir              # Unit file systemd.service is created with default installation path "/lib/systemd/system"
+    $ ./configure --systemddir=CUSTOM_PATH  # Unit file systemd.service is created with installation path "CUSTOM_PATH"
+    
+    The unit file is deployed is deployed using "make install" command, so you should also specify "--prefix" option for configure.
+    
+    I tested the patch on archlinux and fedora (systemd init system) deploying the unit file in different system paths. The following commands were successful:
+    $ service monkey start
+    $ systemctl start monkey.service
+    
+    I also tested on ubuntu (upstart init system), ensuring nothing is broken.
+    
+    Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
+
+commit e74ff9f8f96726a4ef4db63032680fb2ca3cbf90
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Tue Apr 1 21:53:47 2014 +0530
+
+    Scheduler: Moving and renaming function mk_sched_worker_info() to mk_plugin_sched_get_thread_conf
+
+commit adc4ccc42780ff96e03257cb625d7441f556d7b0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 31 11:00:58 2014 -0600
+
+    Memory: upgrade Jemalloc to 3.6.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c253b3675fe90361fef91139127db7c76f55f32d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 29 11:22:53 2014 -0600
+
+    Epoll: when adding a new FD, return status value
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3400e110bc3c5f6e24fce0ef1f3c0e77cd9d745f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 27 22:28:36 2014 -0600
+
+    Vhost: skip files ending in '~' (editor backups)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0f511308bd443f72b5bc7b451870a4e363ac8029
+Author: Savita TS <savita.seetaraman5@gmail.com>
+Date:   Fri Mar 28 04:33:51 2014 +0530
+
+    IOV: store buffer type changed to void in function '_mk_iov_set_free'
+
+commit f5ce9bfcb83e53ee6d043b52c918bc33272d00b9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 24 22:38:35 2014 -0600
+
+    IOV: store buffer using void data type instead of char
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3946861b5b5b4e0755b47c39d0f1fbcc87995542
+Author: Vladimir Cernov <gg.kaspersky@gmail.com>
+Date:   Wed Mar 19 23:50:27 2014 +0200
+
+    Monkey configuration: add program options for configuration paths
+    
+    This patch solves the issue #36.
+    
+    4 additional program arguments were added for specifying different
+    configuration files and directories:
+    
+    -m, --mimes-conf-file # path to monkey.mime
+    -P, --plugins-conf-dir # path to plugins configuration directory
+    -l, --plugin-load-conf-file # path to plugins.load file
+    -S, --sites-conf-dir # path to sites directory
+    
+    Each option has a default value.
+    
+    Monkey will try to interpret the options by prepending their values
+    to default configuration directory. If the obtained path does not
+    exist, the options will be treated as absolute paths.
+    
+    I tested using ./configure --prefix=path --plugdir=--path2 and
+    default build. I was able to load different configuration files
+    from custom locations with custom names, overriding the default
+    names which were hardcoded in Monkey.
+    
+    The patch also contains an unrelated fix to:
+    
+    bin/monkey --confdir # was not working, while provided by --help
+    
+    Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
+
+commit 2d5e48d7697dd6b1ea3aaed48406d74e5d3ab097
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 17 23:13:14 2014 -0600
+
+    Epoll: Fix not catched peer close after events modifications (EPOLLRDHUP)
+    
+    If a socket created on the event loop did some events modifications and
+    the peer closed the connection, the core did not trap this event. This
+    patch re-enable the EPOLLRDHUP flag.
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 102b45e247b4b46d7499f34d8e160f2a22d33eee
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 15 15:51:55 2014 -0600
+
+    Configure: fix broken plugins path on previous contributor patch
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 42a3a8e95d02c14e5f2396e0932ec6b51e634b05
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 10 13:22:05 2014 -0600
+
+    Doc: update CONTRIBUTING with 'Commit Changes' info
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 545809698864309c9c49dc4874f7cdae4596082a
+Author: Vladimir Cernov <gg.kaspersky@gmail.com>
+Date:   Mon Mar 10 20:08:50 2014 +0200
+
+    Libmonkey: fix build and add test for mimetype
+
+commit f0e78d7f1e8e482035ded9e3199f2d575791c2f3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 9 21:31:48 2014 -0600
+
+    Doc: Add CONTRIBUTING.md file
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 2eb580ce3ba890540461d9afc25e28204e5588f2
+Author: matematik7 <domen.ipavec@z-v.si>
+Date:   Sat Mar 8 22:29:35 2014 +0100
+
+    Linux Trace: Fix compile issue
+
+commit b11236bedd56672b56fc3aa235428455e6041071
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 5 13:34:59 2014 -0600
+
+    Debian: bump to v1.5.o (development)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit fab1e41130f6ca76add03df8ed3f51b1325fcd24
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 5 11:46:26 2014 -0600
+
+    Lib: upgrade test lib version
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a3a99b141d0508ef33593e10e4df52a3abdcf04d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 2 23:22:07 2014 -0600
+
+    Epoll: testing new MK_EPOLL_HANGUP mode
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a123d949d03906cfc9f27a5489dc3baa96b5338d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 6 11:31:41 2014 -0600
+
+    Plugins: use new mk_ptr_t data type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b79465eeaf8ed06727b01fc8359edd9850a5b115
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 6 11:30:01 2014 -0600
+
+    Core: use new mk_ptr_t data type
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b353825456fb522bf335ac831570e543e9e2dcf6
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 6 11:26:49 2014 -0600
+
+    Memory: rename datatype mk_pointer to mk_ptr_t
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d77504ab34a4e8633bf643497c75cab2ae7c5843
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 6 11:24:20 2014 -0600
+
+    Development of v1.5 begins :)
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 726b3e8bcb7b14b2adc9ea6e3b2e67c7de25c032
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Feb 4 08:04:22 2014 -0600
+
+    Update ChangeLog for v1.4.0
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit f3638d9d6b7f781d0ad5dd87e04ee03c84271d90
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Feb 4 08:04:22 2014 -0600
