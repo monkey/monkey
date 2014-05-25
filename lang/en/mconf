@@ -47,7 +47,7 @@ cat > conf/monkey.conf <<EOF
     # File where the server guards the process number when starting.
     # Note that the filename will have the port number appended to it.
 
-    PidFile $logdir/monkey.pid
+    PidFile #PIDFILE#
 
     # UserDir:
     # --------
@@ -147,9 +147,9 @@ cat > conf/monkey.conf <<EOF
     # FDT:
     # ----
     # The File Descriptor Table (FDT) it's an internal mechanism to share open
-    # file descriptors under specific threads and virtual host context. When 
-    # enabled, it helps to reduce the number of opened file descriptors for the 
-    # same resource and the number of required system calls to open and close 
+    # file descriptors under specific threads and virtual host context. When
+    # enabled, it helps to reduce the number of opened file descriptors for the
+    # same resource and the number of required system calls to open and close
     # files.
     #
     # The overhead in memory of this feature is around ~5KB per worker.

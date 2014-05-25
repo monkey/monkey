@@ -76,6 +76,7 @@ make_conf()
 	cat $INCDIR/config.path lang/$lang/mconf lang/$lang/sites/default > makeconf.sh
 	sed -i "s/#PORT#/$default_port/g" makeconf.sh
 	sed -i "s/#USER#/$default_user/g" makeconf.sh
+	sed -i 's|#PIDFILE#|'$pidfile'|g' makeconf.sh
 	chmod 755 makeconf.sh
 	./makeconf.sh
 	rm makeconf.sh
@@ -188,7 +189,7 @@ main()
 
 	echo "+ Creating conf/monkey.conf"
 	create_conf prefix
-	make_conf  $lang $default_port $default_user
+	make_conf  $lang $default_port $default_user $pidfile
 
 	echo "+ Creating src/Makefile"
 	create_makefile2 mod_libs mod_obj make_script platform \
@@ -264,6 +265,7 @@ main()
 	echo -e "Datadir\t\t= $datadir"
 	echo -e "Mandir\t\t= $mandir"
 	echo -e "Logdir\t\t= $logdir"
+	echo -e "PidFile\t\t= $pidfile"
 
 	if [ "$plugdir" != "" ]; then
 		echo -e "Plugdir\t\t= $plugdir"
@@ -756,6 +758,7 @@ create_makefile_plugins()
 			find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
+			find $target/* -xtype f -exec sed -i "s,#PIDFILE#,$pidfile," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
 		fi
 
@@ -874,7 +877,7 @@ After=network.target
 [Service]
 Type=fork
 ExecStart=$bindir/monkey -D
-PIDFile=$logdir/monkey.pid.$default_port
+PIDFile=$pidfile.$default_port
 Restart=always
 
 [Install]
@@ -1012,6 +1015,7 @@ mandir="$aux/man"
 sysconfdir="$aux/conf"
 datadir="$aux/htdocs"
 logdir="$aux/logs"
+pidfile="$logdir/monkey.pid"
 plugdir="$aux/plugins"
 systemddir=""
 platform="generic"
@@ -1072,6 +1076,9 @@ for arg in $*; do
 			;;
 		--logdir*)
 			logdir=$optarg
+			;;
+		--pidfile*)
+			pidfile=$optarg
 			;;
 		--plugdir*)
 			plugdir=$optarg
@@ -1199,6 +1206,7 @@ for arg in $*; do
 			echo "  --datadir=DATADIR       Specific Monkey data files"
 			echo "  --mandir=MANDIR         Manpages - documentation"
 			echo "  --logdir=LOGDIR         Log files"
+			echo "  --pidfile=PIDFILE       Path to file to store PID"
 			echo "  --plugdir=PLUGDIR       Plugins directory path"
 			echo "  --systemddir[=DIR]      Systemd directory path"
 			echo "  --enable-plugins=a,b    Enable the listed plugins"
@@ -1315,7 +1323,7 @@ uname=`uname -a`
 
 # Starting main function
 main prefix lang bindir mandir  sysconfdir datadir \
-     logdir plugdir platform only_accept only_accept4 \
+     logdir pidfile plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
      no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname
 
