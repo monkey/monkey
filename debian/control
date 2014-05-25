@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/monkey/monkey
 
 Package: monkey
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, monkey-liana, monkey-logger
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Fast and lightweight Web Server for Linux.
  Monkey HTTP Server has been designed to be very scalable with low memory
  and CPU consumption, the perfect solution for embedded environments. It
