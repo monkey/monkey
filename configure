@@ -1064,6 +1064,9 @@ for arg in $*; do
 		--libdir*)
 			libdir=$optarg
 			;;
+		--includedir*)
+			incdir=$optarg
+			;;
 		--incdir*)
 			incdir=$optarg
 			;;
@@ -1133,13 +1136,37 @@ for arg in $*; do
 			fi
 			;;
 		--version*)
-			echo -e $bldgrn"Monkey HTTP Daemon v$VERSION" $txtrst
-			echo "Copyright 2001-2013 - Monkey Development Team"
+			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
+			echo "Copyright 2001-2014 - Eduardo Silva <eduardo@monkey.io>"
 			echo "http://monkey-project.com"
                         echo
-			echo -e $txtylw"Written by Eduardo Silva P. <edsiper@gmail.com>" $txtrst
-			echo
 			exit 1
+			;;
+		--build*)
+			;;
+		--host*)
+			;;
+		--target*)
+			;;
+		--exec_prefix*)
+			;;
+		--sbindir*)
+			;;
+		--libexecdir*)
+			;;
+		--sharedstatedir*)
+			;;
+		--localstatedir*)
+			;;
+		--oldincludedir*)
+			;;
+		--infodir*)
+			;;
+		--disable-silent-rules*)
+			;;
+		--disable-dependency-tracking*)
+			;;
+		--with-libtool-sysroot*)
 			;;
 		*)
 			echo "Usage: ./configure [OPTION]... [VAR=VALUE]..."
