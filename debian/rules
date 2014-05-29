@@ -15,5 +15,7 @@ override_dh_auto_configure:
 		--plugdir=/usr/lib/monkey	\
 		--enable-plugins="auth,liana,mandril,cheetah,cgi,fastcgi,logger,dirlisting,polarssl"    \
 		--disable-plugins="*"		\
-		--enable-shared
+		--enable-shared                 \
+                --pidfile=/var/run/monkey.pid
+
 
