@@ -1,0 +1,14 @@
+all: monkey-proxy.so
+include ../Make.common
+
+CC	= @echo "  CC   $(_PATH)/$@"; $CC
+CC_QUIET= @echo -n; $CC
+CFLAGS	= $CFLAGS
+LDFLAGS = $LDFLAGS
+DEFS    = $DEFS
+PROXY_OBJECTS = proxy.o proxy_conf.o http/http_proxy.o
+
+-include $(PROXY_OBJECTS:.o=.d)
+
+monkey-proxy.so: $(PROXY_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc

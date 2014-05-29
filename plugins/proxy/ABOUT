@@ -1,0 +1,4 @@
+Proxy
+=====
+This plugin enable Proxy features to Monkey server. It make the server able to
+route requests to different backend servers.
