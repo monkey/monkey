@@ -57,6 +57,14 @@ void mk_config_error(const char *path, int line, const char *msg)
     exit(EXIT_FAILURE);
 }
 
+/* Raise a warning */
+void mk_config_warning(const char *path, int line, const char *msg)
+{
+    mk_warn("Config file warning '%s':\n"
+            "\t\t\t\tat line %i: %s",
+            path, line, msg);
+}
+
 /* Returns a configuration section by [section name] */
 struct mk_config_section *mk_config_section_get(struct mk_config *conf,
                                                 const char *section_name)
@@ -171,7 +179,7 @@ struct mk_config *mk_config_create(const char *path)
                  * one have at least one key set
                  */
                 if (current && n_keys == 0) {
-                    mk_config_error(path, line, "Previous section did not have keys");
+                    mk_config_warning(path, line, "Previous section did not have keys");
                 }
 
                 /* Create new section */
@@ -236,7 +244,8 @@ struct mk_config *mk_config_create(const char *path)
     }
 
     if (section && n_keys == 0) {
-        mk_config_error(path, line, "Section do not have keys");
+        mk_config_warning(path, line, "Section do not have keys");
+        return conf;
     }
 
     /*
