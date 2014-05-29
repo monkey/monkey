@@ -17,11 +17,101 @@
  *  limitations under the License.
  */
 
+#include <regex.h>
+
 #include "MKPlugin.h"
 #include "proxy.h"
 #include "proxy_conf.h"
 
-static int proxy_config_parse_route(struct proxy_backend *backend)
+/* Lookup a backend (defined in proxy.conf) by it's name */
+static struct proxy_backend *proxy_conf_backend_lookup_by_name(char *name)
+{
+    struct mk_list *head;
+    struct proxy_backend *backend;
+
+    mk_list_foreach(head, &proxy_config.backends) {
+        backend = mk_list_entry(head, struct proxy_backend, _head);
+        if (strcmp(backend->name, name) == 0) {
+            return backend;
+        }
+    }
+
+    return NULL;
+}
+
+
+/* Read the list of virtual hosts and prepare the proxies */
+static int proxy_conf_vhosts()
+{
+    int ret;
+    char *router;
+    char *pattern;
+    struct host *host;
+    struct mk_list *head;
+    struct mk_list *vh_section;
+    struct mk_config_section *section;
+    struct proxy_vhost *pvh;
+    struct proxy_match *match;
+    struct proxy_backend *backend;
+
+    mk_list_foreach(head, &mk_api->config->hosts) {
+        host = mk_list_entry(head, struct host, _head);
+
+        pvh = mk_api->mem_alloc(sizeof(struct proxy_vhost));
+        pvh->vhost = host;
+        mk_list_init(&pvh->matches);
+        mk_list_add(&pvh->_head, &proxy_config.vhosts);
+
+        /* lookup PROXY sections */
+        mk_list_foreach(vh_section, &host->config->sections) {
+            section = mk_list_entry(vh_section, struct mk_config_section, _head);
+            if (strcasecmp(section->name, "PROXY") != 0) {
+                continue;
+            }
+
+            router = mk_api->config_section_getval(section,
+                                                   "Router",
+                                                   MK_CONFIG_VAL_STR);
+            pattern = mk_api->config_section_getval(section,
+                                                    "Match",
+                                                    MK_CONFIG_VAL_STR);
+
+            /* Validate router */
+            if (!router) {
+                mk_err("No Router defined in PROXY section");
+                exit(EXIT_FAILURE);
+            }
+
+            backend = proxy_conf_backend_lookup_by_name(router);
+            if (!backend) {
+                mk_err("Router '%s' don't exists in proxy.conf", router);
+                exit(EXIT_FAILURE);
+            }
+
+            /* Validate regex expression */
+            if (!pattern) {
+                mk_err("No Match rule defined in PROXY section");
+                exit(EXIT_FAILURE);
+            }
+
+            /* Allocate node */
+            match = mk_api->mem_alloc(sizeof(struct proxy_match));
+            match->router = backend;
+            ret = regcomp(&match->regex, pattern, REG_EXTENDED | REG_NOSUB);
+            if (ret != 0) {
+                mk_err("Invalid expression on Match pattern in PROXY section");
+                exit(EXIT_FAILURE);
+            }
+
+            PLUGIN_TRACE("Proxy Match: {Router=%s, Match=%s}", router, pattern);
+            mk_list_add(&match->_head, &pvh->matches);
+        }
+    }
+
+    return 0;
+}
+
+static int proxy_conf_parse_route(struct proxy_backend *backend)
 {
     /* FIXME: parse Route string */
     int pos;
@@ -59,7 +149,7 @@ static int proxy_config_parse_route(struct proxy_backend *backend)
         }
     }
     else {
-        backend->host = strndup(host, pos);
+        backend->host = mk_api->str_copy_substr(host, 0, pos);
         port = mk_api->str_dup(host + pos + 1);
         if (strlen(port) != 0) {
             backend->port = atoi(port);
@@ -133,7 +223,7 @@ static int proxy_conf_read_main(char *confdir)
             backend->keepalive = MK_TRUE;
         }
 
-        ret = proxy_config_parse_route(backend);
+        ret = proxy_conf_parse_route(backend);
         if (ret == -1) {
             continue;
         }
@@ -167,7 +257,14 @@ int proxy_conf_init(char *confdir)
     mk_list_init(&proxy_config.backends);
     mk_list_init(&proxy_config.vhosts);
 
+    /* Read main configuration */
     ret = proxy_conf_read_main(confdir);
+    if (ret != 0) {
+        return -1;
+    }
+
+    /* Parse and load proxies per virtual host */
+    ret = proxy_conf_vhosts();
     if (ret != 0) {
         return -1;
     }

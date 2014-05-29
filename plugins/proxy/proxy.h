@@ -42,16 +42,18 @@ struct proxy_backend {
     struct mk_list _head; /* proxy_config link */
 };
 
-/* A rule that exists under a Virtual Host */
+/* A rule that exists under a Virtual Host [PROXY] */
 struct proxy_match {
+    struct proxy_backend *router;
     regex_t regex;
+    struct mk_list _head;
 };
 
 /* Group a set of rules for a Virtual Host */
 struct proxy_vhost {
-    struct host vhost;
-
-    struct mk_list _head;
+    struct host *vhost;       /* Virtual host reference */
+    struct mk_list matches;   /* List of [PROXY] associated to this VHost */
+    struct mk_list _head;     /* Head to linked list */
 };
 
 #endif

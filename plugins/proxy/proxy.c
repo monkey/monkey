@@ -52,5 +52,9 @@ void _mkp_exit()
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
+    (void) plugin;
+    (void) sr;
+    (void) cs;
+
     return MK_PLUGIN_RET_CONTINUE;
 }
