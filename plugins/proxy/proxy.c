@@ -53,8 +53,14 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
     (void) plugin;
-    (void) sr;
     (void) cs;
+    struct proxy_backend *backend;
 
-    return MK_PLUGIN_RET_CONTINUE;
+    backend = proxy_conf_vhost_match(sr);
+    if (!backend) {
+        return MK_PLUGIN_RET_CLOSE_CONX;
+    }
+
+
+    return MK_PLUGIN_RET_NOT_ME;
 }

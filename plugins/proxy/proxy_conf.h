@@ -31,5 +31,6 @@ struct proxy_conf proxy_config;
 
 /* functions */
 int proxy_conf_init();
+struct proxy_backend *proxy_conf_vhost_match(struct session_request *sr);
 
 #endif

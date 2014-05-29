@@ -23,6 +23,44 @@
 #include "proxy.h"
 #include "proxy_conf.h"
 
+/* Lookup a backend (defined in proxy.conf) by it's host pointer ref */
+struct proxy_backend *proxy_conf_vhost_match(struct session_request *sr)
+{
+    int ret;
+    struct mk_list *head;
+    struct mk_list *m_head;
+    struct proxy_vhost *pvh;
+    struct proxy_match *match;
+    struct proxy_backend *router = NULL;
+
+    /*
+     * Regexec do not support string lengths, it just lookup for a NULL
+     * byte from the start position. As a workaround we insert the NULL
+     * byte in the original buffer and then we remove it.
+     */
+    sr->uri_processed.data[sr->uri_processed.len] = '\0';
+
+    /* Lookup the virtual host */
+    mk_list_foreach(head, &proxy_config.vhosts) {
+        pvh = mk_list_entry(head, struct proxy_vhost, _head);
+        if (pvh->vhost == sr->host_conf) {
+            mk_list_foreach(m_head, &pvh->matches) {
+                match = mk_list_entry(m_head, struct proxy_match, _head);
+                ret = regexec(&match->regex,
+                              sr->uri_processed.data,
+                              0, NULL, 0);
+                if (ret == 0) {
+                    router = match->router;
+                    break;
+                }
+            }
+        }
+    }
+    sr->uri_processed.data[sr->uri_processed.len] = ' ';
+
+    return router;
+}
+
 /* Lookup a backend (defined in proxy.conf) by it's name */
 static struct proxy_backend *proxy_conf_backend_lookup_by_name(char *name)
 {
