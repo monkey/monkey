@@ -18,11 +18,11 @@
 #
 
 __MONKEY__="1"
-__MONKEY_MINOR__="5"
+__MONKEY_MINOR__="6"
 __MONKEY_PATCHLEVEL__="0"
 __MONKEY_GIT__="release"
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
