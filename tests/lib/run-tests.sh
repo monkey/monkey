@@ -15,7 +15,7 @@ LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey"
 
 
 # Check that we can run the tests
-if [ ! -f ../../src/libmonkey.so.1.5 ]; then
+if [ ! -f ../../src/libmonkey.so ]; then
 	echo -e "\n${YELLOW}Please build and install the library first.\n"
 
 	echo "The tests will link against the source dir, but the library"
