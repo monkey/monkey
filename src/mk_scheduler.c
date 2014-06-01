@@ -287,7 +287,8 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_conn_close(remote_fd, MK_EP_SOCKET_CLOSED);
+        mk_epoll_del(sched->epoll_fd, remote_fd);
+        mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return -1;
     }
