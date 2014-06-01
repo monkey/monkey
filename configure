@@ -1019,6 +1019,7 @@ pidfile="$logdir/monkey.pid"
 plugdir="$aux/plugins"
 systemddir=""
 platform="generic"
+compiler="gcc"
 
 # Generic default values for monkey.conf
 default_port="2001"
@@ -1142,6 +1143,11 @@ for arg in $*; do
 				systemddir=/lib/systemd/system
 			fi
 			;;
+		--compiler*)
+			if [ $optarg ] ; then
+				compiler=$optarg
+			fi
+			;;
 		--version*)
 			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
 			echo "Copyright 2001-2014 - Eduardo Silva <eduardo@monkey.io>"
@@ -1183,6 +1189,7 @@ for arg in $*; do
 			echo "  --version     Display version information and exit"
 			echo
 			echo -e $bldwht"Compiler and debug Features:"  $txtrst
+			echo "  --compiler=COMPILER     Choose a compiler for Monkey"
 			echo "  --debug                 Compile Monkey with debugging symbols"
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
@@ -1244,9 +1251,9 @@ lang="en"
 
 # Configure environment
 if test -z "$CC" ; then
-	gcc_path=`which gcc`
-	if test -x "$gcc_path" ; then
-		CC="gcc"
+	comp_path=`which $compiler`
+	if test -x "$comp_path" ; then
+		CC="$compiler"
 	else
 		echo
 		echo
