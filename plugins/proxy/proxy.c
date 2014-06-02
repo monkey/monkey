@@ -20,12 +20,14 @@
 #include "MKPlugin.h"
 #include "proxy.h"
 #include "proxy_conf.h"
+#include "proxy_handler.h"
 
 MONKEY_PLUGIN("proxy",             /* shortname */
-              "HTTP Proxy",        /* name */
+              "Proxy",             /* name */
               VERSION,             /* version */
-              MK_PLUGIN_STAGE_30); /* hooks */
+              MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX); /* hooks */
 
+/* Init plugin */
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
     int ret;
@@ -44,23 +46,36 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
+/* Exit plugin */
 void _mkp_exit()
 {
     PLUGIN_TRACE("Exiting");
 }
 
+/* Initialize thread contexts */
+void _mkp_core_thctx(void)
+{
+    /* Perform connections to each backend */
+}
+
+/* Content handler: the real proxy stuff happens here */
 int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
                   struct session_request *sr)
 {
     (void) plugin;
     (void) cs;
+    int ret;
     struct proxy_backend *backend;
 
     backend = proxy_conf_vhost_match(sr);
     if (!backend) {
-        return MK_PLUGIN_RET_CLOSE_CONX;
+        return MK_PLUGIN_RET_NOT_ME;
     }
 
+    ret = proxy_handler_start(cs, sr, backend);
+    if (ret == 0) {
+        return MK_PLUGIN_RET_CONTINUE;
+    }
 
     return MK_PLUGIN_RET_NOT_ME;
 }

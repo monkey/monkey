@@ -6,7 +6,7 @@ CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
-PROXY_OBJECTS = proxy.o proxy_conf.o http/http_proxy.o
+PROXY_OBJECTS = proxy.o proxy_conf.o proxy_handler.o http_proxy.o
 
 -include $(PROXY_OBJECTS:.o=.d)
 
