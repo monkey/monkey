@@ -42,6 +42,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
         mk_err("Proxy configuration failed. Aborting.");
         exit(EXIT_FAILURE);
     }
+    pthread_mutex_init(&mutex_proxy_backend, (pthread_mutexattr_t *) NULL);
 
     return 0;
 }
@@ -55,7 +56,10 @@ void _mkp_exit()
 /* Initialize thread contexts */
 void _mkp_core_thctx(void)
 {
-    /* Perform connections to each backend */
+    /* Initialize each backend connections pool */
+    pthread_mutex_lock(&mutex_proxy_backend);
+    proxy_backend_worker_init();
+    pthread_mutex_unlock(&mutex_proxy_backend);
 }
 
 /* Content handler: the real proxy stuff happens here */

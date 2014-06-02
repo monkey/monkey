@@ -39,6 +39,14 @@ struct proxy_backend {
     long     keepalive;   /* should use KeepAlive connection ? */
     int      protocol;    /* protocol, e.g: PROXY_PROTOCOL_XYZ */
 
+    /* Init state */
+    int      _total_conx; /* Total number of slots still available to let
+                           * workers initialize the connections to the
+                           * backend.
+                           */
+    int      _av_conx;
+    int      _av_diff;
+
     struct mk_list _head; /* proxy_config link */
 };
 
@@ -55,5 +63,8 @@ struct proxy_vhost {
     struct mk_list matches;   /* List of [PROXY] associated to this VHost */
     struct mk_list _head;     /* Head to linked list */
 };
+
+/* A mutex to initialize backends on workers, just used on startup */
+pthread_mutex_t mutex_proxy_backend;
 
 #endif

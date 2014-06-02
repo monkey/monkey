@@ -275,6 +275,10 @@ static int proxy_conf_read_main(char *confdir)
                      backend->host,
                      backend->port);
 
+        /* Temporal value: Each backend entry register 16 persistent connections */
+        backend->_av_conx = backend->_total_conx = 16;
+        backend->_av_diff = (backend->_total_conx % mk_api->config->workers);
+
         mk_list_add(&backend->_head, &proxy_config.backends);
         backends++;
     }
