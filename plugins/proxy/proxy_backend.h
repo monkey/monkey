@@ -20,6 +20,36 @@
 #ifndef PROXY_BACKEND_H
 #define PROXY_BACKEND_H
 
+#define PROXY_POOL_CONNECTING  -1
+#define PROXY_POOL_AVAILABLE    0
+#define PROXY_POOL_BUSY         1
+#define PROXY_POOL_DEAD         2
+
+/* Represents a connection to a specific machine */
+struct proxy_backend_conx {
+    int fd;                          /* socket */
+    int status;                      /* connection status */
+    struct proxy_backend_pool *pool; /* reverse pool lookup */
+    struct rb_node _rb_head;         /* red-black tree head */
+    struct mk_list _head;            /* head link to available or busy queues */
+};
+
+/* A backend pool is a group of connections to a target machine */
+struct proxy_backend_pool {
+    int connections;
+    struct proxy_backend *backend;
+    struct mk_list av_conx;
+    struct mk_list busy_conx;
+};
+
+int proxy_conx_insert(struct proxy_backend_conx *conx);
+int proxy_conx_remove(struct proxy_backend_conx *conx);
+struct proxy_backend_conx *proxy_conx_get(int fd);
+
 int proxy_backend_worker_init();
+
+/* Worker scope variables */
+extern __thread struct mk_list worker_proxy_pool;
+extern __thread struct rb_root worker_connections;
 
 #endif

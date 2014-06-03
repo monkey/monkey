@@ -21,11 +21,13 @@
 #include "proxy.h"
 #include "proxy_conf.h"
 #include "proxy_handler.h"
+#include "proxy_backend.h"
 
 MONKEY_PLUGIN("proxy",             /* shortname */
               "Proxy",             /* name */
               VERSION,             /* version */
-              MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX); /* hooks */
+              MK_PLUGIN_STAGE_30 |
+              MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX); /* hooks */
 
 /* Init plugin */
 int _mkp_init(struct plugin_api **api, char *confdir)
@@ -42,6 +44,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
         mk_err("Proxy configuration failed. Aborting.");
         exit(EXIT_FAILURE);
     }
+
     pthread_mutex_init(&mutex_proxy_backend, (pthread_mutexattr_t *) NULL);
 
     return 0;
@@ -51,6 +54,28 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 void _mkp_exit()
 {
     PLUGIN_TRACE("Exiting");
+}
+
+int _mkp_core_prctx(struct server_config *config)
+{
+    struct mk_list *head;
+    struct plugin *mk_plugin;
+
+    /*
+     * lookup this plugin instance in Monkey internals and create a
+     * assign the reference to the global reference 'proxy_plugin'.
+     */
+    proxy_plugin = NULL;
+    mk_list_foreach(head, config->plugins) {
+        mk_plugin = mk_list_entry(head, struct plugin, _head);
+        if (strcmp(mk_plugin->shortname, "proxy") == 0) {
+            proxy_plugin = mk_plugin;
+            break;
+        }
+    }
+    mk_bug(!proxy_plugin);
+
+    return 0;
 }
 
 /* Initialize thread contexts */

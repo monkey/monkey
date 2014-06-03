@@ -35,16 +35,20 @@ struct proxy_backend {
     char    *name;        /* descriptive name */
     char    *route;       /* original route */
     char    *host;        /* target host IP */
+    char     cport[16];   /* TCP port in char */
     int      port;        /* TCP port */
-    long     keepalive;   /* should use KeepAlive connection ? */
+    long     keepalive;   /* should we use KeepAlive connection ? */
     int      protocol;    /* protocol, e.g: PROXY_PROTOCOL_XYZ */
 
-    /* Init state */
-    int      _total_conx; /* Total number of slots still available to let
-                           * workers initialize the connections to the
-                           * backend.
-                           */
+    /* Total number of slots still available to let workers initialize
+     * the connections to the backend.
+     */
+    int      _total_conx;
+
+    /* Available slots while initializing across workers */
     int      _av_conx;
+
+    /* Balance difference */
     int      _av_diff;
 
     struct mk_list _head; /* proxy_config link */
@@ -66,5 +70,8 @@ struct proxy_vhost {
 
 /* A mutex to initialize backends on workers, just used on startup */
 pthread_mutex_t mutex_proxy_backend;
+
+/* Reference to the plugin with Monkey internals */
+struct plugin *proxy_plugin;
 
 #endif

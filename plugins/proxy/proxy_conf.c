@@ -202,6 +202,7 @@ static int proxy_conf_parse_route(struct proxy_backend *backend)
         }
     }
 
+    snprintf(backend->cport, sizeof(backend->cport), "%i", backend->port);
     if (port) {
         mk_api->mem_free(port);
     }
