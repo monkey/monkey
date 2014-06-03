@@ -7,7 +7,7 @@ CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
 PROXY_OBJECTS = proxy.o proxy_conf.o proxy_handler.o proxy_backend.o \
-		proxy_event.o proxy_network.o http_proxy.o
+		proxy_event.o proxy_network.o proxy_http.o
 
 -include $(PROXY_OBJECTS:.o=.d)
 
