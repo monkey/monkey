@@ -30,6 +30,9 @@
 #define PROXY_PROTOCOL_FASTCGI_UNIX   8  /* not yet supported */
 #define PROXY_PROTOCOL_SPDY          16  /* not yet supported */
 
+/* Default number of backend connections */
+#define PROXY_BACKEND_CONNECTIONS    16
+
 /* A backend server */
 struct proxy_backend {
     char    *name;        /* descriptive name */
@@ -39,6 +42,7 @@ struct proxy_backend {
     int      port;        /* TCP port */
     long     keepalive;   /* should we use KeepAlive connection ? */
     int      protocol;    /* protocol, e.g: PROXY_PROTOCOL_XYZ */
+    int      connections; /* number of persistent connections */
 
     /* Total number of slots still available to let workers initialize
      * the connections to the backend.

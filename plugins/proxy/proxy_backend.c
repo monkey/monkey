@@ -237,6 +237,10 @@ int proxy_backend_worker_init()
             backend->_av_conx -= connections;
         }
 
+        if (connections == 0) {
+            mk_warn("Proxy: worker connections is zero. Increasing to one");
+            connections = 1;
+        }
         proxy_backend_start_conxs(backend, connections);
     }
 

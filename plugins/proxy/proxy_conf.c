@@ -247,6 +247,10 @@ static int proxy_conf_read_main(char *confdir)
                                                                   "KeepAlive",
                                                                   MK_CONFIG_VAL_BOOL);
 
+        backend->connections = (long) mk_api->config_section_getval(section,
+                                                                    "Connections",
+                                                                    MK_CONFIG_VAL_NUM);
+
         if (!backend->name) {
             mk_err("Proxy backend don't have a Name.");
             exit(EXIT_FAILURE);
@@ -260,6 +264,10 @@ static int proxy_conf_read_main(char *confdir)
         if (backend->keepalive < 0) {
             /* set default ON */
             backend->keepalive = MK_TRUE;
+        }
+
+        if (backend->connections <= 0) {
+            backend->connections = PROXY_BACKEND_CONNECTIONS;
         }
 
         ret = proxy_conf_parse_route(backend);
@@ -277,7 +285,7 @@ static int proxy_conf_read_main(char *confdir)
                      backend->port);
 
         /* Temporal value: Each backend entry register 16 persistent connections */
-        backend->_av_conx = backend->_total_conx = 16;
+        backend->_av_conx = backend->_total_conx = backend->connections;
         backend->_av_diff = (backend->_total_conx % mk_api->config->workers);
 
         mk_list_add(&backend->_head, &proxy_config.backends);
