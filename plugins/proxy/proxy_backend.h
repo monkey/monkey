@@ -40,11 +40,15 @@ struct proxy_backend_pool {
     struct proxy_backend *backend;
     struct mk_list av_conx;
     struct mk_list busy_conx;
+    struct mk_list _head;
 };
 
 int proxy_conx_insert(struct proxy_backend_conx *conx);
 int proxy_conx_remove(struct proxy_backend_conx *conx);
 struct proxy_backend_conx *proxy_conx_get(int fd);
+struct proxy_backend_conx *proxy_conx_get_available(struct proxy_backend *backend);
+int proxy_conx_set_available(struct proxy_backend_conx *conx);
+
 
 int proxy_backend_worker_init();
 

@@ -19,20 +19,27 @@
 
 #include "MKPlugin.h"
 #include "proxy.h"
+#include "proxy_backend.h"
 
 int proxy_handler_start(struct client_session *cs,
                         struct session_request *sr,
                         struct proxy_backend *backend)
 {
     (void) sr;
+    struct proxy_backend_conx *conx;
 
     PLUGIN_TRACE("[FD %i] Proxy Handler routed by '%s'",
                  cs->socket, backend->name);
 
     if (backend->protocol == PROXY_PROTOCOL_HTTP) {
+        /* Put remove client to sleep */
         mk_api->event_socket_change_mode(cs->socket,
                                          MK_EPOLL_SLEEP,
                                          MK_EPOLL_LEVEL_TRIGGERED);
+
+        /* Assign this request to a backend connection */
+        conx = proxy_conx_get_available(backend);
+        PLUGIN_TRACE("[FD %i] Request routing to FD=%i", cs->socket, conx->fd);
     }
 
     return 0;

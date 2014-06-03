@@ -33,6 +33,7 @@ int proxy_conx_insert(struct proxy_backend_conx *conx)
     struct rb_node **new = &(worker_connections.rb_node);
     struct rb_node *parent = NULL;
     struct proxy_backend_conx *this;
+
     /* Figure out where to put new node */
     while (*new) {
         this = container_of(*new, struct proxy_backend_conx, _rb_head);
@@ -58,6 +59,51 @@ int proxy_conx_remove(struct proxy_backend_conx *conx)
 {
     /* Unlink from the red-black tree */
     rb_erase(&conx->_rb_head, &worker_connections);
+    return 0;
+}
+
+struct proxy_backend_conx *proxy_conx_get_available(struct proxy_backend *backend)
+{
+    struct proxy_backend_pool *pool;
+    struct proxy_backend_conx *conx;
+    struct mk_list *head;
+
+    mk_list_foreach(head, &worker_proxy_pool) {
+        pool = mk_list_entry(head, struct proxy_backend_pool, _head);
+        if (pool->backend == backend) {
+            break;
+        }
+        else {
+            pool = NULL;
+        }
+    }
+
+    if (!pool) {
+        return NULL;
+    }
+
+    if (mk_list_is_empty(&pool->av_conx) == 0) {
+        return NULL;
+    }
+
+    conx = mk_list_entry_first(&pool->av_conx, struct proxy_backend_conx, _head);
+    conx->status = PROXY_POOL_BUSY;
+    mk_list_del(&conx->_head);
+    mk_list_add(&conx->_head, &conx->pool->busy_conx);
+    mk_api->event_socket_change_mode(conx->fd,
+                                     MK_EPOLL_WRITE,
+                                     MK_EPOLL_LEVEL_TRIGGERED);
+    return conx;
+}
+
+int proxy_conx_set_available(struct proxy_backend_conx *conx)
+{
+    conx->status = PROXY_POOL_AVAILABLE;
+    mk_list_del(&conx->_head);
+    mk_list_add(&conx->_head, &conx->pool->av_conx);
+    mk_api->event_socket_change_mode(conx->fd,
+                                     MK_EPOLL_HANGUP,
+                                     MK_EPOLL_LEVEL_TRIGGERED);
     return 0;
 }
 
@@ -92,7 +138,8 @@ int proxy_backend_start_conxs(struct proxy_backend *backend,
 
     /* Only HTTP backends are supported at the moment */
     if (backend->protocol != PROXY_PROTOCOL_HTTP) {
-        mk_warn("Backend '%s' have an unsupported protocol", backend->name);
+        mk_warn("Backend '%s' have an unsupported protocol: %i",
+                backend->name, backend->protocol);
         return -1;
     }
 
@@ -104,6 +151,7 @@ int proxy_backend_start_conxs(struct proxy_backend *backend,
     pool->connections = connections;
     mk_list_init(&pool->av_conx);
     mk_list_init(&pool->busy_conx);
+    mk_list_add(&pool->_head, &worker_proxy_pool);
 
     for (i = 0; i < connections; i++) {
         conx = mk_api->mem_alloc(sizeof(struct proxy_backend_conx));
