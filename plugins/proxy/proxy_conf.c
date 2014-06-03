@@ -213,7 +213,9 @@ static int proxy_conf_read_main(char *confdir)
 {
     int ret;
     int backends = 0;
+    int workers = mk_api->config->workers;
     unsigned long len;
+    char *tmp = NULL;
     char *conf_path = NULL;
     struct mk_config *config;
     struct mk_config_section *section;
@@ -247,9 +249,15 @@ static int proxy_conf_read_main(char *confdir)
                                                                   "KeepAlive",
                                                                   MK_CONFIG_VAL_BOOL);
 
-        backend->connections = (long) mk_api->config_section_getval(section,
-                                                                    "Connections",
-                                                                    MK_CONFIG_VAL_NUM);
+        tmp = mk_api->config_section_getval(section,
+                                            "Connections",
+                                            MK_CONFIG_VAL_STR);
+        if (tmp) {
+            backend->connections = atoi(tmp);
+        }
+        else {
+            backend->connections = 0;
+        }
 
         if (!backend->name) {
             mk_err("Proxy backend don't have a Name.");
@@ -266,8 +274,19 @@ static int proxy_conf_read_main(char *confdir)
             backend->keepalive = MK_TRUE;
         }
 
-        if (backend->connections <= 0) {
-            backend->connections = PROXY_BACKEND_CONNECTIONS;
+        /*
+         * If connections is undeterminated or zero, the plugin will trigger
+         * by default four connections per worker. In case the number set is
+         * less than the number of workers, it will create one connection per
+         * worker.
+         */
+        if (backend->connections == 0) {
+            backend->connections = workers * 4;
+        }
+        else if (backend->connections < workers) {
+            mk_warn("Proxy: backend connections less than number "
+                    "of workers. Adjusting.");
+            backend->connections = workers;
         }
 
         ret = proxy_conf_parse_route(backend);
