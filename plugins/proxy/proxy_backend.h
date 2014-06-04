@@ -45,6 +45,8 @@ struct proxy_backend_pool {
 
 int proxy_conx_insert(struct proxy_backend_conx *conx);
 int proxy_conx_remove(struct proxy_backend_conx *conx);
+int proxy_conx_close(struct proxy_backend_conx *conx, int event_delete);
+
 struct proxy_backend_conx *proxy_conx_get(int fd);
 struct proxy_backend_conx *proxy_conx_get_available(struct proxy_backend *backend);
 int proxy_conx_set_available(struct proxy_backend_conx *conx);

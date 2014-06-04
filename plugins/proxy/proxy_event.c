@@ -20,10 +20,17 @@
 #include "MKPlugin.h"
 #include "proxy_backend.h"
 
-static inline int mkp_event_close(int sock)
+static inline int mkp_event_close(int sockfd)
 {
-    (void) sock;
-    return MK_PLUGIN_RET_EVENT_OWNED;
+    struct proxy_backend_conx *conx;
+
+    conx = proxy_conx_get(sockfd);
+    if (conx) {
+        proxy_conx_close(conx, MK_FALSE);
+        return MK_PLUGIN_RET_EVENT_OWNED;
+    }
+
+    return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
 int _mkp_event_read(int sockfd)
@@ -51,9 +58,9 @@ int _mkp_event_write(int sockfd)
             getsockopt(conx->fd, SOL_SOCKET, SO_ERROR, &sock_error, &len);
             if (sock_error != 0) {
                 mk_warn("Proxy: error connecting to backend");
+                proxy_conx_close(conx, MK_TRUE);
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
-
             /* Mark this connection as available */
             proxy_conx_set_available(conx);
             return MK_PLUGIN_RET_EVENT_OWNED;

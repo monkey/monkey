@@ -193,6 +193,28 @@ int proxy_backend_start_conxs(struct proxy_backend *backend,
     return 0;
 }
 
+/* Remove a backend connection from the pool */
+int proxy_conx_close(struct proxy_backend_conx *conx, int event_del)
+{
+    /*
+     * Remove FD from epoll, close the file descriptor, cleanup the
+     * queue and remove the entry from the rbtree
+     */
+    PLUGIN_TRACE("[FD %i] Closing connection", conx->fd);
+
+    if (event_del == MK_TRUE) {
+        mk_api->event_del(conx->fd);
+    }
+
+    close(conx->fd);
+    mk_list_del(&conx->_head);
+    proxy_conx_remove(conx);
+    mk_api->mem_free(conx);
+
+    return 0;
+
+}
+
 /* Initialize connections to each backend defined at a worker level */
 int proxy_backend_worker_init()
 {
