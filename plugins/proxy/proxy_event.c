@@ -57,8 +57,7 @@ int _mkp_event_write(int sockfd)
             len = sizeof(sock_error);
             getsockopt(conx->fd, SOL_SOCKET, SO_ERROR, &sock_error, &len);
             if (sock_error != 0) {
-                mk_warn("Proxy: error connecting to backend");
-                proxy_conx_close(conx, MK_TRUE);
+                proxy_conx_failure(conx);
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
             /* Mark this connection as available */

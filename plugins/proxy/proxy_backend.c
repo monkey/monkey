@@ -127,6 +127,48 @@ struct proxy_backend_conx *proxy_conx_get(int fd)
     return NULL;
 }
 
+/*
+ * Given a backend connection context, perform the connection to the
+ * backend and prepare internals.
+ */
+static inline int proxy_conx_init(struct proxy_backend_conx *conx,
+                                  struct proxy_backend_pool *pool)
+{
+    int ret;
+    struct proxy_backend *backend;
+
+    conx->fd     = proxy_net_socket_create();
+    conx->status = PROXY_POOL_CONNECTING;
+    conx->pool   = pool;
+
+    if (conx->fd == -1) {
+        mk_err("Proxy: could not create socket");
+        return -1;
+    }
+
+    /* Set the socket non-blocking */
+    proxy_net_socket_nonblock(conx->fd);
+
+    /* Connect to... */
+    backend = pool->backend;
+    ret = proxy_net_connect(conx->fd, backend->host, backend->cport);
+    if ((ret == -1 && errno == EINPROGRESS) || ret == 0) {
+        /* Add the in-progress connection to the busy queue */
+        mk_list_add(&conx->_head, &pool->busy_conx);
+        proxy_conx_insert(conx);
+
+        /* Register the socket into the worker epoll(7) loop */
+        mk_api->event_add(conx->fd,
+                          MK_EPOLL_WRITE,
+                          proxy_plugin,
+                          MK_EPOLL_LEVEL_TRIGGERED);
+        return 0;
+    }
+
+    close(conx->fd);
+    return -1;
+}
+
 /* create a specific number of connections for the given backend */
 int proxy_backend_start_conxs(struct proxy_backend *backend,
                               int connections)
@@ -147,7 +189,9 @@ int proxy_backend_start_conxs(struct proxy_backend *backend,
 
     /* Prepare backend pool */
     pool = mk_api->mem_alloc(sizeof(struct proxy_backend_pool));
-    pool->backend = backend;
+    pool->status      = PROXY_BACKEND_ALIVE;
+    pool->backend     = backend;
+    pool->failures    = 0;
     pool->connections = connections;
     mk_list_init(&pool->av_conx);
     mk_list_init(&pool->busy_conx);
@@ -155,50 +199,65 @@ int proxy_backend_start_conxs(struct proxy_backend *backend,
 
     for (i = 0; i < connections; i++) {
         conx = mk_api->mem_alloc(sizeof(struct proxy_backend_conx));
-        conx->fd     = proxy_net_socket_create();
-        conx->status = PROXY_POOL_CONNECTING;
-        conx->pool   = pool;
-
-        if (conx->fd == -1) {
-            mk_err("Proxy: could not create socket");
-            mk_api->mem_free(conx);
+        ret = proxy_conx_init(conx, pool);
+        if (ret == 0) {
             continue;
         }
 
-        /* Set the socket non-blocking */
-        proxy_net_socket_nonblock(conx->fd);
-
-        /* Connect to... */
-        ret = proxy_net_connect(conx->fd, backend->host, backend->cport);
-        if ((ret == -1 && errno == EINPROGRESS) || ret == 0) {
-            /* Add the in-progress connection to the busy queue */
-            mk_list_add(&conx->_head, &pool->busy_conx);
-            proxy_conx_insert(conx);
-
-            /* Register the socket into the worker epoll(7) loop */
-            mk_api->event_add(conx->fd,
-                              MK_EPOLL_WRITE,
-                              proxy_plugin,
-                              MK_EPOLL_LEVEL_TRIGGERED);
-            continue;
-        }
-
-        /* Raise an error */
+        /* Handle exception*/
         mk_err("Proxy: error connecting to %s:%s",
                backend->host, backend->cport);
-        close(conx->fd);
         mk_api->mem_free(conx);
     }
 
     return 0;
 }
 
+/* Suspend a backend */
+int proxy_backend_suspend(struct proxy_backend_pool *pool)
+{
+    pool->status = PROXY_BACKEND_SUSPENDED;
+
+    mk_err("Proxy: suspending backend %s (%s:%i)",
+           pool->backend->name,
+           pool->backend->host, pool->backend->port);
+
+    return 0;
+}
+
+/* Triggered when a new connection to a backend fails */
+int proxy_conx_failure(struct proxy_backend_conx *conx)
+{
+    struct proxy_backend_pool *pool = conx->pool;
+
+    /* Register the failure in the backend context */
+    pool->failures++;
+
+    if ((pool->failures % (PROXY_BACKEND_FAILURES/4)) == 0) {
+        mk_warn("Proxy: %3i errors connecting to %s (%s:%i)",
+                pool->failures,
+                pool->backend->name,
+                pool->backend->host, pool->backend->port);
+    }
+
+    if (pool->failures >= PROXY_BACKEND_FAILURES) {
+        /*
+         * The backend on the current Worker reached the maximum number of
+         * allowed failures between each successful connection. This backend
+         * will be suspeded by PROXY_BACKEND_SUSPEND number of seconds.
+         */
+         proxy_backend_suspend(pool);
+    }
+    return proxy_conx_close(conx, MK_TRUE);
+}
+
+
 /* Remove a backend connection from the pool */
 int proxy_conx_close(struct proxy_backend_conx *conx, int event_del)
 {
     /*
      * Remove FD from epoll, close the file descriptor, cleanup the
-     * queue and remove the entry from the rbtree
+     * queue and remove the entry from the rbtree.
      */
     PLUGIN_TRACE("[FD %i] Closing connection", conx->fd);
 
@@ -209,7 +268,20 @@ int proxy_conx_close(struct proxy_backend_conx *conx, int event_del)
     close(conx->fd);
     mk_list_del(&conx->_head);
     proxy_conx_remove(conx);
-    mk_api->mem_free(conx);
+
+    /*
+     * Now the connection have been cleared, the next step is to determinate
+     * if a new connection should be re-established.
+     */
+    if (conx->pool->backend->keepalive == MK_TRUE &&
+        conx->pool->status == PROXY_BACKEND_ALIVE) {
+        PLUGIN_TRACE("[FD %i] Re-establish KeepAlive connection",
+                     conx->fd);
+        proxy_conx_init(conx, conx->pool);
+    }
+    else {
+        mk_api->mem_free(conx);
+    }
 
     return 0;
 
@@ -263,6 +335,8 @@ int proxy_backend_worker_init()
             mk_warn("Proxy: worker connections is zero. Increasing to one");
             connections = 1;
         }
+
+        /* Start connections for this backend */
         proxy_backend_start_conxs(backend, connections);
     }
 

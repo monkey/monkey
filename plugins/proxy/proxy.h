@@ -44,7 +44,8 @@ struct proxy_backend {
     int      protocol;    /* protocol, e.g: PROXY_PROTOCOL_XYZ */
     int      connections; /* number of persistent connections */
 
-    /* Total number of slots still available to let workers initialize
+    /*
+     * Total number of slots still available to let workers initialize
      * the connections to the backend.
      */
     int      _total_conx;

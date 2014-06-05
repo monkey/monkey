@@ -20,10 +20,15 @@
 #ifndef PROXY_BACKEND_H
 #define PROXY_BACKEND_H
 
-#define PROXY_POOL_CONNECTING  -1
-#define PROXY_POOL_AVAILABLE    0
-#define PROXY_POOL_BUSY         1
-#define PROXY_POOL_DEAD         2
+#define PROXY_POOL_CONNECTING   -1
+#define PROXY_POOL_AVAILABLE     0
+#define PROXY_POOL_BUSY          1
+#define PROXY_POOL_DEAD          2
+
+#define PROXY_BACKEND_ALIVE      0   /* the backend is functional */
+#define PROXY_BACKEND_SUSPENDED -1   /* the backend is suspended */
+#define PROXY_BACKEND_FAILURES 100   /* maximum number of failures allowed */
+#define PROXY_BACKEND_SUSPEND   10   /* backend suspend time */
 
 /* Represents a connection to a specific machine */
 struct proxy_backend_conx {
@@ -36,7 +41,9 @@ struct proxy_backend_conx {
 
 /* A backend pool is a group of connections to a target machine */
 struct proxy_backend_pool {
+    int status;
     int connections;
+    int failures;
     struct proxy_backend *backend;
     struct mk_list av_conx;
     struct mk_list busy_conx;
@@ -53,6 +60,8 @@ int proxy_conx_set_available(struct proxy_backend_conx *conx);
 
 
 int proxy_backend_worker_init();
+int proxy_backend_suspend(struct proxy_backend_pool *pool);
+int proxy_conx_failure(struct proxy_backend_conx *conx);
 
 /* Worker scope variables */
 extern __thread struct mk_list worker_proxy_pool;
