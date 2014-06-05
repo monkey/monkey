@@ -46,6 +46,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     }
 
     pthread_mutex_init(&mutex_proxy_backend, (pthread_mutexattr_t *) NULL);
+    mk_list_init(&proxy_channels);
 
     return 0;
 }
@@ -74,6 +75,8 @@ int _mkp_core_prctx(struct server_config *config)
         }
     }
     mk_bug(!proxy_plugin);
+
+    mk_api->worker_spawn(proxy_backend_worker_watcher, NULL);
 
     return 0;
 }

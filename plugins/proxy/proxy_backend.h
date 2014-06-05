@@ -61,10 +61,14 @@ int proxy_conx_set_available(struct proxy_backend_conx *conx);
 
 int proxy_backend_worker_init();
 int proxy_backend_suspend(struct proxy_backend_pool *pool);
+int proxy_backend_signal(int fd);
+
 int proxy_conx_failure(struct proxy_backend_conx *conx);
 
 /* Worker scope variables */
 extern __thread struct mk_list worker_proxy_pool;
 extern __thread struct rb_root worker_connections;
+
+void proxy_backend_worker_watcher(void *arg);
 
 #endif

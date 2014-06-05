@@ -17,11 +17,18 @@
  *  limitations under the License.
  */
 
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "MKPlugin.h"
 #include "proxy.h"
 #include "proxy_conf.h"
 #include "proxy_backend.h"
 #include "proxy_network.h"
+
+/* Worker communication channel */
+__thread int channel_read;
 
 /* inherit from proxy_backend.h */
 __thread struct mk_list worker_proxy_pool;
@@ -284,18 +291,108 @@ int proxy_conx_close(struct proxy_backend_conx *conx, int event_del)
     }
 
     return 0;
-
 }
+
+void proxy_backend_worker_watcher(void *arg)
+{
+    (void) arg;
+    struct mk_list *head;
+    struct proxy_worker_channel *wc;
+
+    while (1) {
+        sleep(10);
+        mk_list_foreach(head, &proxy_channels) {
+            wc = mk_list_entry(head, struct proxy_worker_channel, _head);
+            write(wc->channel[1], "1", 1);
+
+        }
+    }
+}
+
+int proxy_backend_signal(int fd)
+{
+    int i;
+    int n;
+    int total;
+    int av, busy;
+    char buf[2];
+    struct mk_list *head;
+    struct mk_list *head_conx;
+    struct proxy_backend_pool *pool;
+    struct proxy_backend_conx *conx;
+
+    n = read(fd, &buf, 1);
+    PLUGIN_TRACE("SIGNAL READ=%i\n", n);
+    if (n <= 0) {
+        return -1;
+    }
+
+
+    /* Wake up backends */
+    mk_list_foreach(head, &worker_proxy_pool) {
+        pool = mk_list_entry(head, struct proxy_backend_pool, _head);
+        if (pool->status == PROXY_BACKEND_SUSPENDED) {
+            av   = 0;
+            busy = 0;
+            pool->status   = PROXY_BACKEND_ALIVE;
+            pool->failures = 0;
+
+            mk_list_foreach(head_conx, &pool->av_conx) {
+                av++;
+            }
+            mk_list_foreach(head_conx, &pool->busy_conx) {
+                busy++;
+            }
+
+            total = pool->connections - av - busy;
+            mk_info("Proxy: restarting %i connections to %s",
+                    total, pool->backend->name);
+
+            for (i = 0 ; i < total; i++) {
+                conx = mk_api->mem_alloc(sizeof(struct proxy_backend_conx));
+                if (proxy_conx_init(conx, pool) == 0) {
+                    continue;
+                }
+
+                /* Handle exception*/
+                mk_err("Proxy: error connecting to %s:%s",
+                       pool->backend->host, pool->backend->cport);
+                mk_api->mem_free(conx);
+            }
+        }
+    }
+
+    return 0;
+}
+
 
 /* Initialize connections to each backend defined at a worker level */
 int proxy_backend_worker_init()
 {
     int min;
+    int ret;
     int diff = 0;
     int workers;
     int connections;
     struct mk_list *head;
     struct proxy_backend *backend;
+    struct proxy_worker_channel *wc;
+
+    /* Create the signal channel */
+    wc = mk_api->mem_alloc(sizeof(struct proxy_worker_channel));
+    ret = pipe2(wc->channel, O_NONBLOCK);
+    if (ret != 0) {
+        mk_libc_error("pipe2");
+        exit(1);
+    }
+
+    /* Register the channel into the main event loop */
+    mk_api->event_add(wc->channel[0],
+                      MK_EPOLL_READ,
+                      proxy_plugin,
+                      MK_EPOLL_LEVEL_TRIGGERED);
+    mk_list_add(&wc->_head, &proxy_channels);
+    channel_read = wc->channel[0];
 
     /* Initialize worker pool */
     mk_list_init(&worker_proxy_pool);

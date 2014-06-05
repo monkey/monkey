@@ -18,6 +18,7 @@
  */
 
 #include "MKPlugin.h"
+#include "proxy.h"
 #include "proxy_backend.h"
 
 static inline int mkp_event_close(int sockfd)
@@ -36,6 +37,12 @@ static inline int mkp_event_close(int sockfd)
 int _mkp_event_read(int sockfd)
 {
     struct proxy_backend_conx *conx;
+
+    /* Is this a channel signal ? */
+    if (sockfd == channel_read) {
+        proxy_backend_signal(sockfd);
+        return MK_PLUGIN_RET_EVENT_OWNED;
+    }
 
     conx = proxy_conx_get(sockfd);
     if (conx) {

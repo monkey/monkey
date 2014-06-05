@@ -73,10 +73,22 @@ struct proxy_vhost {
     struct mk_list _head;     /* Head to linked list */
 };
 
+/* A global channel to receive signals, mostly to restore suspended backends */
+struct proxy_worker_channel {
+    int channel[2];
+    struct mk_list _head;
+};
+
 /* A mutex to initialize backends on workers, just used on startup */
 pthread_mutex_t mutex_proxy_backend;
 
-/* Reference to the plugin with Monkey internals */
+/* Reference to th2e plugin with Monkey internals */
 struct plugin *proxy_plugin;
+
+/* Global channels for workers */
+struct mk_list proxy_channels;
+
+extern __thread int channel_read;
+extern __thread int channel_write;
 
 #endif
