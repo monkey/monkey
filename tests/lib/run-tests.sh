@@ -9,7 +9,7 @@ RED="$(echo -e '\033[1;31m')"
 NORMAL="$(echo -e '\033[0;39m')"
 
 CFLAGS="$CFLAGS -I ../../src/include/public"
-LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey"
+LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread"
 
 [ -z "$CC" ] && CC=gcc
 
@@ -70,13 +70,10 @@ rm ../../src/include/public/libmonkey.h.gch
 echo
 
 total=$((fail + success))
-percentage=$(awk "BEGIN{print $success/$total * 100}")
-fpercentage=$(printf '%.2f' $percentage)
-
-num=${percentage//.*/}
+percentage=$(awk "BEGIN{print int($success/$total * 100)}")
 
 [ $fail -eq 0 ] && echo "$GREEN	All tests passed!"
-[ $fail -ne 0 -a $percentage -ge 60 ] && echo "$YELLOW	$fpercentage% passed, $fail/$total fails"
-[ $percentage -lt 60 ] && echo "$RED	$fpercentage% passed, $fail/$total fails"
+[ $fail -ne 0 -a $percentage -ge 60 ] && echo "$YELLOW	$percentage% passed, $fail/$total fails"
+[ $percentage -lt 60 ] && echo "$RED	$percentage% passed, $fail/$total fails"
 
 echo $NORMAL
