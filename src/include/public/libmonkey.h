@@ -66,7 +66,8 @@ struct mklib_vhost {
 };
 
 struct mklib_worker_info {
-    unsigned long long active_connections;
+    unsigned long long accepted_connections;
+    unsigned long long closed_connections;
     int pid;
 };
 

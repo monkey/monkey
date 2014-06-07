@@ -571,8 +571,8 @@ struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx ctx)
 
 
     for (i = 0; i < workers; i++) {
-        ctx->worker_info[i]->active_connections = sched_list[i].accepted_connections -
-                                                  sched_list[i].closed_connections;
+        ctx->worker_info[i]->accepted_connections = sched_list[i].accepted_connections;
+        ctx->worker_info[i]->closed_connections = sched_list[i].closed_connections;
     }
 
     return ctx->worker_info;
