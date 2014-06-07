@@ -13,7 +13,6 @@ LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread"
 
 [ -z "$CC" ] && CC=gcc
 
-
 # Check that we can run the tests
 if [ ! -f ../../src/libmonkey.so ]; then
 	echo -e "\n${YELLOW}Please build and install the library first.\n"
@@ -31,7 +30,15 @@ $CC ../../src/include/public/libmonkey.h
 success=0
 fail=0
 
-for src in *.c; do
+if [ $# == 0 ]; then
+    echo "Running all tests; use './run-tests.sh ip-ban.c url-ban.c' to run a subset"
+    tests=*.c
+else
+    echo "Running tests $@"
+    tests=$@
+fi
+
+for src in $tests; do
 	[ ! -f "$src" ] && exit
 
 	test=${src%.c}
