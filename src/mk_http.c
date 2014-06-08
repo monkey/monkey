@@ -45,6 +45,7 @@
 #include "mk_macros.h"
 #include "mk_vhost.h"
 #include "mk_server.h"
+#include "mk_stats.h"
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);
@@ -213,9 +214,12 @@ int mk_http_method_get(char *body)
     int max_len_method = 8;
     mk_ptr_t method;
 
+    STATS_COUNTER_START_NO_SCHED(mk_http_method_get);
+
     /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
     pos = mk_string_char_search(body, ' ', max_len_method);
     if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_method_get);
         return MK_HTTP_METHOD_UNKNOWN;
     }
 
@@ -223,6 +227,8 @@ int mk_http_method_get(char *body)
     method.len = (unsigned long) pos;
 
     int_method = mk_http_method_check(method);
+
+    STATS_COUNTER_STOP_NO_SCHED(mk_http_method_get);
 
     return int_method;
 }

@@ -68,6 +68,12 @@ struct mklib_vhost {
 struct mklib_worker_info {
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
+    long long mk_session_create_n;
+    long long mk_session_create;
+    long long mk_session_get_n;
+    long long mk_session_get;
+    long long mk_http_method_get_n;
+    long long mk_http_method_get;
     int pid;
 };
 

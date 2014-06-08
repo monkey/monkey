@@ -42,6 +42,7 @@
 #include "mk_macros.h"
 #include "mk_rbtree.h"
 #include "mk_linuxtrace.h"
+#include "mk_stats.h"
 
 pthread_key_t worker_sched_node;
 
@@ -384,6 +385,8 @@ static int mk_sched_register_thread(int server_fd, int efd)
         mk_list_add(&sched_conn->_head, &sl->av_queue);
     }
     sl->request_handler = NULL;
+
+    sl->stats = mk_mem_malloc_z(sizeof(struct stats));
 
     return sl->idx;
 }

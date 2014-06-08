@@ -36,6 +36,7 @@
 #include <mk_vhost.h>
 #include <stdarg.h>
 #include <limits.h>
+#include "mk_stats.h"
 
 static struct host *mklib_host_find(const char *name)
 {
@@ -573,6 +574,12 @@ struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx ctx)
     for (i = 0; i < workers; i++) {
         ctx->worker_info[i]->accepted_connections = sched_list[i].accepted_connections;
         ctx->worker_info[i]->closed_connections = sched_list[i].closed_connections;
+        ctx->worker_info[i]->mk_session_create_n = sched_list[i].stats->mk_session_create_n;
+        ctx->worker_info[i]->mk_session_create = sched_list[i].stats->mk_session_create;
+        ctx->worker_info[i]->mk_session_get = sched_list[i].stats->mk_session_get;
+        ctx->worker_info[i]->mk_session_get_n = sched_list[i].stats->mk_session_get_n;
+        ctx->worker_info[i]->mk_http_method_get_n = sched_list[i].stats->mk_http_method_get_n;
+        ctx->worker_info[i]->mk_http_method_get = sched_list[i].stats->mk_http_method_get;
     }
 
     return ctx->worker_info;

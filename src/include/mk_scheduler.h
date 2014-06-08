@@ -100,6 +100,7 @@ struct sched_list_node
 #ifdef SHAREDLIB
     mklib_ctx ctx;
 #endif
+    struct stats *stats;
 };
 
 
