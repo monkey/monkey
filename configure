@@ -1225,12 +1225,13 @@ for arg in $*; do
 done
 
 echo -en $RED"********************************************\n"
-echo -en $GREEN$BOLD"        Monkey HTTP Daemon v$VERSION        \n"
+echo -en $RED"*"$GREEN$BOLD"        Monkey HTTP Server v$VERSION         "$RED"*\n"
 echo -en $RED"*"$YELLOW"           monkey-project.com             "$RED"*\n"
 echo -en "*"$BLUE" ---------------------------------------- "$RED"*\n"
-echo -en "*"$YELLOW"  We need beta testers, developers and    "$RED"*\n"
-echo -en "*"$YELLOW" translators!, if you want to contribute  "$RED"*\n"
-echo -en "*"$YELLOW" to this wonderful project, contact us !  "$RED"*\n"
+echo -en "*"$YELLOW"      Monkey is the next generation       "$RED"*\n"
+echo -en "*"$YELLOW"  Web Server for Linux and Embedded Linux "$RED"*\n"
+echo -en "*"$YELLOW"                                          "$RED"*\n"
+echo -en "*"$YELLOW"        Feel free to reach us at:         "$RED"*\n"
 echo -en "*"$YELLOW"                                          "$RED"*\n"
 echo -en "*"$YELLOW"        irc.freenode.net #monkey          "$RED"*\n"
 echo -en "*"$YELLOW"                                          "$RED"*\n"
