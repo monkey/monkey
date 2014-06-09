@@ -126,11 +126,11 @@ int mk_user_set_uidgid()
         }
 
         /* Change process UID and GID */
-        if (setgid(usr->pw_gid) == -1) {
+        if (setegid(usr->pw_gid) == -1) {
             mk_err("I cannot change the GID to %u", usr->pw_gid);
         }
 
-        if (setuid(usr->pw_uid) == -1) {
+        if (seteuid(usr->pw_uid) == -1) {
             mk_err("I cannot change the UID to %u", usr->pw_uid);
         }
 
@@ -138,6 +138,8 @@ int mk_user_set_uidgid()
     }
 
     out:
+
+    /* Variables set for run checks on file permission */
     EUID = geteuid();
     EGID = getegid();
 
@@ -148,8 +150,12 @@ int mk_user_set_uidgid()
 int mk_user_undo_uidgid()
 {
     if (config->is_seteuid == MK_TRUE) {
-        if (setegid(0) < 0) mk_err("Can't restore effective GID");
-        if (seteuid(0) < 0) mk_err("Can't restore effective UID");
+        if (setegid(0) < 0) {
+            mk_err("Can't restore effective GID");
+        }
+        if (seteuid(0) < 0) {
+            mk_err("Can't restore effective UID");
+        }
     }
     return 0;
 }
