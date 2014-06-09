@@ -314,9 +314,6 @@ int main(int argc, char **argv)
     /* Init thread keys */
     mk_thread_keys_init();
 
-    /* Change process owner */
-    mk_user_set_uidgid();
-
     /* Configuration sanity check */
     mk_config_sanity_check();
 
@@ -343,6 +340,9 @@ int main(int argc, char **argv)
         if (ready == config->workers) break;
         usleep(10000);
     }
+
+    /* Change process owner */
+    mk_user_set_uidgid();
 
     /* Server loop, let's listen for incomming clients */
     mk_server_loop(config->server_fd);
