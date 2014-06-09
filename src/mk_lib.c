@@ -211,6 +211,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->server_software.data = "";
     config->server_software.len = 0;
     config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
+    config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
     mk_mimetype_read_config();
 
     config->worker_capacity = mk_server_worker_capacity(config->workers);
