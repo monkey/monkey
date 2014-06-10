@@ -174,8 +174,35 @@ int mk_sched_sync_counters()
          */
         sched->accepted_connections = n;
         sched->closed_connections   = 0;
+        sched->over_capacity        = 0;
     }
     pthread_mutex_unlock(&mutex_sched_init);
+
+    return 0;
+}
+
+/*
+ * It checks that current worker (under sched context) have enough
+ * capacity for a new connection. If its not the case, the connection
+ * is held until it can be accepted, then it counts up to 5000 fails
+ * of this type and then increase capacity by 10%.
+ */
+int mk_sched_check_capacity(struct sched_list_node *sched)
+{
+    if (mk_list_is_empty(&sched->av_queue) == 0) {
+        /* The server is over capacity */
+        sched->over_capacity++;
+        if (sched->over_capacity % 5000) {
+            //mk_warn("Scheduler: Server is over capacity\n"
+            //        "- more than 5000 attemps stalled\n"
+            //        "- increasing worker %lu capacity by 10%%",
+            //        syscall(__NR_gettid));
+            sched->over_capacity = 0;
+
+
+        }
+        return -1;
+    }
 
     return 0;
 }
@@ -217,6 +244,11 @@ int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched)
 {
     int r;
 
+    /* Make sure the worker have enough slots */
+    if (mk_list_is_empty(&sched->av_queue) == 0) {
+        return -1;
+    }
+
     r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
                       MK_EPOLL_LEVEL_TRIGGERED);
 
@@ -237,6 +269,14 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     int ret;
     struct sched_connection *sched_conn;
     struct mk_list *av_queue = &sched->av_queue;
+
+    if ((config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
+        mk_list_is_empty(av_queue) == 0) {
+        printf("%lu system out of sched\n", time(NULL));
+        mk_epoll_del(sched->epoll_fd, remote_fd);
+        close(remote_fd);
+        return -1;
+    }
 
     sched_conn = mk_list_entry_first(av_queue, struct sched_connection, _head);
 
@@ -516,6 +556,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
+
         sched->closed_connections++;
 
         /* Change node status */

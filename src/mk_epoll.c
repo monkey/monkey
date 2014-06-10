@@ -255,6 +255,12 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
 
                 /* New connection under MK_SCHEDULER_REUSEPORT mode */
                 if (fd == server_fd) {
+
+                    /* Make sure the worker have enough slots */
+                    if (mk_sched_check_capacity(sched) == -1) {
+                        continue;
+                    }
+
                     remote_fd = mk_socket_accept(server_fd);
                     if (mk_unlikely(remote_fd == -1)) {
 #ifdef TRACE
@@ -266,7 +272,12 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                     MK_TRACE("New connection arrived: FD %i", remote_fd);
 #endif
                     /* Register new connection into the scheduler */
-                    mk_sched_add_client_reuseport(remote_fd, sched);
+                    ret = mk_sched_add_client_reuseport(remote_fd, sched);
+                    if (ret == -1) {
+                        mk_warn("Server over capacity");
+                        close(remote_fd);
+                        continue;
+                    }
                     mk_sched_register_client(remote_fd, sched);
                     fd = remote_fd;
                 }

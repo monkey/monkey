@@ -156,4 +156,18 @@ cat > conf/monkey.conf <<EOF
 
     FDT On
 
+    # OverCapacity:
+    # -------------
+    # When the server is over capacity at networking level, is required to
+    # prepare a contingency plan. The OverCapacity feature allows to define
+    # the behavior under this situation. Monkey defines three options:
+    #
+    #  Drop   : just drop any new incoming connection.
+    #  Resist : try to serve all request, even some of them may delay.
+    #  TooBusy: report a 503 Service Unavailable HTTP status.
+    #
+    # The default behavior is 'Resist'.
+
+    OverCapacity Resist
+
 EOF
