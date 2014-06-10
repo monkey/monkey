@@ -1,3 +1,99 @@
+commit cf9dac52e12917b3cf68a6c3f636587e3b1d1dfc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Jun 10 08:54:33 2014 -0600
+
+    Core: update banner
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e882f163f06ca52256383b957b76606c43375d1c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Jun 10 08:52:42 2014 -0600
+
+    HTML: update to v1.5.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1848b4e63993340f1607079397ce02c697ecda94
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 23:40:37 2014 -0600
+
+    Version: bump to v1.5.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f28c6d275e7393e4d3eca0f3e78760ad5294678a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 23:29:51 2014 -0600
+
+    Scheduler: improve over-capacity handling on SO_REUSEPORT mode.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 38da12461cf5e3854b27dc941c5b42cfefd6b08a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu May 29 08:54:01 2014 -0600
+
+    Debian: fix PidFile path
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 96dd9d5f0058a92a1ec4656811e2cc694f50df28
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 16:24:08 2014 -0600
+
+    Core: fix user switch when running as root
+    
+    Previous this patch the core was using real user id as reference
+    to perform user switch but when restoring back this is not allowed
+    by the Kernel, the right way to do it is through the effective user ID.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4c68075fa3f9fa8ad124cfd43ba2b9b179936eaf
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 15:53:41 2014 -0600
+
+    Core: switch user after Bind port.
+    
+    When running in newer systems with Kernel >= 3.9 and the SO_REUSEPORT
+    option is used, the server was switching to the unpriviledge user before
+    to bind the TCP port, this was generating problems when the port was <= 1024.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2641625c4339d165250a9c65db6e09698d3343b8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 16:44:35 2014 -0600
+
+    Libmonkey: version 1.5.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2688a140d08d9655db682b605bc80668cafd6f24
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 16:44:14 2014 -0600
+
+    Debian: bump to 1.5.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5d045fa4ff124245d12fd732d90edc5488f18162
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jun 9 16:43:28 2014 -0600
+
+    HTML: fix Wikipedia link
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit dd861f49dce2c78f13a45b82cb15f7ac5935a8cd
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun May 25 17:12:44 2014 -0600
+
+    Update ChangeLog for v1.5.0
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 2b0f84634272a3b695587dfb9b21a2ba792b98eb
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sun May 25 17:12:28 2014 -0600
