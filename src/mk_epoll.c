@@ -255,6 +255,14 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
 
                 /* New connection under MK_SCHEDULER_REUSEPORT mode */
                 if (fd == server_fd) {
+                    if (mk_list_is_empty(&sched->av_queue) == 0) {
+                        /*
+                         * The server is over capacity, let's the Kernel
+                         * survive and wait for a slot to become free
+                         */
+                        continue;
+                    }
+
                     remote_fd = mk_socket_accept(server_fd);
                     if (mk_unlikely(remote_fd == -1)) {
 #ifdef TRACE
