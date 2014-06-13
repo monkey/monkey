@@ -73,14 +73,15 @@ txtrst='\e[0m'    # Text Reset
 # Create configuration files under 'conf/'
 make_conf()
 {
-	cat $INCDIR/config.path lang/$lang/mconf lang/$lang/sites/default > makeconf.sh
+	cat $base_path/$INCDIR/config.path $base_path/lang/$lang/mconf \
+            $base_path/lang/$lang/sites/default > makeconf.sh
 	sed -i "s/#PORT#/$default_port/g" makeconf.sh
 	sed -i "s/#USER#/$default_user/g" makeconf.sh
 	sed -i 's|#PIDFILE#|'$pidfile'|g' makeconf.sh
 	chmod 755 makeconf.sh
 	./makeconf.sh
 	rm makeconf.sh
-	rm $INCDIR/config.path
+	rm $base_path/$INCDIR/config.path
 }
 
 local_dirs()
@@ -90,17 +91,20 @@ local_dirs()
 	sites="conf/sites"
 
 	if [ ! -d $bin ]; then
-		mkdir $bin
+		mkdir -p $bin
 	fi
 
 	if [ ! -d $logs ]; then
-		mkdir $logs
+		mkdir -p $logs
 	fi
 
 	if [ ! -d $sites ]; then
-		mkdir $sites
+		mkdir -p $sites
 	fi
+}
 
+abspath() {
+    { [[ "$1" =~ ^/ ]] && echo "$1" || echo "$(pwd)/$1"; } | sed -r ':. s#(/|^)\./#\1#g; t .; :: s#[^/]{1,}/\.\./##; t :'
 }
 
 # Main function
@@ -109,6 +113,12 @@ main()
 	local_dirs
 	dir=0
 	actual_path=`pwd`
+
+        # Check if build path is the same or a separate one
+        base_path=$(dirname $(abspath $0))
+        if [ "$base_path" != "$actual_path" ]; then
+            build_sep=1
+        fi
 
 	if [ "$prefix" != "$actual_path" ]; then
 		dir=1
@@ -178,9 +188,9 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find plugins/ -name Makefile -exec rm {} \;
+	find $base_path/plugins/ -name Makefile -exec rm {} \;
 
-	create_makefile_plugins $plugdir $prefix $bindir $mandir \
+	create_makefile_plugins $base_path $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
 		$logdir $mandir $enabled_plugins $disabled_plugins
 
@@ -188,18 +198,18 @@ main()
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
 
 	echo "+ Creating conf/monkey.conf"
-	create_conf prefix
-	make_conf  $lang $default_port $default_user $pidfile
+	create_conf $base_path $prefix
+	make_conf  $base_path $lang $default_port $default_user $pidfile
 
 	echo "+ Creating src/Makefile"
-	create_makefile2 mod_libs mod_obj make_script platform \
+	create_makefile2 base_path mod_libs mod_obj make_script platform \
                          malloc_libc malloc_jemalloc
 
 	echo "+ Creating plugins/Make.common"
-	create_plugins_make_common bindir
+	create_plugins_make_common base_path bindir
 
 	echo "+ Creating src/include/mk_info.h"
-	create_info sysconfdir \
+	create_info base_path sysconfdir \
                     SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
                     cmd uname
 
@@ -519,7 +529,7 @@ PLUGINDIR=\$(DESTDIR)${plugdir}
 VERSION=$VERSION
 
 all: monkey.pc $all_deps
-	@\$(MAKE) -s -C src all
+	@\$(MAKE) -s -C $base_path/src all
 	@\$(MAKE) -s -C plugins all
 	@echo "  DONE"
 
@@ -609,8 +619,8 @@ create_makefile2()
                 extraso="-Wl,--whole-archive ../deps/jemalloc/lib/libjemalloc_pic.a -Wl,--no-whole-archive"
                 libs="$libs -lm"
         fi
-
-	cat > src/Makefile<<EOF
+        p=`pwd`/src
+	cat > $base_path/src/Makefile<<EOF
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 CC      = @echo "  CC   \$(_PATH)/\$@"; $CC
 CC_QUIET= @echo -n; $CC
@@ -639,7 +649,7 @@ lib: $SONAME
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
-	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o \$@ \$(OBJ) $mod_obj $extra \$(LIBS)
+	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o $p/\$@ \$(OBJ) $mod_obj $extra \$(LIBS)
 
 $SONAME: \$(LIBOBJ)
 	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ $extraso \$(LIBOBJ) $mod_obj \$(LIBS)
@@ -659,19 +669,21 @@ distclean:
 
 .c.o:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
-	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o \$*.d > /dev/null &2>&1
+	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o $p/\$*.d > /dev/null &2>&1
 
-%.lo : %.c
-	\$(CC) -c -o \$@ \$(CFLAGS) \$(LIBDEFS) -I\$(INCDIR) \$<
+%.o : %.c
+	\$(CC) -c -o $p/\$@ \$(CFLAGS) \$(LIBDEFS) -I\$(INCDIR) \$<
 
 EOF
 }
 
 create_makefile_plugins()
 {
-	dir=`pwd`
+	#dir=`pwd`
+        dir=$basepath
 	makefile="plugins/Makefile"
 	plugins_load="conf/plugins.load"
+
 	echo -n > $plugins_load
 	echo "# Monkey Plugins Loader" >> $plugins_load
 	echo "# =====================" >> $plugins_load
@@ -690,7 +702,8 @@ create_makefile_plugins()
 		fi
 	fi
 
-	for plugin_dir in plugins/*;
+
+	for plugin_dir in $base_path/plugins/*;
 	do
 		# Skip non-directories
 		if ! test -d "$plugin_dir" ; then
@@ -698,7 +711,7 @@ create_makefile_plugins()
 		fi
 
 		# Get plugin name and check if we should skip it
-		entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
+		entry=`echo $plugin_dir | awk -F "/" '{print $NF}'`
 		skip_plugin $entry $enabled_plugins $disabled_plugins
 		disabled=$?
 
@@ -706,10 +719,14 @@ create_makefile_plugins()
 			continue
 		fi
 
+                echo $entry
+
 		comment="    "
 		for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
 			echo -e "+ ${name}${i:1}";
 		done
+
+                echo "----->"$plugin_dir
 
 		# Create Makefile
 		MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
@@ -745,10 +762,12 @@ create_makefile_plugins()
 		echo "" >> $plugins_load
 
 		# Copy specific plugin configuration files
-		if test -e $plugin_dir/conf ; then
+                echo $base_path/$plugin_dir/conf
+
+		if test -e $base_path/$plugin_dir/conf ; then
 			target="conf/$plugin_dir/"
 			mkdir -p $target
-			cp -r $plugin_dir/conf/* $target/
+			cp -r $base_path/$plugin_dir/conf/* $target/
 
 		   # Replace configuration variables:
 			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
@@ -768,16 +787,16 @@ create_makefile_plugins()
 		fi
 	done
 
-	echo "all:" > $makefile
-	echo -e $MAKE_ALL >> $makefile
-	echo "" >> $makefile
-	echo "clean:" >> $makefile
-	echo -e $MAKE_CLEAN >> $makefile
+	echo "all:" > $base_path/$makefile
+	echo -e $MAKE_ALL >> $base_path/$makefile
+	echo "" >> $base_path/$makefile
+	echo "clean:" >> $base_path/$makefile
+	echo -e $MAKE_CLEAN >> $base_path/$makefile
 
 # Add 'install' option to Makefile if plugdir was specified
 	if [ "$plugdir" != "" ]; then
-		echo -e "\ninstall:" >> $makefile
-		echo -e "\tinstall -d $plugdir" >> $makefile
+		echo -e "\ninstall:" >> $base_path/$makefile
+		echo -e "\tinstall -d $plugdir" >> $base_path/$makefile
 
 		for plugin_dir in plugins/*;
 		do
@@ -801,7 +820,7 @@ create_plugins_make_common()
 	if [ $malloc_jemalloc == 1 ]; then
 		LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
 	fi
-	cat > plugins/Make.common <<EOF
+	cat > $base_path/plugins/Make.common <<EOF
 _PATH     = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 INC_EXTRA = "./"
 INCDIR    = ../../src/include -I\$(INC_EXTRA)
@@ -822,7 +841,7 @@ EOF
 # Creando include/mk_info.h
 create_info()
 {
-	cat > $INCDIR/mk_info.h <<EOF
+	cat > $base_path/$INCDIR/mk_info.h <<EOF
 #ifndef MK_INFO_H
 #define MK_INFO_H
 
@@ -847,12 +866,12 @@ EOF
 	sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-	    $INCDIR/public/libmonkey.h
+	    $base_path/$INCDIR/public/libmonkey.h
 }
 
 create_conf()
 {
-	cat > $INCDIR/config.path <<EOF
+	cat > $base_path/$INCDIR/config.path <<EOF
 #!/bin/sh
 prefix=$prefix
 bindir=$bindir
@@ -1019,6 +1038,7 @@ pidfile="$logdir/monkey.pid"
 plugdir="$aux/plugins"
 systemddir=""
 platform="generic"
+build_sep=0
 
 # Generic default values for monkey.conf
 default_port="2001"
