@@ -1019,6 +1019,7 @@ struct client_session *mk_session_get(int socket)
     struct client_session *cs;
     struct rb_node *node;
 
+    STATS_COUNTER_INIT_NO_SCHED;
     STATS_COUNTER_START_NO_SCHED(mk_session_get);
 
     node = cs_list->rb_node;

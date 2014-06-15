@@ -55,16 +55,17 @@ static inline long long stats_current_time()
         sched_list_node->stats->func_name += stats_current_time();\
     } while (0)
 
+#define STATS_COUNTER_INIT_NO_SCHED\
+    struct sched_list_node *__sched = pthread_getspecific(worker_sched_node)
+
 #define STATS_COUNTER_START_NO_SCHED(func_name)\
     do {\
-        struct sched_list_node *sched = pthread_getspecific(worker_sched_node);\
-        STATS_COUNTER_START(sched, func_name);\
+        STATS_COUNTER_START(__sched, func_name);\
     } while (0)
 
 #define STATS_COUNTER_STOP_NO_SCHED(func_name)\
     do {\
-        struct sched_list_node *sched = pthread_getspecific(worker_sched_node);\
-        STATS_COUNTER_STOP(sched, func_name);\
+        STATS_COUNTER_STOP(__sched, func_name);\
     } while (0)
 
 #endif

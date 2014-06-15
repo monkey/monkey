@@ -214,6 +214,7 @@ int mk_http_method_get(char *body)
     int max_len_method = 8;
     mk_ptr_t method;
 
+    STATS_COUNTER_INIT_NO_SCHED;
     STATS_COUNTER_START_NO_SCHED(mk_http_method_get);
 
     /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
