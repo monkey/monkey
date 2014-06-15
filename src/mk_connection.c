@@ -21,6 +21,7 @@
 #include "mk_http.h"
 #include "mk_plugin.h"
 #include "mk_macros.h"
+#include "mk_stats.h"
 
 int mk_conn_read(int socket)
 {
@@ -30,19 +31,23 @@ int mk_conn_read(int socket)
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
 
+    sched = mk_sched_get_thread_conf();
+    STATS_COUNTER_START(sched, mk_conn_read);
+
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
 
     switch(ret) {
     case MK_PLUGIN_RET_EVENT_OWNED:
+        STATS_COUNTER_STOP(sched, mk_conn_read);
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
+        STATS_COUNTER_STOP(sched, mk_conn_read);
         return -1;
     case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
     }
 
-    sched = mk_sched_get_thread_conf();
     cs = mk_session_get(socket);
     if (!cs) {
         /* Check if is this a new connection for the Scheduler */
@@ -50,6 +55,7 @@ int mk_conn_read(int socket)
             MK_TRACE("[FD %i] Registering new connection");
             if (mk_sched_register_client(socket, sched) == -1) {
                 MK_TRACE("[FD %i] Close requested", socket);
+                STATS_COUNTER_STOP(sched, mk_conn_read);
                 return -1;
             }
             /*
@@ -60,6 +66,7 @@ int mk_conn_read(int socket)
                                MK_EPOLL_READ,
                                MK_EPOLL_LEVEL_TRIGGERED,
                                (EPOLLERR | EPOLLHUP | EPOLLRDHUP | EPOLLIN));
+            STATS_COUNTER_STOP(sched, mk_conn_read);
             return 0;
         }
 
@@ -67,6 +74,7 @@ int mk_conn_read(int socket)
         MK_TRACE("[FD %i] Create session", socket);
         cs = mk_session_create(socket, sched);
         if (!cs) {
+            STATS_COUNTER_STOP(sched, mk_conn_read);
             return -1;
         }
     }
@@ -84,6 +92,7 @@ int mk_conn_read(int socket)
              * close connection
              */
             mk_session_remove(socket);
+            STATS_COUNTER_STOP(sched, mk_conn_read);
             return -1;
         }
         else {
@@ -91,6 +100,7 @@ int mk_conn_read(int socket)
         }
     }
 
+    STATS_COUNTER_STOP(sched, mk_conn_read);
     return ret;
 }
 
@@ -101,14 +111,19 @@ int mk_conn_write(int socket)
     struct sched_list_node *sched;
     struct sched_connection *conx;
 
+    sched = mk_sched_get_thread_conf();
+    STATS_COUNTER_START(sched, mk_conn_write);
+
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
     /* Plugin hook */
     ret = mk_plugin_event_write(socket);
     switch(ret) {
     case MK_PLUGIN_RET_EVENT_OWNED:
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return -1;
     case MK_PLUGIN_RET_EVENT_CONTINUE:
         break; /* just return controller to invoker */
@@ -116,17 +131,18 @@ int mk_conn_write(int socket)
 
     MK_TRACE("[FD %i] Normal connection write handling", socket);
 
-    sched = mk_sched_get_thread_conf();
     conx = mk_sched_get_connection(sched, socket);
     if (!conx) {
         MK_TRACE("[FD %i] Registering new connection");
         if (mk_sched_register_client(socket, sched) == -1) {
             MK_TRACE("[FD %i] Close requested", socket);
+            STATS_COUNTER_STOP(sched, mk_conn_write);
             return -1;
         }
 
         mk_epoll_change_mode(sched->epoll_fd, socket,
                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return 0;
     }
 
@@ -142,6 +158,7 @@ int mk_conn_write(int socket)
          * socket, so pass it to remove_client that checks it's ours.
          */
         mk_sched_remove_client(sched, socket);
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return 0;
     }
 
@@ -156,16 +173,20 @@ int mk_conn_write(int socket)
     if (ret < 0) {
         mk_request_free_list(cs);
         mk_session_remove(socket);
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return -1;
     }
     else if (ret == 0) {
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return mk_http_request_end(socket);
     }
     else if (ret > 0) {
+        STATS_COUNTER_STOP(sched, mk_conn_write);
         return 0;
     }
 
     /* avoid to make gcc cry :_( */
+    STATS_COUNTER_STOP(sched, mk_conn_write);
     return -1;
 }
 

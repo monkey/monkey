@@ -596,6 +596,8 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi)
     printf("mk_plugin_event_read %lld:%lld\n", stats->mk_plugin_event_read_n, stats->mk_plugin_event_read);
     printf("mk_plugin_event_write %lld:%lld\n", stats->mk_plugin_event_write_n, stats->mk_plugin_event_write);
     printf("mk_header_send %lld:%lld\n", stats->mk_header_send_n, stats->mk_header_send);
+    printf("mk_conn_read %lld:%lld\n", stats->mk_conn_read_n, stats->mk_conn_read);
+    printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write_n, stats->mk_conn_write);
     printf("\n");
 }
 

@@ -48,6 +48,10 @@ struct stats
     long long mk_plugin_event_write;
     long long mk_header_send_n;
     long long mk_header_send;
+    long long mk_conn_read_n;
+    long long mk_conn_read;
+    long long mk_conn_write_n;
+    long long mk_conn_write;
     //...
 };
 
