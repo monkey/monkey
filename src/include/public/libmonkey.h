@@ -74,6 +74,8 @@ struct mklib_worker_info {
     long long mk_session_get;
     long long mk_http_method_get_n;
     long long mk_http_method_get;
+    long long mk_sched_get_connection_n;
+    long long mk_sched_get_connection;
     int pid;
 };
 

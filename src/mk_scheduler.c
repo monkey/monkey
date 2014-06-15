@@ -597,6 +597,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
 {
     struct rb_node *node;
     struct sched_connection *this;
+    STATS_COUNTER_START(sched, mk_sched_get_connection);
 
     /*
      * In some cases the sched node can be NULL when is a premature close,
@@ -607,6 +608,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
     if (!sched) {
         MK_TRACE("[FD %i] No scheduler information", remote_fd);
         mk_socket_close(remote_fd);
+        STATS_COUNTER_STOP(sched, mk_sched_get_connection);
         return NULL;
     }
 
@@ -619,12 +621,14 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
   			node = node->rb_right;
 		else {
             MK_LT_SCHED(remote_fd, "GET_CONNECTION");
+            STATS_COUNTER_STOP(sched, mk_sched_get_connection);
   			return this;
         }
 	}
 
     MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
     MK_LT_SCHED(remote_fd, "GET_FAILED");
+    STATS_COUNTER_STOP(sched, mk_sched_get_connection);
     return NULL;
 }
 

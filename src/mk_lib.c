@@ -580,6 +580,8 @@ struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx ctx)
         ctx->worker_info[i]->mk_session_get_n = sched_list[i].stats->mk_session_get_n;
         ctx->worker_info[i]->mk_http_method_get_n = sched_list[i].stats->mk_http_method_get_n;
         ctx->worker_info[i]->mk_http_method_get = sched_list[i].stats->mk_http_method_get;
+        ctx->worker_info[i]->mk_sched_get_connection_n = sched_list[i].stats->mk_sched_get_connection_n;
+        ctx->worker_info[i]->mk_sched_get_connection = sched_list[i].stats->mk_sched_get_connection;
     }
 
     return ctx->worker_info;

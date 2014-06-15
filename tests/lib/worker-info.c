@@ -26,7 +26,7 @@ void *simple_request(void *portp)
     int i;
     FILE *f;
 
-	snprintf(comm, 1024, "wget --timeout=1 -t2 -q -O- http://localhost:%d | md5sum -", port);
+	snprintf(comm, 1024, "wget --timeout=1 -t2 -q -O- http://localhost:%d", port);
     for (i = 0; i < REQ_PER_THREAD; i++) {
         f = popen(comm, "r");
         if (!f)
@@ -57,8 +57,14 @@ int main()
 
     struct mklib_worker_info **mwi = mklib_scheduler_worker_info(ctx);
 
-    for (i = 0; mwi[i]; i++)
+    for (i = 0; mwi[i]; i++) {
         total += mwi[i]->closed_connections;
+        printf("mk_session_create %lld:%lld\n", mwi[i]->mk_session_create_n, mwi[i]->mk_session_create);
+        printf("mk_session_get %lld:%lld\n", mwi[i]->mk_session_get_n, mwi[i]->mk_session_get);
+        printf("mk_http_method_get %lld:%lld\n", mwi[i]->mk_http_method_get_n, mwi[i]->mk_http_method_get);
+        printf("mk_sched_get_connection %lld:%lld\n", mwi[i]->mk_sched_get_connection_n, mwi[i]->mk_sched_get_connection);
+        printf("------------------\n");
+    }
 
 	if (!mklib_stop(ctx))
         return 1;

@@ -31,6 +31,9 @@ struct stats
     long long mk_session_get;
     long long mk_http_method_get_n;
     long long mk_http_method_get;
+    long long mk_sched_get_connection_n;
+    long long mk_sched_get_connection;
+    //...
 };
 
 static inline long long stats_current_time()
