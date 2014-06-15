@@ -588,7 +588,10 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi)
     printf("mk_session_get %lld:%lld\n", stats->mk_session_get_n, stats->mk_session_get);
     printf("mk_http_method_get %lld:%lld\n", stats->mk_http_method_get_n, stats->mk_http_method_get);
     printf("mk_http_request_end %lld:%lld\n", stats->mk_http_request_end_n, stats->mk_http_request_end);
+    printf("mk_http_range_parse %lld:%lld\n", stats->mk_http_range_parse_n, stats->mk_http_range_parse);
     printf("mk_sched_get_connection %lld:%lld\n", stats->mk_sched_get_connection_n, stats->mk_sched_get_connection);
+    printf("mk_sched_remove_client %lld:%lld\n", stats->mk_sched_remove_client_n, stats->mk_sched_remove_client);
+    printf("mk_plugin_stage_run %lld:%lld\n", stats->mk_plugin_stage_run_n, stats->mk_plugin_stage_run);
     printf("\n");
 }
 

@@ -546,6 +546,8 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
     struct sched_connection *sc;
 
+    STATS_COUNTER_START(sched, mk_sched_remove_client);
+
     /*
      * Close socket and change status: we must invoke mk_epoll_del()
      * because when the socket is closed is cleaned from the queue by
@@ -583,12 +585,14 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
          */
         mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
+        STATS_COUNTER_STOP(sched, mk_sched_remove_client);
         return 0;
     }
     else {
         MK_TRACE("[FD %i] Not found", remote_fd);
         MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
     }
+    STATS_COUNTER_STOP(sched, mk_sched_remove_client);
     return -1;
 }
 

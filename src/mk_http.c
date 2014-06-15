@@ -150,17 +150,28 @@ static int mk_http_range_parse(struct session_request *sr)
     char *buffer = 0;
     struct response_headers *sh;
 
-    if (!sr->range.data)
-        return -1;
+    STATS_COUNTER_INIT_NO_SCHED;
+    STATS_COUNTER_START_NO_SCHED(mk_http_range_parse);
 
-    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0)
+    if (!sr->range.data) {
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return -1;
+    }
 
-    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
+    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0) {
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return -1;
+    }
 
-    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0)
+    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0) {
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return -1;
+    }
+
+    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0) {
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
+        return -1;
+    }
 
     len = sr->range.len;
     sh = &sr->headers;
@@ -171,10 +182,12 @@ static int mk_http_range_parse(struct session_request *sr)
         sh->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
 
         if (sh->ranges[1] <= 0) {
+            STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
             return -1;
         }
 
         sh->content_length = sh->ranges[1];
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
 
@@ -189,10 +202,12 @@ static int mk_http_range_parse(struct session_request *sr)
         mk_mem_free(buffer);
 
         if (sh->ranges[1] < 0 || (sh->ranges[0] > sh->ranges[1])) {
+            STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
             return -1;
         }
 
         sh->content_length = abs(sh->ranges[1] - sh->ranges[0]) + 1;
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
     /* =yyy- */
@@ -202,9 +217,11 @@ static int mk_http_range_parse(struct session_request *sr)
         mk_mem_free(buffer);
 
         sh->content_length = (sh->content_length - sh->ranges[0]);
+        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
 
+    STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
     return -1;
 }
 

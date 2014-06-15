@@ -32,8 +32,14 @@ struct stats
     long long mk_http_method_get;
     long long mk_http_request_end_n;
     long long mk_http_request_end;
+    long long mk_http_range_parse_n;
+    long long mk_http_range_parse;
     long long mk_sched_get_connection_n;
     long long mk_sched_get_connection;
+    long long mk_sched_remove_client_n;
+    long long mk_sched_remove_client;
+    long long mk_plugin_stage_run_n;
+    long long mk_plugin_stage_run;
     //...
 };
 
