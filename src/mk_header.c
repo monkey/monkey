@@ -37,6 +37,7 @@
 #include "mk_string.h"
 #include "mk_macros.h"
 #include "mk_vhost.h"
+#include "mk_stats.h"
 
 const mk_ptr_t mk_header_short_date = mk_ptr_t_init(MK_HEADER_SHORT_DATE);
 const mk_ptr_t mk_header_short_location = mk_ptr_t_init(MK_HEADER_SHORT_LOCATION);
@@ -143,6 +144,9 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_ptr_t response;
     struct response_headers *sh;
     struct mk_iov *iov;
+
+    STATS_COUNTER_INIT_NO_SCHED;
+    STATS_COUNTER_START_NO_SCHED(mk_header_send);
 
     sh = &sr->headers;
 
@@ -343,6 +347,7 @@ int mk_header_send(int fd, struct client_session *cs,
     mk_header_iov_free(iov);
     sh->sent = MK_TRUE;
 
+    STATS_COUNTER_STOP_NO_SCHED(mk_header_send);
     return 0;
 }
 

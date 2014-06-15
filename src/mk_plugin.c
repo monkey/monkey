@@ -1054,6 +1054,9 @@ int mk_plugin_event_read(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
+    STATS_COUNTER_INIT_NO_SCHED;
+    STATS_COUNTER_START_NO_SCHED(mk_plugin_event_read);
+
     MK_TRACE("[FD %i] Read Event", socket);
 
     /*
@@ -1063,6 +1066,7 @@ int mk_plugin_event_read(int socket)
      */
     if (!mk_epoll_state_get(socket)) {
         MK_TRACE("[FD %i] Connection already closed", socket);
+        STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
         return -1;
     }
 
@@ -1074,6 +1078,7 @@ int mk_plugin_event_read(int socket)
 
             ret = event->handler->event_read(socket);
             mk_plugin_event_check_return("read|handled_by", ret);
+            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
             return ret;
         }
     }
@@ -1089,11 +1094,13 @@ int mk_plugin_event_read(int socket)
                 continue;
             }
             else {
+                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
                 return ret;
             }
         }
     }
 
+    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
     return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
@@ -1104,6 +1111,9 @@ int mk_plugin_event_write(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
+    STATS_COUNTER_INIT_NO_SCHED;
+    STATS_COUNTER_START_NO_SCHED(mk_plugin_event_write);
+
     MK_TRACE("[FD %i] Plugin event write", socket);
 
     /*
@@ -1113,6 +1123,7 @@ int mk_plugin_event_write(int socket)
      */
     if (!mk_epoll_state_get(socket)) {
         MK_TRACE("[FD %i] Connection already closed", socket);
+        STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
         return -1;
     }
 
@@ -1123,6 +1134,7 @@ int mk_plugin_event_write(int socket)
 
             ret = event->handler->event_write(socket);
             mk_plugin_event_check_return("write|handled_by", ret);
+            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
             return ret;
         }
     }
@@ -1138,11 +1150,13 @@ int mk_plugin_event_write(int socket)
                 continue;
             }
             else {
+                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
                 return ret;
             }
         }
     }
 
+    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
     return MK_PLUGIN_RET_CONTINUE;
 }
 

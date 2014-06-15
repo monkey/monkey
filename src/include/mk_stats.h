@@ -34,12 +34,20 @@ struct stats
     long long mk_http_request_end;
     long long mk_http_range_parse_n;
     long long mk_http_range_parse;
+    long long mk_http_init_n;
+    long long mk_http_init;
     long long mk_sched_get_connection_n;
     long long mk_sched_get_connection;
     long long mk_sched_remove_client_n;
     long long mk_sched_remove_client;
     long long mk_plugin_stage_run_n;
     long long mk_plugin_stage_run;
+    long long mk_plugin_event_read_n;
+    long long mk_plugin_event_read;
+    long long mk_plugin_event_write_n;
+    long long mk_plugin_event_write;
+    long long mk_header_send_n;
+    long long mk_header_send;
     //...
 };
 
