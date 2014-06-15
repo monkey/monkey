@@ -17,7 +17,6 @@
  *  limitations under the License.
  */
 
-
 #ifndef MK_STATS_H
 #define MK_STATS_H
 
@@ -31,6 +30,8 @@ struct stats
     long long mk_session_get;
     long long mk_http_method_get_n;
     long long mk_http_method_get;
+    long long mk_http_request_end_n;
+    long long mk_http_request_end;
     long long mk_sched_get_connection_n;
     long long mk_sched_get_connection;
     //...

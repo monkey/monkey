@@ -68,14 +68,7 @@ struct mklib_vhost {
 struct mklib_worker_info {
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
-    long long mk_session_create_n;
-    long long mk_session_create;
-    long long mk_session_get_n;
-    long long mk_session_get;
-    long long mk_http_method_get_n;
-    long long mk_http_method_get;
-    long long mk_sched_get_connection_n;
-    long long mk_sched_get_connection;
+    struct stats *stats;
     int pid;
 };
 
@@ -184,6 +177,9 @@ struct mklib_vhost MK_EXPORT **mklib_vhost_list(mklib_ctx);
 
 /* Return a list of the workers */
 struct mklib_worker_info MK_EXPORT **mklib_scheduler_worker_info(mklib_ctx);
+
+/* Print information stored in stats data associated to worker */
+void MK_EXPORT mklib_print_worker_info(struct mklib_worker_info *mwi);
 
 /* Return a list of all mimetypes */
 struct mklib_mime MK_EXPORT **mklib_mimetype_list(mklib_ctx);

@@ -786,15 +786,19 @@ int mk_http_request_end(int socket)
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
+    STATS_COUNTER_START(sched, mk_http_request_end);
+
     cs = mk_session_get(socket);
 
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
+        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return -1;
     }
 
     if (mk_unlikely(!sched)) {
         MK_TRACE("Could not find sched list node :/");
+        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return -1;
     }
 
@@ -814,8 +818,10 @@ int mk_http_request_end(int socket)
         mk_request_ka_next(cs);
         mk_epoll_change_mode(sched->epoll_fd,
                              socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return 0;
     }
 
+    STATS_COUNTER_STOP(sched, mk_http_request_end);
     return -1;
 }

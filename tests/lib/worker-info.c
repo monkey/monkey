@@ -59,11 +59,7 @@ int main()
 
     for (i = 0; mwi[i]; i++) {
         total += mwi[i]->closed_connections;
-        printf("mk_session_create %lld:%lld\n", mwi[i]->mk_session_create_n, mwi[i]->mk_session_create);
-        printf("mk_session_get %lld:%lld\n", mwi[i]->mk_session_get_n, mwi[i]->mk_session_get);
-        printf("mk_http_method_get %lld:%lld\n", mwi[i]->mk_http_method_get_n, mwi[i]->mk_http_method_get);
-        printf("mk_sched_get_connection %lld:%lld\n", mwi[i]->mk_sched_get_connection_n, mwi[i]->mk_sched_get_connection);
-        printf("------------------\n");
+        mklib_print_worker_info(mwi[i]);
     }
 
 	if (!mklib_stop(ctx))
