@@ -38,6 +38,8 @@ else
     tests=$@
 fi
 
+rm -rf bin/ && mkdir bin/
+
 for src in $tests; do
 	[ ! -f "$src" ] && exit
 
@@ -48,7 +50,7 @@ for src in $tests; do
 	case $test in x*) ret=1 ;; esac
 
 	echo -n "Building test $test... "
-	$CC $CFLAGS $src -o $test $LDFLAGS
+	$CC $CFLAGS $src -o bin/$test $LDFLAGS
 
 	if [ $? -ne 0 ]; then
 		fail=$((fail + 1))
@@ -56,7 +58,7 @@ for src in $tests; do
 		continue
 	fi
 
-	./$test > $log
+	bin/$test > $log
 	if [ $? -ne $ret ]; then
 		fail=$((fail + 1))
 		echo "${RED}Failed $NORMAL"
@@ -72,7 +74,6 @@ done
 
 # Remove the PCH
 rm ../../src/include/public/libmonkey.h.gch
-
 
 echo
 
