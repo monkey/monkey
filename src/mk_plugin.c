@@ -716,8 +716,8 @@ int mk_plugin_stage_run(unsigned int hook,
         ret = ctx->dataf(sr, sr->host_conf->file, buf,
                          get, get_len, post, post_len,
                          &status, &content, &clen, header);
-    mk_mem_free(get);
-    mk_mem_free(post);
+        mk_mem_free(get);
+        mk_mem_free(post);
 
         if (ret == MKLIB_FALSE) return -1;
 
