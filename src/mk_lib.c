@@ -349,6 +349,76 @@ int mklib_config(mklib_ctx ctx, ...)
     return MKLIB_TRUE;
 }
 
+/*
+ * NULL-terminated config call retrieving monkey configuration.
+ * Returns MKLIB_FALSE on failure
+ */
+int mklib_get_config(mklib_ctx ctx, ...)
+{
+    int i, *ip;
+    va_list va;
+    char *s;
+
+    if (!ctx)
+        return MKLIB_FALSE;
+
+    va_start(va, ctx);
+
+    i = va_arg(va, int);
+    while (i) {
+        const enum mklib_mkc e = i;
+
+        switch(e) {
+            case MKC_WORKERS:
+                ip = va_arg(va, int *);
+                *ip = config->workers;
+                break;
+            case MKC_TIMEOUT:
+                ip = va_arg(va, int *);
+                *ip = config->timeout;
+                break;
+            case MKC_USERDIR:
+                s = va_arg(va, char *);
+                memcpy(s, config->user_dir, strlen(config->user_dir + 1));
+                break;
+            case MKC_RESUME:
+                ip = va_arg(va, int *);
+                *ip = config->resume;
+                break;
+            case MKC_KEEPALIVE:
+                ip = va_arg(va, int *);
+                *ip = config->keep_alive;
+                break;
+            case MKC_KEEPALIVETIMEOUT:
+                ip = va_arg(va, int *);
+                *ip = config->keep_alive_timeout;
+                break;
+            case MKC_MAXKEEPALIVEREQUEST:
+                ip = va_arg(va, int *);
+                *ip = config->max_keep_alive_request;
+                break;
+            case MKC_MAXREQUESTSIZE:
+                ip = va_arg(va, int *);
+                *ip = config->max_request_size;
+                break;
+            case MKC_SYMLINK:
+                ip = va_arg(va, int *);
+                *ip = config->symlink;
+                break;
+            case MKC_DEFAULTMIMETYPE:
+                s = va_arg(va, char *);
+                memcpy(s, config->default_mimetype, strlen(config->default_mimetype + 1));
+                break;
+            default:
+                mk_warn("Unknown config option");
+        }
+
+        i = va_arg(va, int);
+    }
+
+    return MKLIB_TRUE;
+}
+
 /* NULL-terminated config call creating a vhost with *name. Returns MKLIB_FALSE
  * on failure. */
 int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)

@@ -162,6 +162,12 @@ int MK_EXPORT mklib_callback_set(mklib_ctx, const enum mklib_cb, void *);
  * Returns MKLIB_FALSE on failure. */
 int MK_EXPORT mklib_config(mklib_ctx, ...) NULL_TERMINATED;
 
+/*
+ * NULL-terminated config call retrieving monkey configuration.
+ * Returns MKLIB_FALSE on failure
+ */
+int MK_EXPORT mklib_get_config(mklib_ctx ctx, ...) NULL_TERMINATED;
+
 /* NULL-terminated config call creating a vhost with *name. Returns MKLIB_FALSE
  * on failure. */
 int MK_EXPORT mklib_vhost_config(mklib_ctx, const char *name, ...) NULL_TERMINATED;
