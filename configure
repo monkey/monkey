@@ -1109,6 +1109,9 @@ for arg in $*; do
 		--trace*)
 			trace=1
 			;;
+		--stats*)
+			mk_stats=1
+			;;
 		--no-backtrace*)
 			no_backtrace=1
 			;;
@@ -1207,6 +1210,7 @@ for arg in $*; do
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
+			echo "  --stats                 Enable worker statistics gathering"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
                         echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
@@ -1325,6 +1329,10 @@ fi
 if [ $linux_trace ]; then
         libs="$libs -llttng-ust -lurcu-bp"
 	DEFS="$DEFS -DLINUX_TRACE"
+fi
+
+if [ $mk_stats ]; then
+    DEFS="$DEFS -DSTATS"
 fi
 
 if [ $malloc_libc -eq 1 ]; then

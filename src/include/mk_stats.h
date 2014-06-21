@@ -63,9 +63,11 @@ static inline long long stats_current_time()
     return ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
 
+#ifdef STATS
+
 #define STATS_COUNTER_START(sched_list_node, func_name)\
-    do { \
-        sched_list_node->stats->func_name##_n++; \
+    do {\
+        sched_list_node->stats->func_name##_n++;\
         sched_list_node->stats->func_name -= stats_current_time();\
     } while (0)
 
@@ -86,5 +88,15 @@ static inline long long stats_current_time()
     do {\
         STATS_COUNTER_STOP(__sched, func_name);\
     } while (0)
+
+#else
+
+#define STATS_COUNTER_START(sched_list_node, func_name)
+#define STATS_COUNTER_STOP(sched_list_node, func_name)
+#define STATS_COUNTER_INIT_NO_SCHED
+#define STATS_COUNTER_START_NO_SCHED(func_name)
+#define STATS_COUNTER_STOP_NO_SCHED(func_name)
+
+#endif
 
 #endif
