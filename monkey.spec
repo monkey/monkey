@@ -135,7 +135,7 @@ rmdir %{_sysconfdir}/%{name} > /dev/null 2>&1
 * Sun Dec 22 2013 Eduardo Silva <edsiper@gmail.com> - 1.4.0-1
 - Testing new spec file for v1.4
 
-* Thu Aug 24 2010  Antonio Salles <antonio@salles.clcl> - 0.11.1-2
+* Tue Aug 24 2010  Antonio Salles <antonio@salles.cl> - 0.11.1-2
 - Spec rebuild. Now it work fine with Fedora.
 
 * Thu Jul 22 2010  Horst H. von Brand <vonbrand@inf.utfsm.cl> - 0.11.0-2
