@@ -671,7 +671,7 @@ distclean:
 	\$(CC) -c \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$<
 	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) \$*.c -o $p/\$*.d > /dev/null &2>&1
 
-%.o : %.c
+%.lo : %.c
 	\$(CC) -c -o $p/\$@ \$(CFLAGS) \$(LIBDEFS) -I\$(INCDIR) \$<
 
 EOF
