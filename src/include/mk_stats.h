@@ -24,34 +24,20 @@
 
 struct stats
 {
-    long long mk_session_create_n;
-    long long mk_session_create;
-    long long mk_session_get_n;
-    long long mk_session_get;
-    long long mk_http_method_get_n;
-    long long mk_http_method_get;
-    long long mk_http_request_end_n;
-    long long mk_http_request_end;
-    long long mk_http_range_parse_n;
-    long long mk_http_range_parse;
-    long long mk_http_init_n;
-    long long mk_http_init;
-    long long mk_sched_get_connection_n;
-    long long mk_sched_get_connection;
-    long long mk_sched_remove_client_n;
-    long long mk_sched_remove_client;
-    long long mk_plugin_stage_run_n;
-    long long mk_plugin_stage_run;
-    long long mk_plugin_event_read_n;
-    long long mk_plugin_event_read;
-    long long mk_plugin_event_write_n;
-    long long mk_plugin_event_write;
-    long long mk_header_send_n;
-    long long mk_header_send;
-    long long mk_conn_read_n;
-    long long mk_conn_read;
-    long long mk_conn_write_n;
-    long long mk_conn_write;
+    long long mk_session_create[2];
+    long long mk_session_get[2];
+    long long mk_http_method_get[2];
+    long long mk_http_request_end[2];
+    long long mk_http_range_parse[2];
+    long long mk_http_init[2];
+    long long mk_sched_get_connection[2];
+    long long mk_sched_remove_client[2];
+    long long mk_plugin_stage_run[2];
+    long long mk_plugin_event_read[2];
+    long long mk_plugin_event_write[2];
+    long long mk_header_send[2];
+    long long mk_conn_read[2];
+    long long mk_conn_write[2];
     //...
 };
 
@@ -67,13 +53,13 @@ static inline long long stats_current_time()
 
 #define STATS_COUNTER_START(sched_list_node, func_name)\
     do {\
-        sched_list_node->stats->func_name##_n++;\
-        sched_list_node->stats->func_name -= stats_current_time();\
+        sched_list_node->stats->func_name[0]++;\
+        sched_list_node->stats->func_name[1] -= stats_current_time();\
     } while (0)
 
 #define STATS_COUNTER_STOP(sched_list_node, func_name)\
     do {\
-        sched_list_node->stats->func_name += stats_current_time();\
+        sched_list_node->stats->func_name[1] += stats_current_time();\
     } while (0)
 
 #define STATS_COUNTER_INIT_NO_SCHED\

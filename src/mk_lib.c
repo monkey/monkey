@@ -657,20 +657,20 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi)
     struct stats *stats = mwi->stats;
 
     printf("Stat info for worker: %d\n", mwi->pid);
-    printf("mk_session_create %lld:%lld\n", stats->mk_session_create_n, stats->mk_session_create);
-    printf("mk_session_get %lld:%lld\n", stats->mk_session_get_n, stats->mk_session_get);
-    printf("mk_http_method_get %lld:%lld\n", stats->mk_http_method_get_n, stats->mk_http_method_get);
-    printf("mk_http_request_end %lld:%lld\n", stats->mk_http_request_end_n, stats->mk_http_request_end);
-    printf("mk_http_range_parse %lld:%lld\n", stats->mk_http_range_parse_n, stats->mk_http_range_parse);
-    printf("mk_http_init %lld:%lld\n", stats->mk_http_init_n, stats->mk_http_init);
-    printf("mk_sched_get_connection %lld:%lld\n", stats->mk_sched_get_connection_n, stats->mk_sched_get_connection);
-    printf("mk_sched_remove_client %lld:%lld\n", stats->mk_sched_remove_client_n, stats->mk_sched_remove_client);
-    printf("mk_plugin_stage_run %lld:%lld\n", stats->mk_plugin_stage_run_n, stats->mk_plugin_stage_run);
-    printf("mk_plugin_event_read %lld:%lld\n", stats->mk_plugin_event_read_n, stats->mk_plugin_event_read);
-    printf("mk_plugin_event_write %lld:%lld\n", stats->mk_plugin_event_write_n, stats->mk_plugin_event_write);
-    printf("mk_header_send %lld:%lld\n", stats->mk_header_send_n, stats->mk_header_send);
-    printf("mk_conn_read %lld:%lld\n", stats->mk_conn_read_n, stats->mk_conn_read);
-    printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write_n, stats->mk_conn_write);
+    printf("mk_session_create %lld:%lld\n", stats->mk_session_create[0], stats->mk_session_create[1]);
+    printf("mk_session_get %lld:%lld\n", stats->mk_session_get[0], stats->mk_session_get[1]);
+    printf("mk_http_method_get %lld:%lld\n", stats->mk_http_method_get[0], stats->mk_http_method_get[1]);
+    printf("mk_http_request_end %lld:%lld\n", stats->mk_http_request_end[0], stats->mk_http_request_end[1]);
+    printf("mk_http_range_parse %lld:%lld\n", stats->mk_http_range_parse[0], stats->mk_http_range_parse[1]);
+    printf("mk_http_init %lld:%lld\n", stats->mk_http_init[0], stats->mk_http_init[1]);
+    printf("mk_sched_get_connection %lld:%lld\n", stats->mk_sched_get_connection[0], stats->mk_sched_get_connection[1]);
+    printf("mk_sched_remove_client %lld:%lld\n", stats->mk_sched_remove_client[0], stats->mk_sched_remove_client[1]);
+    printf("mk_plugin_stage_run %lld:%lld\n", stats->mk_plugin_stage_run[0], stats->mk_plugin_stage_run[1]);
+    printf("mk_plugin_event_read %lld:%lld\n", stats->mk_plugin_event_read[0], stats->mk_plugin_event_read[1]);
+    printf("mk_plugin_event_write %lld:%lld\n", stats->mk_plugin_event_write[0], stats->mk_plugin_event_write[1]);
+    printf("mk_header_send %lld:%lld\n", stats->mk_header_send[0], stats->mk_header_send[1]);
+    printf("mk_conn_read %lld:%lld\n", stats->mk_conn_read[0], stats->mk_conn_read[1]);
+    printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write[0], stats->mk_conn_write[1]);
     printf("\n");
 }
 
