@@ -148,6 +148,9 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->serverconf = mk_string_dup(MONKEY_PATH_CONF);
     mk_config_set_init_values();
 
+    mk_kernel_init();
+    mk_kernel_features();
+
     /*
      * If the worker numbers have not be set, set the number based on
      * the number of CPU cores
