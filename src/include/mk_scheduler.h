@@ -50,6 +50,10 @@
 
 extern __thread struct rb_root *cs_list;
 
+#ifdef STATS
+extern __thread struct stats *stats;
+#endif
+
 struct sched_connection
 {
     struct rb_node _rb_head; /* red-black tree head */
@@ -100,7 +104,6 @@ struct sched_list_node
 #ifdef SHAREDLIB
     mklib_ctx ctx;
 #endif
-    struct stats *stats;
 };
 
 

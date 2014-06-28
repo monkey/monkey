@@ -505,15 +505,18 @@ int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
 /* Start the server. */
 int mklib_start(mklib_ctx ctx)
 {
-    if (!ctx || ctx->lib_running) return MKLIB_FALSE;
+    unsigned int i;
+    const unsigned int workers = config->workers;
+    if (!ctx || ctx->lib_running)
+        return MKLIB_FALSE;
 
     mk_plugin_core_process();
 
     ctx->workers = mk_mem_malloc_z(sizeof(pthread_t) * config->workers);
 
-    unsigned int i;
-    const unsigned int workers = config->workers;
-    for (i = 0; i < workers; i++) {
+    ctx->worker_info = mk_mem_malloc_z(sizeof(struct mklib_worker_info *) * (workers + 1));
+    for(i = 0; i < workers; i++) {
+        ctx->worker_info[i] = mk_mem_malloc_z(sizeof(struct mklib_worker_info));
         mk_sched_launch_thread(config->worker_capacity, &ctx->workers[i], ctx);
     }
 
@@ -532,11 +535,8 @@ int mklib_start(mklib_ctx ctx)
         usleep(10000);
     }
 
-    ctx->worker_info = mk_mem_malloc_z(sizeof(struct mklib_worker_info *) * (workers + 1));
-    for(i = 0; i < workers; i++) {
-        ctx->worker_info[i] = mk_mem_malloc_z(sizeof(struct mklib_worker_info));
+    for(i = 0; i < workers; i++)
         ctx->worker_info[i]->pid = sched_list[i].pid;
-    }
 
     ctx->lib_running = 1;
     ctx->tid = mk_utils_worker_spawn(mklib_run, ctx);
@@ -646,14 +646,17 @@ struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx ctx)
     for (i = 0; i < workers; i++) {
         ctx->worker_info[i]->accepted_connections = sched_list[i].accepted_connections;
         ctx->worker_info[i]->closed_connections = sched_list[i].closed_connections;
-        ctx->worker_info[i]->stats = sched_list[i].stats;
+//#ifdef STATS
+//        ctx->worker_info[i]->stats = stats;
+//#endif
     }
 
     return ctx->worker_info;
 }
 
-void mklib_print_worker_info(struct mklib_worker_info *mwi)
+void mklib_print_worker_info(struct mklib_worker_info *mwi UNUSED_PARAM)
 {
+#ifdef STATS
     struct stats *stats = mwi->stats;
 
     printf("Stat info for worker: %d\n", mwi->pid);
@@ -672,6 +675,9 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi)
     printf("mk_conn_read %lld:%lld\n", stats->mk_conn_read[0], stats->mk_conn_read[1]);
     printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write[0], stats->mk_conn_write[1]);
     printf("\n");
+#else
+    printf("No stats available, use \"./configure --stats\"\n");
+#endif
 }
 
 /* Return a list of all mimetypes */

@@ -954,8 +954,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 
     sc = mk_sched_get_connection(sched, socket);
 
-    STATS_COUNTER_START(sched, mk_session_create);
-
     if (!sc) {
         MK_TRACE("[FD %i] No sched node, could not create session", socket);
         return NULL;
@@ -1010,7 +1008,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     rb_link_node(&cs->_rb_head, parent, new);
     rb_insert_color(&cs->_rb_head, cs_list);
 
-    STATS_COUNTER_STOP(sched, mk_session_create);
     return cs;
 }
 
@@ -1018,9 +1015,6 @@ struct client_session *mk_session_get(int socket)
 {
     struct client_session *cs;
     struct rb_node *node;
-
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_session_get);
 
     node = cs_list->rb_node;
   	while (node) {
@@ -1030,11 +1024,9 @@ struct client_session *mk_session_get(int socket)
 		else if (socket > cs->socket)
   			node = node->rb_right;
 		else {
-            STATS_COUNTER_STOP_NO_SCHED(mk_session_get);
   			return cs;
         }
 	}
-    STATS_COUNTER_STOP_NO_SCHED(mk_session_get);
 	return NULL;
 }
 

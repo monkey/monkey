@@ -45,7 +45,6 @@
 #include "mk_macros.h"
 #include "mk_vhost.h"
 #include "mk_server.h"
-#include "mk_stats.h"
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);
@@ -150,28 +149,17 @@ static int mk_http_range_parse(struct session_request *sr)
     char *buffer = 0;
     struct response_headers *sh;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_http_range_parse);
-
-    if (!sr->range.data) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
+    if (!sr->range.data)
         return -1;
-    }
 
-    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
+    if ((eq_pos = mk_string_char_search(sr->range.data, '=', sr->range.len)) < 0)
         return -1;
-    }
 
-    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
+    if (strncasecmp(sr->range.data, "Bytes", eq_pos) != 0)
         return -1;
-    }
 
-    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
+    if ((sep_pos = mk_string_char_search(sr->range.data, '-', sr->range.len)) < 0)
         return -1;
-    }
 
     len = sr->range.len;
     sh = &sr->headers;
@@ -182,12 +170,10 @@ static int mk_http_range_parse(struct session_request *sr)
         sh->ranges[1] = (unsigned long) atol(sr->range.data + sep_pos + 1);
 
         if (sh->ranges[1] <= 0) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
             return -1;
         }
 
         sh->content_length = sh->ranges[1];
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
 
@@ -202,12 +188,10 @@ static int mk_http_range_parse(struct session_request *sr)
         mk_mem_free(buffer);
 
         if (sh->ranges[1] < 0 || (sh->ranges[0] > sh->ranges[1])) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
             return -1;
         }
 
         sh->content_length = abs(sh->ranges[1] - sh->ranges[0]) + 1;
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
     /* =yyy- */
@@ -217,11 +201,9 @@ static int mk_http_range_parse(struct session_request *sr)
         mk_mem_free(buffer);
 
         sh->content_length = (sh->content_length - sh->ranges[0]);
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
         return 0;
     }
 
-    STATS_COUNTER_STOP_NO_SCHED(mk_http_range_parse);
     return -1;
 }
 
@@ -231,13 +213,9 @@ int mk_http_method_get(char *body)
     int max_len_method = 8;
     mk_ptr_t method;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_http_method_get);
-
     /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
     pos = mk_string_char_search(body, ' ', max_len_method);
     if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_method_get);
         return MK_HTTP_METHOD_UNKNOWN;
     }
 
@@ -245,8 +223,6 @@ int mk_http_method_get(char *body)
     method.len = (unsigned long) pos;
 
     int_method = mk_http_method_check(method);
-
-    STATS_COUNTER_STOP_NO_SCHED(mk_http_method_get);
 
     return int_method;
 }
@@ -355,9 +331,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int bytes = 0;
     struct mimetype *mime;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_http_init);
-
     MK_TRACE("HTTP Protocol Init");
 
     /* Request to root path of the virtualhost in question */
@@ -391,7 +364,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
             if (ret < 0) {
                 MK_TRACE("Error composing real path");
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return EXIT_ERROR;
             }
         }
@@ -401,7 +373,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     if (memmem(sr->uri_processed.data, sr->uri_processed.len,
                MK_HTTP_DIRECTORY_BACKWARD,
                sizeof(MK_HTTP_DIRECTORY_BACKWARD) - 1)) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
@@ -414,29 +385,23 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             if (sr->headers.status > 0) {
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(sr->headers.status, cs, sr);
             }
             else {
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
         }
         else if (ret == MK_PLUGIN_RET_CONTINUE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return MK_PLUGIN_RET_CONTINUE;
         }
         else if (ret == MK_PLUGIN_RET_END) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return EXIT_NORMAL;
         }
 
         if (sr->file_info.exists == MK_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
         }
         else if (sr->stage30_blocked == MK_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
     }
@@ -448,7 +413,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             MK_TRACE("Directory Redirect");
 
             /* Redirect has been sent */
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return -1;
         }
 
@@ -482,7 +446,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     /* Check symbolic link file */
     if (sr->file_info.is_link == MK_TRUE) {
         if (config->symlink == MK_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         else {
@@ -490,7 +453,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             char linked_file[MK_MAX_PATH];
             n = readlink(sr->real_path.data, linked_file, MK_MAX_PATH);
             if (n < 0) {
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
         }
@@ -502,19 +464,15 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
         switch (ret) {
         case MK_PLUGIN_RET_CONTINUE:
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return MK_PLUGIN_RET_CONTINUE;
         case MK_PLUGIN_RET_CLOSE_CONX:
             if (sr->headers.status > 0) {
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(sr->headers.status, cs, sr);
             }
             else {
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
         case MK_PLUGIN_RET_END:
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return EXIT_NORMAL;
         }
     }
@@ -526,7 +484,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
      */
     if (sr->method == MK_HTTP_METHOD_PUT || sr->method == MK_HTTP_METHOD_DELETE ||
         sr->method == MK_HTTP_METHOD_UNKNOWN) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return mk_request_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
@@ -549,7 +506,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         mk_ptr_t_reset(&sr->headers.content_type);
         mk_header_send(cs->socket, cs, sr);
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return EXIT_NORMAL;
     }
     else {
@@ -558,7 +514,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
     /* read permissions and check file */
     if (sr->file_info.read_access == MK_FALSE) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
@@ -569,13 +524,11 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
     if (sr->file_info.is_directory == MK_TRUE) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
 
     /* get file size */
     if (sr->file_info.size < 0) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
@@ -593,7 +546,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
             mk_header_send(cs->socket, cs, sr);
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return EXIT_NORMAL;
         }
     }
@@ -607,7 +559,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         sr->fd_file = mk_vhost_open(sr);
         if (sr->fd_file == -1) {
             MK_TRACE("open() failed");
-            STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         sr->bytes_to_send = sr->file_info.size;
@@ -622,7 +573,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             if (mk_http_range_parse(sr) < 0) {
                 sr->headers.ranges[0] = -1;
                 sr->headers.ranges[1] = -1;
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
             }
             if (sr->headers.ranges[0] >= 0 || sr->headers.ranges[1] >= 0) {
@@ -634,7 +584,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
                 sr->headers.content_length = -1;
                 sr->headers.ranges[0] = -1;
                 sr->headers.ranges[1] = -1;
-                STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
                 return mk_request_error(MK_CLIENT_REQUESTED_RANGE_NOT_SATISF, cs, sr);
             }
         }
@@ -648,7 +597,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     mk_header_send(cs->socket, cs, sr);
 
     if (mk_unlikely(sr->headers.content_length == 0)) {
-        STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
         return 0;
     }
 
@@ -657,7 +605,6 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         bytes = mk_http_send_file(cs, sr);
     }
 
-    STATS_COUNTER_STOP_NO_SCHED(mk_http_init);
     return bytes;
 }
 
@@ -832,19 +779,15 @@ int mk_http_request_end(int socket)
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
-    STATS_COUNTER_START(sched, mk_http_request_end);
-
     cs = mk_session_get(socket);
 
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
-        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return -1;
     }
 
     if (mk_unlikely(!sched)) {
         MK_TRACE("Could not find sched list node :/");
-        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return -1;
     }
 
@@ -864,10 +807,8 @@ int mk_http_request_end(int socket)
         mk_request_ka_next(cs);
         mk_epoll_change_mode(sched->epoll_fd,
                              socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
-        STATS_COUNTER_STOP(sched, mk_http_request_end);
         return 0;
     }
 
-    STATS_COUNTER_STOP(sched, mk_http_request_end);
     return -1;
 }

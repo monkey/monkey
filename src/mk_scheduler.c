@@ -53,6 +53,10 @@ pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
 
+#ifdef STATS
+__thread struct stats *stats;
+#endif
+
 /*
  * Returns the worker id which should take a new incomming connection,
  * it returns the worker id with less active connections. Just used
@@ -386,8 +390,6 @@ static int mk_sched_register_thread(int server_fd, int efd)
     }
     sl->request_handler = NULL;
 
-    sl->stats = mk_mem_malloc_z(sizeof(struct stats));
-
     return sl->idx;
 }
 
@@ -402,6 +404,10 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     struct epoll_event event = {0, {0}};
+
+#ifdef STATS
+    stats = mk_mem_malloc_z(sizeof(struct stats));
+#endif
 
 #ifndef SHAREDLIB
     /* Avoid SIGPIPE signals */
@@ -464,6 +470,9 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
      */
 
 #ifdef SHAREDLIB
+#ifdef STATS
+    thconf->ctx->worker_info[wid]->stats = stats;
+#endif
     thinfo->ctx = thconf->ctx;
 #endif
 
@@ -546,8 +555,6 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
     struct sched_connection *sc;
 
-    STATS_COUNTER_START(sched, mk_sched_remove_client);
-
     /*
      * Close socket and change status: we must invoke mk_epoll_del()
      * because when the socket is closed is cleaned from the queue by
@@ -585,14 +592,12 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
          */
         mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
-        STATS_COUNTER_STOP(sched, mk_sched_remove_client);
         return 0;
     }
     else {
         MK_TRACE("[FD %i] Not found", remote_fd);
         MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
     }
-    STATS_COUNTER_STOP(sched, mk_sched_remove_client);
     return -1;
 }
 
@@ -601,7 +606,6 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
 {
     struct rb_node *node;
     struct sched_connection *this;
-    STATS_COUNTER_START(sched, mk_sched_get_connection);
 
     /*
      * In some cases the sched node can be NULL when is a premature close,
@@ -612,7 +616,6 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
     if (!sched) {
         MK_TRACE("[FD %i] No scheduler information", remote_fd);
         mk_socket_close(remote_fd);
-        STATS_COUNTER_STOP(sched, mk_sched_get_connection);
         return NULL;
     }
 
@@ -625,14 +628,12 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
   			node = node->rb_right;
 		else {
             MK_LT_SCHED(remote_fd, "GET_CONNECTION");
-            STATS_COUNTER_STOP(sched, mk_sched_get_connection);
   			return this;
         }
 	}
 
     MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
     MK_LT_SCHED(remote_fd, "GET_FAILED");
-    STATS_COUNTER_STOP(sched, mk_sched_get_connection);
     return NULL;
 }
 

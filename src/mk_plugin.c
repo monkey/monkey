@@ -567,8 +567,6 @@ int mk_plugin_stage_run(unsigned int hook,
     int ret;
     struct plugin_stagem *stm;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_plugin_stage_run);
 
 #ifdef SHAREDLIB
     struct sched_list_node *thconf = mk_sched_get_thread_conf();
@@ -580,7 +578,6 @@ int mk_plugin_stage_run(unsigned int hook,
         mk_socket_ip_str(socket, &ptr, bufsize, &len);
         ret = ctx->ipf(buf);
         if (ret == MKLIB_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
             return MK_PLUGIN_RET_CLOSE_CONX;
         }
     }
@@ -593,7 +590,6 @@ int mk_plugin_stage_run(unsigned int hook,
 
         ret = ctx->urlf(buf);
         if (ret == MKLIB_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
             return MK_PLUGIN_RET_CLOSE_CONX;
         }
     }
@@ -609,7 +605,6 @@ int mk_plugin_stage_run(unsigned int hook,
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
                 MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
@@ -628,7 +623,6 @@ int mk_plugin_stage_run(unsigned int hook,
             case MK_PLUGIN_RET_CLOSE_CONX:
                 MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
 
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
 
@@ -659,16 +653,13 @@ int mk_plugin_stage_run(unsigned int hook,
                      * connection use MK_PLUGIN_RET_CLOSE_CONX.
                      */
                     mk_bug(sr->headers.sent == MK_FALSE);
-                    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                     return ret;
                 case MK_PLUGIN_RET_CLOSE_CONX:
                 case MK_PLUGIN_RET_CONTINUE:
-                    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                     return ret;
                 default:
                     mk_err("Plugin '%s' returns invalid value %i",
                            stm->p->shortname, ret);
-                    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                     exit(EXIT_FAILURE);
             }
             stm = stm->next;
@@ -697,7 +688,6 @@ int mk_plugin_stage_run(unsigned int hook,
             case MK_PLUGIN_RET_NOT_ME:
                 break;
             case MK_PLUGIN_RET_CONTINUE:
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                 return MK_PLUGIN_RET_CONTINUE;
             }
             stm = stm->next;
@@ -736,7 +726,6 @@ int mk_plugin_stage_run(unsigned int hook,
         mk_mem_free(post);
 
         if (ret == MKLIB_FALSE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
             return -1;
         }
 
@@ -762,7 +751,6 @@ int mk_plugin_stage_run(unsigned int hook,
                 if (errno == EAGAIN) {
                     continue;
                 }
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
                 return -1;
             }
             clen -= remaining;
@@ -771,7 +759,6 @@ int mk_plugin_stage_run(unsigned int hook,
         mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
 
         if (ret == MKLIB_TRUE) {
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
             return MK_PLUGIN_RET_END;
         }
     }
@@ -782,7 +769,6 @@ int mk_plugin_stage_run(unsigned int hook,
 
 #endif
 
-    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_stage_run);
     return -1;
 }
 
@@ -1054,8 +1040,6 @@ int mk_plugin_event_read(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_plugin_event_read);
 
     MK_TRACE("[FD %i] Read Event", socket);
 
@@ -1066,7 +1050,6 @@ int mk_plugin_event_read(int socket)
      */
     if (!mk_epoll_state_get(socket)) {
         MK_TRACE("[FD %i] Connection already closed", socket);
-        STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
         return -1;
     }
 
@@ -1078,7 +1061,6 @@ int mk_plugin_event_read(int socket)
 
             ret = event->handler->event_read(socket);
             mk_plugin_event_check_return("read|handled_by", ret);
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
             return ret;
         }
     }
@@ -1094,13 +1076,11 @@ int mk_plugin_event_read(int socket)
                 continue;
             }
             else {
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
                 return ret;
             }
         }
     }
 
-    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_read);
     return MK_PLUGIN_RET_EVENT_CONTINUE;
 }
 
@@ -1111,8 +1091,6 @@ int mk_plugin_event_write(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
-    STATS_COUNTER_INIT_NO_SCHED;
-    STATS_COUNTER_START_NO_SCHED(mk_plugin_event_write);
 
     MK_TRACE("[FD %i] Plugin event write", socket);
 
@@ -1123,7 +1101,6 @@ int mk_plugin_event_write(int socket)
      */
     if (!mk_epoll_state_get(socket)) {
         MK_TRACE("[FD %i] Connection already closed", socket);
-        STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
         return -1;
     }
 
@@ -1134,7 +1111,6 @@ int mk_plugin_event_write(int socket)
 
             ret = event->handler->event_write(socket);
             mk_plugin_event_check_return("write|handled_by", ret);
-            STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
             return ret;
         }
     }
@@ -1150,13 +1126,11 @@ int mk_plugin_event_write(int socket)
                 continue;
             }
             else {
-                STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
                 return ret;
             }
         }
     }
 
-    STATS_COUNTER_STOP_NO_SCHED(mk_plugin_event_write);
     return MK_PLUGIN_RET_CONTINUE;
 }
 

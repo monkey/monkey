@@ -20,6 +20,8 @@
 #ifndef MK_STATS_H
 #define MK_STATS_H
 
+#ifdef STATS
+
 #include <time.h>
 
 struct stats
@@ -49,39 +51,21 @@ static inline long long stats_current_time()
     return ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
 
-#ifdef STATS
-
-#define STATS_COUNTER_START(sched_list_node, func_name)\
+#define STATS_COUNTER_START(func_name)\
     do {\
-        sched_list_node->stats->func_name[0]++;\
-        sched_list_node->stats->func_name[1] -= stats_current_time();\
+        stats->func_name[0]++;\
+        stats->func_name[1] -= stats_current_time();\
     } while (0)
 
-#define STATS_COUNTER_STOP(sched_list_node, func_name)\
+#define STATS_COUNTER_STOP(func_name)\
     do {\
-        sched_list_node->stats->func_name[1] += stats_current_time();\
-    } while (0)
-
-#define STATS_COUNTER_INIT_NO_SCHED\
-    struct sched_list_node *__sched = pthread_getspecific(worker_sched_node)
-
-#define STATS_COUNTER_START_NO_SCHED(func_name)\
-    do {\
-        STATS_COUNTER_START(__sched, func_name);\
-    } while (0)
-
-#define STATS_COUNTER_STOP_NO_SCHED(func_name)\
-    do {\
-        STATS_COUNTER_STOP(__sched, func_name);\
+        stats->func_name[1] += stats_current_time();\
     } while (0)
 
 #else
 
 #define STATS_COUNTER_START(sched_list_node, func_name)
 #define STATS_COUNTER_STOP(sched_list_node, func_name)
-#define STATS_COUNTER_INIT_NO_SCHED
-#define STATS_COUNTER_START_NO_SCHED(func_name)
-#define STATS_COUNTER_STOP_NO_SCHED(func_name)
 
 #endif
 
