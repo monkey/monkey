@@ -206,7 +206,8 @@ main()
                          malloc_libc malloc_jemalloc
 
 	echo "+ Creating plugins/Make.common"
-	create_plugins_make_common base_path bindir
+	create_plugins_make_common base_path bindir \
+                         polarssl_headers polarssl_library polarssl_debug_level
 
 	echo "+ Creating src/include/mk_info.h"
 	create_info base_path sysconfdir \
@@ -719,14 +720,10 @@ create_makefile_plugins()
 			continue
 		fi
 
-                echo $entry
-
 		comment="    "
 		for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
 			echo -e "+ ${name}${i:1}";
 		done
-
-                echo "----->"$plugin_dir
 
 		# Create Makefile
 		MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
@@ -762,7 +759,7 @@ create_makefile_plugins()
 		echo "" >> $plugins_load
 
 		# Copy specific plugin configuration files
-                echo $base_path/$plugin_dir/conf
+                #echo $base_path/$plugin_dir/conf
 
 		if test -e $base_path/$plugin_dir/conf ; then
 			target="conf/$plugin_dir/"
@@ -820,6 +817,18 @@ create_plugins_make_common()
 	if [ $malloc_jemalloc == 1 ]; then
 		LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
 	fi
+
+	if [ $polarssl_headers != "" ] ; then
+		MK_POLARSSL_HEADERS="-I$polarssl_headers"
+	fi
+	if [ $polarssl_library != "" ] ; then
+		MK_POLARSSL_LIBRARY="-L$polarssl_library -Wl,-rpath=$polarssl_library"
+	fi
+
+	if [ $polarssl_debug_level != "" ] ; then
+		MK_POLARSSL_DEBUG_LEVEL="$polarssl_debug_level"
+	fi
+
 	cat > $base_path/plugins/Make.common <<EOF
 _PATH     = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 INC_EXTRA = "./"
@@ -827,6 +836,9 @@ INCDIR    = ../../src/include -I\$(INC_EXTRA)
 MONKEY_OBJECTS = \$(wildcard ../../src/*.o)
 MONKEY_OBJECTS_N = \$(filter-out ../../src/monkey.o, \$(MONKEY_OBJECTS))
 MONKEY_BIN_DIR = $bindir
+MONKEY_POLARSSL_HEADERS = $MK_POLARSSL_HEADERS
+MONKEY_POLARSSL_LIBRARY = $MK_POLARSSL_LIBRARY
+MONKEY_POLARSSL_DEBUG_LEVEL = $MK_POLARSSL_DEBUG_LEVEL
 LIBS = $LIBS
 
 .c.o:
@@ -1052,6 +1064,11 @@ only_accept4=0
 malloc_libc=0
 malloc_jemalloc=1
 
+# polarssl
+polarssl_headers=""
+polarssl_library=""
+polarssl_debug_level=0
+
 for arg in $*; do
 
 	case "$arg" in
@@ -1162,6 +1179,15 @@ for arg in $*; do
 				systemddir=/lib/systemd/system
 			fi
 			;;
+		--polarssl-headers*)
+			polarssl_headers=$optarg
+			;;
+		--polarssl-library*)
+			polarssl_library=$optarg
+			;;
+		--polarssl-debug-level*)
+			polarssl_debug_level=$optarg
+			;;
 		--version*)
 			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
 			echo "Copyright 2001-2014 - Eduardo Silva <eduardo@monkey.io>"
@@ -1216,6 +1242,11 @@ for arg in $*; do
 			echo "  --enable-shared         Build Monkey as a shared library in addition to a stand-alone server"
 			echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
 			echo "                          WARNING security risk, do not enable in distro packages!"
+			echo
+			echo -e $bldwht"PolarSSL plugin options:" $txtrst
+			echo "  --polarssl-headers      Set the path for PolarSSL headers"
+			echo "  --polarssl-library      Set the path where the PolarSSL library can be found"
+			echo "  --polarssl-debug-level  Set PolarSSL debug level"
 			echo
 			echo -e $bldwht"Installation Directories:" $txtrst
 			echo "  --prefix=PREFIX         Root prefix directory"
@@ -1346,6 +1377,7 @@ uname=`uname -a`
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir pidfile plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
-     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname
+     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname \
+     polarssl_headers polarssl_library polarssl_debug_level
 
 exit 0
