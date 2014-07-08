@@ -1,8 +1,7 @@
 #include "test/jemalloc_test.h"
 
 #define	CHUNK 0x400000
-/* #define MAXALIGN ((size_t)UINT64_C(0x80000000000)) */
-#define	MAXALIGN ((size_t)0x2000000LU)
+#define	MAXALIGN (((size_t)1) << 25)
 #define	NITER 4
 
 TEST_BEGIN(test_basic)
@@ -36,28 +35,6 @@ TEST_BEGIN(test_basic)
 	assert_zu_eq(nsz, rsz, "nallocm()/allocm() rsize mismatch");
 	assert_d_eq(dallocm(p, 0), ALLOCM_SUCCESS,
 	    "Unexpected dallocm() error");
-}
-TEST_END
-
-TEST_BEGIN(test_alignment_errors)
-{
-	void *p;
-	size_t nsz, rsz, sz, alignment;
-
-#if LG_SIZEOF_PTR == 3
-	alignment = UINT64_C(0x4000000000000000);
-	sz        = UINT64_C(0x8400000000000001);
-#else
-	alignment = 0x40000000LU;
-	sz        = 0x84000001LU;
-#endif
-	nsz = 0;
-	assert_d_eq(nallocm(&nsz, sz, ALLOCM_ALIGN(alignment)), ALLOCM_SUCCESS,
-	    "Unexpected nallocm() error");
-	rsz = 0;
-	assert_d_ne(allocm(&p, &rsz, sz, ALLOCM_ALIGN(alignment)),
-	    ALLOCM_SUCCESS, "Expected error for allocm(&p, %zu, %#x)",
-	    sz, ALLOCM_ALIGN(alignment));
 }
 TEST_END
 
@@ -126,6 +103,5 @@ main(void)
 
 	return (test(
 	    test_basic,
-	    test_alignment_errors,
 	    test_alignment_and_size));
 }
