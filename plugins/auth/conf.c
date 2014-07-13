@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 #include "base64.h"
 #include "auth.h"
 #include "conf.h"

@@ -31,14 +31,14 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include "monkey.h"
-#include "mk_kernel.h"
-#include "mk_file.h"
-#include "mk_socket.h"
-#include "mk_memory.h"
-#include "mk_utils.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
 
 static void mk_socket_safe_event_write(int socket)
 {

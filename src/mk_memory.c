@@ -23,15 +23,15 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include "monkey.h"
-#include "mk_config.h"
-#include "mk_memory.h"
-#include "mk_request.h"
-#include "mk_header.h"
-#include "mk_http.h"
-#include "mk_iov.h"
-#include "mk_user.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_iov.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_macros.h>
 
 mk_ptr_t mk_ptr_t_create(char *buf, long init, long end)
 {

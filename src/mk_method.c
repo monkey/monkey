@@ -28,18 +28,17 @@
 #include <string.h>
 #include <time.h>
 
-#include "monkey.h"
-
-#include "mk_string.h"
-#include "mk_memory.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_socket.h"
-#include "mk_config.h"
-#include "mk_utils.h"
-#include "mk_file.h"
-#include "mk_cache.h"
-#include "mk_request.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_request.h>
 
 long int mk_method_validate_content_length(const char *body, int body_len)
 {

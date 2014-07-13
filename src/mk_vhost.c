@@ -25,18 +25,17 @@
 #include <pthread.h>
 #include <fcntl.h>
 
-
-#include "mk_list.h"
-#include "mk_vhost.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_http_status.h"
-#include "mk_memory.h"
-#include "mk_request.h"
-#include "mk_info.h"
-#include "mk_file.h"
+#include <monkey/mk_list.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_file.h>
 
 /* Initialize Virtual Host FDT mutex */
 pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;

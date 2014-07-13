@@ -21,10 +21,10 @@
 #include <pthread.h>
 #include <sys/utsname.h>
 
-#include "mk_kernel.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_server.h"
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_server.h>
 
 int mk_kernel_init()
 {

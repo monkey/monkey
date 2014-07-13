@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 #include "auth.h"
 #include "conf.h"

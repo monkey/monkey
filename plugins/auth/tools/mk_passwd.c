@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mk_list.h"
-#include "mk_macros.h"
+#include <monkey/mk_list.h>
+#include <monkey/mk_macros.h>
 #include "sha1.h"
 #include "base64.h"
 

@@ -48,7 +48,7 @@
 #include <polarssl/pk.h>
 #endif
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 #ifndef SENDFILE_BUF_SIZE
 #define SENDFILE_BUF_SIZE SSL_MAX_CONTENT_LEN

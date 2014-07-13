@@ -21,8 +21,8 @@
 #ifndef MK_LOGGER_H
 #define MK_LOGGER_H
 
-#include "MKPlugin.h"
 #include <stdio.h>
+#include <monkey/mk_api.h>
 
 #define MK_LOGGER_PIPE_LIMIT 0.75
 #define MK_LOGGER_TIMEOUT_DEFAULT 3

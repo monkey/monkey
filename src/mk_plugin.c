@@ -25,16 +25,16 @@
 #include <dlfcn.h>
 #include <err.h>
 
-#include "mk_connection.h"
-#include "mk_request.h"
-#include "mk_utils.h"
-#include "mk_file.h"
-#include "mk_http.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_mimetype.h"
-#include "mk_vhost.h"
+#include <monkey/mk_connection.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_vhost.h>
 
 enum {
     bufsize = 256

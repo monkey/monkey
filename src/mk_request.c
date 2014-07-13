@@ -38,26 +38,26 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#include "monkey.h"
-#include "mk_request.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_string.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
-#include "mk_epoll.h"
-#include "mk_utils.h"
-#include "mk_header.h"
-#include "mk_user.h"
-#include "mk_method.h"
-#include "mk_memory.h"
-#include "mk_socket.h"
-#include "mk_cache.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
-#include "mk_server.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_method.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_server.h>
 
 const mk_ptr_t mk_crlf = mk_ptr_t_init(MK_CRLF);
 const mk_ptr_t mk_endblock = mk_ptr_t_init(MK_ENDBLOCK);

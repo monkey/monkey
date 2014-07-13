@@ -27,21 +27,21 @@
 #include <sys/syscall.h>
 #include <string.h>
 
-#include "monkey.h"
-#include "mk_connection.h"
-#include "mk_scheduler.h"
-#include "mk_memory.h"
-#include "mk_epoll.h"
-#include "mk_request.h"
-#include "mk_cache.h"
-#include "mk_config.h"
-#include "mk_clock.h"
-#include "mk_signals.h"
-#include "mk_plugin.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
-#include "mk_rbtree.h"
-#include "mk_linuxtrace.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_connection.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_signals.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_rbtree.h>
+#include <monkey/mk_linuxtrace.h>
 
 pthread_key_t worker_sched_node;
 

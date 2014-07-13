@@ -31,11 +31,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "monkey.h"
-#include "mk_signals.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_signals.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
 
 
 /*

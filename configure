@@ -26,7 +26,7 @@ VERSION="1.6.0"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
-INCDIR="src/include/"
+INCDIR="include/monkey"
 
 BOLD="\033[1m"
 END_COLOR="\033[0m"
@@ -209,7 +209,7 @@ main()
 	create_plugins_make_common base_path bindir \
                          polarssl_headers polarssl_library polarssl_debug_level
 
-	echo "+ Creating src/include/mk_info.h"
+	echo "+ Creating include/monkey/mk_info.h"
 	create_info base_path sysconfdir \
                     SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
                     cmd uname
@@ -295,10 +295,10 @@ main()
 	echo -n "Have fun! ;)"
 	echo
 
-	echo "#ifndef MK_ENV_H" > src/include/mk_env.h
-	echo "#define MK_ENV_H" >> src/include/mk_env.h
-	echo "#define CC \"${CC}\"" >> src/include/mk_env.h
-	echo "#endif" >> src/include/mk_env.h
+	echo "#ifndef MK_ENV_H" > include/monkey/mk_env.h
+	echo "#define MK_ENV_H" >> include/monkey/mk_env.h
+	echo "#define CC \"${CC}\"" >> include/monkey/mk_env.h
+	echo "#endif" >> include/monkey/mk_env.h
 }
 
 # Test if compiling a file with a given feature will work.
@@ -504,7 +504,7 @@ create_makefile1_install()
 	plglist=`cat plugins.list`
 
 	if [ -n "$sharedlib" ]; then
-		incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
+		incinstall="	install -m 644 include/monkey/libmonkey.h \$(INCDIR)"
 	fi
 
 	ins_systemd=""
@@ -628,7 +628,7 @@ CC_QUIET= @echo -n; $CC
 CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
-INCDIR  = ./include
+INCDIR  = ../include/
 LDFLAGS = $LDFLAGS
 DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
@@ -832,7 +832,7 @@ create_plugins_make_common()
 	cat > $base_path/plugins/Make.common <<EOF
 _PATH     = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 INC_EXTRA = "./"
-INCDIR    = ../../src/include -I\$(INC_EXTRA)
+INCDIR    = ../../include -I\$(INC_EXTRA)
 MONKEY_OBJECTS = \$(wildcard ../../src/*.o)
 MONKEY_OBJECTS_N = \$(filter-out ../../src/monkey.o, \$(MONKEY_OBJECTS))
 MONKEY_BIN_DIR = $bindir
@@ -850,7 +850,7 @@ clean:
 EOF
 }
 
-# Creando include/mk_info.h
+# Create include/monkey/mk_info.h
 create_info()
 {
 	cat > $base_path/$INCDIR/mk_info.h <<EOF
@@ -878,7 +878,7 @@ EOF
 	sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-	    $base_path/$INCDIR/public/libmonkey.h
+	    $base_path/$INCDIR/libmonkey.h
 }
 
 create_conf()

@@ -26,12 +26,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "monkey.h"
-
-#include "mk_macros.h"
-#include "mk_header.h"
-#include "mk_memory.h"
-#include "mk_iov.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_iov.h>
 
 const mk_ptr_t mk_iov_crlf = mk_ptr_t_init(MK_IOV_CRLF);
 const mk_ptr_t mk_iov_lf = mk_ptr_t_init(MK_IOV_LF);

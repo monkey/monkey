@@ -23,9 +23,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "mk_memory.h"
-#include "mk_clock.h"
-#include "mk_utils.h"
+#include <monkey/mk_memory.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_utils.h>
 
 time_t log_current_utime;
 time_t monkey_init_time;

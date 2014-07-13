@@ -27,24 +27,24 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "monkey.h"
-#include "mk_memory.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_clock.h"
-#include "mk_file.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_method.h"
-#include "mk_socket.h"
-#include "mk_mimetype.h"
-#include "mk_header.h"
-#include "mk_epoll.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
-#include "mk_server.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_method.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_server.h>
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);

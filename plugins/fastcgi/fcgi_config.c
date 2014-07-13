@@ -25,7 +25,7 @@
 
 #include "dbg.h"
 #include "fcgi_config.h"
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 void fcgi_config_free(struct fcgi_config *config)
 {

@@ -2,8 +2,7 @@
 #define _FCGI_PROTOCOL_H_
 
 #include <stdint.h>
-
-#include "mk_memory.h"
+#include <monkey/mk_memory.h>
 
 #define FCGI_MAX_LENGTH 0xffff
 #define FCGI_VERSION_1 1

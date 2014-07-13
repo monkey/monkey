@@ -1,7 +1,7 @@
 #ifndef _FCGI_CONFIG_H_
 #define _FCGI_CONFIG_H_
 
-#include "mk_list.h"
+#include <monkey/mk_api.h>
 #include "regex.h" /* regex_t */
 
 struct fcgi_server {

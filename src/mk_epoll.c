@@ -28,18 +28,18 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 
-#include "monkey.h"
-#include "mk_connection.h"
-#include "mk_socket.h"
-#include "mk_clock.h"
-#include "mk_request.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
-#include "mk_epoll.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
-#include "mk_linuxtrace.h"
-#include "mk_scheduler.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_connection.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_linuxtrace.h>
+#include <monkey/mk_scheduler.h>
 
 static __thread struct epoll_state_index mk_epoll_state_k;
 

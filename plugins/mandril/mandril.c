@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 
 /* Monkey API */
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 #include "mandril.h"
 
 MONKEY_PLUGIN("mandril",  /* shortname */

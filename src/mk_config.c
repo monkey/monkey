@@ -32,18 +32,18 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include "monkey.h"
-#include "mk_kernel.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_mimetype.h"
-#include "mk_info.h"
-#include "mk_memory.h"
-#include "mk_server.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
 
 struct server_config *config;
 gid_t EGID;

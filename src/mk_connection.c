@@ -17,10 +17,10 @@
  *  limitations under the License.
  */
 
-#include "monkey.h"
-#include "mk_http.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
 
 int mk_conn_read(int socket)
 {

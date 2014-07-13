@@ -22,7 +22,7 @@
 #include <string.h>
 
 /* Monkey Plugin Interface */
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 /* Local header files */
 #include "cmd.h"

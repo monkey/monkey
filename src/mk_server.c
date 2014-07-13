@@ -25,14 +25,14 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "monkey.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
-#include "mk_epoll.h"
-#include "mk_socket.h"
-#include "mk_plugin.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
 
 /* Return the number of clients that can be attended
  * at the same time per worker thread

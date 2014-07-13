@@ -21,14 +21,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include "mk_iov.h"
-#include "mk_cache.h"
-#include "mk_request.h"
-#include "mk_string.h"
-#include "mk_config.h"
-#include "mk_macros.h"
-#include "mk_utils.h"
-#include "mk_vhost.h"
+#include <monkey/mk_iov.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_vhost.h>
 
 pthread_key_t mk_cache_iov_header;
 pthread_key_t mk_cache_header_lm;

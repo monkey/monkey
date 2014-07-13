@@ -21,22 +21,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "monkey.h"
-#include "mk_server.h"
-#include "mk_header.h"
-#include "mk_memory.h"
-#include "mk_request.h"
-#include "mk_iov.h"
-#include "mk_http_status.h"
-#include "mk_config.h"
-#include "mk_socket.h"
-#include "mk_utils.h"
-#include "mk_clock.h"
-#include "mk_cache.h"
-#include "mk_http.h"
-#include "mk_string.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_iov.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
 
 const mk_ptr_t mk_header_short_date = mk_ptr_t_init(MK_HEADER_SHORT_DATE);
 const mk_ptr_t mk_header_short_location = mk_ptr_t_init(MK_HEADER_SHORT_LOCATION);

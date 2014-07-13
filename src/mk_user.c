@@ -26,15 +26,15 @@
 #include <sys/types.h>
 #include <grp.h>
 
-#include "monkey.h"
-#include "mk_user.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_memory.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_macros.h>
 
 int mk_user_init(struct client_session *cs, struct session_request *sr)
 {

@@ -19,8 +19,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MONKEY_PLUGIN_H
-#define MONKEY_PLUGIN_H
+#ifndef MONKEY_PLUGIN_API_H
+#define MONKEY_PLUGIN_API_H
 
 /* General Headers */
 #include <errno.h>

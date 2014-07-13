@@ -24,16 +24,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "monkey.h"
-#include "mk_mimetype.h"
-#include "mk_memory.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_request.h"
-#include "mk_list.h"
-#include "mk_macros.h"
-#include "mk_file.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_list.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_file.h>
 
 struct mimetype *mimetype_default;
 
