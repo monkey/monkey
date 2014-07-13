@@ -27,6 +27,8 @@
     xbm image/x-xbitmap
     xpm image/x-xpixmap
     xwd image/x-xwindowdump
+    svg image/svg+xml
+    svgz image/svg+xml
 
     json application/json
     ez application/andrew-inset
