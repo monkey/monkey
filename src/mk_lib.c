@@ -382,7 +382,10 @@ int mklib_get_config(mklib_ctx ctx, ...)
                 break;
             case MKC_USERDIR:
                 s = va_arg(va, char *);
-                memcpy(s, config->user_dir, strlen(config->user_dir + 1));
+                if (config->user_dir)
+                    memcpy(s, config->user_dir, strlen(config->user_dir) + 1);
+                else
+                    s[0] = 0;
                 break;
             case MKC_RESUME:
                 ip = va_arg(va, int *);
@@ -410,7 +413,7 @@ int mklib_get_config(mklib_ctx ctx, ...)
                 break;
             case MKC_DEFAULTMIMETYPE:
                 s = va_arg(va, char *);
-                memcpy(s, config->default_mimetype, strlen(config->default_mimetype + 1));
+                memcpy(s, config->default_mimetype, strlen(config->default_mimetype) + 1);
                 break;
             default:
                 mk_warn("Unknown config option");
