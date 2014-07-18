@@ -68,11 +68,12 @@ static void mk_signal_exit()
 
 void mk_signal_thread_sigpipe_safe()
 {
+    sigset_t old;
     sigset_t set;
 
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
-    //pthread_sigmask(SIG_BLOCK, &set, &old);
+    pthread_sigmask(SIG_BLOCK, &set, &old);
 }
 
 
