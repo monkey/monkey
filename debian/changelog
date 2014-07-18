@@ -1,4 +1,10 @@
-monkey (1.5.0-2) stable; urgency=low
+monkey (1.5.2-1) stable; urgency=low
+
+  * Update Monkey release to v1.5.2
+
+ -- Eduardo Silva <eduardo@monkey.io>  Fri, 18 Jul 2014 09:00:00 -0300
+
+monkey (1.5.1-1) stable; urgency=low
 
   * Fix configure script parameters
 
