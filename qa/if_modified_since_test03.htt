@@ -23,7 +23,7 @@ _CALL INIT
 _REQ $HOST $PORT
 __GET / $HTTPVER
 __Host: $HOST
-__If-Modified-Since: i'm a bad monkey }:] 
+__If-Modified-Since: i'm a bad monkey }:]
 __Connection: Keep-Alive
 __
 _EXPECT . "HTTP/1.1 200 OK"
@@ -33,7 +33,7 @@ _WAIT
 _REQ $HOST $PORT
 __GET / $HTTPVER
 __Host: $HOST
-__If-Modified-Since: Sat, 30 Feb 2009 14:40:57 GMT 
+__If-Modified-Since: Sat, 30 Feb 2009 14:40:57 GMT
 __Connection: Keep-Alive
 __
 _EXPECT . "HTTP/1.1 200 OK"
@@ -42,9 +42,9 @@ _WAIT
 _REQ $HOST $PORT
 __GET / $HTTPVER
 __Host: $HOST
-__If-Modified-Since: Sat, 21 Nov 9999 14:40:57 GMT 
+__If-Modified-Since: Sat, 21 Nov 9999 14:40:57 GMT
 __Connection: close
 __
-_EXPECT . "HTTP/1.1 200 OK"
+_EXPECT . "HTTP/1.1 304 Not Modified"
 _WAIT
 END
