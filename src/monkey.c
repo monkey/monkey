@@ -72,7 +72,7 @@ void mk_thread_keys_init(void)
 #ifndef SHAREDLIB
 static void mk_version(void)
 {
-    printf("Monkey HTTP Daemon %i.%i.%i\n",
+    printf("Monkey HTTP Server v%i.%i.%i\n",
            __MONKEY__, __MONKEY_MINOR__, __MONKEY_PATCHLEVEL__);
     printf("Built : %s (%s %i.%i.%i)\n",
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
