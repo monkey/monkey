@@ -544,9 +544,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         date_client = mk_utils_gmt2utime(sr->if_modified_since.data);
         date_file_server = sr->file_info.last_modification;
 
-        if (date_file_server <= date_client && date_client > 0 &&
-            date_client <= log_current_utime) {
-
+        if (date_file_server <= date_client &&
+            date_client > 0) {
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
             mk_header_send(cs->socket, cs, sr);
             return EXIT_NORMAL;
