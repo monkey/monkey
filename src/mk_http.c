@@ -632,8 +632,11 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
      * return values <= zero
      */
     if (mk_unlikely(nbytes <= 0)) {
-        MK_TRACE("sendfile() = -1;");
-        return EXIT_ABORT;
+        if (errno != EAGAIN) {
+            MK_TRACE("sendfile() = %i", nbytes);
+            return EXIT_ABORT;
+        }
+        MK_TRACE("sendfile() = EAGAIN");
     }
 
     return sr->bytes_to_send;
