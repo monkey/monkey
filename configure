@@ -818,14 +818,14 @@ create_plugins_make_common()
 		LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
 	fi
 
-	if [ $polarssl_headers != "" ] ; then
+	if [ -n "$polarssl_headers" ]; then
 		MK_POLARSSL_HEADERS="-I$polarssl_headers"
 	fi
-	if [ $polarssl_library != "" ] ; then
+	if [ -n "$polarssl_library" ]; then
 		MK_POLARSSL_LIBRARY="-L$polarssl_library -Wl,-rpath=$polarssl_library"
 	fi
 
-	if [ $polarssl_debug_level != "" ] ; then
+	if [ -n "$polarssl_debug_level" ]; then
 		MK_POLARSSL_DEBUG_LEVEL="$polarssl_debug_level"
 	fi
 

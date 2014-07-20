@@ -22,20 +22,21 @@
 #ifdef SHAREDLIB
 
 #include <stdio.h>
-#include <mk_lib.h>
-#include <mk_utils.h>
-#include <mk_memory.h>
-#include <mk_config.h>
-#include <mk_info.h>
-#include <mk_string.h>
-#include <mk_plugin.h>
-#include <dlfcn.h>
-#include <mk_clock.h>
-#include <mk_mimetype.h>
-#include <mk_server.h>
-#include <mk_vhost.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <dlfcn.h>
+
+#include <monkey/mk_lib.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_vhost.h>
 
 static struct host *mklib_host_find(const char *name)
 {
