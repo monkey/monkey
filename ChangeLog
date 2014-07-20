@@ -1,3 +1,98 @@
+commit d673a69a831643a006f3e33fe207dc3b714d505b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jul 19 21:27:00 2014 -0600
+
+    Help: add missing break line on text
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 03ebbd3d9d79fc397fe2590bff4400a8cbcaa127
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jul 19 21:09:30 2014 -0600
+
+    Version: bump to 1.5.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 66b69ee0692aaed4023f1443e9ad10165b9d00ea
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jul 19 10:37:35 2014 -0600
+
+    HTTP: on using API sendfile, check EAGAIN
+    
+    Some plugins may not be too efficient to buffer outgoing data
+    and when implementing the sendfile callback on some cases it will
+    need to re-call the routine until the Kernel enqueue the data.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4e315e776aacc00625f52d78aa205e15ee4d8d73
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Jul 18 16:46:55 2014 -0600
+
+    HTTP: If-Modified-Since now allow clients from the future.
+    
+    Before this patch the server did not respect a conditional
+    If-Modified-Since if the value was higher than the system server
+    date. This patch makes this pass, not a bug but make it more
+    friendly with Checker tools.
+    
+    This patch also fix a QA script involved.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8388db11fb67cbe09d8e234365785ba36bfae8ec
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Jul 18 15:39:37 2014 -0600
+
+    HTML: update to v1.5.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 466fe3517f6bf54898ec1b15e294603093253346
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Jul 18 15:36:58 2014 -0600
+
+    Libmonkey: version 1.5.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit da0d3251ccb70969f4a8d136a812a25163a1d76f
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Jul 18 15:35:58 2014 -0600
+
+    Debian: bump to 1.5.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 7969956796cba01f600cc5200ba627a36fa51cac
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Jul 13 11:53:49 2014 -0600
+
+    Mimetype: add SVG types (fix #153)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a765b4e2e70156ecb798c6e55cff016db0d9aebe
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Jul 18 15:24:21 2014 -0600
+
+    Signal: restore handler for SIGPIPE.
+    
+    This problem was introduced on commit 84fa79eb. Without the SIGPIPE handler
+    the server will stop working when the Kernel trigger a SIGPIPE because of a
+    remote socket disconnection.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3ae6418f02b594ae060055d45d0377bbf8b8ba5d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Jun 10 11:25:33 2014 -0600
+
+    Update ChangeLog for v1.5.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit cf9dac52e12917b3cf68a6c3f636587e3b1d1dfc
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Tue Jun 10 08:54:33 2014 -0600
