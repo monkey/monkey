@@ -111,7 +111,7 @@ abspath() {
 main()
 {
 	local_dirs
-	dir=0
+	dir_diff=0
 	actual_path=`pwd`
 
         # Check if build path is the same or a separate one
@@ -121,30 +121,31 @@ main()
         fi
 
 	if [ "$prefix" != "$actual_path" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$mandir" != "$actual_path/man" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
-	echo
+        echo
+        echo
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
 	# Check for accept4()
@@ -220,7 +221,7 @@ main()
 	create_monkey_systemd_script bindir logdir default_port systemddir
 
 	echo -e "+ Creating Makefile"
-	if [ "$dir" = 0 ]; then
+	if [ $dir_diff -eq 0 ]; then
 		create_makefile1 bindir malloc_jemalloc
 	else
 		create_makefile1_install prefix bindir mandir sysconfdir \
@@ -287,7 +288,7 @@ main()
 	echo
 	echo "--"
 	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, to build type 'make"
-	if [ "$dir" = 1 ]; then
+	if [ $dir_diff -eq 1 ]; then
 		echo -n " && make install' "
 	else
 		echo "' "
@@ -328,9 +329,9 @@ check_generic() {
 create_makefile1()
 {
         if [ $malloc_jemalloc -eq 1 ]; then
-                $deps="deps/jemalloc"
+            deps="deps/jemalloc"
         else
-                $deps=""
+            deps=""
         fi
 
 	cat > Makefile << EOF
@@ -416,12 +417,12 @@ skip_plugin() {
 
 
 	path="plugins/$entry"
-	if ! test -d $path; then
+	if [ ! -d "$path" ]; then
 		return 1
 	fi
 
 	# does it contains a proper Makefile.in ?
-	if test ! -e $path/Makefile.in ; then
+	if [ ! -e "$path/Makefile.in" ]; then
 		return 1
 	fi
 
@@ -484,7 +485,7 @@ create_makefile1_install()
 	do
 		entry=`echo $e | awk -F "/" '{print $3}'`
 		skip_plugin $entry $enabled_plugins $disabled_plugins
-		if [ $? == 1 ]; then
+		if [ $? -eq 1 ]; then
 			continue
 		fi
 		echo -e "\tcp -r conf/plugins/$entry \${SYSCONFDIR}/plugins/" >> plugins.conf
@@ -680,7 +681,6 @@ EOF
 
 create_makefile_plugins()
 {
-	#dir=`pwd`
         dir=$basepath
 	makefile="plugins/Makefile"
 	plugins_load="conf/plugins.load"
@@ -759,14 +759,12 @@ create_makefile_plugins()
 		echo "" >> $plugins_load
 
 		# Copy specific plugin configuration files
-                #echo $base_path/$plugin_dir/conf
-
-		if test -e $base_path/$plugin_dir/conf ; then
-			target="conf/$plugin_dir/"
+		if [ -d "$plugin_dir/conf" ]; then
+			target="conf/plugins/$entry/"
 			mkdir -p $target
-			cp -r $base_path/$plugin_dir/conf/* $target/
+			cp -r $plugin_dir/conf/* $target/
 
-		   # Replace configuration variables:
+		        # Replace configuration variables:
 			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
