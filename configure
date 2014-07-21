@@ -339,8 +339,8 @@ create_makefile1()
 # ============================
 
 all:
-	@\$(MAKE) -s -C $deps src all
-	@\$(MAKE) -s -C plugins all
+	@\$(MAKE) -s -C $deps src
+	@\$(MAKE) -s -C plugins
 	@echo "done"
 
 plugins:

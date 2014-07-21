@@ -26,14 +26,14 @@
 #include <errno.h>
 
 /* Monkey Headers */
-#include "mk_plugin.h"
-#include "mk_vhost.h"
-#include "mk_list.h"
-#include "mk_http.h"
-#include "mk_file.h"
-#include "mk_socket.h"
-#include "mk_kernel.h"
-#include "mk_macros.h"
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_list.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_macros.h>
 
 /* global vars */
 struct plugin_api *mk_api;
