@@ -31,7 +31,7 @@ cdef extern from "libmonkey.h":
 
     ctypedef mklib_ctx_t *mklib_ctx
     ctypedef void mklib_session
-    ctypedef int (*cp_ipcheck)(char *ip)
+    ctypedef int (*cb_ipcheck)(char *ip)
     ctypedef int (*cb_urlcheck)(char *ip)
     ctypedef int (*cb_data)(mklib_session *, char *vhost, char *url, char *get, unsigned long get_len, char *post, unsigned long post_len, unsigned int *status, char **content, unsigned long *clen, char *header)
     ctypedef int (*cb_close)(mklib_session *)

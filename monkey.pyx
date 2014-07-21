@@ -5,7 +5,33 @@ class Mimetype:
         self.name = ''
         self.type = ''
 
-cdef 
+cdef int c_cb_ipcheck(char *ip):
+    global c_cb_ipcheck_fn
+    return c_cb_ipcheck_fn(ip)
+
+cdef int c_cb_urlcheck(char *ip):
+    global c_cb_urlcheck_fn
+    return c_cb_urlcheck_fn(ip)
+
+cdef int c_cb_data(mklib_session *session, char *vhost, char *url, char *get, unsigned long get_len, char *post, unsigned long post_len, unsigned int *status, char **content, unsigned long *clen, char *header):
+    global c_cb_data_fn
+    py_vhost = None if url == NULL else vhost
+    py_url = None if url == NULL else url
+    py_get = None if get == NULL else get
+    py_post = None if post == NULL else post
+    py_header = None if header == NULL else header
+    ret = c_cb_data_fn(py_vhost, py_url, py_get, get_len, py_post, post_len, py_header)
+    if 'content' in ret:
+        content[0] = ret['content']
+    if 'status' in ret:
+        status[0] = ret['status']
+    if 'clen' in ret:
+        clen[0] = ret['clen']
+    return ret['return']
+
+cdef int c_cb_close(mklib_session *session):
+    global c_cb_close_fn
+    #return c_cb_close_fn(session)
 
 cdef class Server:
     cdef monkey.mklib_ctx _server
@@ -107,15 +133,20 @@ cdef class Server:
     def mimetype_add(self, char *name, char *type):
         return mklib_mimetype_add(self._server, name, type)
 
-    cdef c_set_callback(self, mklib_cb cb, void *f):
-        return mklib_callback_set(self._server, cb, <void *> f)
-
     def set_callback(self, cb, f):
         if cb == 'data':
-            return mklib_callback_set(self._server, MKCB_DATA, <void *> f)
+            global c_cb_data_fn
+            c_cb_data_fn = f
+            return mklib_callback_set(self._server, MKCB_DATA, <void *> c_cb_data)
         if cb == 'ip':
-            return self.c_set_callback(MKCB_IPCHECK, <void *> f)
+            global c_cb_ipcheck_fn
+            c_cb_ipcheck_fn = f
+            return mklib_callback_set(self._server, MKCB_IPCHECK, <void *> c_cb_ipcheck)
         if cb == 'url':
-            return self.c_set_callback(MKCB_URLCHECK, <void *> f)
+            global c_cb_urlcheck_fn
+            c_cb_urlcheck_fn = f
+            return mklib_callback_set(self._server, MKCB_URLCHECK, <void *> c_cb_urlcheck)
         if cb == 'close':
-            return self.c_set_callback(MKCB_CLOSE, <void *> f)
+            global c_cb_close_fn
+            c_cb_close_fn = f
+            return mklib_callback_set(self._server, MKCB_CLOSE, <void *> c_cb_close)
