@@ -581,7 +581,7 @@ install:
 	install -d \${PLUGINDIR}
 	install -m 755 bin/* \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
-	install -m 644 src/include/*.h \$(INCDIR)
+	install -m 644 include/monkey/*.h \$(INCDIR)
 $ins_systemd
 $plgconf
 $plglist
