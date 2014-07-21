@@ -24,7 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 /* System resources are not sufficient to handle the request. */
 #define ERROR_MEMORY                -1
