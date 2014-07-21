@@ -222,7 +222,7 @@ main()
 
 	echo -e "+ Creating Makefile"
 	if [ $dir_diff -eq 0 ]; then
-		create_makefile1 bindir malloc_jemalloc
+		create_makefile1 base_path bindir malloc_jemalloc
 	else
 		create_makefile1_install prefix bindir mandir sysconfdir \
                 datadir logdir malloc_jemalloc
@@ -329,19 +329,35 @@ check_generic() {
 create_makefile1()
 {
         if [ $malloc_jemalloc -eq 1 ]; then
-            deps="deps/jemalloc"
+            all_deps="$all_deps jemalloc"
         else
-            deps=""
+            all_deps=""
         fi
 
 	cat > Makefile << EOF
-# Monkey HTTP Daemon: Makefile
+# Monkey HTTP Server: Makefile
 # ============================
+export monkey_root=\$(CURDIR)
+PREFIX=\$(DESTDIR)${prefix}
+BINDIR=\$(DESTDIR)${bindir}
+LIBDIR=\$(DESTDIR)${libdir}
+INCDIR=\$(DESTDIR)${incdir}
+MANDIR=\$(DESTDIR)${mandir}
+SYSCONFDIR=\$(DESTDIR)${sysconfdir}
+DATADIR=\$(DESTDIR)${datadir}
+LOGDIR=\$(DESTDIR)${logdir}
+SYSTEMDDIR=$systemddir
+PLUGINDIR=\$(DESTDIR)${plugdir}
+VERSION=$VERSION
 
-all:
-	@\$(MAKE) -s -C $deps src
-	@\$(MAKE) -s -C plugins
-	@echo "done"
+all: $all_deps
+	@\$(MAKE) -s -C $base_path/src all
+	@\$(MAKE) -s -C plugins all
+	@echo "  DONE"
+
+jemalloc:
+	@echo "  CC    jemalloc [all]"
+	@\$(MAKE) -s -C deps/jemalloc
 
 plugins:
 	@\$(MAKE) -s -C plugins all
@@ -475,7 +491,7 @@ create_makefile1_install()
         if [ $malloc_jemalloc -eq 1 ]; then
                 all_deps="$all_deps jemalloc"
         else
-                deps=""
+                all_deps=""
         fi
 
 	# remove old data
@@ -515,7 +531,7 @@ create_makefile1_install()
 	fi
 
 	cat > Makefile <<EOF
-# Monkey HTTP Daemon: Makefile
+# Monkey HTTP Server: Makefile
 # ============================
 export monkey_root=\$(CURDIR)
 PREFIX=\$(DESTDIR)${prefix}
