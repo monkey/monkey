@@ -48,7 +48,7 @@ static __thread struct epoll_state_index mk_epoll_state_k;
  * a fixed array of epoll_state entries and two mk_list to represent an available and
  * busy queue for each entry
  */
-int mk_epoll_state_init()
+int mk_epoll_state_worker_init()
 {
     int i;
     struct epoll_state *es;
@@ -64,6 +64,29 @@ int mk_epoll_state_init()
     for (i = 0; i < index->size; i++) {
         es = mk_mem_malloc_z(sizeof(struct epoll_state));
         mk_list_add(&es->_head, &index->av_queue);
+    }
+
+    return 0;
+}
+
+/* Release all entries in the epoll states */
+int mk_epoll_state_worker_exit()
+{
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct epoll_state *es;
+    struct epoll_state_index *index = &mk_epoll_state_k;
+
+    /* Remove information being held by the available queue */
+    mk_list_foreach_safe(head, tmp, &index->av_queue) {
+        es = mk_list_entry(head, struct epoll_state, _head);
+        mk_mem_free(es);
+    }
+
+    /* Remove information being held by the busy queue */
+    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
+        es = mk_list_entry(head, struct epoll_state, _head);
+        mk_mem_free(es);
     }
 
     return 0;
@@ -249,6 +272,11 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                         if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
                             mk_sched_sync_counters();
                             continue;
+                        }
+                        else if (val == MK_SCHEDULER_SIGNAL_FREE_ALL) {
+                            mk_sched_worker_free();
+                            mk_mem_free(events);
+                            return NULL;
                         }
                     }
                 }

@@ -110,6 +110,27 @@ int mk_vhost_fdt_worker_init()
     return 0;
 }
 
+int mk_vhost_fdt_worker_exit()
+{
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct vhost_fdt_host *fdt;
+
+    if (config->fdt == MK_FALSE) {
+        return -1;
+    }
+
+    mk_list_foreach_safe(head, tmp, mk_vhost_fdt_key) {
+        fdt = mk_list_entry(head, struct vhost_fdt_host, _head);
+        mk_list_del(&fdt->_head);
+        mk_mem_free(fdt);
+    }
+
+    mk_mem_free(mk_vhost_fdt_key);
+    return 0;
+}
+
+
 static inline
 struct vhost_fdt_hash_table *mk_vhost_fdt_table_lookup(int id, struct host *host)
 {
@@ -252,8 +273,6 @@ int mk_vhost_open(struct session_request *sr)
     int off;
     unsigned int hash;
 
-    //return open(sr->real_path.data, sr->file_info.flags_read_only);
-
     off = sr->host_conf->documentroot.len;
     hash = mk_utils_gen_hash(sr->real_path.data + off,
                              sr->real_path.len - off);
@@ -264,8 +283,6 @@ int mk_vhost_open(struct session_request *sr)
 
 int mk_vhost_close(struct session_request *sr)
 {
-    //return close(sr->fd_file);
-
     return mk_vhost_fdt_close(sr);
 }
 
@@ -544,6 +561,7 @@ void mk_vhost_free_all()
         /* Free error pages */
         mk_list_foreach_safe(head_error, tmp2, &host->error_pages) {
             ep = mk_list_entry(head_error, struct error_page, _head);
+            mk_list_del(&ep->_head);
             mk_mem_free(ep->file);
             mk_mem_free(ep->real_path);
             mk_mem_free(ep);

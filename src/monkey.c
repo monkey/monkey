@@ -306,7 +306,7 @@ int main(int argc, char **argv)
     mk_utils_register_pid();
 
     /* Workers: logger and clock */
-    mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
+    mk_clock_tid = mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
 
     /* Init mk pointers */
     mk_mem_pointers_init();

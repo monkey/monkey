@@ -28,7 +28,8 @@ extern pthread_key_t mk_cache_header_ka_max;
 extern pthread_key_t mk_cache_utils_gmtime;
 extern pthread_key_t mk_cache_utils_gmt_text;
 
-void mk_cache_thread_init(void);
+void mk_cache_worker_init();
+void mk_cache_worker_exit();
 
 static inline void *mk_cache_get(pthread_key_t key)
 {

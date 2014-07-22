@@ -50,10 +50,22 @@
    to do it gracefully */
 static void mk_signal_exit()
 {
+    int i;
+    uint64_t val;
+
     /* ignore future signals to properly handle the cleanup */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
     signal(SIGHUP,  SIG_IGN);
+
+    val = MK_SCHEDULER_SIGNAL_FREE_ALL;
+    for (i = 0; i < config->workers; i++) {
+        printf("closing thread: sigchn=%i\n", sched_list[i].signal_channel);
+        write(sched_list[i].signal_channel, &val, sizeof(val));
+    }
+    //mk_mem_free(sched_list);
+    mk_clock_exit();
+    sleep(5);
 
     mk_utils_remove_pid();
     mk_plugin_exit_all();

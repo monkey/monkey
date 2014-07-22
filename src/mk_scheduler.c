@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include <monkey/monkey.h>
+#include <monkey/mk_vhost.h>
 #include <monkey/mk_connection.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_memory.h>
@@ -49,6 +50,7 @@ struct sched_list_node *sched_list;
 
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
 
@@ -182,6 +184,47 @@ int mk_sched_sync_counters()
 }
 
 /*
+ * This function is invoked when the core triggers a MK_SCHED_SIGNAL_FREE_ALL
+ * event through the signal channels, it means the server will stop working
+ * so this is the last call to release all memory resources in use. Of course
+ * this takes place in a thread context.
+ */
+void mk_sched_worker_free()
+{
+    int i;
+    pthread_t tid;
+    struct sched_list_node *sl = NULL;
+
+    pthread_mutex_lock(&mutex_worker_exit);
+
+    /*
+     * Fix Me: needs to implement API to make plugins release
+     * their resources first at WORKER LEVEL
+     */
+
+    /* External */
+    mk_epoll_state_worker_exit();
+    mk_vhost_fdt_worker_exit();
+    mk_cache_worker_exit();
+
+    /* Scheduler stuff */
+    tid = pthread_self();
+    for (i = 0; i < config->workers; i++) {
+        if (sched_list[i].tid == tid) {
+            sl = &sched_list[i];
+        }
+    }
+
+    mk_bug(!sl);
+
+    //sl->request_handler;
+
+    /* Free master array (av queue & busy queue) */
+    mk_mem_free(sl->sched_array);
+    pthread_mutex_unlock(&mutex_worker_exit);
+}
+
+/*
  * It checks that current worker (under sched context) have enough
  * capacity for a new connection. If its not the case, the connection
  * is held until it can be accepted, then it counts up to 5000 fails
@@ -198,8 +241,6 @@ int mk_sched_check_capacity(struct sched_list_node *sched)
             //        "- increasing worker %lu capacity by 10%%",
             //        syscall(__NR_gettid));
             sched->over_capacity = 0;
-
-
         }
         return -1;
     }
@@ -338,7 +379,7 @@ static void mk_sched_thread_lists_init()
 static int mk_sched_register_thread(int server_fd, int efd)
 {
     unsigned int i;
-    struct sched_connection *sched_conn, *array;
+    struct sched_connection *sched_conn;
     struct sched_list_node *sl;
     static int wid = 0;
 
@@ -374,9 +415,10 @@ static int mk_sched_register_thread(int server_fd, int efd)
     mk_list_init(&sl->av_queue);
 
     /* Start filling the array */
-    array = mk_mem_malloc_z(sizeof(struct sched_connection) * config->worker_capacity);
+    sl->sched_array = mk_mem_malloc_z(sizeof(struct sched_connection) *
+                                      config->worker_capacity);
     for (i = 0; i < config->worker_capacity; i++) {
-        sched_conn = &array[i];
+        sched_conn = &sl->sched_array[i];
         sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
         sched_conn->socket = -1;
         sched_conn->arrive_time = 0;
@@ -406,7 +448,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
-    mk_cache_thread_init();
+    mk_cache_worker_init();
 
     /* Register working thread */
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
@@ -425,7 +467,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
 
     /* Plugin thread context calls */
-    mk_epoll_state_init();
+    mk_epoll_state_worker_init();
     mk_plugin_event_init_list();
 
     thinfo = &sched_list[wid];
