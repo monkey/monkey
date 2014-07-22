@@ -58,18 +58,22 @@ static void mk_signal_exit()
     signal(SIGINT,  SIG_IGN);
     signal(SIGHUP,  SIG_IGN);
 
+    /* Distribute worker signals to stop working */
     val = MK_SCHEDULER_SIGNAL_FREE_ALL;
     for (i = 0; i < config->workers; i++) {
-        printf("closing thread: sigchn=%i\n", sched_list[i].signal_channel);
         write(sched_list[i].signal_channel, &val, sizeof(val));
     }
-    sleep(1);
 
-    mk_clock_exit();
+    /* Wait for workers to finish */
+    for (i = 0; i < config->workers; i++) {
+        pthread_join(sched_list[i].tid, NULL);
+    }
+
     mk_utils_remove_pid();
     mk_plugin_exit_all();
     mk_config_free_all();
     mk_mem_free(sched_list);
+    mk_clock_exit();
     mk_info("Exiting... >:(");
     exit(EXIT_SUCCESS);
 }

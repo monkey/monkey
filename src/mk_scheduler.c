@@ -523,7 +523,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Init epoll_wait() loop */
     mk_epoll_init(thinfo->server_fd, thinfo->epoll_fd, epoll_max_events);
-
     return 0;
 }
 
@@ -554,7 +553,7 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
 #endif
 
     pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     if (pthread_create(&tid, &attr, mk_sched_launch_worker_loop,
                        (void *) thconf) != 0) {
         mk_libc_error("pthread_create");
