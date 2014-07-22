@@ -556,6 +556,33 @@ void mk_plugin_exit_all()
         mk_mem_free(node);
     }
     mk_mem_free(api);
+    mk_mem_free(plg_stagemap);
+}
+
+/*
+ * When a worker is exiting, it invokes this function to release any plugin
+ * associated data.
+ */
+void mk_plugin_exit_worker()
+{
+    struct mk_list *list;
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct plugin_event *pe;
+
+    /* For each plugin on this context, exit worker zone */
+
+
+    /* Remove plugins events */
+    list = mk_plugin_event_get_list();
+    if (list) {
+        mk_list_foreach_safe(head, tmp, list) {
+            pe = mk_list_entry(head, struct plugin_event, _head);
+            mk_list_del(&pe->_head);
+            mk_mem_free(pe);
+        }
+        mk_mem_free(list);
+    }
 }
 
 int mk_plugin_stage_run(unsigned int hook,

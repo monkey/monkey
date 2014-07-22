@@ -203,6 +203,7 @@ void mk_sched_worker_free()
      */
 
     /* External */
+    mk_plugin_exit_worker();
     mk_epoll_state_worker_exit();
     mk_vhost_fdt_worker_exit();
     mk_cache_worker_exit();
