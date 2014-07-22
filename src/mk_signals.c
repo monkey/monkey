@@ -63,13 +63,13 @@ static void mk_signal_exit()
         printf("closing thread: sigchn=%i\n", sched_list[i].signal_channel);
         write(sched_list[i].signal_channel, &val, sizeof(val));
     }
-    //mk_mem_free(sched_list);
-    mk_clock_exit();
     sleep(1);
 
+    mk_clock_exit();
     mk_utils_remove_pid();
     mk_plugin_exit_all();
     mk_config_free_all();
+    mk_mem_free(sched_list);
     mk_info("Exiting... >:(");
     exit(EXIT_SUCCESS);
 }
