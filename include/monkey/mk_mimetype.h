@@ -29,7 +29,7 @@
 
 struct mimetype
 {
-    const char *name;
+    char *name;
     mk_ptr_t type;
 
     struct mk_list _head;
@@ -46,5 +46,9 @@ int mk_mimetype_add(char *name, const char *type);
 void mk_mimetype_read_config(void);
 struct mimetype *mk_mimetype_find(mk_ptr_t * filename);
 struct mimetype *mk_mimetype_lookup(char *name);
+
+#ifdef SAFE_FREE
+void mk_mimetype_free_all();
+#endif
 
 #endif

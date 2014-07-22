@@ -44,6 +44,7 @@
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
+#include <monkey/mk_mimetype.h>
 
 struct server_config *config;
 gid_t EGID;
@@ -311,6 +312,8 @@ void mk_config_free_entries(struct mk_config_section *section)
 void mk_config_free_all()
 {
     mk_vhost_free_all();
+    mk_mimetype_free_all();
+
     if (config->config) mk_config_free(config->config);
 
     if (config->serverconf) mk_mem_free(config->serverconf);
@@ -325,7 +328,9 @@ void mk_config_free_all()
 
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
-    if (config->server_software.len) mk_ptr_t_free(&config->server_software);
+
+    mk_ptr_t_free(&config->server_software);
+    mk_mem_free(config->plugins);
     mk_mem_free(config);
 }
 #endif
