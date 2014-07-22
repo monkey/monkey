@@ -48,10 +48,10 @@ MONKEY_PLUGIN("dirlisting",          /* shortname */
               VERSION,              /* version */
               MK_PLUGIN_STAGE_30);   /* hooks */
 
-const mk_ptr_t mk_dirhtml_default_mime = mk_ptr_t_init(MK_DIRHTML_DEFAULT_MIME);
-const mk_ptr_t mk_iov_dash = mk_ptr_t_init("-");
-const mk_ptr_t mk_iov_none = mk_ptr_t_init("");
-const mk_ptr_t mk_iov_slash = mk_ptr_t_init("/");
+const mk_ptr_t mk_dirhtml_default_mime = mk_ptr_init(MK_DIRHTML_DEFAULT_MIME);
+const mk_ptr_t mk_iov_dash = mk_ptr_init("-");
+const mk_ptr_t mk_iov_none = mk_ptr_init("");
+const mk_ptr_t mk_iov_slash = mk_ptr_init("/");
 
 /* DIR_HTML logic:
  * ---------------
