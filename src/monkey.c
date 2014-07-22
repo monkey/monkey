@@ -51,7 +51,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-const mk_ptr_t mk_monkey_protocol = mk_ptr_t_init(MK_HTTP_PROTOCOL_11_STR);
+const mk_ptr_t mk_monkey_protocol = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 
 void mk_thread_keys_init(void)
 {

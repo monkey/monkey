@@ -59,25 +59,25 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
 
-const mk_ptr_t mk_crlf = mk_ptr_t_init(MK_CRLF);
-const mk_ptr_t mk_endblock = mk_ptr_t_init(MK_ENDBLOCK);
+const mk_ptr_t mk_crlf = mk_ptr_init(MK_CRLF);
+const mk_ptr_t mk_endblock = mk_ptr_init(MK_ENDBLOCK);
 
-const mk_ptr_t mk_rh_accept = mk_ptr_t_init(RH_ACCEPT);
-const mk_ptr_t mk_rh_accept_charset = mk_ptr_t_init(RH_ACCEPT_CHARSET);
-const mk_ptr_t mk_rh_accept_encoding = mk_ptr_t_init(RH_ACCEPT_ENCODING);
-const mk_ptr_t mk_rh_accept_language = mk_ptr_t_init(RH_ACCEPT_LANGUAGE);
-const mk_ptr_t mk_rh_connection = mk_ptr_t_init(RH_CONNECTION);
-const mk_ptr_t mk_rh_cookie = mk_ptr_t_init(RH_COOKIE);
-const mk_ptr_t mk_rh_content_length = mk_ptr_t_init(RH_CONTENT_LENGTH);
-const mk_ptr_t mk_rh_content_range = mk_ptr_t_init(RH_CONTENT_RANGE);
-const mk_ptr_t mk_rh_content_type = mk_ptr_t_init(RH_CONTENT_TYPE);
-const mk_ptr_t mk_rh_if_modified_since = mk_ptr_t_init(RH_IF_MODIFIED_SINCE);
-const mk_ptr_t mk_rh_host = mk_ptr_t_init(RH_HOST);
-const mk_ptr_t mk_rh_last_modified = mk_ptr_t_init(RH_LAST_MODIFIED);
-const mk_ptr_t mk_rh_last_modified_since = mk_ptr_t_init(RH_LAST_MODIFIED_SINCE);
-const mk_ptr_t mk_rh_referer = mk_ptr_t_init(RH_REFERER);
-const mk_ptr_t mk_rh_range = mk_ptr_t_init(RH_RANGE);
-const mk_ptr_t mk_rh_user_agent = mk_ptr_t_init(RH_USER_AGENT);
+const mk_ptr_t mk_rh_accept = mk_ptr_init(RH_ACCEPT);
+const mk_ptr_t mk_rh_accept_charset = mk_ptr_init(RH_ACCEPT_CHARSET);
+const mk_ptr_t mk_rh_accept_encoding = mk_ptr_init(RH_ACCEPT_ENCODING);
+const mk_ptr_t mk_rh_accept_language = mk_ptr_init(RH_ACCEPT_LANGUAGE);
+const mk_ptr_t mk_rh_connection = mk_ptr_init(RH_CONNECTION);
+const mk_ptr_t mk_rh_cookie = mk_ptr_init(RH_COOKIE);
+const mk_ptr_t mk_rh_content_length = mk_ptr_init(RH_CONTENT_LENGTH);
+const mk_ptr_t mk_rh_content_range = mk_ptr_init(RH_CONTENT_RANGE);
+const mk_ptr_t mk_rh_content_type = mk_ptr_init(RH_CONTENT_TYPE);
+const mk_ptr_t mk_rh_if_modified_since = mk_ptr_init(RH_IF_MODIFIED_SINCE);
+const mk_ptr_t mk_rh_host = mk_ptr_init(RH_HOST);
+const mk_ptr_t mk_rh_last_modified = mk_ptr_init(RH_LAST_MODIFIED);
+const mk_ptr_t mk_rh_last_modified_since = mk_ptr_init(RH_LAST_MODIFIED_SINCE);
+const mk_ptr_t mk_rh_referer = mk_ptr_init(RH_REFERER);
+const mk_ptr_t mk_rh_range = mk_ptr_init(RH_RANGE);
+const mk_ptr_t mk_rh_user_agent = mk_ptr_init(RH_USER_AGENT);
 
 pthread_key_t request_list;
 
@@ -107,11 +107,11 @@ static inline void mk_request_free(struct session_request *sr)
     }
 
     if (sr->uri_processed.data != sr->uri.data) {
-        mk_ptr_t_free(&sr->uri_processed);
+        mk_ptr_free(&sr->uri_processed);
     }
 
     if (sr->real_path.data != sr->real_path_static) {
-        mk_ptr_t_free(&sr->real_path);
+        mk_ptr_free(&sr->real_path);
     }
 }
 
@@ -230,13 +230,13 @@ static int mk_request_header_process(struct session_request *sr)
             end = uri_end;
             uri_end = init - 1;
 
-            sr->query_string = mk_ptr_t_create(sr->body.data,
+            sr->query_string = mk_ptr_create(sr->body.data,
                                                  init + 1, end + 1);
         }
     }
 
     /* Request URI Part 2 */
-    sr->uri = mk_ptr_t_create(sr->body.data, uri_init, uri_end + 1);
+    sr->uri = mk_ptr_create(sr->body.data, uri_init, uri_end + 1);
     if (mk_unlikely(sr->uri.len < 1)) {
         return -1;
     }
@@ -447,7 +447,7 @@ static int mk_request_parse(struct client_session *cs)
     printf("\n*******************\n");
     mk_list_foreach(head, &cs->request_list) {
         entry = mk_list_entry(head, struct session_request, _head);
-        mk_ptr_t_print(entry->body);
+        mk_ptr_print(entry->body);
         fflush(stdout);
     }
     */
@@ -614,7 +614,7 @@ static mk_ptr_t *mk_request_set_default_page(char *title, mk_ptr_t message,
     p = mk_mem_malloc(sizeof(mk_ptr_t));
     p->data = NULL;
 
-    temp = mk_ptr_t_to_buf(message);
+    temp = mk_ptr_to_buf(message);
     mk_string_build(&p->data, &p->len,
                     MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
 
@@ -759,7 +759,7 @@ mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int fle
     struct mk_string_line *entry;
     struct mk_list *head;
 
-    mk_ptr_t_reset(&f);
+    mk_ptr_reset(&f);
     if (!config->index_files) return f;
 
     mk_list_foreach(head, config->index_files) {
@@ -830,7 +830,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         }
     }
 
-    mk_ptr_t_reset(&message);
+    mk_ptr_reset(&message);
 
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
@@ -851,7 +851,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         page = mk_request_set_default_page("Not Found",
                                            message,
                                            sr->host_conf->host_signature);
-        mk_ptr_t_free(&message);
+        mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
@@ -860,7 +860,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         page = mk_request_set_default_page("Entity too large",
                                            message,
                                            sr->host_conf->host_signature);
-        mk_ptr_t_free(&message);
+        mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_METHOD_NOT_ALLOWED:
@@ -886,7 +886,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         break;
 
     case MK_SERVER_HTTP_VERSION_UNSUP:
-        mk_ptr_t_reset(&message);
+        mk_ptr_reset(&message);
         page = mk_request_set_default_page("HTTP Version Not Supported",
                                            message,
                                            sr->host_conf->host_signature);
@@ -903,10 +903,10 @@ int mk_request_error(int http_status, struct client_session *cs,
     sr->headers.last_modified = -1;
 
     if (!page) {
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
     }
     else {
-        mk_ptr_t_set(&sr->headers.content_type, "text/html\r\n");
+        mk_ptr_set(&sr->headers.content_type, "text/html\r\n");
     }
 
     mk_header_send(cs->socket, cs, sr);
@@ -915,7 +915,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         if (sr->method != MK_HTTP_METHOD_HEAD)
             mk_socket_send(cs->socket, page->data, page->len);
 
-        mk_ptr_t_free(page);
+        mk_ptr_free(page);
         mk_mem_free(page);
     }
 

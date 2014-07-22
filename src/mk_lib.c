@@ -335,7 +335,7 @@ int mklib_config(mklib_ctx ctx, ...)
                 free(config->default_mimetype);
                 config->default_mimetype = NULL;
                 mk_string_build(&config->default_mimetype, &len, "%s\r\n", s);
-                mk_ptr_t_set(&mimetype_default->type, config->default_mimetype);
+                mk_ptr_set(&mimetype_default->type, config->default_mimetype);
             break;
             default:
                 mk_warn("Unknown config option");

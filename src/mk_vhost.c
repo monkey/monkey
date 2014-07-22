@@ -567,9 +567,9 @@ void mk_vhost_free_all()
             mk_mem_free(ep);
         }
 
-        mk_ptr_t_free(&host->documentroot);
+        mk_ptr_free(&host->documentroot);
         mk_mem_free(host->host_signature);
-        mk_ptr_t_free(&host->header_host_signature);
+        mk_ptr_free(&host->header_host_signature);
 
         /* Free source configuration */
         if (host->config) mk_config_free(host->config);

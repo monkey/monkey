@@ -325,9 +325,9 @@ void mk_plugin_init()
     api->http_request_error = mk_request_error;
 
     /* Memory callbacks */
-    api->pointer_set = mk_ptr_t_set;
-    api->pointer_print = mk_ptr_t_print;
-    api->pointer_to_buf = mk_ptr_t_to_buf;
+    api->pointer_set = mk_ptr_set;
+    api->pointer_print = mk_ptr_print;
+    api->pointer_to_buf = mk_ptr_to_buf;
     api->plugin_load_symbol = mk_plugin_load_symbol;
     api->mem_alloc = mk_mem_malloc;
     api->mem_alloc_z = mk_mem_malloc_z;

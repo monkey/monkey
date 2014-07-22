@@ -46,17 +46,17 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
 
-const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
-const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);
-const mk_ptr_t mk_http_method_head_p = mk_ptr_t_init(MK_HTTP_METHOD_HEAD_STR);
-const mk_ptr_t mk_http_method_put_p = mk_ptr_t_init(MK_HTTP_METHOD_PUT_STR);
-const mk_ptr_t mk_http_method_delete_p = mk_ptr_t_init(MK_HTTP_METHOD_DELETE_STR);
-const mk_ptr_t mk_http_method_options_p = mk_ptr_t_init(MK_HTTP_METHOD_OPTIONS_STR);
+const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_HTTP_METHOD_GET_STR);
+const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_HTTP_METHOD_POST_STR);
+const mk_ptr_t mk_http_method_head_p = mk_ptr_init(MK_HTTP_METHOD_HEAD_STR);
+const mk_ptr_t mk_http_method_put_p = mk_ptr_init(MK_HTTP_METHOD_PUT_STR);
+const mk_ptr_t mk_http_method_delete_p = mk_ptr_init(MK_HTTP_METHOD_DELETE_STR);
+const mk_ptr_t mk_http_method_options_p = mk_ptr_init(MK_HTTP_METHOD_OPTIONS_STR);
 const mk_ptr_t mk_http_method_null_p = { NULL, 0 };
 
-const mk_ptr_t mk_http_protocol_09_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_09_STR);
-const mk_ptr_t mk_http_protocol_10_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_10_STR);
-const mk_ptr_t mk_http_protocol_11_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_11_STR);
+const mk_ptr_t mk_http_protocol_09_p = mk_ptr_init(MK_HTTP_PROTOCOL_09_STR);
+const mk_ptr_t mk_http_protocol_10_p = mk_ptr_init(MK_HTTP_PROTOCOL_10_STR);
+const mk_ptr_t mk_http_protocol_11_p = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 
 
@@ -274,7 +274,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
         return 0;
     }
 
-    host = mk_ptr_t_to_buf(sr->host);
+    host = mk_ptr_to_buf(sr->host);
 
     /*
      * Add ending slash to the location string
@@ -307,7 +307,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     mk_header_set_http_status(sr, MK_REDIR_MOVED);
     sr->headers.content_length = 0;
 
-    mk_ptr_t_reset(&sr->headers.content_type);
+    mk_ptr_reset(&sr->headers.content_type);
     sr->headers.location = real_location;
     sr->headers.cgi = SH_NOCGI;
     sr->headers.pconnections_left =
@@ -423,7 +423,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         if (index_file.data) {
             if (sr->real_path.data != sr->real_path_static) {
-                mk_ptr_t_free(&sr->real_path);
+                mk_ptr_free(&sr->real_path);
                 sr->real_path = index_file;
                 sr->real_path.data = mk_string_dup(index_file.data);
             }
@@ -504,12 +504,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         sr->headers.allow_methods.data = MK_HTTP_METHOD_AVAILABLE;
         sr->headers.allow_methods.len = strlen(MK_HTTP_METHOD_AVAILABLE);
 
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
         mk_header_send(cs->socket, cs, sr);
         return EXIT_NORMAL;
     }
     else {
-        mk_ptr_t_reset(&sr->headers.allow_methods);
+        mk_ptr_reset(&sr->headers.allow_methods);
     }
 
     /* read permissions and check file */
@@ -589,7 +589,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
     else {
         /* without content-type */
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
     }
 
     /* Send headers */

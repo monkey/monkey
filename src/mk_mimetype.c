@@ -157,7 +157,7 @@ void mk_mimetype_read_config()
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
-    mk_ptr_t_set(&mimetype_default->type, config->default_mimetype);
+    mk_ptr_set(&mimetype_default->type, config->default_mimetype);
 
     mk_config_free(cnf);
 }
@@ -188,7 +188,7 @@ void mk_mimetype_free_all()
 
     mk_list_foreach_safe(head, tmp, &mimetype_list) {
         mime = mk_list_entry(head, struct mimetype, _head);
-        mk_ptr_t_free(&mime->type);
+        mk_ptr_free(&mime->type);
         mk_mem_free(mime->name);
         mk_mem_free(mime);
     }
