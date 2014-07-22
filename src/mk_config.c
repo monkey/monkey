@@ -308,7 +308,6 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
-#ifdef SAFE_FREE
 void mk_config_free_all()
 {
     mk_vhost_free_all();
@@ -333,7 +332,6 @@ void mk_config_free_all()
     mk_mem_free(config->plugins);
     mk_mem_free(config);
 }
-#endif
 
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
 {

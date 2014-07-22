@@ -487,13 +487,8 @@ int mklib_stop(mklib_ctx ctx)
     free(ctx->worker_info);
 
     mk_plugin_exit_all();
-
-#ifdef SAFE_FREE
     mk_config_free_all();
-#else
     free(config);
-#endif
-
     free(ctx->workers);
     free(ctx);
 

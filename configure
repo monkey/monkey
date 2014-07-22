@@ -1174,9 +1174,6 @@ for arg in $*; do
 		--only-accept4)
 			only_accept4=1
 			;;
-		--safe-free*)
-			safe_free=1
-			;;
 		--platform*)
 			platform=$optarg
 			;;

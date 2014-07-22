@@ -515,7 +515,6 @@ int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
     return -1;
 }
 
-#ifdef SAFE_FREE
 void mk_vhost_free_all()
 {
     struct host *host;
@@ -547,4 +546,3 @@ void mk_vhost_free_all()
         mk_mem_free(host);
     }
 }
-#endif

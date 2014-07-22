@@ -180,7 +180,6 @@ struct mimetype *mk_mimetype_find(mk_ptr_t *filename)
     return mk_mimetype_lookup(filename->data + j + 1);
 }
 
-#ifdef SAFE_FREE
 void mk_mimetype_free_all()
 {
     struct mk_list *head;
@@ -194,5 +193,3 @@ void mk_mimetype_free_all()
         mk_mem_free(mime);
     }
 }
-
-#endif
