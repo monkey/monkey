@@ -65,7 +65,7 @@ static void mk_signal_exit()
     }
     //mk_mem_free(sched_list);
     mk_clock_exit();
-    sleep(5);
+    sleep(1);
 
     mk_utils_remove_pid();
     mk_plugin_exit_all();

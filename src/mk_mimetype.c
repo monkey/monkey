@@ -192,4 +192,7 @@ void mk_mimetype_free_all()
         mk_mem_free(mime->name);
         mk_mem_free(mime);
     }
+
+    mk_mem_free(mimetype_default->type.data);
+    mk_mem_free(mimetype_default);
 }
