@@ -397,6 +397,7 @@ static void mk_config_print_error_msg(char *variable, char *path)
 {
     mk_err("Error in %s variable under %s, has an invalid value",
            variable, path);
+    mk_mem_free(path);
     exit(EXIT_FAILURE);
 }
 
@@ -417,9 +418,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     mk_string_build(&tmp, &len, "%s/%s", path_conf, file_conf);
-
     cnf = mk_config_create(tmp);
     if (!cnf) {
+        mk_mem_free(tmp);
         mk_err("Cannot read '%s'", config->server_conf_file);
         exit(EXIT_FAILURE);
     }
@@ -554,13 +555,13 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                        MK_CONFIG_VAL_STR);
 
     /* Default Mimetype */
+    mk_mem_free(tmp);
     tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
     if (!tmp) {
         config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     }
     else {
         mk_string_build(&config->default_mimetype, &len, "%s\r\n", tmp);
-        mk_mem_free(tmp);
     }
 
     /* File Descriptor Table (FDT) */
@@ -568,6 +569,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                     "FDT",
                                                     MK_CONFIG_VAL_BOOL);
     mk_vhost_init(path_conf);
+    mk_mem_free(tmp);
 }
 
 /* read main configuration from monkey.conf */

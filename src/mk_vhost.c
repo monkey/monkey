@@ -459,6 +459,7 @@ void mk_vhost_init(char *path)
 
     /* Read all virtual hosts defined in sites/ */
     if (!(dir = opendir(sites))) {
+        mk_mem_free(sites);
         mk_err("Could not open %s", sites);
         exit(EXIT_FAILURE);
     }
@@ -489,6 +490,7 @@ void mk_vhost_init(char *path)
         }
     }
     closedir(dir);
+    mk_mem_free(sites);
 }
 
 
@@ -519,8 +521,10 @@ void mk_vhost_free_all()
 {
     struct host *host;
     struct host_alias *host_alias;
+    struct error_page *ep;
     struct mk_list *head_host;
     struct mk_list *head_alias;
+    struct mk_list *head_error;
     struct mk_list *tmp1, *tmp2;
 
     mk_list_foreach_safe(head_host, tmp1, &config->hosts) {
@@ -535,6 +539,14 @@ void mk_vhost_free_all()
             mk_list_del(&host_alias->_head);
             mk_mem_free(host_alias->name);
             mk_mem_free(host_alias);
+        }
+
+        /* Free error pages */
+        mk_list_foreach_safe(head_error, tmp2, &host->error_pages) {
+            ep = mk_list_entry(head_error, struct error_page, _head);
+            mk_mem_free(ep->file);
+            mk_mem_free(ep->real_path);
+            mk_mem_free(ep);
         }
 
         mk_ptr_t_free(&host->documentroot);
