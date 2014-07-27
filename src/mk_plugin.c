@@ -937,7 +937,6 @@ int mk_plugin_http_request_end(int socket)
     sr = mk_list_entry_last(&cs->request_list, struct session_request, _head);
     mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
 
-    printf("ENTRY LAST =%p\n", sr);
     ret = mk_http_request_end(socket);
     MK_TRACE(" ret = %i", ret);
 
