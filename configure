@@ -189,7 +189,7 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find $base_path/plugins/ -name Makefile -exec rm {} \;
+	find $base_path/plugins/ -name Makefile -exec rm -rf {} \;
 
 	create_makefile_plugins $base_path $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \

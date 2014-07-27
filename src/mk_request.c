@@ -96,7 +96,7 @@ static inline void mk_request_init(struct session_request *request)
     mk_header_response_reset(&request->headers);
 }
 
-static inline void mk_request_free(struct session_request *sr)
+void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
         mk_vhost_close(sr);
@@ -385,17 +385,7 @@ static int mk_request_parse(struct client_session *cs)
          * well known as KeepAlive, so if we are in keepalive mode
          * we should check if we have multiple request in our body buffer
          */
-        if (cs->counter_connections > 0) {
-            /*
-             * Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
-             * request can be involved.
-             */
-            end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
-        }
-        else {
-            end = cs->body_pos_end;
-        }
-
+        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
         if (end <  0) {
             return -1;
         }
@@ -463,9 +453,20 @@ static int mk_request_parse(struct client_session *cs)
                 return -1;
             }
         }
-
         cs->pipelined = MK_TRUE;
     }
+
+#ifdef TRACE
+    int b = 0;
+    if (cs->pipelined == MK_TRUE) {
+        MK_TRACE("[FD %i] Pipeline Requests: %i blocks", cs->socket, blocks);
+        mk_list_foreach(sr_head, sr_list) {
+            sr_node = mk_list_entry(sr_head, struct session_request, _head);
+            MK_TRACE("[FD %i] Pipeline Block #%i: %p", cs->socket, b, sr_node);
+            b++;
+        }
+    }
+#endif
 
     return 0;
 }
@@ -700,7 +701,7 @@ int mk_handler_write(int socket, struct client_session *cs)
 {
     int final_status = 0;
     struct session_request *sr_node;
-    struct mk_list *sr_list, *sr_head;
+    struct mk_list *sr_list;
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
         if (mk_request_parse(cs) != 0) {
@@ -709,44 +710,43 @@ int mk_handler_write(int socket, struct client_session *cs)
     }
 
     sr_list = &cs->request_list;
-    mk_list_foreach(sr_head, sr_list) {
-        sr_node = mk_list_entry(sr_head, struct session_request, _head);
 
-        if (sr_node->bytes_to_send > 0) {
-            /* Request with data to send by static file sender */
-            final_status = mk_http_send_file(cs, sr_node);
-        }
-        else if (sr_node->bytes_to_send < 0) {
-            final_status = mk_request_process(cs, sr_node);
-        }
+    sr_node = mk_list_entry_first(sr_list, struct session_request, _head);
 
-        /*
-         * If we got an error, we don't want to parse
-         * and send information for another pipelined request
-         */
-        if (final_status > 0) {
-            return final_status;
-        }
-        else {
-            /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
-                                NULL, cs, sr_node);
-            switch (final_status) {
-            case EXIT_NORMAL:
-            case EXIT_ERROR:
-                if (sr_node->close_now == MK_TRUE) {
-                    return -1;
-                }
-                break;
-            case EXIT_ABORT:
-                  return -1;
+    if (sr_node->bytes_to_send > 0) {
+        /* Request with data to send by static file sender */
+        final_status = mk_http_send_file(cs, sr_node);
+    }
+    else if (sr_node->bytes_to_send < 0) {
+        final_status = mk_request_process(cs, sr_node);
+    }
+
+    /*
+     * If we got an error, we don't want to parse
+     * and send information for another pipelined request
+     */
+    if (final_status > 0) {
+        return final_status;
+    }
+    else {
+        /* STAGE_40, request has ended */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
+                            NULL, cs, sr_node);
+        switch (final_status) {
+        case EXIT_NORMAL:
+        case EXIT_ERROR:
+            if (sr_node->close_now == MK_TRUE) {
+                return -1;
             }
+            break;
+        case EXIT_ABORT:
+            return -1;
         }
     }
 
     /*
      * If we are here, is because all pipelined request were
-     * processed successfully, let's return 0;
+     * processed successfully, let's return 0
      */
     return 0;
 }

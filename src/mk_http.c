@@ -331,7 +331,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int bytes = 0;
     struct mimetype *mime;
 
-    MK_TRACE("HTTP Protocol Init");
+    MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
     /* Request to root path of the virtualhost in question */
     if (sr->uri_processed.len == 1 && sr->uri_processed.data[0] == '/') {
@@ -778,11 +778,11 @@ int mk_http_request_end(int socket)
 {
     int ka;
     struct client_session *cs;
+    struct session_request *sr;
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
     cs = mk_session_get(socket);
-
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
         return -1;
@@ -792,6 +792,26 @@ int mk_http_request_end(int socket)
         MK_TRACE("Could not find sched list node :/");
         return -1;
     }
+
+    /* Check if we have some enqueued pipeline requests */
+    if (cs->pipelined == MK_TRUE) {
+        sr =  mk_list_entry_first(&cs->request_list, struct session_request, _head);
+        MK_TRACE("[FD %i] Pipeline finishing %p", socket, sr);
+
+        /* Remove node and release resources */
+        mk_list_del(&sr->_head);
+        mk_request_free(sr);
+
+
+        if (mk_list_is_empty(&cs->request_list) != 0) {
+#ifdef TRACE
+            sr = mk_list_entry_first(&cs->request_list, struct session_request, _head);
+            MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
+#endif
+            return 0;
+        }
+    }
+
 
     /*
      * We need to ask to http_keepalive if this

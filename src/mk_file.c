@@ -93,11 +93,6 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
         f_info->exec_access = MK_TRUE;
 
     }
-#ifdef TRACE
-    else {
-        MK_TRACE("warning: target has not execution permission");
-    }
-#endif
 
     /* Suggest open(2) flags */
     f_info->flags_read_only = O_RDONLY | O_NONBLOCK;
