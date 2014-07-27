@@ -894,11 +894,14 @@ int mk_plugin_http_request_end(int socket)
 
     if (!mk_list_is_empty(&cs->request_list)) {
         mk_err("[FD %i] Tried to end non-existing request.", socket);
+        printf("fin 1\n");
         return -1;
     }
+
     sr = mk_list_entry_last(&cs->request_list, struct session_request, _head);
     mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
 
+    printf("ENTRY LAST =%p\n", sr);
     ret = mk_http_request_end(socket);
     MK_TRACE(" ret = %i", ret);
 
@@ -978,7 +981,7 @@ void mk_plugin_event_bad_return(const char *hook, int ret)
     mk_err("[%s] Not allowed return value %i", hook, ret);
 }
 
-int mk_plugin_event_check_return(const char *hook, int ret)
+static inline int mk_plugin_event_check_return(const char *hook, int ret)
 {
 #ifdef TRACE
     MK_TRACE("Hook '%s' returned %i", hook, ret);
