@@ -7,7 +7,7 @@ cdef:
     void *c_cb_close_fn
     monkey.mklib_ctx _server
 
-cdef class Mimetype:
+class Mimetype:
     def __init__(self):
         self.name = ''
         self.type = ''
@@ -42,6 +42,7 @@ cdef int c_cb_close(mklib_session *session) with gil:
 
 def init(address, int port, int plugins, documentroot):
     global _server
+    _server = NULL
     if address is None:
         if documentroot is None:
             _server = monkey.mklib_init(NULL, port, plugins, NULL)
@@ -52,6 +53,9 @@ def init(address, int port, int plugins, documentroot):
             _server = monkey.mklib_init(address, port, plugins, NULL)
         else:
             _server = monkey.mklib_init(address, port, plugins, documentroot)
+    if _server == NULL:
+        return False
+    return True
 
 def start():
     return monkey.mklib_start(_server)
@@ -146,12 +150,14 @@ def set_callback(cb, f):
         c_cb_data_fn = <void *> f
         return mklib_callback_set(_server, MKCB_DATA, <void *> c_cb_data)
     if cb == 'ip':
-        global c_cb_ipcheck
-        c_cb_ipcheck_fn = f
+        global c_cb_ipcheck_fn
+        c_cb_ipcheck_fn = <void *> f
         return mklib_callback_set(_server, MKCB_IPCHECK, <void *> c_cb_ipcheck)
     if cb == 'url':
-        c_cb_urlcheck_fn = f
+        global c_cb_urlcheck_fn
+        c_cb_urlcheck_fn = <void *> f
         return mklib_callback_set(_server, MKCB_URLCHECK, <void *> c_cb_urlcheck)
     if cb == 'close':
-        c_cb_close_fn = f
+        global c_cb_close_fn
+        c_cb_close_fn = <void *> f
         return mklib_callback_set(_server, MKCB_CLOSE, <void *> c_cb_close)
