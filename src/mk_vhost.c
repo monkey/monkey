@@ -363,6 +363,12 @@ struct host *mk_vhost_read(char *path)
     host->documentroot.data = mk_config_section_getval(section_host,
                                                        "DocumentRoot",
                                                        MK_CONFIG_VAL_STR);
+    if (!host->documentroot.data) {
+        mk_err("Missing DocumentRoot entry on %s file", path);
+        mk_config_free(cnf);
+        return NULL;
+    }
+
     host->documentroot.len = strlen(host->documentroot.data);
 
     /* Validate document root configured */
@@ -483,16 +489,18 @@ void mk_vhost_init(char *path)
 
     /* Reading content */
     while ((ent = readdir(dir)) != NULL) {
-        if (strcmp((char *) ent->d_name, ".") == 0)
+        if (ent->d_name[0] == '.') {
             continue;
-        if (strcmp((char *) ent->d_name, "..") == 0)
+        }
+        if (strcmp((char *) ent->d_name, "..") == 0) {
             continue;
+        }
         if (ent->d_name[strlen(ent->d_name) - 1] ==  '~') {
             continue;
         }
-        if (strcasecmp((char *) ent->d_name, "default") == 0)
+        if (strcasecmp((char *) ent->d_name, "default") == 0) {
             continue;
-
+        }
         file = NULL;
         mk_string_build(&file, &len, "%s/%s", sites, ent->d_name);
 
