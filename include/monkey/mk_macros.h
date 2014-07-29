@@ -43,7 +43,7 @@
 
 /* ANSI Colors */
 #define ANSI_RESET "\033[0m"
-#define ANSI_BOLD "\033[1m"
+#define ANSI_BOLD  "\033[1m"
 
 #define ANSI_CYAN          "\033[36m"
 #define ANSI_BOLD_CYAN     ANSI_BOLD ANSI_CYAN

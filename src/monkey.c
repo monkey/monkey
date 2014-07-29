@@ -108,11 +108,13 @@ static void mk_help(int rc)
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
     printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
-    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n");
+    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n\n");
+
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -b, --build\t\tprint build information\n");
-    printf("  -v, --version\t\tshow version number\n");
-    printf("  -h, --help\t\tprint this help\n\n");
+    printf("  -b, --build\t\t\tprint build information\n");
+    printf("  -v, --version\t\t\tshow version number\n");
+    printf("  -h, --help\t\t\tprint this help\n\n");
+
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  http://monkey-project.com/documentation\n\n");
 
