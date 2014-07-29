@@ -49,16 +49,18 @@
 #define MK_SCHEDULER_REUSEPORT        1
 
 extern __thread struct rb_root *cs_list;
+extern __thread struct mk_list *cs_incomplete;
 
 struct sched_connection
 {
     struct rb_node _rb_head; /* red-black tree head */
 
-    int socket;              /* file descriptor     */
-    int status;              /* connection status   */
-    time_t arrive_time;      /* arrived time        */
-    struct mk_list _head;    /* list head           */
-    uint32_t events;         /* epoll events        */
+    int socket;                  /* file descriptor            */
+    int status;                  /* connection status          */
+    time_t arrive_time;          /* arrived time               */
+    struct mk_list _head;        /* list head: av/busy         */
+    struct mk_list status_queue; /* link to the incoming queue */
+    uint32_t events;             /* epoll events               */
 };
 
 /* Global struct */
@@ -77,9 +79,20 @@ struct sched_list_node
      */
     struct rb_root rb_queue;
 
-    /* Available and busy queue */
+    /*
+     * Available and busy queue: provides a fast lookup
+     * for available and used slot connections
+     */
     struct mk_list busy_queue;
     struct mk_list av_queue;
+
+    /*
+     * The incoming queue represents client connections that
+     * have not initiated it requests or the request status
+     * is incomplete. This linear lists allows the scheduler
+     * to perform a fast check upon every timeout.
+     */
+    struct mk_list incoming_queue;
 
     short int idx;
     unsigned char initialized;

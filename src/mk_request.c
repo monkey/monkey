@@ -964,6 +964,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->counter_connections = 0;
     cs->socket = socket;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
+    mk_list_add(&cs->request_incomplete, cs_incomplete);
 
     /* creation time in unix time */
     cs->init_time = sc->arrive_time;
@@ -1042,6 +1043,9 @@ void mk_session_remove(int socket)
         if (cs_node->body != cs_node->body_fixed) {
             mk_mem_free(cs_node->body);
         }
+        if (mk_list_entry_orphan(&cs_node->request_incomplete) == 0) {
+            mk_list_del(&cs_node->request_incomplete);
+        }
         mk_mem_free(cs_node);
     }
 }
@@ -1088,4 +1092,5 @@ void mk_request_ka_next(struct client_session *cs)
     /* Update data for scheduler */
     cs->init_time = log_current_utime;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
+    mk_list_add(&cs->request_incomplete, cs_incomplete);
 }

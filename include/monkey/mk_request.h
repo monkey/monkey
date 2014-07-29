@@ -265,6 +265,7 @@ struct client_session
     /* red-black tree head */
     struct rb_node _rb_head;
     struct mk_list request_list;
+    struct mk_list request_incomplete;
 
     time_t init_time;
 
