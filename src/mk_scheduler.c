@@ -51,6 +51,7 @@ static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
+__thread struct mk_list *cs_incomplete;
 
 /*
  * Returns the worker id which should take a new incomming connection,
@@ -287,6 +288,10 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     mk_list_del(&sched_conn->_head);
     mk_list_add(&sched_conn->_head, &sched->busy_queue);
 
+    /* As the connection is still pending, add it to the incoming_queue */
+    mk_list_add(&sched_conn->status_queue, &sched->incoming_queue);
+
+    /* Linux trace message */
     MK_LT_SCHED(remote_fd, "REGISTERED");
 
     return 0;
@@ -296,6 +301,8 @@ static void mk_sched_thread_lists_init()
 {
     /* client_session mk_list */
     cs_list = mk_mem_malloc_z(sizeof(struct rb_root));
+    cs_incomplete = mk_mem_malloc(sizeof(struct mk_list));
+    mk_list_init(cs_incomplete);
 }
 
 /* Register thread information. The caller thread is the thread information's owner */
@@ -336,6 +343,7 @@ static int mk_sched_register_thread(int server_fd, int efd)
     sl->rb_queue = RB_ROOT;
     mk_list_init(&sl->busy_queue);
     mk_list_init(&sl->av_queue);
+    mk_list_init(&sl->incoming_queue);
 
     /* Start filling the array */
     array = mk_mem_malloc_z(sizeof(struct sched_connection) * config->worker_capacity);
@@ -533,6 +541,10 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         mk_list_del(&sc->_head);
         mk_list_add(&sc->_head, &sched->av_queue);
 
+        if (mk_list_entry_orphan(&sc->status_queue) == 0) {
+            mk_list_del(&sc->status_queue);
+        }
+
         /* Only close if this was our connection.
          *
          * This has to happen _after_ the busy list removal,
@@ -592,48 +604,39 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     int client_timeout;
     struct client_session *cs_node;
     struct sched_connection *entry_conn;
-    struct mk_list *sched_head, *temp;
+    struct mk_list *head;
+    struct mk_list *temp;
 
     /* PENDING CONN TIMEOUT */
-    mk_list_foreach_safe(sched_head, temp, &sched->busy_queue) {
-        entry_conn = mk_list_entry(sched_head, struct sched_connection, _head);
-        if (entry_conn->status == MK_SCHEDULER_CONN_PENDING) {
-            client_timeout = entry_conn->arrive_time + config->timeout;
+    mk_list_foreach_safe(head, temp, &sched->incoming_queue) {
+        entry_conn = mk_list_entry(head, struct sched_connection, status_queue);
+        client_timeout = entry_conn->arrive_time + config->timeout;
 
-            /* Check timeout */
-            if (client_timeout <= log_current_utime) {
-                MK_TRACE("Scheduler, closing fd %i due TIMEOUT", entry_conn->socket);
-                MK_LT_SCHED(entry_conn->socket, "TIMEOUT_CONN_PENDING");
-                mk_sched_remove_client(sched, entry_conn->socket);
-            }
+        /* Check timeout */
+        if (client_timeout <= log_current_utime) {
+            MK_TRACE("Scheduler, closing fd %i due TIMEOUT", entry_conn->socket);
+            MK_LT_SCHED(entry_conn->socket, "TIMEOUT_CONN_PENDING");
+            mk_sched_remove_client(sched, entry_conn->socket);
         }
     }
 
     /* PROCESSING CONN TIMEOUT */
-    struct rb_node *node;
+    mk_list_foreach_safe(head, temp, cs_incomplete) {
+        cs_node = mk_list_entry(head, struct client_session, request_incomplete);
+        if (cs_node->counter_connections == 0) {
+            client_timeout = cs_node->init_time + config->timeout;
+        }
+        else {
+            client_timeout = cs_node->init_time + config->keep_alive_timeout;
+        }
 
-    for (node = rb_first(cs_list); node; node = rb_next(node)) {
-        cs_node = rb_entry(node, struct client_session, _rb_head);
-        if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
-            if (cs_node->counter_connections == 0) {
-                client_timeout = cs_node->init_time + config->timeout;
-            }
-            else {
-                client_timeout = cs_node->init_time + config->keep_alive_timeout;
-            }
-
-            /* Check timeout */
-            if (client_timeout <= log_current_utime) {
-                MK_TRACE("[FD %i] Scheduler, closing due to timeout (incomplete)",
-                         cs_node->socket);
-                MK_LT_SCHED(cs_node->socket, "TIMEOUT_REQ_INCOMPLETE");
-                mk_sched_remove_client(sched, cs_node->socket);
-                mk_session_remove(cs_node->socket);
-
-                /* This removal invalidated our iterator. Start over from the beginning. */
-                node = rb_first(cs_list);
-                if (!node) break;
-            }
+        /* Check timeout */
+        if (client_timeout <= log_current_utime) {
+            MK_TRACE("[FD %i] Scheduler, closing due to timeout (incomplete)",
+                     cs_node->socket);
+            MK_LT_SCHED(cs_node->socket, "TIMEOUT_REQ_INCOMPLETE");
+            mk_sched_remove_client(sched, cs_node->socket);
+            mk_session_remove(cs_node->socket);
         }
     }
 
@@ -653,6 +656,16 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
     sched_conn = mk_sched_get_connection(sched, remote_fd);
     mk_bug(!sched_conn);
     sched_conn->status = status;
+
+    /* Incoming queue check */
+    if (status == MK_SCHEDULER_CONN_PENDING) {
+        mk_list_add(&sched_conn->status_queue, &sched->incoming_queue);
+    }
+    else {
+        if (mk_list_entry_orphan(&sched_conn->status_queue) == 0) {
+            mk_list_del(&sched_conn->status_queue);
+        }
+    }
 
     return 0;
 }

@@ -84,6 +84,16 @@ static inline int mk_list_size(struct mk_list *head)
     return ret;
 }
 
+static inline int mk_list_entry_orphan(struct mk_list *head)
+{
+    if (head->next && head->prev) {
+        return 0;
+    }
+
+    return -1;
+}
+
+
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
 #define mk_list_foreach_safe(curr, n, head) \
     for (curr = (head)->next, n = curr->next; curr != (head); curr = n, n = curr->next)
