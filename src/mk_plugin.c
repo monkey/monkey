@@ -930,7 +930,6 @@ int mk_plugin_http_request_end(int socket)
 
     if (!mk_list_is_empty(&cs->request_list)) {
         mk_err("[FD %i] Tried to end non-existing request.", socket);
-        printf("fin 1\n");
         return -1;
     }
 
