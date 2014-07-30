@@ -12,6 +12,21 @@ class Mimetype:
         self.name = ''
         self.type = ''
 
+cdef class Worker:
+    cdef:
+        mklib_worker_info *_worker
+        unsigned long long accepted_connections
+        unsigned long long closed_connections
+        int pid
+    def __init__(self):
+        self.accepted_connections = 0
+        self.closed_connections = 0
+        self.pid = -1
+    cdef _set(self, mklib_worker_info *worker):
+        self._worker = worker
+    def print_info(self):
+        monkey.mklib_print_worker_info(self._worker)
+
 cdef int c_cb_ipcheck(char *ip) with gil:
     func = <object> c_cb_ipcheck_fn
     return func(ip)
@@ -130,10 +145,8 @@ def mimetype_list():
         mklib_mime **mimetypes
         int i = 0
     ret = []
-    mimetypes = mklib_mimetype_list(_server)
+    mimetypes = monkey.mklib_mimetype_list(_server)
     while mimetypes[i] != NULL:
-        if mimetypes[i] == NULL:
-            break
         mimetype = Mimetype()
         mimetype.name = mimetypes[i].name
         mimetype.type = mimetypes[i].type
@@ -161,3 +174,20 @@ def set_callback(cb, f):
         global c_cb_close_fn
         c_cb_close_fn = <void *> f
         return mklib_callback_set(_server, MKCB_CLOSE, <void *> c_cb_close)
+
+def scheduler_workers_info():
+    cdef:
+        mklib_worker_info **workers
+        #mklib_worker_info
+        int i = 0
+    ret = []
+    workers = monkey.mklib_scheduler_worker_info(_server)
+    while workers[i] != NULL:
+        worker = Worker()
+        worker._set(workers[i])
+        worker.accepted_connections = workers[i].accepted_connections
+        worker.closed_connections = workers[i].closed_connections
+        worker.pid = workers[i].pid
+        ret.append(worker)
+        i += 1
+    return ret

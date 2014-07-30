@@ -24,7 +24,9 @@ cdef extern from "libmonkey.h":
     cdef struct worker_info:
         pass
     cdef struct mklib_worker_info:
-        pass
+        unsigned long long accepted_connections
+        unsigned long long closed_connections
+        int pid
     cdef struct mklib_mime:
         char *name
         char *type
