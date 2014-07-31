@@ -87,6 +87,7 @@ pthread_mutex_t mk_vhost_fdt_mutex;
 
 struct host *mk_vhost_read(char *path);
 int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias);
+void mk_vhost_set_single(char *path);
 void mk_vhost_init(char *path);
 int mk_vhost_fdt_worker_init();
 int mk_vhost_fdt_worker_exit();

@@ -104,6 +104,7 @@ static void mk_help(int rc)
     printf("  -s, --serverconf=FILE\t\t\tspecify main server configuration file\n");
     printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
     printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
+    printf("  -o, --one-shot=DIR\t\t\tone-shot, serve a single directory\n");
     printf("  -w, --workers=N\t\t\tset number of workers (override config)\n");
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
@@ -128,6 +129,7 @@ int main(int argc, char **argv)
     int port_override = -1;
     int workers_override = -1;
     int run_daemon = 0;
+    char *one_shot = NULL;
     char *path_config = NULL;
     char *server_conf_file = NULL;
     char *plugin_load_conf_file = NULL;
@@ -141,6 +143,7 @@ int main(int argc, char **argv)
         { "build",                  no_argument,        NULL, 'b' },
         { "daemon",                 no_argument,        NULL, 'D' },
         { "port",                   required_argument,  NULL, 'p' },
+        { "one-shot",               required_argument,  NULL, 'o' },
         { "workers",                required_argument,  NULL, 'w' },
         { "version",                no_argument,        NULL, 'v' },
         { "help",                   no_argument,        NULL, 'h' },
@@ -151,7 +154,7 @@ int main(int argc, char **argv)
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:o:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -166,6 +169,9 @@ int main(int argc, char **argv)
             break;
         case 'p':
             port_override = atoi(optarg);
+            break;
+        case 'o':
+            one_shot = optarg;
             break;
         case 'w':
             workers_override = atoi(optarg);
@@ -196,7 +202,6 @@ int main(int argc, char **argv)
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));
 
-
     /* Init Kernel version data */
     mk_kernel_init();
     mk_kernel_features();
@@ -217,10 +222,12 @@ int main(int argc, char **argv)
         config->server_conf_file = server_conf_file;
     }
 
-    if (run_daemon)
+    if (run_daemon) {
         config->is_daemon = MK_TRUE;
-    else
+    }
+    else {
         config->is_daemon = MK_FALSE;
+    }
 
     if (!mimes_conf_file) {
         config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
@@ -249,6 +256,9 @@ int main(int argc, char **argv)
     else {
         config->plugins_conf_dir = plugins_conf_dir;
     }
+
+    /* one shot */
+    config->one_shot = one_shot;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);
