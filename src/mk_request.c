@@ -460,6 +460,7 @@ static int mk_request_parse(struct client_session *cs)
     int b = 0;
     if (cs->pipelined == MK_TRUE) {
         MK_TRACE("[FD %i] Pipeline Requests: %i blocks", cs->socket, blocks);
+        sr_list = &cs->request_list;
         mk_list_foreach(sr_head, sr_list) {
             sr_node = mk_list_entry(sr_head, struct session_request, _head);
             MK_TRACE("[FD %i] Pipeline Block #%i: %p", cs->socket, b, sr_node);
