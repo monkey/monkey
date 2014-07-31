@@ -51,6 +51,7 @@
 static void mk_signal_exit()
 {
     int i;
+    int n;
     uint64_t val;
 
     /* ignore future signals to properly handle the cleanup */
@@ -61,7 +62,10 @@ static void mk_signal_exit()
     /* Distribute worker signals to stop working */
     val = MK_SCHEDULER_SIGNAL_FREE_ALL;
     for (i = 0; i < config->workers; i++) {
-        write(sched_list[i].signal_channel, &val, sizeof(val));
+        n = write(sched_list[i].signal_channel, &val, sizeof(val));
+        if (n < 0) {
+            perror("write");
+        }
     }
 
     /* Wait for workers to finish */
