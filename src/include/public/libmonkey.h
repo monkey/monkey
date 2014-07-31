@@ -27,6 +27,11 @@ extern "C" {
 #endif
 
 #include <pthread.h>
+#ifdef PYTHON_BINDINGS
+#include <mk_info.h>
+#define PYTHONH <PYTHONVERSION/Python.h>
+#include PYTHONH
+#endif
 
 #if __GNUC__ >= 4
  #define NULL_TERMINATED __attribute__ ((sentinel))

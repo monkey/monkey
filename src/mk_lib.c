@@ -139,6 +139,9 @@ int mklib_callback_set(mklib_ctx ctx, const enum mklib_cb cb, void *func)
 mklib_ctx mklib_init(const char *address, const unsigned int port,
                      const unsigned int plugins, const char *documentroot)
 {
+#ifdef PYTHON_BINDINGS
+    PyEval_InitThreads();
+#endif
     mklib_ctx a = mk_mem_malloc_z(sizeof(struct mklib_ctx_t));
     if (!a) return NULL;
 
@@ -658,7 +661,6 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi UNUSED_PARAM)
 {
 #ifdef STATS
     struct stats *stats = mwi->stats;
-
     printf("Stat info for worker: %d\n", mwi->pid);
     printf("mk_session_create %lld:%lld\n", stats->mk_session_create[0], stats->mk_session_create[1]);
     printf("mk_session_get %lld:%lld\n", stats->mk_session_get[0], stats->mk_session_get[1]);
@@ -676,7 +678,11 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi UNUSED_PARAM)
     printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write[0], stats->mk_conn_write[1]);
     printf("\n");
 #else
-    printf("No stats available, use \"./configure --stats\"\n");
+    printf("Stat info for worker: %d\n", mwi->pid);
+    printf("Open connections: %lld\n", mwi->accepted_connections);
+    printf("Closed connections: %lld\n", mwi->closed_connections);
+    printf("No more stats available, use \"./configure --stats\"\n");
+    printf("\n");
 #endif
 }
 

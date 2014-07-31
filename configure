@@ -859,6 +859,7 @@ create_info()
 #define MK_BUILD_UNAME   "$uname"
 #define MONKEY_PATH_CONF "$sysconfdir"
 #define PLUGDIR "$plugdir"
+#define PYTHONVERSION python$PYTHONVERSION
 
 #endif
 EOF
@@ -1052,6 +1053,9 @@ only_accept4=0
 malloc_libc=0
 malloc_jemalloc=1
 
+mk_python=0
+PYTHONVERSION=`python -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
+
 for arg in $*; do
 
 	case "$arg" in
@@ -1111,6 +1115,9 @@ for arg in $*; do
 			;;
 		--stats*)
 			mk_stats=1
+			;;
+		--python*)
+			mk_python=1
 			;;
 		--no-backtrace*)
 			no_backtrace=1
@@ -1211,6 +1218,7 @@ for arg in $*; do
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
 			echo "  --stats                 Enable worker statistics gathering"
+			echo "  --python                Generate a python module for monkey"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
                         echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
@@ -1333,6 +1341,10 @@ fi
 
 if [ $mk_stats ]; then
     DEFS="$DEFS -DSTATS"
+fi
+
+if [ $mk_python == 1 ]; then
+    DEFS="$DEFS -DPYTHON_BINDINGS"
 fi
 
 if [ $malloc_libc -eq 1 ]; then
