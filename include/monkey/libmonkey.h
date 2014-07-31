@@ -28,7 +28,7 @@ extern "C" {
 
 #include <pthread.h>
 #ifdef PYTHON_BINDINGS
-#include <mk_info.h>
+#include <monkey/mk_info.h>
 #define PYTHONH <PYTHONVERSION/Python.h>
 #include PYTHONH
 #endif
