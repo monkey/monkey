@@ -26,19 +26,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "monkey.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_iov.h>
 
-#include "mk_macros.h"
-#include "mk_header.h"
-#include "mk_memory.h"
-#include "mk_iov.h"
-
-const mk_ptr_t mk_iov_crlf = mk_ptr_t_init(MK_IOV_CRLF);
-const mk_ptr_t mk_iov_lf = mk_ptr_t_init(MK_IOV_LF);
-const mk_ptr_t mk_iov_space = mk_ptr_t_init(MK_IOV_SPACE);
-const mk_ptr_t mk_iov_slash = mk_ptr_t_init(MK_IOV_SLASH);
-const mk_ptr_t mk_iov_none = mk_ptr_t_init(MK_IOV_NONE);
-const mk_ptr_t mk_iov_equal = mk_ptr_t_init(MK_IOV_EQUAL);
+const mk_ptr_t mk_iov_crlf = mk_ptr_init(MK_IOV_CRLF);
+const mk_ptr_t mk_iov_lf = mk_ptr_init(MK_IOV_LF);
+const mk_ptr_t mk_iov_space = mk_ptr_init(MK_IOV_SPACE);
+const mk_ptr_t mk_iov_slash = mk_ptr_init(MK_IOV_SLASH);
+const mk_ptr_t mk_iov_none = mk_ptr_init(MK_IOV_NONE);
+const mk_ptr_t mk_iov_equal = mk_ptr_init(MK_IOV_EQUAL);
 
 struct mk_iov *mk_iov_create(int n, int offset)
 {

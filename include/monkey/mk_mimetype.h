@@ -17,29 +17,35 @@
  *  limitations under the License.
  */
 
-#ifndef MK_LIB_H
-#define MK_LIB_H
+#include "mk_memory.h"
+#include "mk_list.h"
+#include "mk_rbtree.h"
 
-#include "mk_macros.h"
-#include "public/libmonkey.h"
+#ifndef MK_MIMETYPE_H
+#define MK_MIMETYPE_H
 
-/* Data */
+#define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
+#define MIMETYPE_DEFAULT_NAME "default"
 
-struct mklib_ctx_t {
-    pthread_t tid;
-    pthread_t clock;
-    pthread_t *workers;
+struct mimetype
+{
+    char *name;
+    mk_ptr_t type;
 
-    cb_ipcheck ipf;
-    cb_urlcheck urlf;
-    cb_data dataf;
-    cb_close closef;
-
-    struct mklib_worker_info **worker_info;
-
-    const char *plugdir;
-
-    int lib_running;
+    struct mk_list _head;
+    struct rb_node _rb_head;
 };
+
+/* Head for RBT */
+struct mk_list mimetype_list;
+struct rb_root mimetype_rb_head;
+
+extern struct mimetype *mimetype_default;
+
+int mk_mimetype_add(char *name, const char *type);
+void mk_mimetype_read_config(void);
+struct mimetype *mk_mimetype_find(mk_ptr_t * filename);
+struct mimetype *mk_mimetype_lookup(char *name);
+void mk_mimetype_free_all();
 
 #endif

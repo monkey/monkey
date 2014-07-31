@@ -22,21 +22,22 @@
 #ifdef SHAREDLIB
 
 #include <stdio.h>
-#include <mk_lib.h>
-#include <mk_utils.h>
-#include <mk_memory.h>
-#include <mk_config.h>
-#include <mk_info.h>
-#include <mk_string.h>
-#include <mk_plugin.h>
-#include <dlfcn.h>
-#include <mk_clock.h>
-#include <mk_mimetype.h>
-#include <mk_server.h>
-#include <mk_vhost.h>
 #include <stdarg.h>
 #include <limits.h>
-#include <mk_stats.h>
+#include <dlfcn.h>
+
+#include <monkey/mk_lib.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_stats.h>
 
 static struct host *mklib_host_find(const char *name)
 {
@@ -341,7 +342,7 @@ int mklib_config(mklib_ctx ctx, ...)
                 free(config->default_mimetype);
                 config->default_mimetype = NULL;
                 mk_string_build(&config->default_mimetype, &len, "%s\r\n", s);
-                mk_ptr_t_set(&mimetype_default->type, config->default_mimetype);
+                mk_ptr_set(&mimetype_default->type, config->default_mimetype);
             break;
             default:
                 mk_warn("Unknown config option");
@@ -566,13 +567,8 @@ int mklib_stop(mklib_ctx ctx)
     free(ctx->worker_info);
 
     mk_plugin_exit_all();
-
-#ifdef SAFE_FREE
     mk_config_free_all();
-#else
     free(config);
-#endif
-
     free(ctx->workers);
     free(ctx);
 

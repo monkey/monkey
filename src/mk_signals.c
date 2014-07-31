@@ -31,11 +31,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "monkey.h"
-#include "mk_signals.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_signals.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
 
 
 /*
@@ -50,29 +50,46 @@
    to do it gracefully */
 static void mk_signal_exit()
 {
+    int i;
+    int n;
+    uint64_t val;
+
     /* ignore future signals to properly handle the cleanup */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
     signal(SIGHUP,  SIG_IGN);
 
+    /* Distribute worker signals to stop working */
+    val = MK_SCHEDULER_SIGNAL_FREE_ALL;
+    for (i = 0; i < config->workers; i++) {
+        n = write(sched_list[i].signal_channel, &val, sizeof(val));
+        if (n < 0) {
+            perror("write");
+        }
+    }
+
+    /* Wait for workers to finish */
+    for (i = 0; i < config->workers; i++) {
+        pthread_join(sched_list[i].tid, NULL);
+    }
+
     mk_utils_remove_pid();
     mk_plugin_exit_all();
-
-#ifdef SAFE_FREE
     mk_config_free_all();
-#endif
-
+    mk_mem_free(sched_list);
+    mk_clock_exit();
     mk_info("Exiting... >:(");
     exit(EXIT_SUCCESS);
 }
 
 void mk_signal_thread_sigpipe_safe()
 {
+    sigset_t old;
     sigset_t set;
 
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
-    //pthread_sigmask(SIG_BLOCK, &set, &old);
+    pthread_sigmask(SIG_BLOCK, &set, &old);
 }
 
 

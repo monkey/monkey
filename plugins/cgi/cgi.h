@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <libgen.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 enum {
     PATHLEN = 1024,

@@ -38,47 +38,47 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#include "monkey.h"
-#include "mk_request.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_string.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
-#include "mk_epoll.h"
-#include "mk_utils.h"
-#include "mk_header.h"
-#include "mk_user.h"
-#include "mk_method.h"
-#include "mk_memory.h"
-#include "mk_socket.h"
-#include "mk_cache.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
-#include "mk_server.h"
-#include "mk_stats.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_method.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_stats.h>
 
-const mk_ptr_t mk_crlf = mk_ptr_t_init(MK_CRLF);
-const mk_ptr_t mk_endblock = mk_ptr_t_init(MK_ENDBLOCK);
+const mk_ptr_t mk_crlf = mk_ptr_init(MK_CRLF);
+const mk_ptr_t mk_endblock = mk_ptr_init(MK_ENDBLOCK);
 
-const mk_ptr_t mk_rh_accept = mk_ptr_t_init(RH_ACCEPT);
-const mk_ptr_t mk_rh_accept_charset = mk_ptr_t_init(RH_ACCEPT_CHARSET);
-const mk_ptr_t mk_rh_accept_encoding = mk_ptr_t_init(RH_ACCEPT_ENCODING);
-const mk_ptr_t mk_rh_accept_language = mk_ptr_t_init(RH_ACCEPT_LANGUAGE);
-const mk_ptr_t mk_rh_connection = mk_ptr_t_init(RH_CONNECTION);
-const mk_ptr_t mk_rh_cookie = mk_ptr_t_init(RH_COOKIE);
-const mk_ptr_t mk_rh_content_length = mk_ptr_t_init(RH_CONTENT_LENGTH);
-const mk_ptr_t mk_rh_content_range = mk_ptr_t_init(RH_CONTENT_RANGE);
-const mk_ptr_t mk_rh_content_type = mk_ptr_t_init(RH_CONTENT_TYPE);
-const mk_ptr_t mk_rh_if_modified_since = mk_ptr_t_init(RH_IF_MODIFIED_SINCE);
-const mk_ptr_t mk_rh_host = mk_ptr_t_init(RH_HOST);
-const mk_ptr_t mk_rh_last_modified = mk_ptr_t_init(RH_LAST_MODIFIED);
-const mk_ptr_t mk_rh_last_modified_since = mk_ptr_t_init(RH_LAST_MODIFIED_SINCE);
-const mk_ptr_t mk_rh_referer = mk_ptr_t_init(RH_REFERER);
-const mk_ptr_t mk_rh_range = mk_ptr_t_init(RH_RANGE);
-const mk_ptr_t mk_rh_user_agent = mk_ptr_t_init(RH_USER_AGENT);
+const mk_ptr_t mk_rh_accept = mk_ptr_init(RH_ACCEPT);
+const mk_ptr_t mk_rh_accept_charset = mk_ptr_init(RH_ACCEPT_CHARSET);
+const mk_ptr_t mk_rh_accept_encoding = mk_ptr_init(RH_ACCEPT_ENCODING);
+const mk_ptr_t mk_rh_accept_language = mk_ptr_init(RH_ACCEPT_LANGUAGE);
+const mk_ptr_t mk_rh_connection = mk_ptr_init(RH_CONNECTION);
+const mk_ptr_t mk_rh_cookie = mk_ptr_init(RH_COOKIE);
+const mk_ptr_t mk_rh_content_length = mk_ptr_init(RH_CONTENT_LENGTH);
+const mk_ptr_t mk_rh_content_range = mk_ptr_init(RH_CONTENT_RANGE);
+const mk_ptr_t mk_rh_content_type = mk_ptr_init(RH_CONTENT_TYPE);
+const mk_ptr_t mk_rh_if_modified_since = mk_ptr_init(RH_IF_MODIFIED_SINCE);
+const mk_ptr_t mk_rh_host = mk_ptr_init(RH_HOST);
+const mk_ptr_t mk_rh_last_modified = mk_ptr_init(RH_LAST_MODIFIED);
+const mk_ptr_t mk_rh_last_modified_since = mk_ptr_init(RH_LAST_MODIFIED_SINCE);
+const mk_ptr_t mk_rh_referer = mk_ptr_init(RH_REFERER);
+const mk_ptr_t mk_rh_range = mk_ptr_init(RH_RANGE);
+const mk_ptr_t mk_rh_user_agent = mk_ptr_init(RH_USER_AGENT);
 
 pthread_key_t request_list;
 
@@ -97,7 +97,7 @@ static inline void mk_request_init(struct session_request *request)
     mk_header_response_reset(&request->headers);
 }
 
-static inline void mk_request_free(struct session_request *sr)
+void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
         mk_vhost_close(sr);
@@ -108,11 +108,11 @@ static inline void mk_request_free(struct session_request *sr)
     }
 
     if (sr->uri_processed.data != sr->uri.data) {
-        mk_ptr_t_free(&sr->uri_processed);
+        mk_ptr_free(&sr->uri_processed);
     }
 
     if (sr->real_path.data != sr->real_path_static) {
-        mk_ptr_t_free(&sr->real_path);
+        mk_ptr_free(&sr->real_path);
     }
 }
 
@@ -231,13 +231,13 @@ static int mk_request_header_process(struct session_request *sr)
             end = uri_end;
             uri_end = init - 1;
 
-            sr->query_string = mk_ptr_t_create(sr->body.data,
+            sr->query_string = mk_ptr_create(sr->body.data,
                                                  init + 1, end + 1);
         }
     }
 
     /* Request URI Part 2 */
-    sr->uri = mk_ptr_t_create(sr->body.data, uri_init, uri_end + 1);
+    sr->uri = mk_ptr_create(sr->body.data, uri_init, uri_end + 1);
     if (mk_unlikely(sr->uri.len < 1)) {
         return -1;
     }
@@ -386,17 +386,7 @@ static int mk_request_parse(struct client_session *cs)
          * well known as KeepAlive, so if we are in keepalive mode
          * we should check if we have multiple request in our body buffer
          */
-        if (cs->counter_connections > 0) {
-            /*
-             * Look for CRLFCRLF (\r\n\r\n), maybe some pipelining
-             * request can be involved.
-             */
-            end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
-        }
-        else {
-            end = cs->body_pos_end;
-        }
-
+        end = mk_string_search(cs->body + i, mk_endblock.data, MK_STR_SENSITIVE) + i;
         if (end <  0) {
             return -1;
         }
@@ -448,7 +438,7 @@ static int mk_request_parse(struct client_session *cs)
     printf("\n*******************\n");
     mk_list_foreach(head, &cs->request_list) {
         entry = mk_list_entry(head, struct session_request, _head);
-        mk_ptr_t_print(entry->body);
+        mk_ptr_print(entry->body);
         fflush(stdout);
     }
     */
@@ -464,9 +454,21 @@ static int mk_request_parse(struct client_session *cs)
                 return -1;
             }
         }
-
         cs->pipelined = MK_TRUE;
     }
+
+#ifdef TRACE
+    int b = 0;
+    if (cs->pipelined == MK_TRUE) {
+        MK_TRACE("[FD %i] Pipeline Requests: %i blocks", cs->socket, blocks);
+        sr_list = &cs->request_list;
+        mk_list_foreach(sr_head, sr_list) {
+            sr_node = mk_list_entry(sr_head, struct session_request, _head);
+            MK_TRACE("[FD %i] Pipeline Block #%i: %p", cs->socket, b, sr_node);
+            b++;
+        }
+    }
+#endif
 
     return 0;
 }
@@ -615,7 +617,7 @@ static mk_ptr_t *mk_request_set_default_page(char *title, mk_ptr_t message,
     p = mk_mem_malloc(sizeof(mk_ptr_t));
     p->data = NULL;
 
-    temp = mk_ptr_t_to_buf(message);
+    temp = mk_ptr_to_buf(message);
     mk_string_build(&p->data, &p->len,
                     MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
 
@@ -701,7 +703,7 @@ int mk_handler_write(int socket, struct client_session *cs)
 {
     int final_status = 0;
     struct session_request *sr_node;
-    struct mk_list *sr_list, *sr_head;
+    struct mk_list *sr_list;
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
         if (mk_request_parse(cs) != 0) {
@@ -710,44 +712,43 @@ int mk_handler_write(int socket, struct client_session *cs)
     }
 
     sr_list = &cs->request_list;
-    mk_list_foreach(sr_head, sr_list) {
-        sr_node = mk_list_entry(sr_head, struct session_request, _head);
 
-        if (sr_node->bytes_to_send > 0) {
-            /* Request with data to send by static file sender */
-            final_status = mk_http_send_file(cs, sr_node);
-        }
-        else if (sr_node->bytes_to_send < 0) {
-            final_status = mk_request_process(cs, sr_node);
-        }
+    sr_node = mk_list_entry_first(sr_list, struct session_request, _head);
 
-        /*
-         * If we got an error, we don't want to parse
-         * and send information for another pipelined request
-         */
-        if (final_status > 0) {
-            return final_status;
-        }
-        else {
-            /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
-                                NULL, cs, sr_node);
-            switch (final_status) {
-            case EXIT_NORMAL:
-            case EXIT_ERROR:
-                if (sr_node->close_now == MK_TRUE) {
-                    return -1;
-                }
-                break;
-            case EXIT_ABORT:
-                  return -1;
+    if (sr_node->bytes_to_send > 0) {
+        /* Request with data to send by static file sender */
+        final_status = mk_http_send_file(cs, sr_node);
+    }
+    else if (sr_node->bytes_to_send < 0) {
+        final_status = mk_request_process(cs, sr_node);
+    }
+
+    /*
+     * If we got an error, we don't want to parse
+     * and send information for another pipelined request
+     */
+    if (final_status > 0) {
+        return final_status;
+    }
+    else {
+        /* STAGE_40, request has ended */
+        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
+                            NULL, cs, sr_node);
+        switch (final_status) {
+        case EXIT_NORMAL:
+        case EXIT_ERROR:
+            if (sr_node->close_now == MK_TRUE) {
+                return -1;
             }
+            break;
+        case EXIT_ABORT:
+            return -1;
         }
     }
 
     /*
      * If we are here, is because all pipelined request were
-     * processed successfully, let's return 0;
+     * processed successfully, let's return 0
      */
     return 0;
 }
@@ -760,7 +761,7 @@ mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int fle
     struct mk_string_line *entry;
     struct mk_list *head;
 
-    mk_ptr_t_reset(&f);
+    mk_ptr_reset(&f);
     if (!config->index_files) return f;
 
     mk_list_foreach(head, config->index_files) {
@@ -831,7 +832,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         }
     }
 
-    mk_ptr_t_reset(&message);
+    mk_ptr_reset(&message);
 
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
@@ -852,7 +853,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         page = mk_request_set_default_page("Not Found",
                                            message,
                                            sr->host_conf->host_signature);
-        mk_ptr_t_free(&message);
+        mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
@@ -861,7 +862,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         page = mk_request_set_default_page("Entity too large",
                                            message,
                                            sr->host_conf->host_signature);
-        mk_ptr_t_free(&message);
+        mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_METHOD_NOT_ALLOWED:
@@ -887,7 +888,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         break;
 
     case MK_SERVER_HTTP_VERSION_UNSUP:
-        mk_ptr_t_reset(&message);
+        mk_ptr_reset(&message);
         page = mk_request_set_default_page("HTTP Version Not Supported",
                                            message,
                                            sr->host_conf->host_signature);
@@ -904,10 +905,10 @@ int mk_request_error(int http_status, struct client_session *cs,
     sr->headers.last_modified = -1;
 
     if (!page) {
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
     }
     else {
-        mk_ptr_t_set(&sr->headers.content_type, "text/html\r\n");
+        mk_ptr_set(&sr->headers.content_type, "text/html\r\n");
     }
 
     mk_header_send(cs->socket, cs, sr);
@@ -916,7 +917,7 @@ int mk_request_error(int http_status, struct client_session *cs,
         if (sr->method != MK_HTTP_METHOD_HEAD)
             mk_socket_send(cs->socket, page->data, page->len);
 
-        mk_ptr_t_free(page);
+        mk_ptr_free(page);
         mk_mem_free(page);
     }
 
@@ -966,6 +967,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->counter_connections = 0;
     cs->socket = socket;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
+    mk_list_add(&cs->request_incomplete, cs_incomplete);
 
     /* creation time in unix time */
     cs->init_time = sc->arrive_time;
@@ -1044,6 +1046,9 @@ void mk_session_remove(int socket)
         if (cs_node->body != cs_node->body_fixed) {
             mk_mem_free(cs_node->body);
         }
+        if (mk_list_entry_orphan(&cs_node->request_incomplete) == 0) {
+            mk_list_del(&cs_node->request_incomplete);
+        }
         mk_mem_free(cs_node);
     }
 }
@@ -1090,4 +1095,5 @@ void mk_request_ka_next(struct client_session *cs)
     /* Update data for scheduler */
     cs->init_time = log_current_utime;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
+    mk_list_add(&cs->request_incomplete, cs_incomplete);
 }

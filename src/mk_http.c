@@ -27,36 +27,36 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "monkey.h"
-#include "mk_memory.h"
-#include "mk_http.h"
-#include "mk_http_status.h"
-#include "mk_clock.h"
-#include "mk_file.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_method.h"
-#include "mk_socket.h"
-#include "mk_mimetype.h"
-#include "mk_header.h"
-#include "mk_epoll.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
-#include "mk_server.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_method.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_header.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_server.h>
 
-const mk_ptr_t mk_http_method_get_p = mk_ptr_t_init(MK_HTTP_METHOD_GET_STR);
-const mk_ptr_t mk_http_method_post_p = mk_ptr_t_init(MK_HTTP_METHOD_POST_STR);
-const mk_ptr_t mk_http_method_head_p = mk_ptr_t_init(MK_HTTP_METHOD_HEAD_STR);
-const mk_ptr_t mk_http_method_put_p = mk_ptr_t_init(MK_HTTP_METHOD_PUT_STR);
-const mk_ptr_t mk_http_method_delete_p = mk_ptr_t_init(MK_HTTP_METHOD_DELETE_STR);
-const mk_ptr_t mk_http_method_options_p = mk_ptr_t_init(MK_HTTP_METHOD_OPTIONS_STR);
+const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_HTTP_METHOD_GET_STR);
+const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_HTTP_METHOD_POST_STR);
+const mk_ptr_t mk_http_method_head_p = mk_ptr_init(MK_HTTP_METHOD_HEAD_STR);
+const mk_ptr_t mk_http_method_put_p = mk_ptr_init(MK_HTTP_METHOD_PUT_STR);
+const mk_ptr_t mk_http_method_delete_p = mk_ptr_init(MK_HTTP_METHOD_DELETE_STR);
+const mk_ptr_t mk_http_method_options_p = mk_ptr_init(MK_HTTP_METHOD_OPTIONS_STR);
 const mk_ptr_t mk_http_method_null_p = { NULL, 0 };
 
-const mk_ptr_t mk_http_protocol_09_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_09_STR);
-const mk_ptr_t mk_http_protocol_10_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_10_STR);
-const mk_ptr_t mk_http_protocol_11_p = mk_ptr_t_init(MK_HTTP_PROTOCOL_11_STR);
+const mk_ptr_t mk_http_protocol_09_p = mk_ptr_init(MK_HTTP_PROTOCOL_09_STR);
+const mk_ptr_t mk_http_protocol_10_p = mk_ptr_init(MK_HTTP_PROTOCOL_10_STR);
+const mk_ptr_t mk_http_protocol_11_p = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 
 
@@ -274,7 +274,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
         return 0;
     }
 
-    host = mk_ptr_t_to_buf(sr->host);
+    host = mk_ptr_to_buf(sr->host);
 
     /*
      * Add ending slash to the location string
@@ -307,7 +307,7 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     mk_header_set_http_status(sr, MK_REDIR_MOVED);
     sr->headers.content_length = 0;
 
-    mk_ptr_t_reset(&sr->headers.content_type);
+    mk_ptr_reset(&sr->headers.content_type);
     sr->headers.location = real_location;
     sr->headers.cgi = SH_NOCGI;
     sr->headers.pconnections_left =
@@ -331,7 +331,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     int bytes = 0;
     struct mimetype *mime;
 
-    MK_TRACE("HTTP Protocol Init");
+    MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
     /* Request to root path of the virtualhost in question */
     if (sr->uri_processed.len == 1 && sr->uri_processed.data[0] == '/') {
@@ -423,7 +423,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
         if (index_file.data) {
             if (sr->real_path.data != sr->real_path_static) {
-                mk_ptr_t_free(&sr->real_path);
+                mk_ptr_free(&sr->real_path);
                 sr->real_path = index_file;
                 sr->real_path.data = mk_string_dup(index_file.data);
             }
@@ -504,12 +504,12 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         sr->headers.allow_methods.data = MK_HTTP_METHOD_AVAILABLE;
         sr->headers.allow_methods.len = strlen(MK_HTTP_METHOD_AVAILABLE);
 
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
         mk_header_send(cs->socket, cs, sr);
         return EXIT_NORMAL;
     }
     else {
-        mk_ptr_t_reset(&sr->headers.allow_methods);
+        mk_ptr_reset(&sr->headers.allow_methods);
     }
 
     /* read permissions and check file */
@@ -541,9 +541,8 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
         date_client = mk_utils_gmt2utime(sr->if_modified_since.data);
         date_file_server = sr->file_info.last_modification;
 
-        if (date_file_server <= date_client && date_client > 0 &&
-            date_client <= log_current_utime) {
-
+        if (date_file_server <= date_client &&
+            date_client > 0) {
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
             mk_header_send(cs->socket, cs, sr);
             return EXIT_NORMAL;
@@ -590,7 +589,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
     else {
         /* without content-type */
-        mk_ptr_t_reset(&sr->headers.content_type);
+        mk_ptr_reset(&sr->headers.content_type);
     }
 
     /* Send headers */
@@ -633,8 +632,11 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
      * return values <= zero
      */
     if (mk_unlikely(nbytes <= 0)) {
-        MK_TRACE("sendfile() = -1;");
-        return EXIT_ABORT;
+        if (errno != EAGAIN) {
+            MK_TRACE("sendfile() = %i", nbytes);
+            return EXIT_ABORT;
+        }
+        MK_TRACE("sendfile() = EAGAIN");
     }
 
     return sr->bytes_to_send;
@@ -747,6 +749,7 @@ int mk_http_pending_request(struct client_session *cs)
                  */
                 if (content_length <= 0) {
                     cs->status = MK_REQUEST_STATUS_COMPLETED;
+                    mk_list_del(&cs->request_incomplete);
                     return 0;
                 }
                 else {
@@ -759,6 +762,7 @@ int mk_http_pending_request(struct client_session *cs)
                 }
                 else {
                     cs->status = MK_REQUEST_STATUS_COMPLETED;
+                    mk_list_del(&cs->request_incomplete);
                     return 0;
                 }
             }
@@ -769,6 +773,7 @@ int mk_http_pending_request(struct client_session *cs)
     }
 
     cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_list_del(&cs->request_incomplete);
     return 0;
 }
 
@@ -776,11 +781,11 @@ int mk_http_request_end(int socket)
 {
     int ka;
     struct client_session *cs;
+    struct session_request *sr;
     struct sched_list_node *sched;
 
     sched = mk_sched_get_thread_conf();
     cs = mk_session_get(socket);
-
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
         return -1;
@@ -790,6 +795,26 @@ int mk_http_request_end(int socket)
         MK_TRACE("Could not find sched list node :/");
         return -1;
     }
+
+    /* Check if we have some enqueued pipeline requests */
+    if (cs->pipelined == MK_TRUE) {
+        sr =  mk_list_entry_first(&cs->request_list, struct session_request, _head);
+        MK_TRACE("[FD %i] Pipeline finishing %p", socket, sr);
+
+        /* Remove node and release resources */
+        mk_list_del(&sr->_head);
+        mk_request_free(sr);
+
+
+        if (mk_list_is_empty(&cs->request_list) != 0) {
+#ifdef TRACE
+            sr = mk_list_entry_first(&cs->request_list, struct session_request, _head);
+            MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
+#endif
+            return 0;
+        }
+    }
+
 
     /*
      * We need to ask to http_keepalive if this

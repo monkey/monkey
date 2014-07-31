@@ -24,7 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 #include "cheetah.h"
 #include "cutils.h"
 

@@ -3,7 +3,7 @@ include ../../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
-CFLAGS	= -I../../../src/include -I../ $CFLAGS
+CFLAGS	= -I../../../include/ -I../ $CFLAGS
 LDFLAGS = $LDFLAGS
 SOURCES = ../sha1.c ../base64.c mk_passwd.c
 OBJECTS = $(SOURCES:../.c=%.o)

@@ -20,7 +20,7 @@
 #ifndef MK_AUTH_H
 #define MK_AUTH_H
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 /* Header stuff */
 #define MK_AUTH_HEADER_REQUEST   "Authorization:"

@@ -92,6 +92,7 @@ struct server_config
     mk_ptr_t server_addr;
     mk_ptr_t server_software;
 
+    char *one_shot;
     char *user;
     char *user_dir;
     char *pid_file_path;        /* pid of server */

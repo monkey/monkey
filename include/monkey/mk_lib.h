@@ -17,26 +17,29 @@
  *  limitations under the License.
  */
 
-/* clock.h */
+#ifndef MK_LIB_H
+#define MK_LIB_H
 
-#ifndef MK_CLOCK_H
-#define MK_CLOCK_H
+#include <monkey/mk_macros.h>
+#include <monkey/libmonkey.h>
 
-#include <time.h>
-#include "memory.h"
+/* Data */
 
-extern time_t log_current_utime;
-extern time_t monkey_init_time;
+struct mklib_ctx_t {
+    pthread_t tid;
+    pthread_t clock;
+    pthread_t *workers;
 
-extern mk_ptr_t log_current_time;
-extern mk_ptr_t header_current_time;
+    cb_ipcheck ipf;
+    cb_urlcheck urlf;
+    cb_data dataf;
+    cb_close closef;
 
-#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
-#define HEADER_TIME_BUFFER_SIZE 32
-#define LOG_TIME_BUFFER_SIZE 30
+    struct mklib_worker_info **worker_info;
 
-void *mk_clock_worker_init(void *args);
-void mk_clock_set_time(void);
-void mk_clock_sequential_init();
+    const char *plugdir;
+
+    int lib_running;
+};
 
 #endif

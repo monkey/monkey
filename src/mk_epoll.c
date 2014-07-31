@@ -27,19 +27,20 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <sys/timerfd.h>
 
-#include "monkey.h"
-#include "mk_connection.h"
-#include "mk_socket.h"
-#include "mk_clock.h"
-#include "mk_request.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
-#include "mk_epoll.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
-#include "mk_linuxtrace.h"
-#include "mk_scheduler.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_connection.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_epoll.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_linuxtrace.h>
+#include <monkey/mk_scheduler.h>
 
 static __thread struct epoll_state_index mk_epoll_state_k;
 
@@ -48,7 +49,7 @@ static __thread struct epoll_state_index mk_epoll_state_k;
  * a fixed array of epoll_state entries and two mk_list to represent an available and
  * busy queue for each entry
  */
-int mk_epoll_state_init()
+int mk_epoll_state_worker_init()
 {
     int i;
     struct epoll_state *es;
@@ -64,6 +65,29 @@ int mk_epoll_state_init()
     for (i = 0; i < index->size; i++) {
         es = mk_mem_malloc_z(sizeof(struct epoll_state));
         mk_list_add(&es->_head, &index->av_queue);
+    }
+
+    return 0;
+}
+
+/* Release all entries in the epoll states */
+int mk_epoll_state_worker_exit()
+{
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct epoll_state *es;
+    struct epoll_state_index *index = &mk_epoll_state_k;
+
+    /* Remove information being held by the available queue */
+    mk_list_foreach_safe(head, tmp, &index->av_queue) {
+        es = mk_list_entry(head, struct epoll_state, _head);
+        mk_mem_free(es);
+    }
+
+    /* Remove information being held by the busy queue */
+    mk_list_foreach_safe(head, tmp, &index->busy_queue) {
+        es = mk_list_entry(head, struct epoll_state, _head);
+        mk_mem_free(es);
     }
 
     return 0;
@@ -201,6 +225,45 @@ static int mk_epoll_state_del(int fd)
     return -1;
 }
 
+static int mk_epoll_timeout_set(int efd, int exp)
+{
+    int ret;
+    int timer_fd;
+    struct itimerspec its;
+    struct epoll_event event;
+
+    /* expiration interval */
+    its.it_interval.tv_sec  = exp;
+    its.it_interval.tv_nsec = 0;
+
+    /* initial expiration */
+    its.it_value.tv_sec  = time(NULL) + exp;
+    its.it_value.tv_nsec = 0;
+
+    timer_fd = timerfd_create(CLOCK_REALTIME, 0);
+    if (timer_fd == -1) {
+        perror("timerfd");
+        exit(EXIT_FAILURE);
+    }
+
+    ret = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &its, NULL);
+    if (ret < 0) {
+        perror("timerfd_settime");
+        exit(EXIT_FAILURE);
+    }
+
+    /* register the timer into the epoll queue */
+    event.data.fd = timer_fd;
+    event.events  = EPOLLIN;
+    ret = epoll_ctl(efd, EPOLL_CTL_ADD, timer_fd, &event);
+    if (ret < 0) {
+        perror("epoll_ctl");
+        exit(EXIT_FAILURE);
+    }
+
+    return timer_fd;
+}
+
 int mk_epoll_create()
 {
     int efd;
@@ -216,15 +279,16 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
 {
     int i, fd, ret = -1;
     int num_fds;
-    int fds_timeout;
     int remote_fd;
+    int timeout_fd;
+    uint64_t val = 0;
     struct epoll_event *events;
     struct sched_list_node *sched;
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
 
-    fds_timeout = log_current_utime + config->timeout;
+    timeout_fd = mk_epoll_timeout_set(efd, config->timeout);
     events = mk_mem_malloc_z(max_events * sizeof(struct epoll_event));
 
     pthread_mutex_lock(&mutex_worker_init);
@@ -242,15 +306,31 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                 MK_LT_EPOLL(fd, "EPOLLIN");
                 MK_TRACE("[FD %i] EPoll Event READ", fd);
 
+                /* Check if we have a worker signal */
                 if (mk_unlikely(fd == sched->signal_channel)) {
-                    uint64_t val = 0;
                     ret = read(fd, &val, sizeof(val));
                     if (ret > 0) {
                         if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
                             mk_sched_sync_counters();
                             continue;
                         }
+                        else if (val == MK_SCHEDULER_SIGNAL_FREE_ALL) {
+                            mk_sched_worker_free();
+                            mk_mem_free(events);
+                            return NULL;
+                        }
                     }
+                }
+                else if (mk_unlikely(fd == timeout_fd)) {
+                    MK_LT_EPOLL(0, "TIMEOUT CHECK");
+                    ret = read(fd, &val, sizeof(val));
+                    if (ret < 0) {
+                        perror("read");
+                    }
+                    else {
+                        mk_sched_check_timeouts(sched);
+                    }
+                    continue;
                 }
 
                 /* New connection under MK_SCHEDULER_REUSEPORT mode */
@@ -305,13 +385,6 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                 MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
                 mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
             }
-        }
-
-        /* Check timeouts and update next one */
-        if (log_current_utime >= fds_timeout) {
-            MK_LT_EPOLL(0, "TIMEOUT CHECK");
-            mk_sched_check_timeouts(sched);
-            fds_timeout = log_current_utime + config->timeout;
         }
     }
 

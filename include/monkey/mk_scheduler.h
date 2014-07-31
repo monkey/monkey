@@ -33,7 +33,7 @@
 #define MK_SCHEDULER_CONN_PENDING     0
 #define MK_SCHEDULER_CONN_PROCESS     1
 #define MK_SCHEDULER_SIGNAL_DEADBEEF  0xDEADBEEF
-
+#define MK_SCHEDULER_SIGNAL_FREE_ALL  0xFFEE0000
 /*
  * Scheduler balancing mode:
  *
@@ -49,6 +49,7 @@
 #define MK_SCHEDULER_REUSEPORT        1
 
 extern __thread struct rb_root *cs_list;
+extern __thread struct mk_list *cs_incomplete;
 
 #ifdef STATS
 extern __thread struct stats *stats;
@@ -58,11 +59,12 @@ struct sched_connection
 {
     struct rb_node _rb_head; /* red-black tree head */
 
-    int socket;              /* file descriptor     */
-    int status;              /* connection status   */
-    time_t arrive_time;      /* arrived time        */
-    struct mk_list _head;    /* list head           */
-    uint32_t events;         /* epoll events        */
+    int socket;                  /* file descriptor            */
+    int status;                  /* connection status          */
+    time_t arrive_time;          /* arrived time               */
+    struct mk_list _head;        /* list head: av/busy         */
+    struct mk_list status_queue; /* link to the incoming queue */
+    uint32_t events;             /* epoll events               */
 };
 
 /* Global struct */
@@ -81,9 +83,20 @@ struct sched_list_node
      */
     struct rb_root rb_queue;
 
-    /* Available and busy queue */
+    /*
+     * Available and busy queue: provides a fast lookup
+     * for available and used slot connections
+     */
     struct mk_list busy_queue;
     struct mk_list av_queue;
+
+    /*
+     * The incoming queue represents client connections that
+     * have not initiated it requests or the request status
+     * is incomplete. This linear lists allows the scheduler
+     * to perform a fast check upon every timeout.
+     */
+    struct mk_list incoming_queue;
 
     short int idx;
     unsigned char initialized;
@@ -100,6 +113,12 @@ struct sched_list_node
      * on mk_scheduler.c .
      */
     int signal_channel;
+
+    /*
+     * Reference of the memory array that contains all entries for
+     * the available and busy queue entries.
+     */
+    struct sched_connection *sched_array;
 
 #ifdef SHAREDLIB
     mklib_ctx ctx;
@@ -125,6 +144,7 @@ typedef struct
 
 pthread_key_t MK_EXPORT worker_sched_node;
 extern pthread_mutex_t mutex_worker_init;
+extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
 
 void mk_sched_init();
@@ -160,5 +180,6 @@ int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);
 int mk_sched_sync_counters();
 int mk_sched_check_capacity(struct sched_list_node *sched);
+void mk_sched_worker_free();
 
 #endif

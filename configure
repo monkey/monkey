@@ -26,7 +26,7 @@ VERSION="1.6.0"
 SONAME="libmonkey.so.$__MONKEY__.$__MONKEY_MINOR__"
 SYSNAME=`uname -s`
 SYSINFO=`uname -sr`
-INCDIR="src/include/"
+INCDIR="include/monkey"
 
 BOLD="\033[1m"
 END_COLOR="\033[0m"
@@ -111,7 +111,7 @@ abspath() {
 main()
 {
 	local_dirs
-	dir=0
+	dir_diff=0
 	actual_path=`pwd`
 
         # Check if build path is the same or a separate one
@@ -121,30 +121,31 @@ main()
         fi
 
 	if [ "$prefix" != "$actual_path" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$bindir" != "$actual_path/bin" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$sysconfdir" != "$actual_path/conf" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$datadir" != "$actual_path/htdocs" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$logdir" != "$actual_path/logs" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
 	if [ "$mandir" != "$actual_path/man" ]; then
-		dir=1
+		dir_diff=1
 	fi
 
-	echo
+        echo
+        echo
 	echo -e "\033[1m=== Checking dependencies ===\033[0m"
 
 	# Check for accept4()
@@ -188,7 +189,7 @@ main()
 
 	echo
 	echo -e "\033[1m=== Plugins included ===\033[0m"
-	find $base_path/plugins/ -name Makefile -exec rm {} \;
+	find $base_path/plugins/ -name Makefile -exec rm -rf {} \;
 
 	create_makefile_plugins $base_path $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
@@ -206,9 +207,10 @@ main()
                          malloc_libc malloc_jemalloc
 
 	echo "+ Creating plugins/Make.common"
-	create_plugins_make_common base_path bindir
+	create_plugins_make_common base_path bindir \
+                         polarssl_headers polarssl_library polarssl_debug_level
 
-	echo "+ Creating src/include/mk_info.h"
+	echo "+ Creating include/monkey/mk_info.h"
 	create_info base_path sysconfdir \
                     SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
                     cmd uname
@@ -219,8 +221,8 @@ main()
 	create_monkey_systemd_script bindir logdir default_port systemddir
 
 	echo -e "+ Creating Makefile"
-	if [ "$dir" = 0 ]; then
-		create_makefile1 bindir malloc_jemalloc
+	if [ $dir_diff -eq 0 ]; then
+		create_makefile1 base_path bindir malloc_jemalloc
 	else
 		create_makefile1_install prefix bindir mandir sysconfdir \
                 datadir logdir malloc_jemalloc
@@ -286,7 +288,7 @@ main()
 	echo
 	echo "--"
 	echo -en "$GREEN Monkey $END_COLOR configuration is$YELLOW done!$END_COLOR, to build type 'make"
-	if [ "$dir" = 1 ]; then
+	if [ $dir_diff -eq 1 ]; then
 		echo -n " && make install' "
 	else
 		echo "' "
@@ -294,10 +296,10 @@ main()
 	echo -n "Have fun! ;)"
 	echo
 
-	echo "#ifndef MK_ENV_H" > src/include/mk_env.h
-	echo "#define MK_ENV_H" >> src/include/mk_env.h
-	echo "#define CC \"${CC}\"" >> src/include/mk_env.h
-	echo "#endif" >> src/include/mk_env.h
+	echo "#ifndef MK_ENV_H" > include/monkey/mk_env.h
+	echo "#define MK_ENV_H" >> include/monkey/mk_env.h
+	echo "#define CC \"${CC}\"" >> include/monkey/mk_env.h
+	echo "#endif" >> include/monkey/mk_env.h
 }
 
 # Test if compiling a file with a given feature will work.
@@ -327,19 +329,35 @@ check_generic() {
 create_makefile1()
 {
         if [ $malloc_jemalloc -eq 1 ]; then
-                $deps="deps/jemalloc"
+            all_deps="$all_deps jemalloc"
         else
-                $deps=""
+            all_deps=""
         fi
 
 	cat > Makefile << EOF
-# Monkey HTTP Daemon: Makefile
+# Monkey HTTP Server: Makefile
 # ============================
+export monkey_root=\$(CURDIR)
+PREFIX=\$(DESTDIR)${prefix}
+BINDIR=\$(DESTDIR)${bindir}
+LIBDIR=\$(DESTDIR)${libdir}
+INCDIR=\$(DESTDIR)${incdir}
+MANDIR=\$(DESTDIR)${mandir}
+SYSCONFDIR=\$(DESTDIR)${sysconfdir}
+DATADIR=\$(DESTDIR)${datadir}
+LOGDIR=\$(DESTDIR)${logdir}
+SYSTEMDDIR=$systemddir
+PLUGINDIR=\$(DESTDIR)${plugdir}
+VERSION=$VERSION
 
-all:
-	@\$(MAKE) -s -C $deps src all
+all: $all_deps
+	@\$(MAKE) -s -C $base_path/src all
 	@\$(MAKE) -s -C plugins all
-	@echo "done"
+	@echo "  DONE"
+
+jemalloc:
+	@echo "  CC    jemalloc [all]"
+	@\$(MAKE) -s -C deps/jemalloc
 
 plugins:
 	@\$(MAKE) -s -C plugins all
@@ -415,12 +433,12 @@ skip_plugin() {
 
 
 	path="plugins/$entry"
-	if ! test -d $path; then
+	if [ ! -d "$path" ]; then
 		return 1
 	fi
 
 	# does it contains a proper Makefile.in ?
-	if test ! -e $path/Makefile.in ; then
+	if [ ! -e "$path/Makefile.in" ]; then
 		return 1
 	fi
 
@@ -473,7 +491,7 @@ create_makefile1_install()
         if [ $malloc_jemalloc -eq 1 ]; then
                 all_deps="$all_deps jemalloc"
         else
-                deps=""
+                all_deps=""
         fi
 
 	# remove old data
@@ -483,7 +501,7 @@ create_makefile1_install()
 	do
 		entry=`echo $e | awk -F "/" '{print $3}'`
 		skip_plugin $entry $enabled_plugins $disabled_plugins
-		if [ $? == 1 ]; then
+		if [ $? -eq 1 ]; then
 			continue
 		fi
 		echo -e "\tcp -r conf/plugins/$entry \${SYSCONFDIR}/plugins/" >> plugins.conf
@@ -503,7 +521,7 @@ create_makefile1_install()
 	plglist=`cat plugins.list`
 
 	if [ -n "$sharedlib" ]; then
-		incinstall="	install -m 644 src/include/public/libmonkey.h \$(INCDIR)"
+		incinstall="	install -m 644 include/monkey/libmonkey.h \$(INCDIR)"
 	fi
 
 	ins_systemd=""
@@ -513,7 +531,7 @@ create_makefile1_install()
 	fi
 
 	cat > Makefile <<EOF
-# Monkey HTTP Daemon: Makefile
+# Monkey HTTP Server: Makefile
 # ============================
 export monkey_root=\$(CURDIR)
 PREFIX=\$(DESTDIR)${prefix}
@@ -563,7 +581,7 @@ install:
 	install -d \${PLUGINDIR}
 	install -m 755 bin/* \$(BINDIR)
 	install -m 644 ./conf/*.* \$(SYSCONFDIR)
-	install -m 644 src/include/*.h \$(INCDIR)
+	install -m 644 include/monkey/*.h \$(INCDIR)
 $ins_systemd
 $plgconf
 $plglist
@@ -627,7 +645,7 @@ CC_QUIET= @echo -n; $CC
 CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
-INCDIR  = ./include
+INCDIR  = ../include/
 LDFLAGS = $LDFLAGS
 DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
@@ -679,7 +697,6 @@ EOF
 
 create_makefile_plugins()
 {
-	#dir=`pwd`
         dir=$basepath
 	makefile="plugins/Makefile"
 	plugins_load="conf/plugins.load"
@@ -719,14 +736,10 @@ create_makefile_plugins()
 			continue
 		fi
 
-                echo $entry
-
 		comment="    "
 		for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
 			echo -e "+ ${name}${i:1}";
 		done
-
-                echo "----->"$plugin_dir
 
 		# Create Makefile
 		MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
@@ -762,14 +775,12 @@ create_makefile_plugins()
 		echo "" >> $plugins_load
 
 		# Copy specific plugin configuration files
-                echo $base_path/$plugin_dir/conf
-
-		if test -e $base_path/$plugin_dir/conf ; then
-			target="conf/$plugin_dir/"
+		if [ -d "$plugin_dir/conf" ]; then
+			target="conf/plugins/$entry/"
 			mkdir -p $target
-			cp -r $base_path/$plugin_dir/conf/* $target/
+			cp -r $plugin_dir/conf/* $target/
 
-		   # Replace configuration variables:
+		        # Replace configuration variables:
 			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
 			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
@@ -820,13 +831,28 @@ create_plugins_make_common()
 	if [ $malloc_jemalloc == 1 ]; then
 		LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
 	fi
+
+	if [ -n "$polarssl_headers" ]; then
+		MK_POLARSSL_HEADERS="-I$polarssl_headers"
+	fi
+	if [ -n "$polarssl_library" ]; then
+		MK_POLARSSL_LIBRARY="-L$polarssl_library -Wl,-rpath=$polarssl_library"
+	fi
+
+	if [ -n "$polarssl_debug_level" ]; then
+		MK_POLARSSL_DEBUG_LEVEL="$polarssl_debug_level"
+	fi
+
 	cat > $base_path/plugins/Make.common <<EOF
 _PATH     = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 INC_EXTRA = "./"
-INCDIR    = ../../src/include -I\$(INC_EXTRA)
+INCDIR    = ../../include -I\$(INC_EXTRA)
 MONKEY_OBJECTS = \$(wildcard ../../src/*.o)
 MONKEY_OBJECTS_N = \$(filter-out ../../src/monkey.o, \$(MONKEY_OBJECTS))
 MONKEY_BIN_DIR = $bindir
+MONKEY_POLARSSL_HEADERS = $MK_POLARSSL_HEADERS
+MONKEY_POLARSSL_LIBRARY = $MK_POLARSSL_LIBRARY
+MONKEY_POLARSSL_DEBUG_LEVEL = $MK_POLARSSL_DEBUG_LEVEL
 LIBS = $LIBS
 
 .c.o:
@@ -838,7 +864,7 @@ clean:
 EOF
 }
 
-# Creando include/mk_info.h
+# Create include/monkey/mk_info.h
 create_info()
 {
 	cat > $base_path/$INCDIR/mk_info.h <<EOF
@@ -867,7 +893,7 @@ EOF
 	sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-	    $base_path/$INCDIR/public/libmonkey.h
+	    $base_path/$INCDIR/libmonkey.h
 }
 
 create_conf()
@@ -1053,8 +1079,14 @@ only_accept4=0
 malloc_libc=0
 malloc_jemalloc=1
 
+# python bindings
 mk_python=0
 PYTHONVERSION=`python -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
+
+# polarssl
+polarssl_headers=""
+polarssl_library=""
+polarssl_debug_level=0
 
 for arg in $*; do
 
@@ -1153,9 +1185,6 @@ for arg in $*; do
 		--only-accept4)
 			only_accept4=1
 			;;
-		--safe-free*)
-			safe_free=1
-			;;
 		--platform*)
 			platform=$optarg
 			;;
@@ -1171,6 +1200,15 @@ for arg in $*; do
 			else
 				systemddir=/lib/systemd/system
 			fi
+			;;
+		--polarssl-headers*)
+			polarssl_headers=$optarg
+			;;
+		--polarssl-library*)
+			polarssl_library=$optarg
+			;;
+		--polarssl-debug-level*)
+			polarssl_debug_level=$optarg
 			;;
 		--version*)
 			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
@@ -1229,6 +1267,11 @@ for arg in $*; do
 			echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
 			echo "                          WARNING security risk, do not enable in distro packages!"
 			echo
+			echo -e $bldwht"PolarSSL plugin options:" $txtrst
+			echo "  --polarssl-headers      Set the path for PolarSSL headers"
+			echo "  --polarssl-library      Set the path where the PolarSSL library can be found"
+			echo "  --polarssl-debug-level  Set PolarSSL debug level"
+			echo
 			echo -e $bldwht"Installation Directories:" $txtrst
 			echo "  --prefix=PREFIX         Root prefix directory"
 			echo "  --bindir=BINDIR         Binary files (executables)"
@@ -1245,7 +1288,6 @@ for arg in $*; do
 			echo "  --disable-plugins=a,b   Disable the listed plugins"
 			echo "  --only-accept           Use only accept(2)"
 			echo "  --only-accept4          Use only accept4(2) (default and preferred)"
-			echo "  --safe-free             Force Monkey to free resources before exit"
 			echo
 			echo -e $bldwht"Override Server Configuration:" $txtrst
 			echo "  --default-port=PORT     Override default TCP port (default: 2001)"
@@ -1303,19 +1345,13 @@ if test -z "$debug" && test -z "$mk_stats"; then
 	# Only set -O2 if the user didn't include an -O level
 	echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
-	DEFS="-DDEBUG -DSAFE_FREE"
+	DEFS="-DDEBUG "
 	CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
 fi
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
 	echo -e "\nError: you cannot use --only-accept and --only-accept4 at same time\n"
 	exit 1
-fi
-
-if test -n "$safe_free" ; then
-	if test -z "$debug" ; then
-		DEFS="$DEFS -DSAFE_FREE"
-	fi
 fi
 
 if [ $trace ] ; then
@@ -1366,6 +1402,7 @@ uname=`uname -a`
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir pidfile plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
-     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname
+     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname \
+     polarssl_headers polarssl_library polarssl_debug_level
 
 exit 0

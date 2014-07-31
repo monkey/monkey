@@ -5,7 +5,7 @@ debian/tmp/usr/include/monkey/mk_env.h
 debian/tmp/usr/include/monkey/mk_limits.h
 debian/tmp/usr/include/monkey/mk_epoll.h
 debian/tmp/usr/include/monkey/mk_http.h
-debian/tmp/usr/include/monkey/MKPlugin.h
+debian/tmp/usr/include/monkey/mk_api.h
 debian/tmp/usr/include/monkey/mk_header.h
 debian/tmp/usr/include/monkey/monkey.h
 debian/tmp/usr/include/monkey/mk_string.h

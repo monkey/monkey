@@ -24,16 +24,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "monkey.h"
-#include "mk_mimetype.h"
-#include "mk_memory.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_request.h"
-#include "mk_list.h"
-#include "mk_macros.h"
-#include "mk_file.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_list.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_file.h>
 
 struct mimetype *mimetype_default;
 
@@ -157,7 +157,7 @@ void mk_mimetype_read_config()
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
-    mk_ptr_t_set(&mimetype_default->type, config->default_mimetype);
+    mk_ptr_set(&mimetype_default->type, config->default_mimetype);
 
     mk_config_free(cnf);
 }
@@ -178,4 +178,21 @@ struct mimetype *mk_mimetype_find(mk_ptr_t *filename)
     }
 
     return mk_mimetype_lookup(filename->data + j + 1);
+}
+
+void mk_mimetype_free_all()
+{
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct mimetype *mime;
+
+    mk_list_foreach_safe(head, tmp, &mimetype_list) {
+        mime = mk_list_entry(head, struct mimetype, _head);
+        mk_ptr_free(&mime->type);
+        mk_mem_free(mime->name);
+        mk_mem_free(mime);
+    }
+
+    mk_mem_free(mimetype_default->type.data);
+    mk_mem_free(mimetype_default);
 }

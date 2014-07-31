@@ -25,17 +25,17 @@
 #include <dlfcn.h>
 #include <err.h>
 
-#include "mk_connection.h"
-#include "mk_request.h"
-#include "mk_utils.h"
-#include "mk_file.h"
-#include "mk_http.h"
-#include "mk_clock.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_mimetype.h"
-#include "mk_vhost.h"
-#include "mk_stats.h"
+#include <monkey/mk_connection.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_stats.h>
 
 enum {
     bufsize = 256
@@ -326,9 +326,9 @@ void mk_plugin_init()
     api->http_request_error = mk_request_error;
 
     /* Memory callbacks */
-    api->pointer_set = mk_ptr_t_set;
-    api->pointer_print = mk_ptr_t_print;
-    api->pointer_to_buf = mk_ptr_t_to_buf;
+    api->pointer_set = mk_ptr_set;
+    api->pointer_print = mk_ptr_print;
+    api->pointer_to_buf = mk_ptr_to_buf;
     api->plugin_load_symbol = mk_plugin_load_symbol;
     api->mem_alloc = mk_mem_malloc;
     api->mem_alloc_z = mk_mem_malloc_z;
@@ -557,6 +557,33 @@ void mk_plugin_exit_all()
         mk_mem_free(node);
     }
     mk_mem_free(api);
+    mk_mem_free(plg_stagemap);
+}
+
+/*
+ * When a worker is exiting, it invokes this function to release any plugin
+ * associated data.
+ */
+void mk_plugin_exit_worker()
+{
+    struct mk_list *list;
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct plugin_event *pe;
+
+    /* For each plugin on this context, exit worker zone */
+
+
+    /* Remove plugins events */
+    list = mk_plugin_event_get_list();
+    if (list) {
+        mk_list_foreach_safe(head, tmp, list) {
+            pe = mk_list_entry(head, struct plugin_event, _head);
+            mk_list_del(&pe->_head);
+            mk_mem_free(pe);
+        }
+        mk_mem_free(list);
+    }
 }
 
 int mk_plugin_stage_run(unsigned int hook,
@@ -915,6 +942,7 @@ int mk_plugin_http_request_end(int socket)
         mk_err("[FD %i] Tried to end non-existing request.", socket);
         return -1;
     }
+
     sr = mk_list_entry_last(&cs->request_list, struct session_request, _head);
     mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
 
@@ -997,7 +1025,7 @@ void mk_plugin_event_bad_return(const char *hook, int ret)
     mk_err("[%s] Not allowed return value %i", hook, ret);
 }
 
-int mk_plugin_event_check_return(const char *hook, int ret)
+static inline int mk_plugin_event_check_return(const char *hook, int ret)
 {
 #ifdef TRACE
     MK_TRACE("Hook '%s' returned %i", hook, ret);

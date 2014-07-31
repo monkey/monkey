@@ -25,18 +25,17 @@
 #include <pthread.h>
 #include <fcntl.h>
 
-
-#include "mk_list.h"
-#include "mk_vhost.h"
-#include "mk_utils.h"
-#include "mk_macros.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_http_status.h"
-#include "mk_memory.h"
-#include "mk_request.h"
-#include "mk_info.h"
-#include "mk_file.h"
+#include <monkey/mk_list.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_http_status.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_request.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_file.h>
 
 /* Initialize Virtual Host FDT mutex */
 pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -110,6 +109,27 @@ int mk_vhost_fdt_worker_init()
 
     return 0;
 }
+
+int mk_vhost_fdt_worker_exit()
+{
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct vhost_fdt_host *fdt;
+
+    if (config->fdt == MK_FALSE) {
+        return -1;
+    }
+
+    mk_list_foreach_safe(head, tmp, mk_vhost_fdt_key) {
+        fdt = mk_list_entry(head, struct vhost_fdt_host, _head);
+        mk_list_del(&fdt->_head);
+        mk_mem_free(fdt);
+    }
+
+    mk_mem_free(mk_vhost_fdt_key);
+    return 0;
+}
+
 
 static inline
 struct vhost_fdt_hash_table *mk_vhost_fdt_table_lookup(int id, struct host *host)
@@ -253,8 +273,6 @@ int mk_vhost_open(struct session_request *sr)
     int off;
     unsigned int hash;
 
-    //return open(sr->real_path.data, sr->file_info.flags_read_only);
-
     off = sr->host_conf->documentroot.len;
     hash = mk_utils_gen_hash(sr->real_path.data + off,
                              sr->real_path.len - off);
@@ -265,8 +283,6 @@ int mk_vhost_open(struct session_request *sr)
 
 int mk_vhost_close(struct session_request *sr)
 {
-    //return close(sr->fd_file);
-
     return mk_vhost_fdt_close(sr);
 }
 
@@ -347,6 +363,12 @@ struct host *mk_vhost_read(char *path)
     host->documentroot.data = mk_config_section_getval(section_host,
                                                        "DocumentRoot",
                                                        MK_CONFIG_VAL_STR);
+    if (!host->documentroot.data) {
+        mk_err("Missing DocumentRoot entry on %s file", path);
+        mk_config_free(cnf);
+        return NULL;
+    }
+
     host->documentroot.len = strlen(host->documentroot.data);
 
     /* Validate document root configured */
@@ -425,6 +447,53 @@ struct host *mk_vhost_read(char *path)
     return host;
 }
 
+void mk_vhost_set_single(char *path)
+{
+    struct host *host;
+    struct host_alias *halias;
+    struct stat checkdir;
+    unsigned long len = 0;
+
+    /* Set the default host */
+    host = mk_mem_malloc_z(sizeof(struct host));
+    mk_list_init(&host->error_pages);
+    mk_list_init(&host->server_names);
+
+    /* Prepare the unique alias */
+    halias = mk_mem_malloc_z(sizeof(struct host_alias));
+    halias->name = mk_string_dup("127.0.0.1");
+    mk_list_add(&halias->_head, &host->server_names);
+
+    host->documentroot.data = mk_string_dup(path);
+    host->documentroot.len = strlen(path);
+    host->header_redirect.data = NULL;
+
+    /* Validate document root configured */
+    if (stat(host->documentroot.data, &checkdir) == -1) {
+        mk_err("Invalid path to DocumentRoot in %s", path);
+        exit(EXIT_FAILURE);
+    }
+    else if (!(checkdir.st_mode & S_IFDIR)) {
+        mk_err("DocumentRoot variable in %s has an invalid directory path", path);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Server Signature */
+    if (config->hideversion == MK_FALSE) {
+        mk_string_build(&host->host_signature, &len,
+                        "Monkey/%s", VERSION);
+    }
+    else {
+        mk_string_build(&host->host_signature, &len, "Monkey");
+    }
+
+    mk_string_build(&host->header_host_signature.data,
+                    &host->header_host_signature.len,
+                    "Server: %s", host->host_signature);
+
+    mk_list_add(&host->_head, &config->hosts);
+}
+
 /* Given a configuration directory, start reading the virtual host entries */
 void mk_vhost_init(char *path)
 {
@@ -460,22 +529,25 @@ void mk_vhost_init(char *path)
 
     /* Read all virtual hosts defined in sites/ */
     if (!(dir = opendir(sites))) {
+        mk_mem_free(sites);
         mk_err("Could not open %s", sites);
         exit(EXIT_FAILURE);
     }
 
     /* Reading content */
     while ((ent = readdir(dir)) != NULL) {
-        if (strcmp((char *) ent->d_name, ".") == 0)
+        if (ent->d_name[0] == '.') {
             continue;
-        if (strcmp((char *) ent->d_name, "..") == 0)
+        }
+        if (strcmp((char *) ent->d_name, "..") == 0) {
             continue;
+        }
         if (ent->d_name[strlen(ent->d_name) - 1] ==  '~') {
             continue;
         }
-        if (strcasecmp((char *) ent->d_name, "default") == 0)
+        if (strcasecmp((char *) ent->d_name, "default") == 0) {
             continue;
-
+        }
         file = NULL;
         mk_string_build(&file, &len, "%s/%s", sites, ent->d_name);
 
@@ -490,6 +562,7 @@ void mk_vhost_init(char *path)
         }
     }
     closedir(dir);
+    mk_mem_free(sites);
 }
 
 
@@ -516,13 +589,14 @@ int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
     return -1;
 }
 
-#ifdef SAFE_FREE
 void mk_vhost_free_all()
 {
     struct host *host;
     struct host_alias *host_alias;
+    struct error_page *ep;
     struct mk_list *head_host;
     struct mk_list *head_alias;
+    struct mk_list *head_error;
     struct mk_list *tmp1, *tmp2;
 
     mk_list_foreach_safe(head_host, tmp1, &config->hosts) {
@@ -539,13 +613,21 @@ void mk_vhost_free_all()
             mk_mem_free(host_alias);
         }
 
-        mk_ptr_t_free(&host->documentroot);
+        /* Free error pages */
+        mk_list_foreach_safe(head_error, tmp2, &host->error_pages) {
+            ep = mk_list_entry(head_error, struct error_page, _head);
+            mk_list_del(&ep->_head);
+            mk_mem_free(ep->file);
+            mk_mem_free(ep->real_path);
+            mk_mem_free(ep);
+        }
+
+        mk_ptr_free(&host->documentroot);
         mk_mem_free(host->host_signature);
-        mk_ptr_t_free(&host->header_host_signature);
+        mk_ptr_free(&host->header_host_signature);
 
         /* Free source configuration */
         if (host->config) mk_config_free(host->config);
         mk_mem_free(host);
     }
 }
-#endif

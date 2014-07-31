@@ -17,22 +17,29 @@
  *  limitations under the License.
  */
 
-#ifndef MK_CACHE_H
-#define MK_CACHE_H
+/* clock.h */
 
-extern pthread_key_t mk_cache_iov_header;
-extern pthread_key_t mk_cache_header_lm;
-extern pthread_key_t mk_cache_header_cl;
-extern pthread_key_t mk_cache_header_ka;
-extern pthread_key_t mk_cache_header_ka_max;
-extern pthread_key_t mk_cache_utils_gmtime;
-extern pthread_key_t mk_cache_utils_gmt_text;
+#ifndef MK_CLOCK_H
+#define MK_CLOCK_H
 
-void mk_cache_thread_init(void);
+#include <time.h>
+#include <monkey/mk_memory.h>
 
-static inline void *mk_cache_get(pthread_key_t key)
-{
-    return pthread_getspecific(key);
-}
+extern time_t log_current_utime;
+extern time_t monkey_init_time;
+
+extern mk_ptr_t log_current_time;
+extern mk_ptr_t header_current_time;
+
+pthread_t mk_clock_tid;
+
+#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
+#define HEADER_TIME_BUFFER_SIZE 32
+#define LOG_TIME_BUFFER_SIZE 30
+
+void *mk_clock_worker_init(void *args);
+void mk_clock_set_time(void);
+void mk_clock_sequential_init();
+void mk_clock_exit();
 
 #endif

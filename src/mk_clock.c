@@ -23,9 +23,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "mk_memory.h"
-#include "mk_clock.h"
-#include "mk_utils.h"
+#include <monkey/mk_memory.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_utils.h>
 
 time_t log_current_utime;
 time_t monkey_init_time;
@@ -82,6 +82,9 @@ void *mk_clock_worker_init(void *args UNUSED_PARAM)
     time_t cur_time;
 
     mk_utils_worker_rename("monkey: clock");
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
+    mk_clock_tid = pthread_self();
 
     while (1) {
         cur_time = time(NULL);
@@ -95,6 +98,17 @@ void *mk_clock_worker_init(void *args UNUSED_PARAM)
     }
 
     return NULL;
+}
+
+void mk_clock_exit()
+{
+    pthread_cancel(mk_clock_tid);
+    pthread_join(mk_clock_tid, NULL);
+
+    mk_mem_free(header_time_buffers[0]);
+    mk_mem_free(header_time_buffers[1]);
+    mk_mem_free(log_time_buffers[0]);
+    mk_mem_free(log_time_buffers[1]);
 }
 
 /* This function must be called before any threads are created */

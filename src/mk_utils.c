@@ -42,17 +42,17 @@
 #endif
 
 /* local headers */
-#include "monkey.h"
-#include "mk_memory.h"
-#include "mk_utils.h"
-#include "mk_file.h"
-#include "mk_string.h"
-#include "mk_config.h"
-#include "mk_socket.h"
-#include "mk_clock.h"
-#include "mk_user.h"
-#include "mk_cache.h"
-#include "mk_macros.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_file.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_macros.h>
 
 /* Date helpers */
 static const char mk_date_wd[][6]  = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
@@ -619,7 +619,7 @@ pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg)
     pthread_attr_t thread_attr;
 
     pthread_attr_init(&thread_attr);
-    pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_JOINABLE);
     if (pthread_create(&tid, &thread_attr, (void *) func, arg) < 0) {
         mk_libc_error("pthread_create");
         exit(EXIT_FAILURE);

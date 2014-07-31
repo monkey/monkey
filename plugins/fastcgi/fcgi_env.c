@@ -24,7 +24,7 @@
 #include <sys/socket.h> /* getsockname, getpeername */
 #include <arpa/inet.h> /* inet_ntop */
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 #include "dbg.h"
 #include "protocol.h"

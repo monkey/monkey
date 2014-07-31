@@ -41,7 +41,7 @@ extern "C" {
 
 /* For the internal build */
 #ifdef SHAREDLIB
- #include <mk_macros.h>
+ #include <monkey/mk_macros.h>
 #else
  #ifndef MK_EXPORT
  #define MK_EXPORT

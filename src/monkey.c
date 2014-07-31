@@ -26,24 +26,24 @@
 #ifdef LINUX_TRACE
 #define TRACEPOINT_CREATE_PROBES
 #define TRACEPOINT_DEFINE
-#include "mk_linuxtrace.h"
+#include <monkey/mk_linuxtrace.h>
 #endif
 
-#include "monkey.h"
-#include "mk_kernel.h"
-#include "mk_socket.h"
-#include "mk_user.h"
-#include "mk_signals.h"
-#include "mk_clock.h"
-#include "mk_cache.h"
-#include "mk_server.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_env.h"
-#include "mk_http.h"
-#include "mk_utils.h"
-#include "mk_config.h"
-#include "mk_scheduler.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_socket.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_signals.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_env.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -51,7 +51,7 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-const mk_ptr_t mk_monkey_protocol = mk_ptr_t_init(MK_HTTP_PROTOCOL_11_STR);
+const mk_ptr_t mk_monkey_protocol = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 
 void mk_thread_keys_init(void)
 {
@@ -72,7 +72,7 @@ void mk_thread_keys_init(void)
 #ifndef SHAREDLIB
 static void mk_version(void)
 {
-    printf("Monkey HTTP Daemon %i.%i.%i\n",
+    printf("Monkey HTTP Server v%i.%i.%i\n",
            __MONKEY__, __MONKEY_MINOR__, __MONKEY_PATCHLEVEL__);
     printf("Built : %s (%s %i.%i.%i)\n",
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
@@ -104,15 +104,18 @@ static void mk_help(int rc)
     printf("  -s, --serverconf=FILE\t\t\tspecify main server configuration file\n");
     printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
     printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
+    printf("  -o, --one-shot=DIR\t\t\tone-shot, serve a single directory\n");
     printf("  -w, --workers=N\t\t\tset number of workers (override config)\n");
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
     printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
-    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n");
+    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n\n");
+
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -b, --build\t\tprint build information\n");
-    printf("  -v, --version\t\tshow version number\n");
-    printf("  -h, --help\t\tprint this help\n\n");
+    printf("  -b, --build\t\t\tprint build information\n");
+    printf("  -v, --version\t\t\tshow version number\n");
+    printf("  -h, --help\t\t\tprint this help\n\n");
+
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  http://monkey-project.com/documentation\n\n");
 
@@ -126,6 +129,7 @@ int main(int argc, char **argv)
     int port_override = -1;
     int workers_override = -1;
     int run_daemon = 0;
+    char *one_shot = NULL;
     char *path_config = NULL;
     char *server_conf_file = NULL;
     char *plugin_load_conf_file = NULL;
@@ -139,6 +143,7 @@ int main(int argc, char **argv)
         { "build",                  no_argument,        NULL, 'b' },
         { "daemon",                 no_argument,        NULL, 'D' },
         { "port",                   required_argument,  NULL, 'p' },
+        { "one-shot",               required_argument,  NULL, 'o' },
         { "workers",                required_argument,  NULL, 'w' },
         { "version",                no_argument,        NULL, 'v' },
         { "help",                   no_argument,        NULL, 'h' },
@@ -149,7 +154,7 @@ int main(int argc, char **argv)
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:o:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -164,6 +169,9 @@ int main(int argc, char **argv)
             break;
         case 'p':
             port_override = atoi(optarg);
+            break;
+        case 'o':
+            one_shot = optarg;
             break;
         case 'w':
             workers_override = atoi(optarg);
@@ -194,7 +202,6 @@ int main(int argc, char **argv)
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));
 
-
     /* Init Kernel version data */
     mk_kernel_init();
     mk_kernel_features();
@@ -215,10 +222,12 @@ int main(int argc, char **argv)
         config->server_conf_file = server_conf_file;
     }
 
-    if (run_daemon)
+    if (run_daemon) {
         config->is_daemon = MK_TRUE;
-    else
+    }
+    else {
         config->is_daemon = MK_FALSE;
+    }
 
     if (!mimes_conf_file) {
         config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
@@ -247,6 +256,9 @@ int main(int argc, char **argv)
     else {
         config->plugins_conf_dir = plugins_conf_dir;
     }
+
+    /* one shot */
+    config->one_shot = one_shot;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);
@@ -306,7 +318,7 @@ int main(int argc, char **argv)
     mk_utils_register_pid();
 
     /* Workers: logger and clock */
-    mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
+    mk_clock_tid = mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
 
     /* Init mk pointers */
     mk_mem_pointers_init();

@@ -29,7 +29,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 MONKEY_PLUGIN("liana",         /* shortname */
               "Liana Network", /* name */

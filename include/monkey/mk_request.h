@@ -265,6 +265,7 @@ struct client_session
     /* red-black tree head */
     struct rb_node _rb_head;
     struct mk_list request_list;
+    struct mk_list request_incomplete;
 
     time_t init_time;
 
@@ -286,6 +287,7 @@ struct handler
     struct handler *next;
 };
 
+void mk_request_free(struct session_request *sr);
 int mk_request_header_toc_parse(struct headers_toc *toc, const char *data, int len);
 mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int flen);
 mk_ptr_t mk_request_header_get(struct headers_toc *toc,

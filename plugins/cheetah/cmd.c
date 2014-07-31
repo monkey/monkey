@@ -25,7 +25,7 @@
 #include <pwd.h>
 #include <ctype.h>
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 #include "cheetah.h"
 #include "cutils.h"
 #include "cmd.h"

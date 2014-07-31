@@ -23,7 +23,7 @@
 #include <sys/un.h> /* sockaddr_un */
 #include <regex.h>  /* regex_t, regcomp */
 
-#include "MKPlugin.h"
+#include <monkey/mk_api.h>
 
 #include "dbg.h"
 #include "fcgi_config.h"

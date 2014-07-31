@@ -32,18 +32,19 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include "monkey.h"
-#include "mk_kernel.h"
-#include "mk_config.h"
-#include "mk_string.h"
-#include "mk_utils.h"
-#include "mk_mimetype.h"
-#include "mk_info.h"
-#include "mk_memory.h"
-#include "mk_server.h"
-#include "mk_plugin.h"
-#include "mk_macros.h"
-#include "mk_vhost.h"
+#include <monkey/monkey.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_string.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_mimetype.h>
+#include <monkey/mk_info.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_macros.h>
+#include <monkey/mk_vhost.h>
+#include <monkey/mk_mimetype.h>
 
 struct server_config *config;
 gid_t EGID;
@@ -307,10 +308,11 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
-#ifdef SAFE_FREE
 void mk_config_free_all()
 {
     mk_vhost_free_all();
+    mk_mimetype_free_all();
+
     if (config->config) mk_config_free(config->config);
 
     if (config->serverconf) mk_mem_free(config->serverconf);
@@ -325,10 +327,11 @@ void mk_config_free_all()
 
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
-    if (config->server_software.len) mk_ptr_t_free(&config->server_software);
+
+    mk_ptr_free(&config->server_software);
+    mk_mem_free(config->plugins);
     mk_mem_free(config);
 }
-#endif
 
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
 {
@@ -394,6 +397,7 @@ static void mk_config_print_error_msg(char *variable, char *path)
 {
     mk_err("Error in %s variable under %s, has an invalid value",
            variable, path);
+    mk_mem_free(path);
     exit(EXIT_FAILURE);
 }
 
@@ -414,9 +418,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     mk_string_build(&tmp, &len, "%s/%s", path_conf, file_conf);
-
     cnf = mk_config_create(tmp);
     if (!cnf) {
+        mk_mem_free(tmp);
         mk_err("Cannot read '%s'", config->server_conf_file);
         exit(EXIT_FAILURE);
     }
@@ -551,20 +555,28 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                        MK_CONFIG_VAL_STR);
 
     /* Default Mimetype */
+    mk_mem_free(tmp);
     tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
     if (!tmp) {
         config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     }
     else {
         mk_string_build(&config->default_mimetype, &len, "%s\r\n", tmp);
-        mk_mem_free(tmp);
     }
 
     /* File Descriptor Table (FDT) */
     config->fdt = (size_t) mk_config_section_getval(section,
                                                     "FDT",
                                                     MK_CONFIG_VAL_BOOL);
-    mk_vhost_init(path_conf);
+
+    if (!config->one_shot) {
+        mk_vhost_init(path_conf);
+    }
+    else {
+        mk_vhost_set_single(config->one_shot);
+    }
+
+    mk_mem_free(tmp);
 }
 
 /* read main configuration from monkey.conf */
@@ -578,7 +590,7 @@ void mk_config_start_configure(void)
     /* Load mimes */
     mk_mimetype_read_config();
 
-    mk_ptr_t_reset(&config->server_software);
+    mk_ptr_reset(&config->server_software);
 
     /* Basic server information */
     if (config->hideversion == MK_FALSE) {

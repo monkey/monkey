@@ -17,34 +17,23 @@
  *  limitations under the License.
  */
 
-#include "mk_memory.h"
-#include "mk_list.h"
-#include "mk_rbtree.h"
+#ifndef MK_CACHE_H
+#define MK_CACHE_H
 
-#ifndef MK_MIMETYPE_H
-#define MK_MIMETYPE_H
+extern pthread_key_t mk_cache_iov_header;
+extern pthread_key_t mk_cache_header_lm;
+extern pthread_key_t mk_cache_header_cl;
+extern pthread_key_t mk_cache_header_ka;
+extern pthread_key_t mk_cache_header_ka_max;
+extern pthread_key_t mk_cache_utils_gmtime;
+extern pthread_key_t mk_cache_utils_gmt_text;
 
-#define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
-#define MIMETYPE_DEFAULT_NAME "default"
+void mk_cache_worker_init();
+void mk_cache_worker_exit();
 
-struct mimetype
+static inline void *mk_cache_get(pthread_key_t key)
 {
-    const char *name;
-    mk_ptr_t type;
-
-    struct mk_list _head;
-    struct rb_node _rb_head;
-};
-
-/* Head for RBT */
-struct mk_list mimetype_list;
-struct rb_root mimetype_rb_head;
-
-extern struct mimetype *mimetype_default;
-
-int mk_mimetype_add(char *name, const char *type);
-void mk_mimetype_read_config(void);
-struct mimetype *mk_mimetype_find(mk_ptr_t * filename);
-struct mimetype *mk_mimetype_lookup(char *name);
+    return pthread_getspecific(key);
+}
 
 #endif

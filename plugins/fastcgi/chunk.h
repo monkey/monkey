@@ -2,8 +2,7 @@
 #define _CHUNK_H_
 
 #include <stdint.h>
-
-#include "mk_list.h"
+#include <monkey/mk_list.h>
 
 /**
  * struct chunk - Contains a chunk of data.
@@ -51,7 +50,7 @@ enum chunk_ref_type {
 };
 
 /**
- * union chunk_ref_union - A data union for struct chunk_ref. 
+ * union chunk_ref_union - A data union for struct chunk_ref.
  */
 union chunk_ref_union {
 	struct chunk *chunk;
