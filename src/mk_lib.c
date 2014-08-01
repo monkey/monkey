@@ -216,7 +216,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
         host->documentroot.len = sizeof("/dev/null") - 1;
     }
 
-    config->server_software.data = "";
+    config->server_software.data = mk_string_dup("");
     config->server_software.len = 0;
     config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
@@ -568,7 +568,6 @@ int mklib_stop(mklib_ctx ctx)
 
     mk_plugin_exit_all();
     mk_config_free_all();
-    free(config);
     free(ctx->workers);
     free(ctx);
 
