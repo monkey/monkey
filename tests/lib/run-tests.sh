@@ -8,8 +8,8 @@ YELLOW="$(echo -e '\033[0;33m')"
 RED="$(echo -e '\033[1;31m')"
 NORMAL="$(echo -e '\033[0;39m')"
 
-CFLAGS="$CFLAGS -I ../../src/include/public"
-LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread"
+CFLAGS="$CFLAGS -I ../../include/monkey"
+LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread -lpython2.7"
 
 [ -z "$CC" ] && CC=gcc
 
@@ -73,7 +73,7 @@ for src in $tests; do
 done
 
 # Remove the PCH
-rm ../../src/include/public/libmonkey.h.gch
+rm ../../include/monkey/libmonkey.h.gch
 
 echo
 
