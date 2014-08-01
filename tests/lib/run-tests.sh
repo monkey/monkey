@@ -25,7 +25,7 @@ fi
 
 
 # Precompile the header for faster builds
-$CC ../../src/include/public/libmonkey.h
+$CC ../../include/monkey/libmonkey.h
 
 success=0
 fail=0
