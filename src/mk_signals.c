@@ -101,13 +101,9 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
 #endif
         mk_err("%s (%d), code=%d, addr=%p",
                strsignal(signo), signo, si->si_code, si->si_addr);
-
-        struct sched_list_node *sched;
-        sched = mk_sched_get_thread_conf();
-        printf("sched=%p\n", sched);
         //close(sched->server_fd);
-        pthread_exit(NULL);
-        //abort();
+        //pthread_exit(NULL);
+        abort();
     default:
         /* let the kernel handle it */
         kill(getpid(), signo);
