@@ -329,30 +329,65 @@ int mk_string_trim(char **str)
     return 0;
 }
 
-int mk_string_itop(int value, mk_pointer *p)
+uint32_t digits10(uint64_t v) 
 {
-    char aux;
-    char *wstr = p->data;
-    char *begin, *end;
-    unsigned int uvalue = (value < 0) ? -value : value;
+    if (v < 10) return 1;
+    if (v < 100) return 2;
+    if (v < 1000) return 3;
+    if (v < 1000000000000UL) {
+        if (v < 100000000UL) {
+            if (v < 1000000) {
+                if (v < 10000) return 4;
+                return 5 + (v >= 100000);
+            }
+            return 7 + (v >= 10000000UL);
+        }
+        if (v < 10000000000UL) {
+            return 9 + (v >= 1000000000UL);
+        }
+        return 11 + (v >= 100000000000UL);
+    }
+    return 12 + digits10(v / 1000000000000UL);
+}
 
-    do *wstr++ = (char)(48 + (uvalue % 10)); while(uvalue /= 10);
-    if (value < 0) *wstr++ = '-';
-    *wstr='\0';
+int mk_string_itop(uint64_t value, mk_ptr_t *p)
+{
+    static const char digits[201] =
+        "0001020304050607080910111213141516171819"
+        "2021222324252627282930313233343536373839"
+        "4041424344454647484950515253545556575859"
+        "6061626364656667686970717273747576777879"
+        "8081828384858687888990919293949596979899";
 
-    begin = p->data;
-    end = wstr - 1;
+    uint32_t const length = digits10(value);
+    uint32_t next = length - 1;
+    char *dst = p->data;
 
-    while (end > begin) {
-        aux = *end, *end-- = *begin, *begin++ = aux;
+    while (value >= 100) {
+        int const i = (value % 100) * 2;
+        value /= 100;
+        dst[next] = digits[i + 1];
+        dst[next - 1] = digits[i];
+        next -= 2;
     }
 
-    *wstr++ = '\r';
-    *wstr++ = '\n';
-    *wstr++ = '\0';
+    /* Handle last 1-2 digits */
+    if (value < 10) {
+        dst[next] = '0' + (uint32_t) value;
+    }
+    else {
+        int i = (uint32_t) value * 2;
+        dst[next] = digits[i + 1];
+        dst[next - 1] = digits[i];
+    }
 
-    p->len = (wstr - p->data - 1);
-    return 0;
+    dst = p->data + length;
+    *dst++ = '\r';
+    *dst++ = '\n';
+    *dst++ = '\0';
+
+    p->len = (dst - p->data - 1);
+    return p->len;
 }
 
 /* Return a buffer with a new string from string */
