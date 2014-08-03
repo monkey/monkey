@@ -19,3 +19,4 @@ plugins.conf
 plugins.list
 plugins/Make.common
 plugins/auth/mk_passwd
+lib/python/monkey.c
