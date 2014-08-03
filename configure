@@ -1330,6 +1330,26 @@ if test -z "$CC" ; then
 	fi
 fi
 
+# Check dependencies for building the
+# python library if --python was passed
+
+if [ $mk_python == 1 ]; then
+    INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
+    if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
+        echo
+        echo
+        echo "Please install python development files for building the monkey python module"
+        exit 1
+    fi
+    cython_path=`which cython`
+    if ! test -x "$cython_path"; then
+        echo
+        echo
+        echo "Please install cython for building the monkey python module"
+        exit 1
+    fi
+fi
+
 # STRIP support have been removed, just keep this
 # variable for future changes or changes.
 if test -z "$STRIP" ; then
