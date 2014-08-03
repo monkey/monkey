@@ -557,7 +557,7 @@ int mklib_stop(mklib_ctx ctx)
     if (!ctx || !ctx->lib_running) return MKLIB_FALSE;
 
     ctx->lib_running = 0;
-    pthread_cancel(ctx->tid);
+    //pthread_cancel(ctx->tid);
 
     int i;
     for (i = 0; i < config->workers; i++) {

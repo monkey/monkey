@@ -5,14 +5,24 @@ cdef:
     void *c_cb_data_fn
     void *c_cb_urlcheck_fn
     void *c_cb_close_fn
-    monkey.mklib_ctx _server
+    monkey.mklib_ctx _server = NULL
 
-class Mimetype:
+
+cdef class Mimetype:
+    """
+    Store a name, type pair representing a mime
+    """
     def __init__(self):
         self.name = ''
         self.type = ''
 
+
 cdef class Worker:
+    """
+    Store information about a monkey worker thread.
+
+    Call print_info to print the information.
+    """
     cdef:
         mklib_worker_info *_worker
         unsigned long long accepted_connections
@@ -25,15 +35,21 @@ cdef class Worker:
     cdef _set(self, mklib_worker_info *worker):
         self._worker = worker
     def print_info(self):
+        """
+        Print current worker associated information.
+        """
         monkey.mklib_print_worker_info(self._worker)
+
 
 cdef int c_cb_ipcheck(char *ip) with gil:
     func = <object> c_cb_ipcheck_fn
     return func(ip)
 
+
 cdef int c_cb_urlcheck(char *ip) with gil:
     func = <object> c_cb_urlcheck_fn
     return func(ip)
+
 
 cdef int c_cb_data(mklib_session *session, char *vhost, char *url, char *get, unsigned long get_len, char *post, unsigned long post_len, unsigned int *status, char **content, unsigned long *clen, char *header) with gil:
     py_vhost = None if url == NULL else vhost
@@ -47,17 +63,29 @@ cdef int c_cb_data(mklib_session *session, char *vhost, char *url, char *get, un
         content[0] = ret['content']
     if 'status' in ret:
         status[0] = ret['status']
-    if 'clen' in ret:
-        clen[0] = ret['clen']
+    if 'content_len' in ret:
+        clen[0] = ret['content_len']
     return ret['return']
+
 
 cdef int c_cb_close(mklib_session *session) with gil:
     func = <object> c_cb_close_fn
     return func()
 
-def init(address, int port, int plugins, documentroot):
+
+def init(address=None, int port=0, int plugins=0, documentroot=None):
+    """
+    Initialize the monkey server.
+
+    Keyword arguments:
+    address -- address to bind the server (default localhost)
+    port -- listen on this port (default 0 - specified in configuration file)
+    plugins -- plugins to load
+    documentroot -- the directory to serve
+
+    Return True if no error occured, else False.
+    """
     global _server
-    _server = NULL
     if address is None:
         if documentroot is None:
             _server = monkey.mklib_init(NULL, port, plugins, NULL)
@@ -72,13 +100,47 @@ def init(address, int port, int plugins, documentroot):
         return False
     return True
 
+
 def start():
-    return monkey.mklib_start(_server)
+    """
+    Start the monkey server.
+
+    Return True if no error occured, else False.
+    """
+
+    return <bint>monkey.mklib_start(_server)
+
 
 def stop():
-    return monkey.mklib_stop(_server)
+    """
+    Stop the monkey server.
+
+    Return True if no error occured, else False.
+    """
+
+    return <bint>monkey.mklib_stop(_server)
+
 
 def configure(**args):
+    """
+    Configure the monkey server. Call before starting the server.
+
+    Keyword arguments:
+    workers -- number of worker threads
+    timeout
+    userdir
+    indexfile -- the default index.html
+    hideversion
+    resume
+    keepalive
+    keepalive_timeout
+    max_keepalive_request
+    max_request_size
+    symlink -- whether enable support for symlinks
+    default_mimetype
+
+    Return True if configuration succeeded, else False.
+    """
     cdef:
         int integer, ret = 0
         char *string
@@ -121,7 +183,11 @@ def configure(**args):
             ret |= mklib_config(_server, MKC_DEFAULTMIMETYPE, string, NULL)
     return ret
 
+
 def getconfig():
+    """
+    Return the current server configuration as a dictionary.
+    """
     cdef:
         int workers, timeout, resume, keepalive, keepalive_timeout, max_keepalive_request, max_request_size, symlink
         char userdir[1024]
@@ -138,9 +204,14 @@ def getconfig():
     ret['max_request_size'] = max_request_size
     ret['symlink'] = symlink
     ret['default_mimetype'] = default_mimetype
+
     return ret
 
+
 def mimetype_list():
+    """
+    Return a list of mimetypes.
+    """
     cdef:
         mklib_mime **mimetypes
         int i = 0
@@ -154,31 +225,84 @@ def mimetype_list():
         i += 1
     return ret
 
+
 def mimetype_add(char *name, char *type):
+    """
+    Add a new mimetype.
+
+    Arguments:
+    name -- name of the mimetype
+    type -- type of the mimetype
+
+    Return True on success, False otherwise.
+    """
     return mklib_mimetype_add(_server, name, type)
 
-def set_callback(cb, f):
-    if cb == 'data':
+
+def set_callback(callback, func):
+    """
+    Set a user defined callback.
+
+    Arguments:
+    callback -- type of the callback
+    func -- function passed as a callback
+
+    Available callbacks:
+    callback = 'ip'
+        Called before a new client connection
+        Function signature:
+        def ipch(ip):
+
+        Return True/False
+
+    callback = 'url'
+        Called before a new client connection
+        Function signature:
+        def urlcb(url):
+
+        Return True/False
+
+    callback = 'data'
+        Called on a get/post request
+        Function signature:
+        def datacb(vhost, url, get, get_len, post, post_len, header)
+
+        Example return value: {'return': 1', 'content': html content,
+            'content_len': length of set html content}
+
+    callback = 'close'
+        Called on closing connection
+        Function signature:
+
+        def closecb():
+
+    Return True on success, False otherwise.
+    """
+
+    if callback == 'data':
         global c_cb_data_fn
-        c_cb_data_fn = <void *> f
+        c_cb_data_fn = <void *> func
         return mklib_callback_set(_server, MKCB_DATA, <void *> c_cb_data)
-    if cb == 'ip':
+    if callback == 'ip':
         global c_cb_ipcheck_fn
-        c_cb_ipcheck_fn = <void *> f
+        c_cb_ipcheck_fn = <void *> func
         return mklib_callback_set(_server, MKCB_IPCHECK, <void *> c_cb_ipcheck)
-    if cb == 'url':
+    if callback == 'url':
         global c_cb_urlcheck_fn
-        c_cb_urlcheck_fn = <void *> f
+        c_cb_urlcheck_fn = <void *> func
         return mklib_callback_set(_server, MKCB_URLCHECK, <void *> c_cb_urlcheck)
-    if cb == 'close':
+    if callback == 'close':
         global c_cb_close_fn
-        c_cb_close_fn = <void *> f
+        c_cb_close_fn = <void *> func
         return mklib_callback_set(_server, MKCB_CLOSE, <void *> c_cb_close)
 
+
 def scheduler_workers_info():
+    """
+    Return a list of workers
+    """
     cdef:
         mklib_worker_info **workers
-        #mklib_worker_info
         int i = 0
     ret = []
     workers = monkey.mklib_scheduler_worker_info(_server)
