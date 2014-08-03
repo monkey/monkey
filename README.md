@@ -32,7 +32,6 @@ Monkey is an open organization so we want to hear about you, we continue growing
 - Mailing list: http://lists.monkey-project.com
 - IRC: irc.freenode.net #monkey
 - Twitter: http://www.twitter.com/monkeywebserver
-- Identica: http://identi.ca/group/monkey
 - Linkedin: http://www.linkedin.com/groups/Monkey-HTTP-Daemon-3211216
 - Freecode: http://freecode.com/projects/monkey (R.I.P)
 
