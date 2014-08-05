@@ -230,7 +230,7 @@ static int mk_epoll_timeout_set(int efd, int exp)
     int ret;
     int timer_fd;
     struct itimerspec its;
-    struct epoll_event event;
+    struct epoll_event event = {0, {0}};
 
     /* expiration interval */
     its.it_interval.tv_sec  = exp;
