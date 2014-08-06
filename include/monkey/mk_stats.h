@@ -64,8 +64,8 @@ static inline long long stats_current_time()
 
 #else
 
-#define STATS_COUNTER_START(sched_list_node, func_name)
-#define STATS_COUNTER_STOP(sched_list_node, func_name)
+#define STATS_COUNTER_START(func_name)
+#define STATS_COUNTER_STOP(func_name)
 
 #endif
 

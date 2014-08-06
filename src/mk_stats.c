@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include <dlfcn.h>
-#include "mk_stats.h"
+#include <monkey/mk_stats.h>
 
 struct client_session;
 struct sched_list_node;
@@ -55,7 +54,7 @@ __thread struct stats *stats;
 __attribute__((constructor))
 void stats_init(void)
 {
-    monkey_so = dlopen("libmonkey.so", RTLD_NOW); //TODO NOW
+    monkey_so = dlopen("libmonkey.so", RTLD_LAZY);
 #if defined(STATS_ALL) || defined(MK_SESSION_CREATE)
     *(void **) (&__mk_session_create) = dlsym(monkey_so, "mk_session_create");
 #endif
