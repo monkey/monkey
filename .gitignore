@@ -20,3 +20,6 @@ plugins.list
 plugins/Make.common
 plugins/auth/mk_passwd
 lib/python/monkey.c
+lib/python/bin/*
+lib/python/conf/*
+lib/python/jemalloc.config
