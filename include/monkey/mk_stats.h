@@ -26,6 +26,8 @@
 
 struct stats
 {
+    /* [0] -> times called
+     * [1] -> total time spend in nanoseconds */
     long long mk_session_create[2];
     long long mk_session_get[2];
     long long mk_http_method_get[2];

@@ -682,10 +682,10 @@ $SONAME: \$(LIBOBJ)
 \$(LIBOBJ): \$(OBJ)
 
 libstats.so: mk_stats.o
-	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared
+	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared -ldl
 
 mk_stats.o: mk_stats.c
-	\$(CC_QUIET) -c -fPIC $^ -o \$@ -I\$(INCDIR) -ldl
+	\$(CC_QUIET) -c -fPIC $^ -o \$@ \$(CFLAGS) \$(DEFS) -I\$(INCDIR) -ldl
 
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so libstats.so *.lo
