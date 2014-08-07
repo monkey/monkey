@@ -8,5 +8,5 @@ monkey.init(None, 0, 0, '/tmp/')
 monkey.configure(indexfile='index.html')
 
 monkey.start()
-raw_input()
+raw_input("Press enter to stop the server...")
 monkey.stop()

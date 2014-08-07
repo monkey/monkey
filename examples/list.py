@@ -20,5 +20,5 @@ def list_cb(vhost, url, get, get_len, post, post_len, header):
 monkey.init(None, 0, 0, None)
 monkey.set_callback('data', list_cb)
 monkey.start()
-raw_input()
+raw_input("Press enter to stop the server...")
 monkey.stop()
