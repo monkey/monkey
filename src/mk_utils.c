@@ -272,7 +272,7 @@ char *mk_utils_url_decode(mk_ptr_t uri)
 
     i = tmp;
 
-    buf = mk_mem_malloc_z(uri.len);
+    buf = mk_mem_malloc_z(uri.len + 1);
 
     if (i > 0) {
         strncpy(buf, uri.data, i);
