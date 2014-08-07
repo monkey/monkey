@@ -34,6 +34,7 @@
 #define MK_SCHEDULER_CONN_PROCESS     1
 #define MK_SCHEDULER_SIGNAL_DEADBEEF  0xDEADBEEF
 #define MK_SCHEDULER_SIGNAL_FREE_ALL  0xFFEE0000
+
 /*
  * Scheduler balancing mode:
  *
@@ -41,7 +42,7 @@
  *   new connections, lookup the less loaded thread and
  *   assign the socket to that specific epoll queue.
  *
- * - ReusePort: Use new Linux Kernel 3.14 feature that
+ * - ReusePort: Use new Linux Kernel 3.9 feature that
  *   allows thread to share binded address on a lister
  *   socket. We let the Kernel to decide how to balance.
  */
