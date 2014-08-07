@@ -632,6 +632,10 @@ create_makefile2()
 		alltarget="../bin/monkey"
 	fi
 
+    if [ $mk_stats == 1 ]; then
+        alltarget="$alltarget libstats"
+    fi
+
         if [ $malloc_jemalloc -eq 1 ]; then
                 extra="../deps/jemalloc/lib/libjemalloc.a"
                 extraso="-Wl,--whole-archive ../deps/jemalloc/lib/libjemalloc_pic.a -Wl,--no-whole-archive"
@@ -664,6 +668,8 @@ all: $alltarget
 
 lib: $SONAME
 
+libstats: libstats.so
+
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
@@ -675,8 +681,14 @@ $SONAME: \$(LIBOBJ)
 
 \$(LIBOBJ): \$(OBJ)
 
+libstats.so: mk_stats.o
+	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared
+
+mk_stats.o: mk_stats.c
+	\$(CC_QUIET) -c -fPIC $^ -o \$@ -I\$(INCDIR) -ldl
+
 clean:
-	rm -rf *.[od] $SONAME libmonkey.so *.lo
+	rm -rf *.[od] $SONAME libmonkey.so libstats.so *.lo
 	rm -rf ../bin/monkey
 
 distclean:
@@ -1081,6 +1093,10 @@ malloc_jemalloc=1
 
 # python bindings
 mk_python=0
+
+# stats
+mk_stats=0
+
 PYTHONVERSION=`python -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
 
 # polarssl
