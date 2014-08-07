@@ -102,7 +102,10 @@ void stats_init(void)
 __attribute__((destructor))
 void stats_fini(void)
 {
+    if (monkey_so == NULL)
+        return;
     dlclose(monkey_so);
+    monkey_so = NULL;
 }
 
 #if defined(STATS_ALL) || defined(MK_SESSION_CREATE)
