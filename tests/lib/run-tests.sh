@@ -9,7 +9,7 @@ RED="$(echo -e '\033[1;31m')"
 NORMAL="$(echo -e '\033[0;39m')"
 
 CFLAGS="$CFLAGS -I ../../include/monkey"
-LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread -lpython2.7"
+LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread"
 
 [ -z "$CC" ] && CC=gcc
 
