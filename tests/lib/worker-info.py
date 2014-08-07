@@ -10,7 +10,7 @@ def datacb(vhost, url, get, get_len, post, post_len, header):
     ret = {}
     ret['return'] = 1
     ret['content'] = content
-    ret['clen'] = len(content)
+    ret['content_len'] = len(content)
     return ret
 
 class WorkerThread(threading.Thread):

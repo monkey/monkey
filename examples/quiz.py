@@ -275,7 +275,7 @@ def listf(vhost, url, get, get_len, post, post_len, header):
     ret = {}
     if url == '/image.png':
         ret['content'] = image
-        ret['clen'] = len(ret['content'])
+        ret['content_len'] = len(ret['content'])
         ret['return'] = 1
         return ret
     if post is None:
@@ -286,7 +286,7 @@ def listf(vhost, url, get, get_len, post, post_len, header):
         wrong()
 
     ret['content'] = content
-    ret['clen'] = len(ret['content'])
+    ret['content_len'] = len(ret['content'])
     ret['return'] = 1
 
     return ret

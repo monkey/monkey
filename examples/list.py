@@ -13,7 +13,7 @@ def list_cb(vhost, url, get, get_len, post, post_len, header):
     ret = {}
     ret['return'] = 1
     ret['content'] = content
-    ret['clen'] = len(ret['content'])
+    ret['content_len'] = len(ret['content'])
 
     return ret
 
