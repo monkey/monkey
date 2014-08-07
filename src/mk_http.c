@@ -686,6 +686,15 @@ int mk_http_keepalive_check(struct client_session *cs)
     return 0;
 }
 
+static inline void mk_http_status_completed(struct client_session *cs)
+{
+    cs->status = MK_REQUEST_STATUS_COMPLETED;
+
+    if (mk_list_is_set(&cs->request_incomplete) == 0) {
+        mk_list_del(&cs->request_incomplete);
+    }
+}
+
 /*
  * Check if the client request still has pending data.
  *
@@ -711,7 +720,8 @@ int mk_http_pending_request(struct client_session *cs)
         if (strncmp(end, mk_endblock.data, mk_endblock.len) == 0) {
             cs->body_pos_end = cs->body_length - mk_endblock.len;
         }
-        else if ((n = mk_string_search(cs->body, mk_endblock.data, MK_STR_SENSITIVE)) >= 0 ){
+        else if ((n = mk_string_search(cs->body, mk_endblock.data,
+                                       MK_STR_SENSITIVE)) >= 0 ) {
             cs->body_pos_end = n;
         }
         else {
@@ -723,7 +733,9 @@ int mk_http_pending_request(struct client_session *cs)
         cs->first_method = mk_http_method_get(cs->body);
     }
 
-    if (cs->first_method == MK_HTTP_METHOD_POST || cs->first_method == MK_HTTP_METHOD_PUT) {
+    if (cs->first_method == MK_HTTP_METHOD_POST ||
+        cs->first_method == MK_HTTP_METHOD_PUT) {
+
         if (cs->body_pos_end > 0) {
             int content_length;
             int current;
@@ -748,8 +760,7 @@ int mk_http_pending_request(struct client_session *cs)
                  * later
                  */
                 if (content_length <= 0) {
-                    cs->status = MK_REQUEST_STATUS_COMPLETED;
-                    mk_list_del(&cs->request_incomplete);
+                    mk_http_status_completed(cs);
                     return 0;
                 }
                 else {
@@ -761,8 +772,7 @@ int mk_http_pending_request(struct client_session *cs)
                     return -1;
                 }
                 else {
-                    cs->status = MK_REQUEST_STATUS_COMPLETED;
-                    mk_list_del(&cs->request_incomplete);
+                    mk_http_status_completed(cs);
                     return 0;
                 }
             }
@@ -772,8 +782,7 @@ int mk_http_pending_request(struct client_session *cs)
         }
     }
 
-    cs->status = MK_REQUEST_STATUS_COMPLETED;
-    mk_list_del(&cs->request_incomplete);
+    mk_http_status_completed(cs);
     return 0;
 }
 

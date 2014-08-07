@@ -531,6 +531,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Init epoll_wait() loop */
     mk_epoll_init(thinfo->server_fd, thinfo->epoll_fd, epoll_max_events);
+    pthread_exit(0);
     return 0;
 }
 
