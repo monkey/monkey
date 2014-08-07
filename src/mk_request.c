@@ -766,7 +766,7 @@ mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int fle
         entry = mk_list_entry(head, struct mk_string_line, _head);
         len = snprintf(file_aux, flen, "%s%s", pathfile, entry->val);
         if (mk_unlikely(len > flen)) {
-            len = flen;
+            len = flen - 1;
             mk_warn("Path too long, truncated! '%s'", file_aux);
         }
 
