@@ -657,20 +657,20 @@ void mklib_print_worker_info(struct mklib_worker_info *mwi UNUSED_PARAM)
 #ifdef STATS
     struct stats *stats = mwi->stats;
     printf("Stat info for worker: %d\n", mwi->pid);
-    printf("mk_session_create %lld:%lld\n", stats->mk_session_create[0], stats->mk_session_create[1]);
-    printf("mk_session_get %lld:%lld\n", stats->mk_session_get[0], stats->mk_session_get[1]);
-    printf("mk_http_method_get %lld:%lld\n", stats->mk_http_method_get[0], stats->mk_http_method_get[1]);
-    printf("mk_http_request_end %lld:%lld\n", stats->mk_http_request_end[0], stats->mk_http_request_end[1]);
-    printf("mk_http_range_parse %lld:%lld\n", stats->mk_http_range_parse[0], stats->mk_http_range_parse[1]);
-    printf("mk_http_init %lld:%lld\n", stats->mk_http_init[0], stats->mk_http_init[1]);
-    printf("mk_sched_get_connection %lld:%lld\n", stats->mk_sched_get_connection[0], stats->mk_sched_get_connection[1]);
-    printf("mk_sched_remove_client %lld:%lld\n", stats->mk_sched_remove_client[0], stats->mk_sched_remove_client[1]);
-    printf("mk_plugin_stage_run %lld:%lld\n", stats->mk_plugin_stage_run[0], stats->mk_plugin_stage_run[1]);
-    printf("mk_plugin_event_read %lld:%lld\n", stats->mk_plugin_event_read[0], stats->mk_plugin_event_read[1]);
-    printf("mk_plugin_event_write %lld:%lld\n", stats->mk_plugin_event_write[0], stats->mk_plugin_event_write[1]);
-    printf("mk_header_send %lld:%lld\n", stats->mk_header_send[0], stats->mk_header_send[1]);
-    printf("mk_conn_read %lld:%lld\n", stats->mk_conn_read[0], stats->mk_conn_read[1]);
-    printf("mk_conn_write %lld:%lld\n", stats->mk_conn_write[0], stats->mk_conn_write[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_session_create", stats->mk_session_create[0], stats->mk_session_create[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_session_get", stats->mk_session_get[0], stats->mk_session_get[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_method_get", stats->mk_http_method_get[0], stats->mk_http_method_get[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_request_end", stats->mk_http_request_end[0], stats->mk_http_request_end[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_range_parse", stats->mk_http_range_parse[0], stats->mk_http_range_parse[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_init", stats->mk_http_init[0], stats->mk_http_init[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_sched_get_connection", stats->mk_sched_get_connection[0], stats->mk_sched_get_connection[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_sched_remove_client", stats->mk_sched_remove_client[0], stats->mk_sched_remove_client[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_stage_run", stats->mk_plugin_stage_run[0], stats->mk_plugin_stage_run[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_event_read", stats->mk_plugin_event_read[0], stats->mk_plugin_event_read[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_event_write", stats->mk_plugin_event_write[0], stats->mk_plugin_event_write[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_header_send", stats->mk_header_send[0], stats->mk_header_send[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_conn_read", stats->mk_conn_read[0], stats->mk_conn_read[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_conn_write", stats->mk_conn_write[0], stats->mk_conn_write[1]);
     printf("\n");
 #else
     printf("Stat info for worker: %d\n", mwi->pid);
