@@ -221,7 +221,7 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Query String */
-    query_init = mk_string_char_search(sr->body.data + uri_init, '?', prot_init);
+    query_init = mk_string_char_search(sr->body.data + uri_init, '?', prot_init - uri_init);
     if (query_init > 0) {
         int init, end;
 
