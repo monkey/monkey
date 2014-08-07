@@ -23,6 +23,12 @@ if [ ! -f ../../src/libmonkey.so ]; then
 	exit
 fi
 
+# Check liana plugin is in place
+if [ ! -f ../../plugins/liana/monkey-liana.so ]; then
+    echo "Please compile the liana plugin"
+    exit
+fi
+cp ../../plugins/liana/monkey-liana.so ../../plugins/monkey-liana.so
 
 # Precompile the header for faster builds
 $CC ../../include/monkey/libmonkey.h
