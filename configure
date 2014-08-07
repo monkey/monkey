@@ -1411,7 +1411,7 @@ if [ $linux_trace ]; then
 	DEFS="$DEFS -DLINUX_TRACE"
 fi
 
-if [ $mk_stats ]; then
+if [ $mk_stats == 1 ]; then
     DEFS="$DEFS -DSTATS"
 fi
 
