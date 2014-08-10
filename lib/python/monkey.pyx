@@ -181,7 +181,7 @@ def configure(**args):
         elif a == 'default_mimetype':
             string = args['default_mimetype']
             ret |= mklib_config(_server, MKC_DEFAULTMIMETYPE, string, NULL)
-    return ret
+    return <bint>ret
 
 
 def getconfig():
