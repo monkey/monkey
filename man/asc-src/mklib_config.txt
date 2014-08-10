@@ -3,7 +3,7 @@ mklib_config(3)
 
 NAME
 ----
-mklib_config - configure your libmonkey instance
+mklib_config, mklib_get_config - configure your libmonkey instance
 
 SYNOPSIS
 --------
@@ -11,9 +11,14 @@ SYNOPSIS
 
 *int mklib_config(mklib_ctx 'ctx', ...);*
 
+*int mklib_get_config(mklib_ctx 'ctx', ...);*
+
 DESCRIPTION
 -----------
 *mklib_config*() is a NULL-terminated call for configuring the libmonkey context.
+
+*get_config*() is a NULL-terminated call for retrieving the libmonkey context
+configuration.
 
 You may call it several times with different options or all at once.
 
@@ -78,10 +83,12 @@ EXAMPLE
 mklib_config(ctx, MKC_WORKERS, 3, NULL);
 `//` Set timeout and keep-alive timeout to 5s
 mklib_config(ctx, MKC_TIMEOUT, 5, MKC_KEEPALIVETIMEOUT, 5, NULL);
+`//` Get the current configured values for number of workers and timeout
+mklib_get_config(ctx, MKC_WORKERS, &nr_workers, MKC_TIMEOUT, &timeout, NULL);
 
 RETURN VALUE
 ------------
-On success, returns MKLIB_TRUE. On failure MKLIB_FALSE is returned.
+On success, both functions return MKLIB_TRUE. On failure MKLIB_FALSE is returned.
 
 SEE ALSO
 --------

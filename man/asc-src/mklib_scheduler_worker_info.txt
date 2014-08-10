@@ -3,7 +3,7 @@ mklib_scheduler_worker_info(3)
 
 NAME
 ----
-mklib_scheduler_worker_info - list all worker threads and their stats
+mklib_scheduler_worker_info, mklib_print_worker_info - list all worker threads and their stats
 
 SYNOPSIS
 --------
@@ -11,20 +11,25 @@ SYNOPSIS
 
 [verse]
 *struct mklib_worker_info {
-    unsigned long long 'active_connections';
+    unsigned long long 'accepted_connections';
+    unsigned long long 'closed_connections';
     int 'pid';
 };*
 
 *mklib_worker_info_foreach(struct mklib_worker_info *'cur', struct mklib_worker_info `**`'list')*
 
-*struct mklib_worker_info **mklib_vhost_list(mklib_ctx 'ctx');*
+*struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx 'ctx');*
+
+*void mklib_print_worker_info(struct mklib_worker_info *'mwi');*
 
 DESCRIPTION
 -----------
-*mklib_vhost_list*() returns a list of all existing worker threads.
+*mklib_scheduler_worker_info*() returns a list of all existing worker threads.
 
-The 'active_connections' member has the number of currently ongoing connections to this 
-worker.
+*mklib_print_worker_info*() print information about worker to standard output.
+
+The 'accepted_connections' and 'closed_connections' members represent statistics about the
+connections managed by this worker.
 
 The 'pid' member has the thread ID of this worker.
 
