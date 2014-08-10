@@ -544,6 +544,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* Init epoll_wait() loop */
     mk_epoll_init(thinfo->server_fd, thinfo->epoll_fd, epoll_max_events);
+    pthread_exit(0);
     return 0;
 }
 
@@ -617,6 +618,20 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
         MK_TRACE("[FD %i] Scheduler remove", remote_fd);
+
+#ifdef TRACE
+        /*
+         * This is a double check just enable on Trace mode to try to find
+         * conditions of bad API usage. When a Session is exiting, no
+         * client_session context associated to the remote_fd must exists.
+         */
+        struct client_session *cs = mk_session_get(remote_fd);
+        if (cs) {
+            mk_err("[FD %i] A client_session exists, bad API usage",
+                   remote_fd);
+            mk_session_remove(remote_fd);
+        }
+#endif
 
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);

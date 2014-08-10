@@ -76,6 +76,15 @@ static inline int mk_list_is_empty(struct mk_list *head)
     else return -1;
 }
 
+static inline int mk_list_is_set(struct mk_list *head)
+{
+    if (head->next && head->prev) {
+        return 0;
+    }
+
+    return -1;
+}
+
 static inline int mk_list_size(struct mk_list *head)
 {
     int ret = 0;
