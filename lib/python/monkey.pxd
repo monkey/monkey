@@ -1,3 +1,6 @@
+# Import declarations from libmonkey.h
+# Used for the python API implementation
+
 cdef extern from "libmonkey.h":
     cdef struct mklib_ctx_t:
         pass

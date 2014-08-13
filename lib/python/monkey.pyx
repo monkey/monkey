@@ -126,18 +126,18 @@ def configure(**args):
     Configure the monkey server. Call before starting the server.
 
     Keyword arguments:
-    workers -- number of worker threads
-    timeout
-    userdir
+    workers -- How many workers threads to spawn
+    timeout -- How many seconds to wait for a response
+    userdir -- What is the user's www space name
     indexfile -- the default index.html
-    hideversion
-    resume
-    keepalive
-    keepalive_timeout
-    max_keepalive_request
-    max_request_size
-    symlink -- whether enable support for symlinks
-    default_mimetype
+    hideversion -- Whether to hide the libmonkey version in headers and error pages
+    resume -- Whether to support resuming
+    keepalive -- Whether to support keep-alives
+    keepalive_timeout -- How many seconds to keep a keep-alive connection open
+    max_keepalive_request -- How many keep-alive requests to handle at once
+    max_request_size -- The maximum size of a request, in KiB
+    symlink -- Whether to support symbolic links
+    default_mimetype -- The default mimetype when the file has unknown extension
 
     Return True if configuration succeeded, else False.
     """
@@ -231,8 +231,8 @@ def mimetype_add(char *name, char *type):
     Add a new mimetype.
 
     Arguments:
-    name -- name of the mimetype
-    type -- type of the mimetype
+    name -- the file extension
+    type -- the mime type, e.g. "text/html"
 
     Return True on success, False otherwise.
     """
@@ -249,21 +249,26 @@ def set_callback(callback, func):
 
     Available callbacks:
     callback = 'ip'
-        Called before a new client connection
+        Called right after a new connection is established. The function receives the
+        IP in text form. Return False to drop the connection.
+
         Function signature:
         def ipch(ip):
 
         Return True/False
 
     callback = 'url'
-        Called before a new client connection
+        Called when the URL is known. Check whether the URL is valid. Return
+        False to drop the connection.
+
         Function signature:
         def urlcb(url):
 
         Return True/False
 
     callback = 'data'
-        Called on a get/post request
+        Called on a get/post request.
+
         Function signature:
         def datacb(vhost, url, get, get_len, post, post_len, header)
 
@@ -271,7 +276,8 @@ def set_callback(callback, func):
             'content_len': length of set html content}
 
     callback = 'close'
-        Called on closing connection
+        Called on closing connection.
+
         Function signature:
 
         def closecb():
