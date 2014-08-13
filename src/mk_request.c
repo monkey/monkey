@@ -246,7 +246,6 @@ static int mk_request_header_process(struct session_request *sr)
     if (mk_unlikely(prot_init == prot_end)) {
         return  -1;
     }
-
     if (prot_end != prot_init && prot_end > 0) {
         sr->protocol = mk_http_protocol_check(sr->body.data + prot_init,
                                               prot_end - prot_init);
@@ -628,11 +627,16 @@ static mk_ptr_t *mk_request_set_default_page(char *title, mk_ptr_t message,
 int mk_handler_read(int socket, struct client_session *cs)
 {
     int bytes;
+    int total_bytes = 0;
+    int max_read;
     int available = 0;
     int new_size;
+    int remain = 0;
     char *tmp = 0;
 
     MK_TRACE("MAX REQUEST SIZE: %i", config->max_request_size);
+
+ stack:
 
     available = cs->body_size - cs->body_length;
     if (available <= 0) {
@@ -671,8 +675,11 @@ int mk_handler_read(int socket, struct client_session *cs)
     }
 
     /* Read content */
-    bytes = mk_socket_read(socket, cs->body + cs->body_length,
-                           (cs->body_size - cs->body_length));
+    MK_TRACE("[FD %i] Capacity: %i bytes, Write after: %i",
+             socket, (cs->body_size - cs->body_length), cs->body_length);
+
+    max_read = (cs->body_size - cs->body_length);
+    bytes = mk_socket_read(socket, cs->body + cs->body_length, max_read);
 
     MK_TRACE("[FD %i] read %i", socket, bytes);
 
@@ -691,10 +698,25 @@ int mk_handler_read(int socket, struct client_session *cs)
     }
 
     if (bytes > 0) {
-        cs->body_length += bytes;
-        cs->body[cs->body_length] = '\0';
+        if (bytes > max_read) {
+            printf("DIFF IS: %i\n", bytes - max_read);
+
+            cs->body_length += max_read;
+            cs->body[cs->body_length] = '\0';
+            total_bytes += max_read;
+            goto stack;
+        }
+        else {
+            cs->body_length += bytes;
+            cs->body[cs->body_length] = '\0';
+
+            total_bytes += bytes;
+        }
+        printf("TOTAL BYTES= %i\n", total_bytes);
+        return total_bytes;
     }
 
+    printf("BYTES=%i\n", bytes);
     return bytes;
 }
 

@@ -731,6 +731,9 @@ int mk_http_pending_request(struct client_session *cs)
             current = cs->body_length - cs->body_pos_end - mk_endblock.len;
             content_length = mk_method_validate_content_length(cs->body, current);
 
+            MK_TRACE("BODY+LENGTH=%i - BODY_POS_END=%i - BLOCK_END_LEN=%i\n",
+                     cs->body_length, cs->body_pos_end, mk_endblock.len);
+
             MK_TRACE("HTTP DATA %i/%i", current, content_length);
 
             if (content_length >= config->max_request_size) {

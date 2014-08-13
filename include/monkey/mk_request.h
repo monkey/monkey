@@ -28,7 +28,7 @@
 #define MK_REQUEST_H
 
 /* Request buffer chunks = 4KB */
-#define MK_REQUEST_CHUNK (int) 4096
+#define MK_REQUEST_CHUNK 4096
 #define MK_REQUEST_DEFAULT_PAGE  "<HTML><HEAD><STYLE type=\"text/css\"> body {font-size: 12px;} </STYLE></HEAD><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>Powered by %s</ADDRESS></BODY></HTML>"
 
 #define MK_CRLF "\r\n"

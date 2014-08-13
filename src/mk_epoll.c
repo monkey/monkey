@@ -304,7 +304,6 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
 
             if (events[i].events & EPOLLIN) {
                 MK_LT_EPOLL(fd, "EPOLLIN");
-                MK_TRACE("[FD %i] EPoll Event READ", fd);
 
                 /* Check if we have a worker signal */
                 if (mk_unlikely(fd == sched->signal_channel)) {
@@ -332,6 +331,8 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                     }
                     continue;
                 }
+
+                MK_TRACE("[FD %i] EPoll Event READ", fd);
 
                 /* New connection under MK_SCHEDULER_REUSEPORT mode */
                 if (fd == server_fd) {
