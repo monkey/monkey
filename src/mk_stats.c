@@ -1,3 +1,42 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
+/*  Monkey HTTP Server
+ *  ==================
+ *  Copyright 2001-2014 Monkey Software LLC <eduardo@monkey.io>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+/*
+ * How to enable stats:
+ *
+ * $ export CFLAGS=-DSTATS_ALL
+ * $ ./configure --enable-shared --stats
+ *
+ * Compile Monkey (additionally to monkey core a libstats.so will be created)
+ *
+ * $ make
+ *
+ * Compile a source containing mklib_print_worker_info()
+ * calls (e.g. tests/lib/worker-info.c) and run it:
+ *
+ * $ LD_PRELOAD=/path/to/libstats.so ./worker-info
+ *
+ * For using stats selectively, you can use in the beginning:
+ *
+ * $ export CFLAGS=-DMK_CONN_READ -DMK_CONN_WRITE etc.
+ */
+
 #include <dlfcn.h>
 #include <monkey/mk_stats.h>
 
