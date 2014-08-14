@@ -114,15 +114,16 @@ static void mk_help(int rc)
 {
     printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
     printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -c, --confdir=DIR\tspecify configuration files directory\n");
-    printf("  -s, --serverconf=FILE\tspecify main server configuration file\n");
-    printf("  -D, --daemon\t\trun Monkey as daemon (background mode)\n");
-    printf("  -p, --port=PORT\tset listener TCP port (override config)\n");
-    printf("  -w, --workers=N\tset number of workers (override config)\n\n");
+    printf("  -c, --confdir=DIR\t\tspecify configuration files directory\n");
+    printf("  -s, --serverconf=FILE\t\tspecify main server configuration file\n");
+    printf("  -D, --daemon\t\t\trun Monkey as daemon (background mode)\n");
+    printf("  -p, --port=PORT\t\tset listener TCP port (override config)\n");
+    printf("  -t, --transport=TRANSPORT\tspecify transport layer (override config)\n");
+    printf("  -w, --workers=N\t\tset number of workers (override config)\n\n");
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -b, --build\t\tprint build information\n");
-    printf("  -v, --version\t\tshow version number\n");
-    printf("  -h, --help\t\tprint this help\n\n");
+    printf("  -b, --build\t\t\tprint build information\n");
+    printf("  -v, --version\t\t\tshow version number\n");
+    printf("  -h, --help\t\t\tprint this help\n\n");
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  http://monkey-project.com/documentation\n\n");
 
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
     int port_override = -1;
     int workers_override = -1;
     int run_daemon = 0;
+    char *transport_layer = NULL;
     char *path_config = NULL;
     char *server_config = NULL;
 
@@ -145,13 +147,14 @@ int main(int argc, char **argv)
         { "build",     no_argument,       NULL, 'b' },
 		{ "daemon",	   no_argument,       NULL, 'D' },
         { "port",      required_argument, NULL, 'p' },
+        { "transport", required_argument, NULL, 't' },
         { "workers",   required_argument, NULL, 'w' },
         { "version",   no_argument,       NULL, 'v' },
 		{ "help",	   no_argument,       NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:w:c:s:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:t:w:c:s:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -166,6 +169,9 @@ int main(int argc, char **argv)
             break;
         case 'p':
             port_override = atoi(optarg);
+            break;
+        case 't':
+            transport_layer = mk_string_dup(optarg);
             break;
         case 'w':
             workers_override = atoi(optarg);
@@ -183,6 +189,9 @@ int main(int argc, char **argv)
 
     /* setup basic configurations */
     config = mk_mem_malloc_z(sizeof(struct server_config));
+
+    /* Override some configuration */
+    config->transport_layer = transport_layer;
 
     /* set configuration path */
     if (!path_config) {

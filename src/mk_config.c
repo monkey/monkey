@@ -515,9 +515,11 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Transport Layer plugin */
-    config->transport_layer = mk_config_section_getval(section,
-                                                       "TransportLayer",
-                                                       MK_CONFIG_VAL_STR);
+    if (!config->transport_layer) {
+        config->transport_layer = mk_config_section_getval(section,
+                                                           "TransportLayer",
+                                                           MK_CONFIG_VAL_STR);
+    }
 
     /* Default Mimetype */
     tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
@@ -604,7 +606,6 @@ void mk_config_set_init_values(void)
      * we set default to 'http'
      */
     config->transport = MK_TRANSPORT_HTTP;
-    config->transport_layer = NULL;
 
     /* Init plugin list */
     mk_list_init(config->plugins);
