@@ -51,7 +51,7 @@
 static void mk_signal_exit()
 {
     int i;
-    int n;
+    int n = 0;
     uint64_t val;
 
     /* ignore future signals to properly handle the cleanup */
@@ -79,7 +79,7 @@ static void mk_signal_exit()
     mk_mem_free(sched_list);
     mk_clock_exit();
     mk_info("Exiting... >:(");
-    exit(EXIT_SUCCESS);
+    _exit(EXIT_SUCCESS);
 }
 
 void mk_signal_thread_sigpipe_safe()
