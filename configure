@@ -682,7 +682,7 @@ $SONAME: \$(LIBOBJ)
 \$(LIBOBJ): \$(OBJ)
 
 libstats.so: mk_stats.o
-	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared -ldl
+	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared -ldl -lrt
 
 mk_stats.o: mk_stats.c
 	\$(CC_QUIET) -c -fPIC $^ -o \$@ \$(CFLAGS) \$(DEFS) -I\$(INCDIR) -ldl
