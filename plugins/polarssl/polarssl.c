@@ -141,6 +141,18 @@ static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
 
 static pthread_key_t local_context;
 
+/*
+ * The following function is taken from PolarSSL sources to get
+ * the number of available bytes to read from a buffer.
+ *
+ * We copy this to make it inline and avoid extra context switches
+ * on each read routine.
+ */
+static inline size_t polar_get_bytes_avail(const ssl_context *ssl)
+{
+    return (ssl->in_offt == NULL ? 0 : ssl->in_msglen);
+}
+
 static struct polar_thread_context *local_thread_context(void)
 {
     return pthread_getspecific(local_context);
