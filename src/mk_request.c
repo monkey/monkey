@@ -675,8 +675,8 @@ int mk_handler_read(int socket, struct client_session *cs)
     }
 
     /* Read content */
-    bytes = mk_socket_read(socket, cs->body + cs->body_length,
-                           (cs->body_size - cs->body_length));
+    max_read = (cs->body_size - cs->body_length);
+    bytes = mk_socket_read(socket, cs->body + cs->body_length, max_read);
 
     MK_TRACE("[FD %i] read %i", socket, bytes);
 
