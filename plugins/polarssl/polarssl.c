@@ -645,12 +645,30 @@ int _mkp_network_io_buffer_size()
 
 int _mkp_network_io_read(int fd, void *buf, int count)
 {
+    size_t avail;
     ssl_context *ssl = context_get(fd);
+
     if (!ssl) {
         ssl = context_new(fd);
     }
 
     int ret =  handle_return(ssl_read(ssl, buf, count));
+    PLUGIN_TRACE("IN: %i SSL READ: %i ; CORE COUNT: %i",
+                 ssl->in_msglen,
+                 ret, count);
+
+    /* Check if the caller read less than the available data */
+    if (ret > 0) {
+        avail = polar_get_bytes_avail(ssl);
+        if (avail > 0) {
+            /*
+             * A read callback would never read in buffer more than
+             * the size specified in 'count', but it aims to return
+             * as value the total information read in the buffer plugin
+             */
+            ret += avail;
+        }
+    }
     return ret;
 }
 
