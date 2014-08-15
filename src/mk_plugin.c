@@ -206,6 +206,9 @@ struct plugin *mk_plugin_alloc(void *handler, const char *path)
     p->net_io.server = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_server");
 
+    p->net_io.buffer_size = (int (*)())
+        mk_plugin_load_symbol(handler, "_mkp_network_io_buffer_size");
+
     /* Thread key */
     p->thread_key = (pthread_key_t *) mk_plugin_load_symbol(handler,
                                                             "_mkp_data");
@@ -279,6 +282,12 @@ create socket : %p\nbind : %p\nserver : %p",
             strcmp(config->transport_layer, p->shortname) == 0) {
             plg_netiomap = &p->net_io;
             config->transport_layer_plugin = p;
+
+            /* Ask the transport layer if it's using any buffer size */
+            config->transport_buffer_size = p->net_io.buffer_size();
+            if (config->transport_buffer_size <= 0) {
+                config->transport_buffer_size = MK_REQUEST_CHUNK;
+            }
         }
     }
 

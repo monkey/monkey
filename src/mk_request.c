@@ -356,7 +356,6 @@ static int mk_request_header_process(struct session_request *sr)
         sr->keep_alive = MK_TRUE;
         sr->close_now = MK_FALSE;
     }
-
     if (sr->connection.data) {
         if (mk_string_search_n(sr->connection.data, "Keep-Alive",
                                MK_STR_INSENSITIVE, sr->connection.len) >= 0) {
@@ -631,17 +630,21 @@ static mk_ptr_t *mk_request_set_default_page(char *title, mk_ptr_t message,
 int mk_handler_read(int socket, struct client_session *cs)
 {
     int bytes;
+    int max_read;
     int available = 0;
     int new_size;
+    int total_bytes = 0;
     char *tmp = 0;
 
     MK_TRACE("MAX REQUEST SIZE: %i", config->max_request_size);
 
+ try_pending:
+
     available = cs->body_size - cs->body_length;
     if (available <= 0) {
         /* Reallocate buffer size if pending data does not have space */
-        new_size = cs->body_size + MK_REQUEST_CHUNK;
-        if (new_size >= config->max_request_size) {
+        new_size = cs->body_size + config->transport_buffer_size;
+        if (new_size > config->max_request_size) {
             MK_TRACE("Requested size is > config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
             return -1;
@@ -653,14 +656,15 @@ int mk_handler_read(int socket, struct client_session *cs)
          * body.
          */
         if (cs->body == cs->body_fixed) {
-            MK_TRACE("Fixed to dynamic");
             cs->body = mk_mem_malloc(new_size + 1);
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
-            MK_TRACE("Size: %i, Length: %i", new_size, cs->body_length);
+            MK_TRACE("[FD %i] New size: %i, length: %i",
+                     cs->socket, new_size, cs->body_length);
         }
         else {
-            MK_TRACE("Realloc from %i to %i", cs->body_size, new_size);
+            MK_TRACE("[FD %i] Realloc from %i to %i",
+                     cs->socket, cs->body_size, new_size);
             tmp = mk_mem_realloc(cs->body, new_size + 1);
             if (tmp) {
                 cs->body = tmp;
@@ -694,8 +698,26 @@ int mk_handler_read(int socket, struct client_session *cs)
     }
 
     if (bytes > 0) {
-        cs->body_length += bytes;
-        cs->body[cs->body_length] = '\0';
+        if (bytes > max_read) {
+            MK_TRACE("[FD %i] Buffer still have data: %i",
+                     cs->socket, bytes - max_read);
+
+            cs->body_length += max_read;
+            cs->body[cs->body_length] = '\0';
+            total_bytes += max_read;
+
+            goto try_pending;
+        }
+        else {
+            cs->body_length += bytes;
+            cs->body[cs->body_length] = '\0';
+
+            total_bytes += bytes;
+        }
+
+        MK_TRACE("[FD %i] Retry total bytes: %i",
+                 cs->socket, total_bytes);
+        return total_bytes;
     }
 
     return bytes;
@@ -975,10 +997,16 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->init_time = sc->arrive_time;
 
     /* alloc space for body content */
-    cs->body = cs->body_fixed;
+    if (config->transport_buffer_size > MK_REQUEST_CHUNK) {
+        cs->body = mk_mem_malloc(config->transport_buffer_size);
+        cs->body_size = config->transport_buffer_size;
+    }
+    else {
+        /* Buffer size based in Chunk bytes */
+        cs->body = cs->body_fixed;
+        cs->body_size = MK_REQUEST_CHUNK;
+    }
 
-    /* Buffer size based in Chunk bytes */
-    cs->body_size = MK_REQUEST_CHUNK;
     /* Current data length */
     cs->body_length = 0;
 

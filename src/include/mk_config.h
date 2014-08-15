@@ -136,6 +136,9 @@ struct server_config
     /* Safe EPOLLOUT event */
     int safe_event_write;
 
+    /* Buffer size used by the transport layer plugin */
+    int transport_buffer_size;
+
     /* Transport type: HTTP or HTTPS, useful for redirections */
     char *transport;
 
