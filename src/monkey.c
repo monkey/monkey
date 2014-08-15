@@ -105,6 +105,7 @@ static void mk_help(int rc)
     printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
     printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
     printf("  -o, --one-shot=DIR\t\t\tone-shot, serve a single directory\n");
+    printf("  -t, --transport=TRANSPORT\t\tspecify transport layer (override config)\n");
     printf("  -w, --workers=N\t\t\tset number of workers (override config)\n");
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
@@ -130,6 +131,7 @@ int main(int argc, char **argv)
     int workers_override = -1;
     int run_daemon = 0;
     char *one_shot = NULL;
+    char *transport_layer = NULL;
     char *path_config = NULL;
     char *server_conf_file = NULL;
     char *plugin_load_conf_file = NULL;
@@ -144,6 +146,7 @@ int main(int argc, char **argv)
         { "daemon",                 no_argument,        NULL, 'D' },
         { "port",                   required_argument,  NULL, 'p' },
         { "one-shot",               required_argument,  NULL, 'o' },
+        { "transport",              required_argument,  NULL, 't' },
         { "workers",                required_argument,  NULL, 'w' },
         { "version",                no_argument,        NULL, 'v' },
         { "help",                   no_argument,        NULL, 'h' },
@@ -154,7 +157,7 @@ int main(int argc, char **argv)
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:o:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -172,6 +175,9 @@ int main(int argc, char **argv)
             break;
         case 'o':
             one_shot = optarg;
+            break;
+        case 't':
+            transport_layer = mk_string_dup(optarg);
             break;
         case 'w':
             workers_override = atoi(optarg);
@@ -257,8 +263,9 @@ int main(int argc, char **argv)
         config->plugins_conf_dir = plugins_conf_dir;
     }
 
-    /* one shot */
+    /* Override some configuration */
     config->one_shot = one_shot;
+    config->transport_layer = transport_layer;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);

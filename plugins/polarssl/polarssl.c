@@ -141,6 +141,18 @@ static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
 
 static pthread_key_t local_context;
 
+/*
+ * The following function is taken from PolarSSL sources to get
+ * the number of available bytes to read from a buffer.
+ *
+ * We copy this to make it inline and avoid extra context switches
+ * on each read routine.
+ */
+static inline size_t polar_get_bytes_avail(const ssl_context *ssl)
+{
+    return (ssl->in_offt == NULL ? 0 : ssl->in_msglen);
+}
+
 static struct polar_thread_context *local_thread_context(void)
 {
     return pthread_getspecific(local_context);
@@ -638,14 +650,37 @@ static int context_unset(int fd, ssl_context *ssl)
     return 0;
 }
 
+int _mkp_network_io_buffer_size()
+{
+    return SSL_MAX_CONTENT_LEN;
+}
+
 int _mkp_network_io_read(int fd, void *buf, int count)
 {
+    size_t avail;
     ssl_context *ssl = context_get(fd);
+
     if (!ssl) {
         ssl = context_new(fd);
     }
 
     int ret =  handle_return(ssl_read(ssl, buf, count));
+    PLUGIN_TRACE("IN: %i SSL READ: %i ; CORE COUNT: %i",
+                 ssl->in_msglen,
+                 ret, count);
+
+    /* Check if the caller read less than the available data */
+    if (ret > 0) {
+        avail = polar_get_bytes_avail(ssl);
+        if (avail > 0) {
+            /*
+             * A read callback would never read in buffer more than
+             * the size specified in 'count', but it aims to return
+             * as value the total information read in the buffer plugin
+             */
+            ret += avail;
+        }
+    }
     return ret;
 }
 
@@ -928,10 +963,10 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
-    int fail = 0;
+    int ret = 0;
     struct polar_config conf;
 
-    // Evil global config stuff.
+    /* Evil global config stuff */
     mk_api = *api;
     if (mk_api->config->transport_layer &&
         strcmp(mk_api->config->transport_layer, "polarssl")) {
@@ -943,14 +978,13 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
     memset(&conf, 0, sizeof(conf));
     if (config_parse(confdir, &conf)) {
-        fail = -1;
+        ret = -1;
     }
 
     server_context.config = conf;
-
     polar_init();
 
-    return fail;
+    return ret;
 }
 
 void _mkp_core_thctx(void)
