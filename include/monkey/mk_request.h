@@ -115,7 +115,6 @@ struct response_headers
 
     int ranges[2];
 
-
     time_t last_modified;
     mk_ptr_t allow_methods;
     mk_ptr_t content_type;

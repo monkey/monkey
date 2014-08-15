@@ -638,6 +638,11 @@ static int context_unset(int fd, ssl_context *ssl)
     return 0;
 }
 
+int _mkp_network_io_buffer_size()
+{
+    return SSL_MAX_CONTENT_LEN;
+}
+
 int _mkp_network_io_read(int fd, void *buf, int count)
 {
     ssl_context *ssl = context_get(fd);
@@ -928,10 +933,10 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
 int _mkp_init(struct plugin_api **api, char *confdir)
 {
-    int fail = 0;
+    int ret = 0;
     struct polar_config conf;
 
-    // Evil global config stuff.
+    /* Evil global config stuff */
     mk_api = *api;
     if (mk_api->config->transport_layer &&
         strcmp(mk_api->config->transport_layer, "polarssl")) {
@@ -943,14 +948,13 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 
     memset(&conf, 0, sizeof(conf));
     if (config_parse(confdir, &conf)) {
-        fail = -1;
+        ret = -1;
     }
 
     server_context.config = conf;
-
     polar_init();
 
-    return fail;
+    return ret;
 }
 
 void _mkp_core_thctx(void)
