@@ -64,6 +64,11 @@ int _mkp_network_io_accept(int server_fd)
     return remote_fd;
 }
 
+int _mkp_network_io_buffer_size()
+{
+    return -1;
+}
+
 int _mkp_network_io_read(int socket_fd, void *buf, int count)
 {
     ssize_t bytes_read;
