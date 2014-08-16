@@ -1031,6 +1031,7 @@ void mk_session_remove(int socket)
         if (cs_node->body != cs_node->body_fixed) {
             mk_mem_free(cs_node->body);
         }
+        mk_list_del(&cs_node->request_list);
         mk_mem_free(cs_node);
     }
 }
