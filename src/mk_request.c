@@ -99,7 +99,12 @@ static inline void mk_request_init(struct session_request *request)
 static inline void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
-        mk_vhost_close(sr);
+        if (sr->fd_is_fdt == MK_TRUE) {
+            mk_vhost_close(sr);
+        }
+        else {
+            close(sr->fd_file);
+        }
     }
 
     if (sr->headers.location) {
@@ -818,7 +823,8 @@ int mk_request_error(int http_status, struct client_session *cs,
                 break;
             }
 
-            sr->fd_file = fd;
+            sr->fd_file   = fd;
+            sr->fd_is_fdt = MK_FALSE;
             sr->bytes_to_send = finfo.size;
             sr->headers.content_length = finfo.size;
             sr->headers.real_length    = finfo.size;

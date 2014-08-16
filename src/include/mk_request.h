@@ -160,8 +160,18 @@ struct session_request
     long port;
     /*------------*/
 
-    /* file descriptors */
+    /*
+     * Static file file descriptor: the following twp fields represents an
+     * opened file in the file system and a flag saying which mechanism
+     * was used to open it.
+     *
+     *  - fd_file  : common file descriptor
+     *  - fd_is_fdt: set to MK_TRUE if fd_file was opened using Vhost FDT, or
+     *               MK_FALSE for the opposite case.
+     */
     int fd_file;
+    int fd_is_fdt;
+
 
     int headers_len;
 

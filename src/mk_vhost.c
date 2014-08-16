@@ -200,6 +200,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
 
             sr->vhost_fdt_id   = id;
             sr->vhost_fdt_hash = hash;
+            sr->fd_is_fdt      = MK_TRUE;
 
             return fd;
         }
@@ -242,7 +243,6 @@ static inline int mk_vhost_fdt_close(struct session_request *sr)
             return 0;
         }
     }
-
     return close(sr->fd_file);
 }
 
