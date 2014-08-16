@@ -114,8 +114,16 @@
         }                                                               \
     } while(0)
 
+
 /*
- * Macros to calculate sub-net data using ip address and sub-net prefix
+ * Macros to calculate sub-net data using ip address and sub-net prefix. Macros
+ * written by Zeus (@sxd).
+ *
+ * Zeus, why the hell you did not documented the macros data type ???.
+ *
+ *  addr = struct in_addr -> s_addr.
+ *  pos  = numeric position for the octect (0, 1, 2..)
+ *  net  = integer representing the short network mask (e.g: /24)
  */
 
 #define MK_NET_IP_OCTECT(addr,pos) (addr >> (8 * pos) & 255)
