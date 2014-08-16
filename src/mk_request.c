@@ -1053,6 +1053,7 @@ void mk_session_remove(int socket)
         if (mk_list_entry_orphan(&cs_node->request_incomplete) == 0) {
             mk_list_del(&cs_node->request_incomplete);
         }
+        mk_list_del(&cs_node->request_list);
         mk_mem_free(cs_node);
     }
 }
