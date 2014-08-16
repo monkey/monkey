@@ -161,12 +161,16 @@ static int mk_security_check_ip(int socket)
     int network;
     struct mk_secure_ip_t *entry;
     struct mk_list *head;
-    struct in_addr addr_t, *addr = &addr_t;
-    socklen_t len = sizeof(addr);
+    struct in_addr *addr;
+    struct sockaddr_in addr_t;
+    socklen_t len = sizeof(addr_t);
 
-    if (getpeername(socket, (struct sockaddr *)&addr_t, &len) < 0) {
+    if (getpeername(socket, (struct sockaddr *) &addr_t, &len) != 0) {
+        perror("getpeername");
         return -1;
     }
+
+    addr = &(addr_t).sin_addr;
 
     PLUGIN_TRACE("[FD %i] Mandril validating IP address", socket);
     mk_list_foreach(head, &mk_secure_ip) {
@@ -178,7 +182,6 @@ static int mk_security_check_ip(int socket)
             if (network != entry->network) {
                 continue;
             }
-
             /* Validate host range */
             if (addr->s_addr <= entry->hostmax && addr->s_addr >= entry->hostmin) {
                 PLUGIN_TRACE("[FD %i] Mandril closing by rule in ranges", socket);
@@ -337,6 +340,7 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
         PLUGIN_TRACE("[FD %i] Mandril close connection", socket);
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
+
     return MK_PLUGIN_RET_CONTINUE;
 }
 
