@@ -36,6 +36,7 @@
 #define MK_DEFAULT_SITES_CONF_DIR           "sites/"
 #define MK_DEFAULT_PLUGINS_CONF_DIR         "plugins/"
 #define MK_DEFAULT_LISTEN_ADDR              "0.0.0.0"
+#define MK_DEFAULT_LISTEN_PORT              "2001"
 #define MK_WORKERS_DEFAULT                  1
 
 #define VALUE_ON "on"
@@ -72,6 +73,14 @@ struct mk_config_entry
     struct mk_list _head;
 };
 
+struct mk_config_listen
+{
+    char *address;
+    char *port;
+
+    struct mk_config_listen *next;
+};
+
 /* Base struct of server */
 struct server_config
 {
@@ -88,9 +97,9 @@ struct server_config
     int8_t scheduler_mode;        /* Scheduler balancing mode */
 
     char *serverconf;             /* path to configuration files */
-    char *listen_addr;
-    mk_ptr_t server_addr;
     mk_ptr_t server_software;
+
+    struct mk_config_listen listen;
 
     char *one_shot;
     char *user;
@@ -104,7 +113,6 @@ struct server_config
     char *plugins_conf_dir;
     char **request_headers_allowed;
 
-    int serverport;             /* port */
     int timeout;                /* max time to wait for a new connection */
     int standard_port;          /* common port used in web servers (80) */
     int pid_status;

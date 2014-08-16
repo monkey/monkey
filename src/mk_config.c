@@ -31,6 +31,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include <monkey/monkey.h>
 #include <monkey/mk_kernel.h>
@@ -308,6 +309,17 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
+void mk_config_listen_free(struct mk_config_listen *listen)
+{
+    if (listen == NULL)
+        return;
+    if (listen->next != NULL)
+        mk_config_listen_free(listen->next);
+    free(listen->address);
+    free(listen->port);
+    free(listen);
+}
+
 void mk_config_free_all()
 {
     mk_vhost_free_all();
@@ -316,7 +328,6 @@ void mk_config_free_all()
     if (config->config) mk_config_free(config->config);
 
     if (config->serverconf) mk_mem_free(config->serverconf);
-    if (config->listen_addr) mk_mem_free(config->listen_addr);
     if (config->pid_file_path) mk_mem_free(config->pid_file_path);
     if (config->user_dir) mk_mem_free(config->user_dir);
 
@@ -327,6 +338,8 @@ void mk_config_free_all()
 
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
+
+    mk_config_listen_free(config->listen.next);
 
     mk_ptr_free(&config->server_software);
     mk_mem_free(config->plugins);
@@ -371,13 +384,25 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 
 #ifndef SHAREDLIB
 
+static void mk_details_listen(struct mk_config_listen *listen)
+{
+    if (listen == NULL)
+        return;
+
+    printf(MK_BANNER_ENTRY "Server listening on %s:%s\n",
+           listen->address, listen->port);
+
+    mk_details_listen(listen->next);
+}
+
 void mk_details(void)
 {
     char tmp[64];
 
     printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
-    printf(MK_BANNER_ENTRY "Server socket listening on Port %i\n",
-           config->serverport);
+
+    mk_details_listen(&config->listen);
+
     printf(MK_BANNER_ENTRY
            "%i threads, %i client connections per thread, total %i\n",
            config->workers, config->worker_capacity,
@@ -399,6 +424,99 @@ static void mk_config_print_error_msg(char *variable, char *path)
            variable, path);
     mk_mem_free(path);
     exit(EXIT_FAILURE);
+}
+
+static int mk_config_listen_read(struct mk_config_section *section)
+{
+    struct mk_list *cur;
+    struct mk_config_entry *entry;
+    char *address = NULL;
+    char *port = NULL;
+    char *divider;
+    struct mk_config_listen **next = NULL;
+    struct mk_config_listen listen;
+    long port_num;
+
+    bzero(&listen, sizeof(listen));
+
+    mk_list_foreach(cur, &section->entries) {
+        entry = mk_list_entry(cur, struct mk_config_entry, _head);
+        if (strcasecmp(entry->key, "Listen")) {
+            continue;
+        }
+
+        if (entry->val[0] == '[') {
+            // IPv6 address
+            divider = strchr(entry->val, ']');
+            if (divider == NULL) {
+                mk_err("[config] Expected closing ']' in IPv6 address.");
+                goto error;
+            }
+            if (divider[1] != ':' || divider[2] == '\0') {
+                mk_err("[config] Expected ':port' after IPv6 address.");
+                goto error;
+            }
+
+            address = strndup(entry->val + 1, divider - entry->val - 1);
+            port = strdup(divider + 2);
+        }
+        else if (strchr(entry->val, ':') != NULL) {
+            // IPv4 address
+            divider = strrchr(entry->val, ':');
+            if (divider == NULL || divider[1] == '\0') {
+                mk_err("[config] Expected ':port' after IPv4 address.");
+                goto error;
+            }
+
+            address = strndup(entry->val, divider - entry->val);
+            port = strdup(divider + 1);
+        }
+        else {
+            // Port only
+            port = entry->val;
+        }
+
+        port_num = strtol(port, NULL, 10);
+        if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
+            mk_warn("Using defaults, could not understand \"Listen %s\"",
+                    entry->val);
+            port = NULL;
+        }
+
+        listen.address = address == NULL
+            ? strdup(MK_DEFAULT_LISTEN_ADDR)
+            : address;
+        listen.port = port == NULL
+            ? strdup(MK_DEFAULT_LISTEN_PORT)
+            : port;
+        address = NULL;
+        port = NULL;
+
+        if (next == NULL) {
+            memcpy(&config->listen, &listen, sizeof(listen));
+            next = &config->listen.next;
+        }
+        else {
+            *next = malloc(sizeof(listen));
+            if (*next == NULL) {
+                mk_err("[config] Malloc falied: %s", strerror(errno));
+                return -1;
+            }
+            memcpy(*next, &listen, sizeof(listen));
+            next = &(*next)->next;
+        }
+error:
+        if (address) free(address);
+        if (port) free(port);
+    }
+
+    if (next == NULL) {
+        mk_warn("[config] No valid Listen entries found, set default");
+        bzero(&config->listen, sizeof(config->listen));
+        config->listen.address = strdup(MK_DEFAULT_LISTEN_ADDR);
+        config->listen.port = strdup(MK_DEFAULT_LISTEN_PORT);
+    }
+    return 0;
 }
 
 /* Read configuration files */
@@ -434,18 +552,8 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->config = cnf;
 
     /* Listen */
-    config->listen_addr = mk_config_section_getval(section, "Listen",
-                                                   MK_CONFIG_VAL_STR);
-    if (!config->listen_addr) {
-        config->listen_addr = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
-    }
-
-    /* Connection port */
-    config->serverport = (size_t) mk_config_section_getval(section,
-                                                           "Port",
-                                                           MK_CONFIG_VAL_NUM);
-    if (config->serverport <= 1 || config->serverport >= 65535) {
-        mk_config_print_error_msg("Port", tmp);
+    if (mk_config_listen_read(section)) {
+        mk_err("[config] Failed to read listen sections.");
     }
 
     /* Number of thread workers */
@@ -619,8 +727,6 @@ void mk_config_set_init_values(void)
     config->max_keep_alive_request = 50;
     config->resume = MK_TRUE;
     config->standard_port = 80;
-    config->listen_addr = MK_DEFAULT_LISTEN_ADDR;
-    config->serverport = 2001;
     config->symlink = MK_FALSE;
     config->nhosts = 0;
     mk_list_init(&config->hosts);
