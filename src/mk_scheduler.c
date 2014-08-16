@@ -716,6 +716,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     }
 
     /* PROCESSING CONN TIMEOUT */
+    if (mk_list_is_empty(cs_incomplete) != 0) {
+        return 0;
+    }
+
     mk_list_foreach_safe(head, temp, cs_incomplete) {
         cs_node = mk_list_entry(head, struct client_session, request_incomplete);
         if (cs_node->counter_connections == 0) {
