@@ -180,6 +180,7 @@ struct mk_config_section *mk_config_section_add(struct mk_config *conf,
                                                 char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
+void mk_config_listen_free(struct mk_config_listen *listen);
 void mk_config_free(struct mk_config *cnf);
 void mk_config_free_all();
 void mk_config_free_entries(struct mk_config_section *section);
