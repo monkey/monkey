@@ -152,7 +152,7 @@ int mk_socket_reset(int socket)
 }
 
 /* Just IPv4 for now... */
-int mk_socket_server(int port, char *listen_addr, int reuse_port)
+int mk_socket_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd;
 

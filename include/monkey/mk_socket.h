@@ -62,7 +62,7 @@ int mk_socket_close(int socket);
 int mk_socket_create(void);
 int mk_socket_connect(char *host, int port);
 int mk_socket_reset(int socket);
-int mk_socket_server(int port, char *listen_addr, int reuse_port);
+int mk_socket_server(char *port, char *listen_addr, int reuse_port);
 
 int mk_socket_accept(int server_fd);
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io);

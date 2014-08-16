@@ -109,7 +109,7 @@ struct plugin_network_io
     int (*send_file) (int, int, off_t *, size_t);
     int (*create_socket) (int, int, int);
     int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
-    int (*server) (int, char *, int);
+    int (*server) (char *port, char *addr, int);
     int (*buffer_size) ();
 };
 
