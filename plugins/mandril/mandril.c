@@ -85,8 +85,6 @@ static int mk_security_conf(char *confdir)
                     goto ip_next;
                 }
 
-                mk_info("network: '%s' mask: '%s'", _net, _mask);
-
                 /* convert ip string to network address */
                 if (inet_aton(_net, &new_ip->ip) == 0) {
                     mk_warn("Mandril: invalid ip address '%s' in RULES section",
