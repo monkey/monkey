@@ -1,3 +1,185 @@
+commit 998a45315dbea44320c2a6d8565b2749dafe2d4a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 22:50:33 2014 -0600
+
+    Version: bump to 1.5.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 78f579b62e6c678f2373244e4f76fa5db1987137
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 22:50:13 2014 -0600
+
+    HTML: bump to 1.5.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 424871f2f871095a05d8da13d3a174ff9c2c6520
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 22:48:27 2014 -0600
+
+    Scheduler: on Libmonkey mode IP_CHECK, drop socket
+    
+    If the user code on top of Libmonkey decided to drop the connection,
+    let the Scheduler handler that requirement right away inside the
+    registration phase.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e05eeb64d3129543c91da0606e88de523da91833
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 21:34:57 2014 -0600
+
+    Epoll: validate when registering connection with the Scheduler
+    
+    In the epoll event loop, when registering a new connection with
+    the Scheduler, there were not check if this was successfull or not,
+    a common example may be a security plugin dropping a connection
+    at STAGE_10.
+    
+    This patch adds a validation on the return value when trying to register
+    a connection with the Scheduler. If it fails, the socket will be closed
+    right away.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c412d665ce41829b531e0390e5661e61edc4b914
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 21:23:01 2014 -0600
+
+    Libmonkey: do not use SO_REUSEPORT and set Mime default
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5710b4140f936d5e3cf49045ad0d253b1d98b073
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 20:16:40 2014 -0600
+
+    Mandril: remove trace msg
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit cadabc16a002d0ef65a05f456eac6de4217b0646
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 17:27:27 2014 -0600
+
+    Mandril: fix network address reference
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 439940e1875038ee2b3b615494ff6e542bb40e0c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 12:17:33 2014 -0600
+
+    Libmonkey: bump to 1.5.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e8e96170a6de835e757ffad5f63dfc14e1ef6ae8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 12:16:59 2014 -0600
+
+    Debian: bump to 1.5.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit edcbc522e3da28bd05280328736555c2c5e51202
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 11:55:28 2014 -0600
+
+    Request: new request session flag to mark those files opened by FDT
+    
+    This patch aims to fix a potential DDoS problem that can be caused
+    in the server quering repetitive non-existent resources.
+    
+    When serving a static file, the core use Vhost FDT mechanism, but if
+    it sends a static error page it does a direct open(2). When closing
+    the resources for the same request it was just calling mk_vhost_close()
+    which did not clear properly the file descriptor.
+    
+    This patch adds a new field on the struct session_request called 'fd_is_fdt',
+    which contains MK_TRUE or MK_FALSE depending of how fd_file was opened.
+    
+    Thanks to Matthew Daley <mattd@bugfuzz.com> for report and troubleshoot this
+    problem.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0ae2b30c9e7a81f7950d5891d6979bf4ee9429f1
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Fri Aug 8 00:23:48 2014 +1200
+
+    Utils: allocate enough space to include the null terminator when URL-decoding URLs
+    
+    Signed-off-by: Matthew Daley <mattd@bugfuzz.com>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 731298d0dac4ce509df0256780f8ef84e284a3e5
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Fri Aug 8 00:20:52 2014 +1200
+
+    Request: don't search off the end of the body buffer for query strings
+    
+    mk_string_char_search takes a length, not an end position.
+    
+    Signed-off-by: Matthew Daley <mattd@bugfuzz.com>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 810d8bc359f07dfd605a58c50400c9cc9075c240
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Fri Aug 8 00:11:02 2014 +1200
+
+    Method: correctly extract content length value from body buffer when pre-parsing
+    
+    The buffer offset and the end position passed to mk_string_copy_substr
+    is incorrect.
+    
+    Signed-off-by: Matthew Daley <mattd@bugfuzz.com>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 934e8aa4204824a471669143a333d83a5e6d2685
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Fri Aug 8 00:06:08 2014 +1200
+
+    Mimetype: don't iterate off the start of the filename when looking for an extension
+    
+    Check the iterator position before checking for an extension.
+    
+    Signed-off-by: Matthew Daley <mattd@bugfuzz.com>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit cc71eea118827fc1d8a3c14efa1ee0b34d62f74b
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Fri Aug 8 00:05:38 2014 +1200
+
+    Request: set correct path size when truncated
+    
+    If snprintf can't write the entire string out to the buffer, it will
+    still null-terminate it. Hence, the length of the string is one less
+    than the maximum passed in, not the maximum itself.
+    
+    Signed-off-by: Matthew Daley <mattd@bugfuzz.com>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4b41336df891db62b5e6c80dbc7786307e58eaf1
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Sat Aug 16 07:38:14 2014 -0600
+
+    Request: unlink request node from cs->request_lists
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+    
+    Conflicts:
+    	src/mk_request.c
+
+commit 5fb5948c081a4e2cb2fe957dd4bd313b9493c4f2
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jul 19 21:27:13 2014 -0600
+
+    Update ChangeLog for v1.5.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit d673a69a831643a006f3e33fe207dc3b714d505b
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sat Jul 19 21:27:00 2014 -0600
