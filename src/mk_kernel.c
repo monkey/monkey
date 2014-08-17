@@ -91,10 +91,12 @@ int mk_kernel_features()
         flags |= MK_KERNEL_TCP_AUTOCORKING;
     }
 
+#ifndef SHAREDLIB
     /* SO_REUSEPORT */
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 9, 0)) {
         flags |= MK_KERNEL_SO_REUSEPORT;
     }
+#endif
 
     /* TCP_FASTOPEN */
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 7, 0)) {

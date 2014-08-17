@@ -144,7 +144,11 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config = mk_mem_malloc_z(sizeof(struct server_config));
     if (!config) goto out;
 
+    mk_kernel_init();
+    mk_kernel_features();
+
     config->serverconf = mk_string_dup(MONKEY_PATH_CONF);
+    config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
     mk_config_set_init_values();
 
     /*
