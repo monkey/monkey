@@ -81,8 +81,8 @@ long int mk_method_validate_content_length(const char *body, int body_len)
             return -1;
         }
 
-        str_cl = mk_string_copy_substr(body + pos_header + mk_rh_content_length.len + 1,
-                                       0, pos_header + pos_crlf);
+        str_cl = mk_string_copy_substr(body + pos_header + mk_rh_content_length.len,
+                                       0, pos_crlf - mk_rh_content_length.len);
         len = strtol(str_cl, (char **) NULL, 10);
         mk_mem_free(str_cl);
 

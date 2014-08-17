@@ -100,7 +100,12 @@ static inline void mk_request_init(struct session_request *request)
 void mk_request_free(struct session_request *sr)
 {
     if (sr->fd_file > 0) {
-        mk_vhost_close(sr);
+        if (sr->fd_is_fdt == MK_TRUE) {
+            mk_vhost_close(sr);
+        }
+        else {
+            close(sr->fd_file);
+        }
     }
 
     if (sr->headers.location) {
@@ -222,7 +227,7 @@ static int mk_request_header_process(struct session_request *sr)
     }
 
     /* Query String */
-    query_init = mk_string_char_search(sr->body.data + uri_init, '?', prot_init);
+    query_init = mk_string_char_search(sr->body.data + uri_init, '?', prot_init - uri_init);
     if (query_init > 0) {
         int init, end;
 
@@ -790,7 +795,7 @@ mk_ptr_t mk_request_index(char *pathfile, char *file_aux, const unsigned int fle
         entry = mk_list_entry(head, struct mk_string_line, _head);
         len = snprintf(file_aux, flen, "%s%s", pathfile, entry->val);
         if (mk_unlikely(len > flen)) {
-            len = flen;
+            len = flen - 1;
             mk_warn("Path too long, truncated! '%s'", file_aux);
         }
 
@@ -842,7 +847,8 @@ int mk_request_error(int http_status, struct client_session *cs,
                 break;
             }
 
-            sr->fd_file = fd;
+            sr->fd_file   = fd;
+            sr->fd_is_fdt = MK_FALSE;
             sr->bytes_to_send = finfo.size;
             sr->headers.content_length = finfo.size;
             sr->headers.real_length    = finfo.size;
@@ -1077,6 +1083,7 @@ void mk_session_remove(int socket)
         if (mk_list_entry_orphan(&cs_node->request_incomplete) == 0) {
             mk_list_del(&cs_node->request_incomplete);
         }
+        mk_list_del(&cs_node->request_list);
         mk_mem_free(cs_node);
     }
 }
