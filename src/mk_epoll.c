@@ -359,7 +359,11 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                         close(remote_fd);
                         continue;
                     }
-                    mk_sched_register_client(remote_fd, sched);
+                    ret = mk_sched_register_client(remote_fd, sched);
+                    if (ret == -1) {
+                        close(remote_fd);
+                        continue;
+                    }
                     fd = remote_fd;
                 }
                 ret = mk_conn_read(fd);

@@ -316,7 +316,6 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     if ((config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
         mk_list_is_empty(av_queue) == 0) {
-        printf("%lu system out of sched\n", time(NULL));
         mk_epoll_del(sched->epoll_fd, remote_fd);
         close(remote_fd);
         return -1;
