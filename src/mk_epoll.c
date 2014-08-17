@@ -274,8 +274,18 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                     MK_TRACE("New connection arrived: FD %i", remote_fd);
 #endif
                     /* Register new connection into the scheduler */
-                    mk_sched_add_client_reuseport(remote_fd, sched);
-                    mk_sched_register_client(remote_fd, sched);
+                    ret = mk_sched_add_client_reuseport(remote_fd, sched);
+                    if (ret == -1) {
+                        mk_socket_close(remote_fd);
+                        continue;
+                    }
+
+                    ret = mk_sched_register_client(remote_fd, sched);
+                    if (ret == -1) {
+                        mk_socket_close(remote_fd);
+                        continue;
+                    }
+
                     fd = remote_fd;
                 }
                 ret = mk_conn_read(fd);
