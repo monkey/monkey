@@ -66,20 +66,6 @@ unsigned int mk_server_worker_capacity(unsigned short nworkers)
     return ((avl / 2) / nworkers);
 }
 
-#ifndef SHAREDLIB
-
-/* Here we launch the worker threads to attend clients */
-void mk_server_launch_workers()
-{
-    int i;
-    pthread_t skip;
-
-    /* Launch workers */
-    for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(config->worker_capacity, &skip, NULL);
-    }
-}
-
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
 {
     struct mk_server_listen_entry *listen_entry;
@@ -214,6 +200,20 @@ error:
     return -1;
 }
 
+#ifndef SHAREDLIB
+
+/* Here we launch the worker threads to attend clients */
+void mk_server_launch_workers()
+{
+    int i;
+    pthread_t skip;
+
+    /* Launch workers */
+    for (i = 0; i < config->workers; i++) {
+        mk_sched_launch_thread(config->worker_capacity, &skip, NULL);
+    }
+}
+
 void mk_server_loop(void)
 {
     struct sched_list_node *sched;
@@ -222,6 +222,11 @@ void mk_server_loop(void)
     int ret;
     unsigned int i;
     unsigned int count;
+
+    /* Rename worker */
+    mk_utils_worker_rename("monkey: server");
+
+    mk_info("HTTP Server started");
 
     /* check balancing mode, for reuse port just stay here forever */
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
@@ -244,11 +249,6 @@ void mk_server_loop(void)
         fds[i].events = POLLIN | POLLERR | POLLHUP;
         fds[i].fd = listen.listen_list[i].server_fd;
     }
-
-    /* Rename worker */
-    mk_utils_worker_rename("monkey: server");
-
-    mk_info("HTTP Server started");
 
     while (1) {
         ret = poll(fds, count, 30000);
