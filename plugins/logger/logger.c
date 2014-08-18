@@ -273,6 +273,16 @@ static int mk_logger_read_config(char *path)
     return 0;
 }
 
+static void mk_logger_print_listen(struct mk_config_listen *listen)
+{
+    if (listen == NULL)
+        return;
+    printf("    listen on %s:%s\n",
+            listen->address,
+            listen->port);
+    return mk_logger_print_listen(listen->next);
+}
+
 static void mk_logger_print_details(void)
 {
     time_t now;
@@ -288,8 +298,8 @@ static void mk_logger_print_details(void)
            current->tm_min,
            current->tm_sec);
     printf("   version          : %s\n", VERSION);
-    printf("   server port      : %i\n", mk_api->config->serverport);
     printf("   number of workers: %i\n", mk_api->config->workers);
+    mk_logger_print_listen(&mk_api->config->listen);
     fflush(stdout);
 }
 
