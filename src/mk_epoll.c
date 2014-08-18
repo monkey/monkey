@@ -275,7 +275,39 @@ int mk_epoll_create()
     return efd;
 }
 
-void *mk_epoll_init(int server_fd, int efd, int max_events)
+static int mk_epoll_listen_add(struct mk_server_listen *listen, int efd)
+{
+    unsigned int i;
+    struct epoll_event event;
+    struct mk_server_listen_entry *listen_entry;
+
+    if (listen == NULL)
+        goto error;
+    if (efd < 0)
+        goto error;
+
+    for (i = 0; i < listen->count; i++) {
+        listen_entry = &listen->listen_list[i];
+        if (listen_entry->server_fd < 0)
+            continue;
+
+        event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+        event.data.fd = listen_entry->server_fd;
+        if (epoll_ctl(efd, EPOLL_CTL_ADD, listen_entry->server_fd, &event)) {
+            mk_err("[epoll] Failed to add listen socket: %s",
+                    strerror(errno));
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+void *mk_epoll_init(struct mk_server_listen *listen,
+        int efd,
+        int max_events)
 {
     int i, fd, ret = -1;
     int num_fds;
@@ -294,6 +326,12 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
     pthread_mutex_lock(&mutex_worker_init);
     sched->initialized = 1;
     pthread_mutex_unlock(&mutex_worker_init);
+
+    if (listen != NULL) {
+        if (mk_epoll_listen_add(listen, efd)) {
+            mk_err("[epoll] Failed to add listen sockets.");
+        }
+    }
 
     while (1) {
         ret = -1;
@@ -331,41 +369,15 @@ void *mk_epoll_init(int server_fd, int efd, int max_events)
                     }
                     continue;
                 }
-
-                MK_TRACE("[FD %i] EPoll Event READ", fd);
-
-                /* New connection under MK_SCHEDULER_REUSEPORT mode */
-                if (fd == server_fd) {
-
-                    /* Make sure the worker have enough slots */
-                    if (mk_sched_check_capacity(sched) == -1) {
-                        continue;
-                    }
-
-                    remote_fd = mk_socket_accept(server_fd);
-                    if (mk_unlikely(remote_fd == -1)) {
-#ifdef TRACE
-                        MK_TRACE("Could not accept connection");
-#endif
-                        continue;
-                    }
-#ifdef TRACE
-                    MK_TRACE("New connection arrived: FD %i", remote_fd);
-#endif
-                    /* Register new connection into the scheduler */
-                    ret = mk_sched_add_client_reuseport(remote_fd, sched);
-                    if (ret == -1) {
-                        mk_warn("Server over capacity");
-                        close(remote_fd);
-                        continue;
-                    }
-                    ret = mk_sched_register_client(remote_fd, sched);
-                    if (ret == -1) {
-                        close(remote_fd);
+                else if (listen && mk_server_listen_check(listen, fd)) {
+                    remote_fd = mk_server_listen_handler(sched, listen, fd);
+                    if (remote_fd < 0) {
                         continue;
                     }
                     fd = remote_fd;
                 }
+                MK_TRACE("[FD %i] EPoll Event READ", fd);
+
                 ret = mk_conn_read(fd);
             }
             else if (events[i].events & EPOLLOUT) {

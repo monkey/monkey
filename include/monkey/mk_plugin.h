@@ -242,7 +242,7 @@ struct plugin_api
     void *(*plugin_load_symbol) (void *, const char *);
 
     /* epoll functions */
-    void *(*epoll_init) (int, int, int);
+    void *(*epoll_init) (struct mk_server_listen *, int, int);
     int   (*epoll_create) (int);
     int   (*epoll_add) (int, int, int, unsigned int);
     int   (*epoll_del) (int, int);
