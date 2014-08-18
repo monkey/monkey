@@ -6,23 +6,20 @@ cat > conf/monkey.conf <<EOF
 # to the configuration of the different types of directives.
 
 [SERVER]
-    # Port:
-    # -----
-    # Port is the number of the door in which Monkey will be listened through
-    # connections and petitions. This number can have any value between 1 and
-    # 65535. If the specified number is less than or equal to 1024, only root
-    # superuser's owned process will be able to be established as a connection.
-
-    Port #PORT#
-
     # Listen:
     # -------
-    # The Listen directive restricts to the network interface from where Monkey
-    # will be listening for incoming connections. If you want to restrict to the
-    # lookback interface, for IPv4 you can set '127.0.0.1' or the value '::1' in
-    # case of IPv6, e.g:
+    # The Listen directive maps the port and optionally restricts the
+    # network interface from where Monkey will be listens for incoming
+    # connections. Multiple Listen directives are allowed.
     #
-    # Listen 127.0.0.1
+    # The Listen directive requires a port number, preceded by an
+    # optional IPv4 or IPv6 address separated by a colon (:).
+    # IPv6 addresses must be enclosed in brackets ([]), e.g:
+    #
+    # Listen 127.0.0.01:2001
+    # Listen [::1]:2001
+
+    Listen 2001
 
     # Workers:
     # --------
