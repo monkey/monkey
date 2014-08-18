@@ -75,9 +75,6 @@ struct sched_list_node
     unsigned long long closed_connections;
     unsigned long long over_capacity;
 
-    /* Just used on MK_SCHEDULER_REUSEPORT mode */
-    int server_fd;
-
     /*
      * Red-Black tree queue to perform fast lookup over
      * the scheduler busy queue
