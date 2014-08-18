@@ -151,6 +151,16 @@ static inline int _next_target()
     return target;
 }
 
+struct sched_list_node *mk_sched_next_target()
+{
+    int t = _next_target();
+
+    if (mk_likely(t != -1))
+        return &sched_list[t];
+    else
+        return NULL;
+}
+
 /*
  * This function synchronize the worker scheduler counters in case
  * we face the ULONG_MAX bug, this is an unexpected behavior but

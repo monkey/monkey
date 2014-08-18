@@ -148,6 +148,7 @@ extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
 
+struct sched_list_node *mk_sched_next_target();
 void mk_sched_init();
 int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
