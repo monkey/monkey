@@ -267,59 +267,6 @@ int mk_sched_check_capacity(struct sched_list_node *sched)
 }
 
 /*
- * Assign a new incomming connection to a specific worker thread, this call comes
- * from the main monkey process.
- */
-int mk_sched_add_client(int remote_fd)
-{
-    int r, t=0;
-    struct sched_list_node *sched;
-
-    /* Next worker target */
-    t = _next_target();
-
-    if (mk_unlikely(t == -1)) {
-        MK_TRACE("[FD %i] Over Capacity, drop!", remote_fd);
-        MK_LT_SCHED(remote_fd, "OVER_CAPACITY");
-        return -1;
-    }
-
-    sched = &sched_list[t];
-
-    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
-
-    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
-                      MK_EPOLL_LEVEL_TRIGGERED);
-
-    if (mk_likely(r == 0)) {
-        sched->accepted_connections++;
-    }
-
-    MK_LT_SCHED(remote_fd, "ADD_CLIENT");
-    return r;
-}
-
-int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched)
-{
-    int r;
-
-    /* Make sure the worker have enough slots */
-    if (mk_list_is_empty(&sched->av_queue) == 0) {
-        return -1;
-    }
-
-    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                      MK_EPOLL_LEVEL_TRIGGERED);
-
-    if (mk_likely(r == 0)) {
-        sched->accepted_connections++;
-    }
-
-    MK_LT_SCHED(remote_fd, "ADD_CLIENT_REUSEPORT");
-    return r;
-}
-
-/*
  * Register a new client connection into the scheduler, this call takes place
  * inside the worker/thread context.
  */
