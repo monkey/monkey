@@ -356,7 +356,7 @@ int main(int argc, char **argv)
     mk_user_set_uidgid();
 
     /* Server loop, let's listen for incomming clients */
-    mk_server_loop(config->server_fd);
+    mk_server_loop();
 
     mk_mem_free(config);
     return 0;

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <poll.h>
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -33,6 +34,7 @@
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_macros.h>
+#include <monkey/mk_server.h>
 
 /* Return the number of clients that can be attended
  * at the same time per worker thread
@@ -78,19 +80,169 @@ void mk_server_launch_workers()
     }
 }
 
-void mk_server_loop(int server_fd)
+int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
 {
+    struct mk_server_listen_entry *listen_entry;
+    unsigned int i;
+
+    if (listen == NULL)
+        goto error;
+
+    for (i = 0; i < listen->count; i++) {
+        listen_entry = &listen->listen_list[i];
+        if (listen_entry->server_fd == server_fd)
+            return 1;
+    }
+error:
+    return 0;
+}
+
+int mk_server_listen_handler(struct sched_list_node *sched,
+        struct mk_server_listen *listen,
+        int server_fd)
+{
+    struct mk_server_listen_entry *listen_entry;
+    struct sched_list_node *local_sched;
+    unsigned int i;
+    int client_fd = -1;
+    int result;
+
+    if (listen == NULL)
+        goto error;
+
+    local_sched = mk_sched_get_thread_conf();
+
+    for (i = 0; i < listen->count; i++) {
+        listen_entry = &listen->listen_list[i];
+        if (listen_entry->server_fd != server_fd)
+            continue;
+
+        if (mk_sched_check_capacity(sched) == -1)
+            goto error;
+
+        client_fd = mk_socket_accept(server_fd);
+        if (mk_unlikely(client_fd == -1)) {
+            MK_TRACE("[server] Accept connection failed: %s", strerror(errno));
+            goto error;
+        }
+
+        result = mk_epoll_add(sched->epoll_fd,
+                client_fd,
+                MK_EPOLL_READ,
+                MK_EPOLL_LEVEL_TRIGGERED);
+        if (mk_unlikely(result != 0)) {
+            mk_err("[server] Add to epoll failed: %s", strerror(errno));
+            goto error;
+        }
+
+        if (sched == local_sched) {
+            result = mk_sched_register_client(client_fd, sched);
+            if (mk_unlikely(result != 0)) {
+                mk_err("[server] Failed to register client.");
+                goto error;
+            }
+        }
+
+        sched->accepted_connections++;
+        MK_TRACE("[server] New connection arrived: FD %i", client_fd);
+        return client_fd;
+    }
+error:
+    if (client_fd != -1)
+        mk_socket_close(client_fd);
+    return -1;
+}
+
+void mk_server_listen_free(struct mk_server_listen *server_listen)
+{
+    free(server_listen->listen_list);
+    server_listen->listen_list = NULL;
+    server_listen->count = 0;
+}
+
+int mk_server_listen_init(struct server_config *config,
+        struct mk_server_listen *server_listen)
+{
+    struct mk_config_listen *listen;
+    struct mk_server_listen_entry *listen_list = NULL;
+    unsigned int count = 0, i = 0;
+    int server_fd;
+    int reuse_port;
+
+    if (config == NULL)
+        goto error;
+    if (server_listen == NULL)
+        goto error;
+
+    reuse_port = config->scheduler_mode == MK_SCHEDULER_REUSEPORT;
+
+    for (listen = &config->listen; listen != NULL; listen = listen->next) {
+        count += 1;
+    }
+
+    listen_list = calloc(count, sizeof(*listen_list));
+    if (listen_list == NULL) {
+        mk_err("[server] Calloc failed: %s", strerror(errno));
+        goto error;
+    }
+
+    for (listen = &config->listen; listen != NULL; listen = listen->next) {
+        server_fd = mk_socket_server(listen->port,
+                listen->address,
+                reuse_port);
+        if (server_fd >= 0) {
+            if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
+                mk_warn("[server] Could not set TCP_DEFER_ACCEPT");
+            }
+            listen_list[i].listen = listen;
+            listen_list[i].server_fd = server_fd;
+        }
+        else {
+            listen_list[i].server_fd = -1;
+            mk_warn("[server] Failed to bind server socket to %s:%s.",
+                    listen->address,
+                    listen->port);
+        }
+        i += 1;
+    }
+
+    server_listen->count = count;
+    server_listen->listen_list = listen_list;
+    return 0;
+error:
+    if (listen_list != NULL) free(listen_list);
+    return -1;
+}
+
+void mk_server_loop(void)
+{
+    struct sched_list_node *sched;
+    struct mk_server_listen listen;
+    struct pollfd *fds;
     int ret;
-    int remote_fd;
+    unsigned int i;
+    unsigned int count;
 
     /* check balancing mode, for reuse port just stay here forever */
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         while (1) sleep(60);
     }
 
-    /* Activate TCP_DEFER_ACCEPT */
-    if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
-            mk_warn("TCP_DEFER_ACCEPT failed");
+    if (mk_server_listen_init(config, &listen)) {
+        mk_err("Failed to initialize listen sockets.");
+        return;
+    }
+
+    fds = calloc(listen.count, sizeof(*fds));
+    if (fds == NULL) {
+        mk_err("Failed to initialize listen sockets.");
+        mk_server_listen_free(&listen);
+        return;
+    }
+    count = listen.count;
+    for (i = 0; i < count; i++) {
+        fds[i].events = POLLIN | POLLERR | POLLHUP;
+        fds[i].fd = listen.listen_list[i].server_fd;
     }
 
     /* Rename worker */
@@ -99,30 +251,47 @@ void mk_server_loop(int server_fd)
     mk_info("HTTP Server started");
 
     while (1) {
-        remote_fd = mk_socket_accept(server_fd);
-
-        if (mk_unlikely(remote_fd == -1)) {
+        ret = poll(fds, count, 30000);
+        if (mk_unlikely(ret < 0)) {
+            mk_err("[server] Error in poll(): %s", strerror(errno));
+            continue;
+        }
+        else if (mk_unlikely(ret == 0)) {
             continue;
         }
 
-#ifdef TRACE
-        MK_TRACE("New connection arrived: FD %i", remote_fd);
+        for (i = 0; i < count; i++) {
+            if (fds[i].revents == 0) {
+                continue;
+            }
+            else if (fds[i].revents & POLLIN) {
+                // Accept connection
+                sched = mk_sched_next_target();
+                if (sched != NULL) {
+                    mk_server_listen_handler(sched, &listen, fds[i].fd);
+                }
+                else {
+                    mk_warn("[server] Over capacity.");
+                }
+            }
+            else if (fds[i].revents & (POLLERR | POLLHUP)) {
+                // Error occurred
+                mk_err("[server] Error on socket %d: %s",
+                        fds[i].fd,
+                        strerror(errno));
+            }
+            fds[i].revents = 0;
+        }
 
-        int i;
+#ifdef TRACE
         struct sched_list_node *node;
 
         node = sched_list;
-        for (i=0; i < config->workers; i++) {
+        for (i=0; i < (unsigned int)config->workers; i++) {
             MK_TRACE("Worker Status");
             MK_TRACE(" WID %i / conx = %llu", node[i].idx, node[i].accepted_connections - node[i].closed_connections);
         }
 #endif
-
-        /* Assign socket to worker thread */
-        ret = mk_sched_add_client(remote_fd);
-        if (ret == -1) {
-            mk_socket_close(remote_fd);
-        }
     }
 }
 
