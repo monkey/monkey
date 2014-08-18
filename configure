@@ -632,6 +632,10 @@ create_makefile2()
 		alltarget="../bin/monkey"
 	fi
 
+    if [ $mk_stats == 1 ]; then
+        alltarget="$alltarget libstats"
+    fi
+
         if [ $malloc_jemalloc -eq 1 ]; then
                 extra="../deps/jemalloc/lib/libjemalloc.a"
                 extraso="-Wl,--whole-archive ../deps/jemalloc/lib/libjemalloc_pic.a -Wl,--no-whole-archive"
@@ -664,6 +668,8 @@ all: $alltarget
 
 lib: $SONAME
 
+libstats: libstats.so
+
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
@@ -675,8 +681,14 @@ $SONAME: \$(LIBOBJ)
 
 \$(LIBOBJ): \$(OBJ)
 
+libstats.so: mk_stats.o
+	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared -ldl -lrt
+
+mk_stats.o: mk_stats.c
+	\$(CC_QUIET) -c -fPIC $^ -o \$@ \$(CFLAGS) \$(DEFS) -I\$(INCDIR) -ldl
+
 clean:
-	rm -rf *.[od] $SONAME libmonkey.so *.lo
+	rm -rf *.[od] $SONAME libmonkey.so libstats.so *.lo
 	rm -rf ../bin/monkey
 
 distclean:
@@ -885,6 +897,7 @@ create_info()
 #define MK_BUILD_UNAME   "$uname"
 #define MONKEY_PATH_CONF "$sysconfdir"
 #define PLUGDIR "$plugdir"
+#define PYTHONVERSION python$PYTHONVERSION
 
 #endif
 EOF
@@ -1078,6 +1091,14 @@ only_accept4=0
 malloc_libc=0
 malloc_jemalloc=1
 
+# python bindings
+mk_python=0
+
+# stats
+mk_stats=0
+
+PYTHONVERSION=`python -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
+
 # polarssl
 polarssl_headers=""
 polarssl_library=""
@@ -1139,6 +1160,12 @@ for arg in $*; do
 			;;
 		--trace*)
 			trace=1
+			;;
+		--stats*)
+			mk_stats=1
+			;;
+		--python*)
+			mk_python=1
 			;;
 		--no-backtrace*)
 			no_backtrace=1
@@ -1244,6 +1271,8 @@ for arg in $*; do
 			echo "  --trace                 Enable trace messages (don't use in production)"
 			echo "  --no-backtrace          Disable backtrace feature"
 			echo "  --linux-trace           Enable Linux Trace Toolkit"
+			echo "  --stats                 Enable worker statistics gathering"
+			echo "  --python                Generate a python module for monkey"
 			echo "  --musl-mode             Enable musl compatibility mode"
 			echo "  --uclib-mode            Enable uClib compatibility mode"
                         echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
@@ -1317,6 +1346,26 @@ if test -z "$CC" ; then
 	fi
 fi
 
+# Check dependencies for building the
+# python library if --python was passed
+
+if [ $mk_python == 1 ]; then
+    INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
+    if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
+        echo
+        echo
+        echo "Please install python development files for building the monkey python module"
+        exit 1
+    fi
+    cython_path=`which cython`
+    if ! test -x "$cython_path"; then
+        echo
+        echo
+        echo "Please install cython for building the monkey python module"
+        exit 1
+    fi
+fi
+
 # STRIP support have been removed, just keep this
 # variable for future changes or changes.
 if test -z "$STRIP" ; then
@@ -1326,7 +1375,7 @@ fi
 [ -n "$relaxed_plugins" ] && DEFS="$DEFS -DRELAXED_PLUGINS"
 
 CFLAGS_GEN=" -std=gnu99 -Wall -Wextra"
-if test -z "$debug" ; then
+if test -z "$debug" && test -z "$mk_stats"; then
 	CFLAGS="$CFLAGS $CFLAGS_GEN -fvisibility=hidden"
 
 	# Only set -O2 if the user didn't include an -O level
@@ -1360,6 +1409,14 @@ fi
 if [ $linux_trace ]; then
         libs="$libs -llttng-ust -lurcu-bp"
 	DEFS="$DEFS -DLINUX_TRACE"
+fi
+
+if [ $mk_stats == 1 ]; then
+    DEFS="$DEFS -DSTATS"
+fi
+
+if [ $mk_python == 1 ]; then
+    DEFS="$DEFS -DPYTHON_BINDINGS"
 fi
 
 if [ $malloc_libc -eq 1 ]; then

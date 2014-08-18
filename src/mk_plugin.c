@@ -35,6 +35,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_vhost.h>
+#include <monkey/mk_stats.h>
 
 enum {
     bufsize = 256
@@ -602,6 +603,7 @@ int mk_plugin_stage_run(unsigned int hook,
     int ret;
     struct plugin_stagem *stm;
 
+
 #ifdef SHAREDLIB
     struct sched_list_node *thconf = mk_sched_get_thread_conf();
     mklib_ctx ctx = thconf->ctx;
@@ -611,7 +613,9 @@ int mk_plugin_stage_run(unsigned int hook,
     if (hook & MK_PLUGIN_STAGE_10 && ctx->ipf) {
         mk_socket_ip_str(socket, &ptr, bufsize, &len);
         ret = ctx->ipf(buf);
-        if (ret == MKLIB_FALSE) return MK_PLUGIN_RET_CLOSE_CONX;
+        if (ret == MKLIB_FALSE) {
+            return MK_PLUGIN_RET_CLOSE_CONX;
+        }
     }
 
     if (hook & MK_PLUGIN_STAGE_20 && ctx->urlf) {
@@ -621,7 +625,9 @@ int mk_plugin_stage_run(unsigned int hook,
         buf[len] = '\0';
 
         ret = ctx->urlf(buf);
-        if (ret == MKLIB_FALSE) return MK_PLUGIN_RET_CLOSE_CONX;
+        if (ret == MKLIB_FALSE) {
+            return MK_PLUGIN_RET_CLOSE_CONX;
+        }
     }
 
 #endif
@@ -755,7 +761,9 @@ int mk_plugin_stage_run(unsigned int hook,
         mk_mem_free(get);
         mk_mem_free(post);
 
-        if (ret == MKLIB_FALSE) return -1;
+        if (ret == MKLIB_FALSE) {
+            return -1;
+        }
 
         /* Status */
         api->header_set_http_status(sr, status);
@@ -786,7 +794,9 @@ int mk_plugin_stage_run(unsigned int hook,
         }
         mk_socket_set_cork_flag(socket, TCP_CORK_OFF);
 
-        if (ret == MKLIB_TRUE) return MK_PLUGIN_RET_END;
+        if (ret == MKLIB_TRUE) {
+            return MK_PLUGIN_RET_END;
+        }
     }
 
     if (hook & MK_PLUGIN_STAGE_40 && ctx->closef) {
@@ -1067,6 +1077,7 @@ int mk_plugin_event_read(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
+
     MK_TRACE("[FD %i] Read Event", socket);
 
     /*
@@ -1116,6 +1127,7 @@ int mk_plugin_event_write(int socket)
     struct plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
+
 
     MK_TRACE("[FD %i] Plugin event write", socket);
 

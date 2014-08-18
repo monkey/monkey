@@ -58,6 +58,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_stats.h>
 
 const mk_ptr_t mk_crlf = mk_ptr_init(MK_CRLF);
 const mk_ptr_t mk_endblock = mk_ptr_init(MK_ENDBLOCK);
@@ -981,6 +982,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     struct sched_connection *sc;
 
     sc = mk_sched_get_connection(sched, socket);
+
     if (!sc) {
         MK_TRACE("[FD %i] No sched node, could not create session", socket);
         return NULL;

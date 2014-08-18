@@ -8,14 +8,13 @@ YELLOW="$(echo -e '\033[0;33m')"
 RED="$(echo -e '\033[1;31m')"
 NORMAL="$(echo -e '\033[0;39m')"
 
-CFLAGS="$CFLAGS -I ../../src/include/public"
-LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey"
+CFLAGS="$CFLAGS -I ../../include/monkey"
+LDFLAGS="$LDFLAGS -L../../src/ -Wl,-rpath=../../src/ -lmonkey -lpthread"
 
 [ -z "$CC" ] && CC=gcc
 
-
 # Check that we can run the tests
-if [ ! -f ../../src/libmonkey.so.1.5 ]; then
+if [ ! -f ../../src/libmonkey.so ]; then
 	echo -e "\n${YELLOW}Please build and install the library first.\n"
 
 	echo "The tests will link against the source dir, but the library"
@@ -24,14 +23,30 @@ if [ ! -f ../../src/libmonkey.so.1.5 ]; then
 	exit
 fi
 
+# Check liana plugin is in place
+if [ ! -f ../../plugins/liana/monkey-liana.so ]; then
+    echo "Please compile the liana plugin"
+    exit
+fi
+cp ../../plugins/liana/monkey-liana.so ../../plugins/monkey-liana.so
 
 # Precompile the header for faster builds
-$CC ../../src/include/public/libmonkey.h
+$CC ../../include/monkey/libmonkey.h
 
 success=0
 fail=0
 
-for src in *.c; do
+if [ $# == 0 ]; then
+    echo "Running all tests; use './run-tests.sh ip-ban.c url-ban.c' to run a subset"
+    tests=*.c
+else
+    echo "Running tests $@"
+    tests=$@
+fi
+
+rm -rf bin/ && mkdir bin/
+
+for src in $tests; do
 	[ ! -f "$src" ] && exit
 
 	test=${src%.c}
@@ -41,7 +56,7 @@ for src in *.c; do
 	case $test in x*) ret=1 ;; esac
 
 	echo -n "Building test $test... "
-	$CC $CFLAGS $src -o $test $LDFLAGS
+	$CC $CFLAGS $src -o bin/$test $LDFLAGS
 
 	if [ $? -ne 0 ]; then
 		fail=$((fail + 1))
@@ -49,7 +64,7 @@ for src in *.c; do
 		continue
 	fi
 
-	./$test > $log
+	bin/$test > $log
 	if [ $? -ne $ret ]; then
 		fail=$((fail + 1))
 		echo "${RED}Failed $NORMAL"
@@ -64,19 +79,15 @@ for src in *.c; do
 done
 
 # Remove the PCH
-rm ../../src/include/public/libmonkey.h.gch
-
+rm ../../include/monkey/libmonkey.h.gch
 
 echo
 
 total=$((fail + success))
-percentage=$(awk "BEGIN{print $success/$total * 100}")
-fpercentage=$(printf '%.2f' $percentage)
-
-num=${percentage//.*/}
+percentage=$(awk "BEGIN{print int($success/$total * 100)}")
 
 [ $fail -eq 0 ] && echo "$GREEN	All tests passed!"
-[ $fail -ne 0 -a $percentage -ge 60 ] && echo "$YELLOW	$fpercentage% passed, $fail/$total fails"
-[ $percentage -lt 60 ] && echo "$RED	$fpercentage% passed, $fail/$total fails"
+[ $fail -ne 0 -a $percentage -ge 60 ] && echo "$YELLOW	$percentage% passed, $fail/$total fails"
+[ $percentage -lt 60 ] && echo "$RED	$percentage% passed, $fail/$total fails"
 
 echo $NORMAL

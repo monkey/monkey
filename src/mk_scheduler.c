@@ -43,6 +43,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_linuxtrace.h>
+#include <monkey/mk_stats.h>
 
 pthread_key_t worker_sched_node;
 
@@ -54,6 +55,10 @@ pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
 __thread struct mk_list *cs_incomplete;
+
+#ifdef STATS
+__thread struct stats *stats;
+#endif
 
 /*
  * Returns the worker id which should take a new incomming connection,
@@ -330,7 +335,8 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_conn_close(remote_fd, MK_EP_SOCKET_CLOSED);
+        mk_epoll_del(sched->epoll_fd, remote_fd);
+        mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return -1;
     }
@@ -450,6 +456,10 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     struct sched_list_node *thinfo = NULL;
     struct epoll_event event = {0, {0}};
 
+#ifdef STATS
+    stats = mk_mem_malloc_z(sizeof(struct stats));
+#endif
+
 #ifndef SHAREDLIB
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
@@ -511,6 +521,9 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
      */
 
 #ifdef SHAREDLIB
+#ifdef STATS
+    thconf->ctx->worker_info[wid]->stats = stats;
+#endif
     thinfo->ctx = thconf->ctx;
 #endif
 

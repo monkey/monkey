@@ -37,6 +37,7 @@
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_vhost.h>
+#include <monkey/mk_stats.h>
 
 static struct host *mklib_host_find(const char *name)
 {
@@ -139,6 +140,9 @@ int mklib_callback_set(mklib_ctx ctx, const enum mklib_cb cb, void *func)
 mklib_ctx mklib_init(const char *address, const unsigned int port,
                      const unsigned int plugins, const char *documentroot)
 {
+#ifdef PYTHON_BINDINGS
+    PyEval_InitThreads();
+#endif
     mklib_ctx a = mk_mem_malloc_z(sizeof(struct mklib_ctx_t));
     if (!a) return NULL;
 
@@ -147,6 +151,9 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     config->serverconf = mk_string_dup(MONKEY_PATH_CONF);
     mk_config_set_init_values();
+
+    mk_kernel_init();
+    mk_kernel_features();
 
     /*
      * If the worker numbers have not be set, set the number based on
@@ -209,7 +216,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
         host->documentroot.len = sizeof("/dev/null") - 1;
     }
 
-    config->server_software.data = "";
+    config->server_software.data = mk_string_dup("");
     config->server_software.len = 0;
     config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
@@ -349,6 +356,79 @@ int mklib_config(mklib_ctx ctx, ...)
     return MKLIB_TRUE;
 }
 
+/*
+ * NULL-terminated config call retrieving monkey configuration.
+ * Returns MKLIB_FALSE on failure
+ */
+int mklib_get_config(mklib_ctx ctx, ...)
+{
+    int i, *ip;
+    va_list va;
+    char *s;
+
+    if (!ctx)
+        return MKLIB_FALSE;
+
+    va_start(va, ctx);
+
+    i = va_arg(va, int);
+    while (i) {
+        const enum mklib_mkc e = i;
+
+        switch(e) {
+            case MKC_WORKERS:
+                ip = va_arg(va, int *);
+                *ip = config->workers;
+                break;
+            case MKC_TIMEOUT:
+                ip = va_arg(va, int *);
+                *ip = config->timeout;
+                break;
+            case MKC_USERDIR:
+                s = va_arg(va, char *);
+                if (config->user_dir)
+                    memcpy(s, config->user_dir, strlen(config->user_dir) + 1);
+                else
+                    s[0] = 0;
+                break;
+            case MKC_RESUME:
+                ip = va_arg(va, int *);
+                *ip = config->resume;
+                break;
+            case MKC_KEEPALIVE:
+                ip = va_arg(va, int *);
+                *ip = config->keep_alive;
+                break;
+            case MKC_KEEPALIVETIMEOUT:
+                ip = va_arg(va, int *);
+                *ip = config->keep_alive_timeout;
+                break;
+            case MKC_MAXKEEPALIVEREQUEST:
+                ip = va_arg(va, int *);
+                *ip = config->max_keep_alive_request;
+                break;
+            case MKC_MAXREQUESTSIZE:
+                ip = va_arg(va, int *);
+                *ip = config->max_request_size;
+                break;
+            case MKC_SYMLINK:
+                ip = va_arg(va, int *);
+                *ip = config->symlink;
+                break;
+            case MKC_DEFAULTMIMETYPE:
+                s = va_arg(va, char *);
+                memcpy(s, config->default_mimetype, strlen(config->default_mimetype) + 1);
+                break;
+            default:
+                mk_warn("Unknown config option");
+        }
+
+        i = va_arg(va, int);
+    }
+
+    return MKLIB_TRUE;
+}
+
 /* NULL-terminated config call creating a vhost with *name. Returns MKLIB_FALSE
  * on failure. */
 int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
@@ -432,15 +512,18 @@ int mklib_vhost_config(mklib_ctx ctx, const char *name, ...)
 /* Start the server. */
 int mklib_start(mklib_ctx ctx)
 {
-    if (!ctx || ctx->lib_running) return MKLIB_FALSE;
+    unsigned int i;
+    const unsigned int workers = config->workers;
+    if (!ctx || ctx->lib_running)
+        return MKLIB_FALSE;
 
     mk_plugin_core_process();
 
     ctx->workers = mk_mem_malloc_z(sizeof(pthread_t) * config->workers);
 
-    unsigned int i;
-    const unsigned int workers = config->workers;
-    for (i = 0; i < workers; i++) {
+    ctx->worker_info = mk_mem_malloc_z(sizeof(struct mklib_worker_info *) * (workers + 1));
+    for(i = 0; i < workers; i++) {
+        ctx->worker_info[i] = mk_mem_malloc_z(sizeof(struct mklib_worker_info));
         mk_sched_launch_thread(config->worker_capacity, &ctx->workers[i], ctx);
     }
 
@@ -459,11 +542,8 @@ int mklib_start(mklib_ctx ctx)
         usleep(10000);
     }
 
-    ctx->worker_info = mk_mem_malloc_z(sizeof(struct mklib_worker_info *) * (workers + 1));
-    for(i = 0; i < workers; i++) {
-        ctx->worker_info[i] = mk_mem_malloc_z(sizeof(struct mklib_worker_info));
+    for(i = 0; i < workers; i++)
         ctx->worker_info[i]->pid = sched_list[i].pid;
-    }
 
     ctx->lib_running = 1;
     ctx->tid = mk_utils_worker_spawn(mklib_run, ctx);
@@ -477,7 +557,7 @@ int mklib_stop(mklib_ctx ctx)
     if (!ctx || !ctx->lib_running) return MKLIB_FALSE;
 
     ctx->lib_running = 0;
-    pthread_cancel(ctx->tid);
+    //pthread_cancel(ctx->tid);
 
     int i;
     for (i = 0; i < config->workers; i++) {
@@ -488,7 +568,6 @@ int mklib_stop(mklib_ctx ctx)
 
     mk_plugin_exit_all();
     mk_config_free_all();
-    free(config);
     free(ctx->workers);
     free(ctx);
 
@@ -565,13 +644,41 @@ struct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx ctx)
 
     if (!ctx || !ctx->lib_running) return NULL;
 
-
     for (i = 0; i < workers; i++) {
-        ctx->worker_info[i]->active_connections = sched_list[i].accepted_connections -
-                                                  sched_list[i].closed_connections;
+        ctx->worker_info[i]->accepted_connections = sched_list[i].accepted_connections;
+        ctx->worker_info[i]->closed_connections = sched_list[i].closed_connections;
     }
 
     return ctx->worker_info;
+}
+
+void mklib_print_worker_info(struct mklib_worker_info *mwi UNUSED_PARAM)
+{
+#ifdef STATS
+    struct stats *stats = mwi->stats;
+    printf("Stat info for worker: %d\n", mwi->pid);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_session_create", stats->mk_session_create[0], stats->mk_session_create[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_session_get", stats->mk_session_get[0], stats->mk_session_get[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_method_get", stats->mk_http_method_get[0], stats->mk_http_method_get[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_request_end", stats->mk_http_request_end[0], stats->mk_http_request_end[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_range_parse", stats->mk_http_range_parse[0], stats->mk_http_range_parse[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_http_init", stats->mk_http_init[0], stats->mk_http_init[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_sched_get_connection", stats->mk_sched_get_connection[0], stats->mk_sched_get_connection[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_sched_remove_client", stats->mk_sched_remove_client[0], stats->mk_sched_remove_client[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_stage_run", stats->mk_plugin_stage_run[0], stats->mk_plugin_stage_run[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_event_read", stats->mk_plugin_event_read[0], stats->mk_plugin_event_read[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_plugin_event_write", stats->mk_plugin_event_write[0], stats->mk_plugin_event_write[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_header_send", stats->mk_header_send[0], stats->mk_header_send[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_conn_read", stats->mk_conn_read[0], stats->mk_conn_read[1]);
+    printf("%-25s: %8lld times:%10lld nanoseconds\n", "mk_conn_write", stats->mk_conn_write[0], stats->mk_conn_write[1]);
+    printf("\n");
+#else
+    printf("Stat info for worker: %d\n", mwi->pid);
+    printf("Open connections: %lld\n", mwi->accepted_connections);
+    printf("Closed connections: %lld\n", mwi->closed_connections);
+    printf("No more stats available, use \"./configure --stats\"\n");
+    printf("\n");
+#endif
 }
 
 /* Return a list of all mimetypes */

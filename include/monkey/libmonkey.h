@@ -27,6 +27,11 @@ extern "C" {
 #endif
 
 #include <pthread.h>
+#ifdef PYTHON_BINDINGS
+#include <monkey/mk_info.h>
+#define PYTHONH <PYTHONVERSION/Python.h>
+#include PYTHONH
+#endif
 
 #if __GNUC__ >= 4
  #define NULL_TERMINATED __attribute__ ((sentinel))
@@ -66,7 +71,11 @@ struct mklib_vhost {
 };
 
 struct mklib_worker_info {
-    unsigned long long active_connections;
+    unsigned long long accepted_connections;
+    unsigned long long closed_connections;
+#ifdef STATS
+    struct stats *stats;
+#endif
     int pid;
 };
 
@@ -160,6 +169,12 @@ int MK_EXPORT mklib_callback_set(mklib_ctx, const enum mklib_cb, void *);
  * Returns MKLIB_FALSE on failure. */
 int MK_EXPORT mklib_config(mklib_ctx, ...) NULL_TERMINATED;
 
+/*
+ * NULL-terminated config call retrieving monkey configuration.
+ * Returns MKLIB_FALSE on failure
+ */
+int MK_EXPORT mklib_get_config(mklib_ctx ctx, ...) NULL_TERMINATED;
+
 /* NULL-terminated config call creating a vhost with *name. Returns MKLIB_FALSE
  * on failure. */
 int MK_EXPORT mklib_vhost_config(mklib_ctx, const char *name, ...) NULL_TERMINATED;
@@ -175,6 +190,9 @@ struct mklib_vhost MK_EXPORT **mklib_vhost_list(mklib_ctx);
 
 /* Return a list of the workers */
 struct mklib_worker_info MK_EXPORT **mklib_scheduler_worker_info(mklib_ctx);
+
+/* Print information stored in stats data associated to worker */
+void MK_EXPORT mklib_print_worker_info(struct mklib_worker_info *mwi);
 
 /* Return a list of all mimetypes */
 struct mklib_mime MK_EXPORT **mklib_mimetype_list(mklib_ctx);

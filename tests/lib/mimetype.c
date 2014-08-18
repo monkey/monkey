@@ -1,6 +1,6 @@
 #include <libmonkey.h>
 
-int main() {
+int main(void) {
 
 	mklib_ctx c1 = mklib_init(NULL, 0, 0, NULL);
 	if (!c1) return 1;

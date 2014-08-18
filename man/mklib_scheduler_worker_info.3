@@ -28,26 +28,32 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-mklib_scheduler_worker_info \- list all worker threads and their stats
+mklib_scheduler_worker_info, mklib_print_worker_info \- list all worker threads and their stats
 .SH "SYNOPSIS"
 .sp
 \fB#include <libmonkey\&.h>\fR
 .sp
 .nf
 \fBstruct mklib_worker_info {
-    unsigned long long \fR\fB\fIactive_connections\fR\fR\fB;
+    unsigned long long \fR\fB\fIaccepted_connections\fR\fR\fB;
+    unsigned long long \fR\fB\fIclosed_connections\fR\fR\fB;
     int \fR\fB\fIpid\fR\fR\fB;
 };\fR
 .fi
 .sp
 \fBmklib_worker_info_foreach(struct mklib_worker_info *\fR\fB\fIcur\fR\fR\fB, struct mklib_worker_info \fR\fB**\fR\fB\fIlist\fR\fR\fB)\fR
 .sp
-\fBstruct mklib_worker_info **mklib_vhost_list(mklib_ctx \fR\fB\fIctx\fR\fR\fB);\fR
+\fBstruct mklib_worker_info **mklib_scheduler_worker_info(mklib_ctx \fR\fB\fIctx\fR\fR\fB);\fR
+.sp
+\fBvoid mklib_print_worker_info(struct mklib_worker_info *\fR\fB\fImwi\fR\fR\fB);\fR
 .SH "DESCRIPTION"
 .sp
-\fBmklib_vhost_list\fR() returns a list of all existing worker threads\&.
+\fBmklib_scheduler_worker_info\fR() returns a list of all existing worker threads\&.
 .sp
-The \fIactive_connections\fR member has the number of currently ongoing connections to this worker\&.
+\fBmklib_print_worker_info\fR() print information about worker to standard output\&.
+.sp
+The \fIaccepted_connections\fR and \fIclosed_connections\fR members represent statistics about the
+connections managed by this worker\&.
 .sp
 The \fIpid\fR member has the thread ID of this worker\&.
 .sp
