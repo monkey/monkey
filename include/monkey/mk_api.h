@@ -79,6 +79,7 @@ int MK_EXPORT _mkp_network_io_create_socket(int domain, int type, int protocol);
 int MK_EXPORT _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr,
                                    socklen_t addrlen, int backlog);
 int MK_EXPORT _mkp_network_io_server(int port, char *listen_addr, int reuse_port);
+int MK_EXPORT _mkp_network_io_buffer_size();
 int MK_EXPORT _mkp_event_read(int sockfd);
 int MK_EXPORT _mkp_event_write(int sockfd);
 int MK_EXPORT _mkp_event_error(int sockfd);
