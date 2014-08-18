@@ -140,6 +140,7 @@ int mklib_callback_set(mklib_ctx ctx, const enum mklib_cb cb, void *func)
 mklib_ctx mklib_init(const char *address, const unsigned int port,
                      const unsigned int plugins, const char *documentroot)
 {
+    char portbuffer[64];
 #ifdef PYTHON_BINDINGS
     PyEval_InitThreads();
 #endif
@@ -184,9 +185,17 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     if (!plg_netiomap) goto out_config;
     mk_plugin_preworker_calls();
 
-    if (port) config->serverport = port;
-    if (address) config->listen_addr = mk_string_dup(address);
-    else config->listen_addr = mk_string_dup(config->listen_addr);
+    if (address) {
+        if (config->listen.address)
+            free(config->listen.address);
+        config->listen.address = mk_string_dup(address);
+    }
+
+    if (port) {
+        if (snprintf(portbuffer, sizeof(portbuffer), "%d", port)) {
+            config->listen.port = mk_string_dup(portbuffer);
+        }
+    }
 
     unsigned long len;
     struct host *host = mk_mem_malloc_z(sizeof(struct host));
@@ -200,8 +209,8 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
                     "Server: %s", host->host_signature);
 
     struct host_alias *alias = mk_mem_malloc_z(sizeof(struct host_alias));
-    alias->name = mk_string_dup(config->listen_addr);
-    alias->len = strlen(config->listen_addr);
+    alias->name = mk_string_dup(config->listen.address);
+    alias->len = strlen(config->listen.address);
     mk_list_add(&alias->_head, &host->server_names);
 
     mk_list_add(&host->_head, &config->hosts);
