@@ -329,7 +329,7 @@ int mk_string_trim(char **str)
     return 0;
 }
 
-uint32_t digits10(uint64_t v) 
+uint32_t digits10(uint64_t v)
 {
     if (v < 10) return 1;
     if (v < 100) return 2;
@@ -350,7 +350,7 @@ uint32_t digits10(uint64_t v)
     return 12 + digits10(v / 1000000000000UL);
 }
 
-int mk_string_itop(uint64_t value, mk_ptr_t *p)
+int mk_string_itop(uint64_t value, mk_pointer *p)
 {
     static const char digits[201] =
         "0001020304050607080910111213141516171819"

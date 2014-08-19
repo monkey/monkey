@@ -61,7 +61,7 @@ void mk_string_split_free(struct mk_list *list);
 int mk_string_trim(char **str);
 char *mk_string_build(char **buffer, unsigned long *len,
                       const char *format, ...) PRINTF_WARNINGS(3,4);
-int mk_string_itop(uint64_t value, mk_ptr_t *p);
+int mk_string_itop(uint64_t value, mk_pointer *p);
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end);
 
 char *mk_string_tolower(const char *in);
