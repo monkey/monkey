@@ -44,7 +44,6 @@ int mk_kernel_version()
     if (uname(&uts) == -1) {
         mk_libc_error("uname");
     }
-
     len = strlen(uts.release);
 
     /* Fixme: this don't support Linux Kernel 10.x.x :P */
@@ -54,7 +53,11 @@ int mk_kernel_version()
     p = (uts.release) + 2;
     pos = mk_string_char_search(p, '.', len - 2);
     if (pos <= 0) {
-        return -1;
+        /* Some Debian systems uses a different notation, e.g: 3.14-2-amd64 */
+        pos = mk_string_char_search(p, '-', len - 2);
+        if (pos <= 0) {
+            return -1;
+        }
     }
 
     tmp = mk_string_copy_substr(p, 0, pos);
@@ -77,6 +80,7 @@ int mk_kernel_version()
     c = atoi(tmp);
     mk_mem_free(tmp);
 
+    MK_TRACE("Kernel detected: %i.%i.%i", a, b, c);
     return MK_KERNEL_VERSION(a, b, c);
 }
 
