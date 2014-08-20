@@ -210,7 +210,7 @@ struct plugin_api
     char *(*pointer_to_buf) (mk_pointer);
 
     /* string functions */
-    int   (*str_itop) (int, mk_pointer *);
+    int   (*str_itop) (uint64_t, mk_pointer *);
     int   (*str_search) (const char *, const char *, int);
     int   (*str_search_n) (const char *, const char *, int, int);
     char *(*str_build) (char **, unsigned long *, const char *, ...) PRINTF_WARNINGS(3,4);
