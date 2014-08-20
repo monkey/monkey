@@ -296,6 +296,10 @@ struct plugin_api
     /* kernel interfaces */
     int (*kernel_version) ();
     int (*kernel_features_print) (char *, size_t);
+
+#ifdef JEMALLOC_STATS
+    int (*je_mallctl) (const char *, void *, size_t *, void *, size_t);
+#endif
 };
 
 extern struct plugin_api *api;
