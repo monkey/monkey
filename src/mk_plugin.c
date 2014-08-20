@@ -427,6 +427,10 @@ void mk_plugin_init()
     api->errno_print = mk_utils_print_errno;
 #endif
 
+#ifdef JEMALLOC_STATS
+    api->je_mallctl = je_mallctl;
+#endif
+
     api->stacktrace = (void *) mk_utils_stacktrace;
     api->plugins = config->plugins;
 }

@@ -294,6 +294,10 @@ struct plugin_api
 #endif
     void (*stacktrace)(void);
 
+#ifdef JEMALLOC_STATS
+    int (*je_mallctl) (const char *, void *, size_t *, void *, size_t);
+#endif
+
 };
 
 extern struct plugin_api *api;
