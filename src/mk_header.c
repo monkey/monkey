@@ -270,7 +270,7 @@ int mk_header_send(int fd, struct client_session *cs,
     }
 
     /* Content-Length */
-    if (sh->content_length >= 0) {
+    if (sh->content_length >= 0 && sh->transfer_encoding != 0) {
         /* Map content length to MK_POINTER */
         mk_ptr_t *cl;
         cl = mk_cache_get(mk_cache_header_cl);
