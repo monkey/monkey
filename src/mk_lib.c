@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <dlfcn.h>
+#include <poll.h>
 
 #include <monkey/mk_lib.h>
 #include <monkey/mk_utils.h>
@@ -56,24 +57,76 @@ static struct host *mklib_host_find(const char *name)
 
 static void mklib_run(void *p)
 {
-    int remote_fd, ret;
+    struct sched_list_node *sched;
+    struct mk_server_listen listen;
+    struct pollfd *fds;
+    int ret;
     const mklib_ctx ctx = p;
+    unsigned int i;
+    unsigned int count;
 
     mk_utils_worker_rename("libmonkey");
     mk_socket_set_tcp_defer_accept(config->server_fd);
 
-    while (1) {
+    /* check balancing mode, for reuse port just stay here forever */
+    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        while (1) sleep(60);
+    }
 
+    if (mk_server_listen_init(config, &listen)) {
+        mk_err("Failed to initialize listen sockets.");
+        return;
+    }
+
+    fds = calloc(listen.count, sizeof(*fds));
+    if (fds == NULL) {
+        mk_err("Failed to initialize listen sockets.");
+        mk_server_listen_free(&listen);
+        return;
+    }
+    count = listen.count;
+    for (i = 0; i < count; i++) {
+        fds[i].events = POLLIN | POLLERR | POLLHUP;
+        fds[i].fd = listen.listen_list[i].server_fd;
+    }
+
+    while (1) {
         if (!ctx->lib_running) {
             sleep(1);
             continue;
         }
 
-        remote_fd = mk_socket_accept(config->server_fd);
-        if (remote_fd == -1) continue;
+        ret = poll(fds, count, 30000);
+        if (mk_unlikely(ret < 0)) {
+            mk_err("[server] Error in poll(): %s", strerror(errno));
+            continue;
+        }
+        else if (mk_unlikely(ret == 0)) {
+            continue;
+        }
 
-        ret = mk_sched_add_client(remote_fd);
-        if (ret == -1) mk_socket_close(remote_fd);
+        for (i = 0; i < count; i++) {
+            if (fds[i].revents == 0) {
+                continue;
+            }
+            else if (fds[i].revents & POLLIN) {
+                // Accept connection
+                sched = mk_sched_next_target();
+                if (sched != NULL) {
+                    mk_server_listen_handler(sched, &listen, fds[i].fd);
+                }
+                else {
+                    mk_warn("[server] Over capacity.");
+                }
+            }
+            else if (fds[i].revents & (POLLERR | POLLHUP)) {
+                // Error occurred
+                mk_err("[server] Error on socket %d: %s",
+                        fds[i].fd,
+                        strerror(errno));
+            }
+            fds[i].revents = 0;
+        }
     }
 }
 
@@ -140,6 +193,7 @@ int mklib_callback_set(mklib_ctx ctx, const enum mklib_cb cb, void *func)
 mklib_ctx mklib_init(const char *address, const unsigned int port,
                      const unsigned int plugins, const char *documentroot)
 {
+    char portbuffer[64];
 #ifdef PYTHON_BINDINGS
     PyEval_InitThreads();
 #endif
@@ -184,9 +238,23 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     if (!plg_netiomap) goto out_config;
     mk_plugin_preworker_calls();
 
-    if (port) config->serverport = port;
-    if (address) config->listen_addr = mk_string_dup(address);
-    else config->listen_addr = mk_string_dup(config->listen_addr);
+    if (address) {
+        if (config->listen.address)
+            free(config->listen.address);
+        config->listen.address = mk_string_dup(address);
+    }
+    else {
+        config->listen.address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
+    }
+
+    if (port) {
+        if (snprintf(portbuffer, sizeof(portbuffer), "%d", port)) {
+            config->listen.port = mk_string_dup(portbuffer);
+        }
+    }
+    else {
+        config->listen.address = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
+    }
 
     unsigned long len;
     struct host *host = mk_mem_malloc_z(sizeof(struct host));
@@ -200,8 +268,8 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
                     "Server: %s", host->host_signature);
 
     struct host_alias *alias = mk_mem_malloc_z(sizeof(struct host_alias));
-    alias->name = mk_string_dup(config->listen_addr);
-    alias->len = strlen(config->listen_addr);
+    alias->name = mk_string_dup(config->listen.address);
+    alias->len = strlen(config->listen.address);
     mk_list_add(&alias->_head, &host->server_names);
 
     mk_list_add(&host->_head, &config->hosts);
@@ -224,9 +292,6 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     config->worker_capacity = mk_server_worker_capacity(config->workers);
     config->max_load = (config->worker_capacity * config->workers);
-
-    /* Server listening socket */
-    config->server_fd = mk_socket_server(config->serverport, config->listen_addr, MK_FALSE);
 
     /* Clock thread */
     mk_clock_sequential_init();

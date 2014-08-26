@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <limits.h>
 
 #ifdef LINUX_TRACE
 #define TRACEPOINT_CREATE_PROBES
@@ -127,7 +128,7 @@ static void mk_help(int rc)
 int main(int argc, char **argv)
 {
     int opt;
-    int port_override = -1;
+    char *port_override = NULL;
     int workers_override = -1;
     int run_daemon = 0;
     char *one_shot = NULL;
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
             run_daemon = 1;
             break;
         case 'p':
-            port_override = atoi(optarg);
+            port_override = optarg;
             break;
         case 'o':
             one_shot = optarg;
@@ -302,18 +303,9 @@ int main(int argc, char **argv)
     mk_plugin_read_config();
 
     /* Override TCP port if it was set in the command line */
-    if (port_override > 0) {
-        config->serverport = port_override;
-    }
-
-    /* Server: listening socket */
-    if (config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
-        config->server_fd = mk_socket_server(config->serverport,
-                                             config->listen_addr,
-                                             MK_FALSE);
-    }
-    else {
-        config->server_fd = -1;
+    if (port_override != NULL) {
+        config->listen.port = port_override;
+        mk_config_listen_free(config->listen.next);
     }
 
     /* Running Monkey as daemon */
@@ -364,7 +356,7 @@ int main(int argc, char **argv)
     mk_user_set_uidgid();
 
     /* Server loop, let's listen for incomming clients */
-    mk_server_loop(config->server_fd);
+    mk_server_loop();
 
     mk_mem_free(config);
     return 0;

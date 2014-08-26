@@ -109,7 +109,7 @@ struct plugin_network_io
     int (*send_file) (int, int, off_t *, size_t);
     int (*create_socket) (int, int, int);
     int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
-    int (*server) (int, char *, int);
+    int (*server) (char *port, char *addr, int);
     int (*buffer_size) ();
 };
 
@@ -242,7 +242,7 @@ struct plugin_api
     void *(*plugin_load_symbol) (void *, const char *);
 
     /* epoll functions */
-    void *(*epoll_init) (int, int, int);
+    void *(*epoll_init) (struct mk_server_listen *, int, int);
     int   (*epoll_create) (int);
     int   (*epoll_add) (int, int, int, unsigned int);
     int   (*epoll_del) (int, int);

@@ -215,12 +215,10 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     return ret;
 }
 
-int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
+int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd = -1;
     int ret;
-    char *port_str = 0;
-    unsigned long len;
     struct addrinfo hints;
     struct addrinfo *res, *rp;
 
@@ -229,10 +227,7 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    mk_api->str_build(&port_str, &len, "%d", port);
-
-    ret = getaddrinfo(listen_addr, port_str, &hints, &res);
-    mk_api->mem_free(port_str);
+    ret = getaddrinfo(listen_addr, port, &hints, &res);
     if(ret != 0) {
         mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
@@ -261,7 +256,7 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
         if(ret == -1) {
-            mk_err("Cannot listen on %s:%i\n", listen_addr, port);
+            mk_err("Cannot listen on %s:%s\n", listen_addr, port);
             continue;
         }
         break;

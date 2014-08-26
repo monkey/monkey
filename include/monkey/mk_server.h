@@ -23,6 +23,18 @@
 #ifndef MK_SERVER_H
 #define MK_SERVER_H
 
+struct mk_server_listen_entry
+{
+    struct mk_config_listen *listen;
+    int server_fd;
+};
+
+struct mk_server_listen
+{
+    unsigned int count;
+    struct mk_server_listen_entry *listen_list;
+};
+
 static inline int mk_server_cork_flag(int fd, int state)
 {
     if (config->manual_tcp_cork == MK_FALSE) {
@@ -32,9 +44,16 @@ static inline int mk_server_cork_flag(int fd, int state)
     return mk_socket_set_cork_flag(fd, state);
 }
 
-
+struct sched_list_node;
+int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
+int mk_server_listen_handler(struct sched_list_node *sched,
+        struct mk_server_listen *listen,
+        int server_fd);
+void mk_server_listen_free(struct mk_server_listen *server_listen);
+int mk_server_listen_init(struct server_config *config,
+        struct mk_server_listen *server_listen);
 unsigned int mk_server_worker_capacity(unsigned short nworkers);
 void mk_server_launch_workers(void);
-void mk_server_loop(int server_fd);
+void mk_server_loop(void);
 
 #endif

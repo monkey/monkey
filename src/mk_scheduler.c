@@ -31,6 +31,7 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_connection.h>
 #include <monkey/mk_scheduler.h>
+#include <monkey/mk_server.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_epoll.h>
 #include <monkey/mk_request.h>
@@ -151,6 +152,16 @@ static inline int _next_target()
     return target;
 }
 
+struct sched_list_node *mk_sched_next_target()
+{
+    int t = _next_target();
+
+    if (mk_likely(t != -1))
+        return &sched_list[t];
+    else
+        return NULL;
+}
+
 /*
  * This function synchronize the worker scheduler counters in case
  * we face the ULONG_MAX bug, this is an unexpected behavior but
@@ -257,59 +268,6 @@ int mk_sched_check_capacity(struct sched_list_node *sched)
 }
 
 /*
- * Assign a new incomming connection to a specific worker thread, this call comes
- * from the main monkey process.
- */
-int mk_sched_add_client(int remote_fd)
-{
-    int r, t=0;
-    struct sched_list_node *sched;
-
-    /* Next worker target */
-    t = _next_target();
-
-    if (mk_unlikely(t == -1)) {
-        MK_TRACE("[FD %i] Over Capacity, drop!", remote_fd);
-        MK_LT_SCHED(remote_fd, "OVER_CAPACITY");
-        return -1;
-    }
-
-    sched = &sched_list[t];
-
-    MK_TRACE("[FD %i] Balance to WID %i", remote_fd, sched->idx);
-
-    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_WRITE,
-                      MK_EPOLL_LEVEL_TRIGGERED);
-
-    if (mk_likely(r == 0)) {
-        sched->accepted_connections++;
-    }
-
-    MK_LT_SCHED(remote_fd, "ADD_CLIENT");
-    return r;
-}
-
-int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched)
-{
-    int r;
-
-    /* Make sure the worker have enough slots */
-    if (mk_list_is_empty(&sched->av_queue) == 0) {
-        return -1;
-    }
-
-    r  = mk_epoll_add(sched->epoll_fd, remote_fd, MK_EPOLL_READ,
-                      MK_EPOLL_LEVEL_TRIGGERED);
-
-    if (mk_likely(r == 0)) {
-        sched->accepted_connections++;
-    }
-
-    MK_LT_SCHED(remote_fd, "ADD_CLIENT_REUSEPORT");
-    return r;
-}
-
-/*
  * Register a new client connection into the scheduler, this call takes place
  * inside the worker/thread context.
  */
@@ -390,7 +348,7 @@ static void mk_sched_thread_lists_init()
 }
 
 /* Register thread information. The caller thread is the thread information's owner */
-static int mk_sched_register_thread(int server_fd, int efd)
+static int mk_sched_register_thread(int efd)
 {
     unsigned int i;
     struct sched_connection *sched_conn;
@@ -406,7 +364,6 @@ static int mk_sched_register_thread(int server_fd, int efd)
     sl = &sched_list[wid];
     sl->idx = wid++;
     sl->tid = pthread_self();
-    sl->server_fd = server_fd;
 
     /*
      * Under Linux does not exists the difference between process and
@@ -448,13 +405,13 @@ static int mk_sched_register_thread(int server_fd, int efd)
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
     int ret;
-    int server_fd = -1;
     char *thread_name = 0;
     unsigned long len;
     sched_thread_conf *thconf = thread_conf;
     int wid, epoll_max_events = thconf->epoll_max_events;
     struct sched_list_node *thinfo = NULL;
     struct epoll_event event = {0, {0}};
+    struct mk_server_listen server_listen;
 
 #ifdef STATS
     stats = mk_mem_malloc_z(sizeof(struct stats));
@@ -470,20 +427,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_cache_worker_init();
 
     /* Register working thread */
-    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        pthread_mutex_lock(&mutex_port_init);
-        server_fd = mk_socket_server(config->serverport,
-                                     config->listen_addr,
-                                     MK_TRUE);
-
-        /* Activate TCP_DEFER_ACCEPT */
-        if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
-            mk_warn("TCP_DEFER_ACCEPT failed");
-        }
-        pthread_mutex_unlock(&mutex_port_init);
-    }
-    wid = mk_sched_register_thread(server_fd, thconf->epoll_fd);
-
+    wid = mk_sched_register_thread(thconf->epoll_fd);
 
     /* Plugin thread context calls */
     mk_epoll_state_worker_init();
@@ -503,13 +447,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     if (ret != 0) {
         mk_libc_error("epoll_ctl");
         exit(EXIT_FAILURE);
-    }
-
-
-    if (server_fd > 0) {
-        event.data.fd = server_fd;
-        event.events = EPOLLIN;
-        ret = epoll_ctl(thinfo->epoll_fd, EPOLL_CTL_ADD, server_fd, &event);
     }
 
     /*
@@ -538,12 +475,18 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     pthread_setspecific(worker_sched_node, (void *) thinfo);
     mk_plugin_core_thread();
 
+    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        if (mk_server_listen_init(config, &server_listen)) {
+            mk_err("[sched] Failed to initialize listen sockets.");
+            return 0;
+        }
+    }
+
     __builtin_prefetch(thinfo);
     __builtin_prefetch(&worker_sched_node);
 
     /* Init epoll_wait() loop */
-    mk_epoll_init(thinfo->server_fd, thinfo->epoll_fd, epoll_max_events);
-    pthread_exit(0);
+    mk_epoll_init(&server_listen, thinfo->epoll_fd, epoll_max_events);
     return 0;
 }
 

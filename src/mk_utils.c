@@ -492,7 +492,9 @@ int mk_utils_register_pid()
     if (config->pid_status == MK_TRUE)
         return -1;
 
-    mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
+    mk_string_build(&filepath, &len, "%s.%s",
+            config->pid_file_path,
+            config->listen.port);
     if (!stat(filepath, &sb)) {
         /* file exists, perhaps previously kepts by SIGKILL */
         unlink(filepath);
@@ -535,7 +537,9 @@ int mk_utils_remove_pid()
     unsigned long len = 0;
     char *filepath = NULL;
 
-    mk_string_build(&filepath, &len, "%s.%d", config->pid_file_path, config->serverport);
+    mk_string_build(&filepath, &len, "%s.%s",
+            config->pid_file_path,
+            config->listen.port);
     mk_user_undo_uidgid();
     if (unlink(filepath)) {
         mk_warn("cannot delete pidfile\n");

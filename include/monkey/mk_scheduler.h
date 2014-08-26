@@ -75,9 +75,6 @@ struct sched_list_node
     unsigned long long closed_connections;
     unsigned long long over_capacity;
 
-    /* Just used on MK_SCHEDULER_REUSEPORT mode */
-    int server_fd;
-
     /*
      * Red-Black tree queue to perform fast lookup over
      * the scheduler busy queue
@@ -148,6 +145,7 @@ extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
 
+struct sched_list_node *mk_sched_next_target();
 void mk_sched_init();
 int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
@@ -171,8 +169,6 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 
 
 int mk_sched_check_timeouts(struct sched_list_node *sched);
-int mk_sched_add_client(int remote_fd);
-int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched);
 int mk_sched_register_client(int remote_fd, struct sched_list_node *sched);
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
 struct sched_connection *mk_sched_get_connection(struct sched_list_node

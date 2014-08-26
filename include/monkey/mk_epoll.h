@@ -19,6 +19,7 @@
 
 #include <sys/epoll.h>
 #include "mk_rbtree.h"
+#include "mk_server.h"
 
 #ifndef MK_EPOLL_H
 #define MK_EPOLL_H
@@ -85,7 +86,9 @@ struct epoll_state_index
 
 /* Monkey epoll calls */
 int mk_epoll_create();
-void *mk_epoll_init(int server_fd, int efd, int max_events);
+void *mk_epoll_init(struct mk_server_listen *listen,
+        int efd,
+        int max_events);
 struct epoll_state *mk_epoll_state_get(int fd);
 
 int mk_epoll_add(int efd, int fd, int mode, unsigned int behavior);

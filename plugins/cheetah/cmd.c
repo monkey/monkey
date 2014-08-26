@@ -324,6 +324,16 @@ void mk_cheetah_cmd_help()
     CHEETAH_WRITE("\nquit       (\\q)    Exit Cheetah shell :_(\n\n");
 }
 
+static void mk_cheetah_listen_config(struct mk_config_listen *listen)
+{
+    if (listen == NULL)
+        return;
+    CHEETAH_WRITE("\nListen on     : %s:%s",
+            listen->address,
+            listen->port);
+    return mk_cheetah_listen_config(listen->next);
+}
+
 void mk_cheetah_cmd_config()
 {
     struct mk_string_line *entry;
@@ -331,19 +341,13 @@ void mk_cheetah_cmd_config()
 
     CHEETAH_WRITE("Basic configuration");
     CHEETAH_WRITE("\n-------------------");
-    CHEETAH_WRITE("\nServer Port     : %i", mk_api->config->serverport);
+    mk_cheetah_listen_config(&mk_api->config->listen);
 
-    if (strcmp(mk_api->config->listen_addr, "0.0.0.0") == 0) {
-        CHEETAH_WRITE("\nListen          : All interfaces");
-    }
-    else {
-        CHEETAH_WRITE("\nListen          : %s", mk_api->config->listen_addr);
-    }
     CHEETAH_WRITE("\nWorkers         : %i threads", mk_api->config->workers);
     CHEETAH_WRITE("\nTimeout         : %i seconds", mk_api->config->timeout);
-    CHEETAH_WRITE("\nPidFile         : %s.%i",
+    CHEETAH_WRITE("\nPidFile         : %s.%s",
                   mk_api->config->pid_file_path,
-                  mk_api->config->serverport);
+                  mk_api->config->listen.port);
     CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
 
 
@@ -420,7 +424,8 @@ void mk_cheetah_cmd_status()
     CHEETAH_WRITE("Process User       : ");
     mk_cheetah_print_running_user();
 
-    CHEETAH_WRITE("Server Port        : %i\n", mk_api->config->serverport);
+    mk_cheetah_listen_config(&mk_api->config->listen);
+
     CHEETAH_WRITE("Worker Threads     : %i (per configuration: %i)\n",
            nthreads, mk_api->config->workers);
 

@@ -84,8 +84,8 @@ void mk_cheetah_loop_server()
     }
 
     cheetah_server = NULL;
-    mk_api->str_build(&cheetah_server, &len, "/tmp/cheetah.%i",
-                      mk_api->config->serverport);
+    mk_api->str_build(&cheetah_server, &len, "/tmp/cheetah.%s",
+                      mk_api->config->listen.port);
 
     unlink(cheetah_server);
 
