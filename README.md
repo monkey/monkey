@@ -1,6 +1,6 @@
 # Monkey HTTP Server
 
-Monkey HTTP Server is a fast and lightweight Web Server for Linux. It has been designed to be very scalable with low memory and CPU consumption, the perfect solution for Embedded Linux and/or high production environments.
+[Monkey](http://monkey-project.com) is a fast and lightweight Web Server for Linux. It has been designed to be very scalable with low memory and CPU consumption, the perfect solution for Embedded Linux and high end production environments.
 
 Besides the common features as HTTP server, it expose a flexible C API which aims to behave as a fully HTTP development framework, so it can be extended as desired through the plugins interface.
 
@@ -12,9 +12,18 @@ For more details please refer to the [official documentation](http://monkey-proj
 - Hybrid Networking Model: Asynchronous mode + fixed Threads
 - Indented configuration style
 - Versatile plugin subsystem / API
-- x86 & x86_64 architectures compatible (including ARM processors)
-- Common features: SSL, IPv6, Basic Auth, log writer, security, directory listing, CGI, FastCGI, etc.
-- Embeddable as a shared library (only one context supported currently)
+- x86, x86_64 & ARM compatible
+- More features:
+  - SSL
+  - IPv6
+  - Basic Auth
+  - Log writer
+  - Security
+  - Directory Listing
+  - CGI
+  - FastCGI
+  - Much more!
+- Embeddable as a shared library
 
 ## Requirements
 
@@ -24,6 +33,11 @@ Monkey requires the following components:
 - Glibc >= 2.5
 - Pthreads
 - GNU C Compiler >= 3.2
+
+
+## Writing Scalable Web Services
+
+If you are interested into use [Monkey](http://monkey-project.com) as a base platform build scalable web services, we recommend you check our [Duda I/O](http://duda.io) project made for that purpose.
 
 ## Join us!
 
@@ -35,7 +49,7 @@ Monkey is an open organization so we want to hear about you, we continue growing
 - Linkedin: http://www.linkedin.com/groups/Monkey-HTTP-Daemon-3211216
 - Freecode: http://freecode.com/projects/monkey (R.I.P)
 
-We are open to suggestions and criticisms, if you have an idea, found a bug, don't hesitate to report it to find a solution and if you have it, send it to include your code.
+If you want to get involved, please also refer to our [Contributing](https://github.com/monkey/monkey/blob/master/CONTRIBUTING.md) guidelines.
 
 ## Author
 
