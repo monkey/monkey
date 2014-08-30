@@ -75,6 +75,7 @@ void mk_cheetah_loop_server()
     size_t address_length;
     struct sockaddr_un address;
     socklen_t socket_size = sizeof(struct sockaddr_in);
+    struct mk_config_listener *listener;
 
     /* Create listening socket */
     server_fd = socket(PF_UNIX, SOCK_STREAM, 0);
@@ -83,9 +84,12 @@ void mk_cheetah_loop_server()
         exit(EXIT_FAILURE);
     }
 
+    listener = mk_list_entry_first(&mk_api->config->listeners,
+                                   struct mk_config_listener,
+                                 _head);
     cheetah_server = NULL;
     mk_api->str_build(&cheetah_server, &len, "/tmp/cheetah.%s",
-                      mk_api->config->listen.port);
+                      listener->port);
 
     unlink(cheetah_server);
 
@@ -93,17 +97,17 @@ void mk_cheetah_loop_server()
     sprintf(address.sun_path, "%s", cheetah_server);
     address_length = sizeof(address.sun_family) + len;
 
-    if(bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
+    if (bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
         perror("bind");
         exit(EXIT_FAILURE);
     }
 
-    if(listen(server_fd, 5) != 0) {
+    if (listen(server_fd, 5) != 0) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
 
-    while(1) {
+    while (1) {
         /* Listen for incoming connections */
         remote_fd = accept(server_fd, (struct sockaddr *) &address, &socket_size);
         cheetah_socket = remote_fd;
