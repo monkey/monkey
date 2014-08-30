@@ -905,7 +905,6 @@ int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd = -1;
     int ret;
-    unsigned long len;
     struct addrinfo hints;
     struct addrinfo *res, *rp;
 
@@ -944,7 +943,7 @@ int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
         ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
         if(ret == -1) {
-            mk_err("Cannot listen on %s:%i\n", listen_addr, port);
+            mk_err("Cannot listen on %s:%s\n", listen_addr, port);
             continue;
         }
         break;
