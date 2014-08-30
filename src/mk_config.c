@@ -431,14 +431,14 @@ static void mk_config_print_error_msg(char *variable, char *path)
 }
 
 /* Register a new listener into the main configuration */
-int mk_config_listener_add(char *address, char *port)
+struct mk_config_listener *mk_config_listener_add(char *address, char *port)
 {
     struct mk_config_listener *listen = NULL;
 
     listen = mk_mem_malloc(sizeof(struct mk_config_listener));
     if (!listen) {
         mk_err("[listen_add] malloc() failed");
-        return -1;
+        return NULL;
     }
 
     if (!address) {
@@ -457,7 +457,7 @@ int mk_config_listener_add(char *address, char *port)
     }
 
     mk_list_add(&listen->_head, &config->listeners);
-    return 0;
+    return listen;
 }
 
 static int mk_config_listen_read(struct mk_config_section *section)

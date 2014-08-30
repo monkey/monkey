@@ -193,11 +193,16 @@ int mklib_callback_set(mklib_ctx ctx, const enum mklib_cb cb, void *func)
 mklib_ctx mklib_init(const char *address, const unsigned int port,
                      const unsigned int plugins, const char *documentroot)
 {
-    char portbuffer[64];
+    unsigned long len;
+    char *port_str = NULL;
+    mklib_ctx a;
+    struct mk_config_listener *listen;
+
 #ifdef PYTHON_BINDINGS
     PyEval_InitThreads();
 #endif
-    mklib_ctx a = mk_mem_malloc_z(sizeof(struct mklib_ctx_t));
+
+    a = mk_mem_malloc_z(sizeof(struct mklib_ctx_t));
     if (!a) return NULL;
 
     config = mk_mem_malloc_z(sizeof(struct server_config));
@@ -238,25 +243,16 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     if (!plg_netiomap) goto out_config;
     mk_plugin_preworker_calls();
 
-    if (address) {
-        if (config->listen.address)
-            free(config->listen.address);
-        config->listen.address = mk_string_dup(address);
-    }
-    else {
-        config->listen.address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
-    }
 
     if (port) {
-        if (snprintf(portbuffer, sizeof(portbuffer), "%d", port)) {
-            config->listen.port = mk_string_dup(portbuffer);
-        }
+        mk_string_build(&port_str, &len, "%d", port);
     }
-    else {
-        config->listen.address = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
+    listen = mk_config_listener_add((char *) address, port_str);
+    if (!listen) {
+        exit(EXIT_FAILURE);
     }
 
-    unsigned long len;
+
     struct host *host = mk_mem_malloc_z(sizeof(struct host));
     /* We hijack this field for the vhost name */
     host->file = mk_string_dup("default");
@@ -267,9 +263,10 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
                     &host->header_host_signature.len,
                     "Server: %s", host->host_signature);
 
+
     struct host_alias *alias = mk_mem_malloc_z(sizeof(struct host_alias));
-    alias->name = mk_string_dup(config->listen.address);
-    alias->len = strlen(config->listen.address);
+    alias->name = mk_string_dup(listen->address);
+    alias->len = strlen(listen->address);
     mk_list_add(&alias->_head, &host->server_names);
 
     mk_list_add(&host->_head, &config->hosts);
@@ -302,11 +299,11 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
 
     return a;
 
-    out_config:
-    free(config);
+ out_config:
+    mk_mem_free(config);
 
-    out:
-    free(a);
+ out:
+    mk_mem_free(a);
 
     return NULL;
 }

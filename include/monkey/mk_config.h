@@ -180,7 +180,7 @@ struct mk_config_section *mk_config_section_add(struct mk_config *conf,
                                                 char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
-int mk_config_listener_add(char *address, char *port);
+struct mk_config_listener *mk_config_listener_add(char *address, char *port);
 void mk_config_listeners_free();
 void mk_config_free(struct mk_config *cnf);
 void mk_config_free_all();
