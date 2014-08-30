@@ -273,14 +273,17 @@ static int mk_logger_read_config(char *path)
     return 0;
 }
 
-static void mk_logger_print_listen(struct mk_config_listen *listen)
+static void mk_logger_print_listeners()
 {
-    if (listen == NULL)
-        return;
-    printf("    listen on %s:%s\n",
-            listen->address,
-            listen->port);
-    return mk_logger_print_listen(listen->next);
+    struct mk_list *head;
+    struct mk_config_listener *listener;
+
+    mk_list_foreach(head, &mk_api->config->listeners) {
+        listener = mk_list_entry(head, struct mk_config_listener, _head);
+        printf("    listen on %s:%s\n",
+               listener->address,
+               listener->port);
+    }
 }
 
 static void mk_logger_print_details(void)
@@ -299,7 +302,7 @@ static void mk_logger_print_details(void)
            current->tm_sec);
     printf("   version          : %s\n", VERSION);
     printf("   number of workers: %i\n", mk_api->config->workers);
-    mk_logger_print_listen(&mk_api->config->listen);
+    mk_logger_print_listeners();
     fflush(stdout);
 }
 
