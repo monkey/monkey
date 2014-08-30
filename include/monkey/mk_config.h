@@ -73,12 +73,12 @@ struct mk_config_entry
     struct mk_list _head;
 };
 
-struct mk_config_listen
+struct mk_config_listener
 {
     char *address;
     char *port;
 
-    struct mk_config_listen *next;
+    struct mk_list _head;
 };
 
 /* Base struct of server */
@@ -99,7 +99,7 @@ struct server_config
     char *serverconf;             /* path to configuration files */
     mk_ptr_t server_software;
 
-    struct mk_config_listen listen;
+    struct mk_list listeners;
 
     char *one_shot;
     char *user;
@@ -180,7 +180,8 @@ struct mk_config_section *mk_config_section_add(struct mk_config *conf,
                                                 char *section_name);
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
 
-void mk_config_listen_free(struct mk_config_listen *listen);
+int mk_config_listener_add(char *address, char *port);
+void mk_config_listeners_free();
 void mk_config_free(struct mk_config *cnf);
 void mk_config_free_all();
 void mk_config_free_entries(struct mk_config_section *section);

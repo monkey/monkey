@@ -25,7 +25,7 @@
 
 struct mk_server_listen_entry
 {
-    struct mk_config_listen *listen;
+    struct mk_config_listener *listen;
     int server_fd;
 };
 

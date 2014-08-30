@@ -147,13 +147,15 @@ void mk_server_listen_free(struct mk_server_listen *server_listen)
 }
 
 int mk_server_listen_init(struct server_config *config,
-        struct mk_server_listen *server_listen)
+                          struct mk_server_listen *server_listen)
 {
-    struct mk_config_listen *listen;
-    struct mk_server_listen_entry *listen_list = NULL;
-    unsigned int count = 0, i = 0;
+    int i = 0;
+    unsigned int count = 0;
     int server_fd;
     int reuse_port;
+    struct mk_list *head;
+    struct mk_config_listener *listen;
+    struct mk_server_listen_entry *listen_list = NULL;
 
     if (config == NULL)
         goto error;
@@ -162,8 +164,8 @@ int mk_server_listen_init(struct server_config *config,
 
     reuse_port = config->scheduler_mode == MK_SCHEDULER_REUSEPORT;
 
-    for (listen = &config->listen; listen != NULL; listen = listen->next) {
-        count += 1;
+    mk_list_foreach(head, &config->listeners) {
+        count++;
     }
 
     listen_list = calloc(count, sizeof(*listen_list));
@@ -172,7 +174,9 @@ int mk_server_listen_init(struct server_config *config,
         goto error;
     }
 
-    for (listen = &config->listen; listen != NULL; listen = listen->next) {
+    mk_list_foreach(head, &config->listeners) {
+        listen = mk_list_entry(head, struct mk_config_listener, _head);
+
         server_fd = mk_socket_server(listen->port,
                 listen->address,
                 reuse_port);

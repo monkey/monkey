@@ -304,8 +304,7 @@ int main(int argc, char **argv)
 
     /* Override TCP port if it was set in the command line */
     if (port_override != NULL) {
-        config->listen.port = port_override;
-        mk_config_listen_free(config->listen.next);
+        mk_config_listener_add(NULL, port_override);
     }
 
     /* Running Monkey as daemon */

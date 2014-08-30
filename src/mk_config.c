@@ -309,15 +309,19 @@ void mk_config_free_entries(struct mk_config_section *section)
     }
 }
 
-void mk_config_listen_free(struct mk_config_listen *listen)
+void mk_config_listeners_free()
 {
-    if (listen == NULL)
-        return;
-    if (listen->next != NULL)
-        mk_config_listen_free(listen->next);
-    free(listen->address);
-    free(listen->port);
-    free(listen);
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_config_listener *l;
+
+    mk_list_foreach_safe(head, tmp, &config->listeners) {
+        l = mk_list_entry(head, struct mk_config_listener, _head);
+        mk_list_del(&l->_head);
+        mk_mem_free(l->address);
+        mk_mem_free(l->port);
+        mk_mem_free(l);
+    }
 }
 
 void mk_config_free_all()
@@ -339,7 +343,7 @@ void mk_config_free_all()
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
 
-    mk_config_listen_free(config->listen.next);
+    mk_config_listeners_free(&config->listeners);
 
     mk_ptr_free(&config->server_software);
     mk_mem_free(config->plugins);
@@ -384,15 +388,17 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
 
 #ifndef SHAREDLIB
 
-static void mk_details_listen(struct mk_config_listen *listen)
+static void mk_details_listen(struct mk_list *listen)
 {
-    if (listen == NULL)
-        return;
 
-    printf(MK_BANNER_ENTRY "Server listening on %s:%s\n",
-           listen->address, listen->port);
+    struct mk_list *head;
+    struct mk_config_listener *l;
 
-    mk_details_listen(listen->next);
+    mk_list_foreach(head, listen) {
+        l = mk_list_entry(head, struct mk_config_listener, _head);
+        printf(MK_BANNER_ENTRY "Server listening on %s:%s\n",
+               l->address, l->port);
+    }
 }
 
 void mk_details(void)
@@ -400,9 +406,7 @@ void mk_details(void)
     char tmp[64];
 
     printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
-
-    mk_details_listen(&config->listen);
-
+    mk_details_listen(&config->listeners);
     printf(MK_BANNER_ENTRY
            "%i threads, %i client connections per thread, total %i\n",
            config->workers, config->worker_capacity,
@@ -426,18 +430,44 @@ static void mk_config_print_error_msg(char *variable, char *path)
     exit(EXIT_FAILURE);
 }
 
+/* Register a new listener into the main configuration */
+int mk_config_listener_add(char *address, char *port)
+{
+    struct mk_config_listener *listen = NULL;
+
+    listen = mk_mem_malloc(sizeof(struct mk_config_listener));
+    if (!listen) {
+        mk_err("[listen_add] malloc() failed");
+        return -1;
+    }
+
+    if (!address) {
+        listen->address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
+    }
+    else {
+        listen->address = address;
+    }
+
+    /* Set the port */
+    if (!port) {
+        listen->port = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
+        }
+    else {
+        listen->port = port;
+    }
+
+    mk_list_add(&listen->_head, &config->listeners);
+    return 0;
+}
+
 static int mk_config_listen_read(struct mk_config_section *section)
 {
-    struct mk_list *cur;
-    struct mk_config_entry *entry;
+    long port_num;
     char *address = NULL;
     char *port = NULL;
     char *divider;
-    struct mk_config_listen **next = NULL;
-    struct mk_config_listen listen;
-    long port_num;
-
-    bzero(&listen, sizeof(listen));
+    struct mk_list *cur;
+    struct mk_config_entry *entry;
 
     mk_list_foreach(cur, &section->entries) {
         entry = mk_list_entry(cur, struct mk_config_entry, _head);
@@ -457,8 +487,8 @@ static int mk_config_listen_read(struct mk_config_section *section)
                 goto error;
             }
 
-            address = strndup(entry->val + 1, divider - entry->val - 1);
-            port = strdup(divider + 2);
+            address = mk_string_copy_substr(entry->val + 1, 0, divider - entry->val - 1);
+            port = mk_string_dup(divider + 2);
         }
         else if (strchr(entry->val, ':') != NULL) {
             // IPv4 address
@@ -468,8 +498,8 @@ static int mk_config_listen_read(struct mk_config_section *section)
                 goto error;
             }
 
-            address = strndup(entry->val, divider - entry->val);
-            port = strdup(divider + 1);
+            address = mk_string_copy_substr(entry->val, 0, divider - entry->val);
+            port = mk_string_dup(divider + 1);
         }
         else {
             // Port only
@@ -483,39 +513,19 @@ static int mk_config_listen_read(struct mk_config_section *section)
             port = NULL;
         }
 
-        listen.address = address == NULL
-            ? strdup(MK_DEFAULT_LISTEN_ADDR)
-            : address;
-        listen.port = port == NULL
-            ? strdup(MK_DEFAULT_LISTEN_PORT)
-            : port;
-        address = NULL;
-        port = NULL;
+        /* register the new listener */
+        mk_config_listener_add(address, port);
 
-        if (next == NULL) {
-            memcpy(&config->listen, &listen, sizeof(listen));
-            next = &config->listen.next;
-        }
-        else {
-            *next = malloc(sizeof(listen));
-            if (*next == NULL) {
-                mk_err("[config] Malloc falied: %s", strerror(errno));
-                return -1;
-            }
-            memcpy(*next, &listen, sizeof(listen));
-            next = &(*next)->next;
-        }
 error:
-        if (address) free(address);
-        if (port) free(port);
+        if (address) mk_mem_free(address);
+        if (port) mk_mem_free(port);
     }
 
-    if (next == NULL) {
+    if (mk_list_is_empty(&config->listeners) == 0) {
         mk_warn("[config] No valid Listen entries found, set default");
-        bzero(&config->listen, sizeof(config->listen));
-        config->listen.address = strdup(MK_DEFAULT_LISTEN_ADDR);
-        config->listen.port = strdup(MK_DEFAULT_LISTEN_PORT);
+        mk_config_listener_add(NULL, NULL);
     }
+
     return 0;
 }
 
@@ -774,6 +784,9 @@ void mk_config_set_init_values(void)
 
     /* Init plugin list */
     mk_list_init(config->plugins);
+
+    /* Init listeners */
+    mk_list_init(&config->listeners);
 }
 
 

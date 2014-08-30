@@ -488,13 +488,16 @@ int mk_utils_register_pid()
     char *filepath = NULL;
     struct flock lock;
     struct stat sb;
+    struct mk_config_listener *listen;
 
     if (config->pid_status == MK_TRUE)
         return -1;
 
+    listen = mk_list_entry_first(&config->listeners,
+                                 struct mk_config_listener, _head);
     mk_string_build(&filepath, &len, "%s.%s",
             config->pid_file_path,
-            config->listen.port);
+            listen->port);
     if (!stat(filepath, &sb)) {
         /* file exists, perhaps previously kepts by SIGKILL */
         unlink(filepath);
@@ -536,10 +539,13 @@ int mk_utils_remove_pid()
 {
     unsigned long len = 0;
     char *filepath = NULL;
+    struct mk_config_listener *listen;
 
+    listen = mk_list_entry_first(&config->listeners,
+                                 struct mk_config_listener, _head);
     mk_string_build(&filepath, &len, "%s.%s",
-            config->pid_file_path,
-            config->listen.port);
+                    config->pid_file_path,
+                    listen->port);
     mk_user_undo_uidgid();
     if (unlink(filepath)) {
         mk_warn("cannot delete pidfile\n");
