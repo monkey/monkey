@@ -430,54 +430,6 @@ static void mk_config_print_error_msg(char *variable, char *path)
     exit(EXIT_FAILURE);
 }
 
-/* Register a new listener into the main configuration */
-struct mk_config_listener *mk_config_listener_add(char *address, char *port)
-{
-    struct mk_list *head;
-    struct mk_config_listener *check;
-    struct mk_config_listener *listen = NULL;
-
-    listen = mk_mem_malloc(sizeof(struct mk_config_listener));
-    if (!listen) {
-        mk_err("[listen_add] malloc() failed");
-        return NULL;
-    }
-
-    if (!address) {
-        listen->address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
-    }
-    else {
-        listen->address = mk_string_dup(address);
-    }
-
-    /* Set the port */
-    if (!port) {
-        listen->port = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
-    }
-    else {
-        listen->port = mk_string_dup(port);
-    }
-
-    /* Before to add a new listener, lets make sure it's not a duplicated */
-    mk_list_foreach(head, &config->listeners) {
-        check = mk_list_entry(head, struct mk_config_listener, _head);
-        if (strcmp(listen->address, check->address) == 0 &&
-            strcmp(listen->port, check->port) == 0) {
-            mk_warn("Listener: duplicated %s:%s, skip.",
-                    listen->address, listen->port);
-
-            /* free resources */
-            mk_mem_free(listen->address);
-            mk_mem_free(listen->port);
-            mk_mem_free(listen);
-            return NULL;
-        }
-    }
-
-    mk_list_add(&listen->_head, &config->listeners);
-    return listen;
-}
-
 static int mk_config_listen_read(struct mk_config_section *section)
 {
     long port_num;
@@ -744,6 +696,54 @@ void mk_config_start_configure(void)
 }
 
 #endif // !SHAREDLIB
+
+/* Register a new listener into the main configuration */
+struct mk_config_listener *mk_config_listener_add(char *address, char *port)
+{
+    struct mk_list *head;
+    struct mk_config_listener *check;
+    struct mk_config_listener *listen = NULL;
+
+    listen = mk_mem_malloc(sizeof(struct mk_config_listener));
+    if (!listen) {
+        mk_err("[listen_add] malloc() failed");
+        return NULL;
+    }
+
+    if (!address) {
+        listen->address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
+    }
+    else {
+        listen->address = mk_string_dup(address);
+    }
+
+    /* Set the port */
+    if (!port) {
+        listen->port = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
+    }
+    else {
+        listen->port = mk_string_dup(port);
+    }
+
+    /* Before to add a new listener, lets make sure it's not a duplicated */
+    mk_list_foreach(head, &config->listeners) {
+        check = mk_list_entry(head, struct mk_config_listener, _head);
+        if (strcmp(listen->address, check->address) == 0 &&
+            strcmp(listen->port, check->port) == 0) {
+            mk_warn("Listener: duplicated %s:%s, skip.",
+                    listen->address, listen->port);
+
+            /* free resources */
+            mk_mem_free(listen->address);
+            mk_mem_free(listen->port);
+            mk_mem_free(listen);
+            return NULL;
+        }
+    }
+
+    mk_list_add(&listen->_head, &config->listeners);
+    return listen;
+}
 
 void mk_config_set_init_values(void)
 {
