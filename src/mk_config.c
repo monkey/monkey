@@ -515,6 +515,7 @@ static int mk_config_listen_read(struct mk_config_section *section)
 
         /* register the new listener */
         mk_config_listener_add(address, port);
+        continue;
 
 error:
         if (address) mk_mem_free(address);
