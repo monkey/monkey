@@ -278,7 +278,7 @@ int mk_epoll_create()
 static int mk_epoll_listen_add(struct mk_server_listen *listen, int efd)
 {
     unsigned int i;
-    struct epoll_event event;
+    struct epoll_event event = {0, {0}};
     struct mk_server_listen_entry *listen_entry;
 
     if (listen == NULL)
