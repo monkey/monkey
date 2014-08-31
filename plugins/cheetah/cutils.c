@@ -92,7 +92,7 @@ void mk_cheetah_print_running_user()
     uid = getuid();
     getpwuid_r(uid, &pwd, buf, bufsize, &result);
 
-    CHEETAH_WRITE("%s\n", pwd.pw_name);
+    CHEETAH_WRITE("%s", pwd.pw_name);
     mk_api->mem_free(buf);
 }
 

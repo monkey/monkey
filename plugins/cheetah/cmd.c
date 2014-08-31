@@ -331,7 +331,7 @@ static void mk_cheetah_listen_config()
 
     mk_list_foreach(head, &mk_api->config->listeners) {
         listener = mk_list_entry(head, struct mk_config_listener, _head);
-        CHEETAH_WRITE("\nListen on     : %s:%s",
+        CHEETAH_WRITE("\nListen on          : %s:%s",
                       listener->address,
                       listener->port);
     }
@@ -350,20 +350,19 @@ void mk_cheetah_cmd_config()
     CHEETAH_WRITE("Basic configuration");
     CHEETAH_WRITE("\n-------------------");
     mk_cheetah_listen_config();
-
-    CHEETAH_WRITE("\nWorkers         : %i threads", mk_api->config->workers);
-    CHEETAH_WRITE("\nTimeout         : %i seconds", mk_api->config->timeout);
-    CHEETAH_WRITE("\nPidFile         : %s.%s",
+    CHEETAH_WRITE("\nWorkers            : %i threads", mk_api->config->workers);
+    CHEETAH_WRITE("\nTimeout            : %i seconds", mk_api->config->timeout);
+    CHEETAH_WRITE("\nPidFile            : %s.%s",
                   mk_api->config->pid_file_path,
                   listener->port);
-    CHEETAH_WRITE("\nUserDir         : %s", mk_api->config->user_dir);
+    CHEETAH_WRITE("\nUserDir            : %s", mk_api->config->user_dir);
 
 
     if (mk_list_is_empty(mk_api->config->index_files) == 0) {
-        CHEETAH_WRITE("\nIndexFile       : No index files defined");
+        CHEETAH_WRITE("\nIndexFile          : No index files defined");
     }
     else {
-        CHEETAH_WRITE("\nIndexFile       : ");
+        CHEETAH_WRITE("\nIndexFile          : ");
         mk_list_foreach(head, mk_api->config->index_files) {
             entry = mk_list_entry(head, struct mk_string_line, _head);
             CHEETAH_WRITE("%s ", entry->val);
@@ -371,7 +370,7 @@ void mk_cheetah_cmd_config()
 
     }
 
-    CHEETAH_WRITE("\nHideVersion     : ");
+    CHEETAH_WRITE("\nHideVersion        : ");
     if (mk_api->config->hideversion == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
@@ -379,7 +378,7 @@ void mk_cheetah_cmd_config()
         CHEETAH_WRITE("Off");
     }
 
-    CHEETAH_WRITE("\nResume          : ");
+    CHEETAH_WRITE("\nResume             : ");
     if (mk_api->config->resume == MK_TRUE) {
         CHEETAH_WRITE("On");
     }
@@ -387,7 +386,7 @@ void mk_cheetah_cmd_config()
         CHEETAH_WRITE("Off");
     }
 
-    CHEETAH_WRITE("\nUser            : %s", mk_api->config->user);
+    CHEETAH_WRITE("\nUser               : %s", mk_api->config->user);
     CHEETAH_WRITE("\n\nAdvanced configuration");
     CHEETAH_WRITE("\n----------------------");
     CHEETAH_WRITE("\nKeepAlive           : ");
@@ -418,7 +417,7 @@ void mk_cheetah_cmd_status()
     char tmp[64];
 
     CHEETAH_WRITE("Monkey Version     : %s\n", VERSION);
-    CHEETAH_WRITE("Configutarion path : %s\n", mk_api->config->serverconf);
+    CHEETAH_WRITE("Configuration path : %s\n", mk_api->config->serverconf);
 
     CHEETAH_WRITE("Cheetah! mode      : ");
     if (listen_mode == LISTEN_STDIN) {
@@ -431,11 +430,18 @@ void mk_cheetah_cmd_status()
     CHEETAH_WRITE("Process ID         : %i\n", getpid());
     CHEETAH_WRITE("Process User       : ");
     mk_cheetah_print_running_user();
-
     mk_cheetah_listen_config();
 
+    CHEETAH_WRITE("\n");
     CHEETAH_WRITE("Worker Threads     : %i (per configuration: %i)\n",
            nthreads, mk_api->config->workers);
+
+    CHEETAH_WRITE("Memory Allocator   : ");
+#ifdef MALLOC_LIBC
+    CHEETAH_WRITE("libc, system default\n");
+#else
+    CHEETAH_WRITE("Jemalloc\n");
+#endif
 
     if (mk_api->kernel_features_print(tmp, sizeof(tmp)) > 0) {
         CHEETAH_WRITE("Kernel Features    : %s\n", tmp);
