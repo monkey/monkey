@@ -291,7 +291,7 @@ static int mk_epoll_listen_add(struct mk_server_listen *listen, int efd)
         if (listen_entry->server_fd < 0)
             continue;
 
-        event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+        event.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
         event.data.fd = listen_entry->server_fd;
         if (epoll_ctl(efd, EPOLL_CTL_ADD, listen_entry->server_fd, &event)) {
             mk_err("[epoll] Failed to add listen socket: %s",
