@@ -447,15 +447,15 @@ struct mk_config_listener *mk_config_listener_add(char *address, char *port)
         listen->address = mk_string_dup(MK_DEFAULT_LISTEN_ADDR);
     }
     else {
-        listen->address = address;
+        listen->address = mk_string_dup(address);
     }
 
     /* Set the port */
     if (!port) {
         listen->port = mk_string_dup(MK_DEFAULT_LISTEN_PORT);
-        }
+    }
     else {
-        listen->port = port;
+        listen->port = mk_string_dup(port);
     }
 
     /* Before to add a new listener, lets make sure it's not a duplicated */
