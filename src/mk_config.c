@@ -433,6 +433,8 @@ static void mk_config_print_error_msg(char *variable, char *path)
 /* Register a new listener into the main configuration */
 struct mk_config_listener *mk_config_listener_add(char *address, char *port)
 {
+    struct mk_list *head;
+    struct mk_config_listener *check;
     struct mk_config_listener *listen = NULL;
 
     listen = mk_mem_malloc(sizeof(struct mk_config_listener));
@@ -454,6 +456,22 @@ struct mk_config_listener *mk_config_listener_add(char *address, char *port)
         }
     else {
         listen->port = port;
+    }
+
+    /* Before to add a new listener, lets make sure it's not a duplicated */
+    mk_list_foreach(head, &config->listeners) {
+        check = mk_list_entry(head, struct mk_config_listener, _head);
+        if (strcmp(listen->address, check->address) == 0 &&
+            strcmp(listen->port, check->port) == 0) {
+            mk_warn("Listener: duplicated %s:%s, skip.",
+                    listen->address, listen->port);
+
+            /* free resources */
+            mk_mem_free(listen->address);
+            mk_mem_free(listen->port);
+            mk_mem_free(listen);
+            return NULL;
+        }
     }
 
     mk_list_add(&listen->_head, &config->listeners);
