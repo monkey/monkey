@@ -349,6 +349,7 @@ void mk_plugin_init()
     api->str_dup = mk_string_dup;
     api->str_search = mk_string_search;
     api->str_search_n = mk_string_search_n;
+    api->str_char_search = mk_string_char_search;
     api->str_copy_substr = mk_string_copy_substr;
     api->str_itop = mk_string_itop;
     api->str_split_line = mk_string_split_line;
