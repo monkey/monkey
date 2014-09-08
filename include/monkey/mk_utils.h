@@ -22,6 +22,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
