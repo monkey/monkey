@@ -20,9 +20,20 @@
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
+/* Event types */
+#define MK_EVENT_EMPTY     -1
+#define MK_EVENT_SLEEP      0
+#define MK_EVENT_READ       1
+#define MK_EVENT_WRITE      2
+
+/* Events behaviors */
+#define MK_EVENT_LEVEL    256
+#define MK_EVENT_EDGE     512
+
 struct mk_event_fd_state {
     int fd;
     int mask;
+    void *data;
 };
 
 typedef struct {
@@ -35,13 +46,10 @@ typedef struct {
     void *data;
 } mk_event_loop_t;
 
-/* Event types */
-#define MK_EVENT_SLEEP      0
-#define MK_EVENT_READ       1
-#define MK_EVENT_WRITE      2
 
-/* Events behaviors */
-#define MK_EVENT_LEVEL    256
-#define MK_EVENT_EDGE     512
+mk_event_fdt_t *mk_events_fdt;
+
+int mk_event_initalize();
+mk_event_loop_t *mk_event_new_loop(int size);
 
 #endif

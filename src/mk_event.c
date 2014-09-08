@@ -35,10 +35,40 @@
  */
 int mk_event_initalize()
 {
+    int i;
     int ret;
-    int entries;
     mk_event_fdt_t *efdt;
     struct rlimit rlim;
+
+    /*
+     * Event File Descriptor Table (EFDT)
+     * ----------------------------------
+     * The main requirement for this implementation is that we need to maintain
+     * a state of each file descriptor registered events, such as READ, WRITE,
+     * SLEEPING, etc. This is required not by Monkey core but is a fundamental
+     * piece to let plugins perform safe operations over file descriptors and
+     * their events.
+     *
+     * The EFDT is created in the main process context and aims to be used by
+     * every Worker thread. Once a connection arrives and it's notified to the
+     * Worker, this last one will register the file descriptor status on the
+     * EFDT.
+     *
+     * The EFDT is a fixed size array that contains entries for each possible
+     * file descriptor number assigned for a TCP connection. In order to make
+     * sure the assigned number can be used as an index of the array, we have
+     * verified that the Linux Kernel always assigns a number in a range as
+     * defined in __alloc_fd() on file file.c:
+     *
+     *   start: > 2
+     *   end  : rlim.rlim.cur
+     *
+     * The maximum number assigned is always the process soft limit for
+     * RLIMIT_NOFILE, so basically we are safe trusting on this model.
+     *
+     * Note: as we make sure each file descriptor number is only handled by one
+     * thread, there is no race conditions.
+     */
 
     ret = getrlimit(RLIMIT_NOFILE, &rlim);
     if (ret == -1) {
@@ -46,19 +76,26 @@ int mk_event_initalize()
         return -1;
     }
 
-    efdt = mk_mem_malloc_z(sizeof(struct mk_event_fdt_t));
+    efdt = mk_mem_malloc_z(sizeof(mk_event_fdt_t));
     if (!efdt) {
         mk_err("Event: could not allocate memory for event FD Table");
-        exit(EXIT_ERROR);
+        return -1;
     }
 
     efdt->size = rlim.rlim_cur;
     efdt->states = mk_mem_malloc_z(sizeof(struct mk_event_fd_state) * efdt->size);
     if (!efdt->states) {
         mk_err("Event: could not allocate memory for events states on FD Table");
-        exit(EXIT_ERROR);
+        return -1;
     }
 
+    /* mark all file descriptors as available */
+    for (i = 0; i < efdt->size; i++) {
+        efdt->states[i].fd   = -1;
+        efdt->states[i].mask = MK_EVENT_EMPTY;
+    }
+
+    mk_events_fdt = efdt;
     return 0;
 }
 
@@ -78,4 +115,39 @@ mk_event_loop_t *mk_event_new_loop(int size)
     }
 
     return loop;
+}
+
+int mk_event_add(mk_event_ctx_t *ctx, int fd, int mask, void *data)
+{
+    int ret;
+    struct mk_event_fd_state *fds;
+
+    ret = mk_event_add_fd(ctx, fd, mask);
+    if (ret == -1) {
+        return -1;
+    }
+
+    fds = &mk_events_fdt->states[fd];
+    fds->mask |= mask;
+    fds->data  = data;
+
+    return 0;
+}
+
+int mk_event_del(mk_event_ctx_t *ctx, int fd)
+{
+    int ret;
+    struct mk_event_fd_state *fds;
+
+    ret = mk_event_del_fd(ctx, fd);
+    if (ret == -1) {
+        return -1;
+    }
+
+    mk_event_del_fd(ctx, fd);
+    fds = &mk_events_fdt->states[fd];
+    fds->mask = MK_EVENT_EMPTY;
+    fds->data = NULL;
+
+    return 0;
 }

@@ -62,17 +62,21 @@ static mk_event_ctx_t *mk_event_create(int size)
  * It register certain events for the file descriptor in question, if
  * the file descriptor have not been registered, create a new entry.
  */
-static int mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
+static int mk_event_add_fd(mk_event_ctx_t *ctx, int fd, int events)
 {
     int op;
     int ret;
+    struct mk_event_fd_state *fds;
     struct epoll_event event = {0, {0}};
 
-    /*
-     * FIXME: detect if an entry exists in the global state and check
-     * the desired operation here.
-     */
-    op = EPOLL_CTL_ADD;
+    /* Verify the FD status and desired operation */
+    fds = &mk_events_fdt->states[fd];
+    if (fds->mask == MK_EVENT_EMPTY) {
+        op = EPOLL_CTL_ADD;
+    }
+    else {
+        op = EPOLL_CTL_MOD;
+    }
 
     event.data.fd = fd;
     event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -95,11 +99,9 @@ static int mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 }
 
 /* Delete an event */
-static int mk_event_del(mk_event_ctx_t *ctx, int fd)
+static int mk_event_del_fd(mk_event_ctx_t *ctx, int fd)
 {
     int ret;
-
-    /* FIXME: remove entry from global state */
 
     ret = epoll_ctl(ctx->efd, EPOLL_CTL_DEL, fd, NULL);
     MK_TRACE("[FD %i] Epoll, remove from QUEUE_FD=%i, ret=%i",
