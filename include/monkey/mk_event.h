@@ -20,6 +20,16 @@
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
+struct mk_event_fd_state {
+    int fd;
+    int mask;
+};
+
+typedef struct {
+    int size;
+    struct mk_event_fd_state *states;
+} mk_event_fdt_t;
+
 typedef struct {
     int size;
     void *data;

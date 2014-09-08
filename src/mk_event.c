@@ -17,10 +17,50 @@
  *  limitations under the License.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 
 #include "mk_event_epoll.c"
+
+/*
+ * Initialize the global Event structure used by threads to access the
+ * global file descriptor table.
+ */
+int mk_event_initalize()
+{
+    int ret;
+    int entries;
+    mk_event_fdt_t *efdt;
+    struct rlimit rlim;
+
+    ret = getrlimit(RLIMIT_NOFILE, &rlim);
+    if (ret == -1) {
+        mk_libc_error("getrlimit");
+        return -1;
+    }
+
+    efdt = mk_mem_malloc_z(sizeof(struct mk_event_fdt_t));
+    if (!efdt) {
+        mk_err("Event: could not allocate memory for event FD Table");
+        exit(EXIT_ERROR);
+    }
+
+    efdt->size = rlim.rlim_cur;
+    efdt->states = mk_mem_malloc_z(sizeof(struct mk_event_fd_state) * efdt->size);
+    if (!efdt->states) {
+        mk_err("Event: could not allocate memory for events states on FD Table");
+        exit(EXIT_ERROR);
+    }
+
+    return 0;
+}
 
 mk_event_loop_t *mk_event_new_loop(int size)
 {
