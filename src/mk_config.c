@@ -343,7 +343,7 @@ void mk_config_free_all()
     if (config->user) mk_mem_free(config->user);
     if (config->transport_layer) mk_mem_free(config->transport_layer);
 
-    mk_config_listeners_free(&config->listeners);
+    mk_config_listeners_free();
 
     mk_ptr_free(&config->server_software);
     mk_mem_free(config->plugins);
