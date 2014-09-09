@@ -17,6 +17,8 @@
  *  limitations under the License.
  */
 
+#include <stdint.h>
+
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
