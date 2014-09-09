@@ -225,6 +225,8 @@ void mk_server_launch_workers()
  */
 void mk_server_worker_loop()
 {
+    int i;
+    int num_fds;
     int timeout_fd;
     mk_event_loop_t *evl;
     struct sched_list_node *sched;
@@ -239,6 +241,13 @@ void mk_server_worker_loop()
 
     /* create a new timeout file descriptor */
     timeout_fd = mk_event_timeout_set(evl, config->timeout);
+
+    while (1) {
+        num_fds = mk_event_wait(evl);
+        for (i = 0; i < num_fds; i++) {
+
+        }
+    }
 }
 
 void mk_server_loop(void)
