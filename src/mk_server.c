@@ -239,7 +239,6 @@ void mk_server_worker_loop()
 
     /* create a new timeout file descriptor */
     timeout_fd = mk_event_timeout_set(evl, config->timeout);
-
 }
 
 void mk_server_loop(void)

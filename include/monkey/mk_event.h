@@ -70,6 +70,12 @@ typedef struct  {
 /* ---- end of dirty workaround ---- */
 
 
+/*
+ * Events File Descriptor Table (EFDT)
+ * ===================================
+ * It exposes a global array to hold file descriptor statuses.
+ */
+
 struct mk_event_fd_state {
     int fd;
     int mask;
@@ -81,10 +87,13 @@ typedef struct {
     struct mk_event_fd_state *states;
 } mk_event_fdt_t;
 
+/* ---- end of EFDT ---- */
+
 typedef struct {
     int size;
     void *data;
 } mk_event_loop_t;
+
 
 mk_event_fdt_t *mk_events_fdt;
 
@@ -95,6 +104,9 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
 
 int mk_event_initalize();
 mk_event_loop_t *mk_event_loop_create(int size);
-//int mk_event_timeout_set(mk_event_ctx_t *ctx, int expire);
+int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);
+int mk_event_del(mk_event_loop_t *loop, int fd);
+int mk_event_timeout_set(mk_event_loop_t *loop, int expire);
+int mk_event_wait(mk_event_loop_t *loop);
 
 #endif

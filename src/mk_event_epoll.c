@@ -31,9 +31,10 @@ typedef struct {
     mk_event_t *events_ready;
 } mk_event_ctx_t;
 
-static inline mk_event_ctx_t *_mk_event_loop_create(int size)
+static inline mk_event_loop_t *_mk_event_loop_create(int size)
 {
     mk_event_ctx_t *ctx;
+    mk_event_loop_t *loop;
 
     /* Main event context */
     ctx = mk_mem_malloc_z(sizeof(mk_event_ctx_t));
@@ -60,7 +61,11 @@ static inline mk_event_ctx_t *_mk_event_loop_create(int size)
     ctx->events_ready = (mk_event_t *) ctx->events_queue;
     ctx->queue_size = size;
 
-    return ctx;
+    loop = mk_mem_malloc_z(sizeof(mk_event_loop_t));
+    loop->size = size;
+    loop->data = ctx;
+
+    return loop;
 }
 
 
