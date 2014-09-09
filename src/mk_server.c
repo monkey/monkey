@@ -35,6 +35,7 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_event.h>
 
 /* Return the number of clients that can be attended
  * at the same time per worker thread

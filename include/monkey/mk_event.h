@@ -53,16 +53,16 @@
  * If you have a better idea which is not "ah!, you can use libuv", drop me
  * a line.
  */
-typedef union __mk_epoll_data {
+typedef union _mk_epoll_data {
     void        *ptr;
     int          fd;
     uint32_t     u32;
     uint64_t     u64;
-} __mk_epoll_data_t;
+} _mk_epoll_data_t;
 
 typedef struct  {
     uint32_t       events;      /* Epoll events */
-    __mkepoll_data_t data;        /* User data variable */
+    _mk_epoll_data_t data;        /* User data variable */
 } mk_event_t;
 
 /* ---- end of dirty workaround ---- */
@@ -93,5 +93,6 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
 
 int mk_event_initalize();
 mk_event_loop_t *mk_event_loop_create(int size);
+//int mk_event_timeout_set(mk_event_ctx_t *ctx, int expire);
 
 #endif
