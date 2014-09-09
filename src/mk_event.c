@@ -99,7 +99,7 @@ int mk_event_initalize()
     return 0;
 }
 
-mk_event_loop_t *mk_event_new_loop(int size)
+mk_event_loop_t *mk_event_loop_create(int size)
 {
     mk_event_loop_t *loop;
 
@@ -108,7 +108,7 @@ mk_event_loop_t *mk_event_new_loop(int size)
         return NULL;
     }
 
-    loop->data = mk_event_create(size);
+    loop->data = _mk_event_loop_create(size);
     if (!loop->data) {
         mk_mem_free(loop);
         return NULL;
@@ -122,12 +122,12 @@ int mk_event_add(mk_event_ctx_t *ctx, int fd, int mask, void *data)
     int ret;
     struct mk_event_fd_state *fds;
 
-    ret = mk_event_add_fd(ctx, fd, mask);
+    ret = _mk_event_add(ctx, fd, mask);
     if (ret == -1) {
         return -1;
     }
 
-    fds = &mk_events_fdt->states[fd];
+    fds = mk_event_get_state(fd);
     fds->mask |= mask;
     fds->data  = data;
 
@@ -139,15 +139,20 @@ int mk_event_del(mk_event_ctx_t *ctx, int fd)
     int ret;
     struct mk_event_fd_state *fds;
 
-    ret = mk_event_del_fd(ctx, fd);
+    ret = _mk_event_del(ctx, fd);
     if (ret == -1) {
         return -1;
     }
 
-    mk_event_del_fd(ctx, fd);
-    fds = &mk_events_fdt->states[fd];
+    fds = mk_event_get_state(fd);
     fds->mask = MK_EVENT_EMPTY;
     fds->data = NULL;
 
     return 0;
+}
+
+int mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
+{
+    return _mk_event_timeout_set(ctx, expire);
+
 }

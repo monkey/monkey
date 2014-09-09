@@ -218,6 +218,11 @@ void mk_server_launch_workers()
     }
 }
 
+void mk_server_worker_loop()
+{
+
+}
+
 void mk_server_loop(void)
 {
     struct sched_list_node *sched;

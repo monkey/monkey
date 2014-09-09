@@ -18,6 +18,7 @@
  */
 
 #include <sys/epoll.h>
+#include <sys/timerfd.h>
 
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
@@ -28,7 +29,7 @@ typedef struct {
   struct epoll_event *events;
 } mk_event_ctx_t;
 
-static mk_event_ctx_t *mk_event_create(int size)
+static inline mk_event_ctx_t *_mk_event_loop_create(int size)
 {
     mk_event_ctx_t *ctx;
 
@@ -62,7 +63,7 @@ static mk_event_ctx_t *mk_event_create(int size)
  * It register certain events for the file descriptor in question, if
  * the file descriptor have not been registered, create a new entry.
  */
-static int mk_event_add_fd(mk_event_ctx_t *ctx, int fd, int events)
+static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 {
     int op;
     int ret;
@@ -70,7 +71,7 @@ static int mk_event_add_fd(mk_event_ctx_t *ctx, int fd, int events)
     struct epoll_event event = {0, {0}};
 
     /* Verify the FD status and desired operation */
-    fds = &mk_events_fdt->states[fd];
+    fds = mk_event_get_state(fd);
     if (fds->mask == MK_EVENT_EMPTY) {
         op = EPOLL_CTL_ADD;
     }
@@ -99,7 +100,7 @@ static int mk_event_add_fd(mk_event_ctx_t *ctx, int fd, int events)
 }
 
 /* Delete an event */
-static int mk_event_del_fd(mk_event_ctx_t *ctx, int fd)
+static int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 {
     int ret;
 
@@ -113,4 +114,43 @@ static int mk_event_del_fd(mk_event_ctx_t *ctx, int fd)
 #endif
 
     return ret;
+}
+
+static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
+{
+    int ret;
+    int timer_fd;
+    struct itimerspec its;
+    struct epoll_event event = {0, {0}};
+
+    /* expiration interval */
+    its.it_interval.tv_sec  = expire;
+    its.it_interval.tv_nsec = 0;
+
+    /* initial expiration */
+    its.it_value.tv_sec  = time(NULL) + expire;
+    its.it_value.tv_nsec = 0;
+
+    timer_fd = timerfd_create(CLOCK_REALTIME, 0);
+    if (timer_fd == -1) {
+        mk_libc_error("timerfd");
+        return -1;
+    }
+
+    ret = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &its, NULL);
+    if (ret < 0) {
+        mk_libc_error("timerfd_settime");
+        return -1;
+    }
+
+    /* register the timer into the epoll queue */
+    event.data.fd = timer_fd;
+    event.events  = EPOLLIN;
+    ret = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, timer_fd, &event);
+    if (ret < 0) {
+        mk_libc_error("epoll_ctl");
+        return -1;
+    }
+
+    return timer_fd;
 }

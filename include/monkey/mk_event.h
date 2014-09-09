@@ -46,8 +46,12 @@ typedef struct {
     void *data;
 } mk_event_loop_t;
 
-
 mk_event_fdt_t *mk_events_fdt;
+
+static inline struct mk_event_fd_state *mk_event_get_state(int fd)
+{
+    return &mk_events_fdt->states[fd];
+}
 
 int mk_event_initalize();
 mk_event_loop_t *mk_event_new_loop(int size);
