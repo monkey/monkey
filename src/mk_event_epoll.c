@@ -56,7 +56,8 @@ static inline mk_event_ctx_t *_mk_event_loop_create(int size)
         mk_mem_free(ctx);
         return NULL;
     }
-    ctx->events_ready = ctx->events_queue;
+
+    ctx->events_ready = (mk_event_t *) ctx->events_queue;
     ctx->queue_size = size;
 
     return ctx;
@@ -162,5 +163,5 @@ static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
 
 static inline int _mk_event_wait(mk_event_ctx_t *ctx)
 {
-    return epoll_wait(ctx->efd, &ctx->events_queue, ctx->queue_size, -1);
+    return epoll_wait(ctx->efd, ctx->events_queue, ctx->queue_size, -1);
 }
