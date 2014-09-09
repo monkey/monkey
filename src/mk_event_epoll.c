@@ -25,8 +25,10 @@
 #include <monkey/mk_utils.h>
 
 typedef struct {
-  int efd;
-  struct epoll_event *events;
+    int efd;
+    int queue_size;
+    struct epoll_event *events_queue;
+    mk_event_t *events_ready;
 } mk_event_ctx_t;
 
 static inline mk_event_ctx_t *_mk_event_loop_create(int size)
@@ -47,13 +49,15 @@ static inline mk_event_ctx_t *_mk_event_loop_create(int size)
         return NULL;
     }
 
-    /* Allocate space for events */
-    ctx->events = mk_mem_malloc_z(sizeof(struct epoll_event) * size);
-    if (!ctx->events) {
+    /* Allocate space for events queue */
+    ctx->events_queue = mk_mem_malloc_z(sizeof(struct epoll_event) * size);
+    if (!ctx->events_queue) {
         close(ctx->efd);
         mk_mem_free(ctx);
         return NULL;
     }
+    ctx->events_ready = ctx->events_queue;
+    ctx->queue_size = size;
 
     return ctx;
 }
@@ -100,7 +104,7 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 }
 
 /* Delete an event */
-static int _mk_event_del(mk_event_ctx_t *ctx, int fd)
+static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 {
     int ret;
 
@@ -116,6 +120,7 @@ static int _mk_event_del(mk_event_ctx_t *ctx, int fd)
     return ret;
 }
 
+/* Register a timeout file descriptor */
 static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
 {
     int ret;
@@ -153,4 +158,9 @@ static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
     }
 
     return timer_fd;
+}
+
+static inline int _mk_event_wait(mk_event_ctx_t *ctx)
+{
+    return epoll_wait(ctx->efd, &ctx->events_queue, ctx->queue_size, -1);
 }

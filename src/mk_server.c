@@ -218,8 +218,26 @@ void mk_server_launch_workers()
     }
 }
 
+/*
+ * This function is called from the Scheduler and runs in a thread
+ * context. This is the real thread server loop.
+ */
 void mk_server_worker_loop()
 {
+    int timeout_fd;
+    mk_event_loop_t *evl;
+    struct sched_list_node *sched;
+
+    evl = mk_event_loop_create(MK_EVENT_QUEUE_SIZE);
+    if (!evl) {
+        return;
+    }
+
+    /* Get thread conf */
+    sched = mk_sched_get_thread_conf();
+
+    /* create a new timeout file descriptor */
+    timeout_fd = mk_event_timeout_set(evl, config->timeout);
 
 }
 

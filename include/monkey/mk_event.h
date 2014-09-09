@@ -21,14 +21,52 @@
 #define MK_EVENT_H
 
 /* Event types */
-#define MK_EVENT_EMPTY     -1
-#define MK_EVENT_SLEEP      0
-#define MK_EVENT_READ       1
-#define MK_EVENT_WRITE      2
+#define MK_EVENT_EMPTY          -1
+#define MK_EVENT_SLEEP           0
+#define MK_EVENT_READ            1
+#define MK_EVENT_WRITE           4
+
+/* The event queue size */
+#define MK_EVENT_QUEUE_SIZE    256
 
 /* Events behaviors */
-#define MK_EVENT_LEVEL    256
-#define MK_EVENT_EDGE     512
+#define MK_EVENT_LEVEL         256
+#define MK_EVENT_EDGE          512
+
+/*
+ * Dirty Abstraction Workaround
+ * ============================
+ * the purpose of the mk_event interface is to wrap backend polling systems
+ * such as epoll and kqueue. But both systems handle very different structures
+ * to store the events once they are reported.
+ *
+ * The common approach would be to let each backend function to go
+ * around each reported event and duplicate the info on our own
+ * high level structure, but of course that have some performance penalty as the
+ * worker will go around the events array twice: once for duplicate and
+ * the other to process the events.
+ *
+ * The following workaround of course is optimized when running on Linux
+ * where our high level structure is the same than the used by epoll. When
+ * using the kqueue backend the code should do the double work on this.
+ *
+ * If you have a better idea which is not "ah!, you can use libuv", drop me
+ * a line.
+ */
+typedef union __mk_epoll_data {
+    void        *ptr;
+    int          fd;
+    uint32_t     u32;
+    uint64_t     u64;
+} __mk_epoll_data_t;
+
+typedef struct  {
+    uint32_t       events;      /* Epoll events */
+    __mkepoll_data_t data;        /* User data variable */
+} mk_event_t;
+
+/* ---- end of dirty workaround ---- */
+
 
 struct mk_event_fd_state {
     int fd;
@@ -54,6 +92,6 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
 }
 
 int mk_event_initalize();
-mk_event_loop_t *mk_event_new_loop(int size);
+mk_event_loop_t *mk_event_loop_create(int size);
 
 #endif
