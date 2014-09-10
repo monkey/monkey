@@ -33,7 +33,6 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_epoll.h>
 #include <monkey/mk_request.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_config.h>
@@ -45,6 +44,7 @@
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_linuxtrace.h>
 #include <monkey/mk_stats.h>
+#include <monkey/mk_server.h>
 
 pthread_key_t worker_sched_node;
 
@@ -486,7 +486,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     __builtin_prefetch(&worker_sched_node);
 
     /* Init epoll_wait() loop */
-    mk_epoll_init(&server_listen, thinfo->epoll_fd, epoll_max_events);
+    mk_server_worker_loop(&server_listen);
+    //mk_epoll_init(&server_listen, thinfo->epoll_fd, epoll_max_events);
     return 0;
 }
 

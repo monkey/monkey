@@ -55,5 +55,6 @@ int mk_server_listen_init(struct server_config *config,
 unsigned int mk_server_worker_capacity(unsigned short nworkers);
 void mk_server_launch_workers(void);
 void mk_server_loop(void);
+void mk_server_worker_loop(struct mk_server_listen *listen);
 
 #endif

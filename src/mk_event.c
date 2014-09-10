@@ -100,6 +100,7 @@ int mk_event_initalize()
     return 0;
 }
 
+/* Create a new loop */
 mk_event_loop_t *mk_event_loop_create(int size)
 {
     mk_event_loop_t *loop;
@@ -118,6 +119,7 @@ mk_event_loop_t *mk_event_loop_create(int size)
     return loop;
 }
 
+/* Register or modify an event */
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data)
 {
     int ret;
@@ -137,6 +139,7 @@ int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data)
     return 0;
 }
 
+/* Remove an event */
 int mk_event_del(mk_event_loop_t *loop, int fd)
 {
     int ret;
@@ -157,14 +160,25 @@ int mk_event_del(mk_event_loop_t *loop, int fd)
     return 0;
 }
 
-int mk_event_timeout_set(mk_event_loop_t *loop, int expire)
+/* Create a new timer in the loop */
+int mk_event_timeout_create(mk_event_loop_t *loop, int expire)
 {
     mk_event_ctx_t *ctx;
 
     ctx = loop->data;
-    return _mk_event_timeout_set(ctx, expire);
+    return _mk_event_timeout_create(ctx, expire);
 }
 
+/* Create a new channel to distribute signals */
+int mk_event_channel_create(mk_event_loop_t *loop)
+{
+    mk_event_ctx_t *ctx;
+    ctx = loop->data;
+
+    return _mk_event_channel_create(ctx);
+}
+
+/* Poll events */
 int mk_event_wait(mk_event_loop_t *loop)
 {
     return _mk_event_wait(loop);

@@ -18,6 +18,7 @@
  */
 
 #include <sys/epoll.h>
+#include <sys/eventfd.h>
 #include <sys/timerfd.h>
 
 #include <monkey/mk_event.h>
@@ -125,7 +126,7 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 }
 
 /* Register a timeout file descriptor */
-static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
+static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
 {
     int ret;
     int timer_fd;
@@ -157,11 +158,32 @@ static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
     event.events  = EPOLLIN;
     ret = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, timer_fd, &event);
     if (ret < 0) {
+        printf("efd=%i fd=%i\n", ctx->efd, timer_fd);
         mk_libc_error("epoll_ctl");
         return -1;
     }
 
     return timer_fd;
+}
+
+static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
+{
+    int fd;
+    int ret;
+
+    fd = eventfd(0, EFD_CLOEXEC);
+    if (fd == -1) {
+        mk_libc_error("eventfd");
+        return -1;
+    }
+
+    ret = _mk_event_add(ctx, fd, MK_EVENT_READ);
+    if (ret != 0) {
+        close(fd);
+        return ret;
+    }
+
+    return ret;
 }
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)

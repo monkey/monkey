@@ -109,7 +109,8 @@ int mk_event_initalize();
 mk_event_loop_t *mk_event_loop_create(int size);
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);
 int mk_event_del(mk_event_loop_t *loop, int fd);
-int mk_event_timeout_set(mk_event_loop_t *loop, int expire);
+int mk_event_timeout_create(mk_event_loop_t *loop, int expire);
+int mk_event_channel_create(mk_event_loop_t *loop);
 int mk_event_wait(mk_event_loop_t *loop);
 
 #endif

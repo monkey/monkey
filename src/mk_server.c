@@ -246,7 +246,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     sched = mk_sched_get_thread_conf();
 
     /* create a new timeout file descriptor */
-    timeout_fd = mk_event_timeout_set(evl, config->timeout);
+    timeout_fd = mk_event_timeout_create(evl, config->timeout);
 
     while (1) {
         num_fds = mk_event_wait(evl);
