@@ -27,7 +27,6 @@
 #include "mk_memory.h"
 #include "mk_iov.h"
 #include "mk_socket.h"
-#include "mk_epoll.h"
 #include "mk_header.h"
 #include "mk_http_status.h"
 #include "mk_utils.h"

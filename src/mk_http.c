@@ -40,7 +40,6 @@
 #include <monkey/mk_socket.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_header.h>
-#include <monkey/mk_epoll.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
