@@ -36,6 +36,20 @@
 #define MK_EVENT_LEVEL         256
 #define MK_EVENT_EDGE          512
 
+
+/* Legacy definitions: temporal
+ *  ----------------------------
+ *
+ * Once a connection is dropped, define
+ * a reason.
+ */
+#define MK_EP_SOCKET_CLOSED   0
+#define MK_EP_SOCKET_ERROR    1
+#define MK_EP_SOCKET_TIMEOUT  2
+
+/* ---- end ---- */
+
+
 /*
  * Dirty Abstraction Workaround
  * ============================

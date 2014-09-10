@@ -46,8 +46,7 @@ static void mk_socket_safe_event_write(int socket)
 
     sched = mk_sched_get_thread_conf();
     MK_TRACE("[FD %i] Safe event write ON", socket);
-    mk_epoll_change_mode(sched->epoll_fd, socket,
-                         MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
+    mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
 }
 
 /*

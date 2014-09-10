@@ -838,8 +838,7 @@ int mk_http_request_end(int socket)
     }
     else {
         mk_request_ka_next(cs);
-        mk_epoll_change_mode(sched->epoll_fd,
-                             socket, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
         return 0;
     }
 

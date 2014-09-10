@@ -375,13 +375,14 @@ void mk_plugin_init()
     api->iov_send =  mk_iov_send;
     api->iov_print =  mk_iov_print;
 
-    /* EPoll callbacks */
+    /* EPoll callbacks
     api->epoll_create =  mk_epoll_create;
     api->epoll_init =  mk_epoll_init;
     api->epoll_add = mk_epoll_add;
     api->epoll_del = mk_epoll_del;
     api->epoll_change_mode = mk_epoll_change_mode;
     api->epoll_state_get = mk_epoll_state_get;
+    */
 
     /* Red-Black tree */
     api->rb_insert_color = rb_insert_color;
@@ -897,7 +898,7 @@ int mk_plugin_event_del(int socket)
             mk_mem_free(node);
 
             struct sched_list_node *sched = mk_sched_get_thread_conf();
-            mk_epoll_del(sched->epoll_fd, socket);
+            mk_event_del(sched->loop, socket);
             return 0;
         }
     }
@@ -935,7 +936,7 @@ int mk_plugin_event_add(int socket, int mode,
      * The thread event info has been registered, now we need
      * to register the socket involved to the thread epoll array
      */
-    return mk_epoll_add(sched->epoll_fd, socket, mode, behavior);
+    return mk_event_add(sched->loop, socket, mode, NULL);
 }
 
 int mk_plugin_http_request_end(int socket)
@@ -986,7 +987,7 @@ int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavi
         return -1;
     }
 
-    return mk_epoll_change_mode(sched->epoll_fd, socket, mode, behavior);
+    return mk_event_add(sched->loop, socket, mode, NULL);
 }
 
 struct plugin_event *mk_plugin_event_get(int socket)
@@ -1081,7 +1082,7 @@ int mk_plugin_event_read(int socket)
     struct plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
-
+    struct mk_event_fd_state *state;
 
     MK_TRACE("[FD %i] Read Event", socket);
 
@@ -1090,7 +1091,8 @@ int mk_plugin_event_read(int socket)
      * that is still an active connection and was not closed
      * in the middle by a timeout.
      */
-    if (!mk_epoll_state_get(socket)) {
+    state = mk_event_get_state(socket);
+    if (state->mask & MK_EVENT_EMPTY) {
         MK_TRACE("[FD %i] Connection already closed", socket);
         return -1;
     }
@@ -1132,7 +1134,7 @@ int mk_plugin_event_write(int socket)
     struct plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
-
+    struct mk_event_fd_state *state;
 
     MK_TRACE("[FD %i] Plugin event write", socket);
 
@@ -1141,7 +1143,8 @@ int mk_plugin_event_write(int socket)
      * that is still an active connection and was not closed
      * in the middle by a timeout.
      */
-    if (!mk_epoll_state_get(socket)) {
+    state = mk_event_get_state(socket);
+    if (state->mask & MK_EVENT_EMPTY) {
         MK_TRACE("[FD %i] Connection already closed", socket);
         return -1;
     }

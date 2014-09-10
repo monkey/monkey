@@ -53,13 +53,10 @@ int mk_conn_read(int socket)
                 return -1;
             }
             /*
-             * New connections are not registered yet into the epoll
-             * event state list, we need to do it manually
+             * New connections are not registered yet into the
+             * events loop, we need to do it manually:
              */
-            mk_epoll_state_set(socket,
-                               MK_EPOLL_READ,
-                               MK_EPOLL_LEVEL_TRIGGERED,
-                               (EPOLLERR | EPOLLHUP | EPOLLRDHUP | EPOLLIN));
+            mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
             return 0;
         }
 
@@ -75,8 +72,7 @@ int mk_conn_read(int socket)
     ret = mk_handler_read(socket, cs);
     if (ret > 0) {
         if (mk_http_pending_request(cs) == 0) {
-            mk_epoll_change_mode(sched->epoll_fd,
-                                 socket, MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
+            mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
         }
         else if (cs->body_length + 1 >= (unsigned int) config->max_request_size) {
             /*
@@ -125,8 +121,7 @@ int mk_conn_write(int socket)
             return -1;
         }
 
-        mk_epoll_change_mode(sched->epoll_fd, socket,
-                             MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
         return 0;
     }
 
@@ -182,7 +177,8 @@ int mk_conn_close(int socket, int event)
     sched = mk_sched_get_thread_conf();
     mk_sched_remove_client(sched, socket);
 
-    /* Plugin hook: this is a wrap-workaround to do not
+    /*
+     * Plugin hook: this is a wrap-workaround to do not
      * break plugins until the whole interface events and
      * return values are re-worked.
      */

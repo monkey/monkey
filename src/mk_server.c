@@ -114,10 +114,7 @@ int mk_server_listen_handler(struct sched_list_node *sched,
             goto error;
         }
 
-        result = mk_epoll_add(sched->epoll_fd,
-                client_fd,
-                MK_EPOLL_READ,
-                MK_EPOLL_LEVEL_TRIGGERED);
+        result = mk_event_add(sched->loop, client_fd, MK_EVENT_READ, NULL);
         if (mk_unlikely(result != 0)) {
             mk_err("[server] Add to epoll failed: %s", strerror(errno));
             goto error;
