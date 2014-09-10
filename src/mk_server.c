@@ -36,6 +36,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_event.h>
+#include <monkey/mk_connection.h>
 
 /* Return the number of clients that can be attended
  * at the same time per worker thread
@@ -223,11 +224,16 @@ void mk_server_launch_workers()
  * This function is called from the Scheduler and runs in a thread
  * context. This is the real thread server loop.
  */
-void mk_server_worker_loop()
+void mk_server_worker_loop(struct mk_server_listen *listen)
 {
     int i;
+    int fd;
+    int ret;
+    int mask;
     int num_fds;
+    int remote_fd;
     int timeout_fd;
+    uint64_t val;
     mk_event_loop_t *evl;
     struct sched_list_node *sched;
 
@@ -245,7 +251,58 @@ void mk_server_worker_loop()
     while (1) {
         num_fds = mk_event_wait(evl);
         for (i = 0; i < num_fds; i++) {
+            /* shortcut vars */
+            fd   = evl->events[i].data.fd;
+            mask = evl->events[i].events;
 
+            if (mask & MK_EVENT_READ) {
+                /* Check if we have a worker signal */
+                if (mk_unlikely(fd == sched->signal_channel)) {
+                    ret = read(fd, &val, sizeof(val));
+                    if (ret < 0) {
+                        mk_libc_error("read");
+                    }
+
+                    if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
+                        mk_sched_sync_counters();
+                        continue;
+                    }
+                    else if (val == MK_SCHEDULER_SIGNAL_FREE_ALL) {
+                        mk_sched_worker_free();
+                        return;
+                    }
+                }
+                else if (mk_unlikely(fd == timeout_fd)) {
+                    ret = read(fd, &val, sizeof(val));
+                    if (ret < 0) {
+                        mk_libc_error("read");
+                    }
+                    else {
+                        mk_sched_check_timeouts(sched);
+                    }
+                    continue;
+                }
+                else if (listen && mk_server_listen_check(listen, fd)) {
+                    remote_fd = mk_server_listen_handler(sched, listen, fd);
+                    if (remote_fd < 0) {
+                        continue;
+                    }
+                    fd = remote_fd;
+                }
+                ret = mk_conn_read(fd);
+            }
+            else if (mask & MK_EVENT_WRITE) {
+                MK_TRACE("[FD %i] EPoll Event WRITE", fd);
+                ret = mk_conn_write(fd);
+            }
+            else if (mask & MK_EVENT_CLOSE) {
+                ret = -1;
+            }
+
+            if (ret < 0) {
+                MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
+                mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
+            }
         }
     }
 }

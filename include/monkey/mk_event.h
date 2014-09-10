@@ -27,6 +27,7 @@
 #define MK_EVENT_SLEEP           0
 #define MK_EVENT_READ            1
 #define MK_EVENT_WRITE           4
+#define MK_EVENT_CLOSE          (16 | 8 | 8192)
 
 /* The event queue size */
 #define MK_EVENT_QUEUE_SIZE    256
@@ -90,8 +91,10 @@ typedef struct {
 /* ---- end of EFDT ---- */
 
 typedef struct {
-    int size;
-    void *data;
+    int size;                  /* size of events array */
+    int n_events;
+    mk_event_t *events;        /* copy or reference of events triggered */
+    void *data;                /* mk_event_ctx_t from backend */
 } mk_event_loop_t;
 
 

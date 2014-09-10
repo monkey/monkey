@@ -27,8 +27,7 @@
 typedef struct {
     int efd;
     int queue_size;
-    struct epoll_event *events_queue;
-    mk_event_t *events_ready;
+    struct epoll_event *events;
 } mk_event_ctx_t;
 
 static inline mk_event_loop_t *_mk_event_loop_create(int size)
@@ -51,14 +50,13 @@ static inline mk_event_loop_t *_mk_event_loop_create(int size)
     }
 
     /* Allocate space for events queue */
-    ctx->events_queue = mk_mem_malloc_z(sizeof(struct epoll_event) * size);
-    if (!ctx->events_queue) {
+    ctx->events = mk_mem_malloc_z(sizeof(struct epoll_event) * size);
+    if (!ctx->events) {
         close(ctx->efd);
         mk_mem_free(ctx);
         return NULL;
     }
 
-    ctx->events_ready = (mk_event_t *) ctx->events_queue;
     ctx->queue_size = size;
 
     loop = mk_mem_malloc_z(sizeof(mk_event_loop_t));
@@ -166,7 +164,12 @@ static inline int _mk_event_timeout_set(mk_event_ctx_t *ctx, int expire)
     return timer_fd;
 }
 
-static inline int _mk_event_wait(mk_event_ctx_t *ctx)
+static inline int _mk_event_wait(mk_event_loop_t *loop)
 {
-    return epoll_wait(ctx->efd, ctx->events_queue, ctx->queue_size, -1);
+    mk_event_ctx_t *ctx = loop->data;
+
+    loop->n_events = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
+    loop->events = (mk_event_t *) ctx->events;
+
+    return loop->n_events;
 }

@@ -167,8 +167,5 @@ int mk_event_timeout_set(mk_event_loop_t *loop, int expire)
 
 int mk_event_wait(mk_event_loop_t *loop)
 {
-    mk_event_ctx_t *ctx;
-
-    ctx = loop->data;
-    return _mk_event_wait(ctx);
+    return _mk_event_wait(loop);
 }
