@@ -221,7 +221,6 @@ void mk_sched_worker_free()
 
     /* External */
     mk_plugin_exit_worker();
-    mk_epoll_state_worker_exit();
     mk_vhost_fdt_worker_exit();
     mk_cache_worker_exit();
 
@@ -279,7 +278,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     if ((config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
         mk_list_is_empty(av_queue) == 0) {
-        mk_epoll_del(sched->epoll_fd, remote_fd);
+        mk_event_del(sched->loop, remote_fd);
         close(remote_fd);
         return -1;
     }
@@ -293,7 +292,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_epoll_del(sched->epoll_fd, remote_fd);
+        mk_event_del(sched->loop, remote_fd);
         mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return -1;
@@ -428,7 +427,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     wid = mk_sched_register_thread(thconf->epoll_fd);
 
     /* Plugin thread context calls */
-    mk_epoll_state_worker_init();
     mk_plugin_event_init_list();
 
     sched = &sched_list[wid];
@@ -541,7 +539,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
      * the Kernel at its leisure, and we may get false events if we rely
      * on that.
      */
-    mk_epoll_del(sched->epoll_fd, remote_fd);
+    mk_event_del(sched->loop, remote_fd);
 
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {

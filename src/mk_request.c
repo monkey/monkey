@@ -45,7 +45,6 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
-#include <monkey/mk_epoll.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_header.h>
 #include <monkey/mk_user.h>
