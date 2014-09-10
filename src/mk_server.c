@@ -237,13 +237,9 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     mk_event_loop_t *evl;
     struct sched_list_node *sched;
 
-    evl = mk_event_loop_create(MK_EVENT_QUEUE_SIZE);
-    if (!evl) {
-        return;
-    }
-
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
+    evl = sched->loop;
 
     /* create a new timeout file descriptor */
     timeout_fd = mk_event_timeout_create(evl, config->timeout);

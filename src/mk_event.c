@@ -105,14 +105,8 @@ mk_event_loop_t *mk_event_loop_create(int size)
 {
     mk_event_loop_t *loop;
 
-    loop = mk_mem_malloc_z(sizeof(mk_event_loop_t));
+    loop =  _mk_event_loop_create(size);
     if (!loop) {
-        return NULL;
-    }
-
-    loop->data = _mk_event_loop_create(size);
-    if (!loop->data) {
-        mk_mem_free(loop);
         return NULL;
     }
 

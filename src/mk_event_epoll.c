@@ -99,11 +99,10 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
     }
 
     ret = epoll_ctl(ctx->efd, op, fd, &event);
-#ifdef TRACE
     if (ret < 0) {
         mk_libc_error("epoll_ctl");
+        return -1;
     }
-#endif
 
     return ret;
 }
@@ -179,11 +178,12 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 
     ret = _mk_event_add(ctx, fd, MK_EVENT_READ);
     if (ret != 0) {
+        printf("sad: %i\n", ret);
         close(fd);
         return ret;
     }
 
-    return ret;
+    return fd;
 }
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)

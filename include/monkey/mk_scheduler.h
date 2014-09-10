@@ -22,9 +22,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "mk_list.h"
-#include "mk_lib.h"
-#include "mk_rbtree.h"
+#include <monkey/mk_list.h>
+#include <monkey/mk_lib.h>
+#include <monkey/mk_rbtree.h>
+#include <monkey/mk_event.h>
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
@@ -71,6 +72,9 @@ struct sched_connection
 /* Global struct */
 struct sched_list_node
 {
+    /* The event loop on this scheduler thread */
+    mk_event_loop_t *loop;
+
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
     unsigned long long over_capacity;

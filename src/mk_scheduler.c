@@ -404,13 +404,11 @@ static int mk_sched_register_thread(int efd)
 /* created thread, all this calls are in the thread context */
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
-    int ret;
-    char *thread_name = 0;
+    int wid;
     unsigned long len;
+    char *thread_name = 0;
     sched_thread_conf *thconf = thread_conf;
-    int wid, epoll_max_events = thconf->epoll_max_events;
-    struct sched_list_node *thinfo = NULL;
-    struct epoll_event event = {0, {0}};
+    struct sched_list_node *sched = NULL;
     struct mk_server_listen server_listen;
 
 #ifdef STATS
@@ -433,19 +431,16 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_epoll_state_worker_init();
     mk_plugin_event_init_list();
 
-    thinfo = &sched_list[wid];
+    sched = &sched_list[wid];
+    sched->loop = mk_event_loop_create(MK_EVENT_QUEUE_SIZE);
+    if (!sched->loop) {
+        mk_err("Error creating Scheduler loop");
+        exit(EXIT_FAILURE);
+    }
 
-    /*
-     * Register the scheduler channel to signal active
-     * workers, we do this directly here to avoid to have
-     * an entry on the epoll_states.
-     */
-    thinfo->signal_channel = eventfd(0, 0);
-    event.data.fd = thinfo->signal_channel;
-    event.events  = EPOLLIN;
-    ret = epoll_ctl(thinfo->epoll_fd, EPOLL_CTL_ADD, thinfo->signal_channel, &event);
-    if (ret != 0) {
-        mk_libc_error("epoll_ctl");
+    /* Register the scheduler channel to signal active workers */
+    sched->signal_channel = mk_event_channel_create(sched->loop);
+    if (sched->signal_channel <= 0) {
         exit(EXIT_FAILURE);
     }
 
@@ -467,12 +462,12 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_mem_free(thread_conf);
 
     /* Rename worker */
-    mk_string_build(&thread_name, &len, "monkey: wrk/%i", thinfo->idx);
+    mk_string_build(&thread_name, &len, "monkey: wrk/%i", sched->idx);
     mk_utils_worker_rename(thread_name);
     mk_mem_free(thread_name);
 
     /* Export known scheduler node to context thread */
-    pthread_setspecific(worker_sched_node, (void *) thinfo);
+    pthread_setspecific(worker_sched_node, (void *) sched);
     mk_plugin_core_thread();
 
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
@@ -482,37 +477,24 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
         }
     }
 
-    __builtin_prefetch(thinfo);
+    __builtin_prefetch(sched);
     __builtin_prefetch(&worker_sched_node);
 
-    /* Init epoll_wait() loop */
+    /* init server thread loop */
     mk_server_worker_loop(&server_listen);
-    //mk_epoll_init(&server_listen, thinfo->epoll_fd, epoll_max_events);
     return 0;
 }
 
-/*
- * Create thread which will be listening
- * for incomings file descriptors
- */
+/* Create thread which will be listening for incomings requests */
 int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED_PARAM)
 {
-    int efd;
     pthread_t tid;
     pthread_attr_t attr;
     sched_thread_conf *thconf;
-
-    /* Creating epoll file descriptor */
-    efd = mk_epoll_create();
-    if (efd < 1) {
-        return -1;
-    }
+    (void) max_events;
 
     /* Thread data */
     thconf = mk_mem_malloc_z(sizeof(sched_thread_conf));
-    thconf->epoll_fd = efd;
-    thconf->epoll_max_events = (max_events * 2);
-    thconf->max_events = max_events;
 #ifdef SHAREDLIB
     thconf->ctx = ctx;
 #endif
@@ -537,8 +519,11 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
  */
 void mk_sched_init()
 {
-    sched_list = mk_mem_malloc_z(sizeof(struct sched_list_node) *
-                                 config->workers);
+    int size;
+
+    size = sizeof(struct sched_list_node) * config->workers;
+    sched_list = mk_mem_malloc_z(size);
+    mk_event_initalize();
 }
 
 void mk_sched_set_request_list(struct rb_root *list)
