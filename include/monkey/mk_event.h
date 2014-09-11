@@ -80,10 +80,15 @@ typedef union _mk_epoll_data {
 typedef struct  {
     uint32_t       events;      /* Epoll events */
     _mk_epoll_data_t data;        /* User data variable */
-} mk_event_t;
+} mk_event_t_old;
 
 /* ---- end of dirty workaround ---- */
 
+
+typedef struct {
+    int      fd;
+    uint32_t mask;
+} mk_event_t;
 
 /*
  * Events File Descriptor Table (EFDT)

@@ -98,6 +98,7 @@ static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PAR
     switch (signo) {
     case SIGTERM:
     case SIGINT:
+        abort();
         mk_signal_exit();
         break;
     case SIGHUP:

@@ -79,10 +79,10 @@ int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
     for (i = 0; i < listen->count; i++) {
         listen_entry = &listen->listen_list[i];
         if (listen_entry->server_fd == server_fd)
-            return 1;
+            return MK_TRUE;
     }
 error:
-    return 0;
+    return MK_FALSE;
 }
 
 int mk_server_listen_handler(struct sched_list_node *sched,
@@ -233,10 +233,20 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     uint64_t val;
     mk_event_loop_t *evl;
     struct sched_list_node *sched;
+    struct mk_server_listen_entry *listen_entry;
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
     evl = sched->loop;
+
+    /* Register listeners */
+    for (i = 0; i < (int) listen->count; i++) {
+        listen_entry = &listen->listen_list[i];
+        if (listen_entry->server_fd < 0)
+            continue;
+
+        mk_event_add(sched->loop, listen_entry->server_fd, MK_EVENT_READ, NULL);
+    }
 
     /* create a new timeout file descriptor */
     timeout_fd = mk_event_timeout_create(evl, config->timeout);
@@ -245,8 +255,8 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
         num_fds = mk_event_wait(evl);
         for (i = 0; i < num_fds; i++) {
             /* shortcut vars */
-            fd   = evl->events[i].data.fd;
-            mask = evl->events[i].events;
+            fd   = evl->events[i].fd;
+            mask = evl->events[i].mask;
 
             if (mask & MK_EVENT_READ) {
                 /* Check if we have a worker signal */

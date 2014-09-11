@@ -87,6 +87,7 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
     else {
         op = EPOLL_CTL_MOD;
     }
+    fds->mask = events;
 
     event.data.fd = fd;
     event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -157,7 +158,6 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     event.events  = EPOLLIN;
     ret = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, timer_fd, &event);
     if (ret < 0) {
-        printf("efd=%i fd=%i\n", ctx->efd, timer_fd);
         mk_libc_error("epoll_ctl");
         return -1;
     }
@@ -178,7 +178,6 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 
     ret = _mk_event_add(ctx, fd, MK_EVENT_READ);
     if (ret != 0) {
-        printf("sad: %i\n", ret);
         close(fd);
         return ret;
     }
@@ -188,10 +187,14 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
 {
+    int i;
     mk_event_ctx_t *ctx = loop->data;
 
     loop->n_events = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
-    loop->events = (mk_event_t *) ctx->events;
+    for (i = 0; i < loop->n_events; i++) {
+        loop->events[i].fd   = ctx->events[i].data.fd;
+        loop->events[i].mask = ctx->events[i].events;
+    }
 
     return loop->n_events;
 }
