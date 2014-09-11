@@ -31,10 +31,9 @@ typedef struct {
     struct epoll_event *events;
 } mk_event_ctx_t;
 
-static inline mk_event_loop_t *_mk_event_loop_create(int size)
+static inline void *_mk_event_loop_create(int size)
 {
     mk_event_ctx_t *ctx;
-    mk_event_loop_t *loop;
 
     /* Main event context */
     ctx = mk_mem_malloc_z(sizeof(mk_event_ctx_t));
@@ -57,14 +56,8 @@ static inline mk_event_loop_t *_mk_event_loop_create(int size)
         mk_mem_free(ctx);
         return NULL;
     }
-
     ctx->queue_size = size;
-
-    loop = mk_mem_malloc_z(sizeof(mk_event_loop_t));
-    loop->size = size;
-    loop->data = ctx;
-
-    return loop;
+    return ctx;
 }
 
 

@@ -103,12 +103,27 @@ int mk_event_initalize()
 /* Create a new loop */
 mk_event_loop_t *mk_event_loop_create(int size)
 {
+    void *backend;
     mk_event_loop_t *loop;
 
-    loop =  _mk_event_loop_create(size);
+    backend = _mk_event_loop_create(size);
+    if (!backend) {
+        return NULL;
+    }
+
+    loop = mk_mem_malloc_z(sizeof(mk_event_loop_t));
     if (!loop) {
         return NULL;
     }
+
+    loop->events = mk_mem_malloc_z(sizeof(mk_event_t) * size);
+    if (!loop->events) {
+        mk_mem_free(loop);
+        return NULL;
+    }
+
+    loop->size   = size;
+    loop->data   = backend;
 
     return loop;
 }
