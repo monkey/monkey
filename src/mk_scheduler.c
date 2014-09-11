@@ -478,6 +478,10 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     __builtin_prefetch(sched);
     __builtin_prefetch(&worker_sched_node);
 
+    pthread_mutex_lock(&mutex_worker_init);
+    sched->initialized = 1;
+    pthread_mutex_unlock(&mutex_worker_init);
+
     /* init server thread loop */
     mk_server_worker_loop(&server_listen);
     return 0;
