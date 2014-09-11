@@ -52,7 +52,7 @@ int mk_server_listen_handler(struct sched_list_node *sched,
 void mk_server_listen_free(struct mk_server_listen *server_listen);
 int mk_server_listen_init(struct server_config *config,
         struct mk_server_listen *server_listen);
-unsigned int mk_server_worker_capacity(unsigned short nworkers);
+unsigned int mk_server_capacity(unsigned short nworkers);
 void mk_server_launch_workers(void);
 void mk_server_loop(void);
 void mk_server_worker_loop(struct mk_server_listen *listen);

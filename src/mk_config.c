@@ -408,9 +408,8 @@ void mk_details(void)
     printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
     mk_details_listen(&config->listeners);
     printf(MK_BANNER_ENTRY
-           "%i threads, %i client connections per thread, total %i\n",
-           config->workers, config->worker_capacity,
-           config->workers * config->worker_capacity);
+           "%i threads, may handle up to %i client connections\n",
+           config->workers, config->server_capacity);
     printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
            config->transport_layer_plugin->shortname,
            config->transport);
@@ -552,10 +551,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Get each worker clients capacity based on FDs system limits */
-    config->worker_capacity = mk_server_worker_capacity(config->workers);
-
-    /* Set max server load */
-    config->max_load = (config->worker_capacity * config->workers);
+    config->server_capacity = mk_server_capacity(config->workers);
 
     /* Timeout */
     config->timeout = (size_t) mk_config_section_getval(section,

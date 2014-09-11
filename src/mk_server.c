@@ -41,31 +41,24 @@
 /* Return the number of clients that can be attended
  * at the same time per worker thread
  */
-unsigned int mk_server_worker_capacity(unsigned short nworkers)
+unsigned int mk_server_capacity(unsigned short nworkers)
 {
-    unsigned int max, avl;
+    unsigned int max;
     struct rlimit lim;
 
     /* Limit by system */
     getrlimit(RLIMIT_NOFILE, &lim);
     max = lim.rlim_cur;
 
-    /* Minimum of fds needed by Monkey:
-     * --------------------------------
-     * 3 fds: stdin, stdout, stderr
-     * 1 fd for main socket server
-     * 1 fd for epoll array (per thread)
-     * 1 fd for worker logger when writing to FS
-     * 2 fd for worker logger pipe
+    /*
+     * The following are almost taken:
+     *
+     * - 3 fds: STDIN, STDOUT, STDERR
+     * - 1 efd per worker
+     * - others ?, no idea. Sysadmin problem.
      */
 
-    avl = max - (3 + 1 + nworkers + 1 + 2);
-
-    /* The avl is divided by two as we need to consider
-     * a possible additional FD for each plugin working
-     * on the same request.
-     */
-    return ((avl / 2) / nworkers);
+    return (max - nworkers);
 }
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
@@ -213,7 +206,7 @@ void mk_server_launch_workers()
 
     /* Launch workers */
     for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(config->worker_capacity, &skip, NULL);
+        mk_sched_launch_thread(config->server_capacity, &skip, NULL);
     }
 }
 

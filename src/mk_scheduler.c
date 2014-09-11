@@ -69,7 +69,6 @@ __thread struct stats *stats;
 static inline int _next_target()
 {
     int i;
-    int ret;
     int target = 0;
     unsigned long long tmp = 0, cur = 0;
 
@@ -93,57 +92,8 @@ static inline int _next_target()
      * If sched_list[target] worker is full then the whole server too, because
      * it has the lowest load.
      */
-    if (mk_unlikely(cur >= config->worker_capacity)) {
-        MK_TRACE("Too many clients: %i", config->worker_capacity * config->workers);
-
-        /*
-         * ULONG_MAX BUG
-         * =============
-         * This is a workaround for a specific Bug that we still not find the
-         * root cause for it. The conditions are:
-         *
-         *  - for some reason closed_connections > active_connections
-         *  - when performing (active_connections - closed_connections it will
-         *    return UMAX_LONG, which is OK but *not* for our case
-         *
-         * - if cur (current connections) is greater than worker capacity it will
-         *   fail all new incoming connections, and as it may have ULONG_MAX that
-         *   would case a very very bad behavior
-         *
-         * The temporal workaround is to when facing that we are over capacity,
-         * check if we have a ULONG_MAX value in 'cur', on that moment signal
-         * our workers so they can start performing a synchronization of their
-         * counters. This workaround will not generate overhead but we must
-         * solve the root cause.
-         */
-
-        uint64_t val;
-        uint64_t accepted;
-        uint64_t closed;
-
-        for (i = 0; i < config->workers; i++) {
-            accepted = sched_list[i].accepted_connections;
-            closed   = sched_list[i].closed_connections;
-
-            if (closed > accepted) {
-                /* Ok, let everybody know about this... */
-                MK_LT_SCHED(0, "ULONG_MAX BUG!");
-                mk_warn("ULONG_MAX BUG: Performing synchronization");
-
-                val = MK_SCHEDULER_SIGNAL_DEADBEEF;
-                ret = write(sched_list[i].signal_channel, &val, sizeof(val));
-                if (ret <= 0) {
-                    mk_libc_error("write");
-                }
-            }
-        }
-        /*
-         * take a short nap, nobody will die...: we need to
-         * to give some time to the workers to update their
-         * counters, of course it will not take more than a few
-         * microseconds...
-         */
-        sleep(1);
+    if (mk_unlikely(cur >= config->server_capacity)) {
+        MK_TRACE("Too many clients: %i", config->server_capacity);
 
         /* Instruct to close the connection anyways, we lie, it will die */
         return -1;
@@ -347,7 +297,7 @@ static void mk_sched_thread_lists_init()
 }
 
 /* Register thread information. The caller thread is the thread information's owner */
-static int mk_sched_register_thread(int efd)
+static int mk_sched_register_thread()
 {
     unsigned int i;
     struct sched_connection *sched_conn;
@@ -375,7 +325,6 @@ static int mk_sched_register_thread(int efd)
      * the syscall, we need to call it directly through syscall(2).
      */
     sl->pid = syscall(__NR_gettid);
-    sl->epoll_fd = efd;
 
     pthread_mutex_unlock(&mutex_sched_init);
 
@@ -387,8 +336,8 @@ static int mk_sched_register_thread(int efd)
 
     /* Start filling the array */
     sl->sched_array = mk_mem_malloc_z(sizeof(struct sched_connection) *
-                                      config->worker_capacity);
-    for (i = 0; i < config->worker_capacity; i++) {
+                                      config->server_capacity);
+    for (i = 0; i < config->server_capacity; i++) {
         sched_conn = &sl->sched_array[i];
         sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
         sched_conn->socket = -1;
@@ -406,7 +355,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     int wid;
     unsigned long len;
     char *thread_name = 0;
-    sched_thread_conf *thconf = thread_conf;
     struct sched_list_node *sched = NULL;
     struct mk_server_listen server_listen;
 
@@ -424,7 +372,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_cache_worker_init();
 
     /* Register working thread */
-    wid = mk_sched_register_thread(thconf->epoll_fd);
+    wid = mk_sched_register_thread();
 
     /* Plugin thread context calls */
     mk_plugin_event_init_list();
