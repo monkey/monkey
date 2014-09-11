@@ -26,7 +26,6 @@
 
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_config.h>
 
 #include "mk_event_epoll.c"
 
@@ -37,7 +36,9 @@
 int mk_event_initalize()
 {
     int i;
+    int ret;
     mk_event_fdt_t *efdt;
+    struct rlimit rlim;
 
     /*
      * Event File Descriptor Table (EFDT)
@@ -76,7 +77,16 @@ int mk_event_initalize()
         return -1;
     }
 
-    efdt->size = config->server_capacity;
+    /*
+     * Despites what config->server_capacity says, we need to prepare to handle
+     * a high number of file descriptors as process limit allows.
+     */
+    ret = getrlimit(RLIMIT_NOFILE, &rlim);
+    if (ret == -1) {
+        mk_libc_error("getrlimit");
+        return -1;
+    }
+    efdt->size = rlim.rlim_cur;
     efdt->states = mk_mem_malloc_z(sizeof(struct mk_event_fd_state) * efdt->size);
     if (!efdt->states) {
         mk_err("Event: could not allocate memory for events states on FD Table");
