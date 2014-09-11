@@ -38,17 +38,32 @@
 #include <monkey/mk_event.h>
 #include <monkey/mk_connection.h>
 
-/* Return the number of clients that can be attended
- * at the same time per worker thread
- */
+/* Return the number of clients that can be attended  */
 unsigned int mk_server_capacity(unsigned short nworkers)
 {
-    unsigned int max;
+    int ret;
+    int cur;
     struct rlimit lim;
 
     /* Limit by system */
     getrlimit(RLIMIT_NOFILE, &lim);
-    max = lim.rlim_cur;
+    cur = lim.rlim_cur;
+
+    if (config->fd_limit > cur) {
+        lim.rlim_cur = config->fd_limit;
+        lim.rlim_max = config->fd_limit;
+
+        ret = setrlimit(RLIMIT_NOFILE, &lim);
+        if (ret == -1) {
+            mk_warn("Could not increase FDLimit to %i.", config->fd_limit);
+        }
+        else {
+            cur = config->fd_limit;
+        }
+    }
+    else if (config->fd_limit > 0) {
+        cur = config->fd_limit;
+    }
 
     /*
      * The following are almost taken:
@@ -58,7 +73,7 @@ unsigned int mk_server_capacity(unsigned short nworkers)
      * - others ?, no idea. Sysadmin problem.
      */
 
-    return (max - nworkers);
+    return (cur - nworkers);
 }
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
@@ -218,7 +233,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
 {
     int i;
     int fd;
-    int ret;
+    int ret = -1;
     int mask;
     int num_fds;
     int remote_fd;

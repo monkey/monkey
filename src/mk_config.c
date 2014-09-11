@@ -550,9 +550,6 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         }
     }
 
-    /* Get each worker clients capacity based on FDs system limits */
-    config->server_capacity = mk_server_capacity(config->workers);
-
     /* Timeout */
     config->timeout = (size_t) mk_config_section_getval(section,
                                                      "Timeout", MK_CONFIG_VAL_NUM);
@@ -655,6 +652,14 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->fdt = (size_t) mk_config_section_getval(section,
                                                     "FDT",
                                                     MK_CONFIG_VAL_BOOL);
+
+    /* FIXME: Overcapacity not ready */
+    config->fd_limit = (size_t) mk_config_section_getval(section,
+                                                           "FDLimit",
+                                                           MK_CONFIG_VAL_NUM);
+    /* Get each worker clients capacity based on FDs system limits */
+    config->server_capacity = mk_server_capacity(config->workers);
+
 
     if (!config->one_shot) {
         mk_vhost_init(path_conf);

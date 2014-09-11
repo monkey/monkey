@@ -167,4 +167,16 @@ cat > conf/monkey.conf <<EOF
 
     OverCapacity Resist
 
+    # FDLimit:
+    # --------
+    # Define the limit for the number of file descriptors that the server
+    # can use. If the value is not set, Monkey will use the soft limit
+    # imposed to the process (ulimit -n).
+    #
+    # If the variable is set, Monkey will try to increase or decrease
+    # the limit under it restrictions. For values higher that Hard Limit
+    # Monkey needs to be started by root user.
+    #
+    # FDLimit 4096
+
 EOF
