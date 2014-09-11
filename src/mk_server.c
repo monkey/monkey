@@ -39,7 +39,7 @@
 #include <monkey/mk_connection.h>
 
 /* Return the number of clients that can be attended  */
-unsigned int mk_server_capacity(unsigned short nworkers)
+unsigned int mk_server_capacity()
 {
     int ret;
     int cur;
@@ -65,15 +65,7 @@ unsigned int mk_server_capacity(unsigned short nworkers)
         cur = config->fd_limit;
     }
 
-    /*
-     * The following are almost taken:
-     *
-     * - 3 fds: STDIN, STDOUT, STDERR
-     * - 1 efd per worker
-     * - others ?, no idea. Sysadmin problem.
-     */
-
-    return (cur - nworkers);
+    return cur;
 }
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
