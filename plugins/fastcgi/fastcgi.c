@@ -145,8 +145,7 @@ int fcgi_wake_connection(int location_id)
 
 		PLUGIN_TRACE("[FCGI_FD %d] Waking up connection.", fd->fd);
 		mk_api->event_socket_change_mode(fd->fd,
-                                         MK_EPOLL_WAKEUP,
-                                         MK_EPOLL_LEVEL_TRIGGERED);
+                                         MK_EVENT_WRITE, -1);
 		check(!fcgi_fd_set_state(fd, FCGI_FD_READY),
               "[FCGI_FD %d]  State change failed.", fd->fd);
 	}
@@ -214,10 +213,9 @@ int fcgi_new_connection(int location_id)
 
 	mk_api->socket_set_nonblocking(fd->fd);
 	check(!mk_api->event_add(fd->fd,
-                             MK_EPOLL_WRITE,
-                             plugin,
-                             MK_EPOLL_LEVEL_TRIGGERED),
-          "[FD %d] Failed to add event.", fd->fd);
+                             MK_EVENT_WRITE,
+                             plugin, -1),
+                             "[FD %d] Failed to add event.", fd->fd);
 
 	fcgi_fd_set_state(fd, FCGI_FD_READY);
 
@@ -513,8 +511,7 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
                   h.req_id);
 			if (request_get_flag(req, REQ_SLEEPING)) {
 				mk_api->event_socket_change_mode(req->fd,
-                                                 MK_EPOLL_WAKEUP,
-                                                 MK_EPOLL_LEVEL_TRIGGERED);
+                                                 MK_EVENT_WRITE, -1);
 				request_unset_flag(req, REQ_SLEEPING);
 			}
 		}
@@ -534,8 +531,7 @@ static int fcgi_handle_pkg(struct fcgi_fd *fd,
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-                                             MK_EPOLL_WAKEUP,
-                                             MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EVENT_WRITE, -1);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -716,9 +712,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 
 	request_set_flag(req, REQ_SLEEPING);
 	mk_api->event_socket_change_mode(req->fd,
-                                     MK_EPOLL_SLEEP,
-                                     MK_EPOLL_LEVEL_TRIGGERED);
-
+                                     MK_EVENT_SLEEP, 0);
 
 	return MK_PLUGIN_RET_CONTINUE;
 
@@ -728,8 +722,7 @@ int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-                                             MK_EPOLL_WAKEUP,
-                                             MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EVENT_WRITE, -1);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -767,7 +760,7 @@ int _mkp_core_prctx(struct server_config *config)
 	check(!fcgi_context_list_init(&fcgi_global_context_list,
                                   &fcgi_global_config,
                                   config->workers,
-                                  config->worker_capacity),
+                                  config->server_capacity),
           "Failed to init thread data list.");
 
 	mk_list_foreach(h, config->plugins) {
@@ -944,8 +937,8 @@ int _mkp_event_write(int socket)
 			PLUGIN_TRACE("[FCGI_FD %d] Sleep.", fd->fd);
 
 			mk_api->event_socket_change_mode(fd->fd,
-                                             MK_EPOLL_SLEEP,
-                                             MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EVENT_SLEEP,
+                                             -1);
 			check(!fcgi_fd_set_state(fd, FCGI_FD_SLEEPING),
                   "Failed to set fd state.");
 
@@ -979,8 +972,7 @@ int _mkp_event_write(int socket)
 			fd->begin_req = NULL;
 
 			mk_api->event_socket_change_mode(fd->fd,
-                                             MK_EPOLL_READ,
-                                             MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EVENT_READ, -1);
 		} else {
 			chunk_iov_drop(fd->begin_req, ret);
 		}
@@ -996,8 +988,7 @@ int _mkp_event_write(int socket)
 		request_set_state(req, REQ_FAILED);
 		if (request_get_flag(req, REQ_SLEEPING)) {
 			mk_api->event_socket_change_mode(req->fd,
-                                             MK_EPOLL_WAKEUP,
-                                             MK_EPOLL_LEVEL_TRIGGERED);
+                                             MK_EVENT_WRITE, -1);
 			request_unset_flag(req, REQ_SLEEPING);
 		}
 	}
@@ -1036,8 +1027,7 @@ int _mkp_event_read(int socket)
 		if (fd->state == FCGI_FD_READY) {
 			if (loc->keep_alive) {
 				mk_api->event_socket_change_mode(fd->fd,
-                                                 MK_EPOLL_WRITE,
-                                                 MK_EPOLL_LEVEL_TRIGGERED);
+                                                 MK_EVENT_WRITE, -1);
 			}
 			else {
 				check(!fcgi_fd_set_state(fd, FCGI_FD_CLOSING),
