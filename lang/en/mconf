@@ -169,9 +169,10 @@ cat > conf/monkey.conf <<EOF
 
     # FDLimit:
     # --------
-    # Define the limit for the number of file descriptors that the server
-    # can use. If the value is not set, Monkey will use the soft limit
-    # imposed to the process (ulimit -n).
+    # Defines the maximum number of file descriptors that the server
+    # can use, it can be translated to the maximum number of connections.
+    # If the value is not set, Monkey will use the soft limit imposed to
+    # the process (ulimit -n).
     #
     # If the variable is set, Monkey will try to increase or decrease
     # the limit under it restrictions. For values higher that Hard Limit
