@@ -375,14 +375,13 @@ void mk_plugin_init()
     api->iov_send =  mk_iov_send;
     api->iov_print =  mk_iov_print;
 
-    /* EPoll callbacks
-    api->epoll_create =  mk_epoll_create;
-    api->epoll_init =  mk_epoll_init;
-    api->epoll_add = mk_epoll_add;
-    api->epoll_del = mk_epoll_del;
-    api->epoll_change_mode = mk_epoll_change_mode;
-    api->epoll_state_get = mk_epoll_state_get;
-    */
+    /* events mechanism */
+    api->ev_loop_create = mk_event_loop_create;
+    api->ev_add = mk_event_add;
+    api->ev_del = mk_event_del;
+    api->ev_timeout_create = mk_event_timeout_create;
+    api->ev_channel_create = mk_event_channel_create;
+    api->ev_wait = mk_event_wait;
 
     /* Red-Black tree */
     api->rb_insert_color = rb_insert_color;

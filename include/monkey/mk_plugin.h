@@ -242,13 +242,13 @@ struct plugin_api
     /* plugin functions */
     void *(*plugin_load_symbol) (void *, const char *);
 
-    /* epoll functions */
-    void *(*epoll_init) (struct mk_server_listen *, int, int);
-    int   (*epoll_create) (int);
-    int   (*epoll_add) (int, int, int, unsigned int);
-    int   (*epoll_del) (int, int);
-    int   (*epoll_change_mode) (int, int, int, unsigned int);
-    struct epoll_state *(*epoll_state_get) (int);
+    /* core events mechanism */
+    mk_event_loop_t *(*ev_loop_create) (int);
+    int (*ev_add) (mk_event_loop_t *, int, int, void *);
+    int (*ev_del) (mk_event_loop_t *, int);
+    int (*ev_timeout_create) (mk_event_loop_t *, int);
+    int (*ev_channel_create) (mk_event_loop_t *);
+    int (*ev_wait) (mk_event_loop_t *);
 
     /* Mime type */
     struct mimetype *(*mimetype_lookup) (char *);
@@ -264,7 +264,6 @@ struct plugin_api
     struct mk_config_section *(*config_section_get) (struct mk_config *,
                                                      const char *);
     void *(*config_section_getval) (struct mk_config_section *, char *, int);
-
 
     /* Scheduler */
     int (*sched_remove_client) (int);
