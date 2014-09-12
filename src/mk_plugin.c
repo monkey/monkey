@@ -912,8 +912,8 @@ int mk_plugin_event_add(int socket, int mode,
 {
     struct sched_list_node *sched;
     struct plugin_event *event;
-
     struct mk_list *list;
+    (void) behavior;
 
     sched = mk_sched_get_thread_conf();
     if (!sched) {
@@ -979,6 +979,7 @@ int mk_plugin_http_request_end(int socket)
 int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior)
 {
     struct sched_list_node *sched;
+    (void) behavior;
 
     sched = mk_sched_get_thread_conf();
 
