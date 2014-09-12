@@ -181,12 +181,19 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 static inline int _mk_event_wait(mk_event_loop_t *loop)
 {
     int i;
+    int fd;
+    struct mk_event_fd_state *st;
     mk_event_ctx_t *ctx = loop->data;
 
     loop->n_events = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
     for (i = 0; i < loop->n_events; i++) {
-        loop->events[i].fd   = ctx->events[i].data.fd;
+        fd = ctx->events[i].data.fd;
+        st = &mk_events_fdt->states[fd];
+
+        loop->events[i].fd   = fd;
         loop->events[i].mask = ctx->events[i].events;
+
+        loop->events[i].data = st->data;
     }
 
     return loop->n_events;

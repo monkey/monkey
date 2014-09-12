@@ -88,6 +88,7 @@ typedef struct  {
 typedef struct {
     int      fd;
     uint32_t mask;
+    void    *data;
 } mk_event_t;
 
 /*
