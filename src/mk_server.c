@@ -29,7 +29,6 @@
 #include <monkey/monkey.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
-#include <monkey/mk_epoll.h>
 #include <monkey/mk_socket.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
