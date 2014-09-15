@@ -96,10 +96,17 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 
 static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 {
-    (void) ctx;
-    (void) fd;
+    int ret;
+    struct kevent ke;
 
-    return -1;
+    EV_SET(&ke, fd, 0, EV_DELETE, 0, 0, NULL);
+    ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+    if (ret < 0) {
+        mk_libc_error("kevent");
+        return -1;
+    }
+
+    return ret;
 }
 
 static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
