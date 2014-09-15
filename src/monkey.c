@@ -266,6 +266,7 @@ int main(int argc, char **argv)
 
     /* Override some configuration */
     config->one_shot = one_shot;
+    config->port_override = port_override;
     config->transport_layer = transport_layer;
 
 #ifdef TRACE
@@ -301,11 +302,6 @@ int main(int argc, char **argv)
     /* Load plugins */
     mk_plugin_init();
     mk_plugin_read_config();
-
-    /* Override TCP port if it was set in the command line */
-    if (port_override != NULL) {
-        mk_config_listener_add(NULL, port_override);
-    }
 
     /* Running Monkey as daemon */
     if (config->is_daemon == MK_TRUE) {

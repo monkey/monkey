@@ -532,8 +532,13 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     config->config = cnf;
 
     /* Listen */
-    if (mk_config_listen_read(section)) {
-        mk_err("[config] Failed to read listen sections.");
+    if (!config->port_override) {
+        if (mk_config_listen_read(section)) {
+            mk_err("[config] Failed to read listen sections.");
+        }
+    }
+    else {
+        mk_config_listener_add(NULL, config->port_override);
     }
 
     /* Number of thread workers */

@@ -103,6 +103,7 @@ struct server_config
     struct mk_list listeners;
 
     char *one_shot;
+    char *port_override;
     char *user;
     char *user_dir;
     char *pid_file_path;        /* pid of server */
