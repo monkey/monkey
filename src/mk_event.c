@@ -27,7 +27,11 @@
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 
-#include "mk_event_epoll.c"
+#if defined(__linux__) && !defined(LINUX_KQUEUE)
+    #include "mk_event_epoll.c"
+#else
+    #include "mk_event_kqueque.c"
+#endif
 
 /*
  * Initialize the global Event structure used by threads to access the

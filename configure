@@ -170,6 +170,7 @@ main()
 	fi
 
         if [ $linux_kqueue -eq 1 ]; then
+                DEFS="$DEFS -DLINUX_KQUEUE"
                 KFLAGS=`pkg-config libkqueue --cflags`
                 KLIBS=`pkg-config libkqueue --libs`
                 KLIBS="$KLIBS -pthread"
