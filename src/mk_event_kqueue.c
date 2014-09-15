@@ -125,7 +125,29 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
 {
-    (void) loop;
+    int i;
+    int fd;
+    int mask = 0;
+    struct mk_event_fd_state *st;
+    mk_event_ctx_t *ctx = loop->data;
 
-    return 0;
+    loop->n_events = kevent(ctx->kfd, NULL, 0, ctx->events, ctx->queue_size, NULL);
+    for (i = 0; i < loop->n_events; i++) {
+        fd = ctx->events[i].ident;
+        st = &mk_events_fdt->states[fd];
+
+        if (ctx->events[i].filter == EVFILT_READ) {
+            mask |= MK_EVENT_READ;
+        }
+
+        if (ctx->events[i].filter == EVFILT_WRITE) {
+            mask |= MK_EVENT_WRITE;
+        }
+
+        loop->events[i].fd   = fd;
+        loop->events[i].mask = mask;
+        loop->events[i].data = st->data;
+    }
+
+    return loop->n_events;
 }
