@@ -68,11 +68,30 @@ static inline void *_mk_event_loop_create(int size)
 
 static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 {
-    (void) ctx;
-    (void) fd;
-    (void) events;
+    int ret;
+    struct kevent ke;
 
-    return -1;
+    if (events & MK_EVENT_READ) {
+        EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+        if (ret < 0) {
+            mk_libc_error("kevent");
+            return -1;
+        }
+    }
+
+    if (events & MK_EVENT_WRITE) {
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+
+        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+        if (ret < 0) {
+            mk_libc_error("kevent");
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
@@ -88,13 +107,13 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     (void) ctx;
     (void) expire;
 
-    return -1;
+    return 1;
 }
 
 static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
 {
     (void) ctx;
-    return -1;
+    return 1;
 }
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
