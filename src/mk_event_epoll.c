@@ -109,11 +109,9 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
     ret = epoll_ctl(ctx->efd, EPOLL_CTL_DEL, fd, NULL);
     MK_TRACE("[FD %i] Epoll, remove from QUEUE_FD=%i, ret=%i",
              fd, ctx->efd, ret);
-#ifdef TRACE
     if (ret < 0) {
         mk_libc_error("epoll_ctl");
     }
-#endif
 
     return ret;
 }
