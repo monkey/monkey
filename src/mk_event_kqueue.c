@@ -17,6 +17,16 @@
  *  limitations under the License.
  */
 
+#ifndef __linux__
+   #include <sys/types.h>
+   #include <sys/event.h>
+   #include <sys/time.h>
+#endif
+
+#ifdef LINUX_KQUEUE
+   #include <kqueue/sys/event.h>
+#endif
+
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_utils.h>
@@ -24,14 +34,36 @@
 typedef struct {
     int kfd;
     int queue_size;
-    void *events;
+    struct kevent *events;
 } mk_event_ctx_t;
 
 static inline void *_mk_event_loop_create(int size)
 {
-    (void) size;
+    mk_event_ctx_t *ctx;
 
-    return NULL;
+    /* Main event context */
+    ctx = mk_mem_malloc_z(sizeof(mk_event_ctx_t));
+    if (!ctx) {
+        return NULL;
+    }
+
+    /* Create the epoll instance */
+    ctx->kfd = kqueue();
+    if (ctx->kfd == -1) {
+        mk_libc_error("kqueue");
+        mk_mem_free(ctx);
+        return NULL;
+    }
+
+    /* Allocate space for events queue */
+    ctx->events = mk_mem_malloc_z(sizeof(struct kevent) * size);
+    if (!ctx->events) {
+        close(ctx->kfd);
+        mk_mem_free(ctx);
+        return NULL;
+    }
+    ctx->queue_size = size;
+    return ctx;
 }
 
 static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)

@@ -173,6 +173,7 @@ main()
                 DEFS="$DEFS -DLINUX_KQUEUE"
                 KFLAGS=`pkg-config libkqueue --cflags`
                 KLIBS=`pkg-config libkqueue --libs`
+                libs="$libs $KLIBS"
                 KLIBS="$KLIBS -pthread"
 	        check_generic "Linux kqueue emulation" "sys/event.h" "int kqfd = kqueue()" "$KFLAGS" "$KLIBS"
         fi
