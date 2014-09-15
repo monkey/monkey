@@ -98,15 +98,28 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 {
     int ret;
     struct kevent ke;
+    struct mk_event_fd_state *st;
 
-    EV_SET(&ke, fd, 0, EV_DELETE, 0, 0, NULL);
-    ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
-    if (ret < 0) {
-        mk_libc_error("kevent");
-        return -1;
+    st = &mk_events_fdt->states[fd];
+    if (st->mask & MK_EVENT_READ) {
+        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+        if (ret < 0) {
+            mk_libc_error("kevent");
+            return -1;
+        }
+
+    }
+    if (st->mask & MK_EVENT_WRITE) {
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+        if (ret < 0) {
+            mk_libc_error("kevent");
+            return -1;
+        }
     }
 
-    return ret;
+    return 0;
 }
 
 static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)

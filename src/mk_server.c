@@ -115,7 +115,8 @@ int mk_server_listen_handler(struct sched_list_node *sched,
 
         result = mk_event_add(sched->loop, client_fd, MK_EVENT_READ, NULL);
         if (mk_unlikely(result != 0)) {
-            mk_err("[server] Add to epoll failed: %s", strerror(errno));
+            mk_err("[server] Error registering file descriptor: %s",
+                   strerror(errno));
             goto error;
         }
 
