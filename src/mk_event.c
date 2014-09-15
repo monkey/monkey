@@ -30,7 +30,7 @@
 #if defined(__linux__) && !defined(LINUX_KQUEUE)
     #include "mk_event_epoll.c"
 #else
-    #include "mk_event_kqueque.c"
+    #include "mk_event_kqueue.c"
 #endif
 
 /*
