@@ -114,7 +114,8 @@ struct sched_list_node
      * just available because of ULONG_MAX bug described
      * on mk_scheduler.c .
      */
-    int signal_channel;
+    int signal_channel_r;
+    int signal_channel_w;
 
     /*
      * Reference of the memory array that contains all entries for

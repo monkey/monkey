@@ -260,7 +260,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
 
             if (mask & MK_EVENT_READ) {
                 /* Check if we have a worker signal */
-                if (mk_unlikely(fd == sched->signal_channel)) {
+                if (mk_unlikely(fd == sched->signal_channel_r)) {
                     ret = read(fd, &val, sizeof(val));
                     if (ret < 0) {
                         mk_libc_error("read");

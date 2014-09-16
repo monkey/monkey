@@ -186,12 +186,12 @@ int mk_event_timeout_create(mk_event_loop_t *loop, int expire)
 }
 
 /* Create a new channel to distribute signals */
-int mk_event_channel_create(mk_event_loop_t *loop)
+int mk_event_channel_create(mk_event_loop_t *loop, int *r_fd, int *w_fd)
 {
     mk_event_ctx_t *ctx;
     ctx = loop->data;
 
-    return _mk_event_channel_create(ctx);
+    return _mk_event_channel_create(ctx, r_fd, w_fd);
 }
 
 /* Poll events */

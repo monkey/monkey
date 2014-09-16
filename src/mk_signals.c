@@ -62,7 +62,7 @@ static void mk_signal_exit()
     /* Distribute worker signals to stop working */
     val = MK_SCHEDULER_SIGNAL_FREE_ALL;
     for (i = 0; i < config->workers; i++) {
-        n = write(sched_list[i].signal_channel, &val, sizeof(val));
+        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
         if (n < 0) {
             perror("write");
         }

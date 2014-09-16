@@ -352,6 +352,7 @@ static int mk_sched_register_thread()
 /* created thread, all this calls are in the thread context */
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
+    int ret;
     int wid;
     unsigned long len;
     char *thread_name = 0;
@@ -385,8 +386,10 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     }
 
     /* Register the scheduler channel to signal active workers */
-    sched->signal_channel = mk_event_channel_create(sched->loop);
-    if (sched->signal_channel <= 0) {
+    ret = mk_event_channel_create(sched->loop,
+                                  &sched->signal_channel_r,
+                                  &sched->signal_channel_w);
+    if (ret < 0) {
         exit(EXIT_FAILURE);
     }
 

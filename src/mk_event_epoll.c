@@ -156,7 +156,7 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     return timer_fd;
 }
 
-static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
+static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *w_fd)
 {
     int fd;
     int ret;
@@ -173,7 +173,8 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
         return ret;
     }
 
-    return fd;
+    *w_fd = *r_fd = fd;
+    return 0;
 }
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
