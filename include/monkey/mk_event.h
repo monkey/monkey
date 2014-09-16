@@ -49,42 +49,6 @@
 
 /* ---- end ---- */
 
-
-/*
- * Dirty Abstraction Workaround
- * ============================
- * the purpose of the mk_event interface is to wrap backend polling systems
- * such as epoll and kqueue. But both systems handle very different structures
- * to store the events once they are reported.
- *
- * The common approach would be to let each backend function to go
- * around each reported event and duplicate the info on our own
- * high level structure, but of course that have some performance penalty as the
- * worker will go around the events array twice: once for duplicate and
- * the other to process the events.
- *
- * The following workaround of course is optimized when running on Linux
- * where our high level structure is the same than the used by epoll. When
- * using the kqueue backend the code should do the double work on this.
- *
- * If you have a better idea which is not "ah!, you can use libuv", drop me
- * a line.
- */
-typedef union _mk_epoll_data {
-    void        *ptr;
-    int          fd;
-    uint32_t     u32;
-    uint64_t     u64;
-} _mk_epoll_data_t;
-
-typedef struct  {
-    uint32_t       events;      /* Epoll events */
-    _mk_epoll_data_t data;        /* User data variable */
-} mk_event_t_old;
-
-/* ---- end of dirty workaround ---- */
-
-
 typedef struct {
     int      fd;
     uint32_t mask;
