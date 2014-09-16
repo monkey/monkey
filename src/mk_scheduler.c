@@ -405,7 +405,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 #ifdef STATS
     thconf->ctx->worker_info[wid]->stats = stats;
 #endif
-    thinfo->ctx = thconf->ctx;
+    //thinfo->ctx = thconf->ctx;
 #endif
 
     mk_mem_free(thread_conf);

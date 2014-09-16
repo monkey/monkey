@@ -287,8 +287,7 @@ mklib_ctx mklib_init(const char *address, const unsigned int port,
     config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
     mk_mimetype_read_config();
 
-    config->worker_capacity = mk_server_worker_capacity(config->workers);
-    config->max_load = (config->worker_capacity * config->workers);
+    config->server_capacity = mk_server_capacity();
 
     /* Clock thread */
     mk_clock_sequential_init();
@@ -329,9 +328,7 @@ int mklib_config(mklib_ctx ctx, ...)
             case MKC_WORKERS:
                 i = va_arg(va, int);
                 config->workers = i;
-                config->worker_capacity = mk_server_worker_capacity(config->workers);
-                config->max_load = (config->worker_capacity * config->workers);
-
+                config->server_capacity = mk_server_capacity();
                 free(sched_list);
                 mk_sched_init();
             break;
@@ -586,7 +583,7 @@ int mklib_start(mklib_ctx ctx)
     ctx->worker_info = mk_mem_malloc_z(sizeof(struct mklib_worker_info *) * (workers + 1));
     for(i = 0; i < workers; i++) {
         ctx->worker_info[i] = mk_mem_malloc_z(sizeof(struct mklib_worker_info));
-        mk_sched_launch_thread(config->worker_capacity, &ctx->workers[i], ctx);
+        mk_sched_launch_thread(config->server_capacity, &ctx->workers[i], ctx);
     }
 
     /* Wait until all workers report as ready */

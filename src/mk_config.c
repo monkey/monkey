@@ -663,7 +663,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
                                                            "FDLimit",
                                                            MK_CONFIG_VAL_NUM);
     /* Get each worker clients capacity based on FDs system limits */
-    config->server_capacity = mk_server_capacity(config->workers);
+    config->server_capacity = mk_server_capacity();
 
 
     if (!config->one_shot) {
