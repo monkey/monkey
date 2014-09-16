@@ -190,7 +190,7 @@ int _mkp_event_write(int socket)
             {
                 swrite(socket, outptr, r->in_len);
                 r->in_len = 0;
-                mk_api->event_socket_change_mode(socket, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
+                mk_api->event_socket_change_mode(socket, MK_EVENT_SLEEP, -1);
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
 
@@ -206,7 +206,7 @@ int _mkp_event_write(int socket)
 
             if (r->in_len == 0)
             {
-                mk_api->event_socket_change_mode(socket, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
+                mk_api->event_socket_change_mode(socket, MK_EVENT_SLEEP, -1);
                 return MK_PLUGIN_RET_EVENT_OWNED;
             }
         }
@@ -227,8 +227,8 @@ int _mkp_event_write(int socket)
             return MK_PLUGIN_RET_EVENT_CLOSE;
 
         r->in_len = 0;
-        mk_api->event_socket_change_mode(socket, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
-        mk_api->event_socket_change_mode(r->fd, MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+        mk_api->event_socket_change_mode(socket, MK_EVENT_SLEEP, -1);
+        mk_api->event_socket_change_mode(r->fd, MK_EVENT_READ, -1);
 
         if (r->chunked)
         {
@@ -251,7 +251,7 @@ int _mkp_event_read(int fd)
     /* Too much to read? Start writing. */
     if (count < 1)
     {
-        mk_api->event_socket_change_mode(r->fd, MK_EPOLL_SLEEP, MK_EPOLL_LEVEL_TRIGGERED);
+        mk_api->event_socket_change_mode(r->fd, MK_EVENT_SLEEP, -1);
         goto out;
     }
 
@@ -264,7 +264,7 @@ int _mkp_event_read(int fd)
 
 out:
     /* Now we do have something to write */
-    mk_api->event_socket_change_mode(r->socket, MK_EPOLL_WRITE, MK_EPOLL_LEVEL_TRIGGERED);
+    mk_api->event_socket_change_mode(r->socket, MK_EVENT_WRITE, -1);
 
     return MK_PLUGIN_RET_EVENT_OWNED;
 }
