@@ -76,24 +76,21 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 
     fds = mk_event_get_state(fd);
 
-    printf("----------------------------\n");
-
     /* Read flag */
     if ((fds->mask ^ MK_EVENT_READ) && (events & MK_EVENT_READ)) {
         EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
         set = MK_TRUE;
-        printf("[ADD] fd=%i READ\n", fd);
+        //printf("[ADD] fd=%i READ\n", fd);
     }
     else if ((fds->mask & MK_EVENT_READ) && (events ^ MK_EVENT_READ)) {
         EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
         set = MK_TRUE;
-        printf("[DEL] fd=%i READ\n", fd);
+        //printf("[DEL] fd=%i READ\n", fd);
     }
 
     if (set == MK_TRUE) {
         ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
         if (ret < 0) {
-            printf("KFD=%i\n", ctx->kfd);
             mk_libc_error("kevent");
             return ret;
         }
@@ -104,18 +101,17 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
     if ((fds->mask ^ MK_EVENT_WRITE) && (events & MK_EVENT_WRITE)) {
         EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
         set = MK_TRUE;
-        printf("[ADD] fd=%i WRITE\n", fd);
+        //printf("[ADD] fd=%i WRITE\n", fd);
     }
     else if ((fds->mask & MK_EVENT_WRITE) && (events ^ MK_EVENT_WRITE)) {
         EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
         set = MK_TRUE;
-        printf("[DEL] fd=%i WRITE\n", fd);
+        //printf("[DEL] fd=%i WRITE\n", fd);
     }
 
     if (set == MK_TRUE) {
         ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
         if (ret < 0) {
-            printf("[ADD WRITE FAIL] fd=%i????\n", fd);
             mk_libc_error("kevent");
             return ret;
         }
@@ -138,7 +134,7 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
             mk_libc_error("kevent");
             return ret;
         }
-        printf("!DEL READ %i\n", fd);
+        //printf("!DEL READ %i\n", fd);
     }
 
     if (fds->mask & MK_EVENT_WRITE) {
@@ -148,7 +144,7 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
             mk_libc_error("kevent");
             return ret;
         }
-        printf("!DEL WRITE %i\n", fd);
+        //printf("!DEL WRITE %i\n", fd);
     }
 
     return 0;
