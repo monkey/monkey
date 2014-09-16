@@ -59,14 +59,12 @@ extern __thread struct stats *stats;
 
 struct sched_connection
 {
-    struct rb_node _rb_head; /* red-black tree head */
-
     int socket;                  /* file descriptor            */
     int status;                  /* connection status          */
     time_t arrive_time;          /* arrived time               */
     struct mk_list _head;        /* list head: av/busy         */
     struct mk_list status_queue; /* link to the incoming queue */
-    uint32_t events;             /* epoll events               */
+    struct rb_node _rb_head; /* red-black tree head */
 };
 
 /* Global struct */
