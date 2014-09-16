@@ -145,12 +145,10 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     }
 
     /* register the timer into the epoll queue */
-    event.data.fd = timer_fd;
-    event.events  = EPOLLIN;
-    ret = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, timer_fd, &event);
-    if (ret < 0) {
-        mk_libc_error("epoll_ctl");
-        return -1;
+    ret = _mk_event_add(ctx, timer_fd, MK_EVENT_READ);
+    if (ret != 0) {
+        close(timer_fd);
+        return ret;
     }
 
     return timer_fd;
