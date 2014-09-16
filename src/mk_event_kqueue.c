@@ -25,9 +25,18 @@
 
 #ifdef LINUX_KQUEUE
    #include <kqueue/sys/event.h>
+
+   /* Not defined */
+   #ifndef NOTE_SECONDS
+      #define NOTE_SECONDS 0x00000001
+   #endif
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_utils.h>
@@ -152,16 +161,40 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 
 static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
 {
-    (void) ctx;
-    (void) expire;
+    int fd;
+    int ret;
+    struct kevent ke;
 
-    return 1;
+    /*
+     * We just need a file descriptor number, we don't care from where it
+     * comes from.
+     */
+    fd = open("/dev/null", 0);
+    if (fd == -1) {
+        mk_libc_error("open");
+        return -1;
+    }
+
+    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, expire, NULL);
+    ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+    if (ret < 0) {
+        close(fd);
+        mk_libc_error("kevent");
+        return -1;
+    }
+
+    /*
+     * FIXME: the timeout event is not triggered when using libkqueue, need
+     * to confirm how it behave on native OSX.
+     */
+
+    return fd;
 }
 
 static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *w_fd)
 {
-    int fd[2];
     int ret;
+    int fd[2];
 
     ret = pipe(fd);
     if (ret < 0) {

@@ -122,7 +122,6 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     int ret;
     int timer_fd;
     struct itimerspec its;
-    struct epoll_event event = {0, {0}};
 
     /* expiration interval */
     its.it_interval.tv_sec  = expire;
