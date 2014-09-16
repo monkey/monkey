@@ -1340,5 +1340,5 @@ int mk_plugin_header_add(struct session_request *sr, char *row, int len)
 
 struct sched_list_node *mk_plugin_sched_get_thread_conf()
 {
-    return pthread_getspecific(worker_sched_node);
+    return worker_sched_node;
 }

@@ -46,7 +46,6 @@
 #include <monkey/mk_stats.h>
 #include <monkey/mk_server.h>
 
-pthread_key_t worker_sched_node;
 
 struct sched_list_node *sched_list;
 
@@ -56,6 +55,7 @@ pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
 __thread struct mk_list *cs_incomplete;
+__thread struct sched_list_node *worker_sched_node;
 
 #ifdef STATS
 __thread struct stats *stats;
@@ -416,7 +416,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_mem_free(thread_name);
 
     /* Export known scheduler node to context thread */
-    pthread_setspecific(worker_sched_node, (void *) sched);
+    worker_sched_node = sched;
     mk_plugin_core_thread();
 
     if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {

@@ -126,6 +126,8 @@ struct sched_list_node
 #endif
 };
 
+extern __thread struct sched_list_node *worker_sched_node;
+
 
 /* global scheduler list */
 struct sched_list_node *sched_list;
@@ -143,7 +145,6 @@ typedef struct
 #endif
 } sched_thread_conf;
 
-pthread_key_t MK_EXPORT worker_sched_node;
 extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
@@ -164,7 +165,7 @@ static inline struct rb_root *mk_sched_get_request_list()
 
 static inline struct sched_list_node *mk_sched_get_thread_conf()
 {
-    return pthread_getspecific(worker_sched_node);
+    return worker_sched_node;
 }
 
 void mk_sched_update_thread_status(struct sched_list_node *sched,
