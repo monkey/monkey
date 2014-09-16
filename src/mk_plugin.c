@@ -382,6 +382,7 @@ void mk_plugin_init()
     api->ev_timeout_create = mk_event_timeout_create;
     api->ev_channel_create = mk_event_channel_create;
     api->ev_wait = mk_event_wait;
+    api->ev_translate = mk_event_translate;
 
     /* Red-Black tree */
     api->rb_insert_color = rb_insert_color;

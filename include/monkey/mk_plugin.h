@@ -249,6 +249,7 @@ struct plugin_api
     int (*ev_timeout_create) (mk_event_loop_t *, int);
     int (*ev_channel_create) (mk_event_loop_t *, int *, int *);
     int (*ev_wait) (mk_event_loop_t *);
+    int (*ev_translate) (mk_event_loop_t *);
 
     /* Mime type */
     struct mimetype *(*mimetype_lookup) (char *);
