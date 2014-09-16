@@ -22,12 +22,6 @@
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
-#if defined(__linux__) && !defined(LINUX_KQUEUE)
-    #include <monkey/mk_event_epoll.h>
-#else
-    #include <monkey/mk_event_kqueue.c>
-#endif
-
 /* Event types */
 #define MK_EVENT_EMPTY           0
 #define MK_EVENT_READ            1
@@ -54,6 +48,13 @@
 #define MK_EP_SOCKET_TIMEOUT  2
 
 /* ---- end ---- */
+
+#if defined(__linux__) && !defined(LINUX_KQUEUE)
+    #include <monkey/mk_event_epoll.h>
+#else
+    #include <monkey/mk_event_kqueue.h>
+#endif
+
 
 /*
  * Events File Descriptor Table (EFDT)

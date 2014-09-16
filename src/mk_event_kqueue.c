@@ -17,21 +17,6 @@
  *  limitations under the License.
  */
 
-#ifndef __linux__
-   #include <sys/types.h>
-   #include <sys/event.h>
-   #include <sys/time.h>
-#endif
-
-#ifdef LINUX_KQUEUE
-   #include <kqueue/sys/event.h>
-
-   /* Not defined */
-   #ifndef NOTE_SECONDS
-      #define NOTE_SECONDS 0x00000001
-   #endif
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -40,12 +25,6 @@
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_utils.h>
-
-typedef struct {
-    int kfd;
-    int queue_size;
-    struct kevent *events;
-} mk_event_ctx_t;
 
 static inline void *_mk_event_loop_create(int size)
 {
@@ -217,13 +196,20 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
 {
+    mk_event_ctx_t *ctx = loop->data;
+
+    loop->n_events = kevent(ctx->kfd, NULL, 0, ctx->events, ctx->queue_size, NULL);
+    return loop->n_events;
+}
+
+static inline int _mk_event_translate(mk_event_loop_t *loop)
+{
     int i;
     int fd;
     int mask = 0;
     struct mk_event_fd_state *st;
     mk_event_ctx_t *ctx = loop->data;
 
-    loop->n_events = kevent(ctx->kfd, NULL, 0, ctx->events, ctx->queue_size, NULL);
     for (i = 0; i < loop->n_events; i++) {
         fd = ctx->events[i].ident;
         st = &mk_events_fdt->states[fd];
