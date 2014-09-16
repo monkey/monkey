@@ -106,8 +106,9 @@ static struct iov *mk_logger_get_cache()
 
 static void mk_logger_worker_init(void *args)
 {
-    int efd, max_events = mk_api->config->nhosts;
+    int fd;
     int i, bytes, err;
+    int max_events = mk_api->config->nhosts;
     int flog;
     int clk;
     long slen;
@@ -116,6 +117,7 @@ static void mk_logger_worker_init(void *args)
     (void) args;
     struct mk_list *head;
     struct log_target *entry;
+    mk_event_loop_t *evl;
 
     /* pipe_size:
      * ----------
@@ -143,7 +145,7 @@ static void mk_logger_worker_init(void *args)
     buffer_limit = (pipe_size * MK_LOGGER_PIPE_LIMIT);
 
     /* Creating poll */
-    efd = mk_api->epoll_create(max_events);
+    evl = mk_api->ev_loop_create(max_events);
 
     /* Registering targets for virtualhosts */
     mk_list_foreach(head, &targets_list) {
@@ -151,13 +153,11 @@ static void mk_logger_worker_init(void *args)
 
         /* Add access log file */
         if (entry->fd_access[0] > 0) {
-            mk_api->epoll_add(efd, entry->fd_access[0],
-                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+            mk_api->ev_add(evl, entry->fd_access[0], MK_EVENT_READ, NULL);
         }
         /* Add error log file */
         if (entry->fd_error[0] > 0) {
-            mk_api->epoll_add(efd, entry->fd_error[0],
-                              MK_EPOLL_READ, MK_EPOLL_LEVEL_TRIGGERED);
+            mk_api->ev_add(evl, entry->fd_error[0], MK_EVENT_READ, NULL);
         }
     }
 
@@ -167,21 +167,20 @@ static void mk_logger_worker_init(void *args)
     /* Reading pipe buffer */
     while (1) {
         usleep(1200);
-
-        struct epoll_event events[max_events];
-        int num_fds = epoll_wait(efd, events, max_events, -1);
+        int num_fds = mk_api->ev_wait(evl);
 
         clk = mk_api->time_unix();
 
         for (i = 0; i < num_fds; i++) {
-            target = mk_logger_match_by_fd(events[i].data.fd);
+            fd = evl->events[i].fd;
+            target = mk_logger_match_by_fd(fd);
 
             if (!target) {
                 mk_warn("Could not match host/epoll_fd");
                 continue;
             }
 
-            err = ioctl(events[i].data.fd, FIONREAD, &bytes);
+            err = ioctl(fd, FIONREAD, &bytes);
             if (mk_unlikely(err == -1)){
                 perror("ioctl");
             }
@@ -199,7 +198,7 @@ static void mk_logger_worker_init(void *args)
                 int consumed = 0;
                 char buf[255];
                 do {
-                    slen = read(events[i].data.fd, buf, 255);
+                    slen = read(fd, buf, 255);
                     if (slen > 0) {
                         consumed += slen;
                     }
@@ -212,7 +211,7 @@ static void mk_logger_worker_init(void *args)
             }
 
             lseek(flog, 0, SEEK_END);
-            slen = splice(events[i].data.fd, NULL, flog,
+            slen = splice(fd, NULL, flog,
                           NULL, bytes, SPLICE_F_MOVE);
             if (mk_unlikely(slen == -1)) {
                 mk_warn("Could not write to log file: splice() = %ld", slen);
