@@ -27,10 +27,10 @@
    #include <kqueue/sys/event.h>
 #endif
 
+#include <unistd.h>
 #include <monkey/mk_event.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_utils.h>
-#include <assert.h>
 
 typedef struct {
     int kfd;
@@ -158,10 +158,28 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     return 1;
 }
 
-static inline int _mk_event_channel_create(mk_event_ctx_t *ctx)
+static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *w_fd)
 {
-    (void) ctx;
-    return 1;
+    int fd[2];
+    int ret;
+
+    ret = pipe(fd);
+    if (ret < 0) {
+        mk_libc_error("pipe");
+        return ret;
+    }
+
+    ret = _mk_event_add(ctx, fd[0], MK_EVENT_READ);
+    if (ret != 0) {
+        close(fd[0]);
+        close(fd[1]);
+        return ret;
+    }
+
+    *r_fd = fd[0];
+    *w_fd = fd[1];
+
+    return 0;
 }
 
 static inline int _mk_event_wait(mk_event_loop_t *loop)
