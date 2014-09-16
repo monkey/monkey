@@ -199,3 +199,13 @@ int mk_event_wait(mk_event_loop_t *loop)
 {
     return _mk_event_wait(loop);
 }
+
+/*
+ * After mk_event_wait, walk around the events in the backend and populate
+ * the generic array of data. Use only if you are *not* going to use
+ * mk_event_foreach(...).
+ */
+int mk_event_translate(mk_event_loop_t *loop)
+{
+    return _mk_event_translate(loop);
+}

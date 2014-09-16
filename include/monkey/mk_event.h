@@ -22,6 +22,12 @@
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
+#if defined(__linux__) && !defined(LINUX_KQUEUE)
+    #include <monkey/mk_event_epoll.h>
+#else
+    #include <monkey/mk_event_kqueue.c>
+#endif
+
 /* Event types */
 #define MK_EVENT_EMPTY           0
 #define MK_EVENT_READ            1
@@ -49,12 +55,6 @@
 
 /* ---- end ---- */
 
-typedef struct {
-    int      fd;
-    uint32_t mask;
-    void    *data;
-} mk_event_t;
-
 /*
  * Events File Descriptor Table (EFDT)
  * ===================================
@@ -73,6 +73,12 @@ typedef struct {
 } mk_event_fdt_t;
 
 /* ---- end of EFDT ---- */
+
+typedef struct {
+    int      fd;
+    uint32_t mask;
+    void    *data;
+} mk_event_t;
 
 typedef struct {
     int size;                  /* size of events array */
@@ -96,5 +102,6 @@ int mk_event_del(mk_event_loop_t *loop, int fd);
 int mk_event_timeout_create(mk_event_loop_t *loop, int expire);
 int mk_event_channel_create(mk_event_loop_t *loop, int *r_fd, int *w_fd);
 int mk_event_wait(mk_event_loop_t *loop);
+int mk_event_translate(mk_event_loop_t *loop);
 
 #endif

@@ -227,7 +227,6 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     int fd;
     int ret = -1;
     int mask;
-    int num_fds;
     int remote_fd;
     int timeout_fd;
     uint64_t val;
@@ -252,12 +251,8 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     timeout_fd = mk_event_timeout_create(evl, config->timeout);
 
     while (1) {
-        num_fds = mk_event_wait(evl);
-        for (i = 0; i < num_fds; i++) {
-            /* shortcut vars */
-            fd   = evl->events[i].fd;
-            mask = evl->events[i].mask;
-
+        mk_event_wait(evl);
+        mk_event_foreach(evl, fd, mask) {
             if (mask & MK_EVENT_READ) {
                 /* Check if we have a worker signal */
                 if (mk_unlikely(fd == sched->signal_channel_r)) {
