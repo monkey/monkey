@@ -149,8 +149,8 @@ int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data)
     }
 
     fds = mk_event_get_state(fd);
-    fds->mask |= mask;
-    fds->data  = data;
+    fds->mask = mask;
+    fds->data = data;
 
     return 0;
 }

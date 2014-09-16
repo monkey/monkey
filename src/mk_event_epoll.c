@@ -80,7 +80,6 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
     else {
         op = EPOLL_CTL_MOD;
     }
-    fds->mask = events;
 
     event.data.fd = fd;
     event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -98,6 +97,7 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
         return -1;
     }
 
+    fds->mask = events;
     return ret;
 }
 

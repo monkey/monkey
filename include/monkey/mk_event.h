@@ -23,10 +23,10 @@
 #define MK_EVENT_H
 
 /* Event types */
-#define MK_EVENT_EMPTY          -1
-#define MK_EVENT_SLEEP           0
+#define MK_EVENT_EMPTY           0
 #define MK_EVENT_READ            1
 #define MK_EVENT_WRITE           4
+#define MK_EVENT_SLEEP           8
 #define MK_EVENT_CLOSE          (16 | 8 | 8192)
 
 /* The event queue size */
@@ -98,8 +98,8 @@ typedef struct {
  */
 
 struct mk_event_fd_state {
-    int fd;
-    int mask;
+    int      fd;
+    uint32_t mask;
     void *data;
 };
 
