@@ -446,5 +446,7 @@ void mk_cheetah_cmd_status()
     if (mk_api->kernel_features_print(tmp, sizeof(tmp)) > 0) {
         CHEETAH_WRITE("Kernel Features    : %s\n", tmp);
     }
+
+    CHEETAH_WRITE("Events backend     : %s\n", mk_api->ev_backend());
     CHEETAH_WRITE("\n");
 }
