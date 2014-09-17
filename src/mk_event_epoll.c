@@ -194,3 +194,8 @@ static inline int _mk_event_translate(mk_event_loop_t *loop)
 
     return loop->n_events;
 }
+
+static inline char *_mk_event_backend()
+{
+    return "epoll";
+}

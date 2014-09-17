@@ -209,3 +209,9 @@ int mk_event_translate(mk_event_loop_t *loop)
 {
     return _mk_event_translate(loop);
 }
+
+/* Return the backend name */
+char *mk_event_backend()
+{
+    return _mk_event_backend();
+}
