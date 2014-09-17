@@ -57,12 +57,6 @@ const mk_ptr_t mk_monkey_protocol = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 void mk_thread_keys_init(void)
 {
     /* Create thread keys */
-    pthread_key_create(&request_list, NULL);
-    pthread_key_create(&mk_cache_iov_header, NULL);
-    pthread_key_create(&mk_cache_header_lm, NULL);
-    pthread_key_create(&mk_cache_header_cl, NULL);
-    pthread_key_create(&mk_cache_header_ka, NULL);
-    pthread_key_create(&mk_cache_header_ka_max, NULL);
     pthread_key_create(&mk_utils_error_key, NULL);
 }
 

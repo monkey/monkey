@@ -30,13 +30,13 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_vhost.h>
 
-pthread_key_t mk_cache_iov_header;
-pthread_key_t mk_cache_header_lm;
-pthread_key_t mk_cache_header_cl;
-pthread_key_t mk_cache_header_ka;
-pthread_key_t mk_cache_header_ka_max;
 pthread_key_t mk_utils_error_key;
 
+__thread struct mk_iov *worker_cache_iov_header;
+__thread mk_ptr_t *worker_cache_header_cl;
+__thread mk_ptr_t *worker_cache_header_lm;
+__thread mk_ptr_t *worker_cache_header_ka;
+__thread mk_ptr_t *worker_cache_header_ka_max;
 __thread struct tm *worker_cache_gmtime;
 __thread struct mk_gmt_cache *worker_cache_gmtext;
 
@@ -44,41 +44,30 @@ __thread struct mk_gmt_cache *worker_cache_gmtext;
 void mk_cache_worker_init()
 {
     char *cache_error;
-    mk_ptr_t *cache_header_lm;
-    mk_ptr_t *cache_header_cl;
-    mk_ptr_t *cache_header_ka;
-    mk_ptr_t *cache_header_ka_max;
-
-    struct mk_iov *cache_iov_header;
 
     /* Cache header request -> last modified */
-    cache_header_lm = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    cache_header_lm->data = mk_mem_malloc_z(32);
-    cache_header_lm->len = -1;
-    pthread_setspecific(mk_cache_header_lm, (void *) cache_header_lm);
+    worker_cache_header_lm = mk_mem_malloc_z(sizeof(mk_ptr_t));
+    worker_cache_header_lm->data = mk_mem_malloc_z(32);
+    worker_cache_header_lm->len = -1;
 
     /* Cache header request -> content length */
-    cache_header_cl = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    cache_header_cl->data = mk_mem_malloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
-    cache_header_cl->len = -1;
-    pthread_setspecific(mk_cache_header_cl, (void *) cache_header_cl);
+    worker_cache_header_cl = mk_mem_malloc_z(sizeof(mk_ptr_t));
+    worker_cache_header_cl->data = mk_mem_malloc_z(MK_UTILS_INT2MKP_BUFFER_LEN);
+    worker_cache_header_cl->len = -1;
 
     /* Cache header response -> keep-alive */
-    cache_header_ka = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    mk_string_build(&cache_header_ka->data, &cache_header_ka->len,
+    worker_cache_header_ka = mk_mem_malloc_z(sizeof(mk_ptr_t));
+    mk_string_build(&worker_cache_header_ka->data, &worker_cache_header_ka->len,
                     "Keep-Alive: timeout=%i, max=",
                     config->keep_alive_timeout);
-    pthread_setspecific(mk_cache_header_ka, (void *) cache_header_ka);
 
     /* Cache header response -> max=%i */
-    cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    cache_header_ka_max->data = mk_mem_malloc_z(64);
-    cache_header_ka_max->len  = 0;
-    pthread_setspecific(mk_cache_header_ka_max, (void *) cache_header_ka_max);
+    worker_cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_ptr_t));
+    worker_cache_header_ka_max->data = mk_mem_malloc_z(64);
+    worker_cache_header_ka_max->len  = 0;
 
     /* Cache iov header struct */
-    cache_iov_header = mk_iov_create(32, 0);
-    pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
+    worker_cache_iov_header = mk_iov_create(32, 0);
 
     /* Cache gmtime buffer */
     worker_cache_gmtime = mk_mem_malloc(sizeof(struct tm));
@@ -97,37 +86,25 @@ void mk_cache_worker_init()
 void mk_cache_worker_exit()
 {
     char *cache_error;
-    mk_ptr_t *cache_header_lm;
-    mk_ptr_t *cache_header_cl;
-    mk_ptr_t *cache_header_ka;
-    mk_ptr_t *cache_header_ka_max;
-    struct mk_iov *cache_iov_header;
 
     /* Cache header request -> last modified */
-    cache_header_lm = pthread_getspecific(mk_cache_header_lm);
-    mk_mem_free(cache_header_lm->data);
-    mk_mem_free(cache_header_lm);
-
+    mk_mem_free(worker_cache_header_lm->data);
+    mk_mem_free(worker_cache_header_lm);
 
     /* Cache header request -> content length */
-    cache_header_cl = pthread_getspecific(mk_cache_header_cl);
-    mk_mem_free(cache_header_cl->data);
-    mk_mem_free(cache_header_cl);
-    pthread_getspecific(mk_cache_header_cl);
+    mk_mem_free(worker_cache_header_cl->data);
+    mk_mem_free(worker_cache_header_cl);
 
     /* Cache header response -> keep-alive */
-    cache_header_ka = pthread_getspecific(mk_cache_header_ka);
-    mk_mem_free(cache_header_ka->data);
-    mk_mem_free(cache_header_ka);
+    mk_mem_free(worker_cache_header_ka->data);
+    mk_mem_free(worker_cache_header_ka);
 
     /* Cache header response -> max=%i */
-    cache_header_ka_max = pthread_getspecific(mk_cache_header_ka_max);
-    mk_mem_free(cache_header_ka_max->data);
-    mk_mem_free(cache_header_ka_max);
+    mk_mem_free(worker_cache_header_ka_max->data);
+    mk_mem_free(worker_cache_header_ka_max);
 
     /* Cache iov header struct */
-    cache_iov_header = pthread_getspecific(mk_cache_iov_header);
-    mk_iov_free(cache_iov_header);
+    mk_iov_free(worker_cache_iov_header);
 
     /* Cache gmtime buffer */
     mk_mem_free(worker_cache_gmtime);

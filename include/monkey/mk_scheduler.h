@@ -155,9 +155,6 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 
-// Re-declared here, because we can't include mk_request.h
-extern pthread_key_t request_list;
-
 static inline struct rb_root *mk_sched_get_request_list()
 {
     return cs_list;

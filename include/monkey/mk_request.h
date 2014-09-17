@@ -286,8 +286,6 @@ struct client_session
     struct session_request sr_fixed;
 };
 
-extern pthread_key_t request_list;
-
 /* Request plugin Handler, each request can be handled by
  * several plugins, we handle list in a simple list */
 struct handler

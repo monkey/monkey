@@ -20,12 +20,11 @@
 #ifndef MK_CACHE_H
 #define MK_CACHE_H
 
-extern pthread_key_t mk_cache_iov_header;
-extern pthread_key_t mk_cache_header_lm;
-extern pthread_key_t mk_cache_header_cl;
-extern pthread_key_t mk_cache_header_ka;
-extern pthread_key_t mk_cache_header_ka_max;
-
+extern __thread struct mk_iov *worker_cache_iov_header;
+extern __thread mk_ptr_t *worker_cache_header_cl;
+extern __thread mk_ptr_t *worker_cache_header_lm;
+extern __thread mk_ptr_t *worker_cache_header_ka;
+extern __thread mk_ptr_t *worker_cache_header_ka_max;
 extern __thread struct tm *worker_cache_gmtime;
 extern __thread struct mk_gmt_cache *worker_cache_gmtext;
 

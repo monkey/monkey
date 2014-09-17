@@ -123,9 +123,9 @@ static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_ptr_t data,
     return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
 }
 
-static struct mk_iov *mk_header_iov_get()
+static inline struct mk_iov *mk_header_iov_get()
 {
-    return mk_cache_get(mk_cache_iov_header);
+    return worker_cache_iov_header;
 }
 
 static void mk_header_iov_free(struct mk_iov *iov)
@@ -182,8 +182,7 @@ int mk_header_send(int fd, struct client_session *cs,
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
-        mk_ptr_t *lm;
-        lm = mk_cache_get(mk_cache_header_lm);
+        mk_ptr_t *lm = worker_cache_header_lm;
         lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
 
         mk_iov_add_entry(iov, mk_header_last_modified.data,
@@ -196,8 +195,8 @@ int mk_header_send(int fd, struct client_session *cs,
         if (mk_http_keepalive_check(cs) == 0) {
             if (sr->connection.len > 0) {
                 /* Get cached mk_ptr_ts */
-                mk_ptr_t *ka_format = mk_cache_get(mk_cache_header_ka);
-                mk_ptr_t *ka_header = mk_cache_get(mk_cache_header_ka_max);
+                mk_ptr_t *ka_format = worker_cache_header_ka;
+                mk_ptr_t *ka_header = worker_cache_header_ka_max;
 
                 /* Compose header and add entries to iov */
                 mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);
@@ -272,8 +271,7 @@ int mk_header_send(int fd, struct client_session *cs,
     /* Content-Length */
     if (sh->content_length >= 0 && sh->transfer_encoding != 0) {
         /* Map content length to MK_POINTER */
-        mk_ptr_t *cl;
-        cl = mk_cache_get(mk_cache_header_cl);
+        mk_ptr_t *cl = worker_cache_header_cl;
         mk_string_itop(sh->content_length, cl);
 
         /* Set headers */
