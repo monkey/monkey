@@ -35,8 +35,6 @@ pthread_key_t mk_cache_header_lm;
 pthread_key_t mk_cache_header_cl;
 pthread_key_t mk_cache_header_ka;
 pthread_key_t mk_cache_header_ka_max;
-pthread_key_t mk_cache_utils_gmtime;
-pthread_key_t mk_cache_utils_gmt_text;
 pthread_key_t mk_utils_error_key;
 
 __thread struct tm *worker_cache_gmtime;
@@ -103,10 +101,7 @@ void mk_cache_worker_exit()
     mk_ptr_t *cache_header_cl;
     mk_ptr_t *cache_header_ka;
     mk_ptr_t *cache_header_ka_max;
-
-    struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
-    struct mk_gmt_cache *cache_utils_gmt_text;
 
     /* Cache header request -> last modified */
     cache_header_lm = pthread_getspecific(mk_cache_header_lm);
@@ -135,12 +130,10 @@ void mk_cache_worker_exit()
     mk_iov_free(cache_iov_header);
 
     /* Cache gmtime buffer */
-    cache_utils_gmtime = pthread_getspecific(mk_cache_utils_gmtime);
-    mk_mem_free(cache_utils_gmtime);
+    mk_mem_free(worker_cache_gmtime);
 
     /* Cache the most used text representations of utime2gmt */
-    cache_utils_gmt_text = pthread_getspecific(mk_cache_utils_gmt_text);
-    mk_mem_free(cache_utils_gmt_text);
+    mk_mem_free(worker_cache_gmtext);
 
     /* Cache buffer for strerror_r(2) */
     cache_error = pthread_getspecific(mk_utils_error_key);
