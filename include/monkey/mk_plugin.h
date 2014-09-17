@@ -34,6 +34,8 @@
 #include "mk_list.h"
 #include "mk_info.h"
 
+extern __thread struct mk_list *worker_plugin_event_list;
+
 #define MK_PLUGIN_ERROR -1      /* plugin execution error */
 #define MK_PLUGIN_
 

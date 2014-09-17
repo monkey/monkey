@@ -63,7 +63,6 @@ void mk_thread_keys_init(void)
     pthread_key_create(&mk_cache_header_cl, NULL);
     pthread_key_create(&mk_cache_header_ka, NULL);
     pthread_key_create(&mk_cache_header_ka_max, NULL);
-    pthread_key_create(&mk_plugin_event_k, NULL);
     pthread_key_create(&mk_utils_error_key, NULL);
 }
 
