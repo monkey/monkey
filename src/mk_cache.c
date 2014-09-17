@@ -39,6 +39,9 @@ pthread_key_t mk_cache_utils_gmtime;
 pthread_key_t mk_cache_utils_gmt_text;
 pthread_key_t mk_utils_error_key;
 
+__thread struct tm *worker_cache_gmtime;
+__thread struct mk_gmt_cache *worker_cache_gmtext;
+
 /* This function is called when a thread is created */
 void mk_cache_worker_init()
 {
@@ -48,9 +51,7 @@ void mk_cache_worker_init()
     mk_ptr_t *cache_header_ka;
     mk_ptr_t *cache_header_ka_max;
 
-    struct tm *cache_utils_gmtime;
     struct mk_iov *cache_iov_header;
-    struct mk_gmt_cache *cache_utils_gmt_text;
 
     /* Cache header request -> last modified */
     cache_header_lm = mk_mem_malloc_z(sizeof(mk_ptr_t));
@@ -82,12 +83,10 @@ void mk_cache_worker_init()
     pthread_setspecific(mk_cache_iov_header, (void *) cache_iov_header);
 
     /* Cache gmtime buffer */
-    cache_utils_gmtime = mk_mem_malloc(sizeof(struct tm));
-    pthread_setspecific(mk_cache_utils_gmtime, (void *) cache_utils_gmtime);
+    worker_cache_gmtime = mk_mem_malloc(sizeof(struct tm));
 
     /* Cache the most used text representations of utime2gmt */
-    cache_utils_gmt_text = mk_mem_malloc_z(sizeof(struct mk_gmt_cache) * MK_GMT_CACHES);
-    pthread_setspecific(mk_cache_utils_gmt_text, (void *) cache_utils_gmt_text);
+    worker_cache_gmtext = mk_mem_malloc_z(sizeof(struct mk_gmt_cache) * MK_GMT_CACHES);
 
     /* Cache buffer for strerror_r(2) */
     cache_error = mk_mem_malloc(MK_UTILS_ERROR_SIZE);

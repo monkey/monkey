@@ -25,8 +25,9 @@ extern pthread_key_t mk_cache_header_lm;
 extern pthread_key_t mk_cache_header_cl;
 extern pthread_key_t mk_cache_header_ka;
 extern pthread_key_t mk_cache_header_ka_max;
-extern pthread_key_t mk_cache_utils_gmtime;
-extern pthread_key_t mk_cache_utils_gmt_text;
+
+extern __thread struct tm *worker_cache_gmtime;
+extern __thread struct mk_gmt_cache *worker_cache_gmtext;
 
 void mk_cache_worker_init();
 void mk_cache_worker_exit();
@@ -34,6 +35,16 @@ void mk_cache_worker_exit();
 static inline void *mk_cache_get(pthread_key_t key)
 {
     return pthread_getspecific(key);
+}
+
+static inline struct tm *mk_cache_get_utils_gmtime()
+{
+    return worker_cache_gmtime;
+}
+
+static inline struct mk_gmt_cache *mk_cache_get_utils_gmtext()
+{
+    return worker_cache_gmtext;
 }
 
 #endif

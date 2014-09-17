@@ -62,7 +62,7 @@ static const char mk_date_ym[][5] = {"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Ju
 static int mk_utils_gmt_cache_get(char **data, time_t date)
 {
     unsigned int i;
-    struct mk_gmt_cache *gcache = mk_cache_get(mk_cache_utils_gmt_text);
+    struct mk_gmt_cache *gcache = mk_cache_get_utils_gmtext();
 
     if (mk_unlikely(!gcache)) {
         return MK_FALSE;
@@ -82,7 +82,7 @@ static int mk_utils_gmt_cache_get(char **data, time_t date)
 static void mk_utils_gmt_cache_add(char *data, time_t time)
 {
     unsigned int i, min = 0;
-    struct mk_gmt_cache *gcache = mk_cache_get(mk_cache_utils_gmt_text);
+    struct mk_gmt_cache *gcache = mk_cache_get_utils_gmtext();
 
     for (i = 1; i < MK_GMT_CACHES; i++) {
         if (gcache[i].hits < gcache[min].hits)
@@ -122,7 +122,7 @@ int mk_utils_utime2gmt(char **data, time_t date)
     }
 
     /* Convert unix time to struct tm */
-    gtm = mk_cache_get(mk_cache_utils_gmtime);
+    gtm = mk_cache_get_utils_gmtime();
 
     /* If this function was invoked from a non-thread context it should exit */
     mk_bug(!gtm);
