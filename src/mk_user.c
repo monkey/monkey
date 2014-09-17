@@ -109,12 +109,6 @@ int mk_user_set_uidgid()
             mk_warn("cannot get resource limits");
         }
 
-        /* Just if i'm superuser */
-        rl.rlim_cur = rl.rlim_max;
-        if (setrlimit(RLIMIT_NOFILE, &rl) != 0) {
-            mk_warn("cannot set resource limits");
-        }
-
         /* Check if user exists  */
         if ((usr = getpwnam(config->user)) == NULL) {
             mk_err("Invalid user '%s'", config->user);
