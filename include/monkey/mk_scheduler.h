@@ -135,11 +135,6 @@ struct sched_list_node *sched_list;
 /* Struct under thread context */
 typedef struct
 {
-    int server_fd;
-    int epoll_fd;
-    int epoll_max_events;
-    int max_events;
-
 #ifdef SHAREDLIB
     mklib_ctx ctx;
 #endif

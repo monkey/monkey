@@ -299,7 +299,8 @@ static void mk_sched_thread_lists_init()
 /* Register thread information. The caller thread is the thread information's owner */
 static int mk_sched_register_thread()
 {
-    unsigned int i;
+    int i;
+    int capacity;
     struct sched_connection *sched_conn;
     struct sched_list_node *sl;
     static int wid = 0;
@@ -334,10 +335,20 @@ static int mk_sched_register_thread()
     mk_list_init(&sl->av_queue);
     mk_list_init(&sl->incoming_queue);
 
+    /* Set worker capacity based on Scheduler Balancing mode */
+    if (config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
+        capacity = (config->server_capacity / config->workers);
+    }
+    else {
+        /* FIXME: this needs progressive adaption */
+        capacity = config->server_capacity;
+    }
+
+
     /* Start filling the array */
     sl->sched_array = mk_mem_malloc_z(sizeof(struct sched_connection) *
-                                      config->server_capacity);
-    for (i = 0; i < config->server_capacity; i++) {
+                                      capacity);
+    for (i = 0; i < capacity; i++) {
         sched_conn = &sl->sched_array[i];
         sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
         sched_conn->socket = -1;
