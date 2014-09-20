@@ -403,8 +403,6 @@ static void mk_details_listen(struct mk_list *listen)
 
 void mk_details(void)
 {
-    char tmp[64];
-
     printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
     mk_details_listen(&config->listeners);
     printf(MK_BANNER_ENTRY
@@ -414,9 +412,14 @@ void mk_details(void)
            config->transport_layer_plugin->shortname,
            config->transport);
 
+#ifdef __linux__
+    char tmp[64];
+
     if (mk_kernel_features_print(tmp, sizeof(tmp)) > 0) {
         printf(MK_BANNER_ENTRY "Linux Features: %s\n", tmp);
     }
+#endif
+
     fflush(stdout);
 }
 
