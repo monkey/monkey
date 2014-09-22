@@ -103,8 +103,9 @@ local_dirs()
 	fi
 }
 
-abspath() {
-    { [[ "$1" =~ ^/ ]] && echo "$1" || echo "$(pwd)/$1"; } | sed -r ':. s#(/|^)\./#\1#g; t .; :: s#[^/]{1,}/\.\./##; t :'
+get_realpath() {
+    [[ -n "$no_symlinks" ]] && local pwdp='pwd -P' || local pwdp='pwd' # do symlinks.
+    echo $( cd "$( echo "${1%/*}" )" 2>/dev/null; $pwdp )"/"${1##*/}
 }
 
 # Main function
@@ -115,7 +116,8 @@ main()
 	actual_path=`pwd`
 
         # Check if build path is the same or a separate one
-        base_path=$(dirname $(abspath $0))
+        rpath=$(get_realpath $0)
+        base_path=$(dirname $rpath)
         if [ "$base_path" != "$actual_path" ]; then
             build_sep=1
         fi
