@@ -1397,7 +1397,7 @@ if test -z "$debug" && test -z "$mk_stats"; then
 	# Only set -O2 if the user didn't include an -O level
 	echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
-	DEFS="-DDEBUG "
+	DEFS="$DEFS -DDEBUG "
 	CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
 fi
 
