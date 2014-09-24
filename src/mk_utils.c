@@ -273,16 +273,14 @@ char *mk_utils_url_decode(mk_ptr_t uri)
     i = tmp;
 
     buf = mk_mem_malloc_z(uri.len + 1);
-
     if (i > 0) {
-        strncpy(buf, uri.data, i);
+        memcpy(buf, uri.data, i);
         buf_idx = i;
     }
 
     while (i < uri.len) {
         if (uri.data[i] == '%' && i + 2 < uri.len) {
-            memset(hex, '\0', sizeof(hex));
-            strncpy(hex, uri.data + i + 1, 2);
+            memcpy(hex, uri.data + i + 1, 2);
             hex[2] = '\0';
 
             hex_result = mk_utils_hex2int(hex, 2);
