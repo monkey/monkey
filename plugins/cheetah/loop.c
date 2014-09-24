@@ -99,6 +99,7 @@ void mk_cheetah_loop_server()
 
     if (bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
         perror("bind");
+        mk_err("Cheetah: could not bind address %s", address.sun_path);
         exit(EXIT_FAILURE);
     }
 
