@@ -59,7 +59,7 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
         return -1;
     }
 
-    strncpy(user, sr->uri_processed.data + offset, limit);
+    memcpy(user, sr->uri_processed.data + offset, limit);
     user[limit] = '\0';
 
     MK_TRACE("user: '%s'", user);
@@ -76,9 +76,9 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
             return -1;
         }
 
-        strncpy(user_uri,
-                sr->uri_processed.data + (offset + limit),
-                sr->uri_processed.len - offset - limit);
+        memcpy(user_uri,
+               sr->uri_processed.data + (offset + limit),
+               sr->uri_processed.len - offset - limit);
         user_uri[sr->uri_processed.len - offset - limit] = '\0';
 
         mk_string_build(&sr->real_path.data, &sr->real_path.len,
