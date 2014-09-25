@@ -479,6 +479,9 @@ void mk_plugin_read_config()
 
     /* Read section 'PLUGINS' */
     section = mk_config_section_get(cnf, "PLUGINS");
+    if (!section) {
+        exit(EXIT_FAILURE);
+    }
 
     /* Read key entries */
     mk_list_foreach(head, &section->entries) {
