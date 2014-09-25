@@ -108,7 +108,8 @@ static void mk_config_entry_add(struct mk_config *conf,
     struct mk_list *head = &conf->sections;
 
     if (mk_list_is_empty(&conf->sections) == 0) {
-        mk_err("Error: there are not sections available!");
+        mk_err("Error: there are not sections available on %s!", conf->file);
+        return;
     }
 
     /* Last section */
