@@ -98,24 +98,24 @@ long int mk_method_validate_content_length(const char *body, int body_len)
 int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
 {
     mk_ptr_t tmp;
-    long content_length_post = 0;
+    long clen;
 
-    content_length_post = mk_method_validate_content_length(cs->body, cs->body_length);
+    clen = mk_method_validate_content_length(cs->body, cs->body_length);
 
     /* Length Required */
-    if (content_length_post == -1) {
+    if (clen == -1) {
         mk_request_error(MK_CLIENT_LENGTH_REQUIRED, cs, sr);
         return -1;
     }
 
     /* Bad request */
-    if (content_length_post <= 0) {
+    if (clen <= 0) {
         mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return -1;
     }
 
     /* Content length too large */
-    if (content_length_post >= cs->body_size) {
+    if (clen >= cs->body_size) {
         mk_request_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
         return -1;
     }
@@ -142,17 +142,8 @@ int mk_method_parse_data(struct client_session *cs, struct session_request *sr)
     }
 
     /* Set the content-length */
-    sr->content_length = content_length_post;
+    sr->content_length = clen;
     return 0;
 }
 
-/* Return POST variables sent in request */
-mk_ptr_t mk_method_get_data(void *data, int size)
-{
-    mk_ptr_t p;
 
-    p.data = data;
-    p.len = size;
-
-    return p;
-}

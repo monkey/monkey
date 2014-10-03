@@ -376,6 +376,13 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     }
 
 
+    if (sr->_content_length.data &&
+        (sr->method != MK_HTTP_METHOD_POST &&
+         sr->method != MK_HTTP_METHOD_PUT)) {
+        return mk_request_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+    }
+
+
     if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
         /* if the requested resource doesn't exist,
          * check if some plugin would like to handle it
@@ -732,57 +739,53 @@ int mk_http_pending_request(struct client_session *cs)
         }
     }
 
-    if (cs->first_method == MK_HTTP_METHOD_UNKNOWN) {
-        cs->first_method = mk_http_method_get(cs->body);
+    if (cs->pre.method == MK_HTTP_METHOD_UNKNOWN) {
+        cs->pre.method = mk_http_method_get(cs->body);
     }
 
-    if (cs->first_method == MK_HTTP_METHOD_POST ||
-        cs->first_method == MK_HTTP_METHOD_PUT) {
+    if (cs->body_pos_end > 0) {
+        int content_length;
+        int current;
 
-        if (cs->body_pos_end > 0) {
-            int content_length;
-            int current;
+        current = cs->body_length - cs->body_pos_end - mk_endblock.len;
+        content_length = mk_method_validate_content_length(cs->body, current);
 
-            current = cs->body_length - cs->body_pos_end - mk_endblock.len;
-            content_length = mk_method_validate_content_length(cs->body, current);
+        MK_TRACE("HTTP DATA %i/%i", current, content_length);
 
-            MK_TRACE("HTTP DATA %i/%i", current, content_length);
+        if (content_length >= config->max_request_size) {
+            return 0;
+        }
 
-            if (content_length >= config->max_request_size) {
+        /* if first block has ended, we need to verify if exists
+         * a previous block end, that will means that the POST
+         * method has sent the whole information.
+         * just for ref: pipelining is not allowed with POST
+         */
+        if ((unsigned int) cs->body_pos_end == cs->body_length - mk_endblock.len) {
+            /* Content-length is required, if is it not found,
+             * we pass as successful in order to raise the error
+             * later
+             */
+            if (content_length <= 0) {
+                mk_http_status_completed(cs);
                 return 0;
             }
-
-            /* if first block has ended, we need to verify if exists
-             * a previous block end, that will means that the POST
-             * method has sent the whole information.
-             * just for ref: pipelining is not allowed with POST
-             */
-            if ((unsigned int) cs->body_pos_end == cs->body_length - mk_endblock.len) {
-                /* Content-length is required, if is it not found,
-                 * we pass as successful in order to raise the error
-                 * later
-                 */
-                if (content_length <= 0) {
-                    mk_http_status_completed(cs);
-                    return 0;
-                }
-                else {
-                    return -1;
-                }
-            }
             else {
-                if (current < content_length) {
-                    return -1;
-                }
-                else {
-                    mk_http_status_completed(cs);
-                    return 0;
-                }
+                return -1;
             }
         }
         else {
-            return -1;
+            if (current < content_length) {
+                return -1;
+            }
+            else {
+                mk_http_status_completed(cs);
+                return 0;
+            }
         }
+    }
+    else {
+        return -1;
     }
 
     mk_http_status_completed(cs);

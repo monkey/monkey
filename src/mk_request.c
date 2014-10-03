@@ -347,6 +347,10 @@ static int mk_request_header_process(struct session_request *sr)
                                                   mk_rh_if_modified_since.data,
                                                   mk_rh_if_modified_since.len);
 
+    sr->_content_length = mk_request_header_get(&sr->headers_toc,
+                                                mk_rh_content_length.data,
+                                                mk_rh_content_length.len);
+
     /* Default Keepalive is off */
     if (sr->protocol == MK_HTTP_PROTOCOL_10) {
         sr->keep_alive = MK_FALSE;
@@ -410,7 +414,7 @@ static int mk_request_parse(struct client_session *cs)
 
         /* Method, previous catch in mk_http_pending_request */
         if (i == 0) {
-            sr_node->method = cs->first_method;
+            sr_node->method = cs->pre.method;
         }
         else {
             sr_node->method = mk_http_method_get(sr_node->body.data);
@@ -420,8 +424,8 @@ static int mk_request_parse(struct client_session *cs)
         if (sr_node->method == MK_HTTP_METHOD_POST) {
             int offset;
             offset = end + mk_endblock.len;
-            sr_node->data = mk_method_get_data(cs->body + offset,
-                                               cs->body_length - offset);
+            sr_node->data.data = cs->body + offset;
+            sr_node->data.len  = cs->body_length - offset;
         }
 
         /* Increase index to the end of the current block */
@@ -442,6 +446,7 @@ static int mk_request_parse(struct client_session *cs)
     mk_list_foreach(head, &cs->request_list) {
         entry = mk_list_entry(head, struct session_request, _head);
         mk_ptr_print(entry->body);
+        mk_ptr_print(entry->data);
         fflush(stdout);
     }
     */
@@ -1014,7 +1019,7 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
     cs->body_length = 0;
 
     cs->body_pos_end = -1;
-    cs->first_method = MK_HTTP_METHOD_UNKNOWN;
+    cs->pre.method = MK_HTTP_METHOD_UNKNOWN;
 
     /* Init session request list */
     mk_list_init(&cs->request_list);
@@ -1121,7 +1126,8 @@ mk_ptr_t mk_request_header_get(struct headers_toc *toc, const char *key_name, in
 
 void mk_request_ka_next(struct client_session *cs)
 {
-    cs->first_method = -1;
+    cs->pre.method = -1;
+    cs->pre.content_length = -1;
     cs->body_pos_end = -1;
     cs->body_length = 0;
     cs->counter_connections++;

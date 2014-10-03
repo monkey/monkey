@@ -184,10 +184,6 @@ struct session_request
 
     mk_ptr_t body;
 
-
-
-
-
     /* If request specify Connection: close, Monkey will
      * close the connection after send the response, by
      * default this var is set to VAR_OFF;
@@ -197,6 +193,7 @@ struct session_request
     /*---Request headers--*/
     int content_length;
 
+    mk_ptr_t _content_length;
     mk_ptr_t content_type;
     mk_ptr_t connection;
 
@@ -253,9 +250,15 @@ struct session_request
     struct response_headers headers;
 
     struct mk_list _head;
+
     /* HTTP Headers Table of Content */
     struct headers_toc headers_toc;
 
+};
+
+struct pre_http {
+    int method;
+    long content_length;
 };
 
 struct client_session
@@ -269,7 +272,8 @@ struct client_session
     unsigned int body_length;
 
     int body_pos_end;
-    int first_method;
+
+    struct pre_http pre;
 
     /* red-black tree head */
     struct rb_node _rb_head;
