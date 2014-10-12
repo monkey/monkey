@@ -97,6 +97,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
     /* Suggest open(2) flags */
     f_info->flags_read_only = O_RDONLY | O_NONBLOCK;
 
+#if defined(__linux__)
     /*
      * If the user is the owner of the file or the user is root, it
      * can set the O_NOATIME flag for open(2) operations to avoid
@@ -105,6 +106,8 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
     if (target.st_uid == EUID || EUID == 0) {
         f_info->flags_read_only |=  O_NOATIME;
     }
+#endif
+
     return 0;
 }
 
