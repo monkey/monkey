@@ -25,9 +25,12 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/sendfile.h>
 #include <netdb.h>
 #include <fcntl.h>
+
+#if defined (__linux__)
+#include <sys/sendfile.h>
+#endif
 
 #include <monkey/mk_api.h>
 
@@ -165,16 +168,27 @@ int _mkp_network_io_connect(char *host, int port)
 int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
                               size_t file_count)
 {
-    ssize_t bytes_written = -1;
+    ssize_t ret = -1;
 
-    bytes_written = sendfile(socket_fd, file_fd, file_offset, file_count);
-
-    if (mk_unlikely(bytes_written == -1)) {
+#if defined (__linux__)
+    ret = sendfile(socket_fd, file_fd, file_offset, file_count);
+    if (mk_unlikely(ret == -1)) {
         PLUGIN_TRACE("[FD %i] error from sendfile() = -1", socket_fd);
         return -1;
     }
 
-    return bytes_written;
+    return ret;
+
+#elif defined (__APPLE__)
+    off_t len = (off_t) file_count;
+    ret = sendfile(socket_fd, file_fd, file_offset, &len, NULL, 0);
+    if (ret == -1) {
+        if (errno == EAGAIN) {
+            return len;
+        }
+    }
+    return -1;
+#endif
 }
 
 int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t addrlen, int backlog)
