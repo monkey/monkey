@@ -245,11 +245,9 @@ struct mk_config *mk_config_create(const char *path)
 
         n_keys++;
     }
-    fclose(f);
 
     if (section && n_keys == 0) {
         mk_config_warning(path, line, "Section do not have keys");
-        return conf;
     }
 
     /*
@@ -268,6 +266,7 @@ struct mk_config *mk_config_create(const char *path)
     }
     fflush(stdout);
     */
+    fclose(f);
     if (indent) mk_mem_free(indent);
     return conf;
 }
