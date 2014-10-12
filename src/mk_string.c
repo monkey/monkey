@@ -32,6 +32,23 @@
 
 #include <stdio.h>
 
+/* OSX lacks of memrchr() */
+#if defined (__APPLE__)
+void *memrchr(const void *s, int c, size_t n)
+{
+    const unsigned char *cp;
+
+    if (n != 0) {
+        cp = (unsigned char *)s + n;
+        do {
+            if (*(--cp) == (unsigned char)c)
+                return((void *)cp);
+        } while (--n != 0);
+    }
+    return(NULL);
+}
+#endif
+
 /*
  * Base function for search routines, it accept modifiers to enable/disable
  * the case sensitive feature and also allow to specify a haystack len
