@@ -152,7 +152,7 @@ main()
 
 	# Check for accept4()
 	if [ $only_accept4 -eq 1 ]; then
-		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)" "" ""
+		check_generic "accept4() function" "#define _GNU_SOURCE" "sys/socket.h" "accept4(0, 0, 0, 0)" "" ""
 		if [ $result = -1 ]; then
 			exit 1
 		fi
@@ -161,14 +161,14 @@ main()
 		echo -en $GREEN$BOLD"Yes"$END_COLOR"\n"
 		DEFS="$DEFS -DACCEPT_GENERIC"
 	else
-		check_generic "accept4() function" "sys/socket.h" "accept4(0, 0, 0, 0)" "" ""
+		check_generic "accept4() function" "#define _GNU_SOURCE" "sys/socket.h" "accept4(0, 0, 0, 0)" "" ""
 		if [ $result -ne 0 ]; then
 			DEFS="$DEFS -DACCEPT_GENERIC"
 		fi
 	fi
 
 	if [ $platform == "generic" ]; then
-		check_generic "pthread headers" "pthread.h" "pthread_t self = pthread_self()" "" "-lpthread"
+		check_generic "pthread headers" "" "pthread.h" "pthread_t self = pthread_self()" "" "-lpthread"
 	fi
 
         if [ $linux_kqueue -eq 1 ]; then
@@ -177,18 +177,18 @@ main()
                 KLIBS=`pkg-config libkqueue --libs`
                 libs="$libs $KLIBS"
                 KLIBS="$KLIBS -pthread"
-	        check_generic "Linux kqueue emulation" "sys/event.h" "int kqfd = kqueue()" "$KFLAGS" "$KLIBS"
+	        check_generic "Linux kqueue emulation" "" "sys/event.h" "int kqfd = kqueue()" "$KFLAGS" "$KLIBS"
         fi
 
 	if test -z $no_backtrace ; then
-		check_generic "backtrace support" "execinfo.h" ""
+		check_generic "backtrace support" "" "execinfo.h" ""
 		if [ $result -ne 0 ]; then
 			no_backtrace=1
 		fi
 	fi
 
 	if test $linux_trace ; then
-                check_generic "Linux Trace Toolkit (UST)" "lttng/tracepoint.h"
+                check_generic "Linux Trace Toolkit (UST)" "" "lttng/tracepoint.h"
                 if [ $result -ne 0 ]; then
                         echo
                         echo -n "Error: Linux Trace Toolkit (lttng) is not available "
@@ -315,18 +315,20 @@ main()
 
 # Test if compiling a file with a given feature will work.
 # $1: Description of the feature
-# $2: List of needed #includes, separated by spaces
-# $3: A function call, e.g. "printf("Hello, world\n")
-# $4: Compiler flags
-# $5: A list of libraries, e.g. "-lrt -lpthread"
+# $2: Header before includes (defines?)
+# $3: List of needed #includes, separated by spaces
+# $4: A function call, e.g. "printf("Hello, world\n")
+# $5: Compiler flags
+# $6: A list of libraries, e.g. "-lrt -lpthread"
 check_generic() {
 	printf "+ Checking for %s ... " "$1"
 	echo -n "" > check.c
-	for inc in $2; do
+        echo $2 >> check.c
+	for inc in $3; do
 		printf "#include <%s>\n" "$inc" >> check.c
 	done
-	printf "int main(int argc, char *argv) { %s; return 0; }\n" "$3" >> check.c
-	$CC -D_GNU_SOURCE $4 -Wimplicit -Werror check.c $5 &> configure.log
+	printf "int main(int argc, char **argv) { %s; return 0; }\n" "$4" >> check.c
+	$CC $5 -Wimplicit -Werror check.c $6 &> configure.log
 	if [ $? -ne 0 ]; then
 		result=-1
 		echo -en $RED$BOLD"No"$END_COLOR"\n"
