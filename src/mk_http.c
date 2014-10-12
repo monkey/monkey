@@ -259,6 +259,7 @@ mk_ptr_t mk_http_protocol_check_str(int protocol)
 static int mk_http_directory_redirect_check(struct client_session *cs,
                                             struct session_request *sr)
 {
+    int ret;
     int port_redirect = 0;
     char *host;
     char *location = 0;
@@ -312,8 +313,10 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     sr->headers.pconnections_left =
         (config->max_keep_alive_request - cs->counter_connections);
 
-    mk_header_send(cs->socket, cs, sr);
-    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+    ret = mk_header_send(cs->socket, cs, sr);
+    if (ret >= 0) {
+        mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+    }
 
     /*
      *  we do not free() real_location
