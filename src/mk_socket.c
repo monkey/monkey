@@ -19,6 +19,10 @@
 
 #define _GNU_SOURCE
 
+#if defined(__APPLE__)
+#define SOL_TCP(6)
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -26,7 +30,6 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
-#include <sys/sendfile.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -57,7 +60,11 @@ int mk_socket_set_cork_flag(int fd, int state)
 {
     MK_TRACE("Socket, set Cork Flag FD %i to %s", fd, (state ? "ON" : "OFF"));
 
+#if defined (__linux__)
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
+#else
+    return sesockopt(fd, SOL_TCP, TCP_NOPUSH, &state, sizeof(state));
+#endif
 }
 
 int mk_socket_set_nonblocking(int sockfd)
@@ -83,11 +90,13 @@ int mk_socket_set_nonblocking(int sockfd)
 
 int mk_socket_set_tcp_fastopen(int sockfd)
 {
+#if defined (__linux__)
     int qlen = 5;
 
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 7, 0)) {
         return setsockopt(sockfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
     }
+#endif
 
     return -1;
 }
@@ -101,9 +110,13 @@ int mk_socket_set_tcp_nodelay(int sockfd)
 
 int mk_socket_set_tcp_defer_accept(int sockfd)
 {
+#if defined (__linux__)
     int timeout = 0;
 
     return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
+#else
+    return -1;
+#endif
 }
 
 int mk_socket_set_tcp_reuseport(int sockfd)
