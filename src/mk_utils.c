@@ -29,11 +29,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <inttypes.h>
-#include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/sendfile.h>
+
+#if defined (__linux__)
+#include <sys/prctl.h>
+#endif
 
 /* stacktrace */
 #include <dlfcn.h>
@@ -638,7 +640,12 @@ pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg)
 
 int mk_utils_worker_rename(const char *title)
 {
+    /* We only support thread rename on Linux. OSX Patches are welcome */
+#if defined (__linux__)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
+#else
+    return -1;
+#endif
 }
 
 #ifdef NO_BACKTRACE
