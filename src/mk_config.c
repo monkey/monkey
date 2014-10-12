@@ -474,6 +474,7 @@ static int mk_config_listen_read(struct mk_config_section *section)
         }
         else {
             // Port only
+            address = NULL;
             port = entry->val;
         }
 
