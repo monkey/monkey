@@ -88,12 +88,14 @@ int mk_event_initalize()
     ret = getrlimit(RLIMIT_NOFILE, &rlim);
     if (ret == -1) {
         mk_libc_error("getrlimit");
+        mk_mem_free(efdt);
         return -1;
     }
     efdt->size = rlim.rlim_cur;
     efdt->states = mk_mem_malloc_z(sizeof(struct mk_event_fd_state) * efdt->size);
     if (!efdt->states) {
         mk_err("Event: could not allocate memory for events states on FD Table");
+        mk_mem_free(efdt);
         return -1;
     }
 
