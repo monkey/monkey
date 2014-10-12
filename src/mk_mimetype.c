@@ -95,6 +95,7 @@ int mk_mimetype_add(char *name, const char *type)
             new = &((*new)->rb_right);
         }
         else {
+            mk_mem_free(new_mime);
             return -1;
         }
     }
