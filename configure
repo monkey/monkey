@@ -75,9 +75,9 @@ make_conf()
 {
 	cat $base_path/$INCDIR/config.path $base_path/lang/$lang/mconf \
             $base_path/lang/$lang/sites/default > makeconf.sh
-	sed -i "s/#PORT#/$default_port/g" makeconf.sh
-	sed -i "s/#USER#/$default_user/g" makeconf.sh
-	sed -i 's|#PIDFILE#|'$pidfile'|g' makeconf.sh
+	sed -i $OS_SED 's/#PORT#/$default_port/g' makeconf.sh
+	sed -i $OS_SED 's/#USER#/$default_user/g' makeconf.sh
+	sed -i $OS_SED 's|#PIDFILE#|'$pidfile'|g' makeconf.sh
 	chmod 755 makeconf.sh
 	./makeconf.sh
 	rm makeconf.sh
@@ -805,15 +805,15 @@ create_makefile_plugins()
 			cp -r $plugin_dir/conf/* $target/
 
 		        # Replace configuration variables:
-			find $target/* -xtype f -exec sed -i "s,#PREFIX#,$prefix," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#BINDIR#,$bindir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#LIBDIR#,$libdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#MANDIR#,$mandir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#SYSCONFDIR#,$sysconfdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#DATADIR#,$datadir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#LOGDIR#,$logdir," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#PIDFILE#,$pidfile," {} ';'
-			find $target/* -xtype f -exec sed -i "s,#PLUGDIR#,$plugdir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#PREFIX#,$prefix," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#BINDIR#,$bindir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#LIBDIR#,$libdir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#MANDIR#,$mandir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#SYSCONFDIR#,$sysconfdir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#DATADIR#,$datadir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#LOGDIR#,$logdir," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#PIDFILE#,$pidfile," {} ';'
+			find $target/* -xtype f -exec sed -i $OS_SED "s,#PLUGDIR#,$plugdir," {} ';'
 		fi
 
 		# Distribute binary scripts provided by plugins
@@ -914,7 +914,7 @@ create_info()
 #endif
 EOF
 
-	sed -i -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
+	sed -i $OS_SED -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
 	    $base_path/$INCDIR/libmonkey.h
@@ -1450,11 +1450,32 @@ fi
 cmd=$@
 uname=`uname -a`
 
+case "$OSTYPE" in
+  solaris*) target_os="SOLARIS" ;;
+  darwin*)  target_os="OSX" ;;
+  linux*)   target_os="LINUX" ;;
+  bsd*)     target_os="BSD" ;;
+  *)        target_os="unknown: $OSTYPE" ;;
+esac
+
+# Operating system specifics, some commands needs different
+# tweaks, as of now we support Linux and OSX only
+
+if [ $target_os == "LINUX" ]; then
+    OS_SED=""
+elif [ $target_os == "OSX" ]; then
+    OS_SED="''"
+fi
+
+# --- END OF OPERATING SYSTEM SPECIFICS ---
+
+
 # Starting main function
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir pidfile plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
      no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname \
-     polarssl_headers polarssl_library polarssl_debug_level
+     polarssl_headers polarssl_library polarssl_debug_level target_os \
+     OS_SED
 
 exit 0
