@@ -366,6 +366,8 @@ struct host *mk_vhost_read(char *path)
     if (!host->documentroot.data) {
         mk_err("Missing DocumentRoot entry on %s file", path);
         mk_config_free(cnf);
+        mk_mem_free(host->file);
+        mk_mem_free(host);
         return NULL;
     }
 
@@ -381,6 +383,8 @@ struct host *mk_vhost_read(char *path)
 
     if (mk_list_is_empty(&host->server_names) == 0) {
         mk_config_free(cnf);
+        mk_mem_free(host->file);
+        mk_mem_free(host);
         return NULL;
     }
 
