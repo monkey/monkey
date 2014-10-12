@@ -412,9 +412,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         exit(EXIT_FAILURE);
     }
     section = mk_config_section_get(cnf, "SERVER");
-
     if (!section) {
         mk_err("ERROR: No 'SERVER' section defined");
+        exit(EXIT_FAILURE);
     }
 
     /* Map source configuration */
