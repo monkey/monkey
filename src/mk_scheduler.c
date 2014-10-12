@@ -313,6 +313,8 @@ static int mk_sched_register_thread()
     sl->idx = wid++;
     sl->tid = pthread_self();
 
+
+#if defined(__linux__)
     /*
      * Under Linux does not exists the difference between process and
      * threads, everything is a thread in the kernel task struct, and each
@@ -324,6 +326,13 @@ static int mk_sched_register_thread()
      * the syscall, we need to call it directly through syscall(2).
      */
     sl->pid = syscall(__NR_gettid);
+#elif defined(__APPLE__)
+    uint64_t tid;
+    pthread_threadid_np(NULL, &tid);
+    sl->pid = tid;
+#else
+    sl->pid = 0xdeadbeef;
+#endif
 
     pthread_mutex_unlock(&mutex_sched_init);
 
