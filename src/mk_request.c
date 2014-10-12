@@ -524,6 +524,7 @@ static void mk_request_premature_close(int http_status, struct client_session *c
 
 static int mk_request_process(struct client_session *cs, struct session_request *sr)
 {
+    int ret;
     int status = 0;
     int socket = cs->socket;
     struct mk_list *hosts = &config->hosts;
@@ -576,7 +577,12 @@ static int mk_request_process(struct client_session *cs, struct session_request 
             sr->headers.content_length = 0;
             mk_header_send(cs->socket, cs, sr);
             sr->headers.location = NULL;
-            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+
+            ret = mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+            if (ret != 0) {
+                return EXIT_ABORT;
+            }
+
             return 0;
         }
     }
@@ -600,7 +606,6 @@ static int mk_request_process(struct client_session *cs, struct session_request 
     }
 
     /* Plugins Stage 20 */
-    int ret;
     ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, socket, NULL, cs, sr);
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
