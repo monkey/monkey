@@ -21,8 +21,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
-#include <sys/epoll.h>
-#include <sys/eventfd.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <string.h>
