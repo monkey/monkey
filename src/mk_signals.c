@@ -22,7 +22,6 @@
 
 #define _GNU_SOURCE
 
-#include <features.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
