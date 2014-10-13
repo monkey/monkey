@@ -44,7 +44,7 @@
 #include <monkey/mk_http.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_scheduler.h>
+//#include <monkey/mk_scheduler.h>
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;

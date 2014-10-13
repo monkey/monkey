@@ -36,7 +36,7 @@ typedef struct {
     if (evl->n_events > 0) {                                            \
         fd   = ctx->events[__i].data.fd;                                \
         mask = ctx->events[__i].events;                                 \
-        st = mk_event_get_state(fd);                                    \
+        st = _event_get_state(fd);                                      \
                                                                         \
         evl->events[__i].fd   = fd;                                     \
         evl->events[__i].mask = mask;                                   \

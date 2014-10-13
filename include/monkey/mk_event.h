@@ -97,6 +97,12 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
     return &mk_events_fdt->states[fd];
 }
 
+#ifdef MONKEY_PLUGIN_API_H
+#define _event_get_state(fd) mk_plugin_event_get_state(mk_api, fd)
+#else
+#define _event_get_state(fd) mk_event_get_state(fd)
+#endif
+
 int mk_event_initialize();
 mk_event_loop_t *mk_event_loop_create(int size);
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);

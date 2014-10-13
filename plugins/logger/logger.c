@@ -148,6 +148,8 @@ static void mk_logger_worker_init(void *args)
 
     /* Creating poll */
     evl = mk_api->ev_loop_create(max_events);
+    printf("EVL: %p\n", evl);
+
 
     /* Registering targets for virtualhosts */
     mk_list_foreach(head, &targets_list) {
@@ -169,13 +171,14 @@ static void mk_logger_worker_init(void *args)
     /* Reading pipe buffer */
     while (1) {
         usleep(1200);
+
         mk_api->ev_wait(evl);
         clk = mk_api->time_unix();
 
         mk_event_foreach(evl, fd, mask) {
             target = mk_logger_match_by_fd(fd);
             if (!target) {
-                mk_warn("Could not match host/epoll_fd");
+                mk_warn("Could not match host/event_fd");
                 continue;
             }
 
@@ -211,12 +214,19 @@ static void mk_logger_worker_init(void *args)
 
             lseek(flog, 0, SEEK_END);
 
+
+            close(flog);
+            close(fd);
+            continue;
+
 #if defined (__linuxa__)
             slen = splice(fd, NULL, flog,
                           NULL, bytes, SPLICE_F_MOVE);
 #else
+            //exit(1);
             long len;
             char *tmp;
+            printf("bytes = %i\n", bytes);
             tmp = mk_api->mem_alloc(bytes);
             if (tmp) {
                 len = read(fd, tmp, bytes);

@@ -385,4 +385,12 @@ int mk_plugin_header_get(struct session_request *sr,
 
 struct sched_list_node *mk_plugin_sched_get_thread_conf();
 
+static inline struct mk_event_fd_state *mk_plugin_event_get_state(struct plugin_api *api, int fd)
+{
+    mk_event_fdt_t *fdt;
+
+    fdt = api->ev_get_fdt();
+    return &fdt->states[fd];
+}
+
 #endif
