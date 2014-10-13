@@ -18,6 +18,7 @@
  */
 
 #include <stdint.h>
+#include <monkey/mk_macros.h>
 
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
@@ -96,7 +97,7 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
     return &mk_events_fdt->states[fd];
 }
 
-int mk_event_initalize();
+int mk_event_initialize();
 mk_event_loop_t *mk_event_loop_create(int size);
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);
 int mk_event_del(mk_event_loop_t *loop, int fd);
@@ -105,5 +106,6 @@ int mk_event_channel_create(mk_event_loop_t *loop, int *r_fd, int *w_fd);
 int mk_event_wait(mk_event_loop_t *loop);
 int mk_event_translate(mk_event_loop_t *loop);
 char *mk_event_backend();
+mk_event_fdt_t *mk_event_get_fdt();
 
 #endif

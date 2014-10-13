@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <monkey/mk_api.h>
 
 /* Local Headers */
 #include "logger.h"
@@ -107,7 +108,8 @@ static struct iov *mk_logger_get_cache()
 static void mk_logger_worker_init(void *args)
 {
     int fd;
-    int i, bytes, err;
+    int mask;
+    int bytes, err;
     int max_events = mk_api->config->nhosts;
     int flog;
     int clk;
@@ -167,14 +169,11 @@ static void mk_logger_worker_init(void *args)
     /* Reading pipe buffer */
     while (1) {
         usleep(1200);
-        int num_fds = mk_api->ev_wait(evl);
-
+        mk_api->ev_wait(evl);
         clk = mk_api->time_unix();
 
-        for (i = 0; i < num_fds; i++) {
-            fd = evl->events[i].fd;
+        mk_event_foreach(evl, fd, mask) {
             target = mk_logger_match_by_fd(fd);
-
             if (!target) {
                 mk_warn("Could not match host/epoll_fd");
                 continue;
@@ -211,8 +210,21 @@ static void mk_logger_worker_init(void *args)
             }
 
             lseek(flog, 0, SEEK_END);
+
+#if defined (__linuxa__)
             slen = splice(fd, NULL, flog,
                           NULL, bytes, SPLICE_F_MOVE);
+#else
+            long len;
+            char *tmp;
+            tmp = mk_api->mem_alloc(bytes);
+            if (tmp) {
+                len = read(fd, tmp, bytes);
+                if (len > 0) {
+                    slen = write(fd, tmp, len);
+                }
+            }
+#endif
             if (mk_unlikely(slen == -1)) {
                 mk_warn("Could not write to log file: splice() = %ld", slen);
             }
