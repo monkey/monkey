@@ -265,7 +265,19 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
         else if (sched_conn->socket > this->socket)
             new = &((*new)->rb_right);
         else {
-            break;
+            /*
+             * If we reach here, means there is a corruption. We should not register
+             * a client that already exists on the rbtree.
+             *
+             * Just warn about the situation, release resources and continue.
+             */
+            mk_exception();
+
+            /* cleanup */
+            mk_event_del(sched->loop, remote_fd);
+            mk_socket_close(remote_fd);
+
+            return -1;
         }
     }
 
