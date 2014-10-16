@@ -1046,7 +1046,20 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
         else if (cs->socket > this->socket)
             new = &((*new)->rb_right);
         else {
-            break;
+            /*
+             * If we reach here, means there is a corruption. We should not create
+             * a session of the value exists on the rbtree.
+             *
+             * Just warn about the situation, release resources and continue.
+             */
+            mk_exception();
+
+            /* prepare exit */
+            if (cs->body != cs->body_fixed) {
+                mk_mem_free(cs->body);
+            }
+            mk_mem_free(cs);
+            return NULL;
         }
     }
     /* Add new node and rebalance tree. */
