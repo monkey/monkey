@@ -115,8 +115,9 @@
     } while(0)
 
 #define mk_exception() do {                                             \
-        mk_print(MK_WARN, "Exception found in %s() at %s:%d",           \
+        mk_print(MK_BUG, "Exception found in %s() at %s:%d",            \
                  __FUNCTION__, __FILE__, __LINE__);                     \
+        abort();                                                        \
     } while(0)
 
 /*

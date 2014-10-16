@@ -284,7 +284,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
             mk_exception();
 
             /* cleanup */
-            mk_event_del(sched->loop, remote_fd);
+            mk_epoll_del(sched->epoll_fd, remote_fd);
             mk_socket_close(remote_fd);
 
             return -1;
