@@ -1,3 +1,111 @@
+commit 34c8a242c2e5b7b4fbc12a0edc13dd969dd40424
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 16 17:06:41 2014 -0600
+
+    Debian: bump to v1.5.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9d505abab2a8a8be5367c1e6a4bab0a0be5a046c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 16 16:44:55 2014 -0600
+
+    Configure: bump to v1.5.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8e02bf0ad9f2ebf8aee74902716ba596cb95bf25
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 24 16:02:04 2014 -0600
+
+    Utils: use memcpy() on URL decode
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f04a934b83cb6ff8d2ee8df0ca50b87fdf8d808d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 23 11:28:36 2014 -0600
+
+    Header: when using Chunked encoding, do not set Content-Length
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 44860db78362f98da983bc1c3c5f57c04cfc10f5
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 18 19:38:46 2014 -0600
+
+    Kernel: support Debian version format
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b35340d463278d40b0336bad471e7f85b071dad8
+Author: Matthew Daley <mattd@bugfuzz.com>
+Date:   Sat Aug 16 07:38:14 2014 -0600
+
+    Request: unlink request node from cs->request_lists
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 98d23859d4b7130cda738253287c952304113284
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Aug 15 19:08:00 2014 -0600
+
+    Scheduler: on timeout, validate incomplete linked list (#163)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5702cf389533864643449bb4d341e2a8a72049ae
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jul 28 15:30:55 2014 -0600
+
+    Virtual Host: validate dummy files (Fix #155)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 82e6fa500d27aa809d72ded91266514e7e9d0060
+Author: Vladimir Cernov <gg.kaspersky@gmail.com>
+Date:   Sun Jun 1 20:45:17 2014 +0300
+
+    Scheduler: Close connection after MK_PLUGIN_STAGE_10
+    
+    Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
+    
+    Conflicts:
+    	src/mk_scheduler.c
+
+commit e952b266fdd9489bdfb1506e63495b7010e91f25
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jul 28 23:13:06 2014 -0600
+
+    Scheduler: optimization when timing out connections
+    
+    This patch adds a good improvement on performance when the event poll
+    system start checking for candidates to timed out connections. It adds
+    two main lists:
+    
+      - sched->status_queue: Open socket connections list that have not sent any data
+      - cs_incomplete: Client requests list that still have some pending data
+    
+    When the timer triggers the timeout check, now the Scheduler will look
+    over those two global lists at thread level, avoiding to check connections
+    that are in a good state.
+    
+    This performance improvement is faced when having several active connections
+    in the server.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+    
+    Conflicts:
+    	src/mk_request.c
+
+commit 658c9f1f0b4ff7b77765221dde12da8de62aa473
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Aug 16 22:55:06 2014 -0600
+
+    Update ChangeLog for v1.5.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 998a45315dbea44320c2a6d8565b2749dafe2d4a
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sat Aug 16 22:50:33 2014 -0600
@@ -513,6 +621,13 @@ Date:   Mon May 19 10:55:50 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
+commit 2635bbb3d2b3dfb36835aee01a0b04b1c686ecb3
+Merge: 5f998e1 547b701
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue May 13 08:56:27 2014 -0600
+
+    Merge branch 'master' of github.com:monkey/monkey
+
 commit 5f998e189e293ab854e892012bd91b7710591734
 Author: Savita TS <savita.seetaraman5@gmail.com>
 Date:   Tue May 13 18:58:25 2014 +0530
@@ -543,6 +658,13 @@ Date:   Mon May 12 00:17:43 2014 -0600
         Redirect  http://monkey-project.com
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 547b701b2f69a6c6a89ff2887488dd8c6a73ee88
+Merge: 868d751 38f823e
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue May 13 08:54:08 2014 -0600
+
+    Merge branch 'master' of github.com:monkey/monkey
 
 commit 868d751d2cdfa2a00ad386b0085efd69f498c87c
 Author: Eduardo Silva <eduardo@monkey.io>
@@ -898,17 +1020,44 @@ Date:   Wed Apr 23 23:36:22 2014 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 9b6f016df7d68f7a8fbd67b7f0b1aaf4eb597248
+Merge: ccd9d24 30c050b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 15 09:27:33 2014 -0600
+
+    Merge pull request #128 from tssavita/patch1_epoll
+    
+    Epoll: Reporting when event EPOLLRDHUP occurs for an fd
+
 commit 30c050b50f9940d9743c7b711fd10310764e3d04
 Author: Savita TS <savita.seetaraman5@gmail.com>
 Date:   Tue Apr 15 17:21:56 2014 +0530
 
     Reporting when event EPOLLRDHUP occurs in a file descriptor registered in an epoll instance
 
+commit ccd9d24e94e8cc5a0ca4053c1e9983edfe27dbfa
+Merge: 06fb6c9 d253f45
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 8 10:42:57 2014 -0600
+
+    Merge pull request #127 from tssavita/http-conditionals
+    
+    HTTP: Removing unnecessary conditionals from src/mk_http.c
+
 commit d253f454ef2e0f313ebbcdd40bd45b36b6253516
 Author: Savita TS <savita.seetaraman5@gmail.com>
 Date:   Tue Apr 8 17:54:38 2014 +0530
 
     Removing unnecessary conditionals from src/mk_http.c
+
+commit 06fb6c9f8968fbc358551f571febc20a57a4f336
+Merge: ba0fb33 635c130
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Apr 6 08:05:48 2014 -0600
+
+    Merge pull request #125 from TamerTas/master
+    
+    HTTP: Fix comments' grammar and punctuation in mk_http.c
 
 commit 635c1304dd803e611e673521f6b3f389de6438e9
 Author: TamerTas <tamertas@outlook.com>
@@ -944,6 +1093,24 @@ Date:   Wed Apr 2 23:31:17 2014 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 1b486a5d0930d13b042d2e4128455a3e8bd9f022
+Merge: 698f2a5 3946861
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 2 13:32:47 2014 -0600
+
+    Merge pull request #115 from kaspersky/master
+    
+    Monkey configuration: add program options for configuration paths
+
+commit 698f2a554845659645835f6b978004f98ec7c708
+Merge: 1b16611 7ddf7f9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Apr 2 13:32:10 2014 -0600
+
+    Merge pull request #123 from kaspersky/systemd
+    
+    Systemd: add unit file monkey.service
+
 commit 7ddf7f99126487a94064e559edfd570c7e92b745
 Author: Vladimir Cernov <gg.kaspersky@gmail.com>
 Date:   Mon Mar 31 23:40:46 2014 +0300
@@ -966,11 +1133,27 @@ Date:   Mon Mar 31 23:40:46 2014 +0300
     
     Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
 
+commit 1b16611c40d763160a41646cabd0173a08d5ca00
+Merge: d289b9d e74ff9f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Apr 1 10:41:45 2014 -0600
+
+    Merge pull request #122 from tssavita/sched_plugin
+    
+    Scheduler-Plugin: Moving and renaming function mk_sched_worker_info()
+
 commit e74ff9f8f96726a4ef4db63032680fb2ca3cbf90
 Author: Savita TS <savita.seetaraman5@gmail.com>
 Date:   Tue Apr 1 21:53:47 2014 +0530
 
     Scheduler: Moving and renaming function mk_sched_worker_info() to mk_plugin_sched_get_thread_conf
+
+commit d289b9d1e307e7ec8b865cfd2cb8d2cb6fd4b520
+Merge: adc4ccc c253b36
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 31 11:03:14 2014 -0600
+
+    Merge branch 'master' of github.com:monkey/monkey
 
 commit adc4ccc42780ff96e03257cb625d7441f556d7b0
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -995,6 +1178,15 @@ Date:   Thu Mar 27 22:28:36 2014 -0600
     Vhost: skip files ending in '~' (editor backups)
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 11d7459f9c719433244d0a5d7fd2bd7b61c77b0d
+Merge: f5ce9bf 0f51130
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 27 21:14:20 2014 -0600
+
+    Merge pull request #120 from tssavita/iov_patch2
+    
+    IOV: store buffer type from char changed to void in function 'void _mk_iov_set_free'
 
 commit 0f511308bd443f72b5bc7b451870a4e363ac8029
 Author: Savita TS <savita.seetaraman5@gmail.com>
@@ -1071,6 +1263,15 @@ Date:   Mon Mar 10 13:22:05 2014 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit cffdbc9ed802025a4f2b7a0894388f5ccb517b36
+Merge: f0e78d7 5458096
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 10 13:00:20 2014 -0600
+
+    Merge pull request #109 from kaspersky/master
+    
+    Libmonkey: fix build and add test for mimetype
+
 commit 545809698864309c9c49dc4874f7cdae4596082a
 Author: Vladimir Cernov <gg.kaspersky@gmail.com>
 Date:   Mon Mar 10 20:08:50 2014 +0200
@@ -1084,6 +1285,15 @@ Date:   Sun Mar 9 21:31:48 2014 -0600
     Doc: Add CONTRIBUTING.md file
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c17f98155104412e01e455874f63c81b04269944
+Merge: b11236b 2eb580c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 8 16:02:29 2014 -0600
+
+    Merge pull request #103 from matematik7/master
+    
+    Linux Trace: fix compile issue
 
 commit 2eb580ce3ba890540461d9afc25e28204e5588f2
 Author: matematik7 <domen.ipavec@z-v.si>
@@ -1187,6 +1397,13 @@ Date:   Mon Feb 3 22:51:57 2014 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit a8ac7e28cb2aaea6da2086632e383835777b80fb
+Merge: a31d354 dc4bc59
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jan 29 08:09:22 2014 -0600
+
+    Merge branch 'master' of github.com:monkey/monkey
+
 commit a31d354f0bc22f4801a7927953c393ae2eb93bf5
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Jan 29 08:03:12 2014 -0600
@@ -1202,6 +1419,13 @@ Date:   Wed Jan 29 01:18:51 2014 -0600
     Jemalloc: upgrade commit to fix compiler warnings
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit c28781f3874325a0d3d54f054461804ae81af46b
+Merge: 9b43aa6 9304105
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Jan 28 10:49:47 2014 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 9b43aa61e36a465409317f1759816695a00f019c
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -1484,6 +1708,13 @@ Date:   Sun Dec 29 15:20:44 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 7719a5b7447f83eb53fd06a7f5881cd0d764eb81
+Merge: fee4cb0 624ce82
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Dec 26 11:54:47 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit fee4cb0282d9db9419837a3112f9cd4480a3389d
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Dec 26 11:54:08 2013 -0600
@@ -1507,6 +1738,13 @@ Date:   Sun Dec 22 21:04:47 2013 -0600
     RPM: update SPEC file for incoming v1.4.0
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit e21dfccb22f517592fa2fedc11b746c6211e540f
+Merge: ed0d928 fd8c3d9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Dec 18 22:27:30 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit ed0d928ffc665f131ddd66d1fbbde7d47baac26d
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -1584,6 +1822,13 @@ Date:   Sat Dec 7 01:21:26 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 893d8329d792c94f81c36761d374be3c7227c045
+Merge: 3fd2271 53ec2cc
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Dec 7 00:09:26 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit 3fd227144d1ec421826a7a80a7fc57ca4218ed85
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Dec 7 00:08:56 2013 -0600
@@ -1636,6 +1881,13 @@ Date:   Thu Nov 28 23:56:15 2013 -0600
     configuration directory.
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 54c58c37c5fda4afe379831decf1cec930bd6435
+Merge: d9ad8bd dddf9f0
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 28 11:37:19 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit d9ad8bdbc36f3847005ea56d801c3b0c5cd3e680
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -1811,6 +2063,13 @@ Date:   Sun Nov 24 23:39:26 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit e8d06ea1492b3fda90754db49f9a906cd4e0e7c9
+Merge: 98a9864 5bcef00
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Nov 23 14:50:35 2013 -0600
+
+    Merge branch 'lttng'
+
 commit 5bcef00dab6e7001ec157320fd06b0eb2e413c52
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Nov 23 14:49:35 2013 -0600
@@ -1855,6 +2114,13 @@ Date:   Mon Oct 21 23:13:13 2013 +0200
     
     Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit b03bf69168414f911980a67aa6364f87b4eff519
+Merge: 1acfbbe 801e6b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 29 22:14:06 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 1acfbbedd705433d144bc499e5122981fba2907b
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -2302,6 +2568,13 @@ Date:   Tue Jul 2 16:26:03 2013 +0200
     
     Signed-off-by: Sonny Karlsson <ksonny@lotrax.org>
 
+commit 49f5ec670287ec3876b9990accf30d9fde725cf7
+Merge: 4a6cf53 e169b4c
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Jun 26 19:39:08 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit 4a6cf53c01459f167de6dc027549cfbd9da3e003
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Jun 26 19:38:19 2013 -0600
@@ -2467,6 +2740,13 @@ Date:   Mon Jun 17 21:35:43 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 1c5d24707a3194aa5681b42f7bbce69f011c40b8
+Merge: 37c90d6 4128b9a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jun 17 17:50:05 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit 37c90d66a890ba97d906a777373220a75a9cb85d
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Jun 17 17:49:11 2013 -0600
@@ -2508,6 +2788,13 @@ Date:   Thu Jun 6 11:38:54 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit f073796eb48f55637c96c2f37029b54d9a5892c4
+Merge: 6933315 ae6817d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Jun 6 11:40:23 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit ae6817d2b3a0eb473c5ef2b98ce55a8abf8d4e88
 Author: Lauri Kasanen <cand@gmx.com>
 Date:   Thu Jun 6 17:49:57 2013 +0300
@@ -2535,6 +2822,13 @@ Date:   Fri May 31 23:09:39 2013 -0600
     Add a roadmap draft for v1.3
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 6933315a67aae991d2a87a4eee736cec042e2225
+Merge: 8b182d3 84eada9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 27 08:33:26 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 84eada9f0991929c67798695c5561127aa0b6745
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -2656,6 +2950,13 @@ Author: Lauri Kasanen <cand@gmx.com>
 Date:   Mon May 20 14:03:30 2013 +0300
 
     Set close-on-exec flag on new connections
+
+commit de122063f92cbc0bfde72ad41fffb978b66ba2d4
+Merge: dac562a 7fa5419
+Author: Lauri Kasanen <cand@gmx.com>
+Date:   Mon May 20 15:23:02 2013 +0300
+
+    Merge branch 'master' of monkey.io:/srv/git/monkey
 
 commit 7fa54197d6b3cd470170e5a9fd606e9d1a277236
 Author: Sonny Karlsson <ksonny@lotrax.org>
@@ -2931,6 +3232,13 @@ Date:   Sat Apr 20 01:29:33 2013 -0700
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit ce89b5d81bf6ac305bece9021884c9b7f5a7910d
+Merge: b354b03 d857e52
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 19 07:40:23 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit b354b03baea8b0bb0237609d43888c4dedd140ad
 Author: Vincent Cheng <Vincentc1208@gmail.com>
 Date:   Wed Apr 17 01:18:35 2013 -0700
@@ -3039,6 +3347,13 @@ Date:   Fri Apr 5 14:17:33 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 6b94536861568359a23da5b23740ada4df621104
+Merge: c22fd25 3724f56
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Apr 5 14:04:58 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit c22fd25c0c33ebfb8a23d12b97c85244524428e5
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Apr 5 14:02:28 2013 -0600
@@ -3056,6 +3371,13 @@ Date:   Fri Apr 5 14:02:28 2013 -0600
     instead.
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 3724f56a1f5d4cd52970738f6766f4ea426c80b0
+Merge: 927b887 e26011f
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Apr 1 09:45:10 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 927b8870ebef817d25a8e0c6909c5cad4c386980
 Author: Denis Mone <monedenis@gmail.com>
@@ -3081,6 +3403,13 @@ Date:   Mon Mar 25 22:30:21 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit ee5c1dbe656d93c031a584e2c38663a501e3ba6c
+Merge: 1aa1a71 844b042
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 16 12:10:54 2013 -0600
+
+    Merge fix for #174
+
 commit 844b0429ce3e64535a10b5cd7f144ff39bae4b7b
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Mar 16 12:07:05 2013 -0600
@@ -3102,6 +3431,13 @@ Date:   Fri Mar 15 15:45:42 2013 -0600
     Configure: Fix #117: remove strip instructions
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 90363a114804d38330091977e15478b134e83543
+Merge: 0dd4dfb 3a14258
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 15 07:27:28 2013 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 3a14258510e016b15b2c28c1ce434a9c91a3d8e7
 Author: Sonny Karlsson <ksonny@lotrax.org>
@@ -3361,6 +3697,13 @@ Date:   Thu Feb 14 12:02:50 2013 -0600
     Configure: link to mk_rbtree.o object
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d4460fd3c810e017292a27b42b9f9e95c4b6cd0b
+Merge: ca69bc6 fed3d42
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 14 12:02:06 2013 -0600
+
+    Merge commit 'fed3d4224cdbf2fed51c272dde6138df14916aad' into red-black-tree
 
 commit fed3d4224cdbf2fed51c272dde6138df14916aad
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -3852,6 +4195,15 @@ Date:   Fri Jan 11 16:40:09 2013 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit f01ab1d29d7f31a5799194395afb191ac00b091f
+Merge: bbcd308 b89c7db
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 15:38:15 2013 -0600
+
+    Liana: fix merge
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit b89c7dbb493da00d27327860f1ddedeb51baea33
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Jan 11 15:34:31 2013 -0600
@@ -3905,6 +4257,13 @@ Author: Lauri Kasanen <cand@gmx.com>
 Date:   Sat Dec 15 21:51:03 2012 +0200
 
     cgi: Support some non-compliant CGI programs (cgit uses LFLF after headers)
+
+commit bbcd3082b9bc36678296fd7377fca5d38838c93e
+Merge: 652fbf3 9fcc2e8
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Jan 11 15:29:44 2013 -0600
+
+    Merge branch 'coverity' of https://github.com/clbr/monkey
 
 commit 652fbf3c0232258263922b036f389948490bb65a
 Author: Lauri Kasanen <cand@gmx.com>
@@ -4269,6 +4628,45 @@ Date:   Thu Aug 23 16:38:23 2012 +0300
     Signed-off-by: Lauri Kasanen <cand@gmx.com>
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 0ae38aeb6ebb3c607d09e8667e6c648a022aeb09
+Merge: 6bb6b94 d509c17
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 21:16:38 2012 -0600
+
+    Merge commit 'd509c17687f99f93b1fba67e48055a73995efd81'
+
+commit 6bb6b94bd2df4fcc7d5cb659e19cd19e8e57b326
+Merge: a496e6e f3eefe1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 21:16:10 2012 -0600
+
+    debian: merge
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit a496e6e5beb58eb4ff588ee22a5808d22f05286d
+Merge: be05a00 16c324d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 21:15:18 2012 -0600
+
+    Merge commit '16c324ddec7a33ac92de0a6a4a497b73a30b4d6b'
+
+commit be05a00b6e7b46ce3dbd61abebbb99e33c8898ed
+Merge: f3088d8 8bbb309
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 21:15:07 2012 -0600
+
+    Merge commit '8bbb30982845e7f1e5cb5c999a5256d752056ac8'
+
+commit f3088d8b3f342a4b51532afcf9e2e3c288282bdb
+Merge: e0102ba 3ddbf16
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Aug 18 21:14:44 2012 -0600
+
+    Configure: merge
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit d509c17687f99f93b1fba67e48055a73995efd81
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Aug 18 16:43:22 2012 -0600
@@ -4434,6 +4832,16 @@ Date:   Fri Aug 17 11:09:34 2012 -0600
     Monkey v1.2.0 dev
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 7a4a3bbf2314df09f21c6be891474f0c7d9c4fad
+Merge: fd01402 b827b96
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 17 11:01:53 2012 -0600
+
+    Merge tag 'v1.1.0'
+    
+    Conflicts:
+    	configure
 
 commit b827b96ff9dcf739004a0e87f72b985132b7061a
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -6550,6 +6958,13 @@ Date:   Mon May 14 11:50:31 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit fec973e48356aa588105c34b070bf2f23ffe7503
+Merge: 44a0dda 9b3bb92
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon May 14 11:46:17 2012 -0600
+
+    Merge branch 'patches'
+
 commit 9b3bb925816285f487b94e0db2933057c56f0cbd
 Author: Ankit Kumar <ankitkumar.iitbhu@gmail.com>
 Date:   Mon May 14 11:42:10 2012 -0600
@@ -7402,6 +7817,13 @@ Date:   Sat Mar 31 17:32:55 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 9bfbdbbd6a77f5aea1b3e97b597295c5bfc9d841
+Merge: f26230e b30bd47
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 31 16:00:43 2012 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit f26230e314699331e2094b67e2badbbf79800101
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Mar 31 15:55:04 2012 -0600
@@ -7734,6 +8156,13 @@ Date:   Mon Mar 19 09:20:57 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 2a60a7ba8e6f358e0485c89cae7306ba14214a20
+Merge: a5e22aa d2696fe
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Mar 19 09:15:16 2012 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit a5e22aa45db79eec35c85739de75ddd0efccb4b4
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Mar 19 09:14:45 2012 -0600
@@ -7773,6 +8202,13 @@ Date:   Sun Mar 18 15:45:13 2012 -0600
     Duda: SQLITE: deprecate content of sql_init() routine
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit acce61d8fae4c15a5cc86a80a2640711f4b0eb89
+Merge: 76c5d4a cb1b1ee
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Mar 18 15:15:50 2012 -0600
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 76c5d4a142e74d8fe942f2c5d5af697c058ec6ee
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -8255,6 +8691,13 @@ Date:   Mon Feb 20 23:31:00 2012 -0600
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 07b0435cbc22d2d3eba5bdb54c3aeba7f2e7576f
+Merge: 48882ee 6f4a9b9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Feb 20 11:54:08 2012 -0600
+
+    Merge commit 'v0.33.0'
+
 commit 6f4a9b9534d624a27fa848719383b7c5cc759e77
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Feb 20 11:49:26 2012 -0600
@@ -8274,6 +8717,15 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Feb 20 11:47:13 2012 -0600
 
     Duda: checking hooks references
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 0db7753218ed1f8a39b6aa7ad78e3094faae9eeb
+Merge: 6287750 85b9ac2
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Feb 17 22:59:09 2012 -0600
+
+    Merge conflicts
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
@@ -8370,6 +8822,15 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Feb 9 16:08:46 2012 -0600
 
     Monkey 0.32.0
+
+commit 7b941b3f22e4dc39a0fab564eda5f86002a6f837
+Merge: a2ff857 041f314
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 9 16:08:31 2012 -0600
+
+    Merge conflict
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
 commit a2ff857f891e8f7cfdea5c3418962da957744664
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -8696,6 +9157,16 @@ Date:   Tue Nov 8 11:49:26 2011 -0300
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 0b1eb127830ac5ae90e14c3a839b2a93f93c8e55
+Merge: 8b55d76 c83ee4d
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Nov 8 11:23:22 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+    
+    Conflicts:
+    	plugins/liana/liana.c
+
 commit 8b55d769beba5dafd29f2a7bb002fe80d5b94182
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Nov 8 11:19:29 2011 -0300
@@ -8731,6 +9202,13 @@ Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Sat Nov 5 11:54:24 2011 -0300
 
     Liana_ipv6: Fix typo
+
+commit afb799408661ccb68a89157c84edb7a0ee4c559d
+Merge: bab5f54 c990a23
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Nov 5 10:42:23 2011 -0300
+
+    Merge branch 'master' of ssh://monkey-project.com/srv/git/monkey
 
 commit bab5f5455b782fb3f2f1c453ee68b68fee499a66
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -8772,6 +9250,13 @@ Date:   Fri Nov 4 10:15:48 2011 -0300
 
     Liana: Fix some arguments problem in _mkp_network_io_accept()
 
+commit 744bbd269cd4a0f288b5721a8cba2d2e00108fdc
+Merge: 3fcd8d3 801f773
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Fri Nov 4 09:50:01 2011 -0300
+
+    Merge branch 'master' of ssh://monkey-project.com/srv/git/monkey
+
 commit 3fcd8d30bd498a2d3cf7d0a5bab507f4655e2fb4
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Fri Nov 4 09:46:43 2011 -0300
@@ -8793,6 +9278,13 @@ Date:   Thu Nov 3 22:44:21 2011 -0300
     v0.30 begins
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit 629602272f8b8efd5f216d0cc8932e1bb0644a27
+Merge: e7f3036 ad2f90a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Nov 3 22:43:31 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit e7f303637bed20f33d66e9898755c3182cd42870
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -8896,6 +9388,13 @@ Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Thu Oct 20 20:26:06 2011 -0300
 
     Liana_ipv6: Removed DISABLED since we don't need it but we want to aim users to use it
+
+commit 58d23d4ad3cc68fa613edd6eabf27b8ada41696e
+Merge: 667fc70 9a0289d
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 20 20:18:55 2011 -0300
+
+    Merge branch 'master' of ssh://monkey-project.com/srv/git/monkey
 
 commit 667fc70afcb8791db3876dda79a65903c7d1a4a2
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -9129,6 +9628,15 @@ Date:   Sat Oct 1 01:32:39 2011 -0300
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit bbb2646a87db8356f26dd57406c40a795ea20c33
+Merge: c0a4669 6fc7ae1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Sep 15 23:04:04 2011 -0300
+
+    Liana_ssl: fix merge conflict
+    
+    Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
 commit c0a466945b0601675b0eddf416a8563155166bed
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Sep 15 23:00:34 2011 -0300
@@ -9263,6 +9771,13 @@ Date:   Fri Aug 19 21:44:21 2011 -0400
     Prefix source code files and headers with 'mk_'
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit cd8fad5a5eeabf0f51894f2ab498eee12e638955
+Merge: 0db9f4e 3a7a69b
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Aug 19 20:29:42 2011 -0400
+
+    Merge branch 'sched_add_event'
 
 commit 3a7a69bd940fd4432e0214edcb77e6a3205deaf6
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -9844,6 +10359,13 @@ Date:   Sat Apr 9 23:38:22 2011 -0400
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit 9fd8b15d41cdf1ed3db27c9d670ecae5cb34c45d
+Merge: fb01bca d64c8b7
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Apr 7 16:23:19 2011 -0400
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit fb01bca5fe5384827a9b36276d46dc9af76dd7d2
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Apr 7 16:21:26 2011 -0400
@@ -9851,6 +10373,13 @@ Date:   Thu Apr 7 16:21:26 2011 -0400
     Palm: remove unused headers by Monkey
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
+
+commit d64c8b7ccd3c22906e3d3f257c01a57e00e5f044
+Merge: 73b7302 2d408ca
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Apr 7 15:47:52 2011 -0300
+
+    Merge branch 'master' of ssh://monkey-project.com/srv/git/monkey
 
 commit 73b73026cbf380066063c079cc7d1900383fe135
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -10141,6 +10670,13 @@ Date:   Wed Mar 9 11:17:53 2011 -0300
     
     Signed-off-by: Eduardo Silva <edsiper@gmail.com>
 
+commit e0b02a2b7b59b5771a0cc9ce5ad8dc58712e323d
+Merge: 421bbe8 6cb1b54
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 9 11:10:02 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+
 commit 421bbe8ff00fd328d7ce9dab3353e949ad58984a
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Mar 9 11:09:11 2011 -0300
@@ -10224,6 +10760,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Mar 5 23:47:12 2011 -0300
 
     Ticket #33: add conf directory to plugins, it also supports all configuration keys
+
+commit 9e4e9da11fe8955fe950d4dd3e7037ecb714fbad
+Merge: 04b0798 64c946e
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Mar 5 21:39:25 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 64c946ea5c0c32ce9c6c0a471fdaca77631b7b46
 Author: Davidlohr Bueso <dave@gnu.org>
@@ -10452,6 +10995,13 @@ Date:   Sat Feb 26 13:43:40 2011 -0300
     Update Plugins iov_send  API function to reflect changes.
     
     Signed-off-by: Davidlohr Bueso <dave@gnu.org>
+
+commit d3ea2425a4c9e8a7b75f720dc26ecf7ea04be48f
+Merge: 2f352f3 deac1d9
+Author: Davidlohr Bueso <dave@gnu.org>
+Date:   Thu Feb 24 16:56:49 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
 
 commit 2f352f382b46a2f2c28d5095cc3dd4609d927d24
 Author: Davidlohr Bueso <dave@gnu.org>
@@ -11205,6 +11755,16 @@ Date:   Mon Jan 17 00:57:59 2011 -0300
 
     Monkey 0.12.1
 
+commit 7f677ddf425ad9e1820725ab35371853d71d0938
+Merge: 6c94b17 7e64c73
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jan 17 00:55:01 2011 -0300
+
+    Merge branch 'master' of ssh://git.monkey-project.com/srv/git/monkey
+    
+    Conflicts:
+    	configure
+
 commit 6c94b1723349252929f4291d9cd0e6327657ae18
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Jan 17 00:50:16 2011 -0300
@@ -11340,6 +11900,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Dec 2 18:52:35 2010 -0300
 
     New internal safe_event_write flag
+
+commit de68d358cb089a3b03c1ad215bd5af821cf07cae
+Merge: 9140e66 8f0a963
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Dec 2 16:04:56 2010 -0300
+
+    Merge branch 'v0.12.0-dev' of ssh://monkey-project.com/srv/git/monkey into v0.12.0-dev
 
 commit 9140e667ca5639d35b69f3e0236642d84e0a15d4
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -11589,6 +12156,13 @@ Date:   Tue Oct 26 13:10:19 2010 -0300
 
     If the user selected android as target platform we disable by default the plugins cheetah, palm and logger
 
+commit 177490bb9e7e0acb8d8dd02ed0aba99d030702ca
+Merge: 0bc2c79 76bf7c5
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Tue Oct 26 11:50:21 2010 -0300
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
+
 commit 0bc2c79153593489c4fa65a860ee450ff9087b99
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Tue Oct 26 11:49:52 2010 -0300
@@ -11624,6 +12198,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Oct 25 14:51:36 2010 -0300
 
     Add validation to epoll_create
+
+commit 30dcd40b90b499c9bc266fe723b0989ff8afb8e2
+Merge: 3de27b6 f092a61
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Oct 25 12:51:06 2010 -0300
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
 
 commit 3de27b641628a21e177469753a9c2a98d1f4bf71
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -11692,6 +12273,13 @@ Date:   Fri Oct 15 06:26:54 2010 -0300
 
     Code cleanup and extra validations for plugins
 
+commit 906a658bb64cab30095f6342deb8ca22d07a98b4
+Merge: 548fdc0 025b9d3
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 15 05:33:46 2010 -0300
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
+
 commit 548fdc06f2444cacb13527a6d49e7fee873c6afc
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Oct 14 22:16:44 2010 -0300
@@ -11722,6 +12310,13 @@ Date:   Mon Oct 11 14:01:32 2010 -0300
 
     Remove palm server from monkey sources
 
+commit d41319bb65b6b6e6f48ac303d2ec5a612556446a
+Merge: 612cb2a a7d7dc9
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sun Oct 10 14:37:55 2010 -0300
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
+
 commit 612cb2a0bc67a07681980d473819aad9498ba7d6
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sun Oct 10 14:37:11 2010 -0300
@@ -11745,6 +12340,13 @@ Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Thu Oct 7 12:23:33 2010 -0400
 
     liana_ssl: Fixed the return values for _mkp_event_read() to proper follow the new event api
+
+commit ec92758635e0b756e7f6c62bbf402797f9194de1
+Merge: 01c2ec2 388be7c
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Oct 7 12:02:48 2010 -0400
+
+    Merge branch 'v0.12.0-dev' of git://git.monkey-project.com/monkey into v0.12.0-dev
 
 commit 01c2ec2f7da8478977dcbcf74e00d009130ca55b
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -11800,11 +12402,25 @@ Date:   Fri Oct 1 15:03:27 2010 -0400
 
     Fix configure help to 80cols
 
+commit 5c711413f63f7b77b7d0ec255b248605f069c9c2
+Merge: b5a9fd7 81d20ec
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 14:56:59 2010 -0400
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
+
 commit 81d20ec7654ddbfc5faecbcf9b0c97c815d3d601
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Fri Oct 1 14:56:39 2010 -0400
 
     Added the options --enable-plugins and --disable-plugins to the help of configure. Indent description string to be in the same column in the help of configure
+
+commit b5a9fd725b6a73cc66f35128709c72436b34ddb4
+Merge: 2786619 b179acf
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Oct 1 14:47:22 2010 -0400
+
+    Merge branch 'v0.12.0-dev' of ssh://git.monkey-project.com/srv/git/monkey into v0.12.0-dev
 
 commit b179acfe173fddddfa65de87b0f8e3c1c52ad03f
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -11835,6 +12451,13 @@ Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Thu Sep 30 12:14:46 2010 -0400
 
     Run indent comment to indent the code as it should be
+
+commit 4058507822b23dde09f989a060de0d82bcd95cf8
+Merge: 454daeb 4892adb
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Sep 30 11:12:27 2010 -0400
+
+    Merge of liana_ssl plugin to the main dev branch
 
 commit 4892adb00ff82d33808f51e316511622b131c3bc
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -11878,6 +12501,13 @@ Date:   Wed Sep 29 11:47:06 2010 -0400
 
     Move the handshake to the _mkp_event_read() if the socket it's already in our ssl list we presume that there were a handhskae before
 
+commit 35ddb964699571a4a79f85896548713b3c7cecc6
+Merge: 9945151 f51207b
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Wed Sep 29 10:48:21 2010 -0400
+
+    Merge branch 'v0.12.0-dev' into liana_ssl
+
 commit 9945151bb204976fc0326ebad9dedc007c675a29
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Wed Sep 29 10:46:01 2010 -0400
@@ -11908,6 +12538,13 @@ Date:   Mon Sep 27 23:27:13 2010 -0400
 
     Palm Server: fix POST length limitation
 
+commit be3e00af962d22d411a3ae918a57eacdc8235568
+Merge: 6bb7846 db55bae
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sun Sep 26 11:23:20 2010 -0400
+
+    Merge branch 'v0.12.0-dev' into liana_ssl
+
 commit 6bb7846fc4c6dadcbb62d513fc9053b913f1c955
 Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Sun Sep 26 11:04:50 2010 -0400
@@ -11926,6 +12563,13 @@ Date:   Sat Sep 25 13:59:21 2010 -0400
 
     Fix palm plugin request list init
 
+commit 47326fdde53d88c4e542238d07b9bdf2c54164aa
+Merge: 8243f09 2a79c12
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Sep 25 13:31:41 2010 -0400
+
+    fix merge
+
 commit 8243f09f55406185dfeff6e1f27c99eb9fcd46ab
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Sep 25 13:30:34 2010 -0400
@@ -11943,6 +12587,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Sat Sep 25 13:08:21 2010 -0400
 
     New STAGE_15
+
+commit c56c76c6bb498ca9133d89ee7e0e370cf596c60b
+Merge: ab674dd 2a79c12
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Thu Sep 23 23:18:24 2010 -0400
+
+    Merge branch 'v0.12.0-dev' into liana_ssl
 
 commit ab674dde6ef93176cb0b18659715f3d720e166bf
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -11973,6 +12624,13 @@ Author: Jonathan Gonzalez V <zeus@gnu.org>
 Date:   Mon Sep 20 18:44:26 2010 -0400
 
     Fixed Makefile.in to properly compile with matrixssl 3.1
+
+commit e7c91da1d6e50a42a0476ef391e6a152469f7900
+Merge: 76ed8bc 7207773
+Author: Jonathan Gonzalez V <zeus@gnu.org>
+Date:   Sat Sep 18 11:00:13 2010 -0400
+
+    Merge with v0.12.0-dev to get latest changes related to sessions and new manage of request
 
 commit 76ed8bc4ccf020b3cff692b9e1025c38d208fa50
 Author: Jonathan Gonzalez V <zeus@gnu.org>
@@ -12558,6 +13216,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Mon Jul 12 13:24:38 2010 -0400
 
     Fix merge
+
+commit f57f5485a1aa3c6cf92513a3c414c9803172bc72
+Merge: dff448d 30fc792
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Mon Jul 12 13:20:41 2010 -0400
+
+    Merge v0.11.0-dev branch
 
 commit 30fc792384a1e564fdf707c5dab38bf8d4029ba8
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -13990,6 +14655,13 @@ Date:   Sat Apr 10 19:00:50 2010 -0400
 
     Update branch version
 
+commit 6151a552c7b263afd3dd1dbe1d5cb65a36f9f595
+Merge: 5df493b 88db354
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Sat Apr 10 18:59:24 2010 -0400
+
+    Update configure script
+
 commit 88db3540cd7fcd22eaba8f2f4a225996960acf39
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Apr 9 20:24:30 2010 -0400
@@ -14455,6 +15127,13 @@ Date:   Thu Mar 11 19:12:52 2010 -0300
 
     Monkey 0.10.0-rc2
 
+commit d591a1f080e7c9bd39eb41f4297fe40d2482fb18
+Merge: 4a98db4 306b7d1
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Mar 11 18:35:14 2010 -0300
+
+    Merge branch 'master' of git+ssh://repo.or.cz/srv/git/MonkeyD
+
 commit 4a98db4b8fced0fd11bddebd938c06b7bbc58219
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Thu Mar 11 18:33:22 2010 -0300
@@ -14563,6 +15242,13 @@ Date:   Sat Mar 6 00:58:22 2010 -0300
 
     Remove htdocs/php directory
 
+commit fe006c18627474d7308352d36053f4a20d5ba2b0
+Merge: fed4b4c b509b0a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Fri Mar 5 22:09:15 2010 -0300
+
+    Merge branch 'master' of git+ssh://repo.or.cz/srv/git/MonkeyD
+
 commit fed4b4c670060907b4094bc91c3f9a5bd9060585
 Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Fri Mar 5 22:01:32 2010 -0300
@@ -14574,6 +15260,13 @@ Author: Eduardo Silva <edsiper@gmail.com>
 Date:   Wed Mar 3 15:44:09 2010 -0300
 
     Set non-blocking socket on accept with accept4()
+
+commit af406812ec7bdbf9d0aa85f5cb508960106a078d
+Merge: 90d308d b509b0a
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Wed Mar 3 14:36:19 2010 -0300
+
+    Merge branch 'master' into v0.11.0-dev
 
 commit b509b0aa20832bafecca73de8bef68820e10b73d
 Author: Eduardo Silva <edsiper@gmail.com>
@@ -14885,11 +15578,25 @@ Date:   Thu Feb 11 14:33:26 2010 -0300
 
     QA: Remove range test 04 until httest fix their bug
 
+commit 6d567eaeea3330000546a9f36258c0340f1208c7
+Merge: 0e9bac7 09b403e
+Author: edsiper <edsiper@monotop.(none)>
+Date:   Thu Feb 11 13:54:38 2010 -0300
+
+    Merge branch 'master' of git://repo.or.cz/MonkeyD
+
 commit 0e9bac71af626a0e77bbd6801749361aad645aec
 Author: edsiper <edsiper@monotop.(none)>
 Date:   Thu Feb 11 13:54:22 2010 -0300
 
     QA: Add missed scripts
+
+commit 09b403ea9b6eb5d0fb61db7cf5a75b59222f01e2
+Merge: 2079cff bce7ace
+Author: Eduardo Silva <edsiper@gmail.com>
+Date:   Thu Feb 11 13:50:25 2010 -0300
+
+    Merge branch 'master' of git://repo.or.cz/MonkeyD
 
 commit 2079cffb07b93697e746392f4a94c8adb7963964
 Author: Eduardo Silva <edsiper@gmail.com>
