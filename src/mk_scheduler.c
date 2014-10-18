@@ -538,7 +538,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         mk_list_del(&sc->_head);
         mk_list_add(&sc->_head, &sched->av_queue);
 
-        if (mk_list_entry_orphan(&sc->status_queue) == 0) {
+        if (mk_list_is_set(&sc->status_queue) == 0) {
             mk_list_del(&sc->status_queue);
         }
 
@@ -663,7 +663,7 @@ int mk_sched_update_conn_status(struct sched_list_node *sched,
         mk_list_add(&sched_conn->status_queue, &sched->incoming_queue);
     }
     else {
-        if (mk_list_entry_orphan(&sched_conn->status_queue) == 0) {
+        if (mk_list_is_set(&sched_conn->status_queue) == 0) {
             mk_list_del(&sched_conn->status_queue);
         }
     }

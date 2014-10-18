@@ -1050,7 +1050,7 @@ void mk_session_remove(int socket)
             mk_mem_free(cs_node->body);
         }
 
-        if (mk_list_entry_orphan(&cs_node->request_incomplete) == 0) {
+        if (mk_list_is_set(&cs_node->request_incomplete) == 0) {
             mk_list_del(&cs_node->request_incomplete);
         }
         mk_list_del(&cs_node->request_list);
