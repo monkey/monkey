@@ -70,6 +70,15 @@ static inline void mk_list_del(struct mk_list *entry)
     entry->next = NULL;
 }
 
+static inline int mk_list_is_set(struct mk_list *head)
+{
+    if (head->next && head->prev) {
+        return 0;
+    }
+
+    return -1;
+}
+
 static inline int mk_list_is_empty(struct mk_list *head)
 {
     if (head->next == head) return 0;
@@ -83,16 +92,6 @@ static inline int mk_list_size(struct mk_list *head)
     for (it = head->next; it != head; it = it->next, ret++);
     return ret;
 }
-
-static inline int mk_list_entry_orphan(struct mk_list *head)
-{
-    if (head->next && head->prev) {
-        return 0;
-    }
-
-    return -1;
-}
-
 
 #define mk_list_foreach(curr, head) for( curr = (head)->next; curr != (head); curr = curr->next )
 #define mk_list_foreach_safe(curr, n, head) \
