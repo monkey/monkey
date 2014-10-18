@@ -686,6 +686,14 @@ int mk_http_keepalive_check(struct client_session *cs)
     return 0;
 }
 
+static inline void mk_http_status_completed(struct client_session *cs)
+{
+    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    if (mk_list_is_set(&cs->request_incomplete) == 0) {
+        mk_list_del(&cs->request_incomplete);
+    }
+}
+
 /*
  * Check if the client request still has pending data.
  *
@@ -748,8 +756,7 @@ int mk_http_pending_request(struct client_session *cs)
                  * later
                  */
                 if (content_length <= 0) {
-                    cs->status = MK_REQUEST_STATUS_COMPLETED;
-                    mk_list_del(&cs->request_incomplete);
+                    mk_http_status_completed(cs);
                     return 0;
                 }
                 else {
@@ -761,8 +768,7 @@ int mk_http_pending_request(struct client_session *cs)
                     return -1;
                 }
                 else {
-                    cs->status = MK_REQUEST_STATUS_COMPLETED;
-                    mk_list_del(&cs->request_incomplete);
+                    mk_http_status_completed(cs);
                     return 0;
                 }
             }
@@ -772,8 +778,7 @@ int mk_http_pending_request(struct client_session *cs)
         }
     }
 
-    cs->status = MK_REQUEST_STATUS_COMPLETED;
-    mk_list_del(&cs->request_incomplete);
+    mk_http_status_completed(cs);
     return 0;
 }
 
