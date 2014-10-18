@@ -105,6 +105,39 @@ static struct iov *mk_logger_get_cache()
     return pthread_getspecific(_mkp_data);
 }
 
+static ssize_t _mk_logger_append(int pipe_fd_in,
+        int file_fd_out,
+        size_t bytes)
+{
+    ssize_t ret;
+#if defined(__linux__)
+    ret = splice(pipe_fd_in, NULL, file_fd_out,
+            NULL, bytes, SPLICE_F_MOVE);
+    return ret;
+#else
+    unsigned char buffer[4096];
+    ssize_t buffer_used;
+    size_t bytes_written = 0;
+
+    while (bytes_written < bytes) {
+        ret = read(pipe_fd_in, buffer, sizeof(buffer));
+        if (ret < 0) {
+            break;
+        }
+        buffer_used = ret;
+        ret = write(file_fd_out, buffer, buffer_used);
+        if (ret < 0) {
+            break;
+        }
+        bytes_written += ret;
+    }
+    if (ret < 0 && bytes_written == 0)
+        return -1;
+    else
+        return bytes_written;
+#endif
+}
+
 static void mk_logger_worker_init(void *args)
 {
     int i;
@@ -219,24 +252,7 @@ static void mk_logger_worker_init(void *args)
             }
 
             lseek(flog, 0, SEEK_END);
-
-#if defined (__linux__)
-            slen = splice(fd, NULL, flog,
-                          NULL, bytes, SPLICE_F_MOVE);
-#else
-            long len;
-            char *tmp;
-
-            slen = -1;
-            tmp = mk_api->mem_alloc(bytes);
-            if (tmp) {
-                len = read(fd, tmp, bytes);
-                if (len > 0) {
-                    slen = write(flog, tmp, len);
-                }
-                mk_api->mem_free(tmp);
-            }
-#endif
+            slen = _mk_logger_append(fd, flog, bytes);
             if (mk_unlikely(slen == -1)) {
                 mk_warn("Could not write to log file: splice() = %ld", slen);
             }
