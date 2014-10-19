@@ -97,7 +97,7 @@ int mk_socket_set_tcp_fastopen(int sockfd)
         return setsockopt(sockfd, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen));
     }
 #endif
-
+    (void) sockfd;
     return -1;
 }
 
@@ -115,6 +115,7 @@ int mk_socket_set_tcp_defer_accept(int sockfd)
 
     return setsockopt(sockfd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &timeout, sizeof(int));
 #else
+    (void) sockfd;
     return -1;
 #endif
 }
