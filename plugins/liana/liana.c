@@ -180,11 +180,17 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
     return ret;
 
 #elif defined (__APPLE__)
+    off_t offset = *file_offset;
     off_t len = (off_t) file_count;
-    ret = sendfile(socket_fd, file_fd, file_offset, &len, NULL, 0);
+
+    ret = sendfile(file_fd, socket_fd, offset, &len, NULL, 0);
     if (ret == -1) {
         if (errno == EAGAIN) {
+            *file_offset += len;
             return len;
+        }
+        else {
+            perror("sendfile");
         }
     }
     return -1;
