@@ -1,3 +1,9 @@
+monkey (1.5.5-1) stable; urgency=low
+
+  * Update Monkey release to v1.5.5
+
+ -- Eduardo Silva <eduardo@monkey.io>  Sat, 18 Oct 2014 09:00:00 -0300
+
 monkey (1.5.4-1) stable; urgency=low
 
   * Update Monkey release to v1.5.4
