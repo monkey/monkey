@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 
 #if defined(__APPLE__)
-#define SOL_TCP(6)
+#define SOL_TCP     6
 #endif
 
 #include <stdio.h>
@@ -63,7 +63,7 @@ int mk_socket_set_cork_flag(int fd, int state)
 #if defined (__linux__)
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
 #else
-    return sesockopt(fd, SOL_TCP, TCP_NOPUSH, &state, sizeof(state));
+    return setsockopt(fd, SOL_TCP, TCP_NOPUSH, &state, sizeof(state));
 #endif
 }
 
