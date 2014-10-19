@@ -90,12 +90,11 @@ void mk_cheetah_loop_server()
     cheetah_server = NULL;
     mk_api->str_build(&cheetah_server, &len, "/tmp/cheetah.%s",
                       listener->port);
-
     unlink(cheetah_server);
 
     address.sun_family = AF_UNIX;
     sprintf(address.sun_path, "%s", cheetah_server);
-    address_length = sizeof(address.sun_family) + len;
+    address_length = sizeof(address.sun_family) + len + 1;
 
     if (bind(server_fd, (struct sockaddr *) &address, address_length) != 0) {
         perror("bind");
