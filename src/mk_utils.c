@@ -644,6 +644,7 @@ int mk_utils_worker_rename(const char *title)
 #if defined (__linux__)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
 #else
+    (void) title;
     return -1;
 #endif
 }
