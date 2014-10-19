@@ -1400,7 +1400,7 @@ if test -z "$debug" && test -z "$mk_stats"; then
 	echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
 	DEFS="$DEFS -DDEBUG "
-	CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
+	CFLAGS="$CFLAGS $CFLAGS_GEN -g"
 fi
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then
