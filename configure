@@ -658,8 +658,8 @@ create_makefile2()
         p=`pwd`/src
 	cat > $base_path/src/Makefile<<EOF
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
-CC      = @echo "  CC   \$(_PATH)/\$@"; $CC
-CC_QUIET= @echo -n; $CC
+CC      = @printf "  CC   \$(_PATH)/\$@"; $CC
+CC_QUIET= @echo; $CC
 CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
