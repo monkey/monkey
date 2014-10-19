@@ -34,6 +34,7 @@
 #include <monkey/mk_socket.h>
 #include <monkey/mk_kernel.h>
 #include <monkey/mk_macros.h>
+#include <monkey/mk_event.h>
 
 /* global vars */
 struct plugin_api *mk_api;
@@ -85,7 +86,6 @@ int MK_EXPORT _mkp_event_write(int sockfd);
 int MK_EXPORT _mkp_event_error(int sockfd);
 int MK_EXPORT _mkp_event_close(int sockfd);
 int MK_EXPORT _mkp_event_timeout(int sockfd);
-
 
 /*
  * Redefine messages macros

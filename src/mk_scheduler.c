@@ -494,7 +494,7 @@ void mk_sched_init()
 
     size = sizeof(struct sched_list_node) * config->workers;
     sched_list = mk_mem_malloc_z(size);
-    mk_event_initalize();
+    mk_event_initialize();
 }
 
 void mk_sched_set_request_list(struct rb_root *list)
