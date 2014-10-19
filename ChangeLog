@@ -1,4 +1,60 @@
-commit 34c8a242c2e5b7b4fbc12a0edc13dd969dd40424
+commit 3d8a78ce03a416bc945aeca9c7ac47d9920c8e43
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 19:30:35 2014 -0600
+
+    Debian: bump to v1.5.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c93795eea4144f42869d7def2cf6dcef806f789d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 19:30:08 2014 -0600
+
+    Configure: bump to v1.5.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8a88bbce8d257707c08a24b9f9477174a9abeac4
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 19:29:52 2014 -0600
+
+    HTML: bump to v1.5.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ec93f23e7358519583ad854ee980b92835ec107c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 11:54:37 2014 -0600
+
+    HTTP: when setting cs as completed, perform validations
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 17f01fa3bfd3a166a59a44bd901dba6e10d36ae8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 11:51:15 2014 -0600
+
+    Core: use mk_list_is_set to validate nodes removal
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1a47373ea23d7c83a84bf2327682bb6b72225727
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 11:50:02 2014 -0600
+
+    List: replace list_entry_orphan by list_is_set
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 549aa6601e52bd0b47030ceddf873cb2c70593fe
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 16 19:25:16 2014 -0600
+
+    Release: Monkey HTTP Server v1.5.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 003ddb8f384b792b2a53898de6ffb61542696a7d
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Thu Oct 16 17:06:41 2014 -0600
 
@@ -6,7 +62,7 @@ Date:   Thu Oct 16 17:06:41 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 9d505abab2a8a8be5367c1e6a4bab0a0be5a046c
+commit 2d2eb514faa2293d636e04bfebd5d5ae92e5ad32
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Thu Oct 16 16:44:55 2014 -0600
 
@@ -14,7 +70,7 @@ Date:   Thu Oct 16 16:44:55 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 8e02bf0ad9f2ebf8aee74902716ba596cb95bf25
+commit ca58c8368d20435e21683a64831ac1e594eaa505
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Wed Sep 24 16:02:04 2014 -0600
 
@@ -22,7 +78,7 @@ Date:   Wed Sep 24 16:02:04 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit f04a934b83cb6ff8d2ee8df0ca50b87fdf8d808d
+commit 3a5e72e9b891e0a99bb246f4b4436135866196fa
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sat Aug 23 11:28:36 2014 -0600
 
@@ -30,7 +86,7 @@ Date:   Sat Aug 23 11:28:36 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 44860db78362f98da983bc1c3c5f57c04cfc10f5
+commit f251edb9347b54b060fa702e9c84f7eb556bff5e
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Aug 18 19:38:46 2014 -0600
 
@@ -38,7 +94,7 @@ Date:   Mon Aug 18 19:38:46 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit b35340d463278d40b0336bad471e7f85b071dad8
+commit 9ebb1677a4ad432f6b15c7287065abb43a766fc0
 Author: Matthew Daley <mattd@bugfuzz.com>
 Date:   Sat Aug 16 07:38:14 2014 -0600
 
@@ -46,7 +102,7 @@ Date:   Sat Aug 16 07:38:14 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 98d23859d4b7130cda738253287c952304113284
+commit 14b11c81bdca55aea505f0527d2546250a20d8a8
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Fri Aug 15 19:08:00 2014 -0600
 
@@ -54,7 +110,7 @@ Date:   Fri Aug 15 19:08:00 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 5702cf389533864643449bb4d341e2a8a72049ae
+commit ae7c9d01d7761b559b3621e8fb477baa6feba9db
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Jul 28 15:30:55 2014 -0600
 
@@ -62,7 +118,7 @@ Date:   Mon Jul 28 15:30:55 2014 -0600
     
     Signed-off-by: Eduardo Silva <eduardo@monkey.io>
 
-commit 82e6fa500d27aa809d72ded91266514e7e9d0060
+commit 9cc334735e4173f015ff74760555a1e2a548040e
 Author: Vladimir Cernov <gg.kaspersky@gmail.com>
 Date:   Sun Jun 1 20:45:17 2014 +0300
 
@@ -73,11 +129,11 @@ Date:   Sun Jun 1 20:45:17 2014 +0300
     Conflicts:
     	src/mk_scheduler.c
 
-commit e952b266fdd9489bdfb1506e63495b7010e91f25
+commit 7a34d398d9adf94b9810725d57cc48ca64380c08
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Jul 28 23:13:06 2014 -0600
 
-    Scheduler: optimization when timing out connections
+    Scheduler: optimization when timing out connections (fix #171)
     
     This patch adds a good improvement on performance when the event poll
     system start checking for candidates to timed out connections. It adds
