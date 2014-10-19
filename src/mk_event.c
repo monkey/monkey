@@ -37,7 +37,7 @@
  * Initialize the global Event structure used by threads to access the
  * global file descriptor table.
  */
-int mk_event_initalize()
+int mk_event_initialize()
 {
     int i;
     int ret;
@@ -216,4 +216,10 @@ int mk_event_translate(mk_event_loop_t *loop)
 char *mk_event_backend()
 {
     return _mk_event_backend();
+}
+
+/* Get the file descriptor table */
+mk_event_fdt_t *mk_event_get_fdt()
+{
+    return mk_events_fdt;
 }

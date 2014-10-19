@@ -246,6 +246,7 @@ struct plugin_api
 
     /* core events mechanism */
     mk_event_loop_t *(*ev_loop_create) (int);
+    mk_event_fdt_t *(*ev_get_fdt) ();
     int (*ev_add) (mk_event_loop_t *, int, int, void *);
     int (*ev_del) (mk_event_loop_t *, int);
     int (*ev_timeout_create) (mk_event_loop_t *, int);
