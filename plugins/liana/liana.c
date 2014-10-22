@@ -172,28 +172,27 @@ int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
 #if defined (__linux__)
     ret = sendfile(socket_fd, file_fd, file_offset, file_count);
-    if (mk_unlikely(ret == -1)) {
-        PLUGIN_TRACE("[FD %i] error from sendfile() = -1", socket_fd);
-        return -1;
+    if (ret == -1 && errno != EAGAIN) {
+        mk_err("[FD %i] error from sendfile(): %s",
+                socket_fd, strerror(errno));
     }
-
     return ret;
-
 #elif defined (__APPLE__)
     off_t offset = *file_offset;
     off_t len = (off_t) file_count;
 
     ret = sendfile(file_fd, socket_fd, offset, &len, NULL, 0);
-    if (ret == -1) {
-        if (errno == EAGAIN) {
-            *file_offset += len;
-            return len;
-        }
-        else {
-            perror("sendfile");
-        }
+    if (ret == -1 && errno != EAGAIN) {
+        mk_err("[FD %i] error from sendfile(): %s",
+                socket_fd, strerror(errno));
     }
-    return -1;
+    else if (len > 0) {
+        *file_offset += len;
+        return len;
+    }
+    return ret;
+#else
+#error Sendfile not supported on platform
 #endif
 }
 
