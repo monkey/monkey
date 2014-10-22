@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 
 #if defined(__APPLE__)
-#define SOL_TCP     6
+#define SOL_TCP IPPROTO_TCP
 #endif
 
 #include <stdio.h>
