@@ -965,7 +965,6 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 
     /* Alloc memory for node */
     cs = mk_mem_malloc(sizeof(struct client_session));
-
     cs->pipelined = MK_FALSE;
     cs->counter_connections = 0;
     cs->socket = socket;
@@ -1050,9 +1049,11 @@ void mk_session_remove(int socket)
             mk_mem_free(cs_node->body);
         }
 
-        if (mk_list_is_set(&cs_node->request_incomplete) == 0) {
+        if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
             mk_list_del(&cs_node->request_incomplete);
         }
+
+        mk_request_free_list(cs_node);
         mk_list_del(&cs_node->request_list);
         mk_mem_free(cs_node);
     }
