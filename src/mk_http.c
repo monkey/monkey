@@ -697,11 +697,10 @@ int mk_http_keepalive_check(struct client_session *cs)
 
 static inline void mk_http_status_completed(struct client_session *cs)
 {
-    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_bug(cs->status == MK_REQUEST_STATUS_COMPLETED);
 
-    if (mk_list_is_set(&cs->request_incomplete) == 0) {
-        mk_list_del(&cs->request_incomplete);
-    }
+    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_list_del(&cs->request_incomplete);
 }
 
 /*
