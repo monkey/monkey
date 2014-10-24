@@ -642,7 +642,7 @@ int mk_utils_worker_rename(const char *title)
 {
 #if defined (__linux__)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
-#elif defined (__apple__)
+#elif defined (__APPLE__)
     return pthread_setname_np(title);
 #else
     (void) title;
