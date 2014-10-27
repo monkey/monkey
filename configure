@@ -660,7 +660,7 @@ create_makefile2()
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 CC      = @printf "  CC   \$(_PATH)/\$@"; $CC
 CC_QUIET= @echo; $CC
-CFLAGS  = $CFLAGS
+CFLAGS  = $CFLAGS -rdynamic
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ../include/
