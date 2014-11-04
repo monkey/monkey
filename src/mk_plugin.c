@@ -1030,7 +1030,7 @@ int mk_plugin_event_read(int socket)
     struct mk_list *head;
     struct plugin_event *event;
 
-    MK_TRACE("[FD %i] Read Event", socket);
+    MK_TRACE("[FD %i] Plugin Read Event", socket);
 
     /*
      * Before to process this socket, we need to make sure
