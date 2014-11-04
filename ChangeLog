@@ -1,3 +1,49 @@
+commit 427cc6555ad9c77e1f40b310ba02e84edfc05915
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 25 12:08:43 2014 -0600
+
+    Configure: bump to v1.5.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit fc7af7174a807196c7957bcf65039ee81f40c70f
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 25 12:08:16 2014 -0600
+
+    Debian: bump to v1.5.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ec36de32ee9a0cde38c89c9cbe9f19166e048e6c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 25 12:07:47 2014 -0600
+
+    HTML: bump to v1.5.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8770dcc06f41dca2ef979a1ae5709da02263216a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 23 14:44:07 2014 -0600
+
+    Scheduler: proper handling when dropping connections
+    
+    This patch implements a new function at scheduler level that is
+    used to cleanup a complete connection.
+    
+    It helps to fix an issue when connections are dropped from different
+    sources such as: timeouts, I/O errors, incomplete requests, etc.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9162ced23c504ca1707c780d004c39b557655e20
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 19:36:26 2014 -0600
+
+    Release: Monkey HTTP Server v1.5.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 3d8a78ce03a416bc945aeca9c7ac47d9920c8e43
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sat Oct 18 19:30:35 2014 -0600

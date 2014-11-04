@@ -156,7 +156,7 @@ static inline struct sched_list_node *mk_sched_get_thread_conf()
 void mk_sched_update_thread_status(struct sched_list_node *sched,
                                    int active, int closed);
 
-
+int mk_sched_drop_connection(int socket);
 int mk_sched_check_timeouts(struct sched_list_node *sched);
 int mk_sched_add_client(int remote_fd);
 int mk_sched_add_client_reuseport(int remote_fd, struct sched_list_node *sched);

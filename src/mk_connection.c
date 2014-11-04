@@ -141,7 +141,7 @@ int mk_conn_write(int socket)
          * Closing it could accidentally close some other thread's
          * socket, so pass it to remove_client that checks it's ours.
          */
-        mk_sched_remove_client(sched, socket);
+        mk_sched_drop_connection(socket);
         return 0;
     }
 
@@ -154,8 +154,7 @@ int mk_conn_write(int socket)
      * still need to be send.
      */
     if (ret < 0) {
-        mk_request_free_list(cs);
-        mk_session_remove(socket);
+        mk_sched_drop_connection(socket);
         return -1;
     }
     else if (ret == 0) {
@@ -171,16 +170,13 @@ int mk_conn_write(int socket)
 
 int mk_conn_close(int socket, int event)
 {
-    struct sched_list_node *sched;
-
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
 
     /*
      * Remove the socket from the scheduler and make sure
      * to disable all notifications.
      */
-    sched = mk_sched_get_thread_conf();
-    mk_sched_remove_client(sched, socket);
+    mk_sched_drop_connection(socket);
 
     /* Plugin hook: this is a wrap-workaround to do not
      * break plugins until the whole interface events and
