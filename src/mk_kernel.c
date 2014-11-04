@@ -89,11 +89,23 @@ int mk_kernel_features()
 {
     int flags = 0;
 
-    /* TCP Auto Corking */
+    /*
+     * FIXME: TCP Auto Corking:
+     *
+     * I found that running some benchmarks on Linux 3.16 with
+     * tcp_autocorking enabled, it lead to lower performance, looks like
+     * a manual cork fits better for our needs.
+     *
+     * I think there is something wrong that we need to clarify, by now
+     * I've logged the following issue:
+     *
+     *   https://github.com/monkey/monkey/issues/175
+     *
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 14, 0) &&
         mk_socket_tcp_autocorking() == MK_TRUE) {
         flags |= MK_KERNEL_TCP_AUTOCORKING;
     }
+    */
 
 #ifndef SHAREDLIB
     /* SO_REUSEPORT */
