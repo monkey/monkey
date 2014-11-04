@@ -377,6 +377,7 @@ void mk_plugin_init()
 
     /* events mechanism */
     api->ev_loop_create = mk_event_loop_create;
+    api->ev_get_fdt = mk_event_get_fdt;
     api->ev_add = mk_event_add;
     api->ev_del = mk_event_del;
     api->ev_timeout_create = mk_event_timeout_create;
@@ -1089,7 +1090,7 @@ int mk_plugin_event_read(int socket)
     struct plugin_event *event;
     struct mk_event_fd_state *state;
 
-    MK_TRACE("[FD %i] Read Event", socket);
+    MK_TRACE("[FD %i] Plugin Read Event", socket);
 
     /*
      * Before to process this socket, we need to make sure

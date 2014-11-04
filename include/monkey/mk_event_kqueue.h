@@ -57,24 +57,27 @@ static inline int filter_mask(int16_t f)
 
 
 #define mk_event_foreach(evl, fd, mask)                                 \
-    int i = 0;                                                          \
+    int __i = 0;                                                        \
     mk_event_ctx_t *ctx = evl->data;                                    \
-    struct mk_event_fd_state *st;                                       \
+    struct mk_event_fd_state *st = NULL;                                \
                                                                         \
-    fd   = ctx->events[i].ident;                                        \
-    st = &mk_events_fdt->states[fd];                                    \
-    mask = filter_mask(ctx->events[i].filter);                          \
+    if (evl->n_events > 0) {                                            \
+        fd   = ctx->events[__i].ident;                                  \
+        st = &mk_events_fdt->states[fd];                                \
+        mask = filter_mask(ctx->events[__i].filter);                    \
                                                                         \
-    evl->events[i].fd   = fd;                                           \
-    evl->events[i].mask = mask;                                         \
-    evl->events[i].data = st->data;                                     \
+        evl->events[__i].fd   = fd;                                     \
+        evl->events[__i].mask = mask;                                   \
+        evl->events[__i].data = st->data;                               \
+    }                                                                   \
                                                                         \
-    for (i = 0;                                                         \
-         i < evl->n_events;                                             \
-         i++,                                                           \
-             fd = ctx->events[i].ident,                                 \
-             mask = filter_mask(ctx->events[i].filter),                 \
-             evl->events[i].fd   = fd,                                  \
-             evl->events[i].mask = mask,                                \
-             evl->events[i].data = st->data)
+    for (__i = 0;                                                       \
+         __i < evl->n_events;                                           \
+         __i++,                                                         \
+             fd = ctx->events[__i].ident,                               \
+             mask = filter_mask(ctx->events[__i].filter),               \
+             evl->events[__i].fd   = fd,                                \
+             evl->events[__i].mask = mask,                              \
+             evl->events[__i].data = st->data)
+
 #endif

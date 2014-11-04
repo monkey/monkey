@@ -640,10 +640,12 @@ pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg)
 
 int mk_utils_worker_rename(const char *title)
 {
-    /* We only support thread rename on Linux. OSX Patches are welcome */
 #if defined (__linux__)
     return prctl(PR_SET_NAME, title, 0, 0, 0);
+#elif defined (__APPLE__)
+    return pthread_setname_np(title);
 #else
+    (void) title;
     return -1;
 #endif
 }

@@ -162,6 +162,9 @@ int mk_auth_conf_init_users_list()
 
     mk_list_foreach(head_hosts, hosts) {
         entry_host = mk_list_entry(head_hosts, struct host, _head);
+        if (!entry_host->config) {
+            continue;
+        }
 
         auth_vhost = mk_api->mem_alloc(sizeof(struct vhost));
         auth_vhost->host = entry_host;        /* link virtual host entry */

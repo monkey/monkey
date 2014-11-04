@@ -114,6 +114,10 @@
         }                                                               \
     } while(0)
 
+#define mk_exception() do {                                             \
+        mk_print(MK_WARN, "Exception found in %s() at %s:%d",           \
+                 __FUNCTION__, __FILE__, __LINE__);                     \
+    } while(0)
 
 /*
  * Macros to calculate sub-net data using ip address and sub-net prefix. Macros

@@ -618,20 +618,16 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
 
 int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 {
-    int first = MK_FALSE;
     long int nbytes = 0;
 
     if (sr->bytes_offset == 0) {
-        first = MK_TRUE;
+        mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
     }
 
     nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
                                  &sr->bytes_offset, sr->bytes_to_send);
     if (nbytes > 0) {
         sr->bytes_to_send -= nbytes;
-        if (first == MK_TRUE) {
-            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-        }
     }
 
     sr->loop++;
@@ -701,11 +697,10 @@ int mk_http_keepalive_check(struct client_session *cs)
 
 static inline void mk_http_status_completed(struct client_session *cs)
 {
-    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_bug(cs->status == MK_REQUEST_STATUS_COMPLETED);
 
-    if (mk_list_is_set(&cs->request_incomplete) == 0) {
-        mk_list_del(&cs->request_incomplete);
-    }
+    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_list_del(&cs->request_incomplete);
 }
 
 /*

@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <monkey/mk_api.h>
 
 /* Local Headers */
 #include "logger.h"
@@ -104,10 +105,45 @@ static struct iov *mk_logger_get_cache()
     return pthread_getspecific(_mkp_data);
 }
 
+static ssize_t _mk_logger_append(int pipe_fd_in,
+        int file_fd_out,
+        size_t bytes)
+{
+    ssize_t ret;
+#if defined(__linux__)
+    ret = splice(pipe_fd_in, NULL, file_fd_out,
+            NULL, bytes, SPLICE_F_MOVE);
+    return ret;
+#else
+    unsigned char buffer[4096];
+    ssize_t buffer_used;
+    size_t bytes_written = 0;
+
+    while (bytes_written < bytes) {
+        ret = read(pipe_fd_in, buffer, sizeof(buffer));
+        if (ret < 0) {
+            break;
+        }
+        buffer_used = ret;
+        ret = write(file_fd_out, buffer, buffer_used);
+        if (ret < 0) {
+            break;
+        }
+        bytes_written += ret;
+    }
+    if (ret < 0 && bytes_written == 0)
+        return -1;
+    else
+        return bytes_written;
+#endif
+}
+
 static void mk_logger_worker_init(void *args)
 {
+    int i;
     int fd;
-    int i, bytes, err;
+    int nfds;
+    int bytes, err;
     int max_events = mk_api->config->nhosts;
     int flog;
     int clk;
@@ -167,14 +203,19 @@ static void mk_logger_worker_init(void *args)
     /* Reading pipe buffer */
     while (1) {
         usleep(1200);
-        int num_fds = mk_api->ev_wait(evl);
 
+        /* wait for events */
+        mk_api->ev_wait(evl);
+
+        /* get current time */
         clk = mk_api->time_unix();
 
-        for (i = 0; i < num_fds; i++) {
+        /* translate the backend events triggered */
+        nfds = mk_api->ev_translate(evl);
+        for (i = 0; i < nfds; i++) {
             fd = evl->events[i].fd;
-            target = mk_logger_match_by_fd(fd);
 
+            target = mk_logger_match_by_fd(fd);
             if (!target) {
                 mk_warn("Could not match host/epoll_fd");
                 continue;
@@ -211,8 +252,7 @@ static void mk_logger_worker_init(void *args)
             }
 
             lseek(flog, 0, SEEK_END);
-            slen = splice(fd, NULL, flog,
-                          NULL, bytes, SPLICE_F_MOVE);
+            slen = _mk_logger_append(fd, flog, bytes);
             if (mk_unlikely(slen == -1)) {
                 mk_warn("Could not write to log file: splice() = %ld", slen);
             }

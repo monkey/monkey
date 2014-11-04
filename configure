@@ -658,9 +658,9 @@ create_makefile2()
         p=`pwd`/src
 	cat > $base_path/src/Makefile<<EOF
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
-CC      = @echo "  CC   \$(_PATH)/\$@"; $CC
-CC_QUIET= @echo -n; $CC
-CFLAGS  = $CFLAGS
+CC      = @printf "  CC   \$(_PATH)/\$@"; $CC
+CC_QUIET= @echo; $CC
+CFLAGS  = $CFLAGS -rdynamic
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ../include/
@@ -1400,7 +1400,7 @@ if test -z "$debug" && test -z "$mk_stats"; then
 	echo "$CFLAGS" | grep -q -e -O || CFLAGS="$CFLAGS -O2"
 else
 	DEFS="$DEFS -DDEBUG "
-	CFLAGS="$CFLAGS $CFLAGS_GEN -g -rdynamic"
+	CFLAGS="$CFLAGS $CFLAGS_GEN -g"
 fi
 
 if [ $only_accept -eq 1 ] && [ $only_accept4 -eq 1 ] ; then

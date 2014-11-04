@@ -181,7 +181,9 @@ int mk_server_listen_init(struct server_config *config,
                 reuse_port);
         if (server_fd >= 0) {
             if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
+#if defined (__linux__)
                 mk_warn("[server] Could not set TCP_DEFER_ACCEPT");
+#endif
             }
             listen_list[i].listen = listen;
             listen_list[i].server_fd = server_fd;
