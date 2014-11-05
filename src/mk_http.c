@@ -36,7 +36,6 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_string.h>
-#include <monkey/mk_method.h>
 #include <monkey/mk_socket.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_header.h>
