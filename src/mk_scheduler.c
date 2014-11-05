@@ -525,7 +525,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
          * conditions of bad API usage. When a Session is exiting, no
          * client_session context associated to the remote_fd must exists.
          */
-        struct mk_http_session *cs = mk_session_get(remote_fd);
+        struct mk_http_session *cs = mk_http_session_get(remote_fd);
         if (cs) {
             mk_err("[FD %i] A client_session exists, bad API usage",
                    remote_fd);

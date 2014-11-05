@@ -1022,7 +1022,7 @@ int mk_http_request_end(int socket)
 
         if (mk_list_is_empty(&cs->request_list) != 0) {
 #ifdef TRACE
-            sr = mk_list_entry_first(&cs->request_list, struct session_request, _head);
+            sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
             MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
 #endif
             return 0;
