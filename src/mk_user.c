@@ -36,7 +36,7 @@
 #include <monkey/mk_config.h>
 #include <monkey/mk_macros.h>
 
-int mk_user_init(struct client_session *cs, struct session_request *sr)
+int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int limit;
     const int offset = 2; /* The user is defined after the '/~' string, so offset = 2 */
@@ -66,7 +66,7 @@ int mk_user_init(struct client_session *cs, struct session_request *sr)
 
     /* Check system user */
     if ((s_user = getpwnam(user)) == NULL) {
-        mk_request_error(MK_CLIENT_NOT_FOUND, cs, sr);
+        mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
         return -1;
     }
 

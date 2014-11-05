@@ -23,7 +23,6 @@
 
 #include <monkey/mk_iov.h>
 #include <monkey/mk_cache.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_string.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_macros.h>

@@ -33,7 +33,6 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_info.h>
 #include <monkey/mk_file.h>
 
@@ -170,7 +169,7 @@ struct vhost_fdt_hash_chain
 
 
 static inline int mk_vhost_fdt_open(int id, unsigned int hash,
-                                    struct session_request *sr)
+                                    struct mk_http_request *sr)
 {
     int i;
     int fd;
@@ -229,7 +228,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     return -1;
 }
 
-static inline int mk_vhost_fdt_close(struct session_request *sr)
+static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
 {
     int id;
     unsigned int hash;
@@ -267,7 +266,7 @@ static inline int mk_vhost_fdt_close(struct session_request *sr)
 }
 
 
-int mk_vhost_open(struct session_request *sr)
+int mk_vhost_open(struct mk_http_request *sr)
 {
     int id;
     int off;
@@ -281,7 +280,7 @@ int mk_vhost_open(struct session_request *sr)
     return mk_vhost_fdt_open(id, hash, sr);
 }
 
-int mk_vhost_close(struct session_request *sr)
+int mk_vhost_close(struct mk_http_request *sr)
 {
     return mk_vhost_fdt_close(sr);
 }

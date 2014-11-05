@@ -17,8 +17,20 @@
  *  limitations under the License.
  */
 
+#include "mk_memory.h"
+#include "mk_list.h"
+#include "mk_file.h"
+#include "mk_rbtree.h"
+#include "mk_scheduler.h"
+
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
+
+#define MK_CRLF "\r\n"
+
+/* Request buffer chunks = 4KB */
+#define MK_REQUEST_CHUNK (int) 4096
+#define MK_REQUEST_DEFAULT_PAGE  "<HTML><HEAD><STYLE type=\"text/css\"> body {font-size: 12px;} </STYLE></HEAD><BODY><H1>%s</H1>%s<BR><HR><ADDRESS>Powered by %s</ADDRESS></BODY></HTML>"
 
 /* Hard coded restrictions */
 #define MK_HTTP_DIRECTORY_BACKWARD ".."
@@ -39,6 +51,32 @@
 #define MK_HTTP_METHOD_DELETE_STR    "DELETE"
 #define MK_HTTP_METHOD_OPTIONS_STR   "OPTIONS"
 
+/* Headers */
+#define RH_ACCEPT "Accept:"
+#define RH_ACCEPT_CHARSET "Accept-Charset:"
+#define RH_ACCEPT_ENCODING "Accept-Encoding:"
+#define RH_ACCEPT_LANGUAGE "Accept-Language:"
+#define RH_CONNECTION "Connection:"
+#define RH_COOKIE "Cookie:"
+#define RH_CONTENT_LENGTH "Content-Length:"
+#define RH_CONTENT_RANGE "Content-Range:"
+#define RH_CONTENT_TYPE	"Content-Type:"
+#define RH_IF_MODIFIED_SINCE "If-Modified-Since:"
+#define RH_HOST	"Host:"
+#define RH_LAST_MODIFIED "Last-Modified:"
+#define RH_LAST_MODIFIED_SINCE "Last-Modified-Since:"
+#define RH_REFERER "Referer:"
+#define RH_RANGE "Range:"
+#define RH_USER_AGENT "User-Agent:"
+
+#define MK_REQUEST_STATUS_INCOMPLETE -1
+#define MK_REQUEST_STATUS_COMPLETED 0
+
+#define EXIT_NORMAL 0
+#define EXIT_ERROR -1
+#define EXIT_ABORT -2
+#define EXIT_PCONNECTION 24
+
 /* Available methods */
 #define MK_HTTP_METHOD_AVAILABLE   \
     MK_HTTP_METHOD_GET_STR "," MK_HTTP_METHOD_POST_STR "," \
@@ -55,8 +93,6 @@
 #define MK_HTTP_PROTOCOL_10_STR "HTTP/1.0"
 #define MK_HTTP_PROTOCOL_11_STR "HTTP/1.1"
 
-#include "mk_memory.h"
-
 extern const mk_ptr_t mk_http_method_get_p;
 extern const mk_ptr_t mk_http_method_post_p;
 extern const mk_ptr_t mk_http_method_head_p;
@@ -70,7 +106,192 @@ extern const mk_ptr_t mk_http_protocol_10_p;
 extern const mk_ptr_t mk_http_protocol_11_p;
 extern const mk_ptr_t mk_http_protocol_null_p;
 
-#include "mk_request.h"
+struct response_headers
+{
+    int status;
+
+    /* Connection flag, if equal -1, the connection header is ommited */
+    int connection;
+
+    /*
+     * If some plugins wants to set a customized HTTP status, here
+     * is the 'how and where'
+     */
+    mk_ptr_t custom_status;
+
+    /* Length of the content to send */
+    long content_length;
+
+    /* Private value, real length of the file requested */
+    long real_length;
+
+    int cgi;
+    int pconnections_left;
+    int breakline;
+
+    int transfer_encoding;
+
+    int ranges[2];
+
+    time_t last_modified;
+    mk_ptr_t allow_methods;
+    mk_ptr_t content_type;
+    mk_ptr_t content_encoding;
+    char *location;
+
+    /*
+     * This field allow plugins to add their own response
+     * headers
+     */
+    struct mk_iov *_extra_rows;
+
+    /* Flag to track if the response headers were sent */
+    int sent;
+
+};
+
+struct mk_http_request
+{
+    int status;
+    int protocol;
+    /* is keep-alive request ? */
+    int keep_alive;
+
+    /* is it serving a user's home directory ? */
+    int user_home;
+
+    /*-Connection-*/
+    long port;
+    /*------------*/
+
+    /*
+     * Static file file descriptor: the following twp fields represents an
+     * opened file in the file system and a flag saying which mechanism
+     * was used to open it.
+     *
+     *  - fd_file  : common file descriptor
+     *  - fd_is_fdt: set to MK_TRUE if fd_file was opened using Vhost FDT, or
+     *               MK_FALSE for the opposite case.
+     */
+    int fd_file;
+    int fd_is_fdt;
+
+
+    int headers_len;
+
+    /*----First header of client request--*/
+    int method;
+    mk_ptr_t method_p;
+    mk_ptr_t uri;                  /* original request */
+    mk_ptr_t uri_processed;        /* processed request (decoded) */
+
+    mk_ptr_t protocol_p;
+
+    mk_ptr_t body;
+
+    /* If request specify Connection: close, Monkey will
+     * close the connection after send the response, by
+     * default this var is set to VAR_OFF;
+     */
+    int close_now;
+
+    /*---Request headers--*/
+    int content_length;
+
+    mk_ptr_t _content_length;
+    mk_ptr_t content_type;
+    mk_ptr_t connection;
+
+    mk_ptr_t host;
+    mk_ptr_t host_port;
+    mk_ptr_t if_modified_since;
+    mk_ptr_t last_modified_since;
+    mk_ptr_t range;
+
+    /*---------------------*/
+
+    /* POST/PUT data */
+    mk_ptr_t data;
+    /*-----------------*/
+
+    /*-Internal-*/
+    mk_ptr_t real_path;        /* Absolute real path */
+
+    /*
+     * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
+     * it will be stored here and real_path will point this buffer
+     */
+    char real_path_static[MK_PATH_BASE];
+
+    /* Query string: ?.... */
+    mk_ptr_t query_string;
+
+
+    /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
+     * triggers the plugin STAGE_30 to look for a plugin handler. In some
+     * cases the plugin would overwrite the real path of the requested file
+     * and make Monkey handle the new path for the static file. At this point
+     * we need to block STAGE_30 calls from mk_http_init().
+     *
+     * For short.. if a plugin overwrites the real_path, let Monkey handle that
+     * and do not trigger more STAGE_30's.
+     */
+    int stage30_blocked;
+
+    /* Static file information */
+    long loop;
+    long bytes_to_send;
+    off_t bytes_offset;
+    struct file_info file_info;
+
+    /* Vhost */
+    int vhost_fdt_id;
+    unsigned int vhost_fdt_hash;
+
+    struct host       *host_conf;     /* root vhost config */
+    struct host_alias *host_alias;    /* specific vhost matched */
+
+    /* Response headers */
+    struct response_headers headers;
+
+    struct mk_list _head;
+
+    /* HTTP Headers Table of Content */
+    //struct headers_toc headers_toc;
+};
+
+/*
+ * A HTTP session represents an incoming session
+ * from a client, a session can be used for pipelined or
+ * keepalive requests.
+ */
+
+struct mk_http_session
+{
+    int socket;
+    int pipelined;              /* Pipelined request */
+    int counter_connections;    /* Count persistent connections */
+    int status;                 /* Request status */
+
+    unsigned int body_size;
+    unsigned int body_length;
+
+    int body_pos_end;
+
+    /* red-black tree head */
+    struct rb_node _rb_head;
+    struct mk_list request_list;
+    struct mk_list request_incomplete;
+
+    time_t init_time;
+
+    /* request body buffer */
+    char *body;
+
+    /* Initial fixed size buffer for small requests */
+    char body_fixed[MK_REQUEST_CHUNK];
+    struct mk_http_request sr_fixed;
+};
 
 int mk_http_method_check(mk_ptr_t method);
 mk_ptr_t mk_http_method_check_str(int method);
@@ -79,11 +300,29 @@ int mk_http_method_get(char *body);
 int mk_http_protocol_check(char *protocol, int len);
 mk_ptr_t mk_http_protocol_check_str(int protocol);
 
-int mk_http_init(struct client_session *cs, struct session_request *sr);
-int mk_http_keepalive_check(struct client_session *cs);
+int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr);
+int mk_http_keepalive_check(struct mk_http_session *cs);
 
-int mk_http_pending_request(struct client_session *cs);
-int mk_http_send_file(struct client_session *cs, struct session_request *sr);
+int mk_http_pending_request(struct mk_http_session *cs);
+int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr);
 int mk_http_request_end(int socket);
+
+int mk_http_error(int http_status, struct mk_http_session *cs,
+                  struct mk_http_request *sr);
+
+/* http session */
+void mk_http_session_remove(int socket);
+struct mk_http_session *mk_http_session_get(int socket);
+struct mk_http_session *mk_http_session_create(int socket,
+                                              struct sched_list_node *sched);
+
+/* event handlers */
+int mk_http_handler_read(int socket, struct mk_http_session *cs);
+int mk_http_handler_write(int socket, struct mk_http_session *cs);
+
+void mk_http_request_free(struct mk_http_request *sr);
+void mk_http_request_free_list(struct mk_http_session *cs);
+
+void mk_http_request_ka_next(struct mk_http_session *cs);
 
 #endif

@@ -26,12 +26,12 @@
 #include <string.h>
 
 #include <monkey/monkey.h>
+#include <monkey/mk_http.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_connection.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_clock.h>
@@ -525,11 +525,11 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
          * conditions of bad API usage. When a Session is exiting, no
          * client_session context associated to the remote_fd must exists.
          */
-        struct client_session *cs = mk_session_get(remote_fd);
+        struct mk_http_session *cs = mk_session_get(remote_fd);
         if (cs) {
             mk_err("[FD %i] A client_session exists, bad API usage",
                    remote_fd);
-            mk_session_remove(remote_fd);
+            mk_http_session_remove(remote_fd);
         }
 #endif
 
@@ -619,7 +619,7 @@ int mk_sched_drop_connection(int socket)
     struct sched_connection *conn;
     struct sched_list_node *sched;
 
-    mk_session_remove(socket);
+    mk_http_session_remove(socket);
 
     sched = mk_sched_get_thread_conf();
     conn = mk_sched_get_connection(sched, socket);
@@ -632,7 +632,7 @@ int mk_sched_drop_connection(int socket)
 int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
     int client_timeout;
-    struct client_session *cs_node;
+    struct mk_http_session *cs_node;
     struct sched_connection *entry_conn;
     struct mk_list *head;
     struct mk_list *temp;
@@ -652,7 +652,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     }
 
     mk_list_foreach_safe(head, temp, cs_incomplete) {
-        cs_node = mk_list_entry(head, struct client_session, request_incomplete);
+        cs_node = mk_list_entry(head, struct mk_http_session, request_incomplete);
         if (cs_node->counter_connections == 0) {
             client_timeout = cs_node->init_time + config->timeout;
         }

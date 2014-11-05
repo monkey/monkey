@@ -19,7 +19,7 @@
 
 #include "mk_list.h"
 #include "mk_config.h"
-#include "mk_request.h"
+#include "mk_http.h"
 
 #ifndef MK_VHOST_H
 #define MK_VHOST_H
@@ -91,8 +91,8 @@ void mk_vhost_set_single(char *path);
 void mk_vhost_init(char *path);
 int mk_vhost_fdt_worker_init();
 int mk_vhost_fdt_worker_exit();
-int mk_vhost_open(struct session_request *sr);
-int mk_vhost_close(struct session_request *sr);
+int mk_vhost_open(struct mk_http_request *sr);
+int mk_vhost_close(struct mk_http_request *sr);
 void mk_vhost_free_all();
 
 #endif

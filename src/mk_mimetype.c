@@ -30,10 +30,10 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_file.h>
+#include <monkey/mk_http.h>
 
 struct mimetype *mimetype_default;
 

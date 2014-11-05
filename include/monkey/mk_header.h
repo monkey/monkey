@@ -20,7 +20,7 @@
 #ifndef MK_HEADER_H
 #define MK_HEADER_H
 
-#include "mk_request.h"
+#include "mk_http.h"
 #include "mk_http_status.h"
 
 #define MK_HEADER_BREAKLINE 1
@@ -121,9 +121,9 @@ extern const mk_ptr_t mk_header_accept_ranges;
 extern const mk_ptr_t mk_header_te_chunked;
 extern const mk_ptr_t mk_header_last_modified;
 
-int mk_header_send(int fd, struct client_session *cs, struct session_request *sr);
+int mk_header_send(int fd, struct mk_http_session *cs, struct mk_http_request *sr);
 void mk_header_response_reset(struct response_headers *header);
-void mk_header_set_http_status(struct session_request *sr, int status);
-void mk_header_set_content_length(struct session_request *sr, long len);
+void mk_header_set_http_status(struct mk_http_request *sr, int status);
+void mk_header_set_content_length(struct mk_http_request *sr, long len);
 
 #endif

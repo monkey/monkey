@@ -46,10 +46,10 @@ struct session_request;
 
 static void *monkey_so;
 #if defined(STATS_ALL) || defined(MK_SESSION_CREATE)
-static struct client_session *(*__mk_session_create)(int, struct sched_list_node *);
+static struct mk_http_session *(*__mk_session_create)(int, struct sched_list_node *);
 #endif
 #if defined(STATS_ALL) || defined(MK_SESSION_GET)
-static struct client_session *(*__mk_session_get)(int);
+static struct mk_http_session *(*__mk_session_get)(int);
 #endif
 #if defined(STATS_ALL) || defined(MK_HTTP_METHOD_GET)
 static int (*__mk_http_method_get)(char *);
@@ -58,10 +58,10 @@ static int (*__mk_http_method_get)(char *);
 static int (*__mk_http_request_end)(int);
 #endif
 #if defined(STATS_ALL) || defined(MK_HTTP_RANGE_PARSE)
-static int (*__mk_http_range_parse)(struct session_request *);
+static int (*__mk_http_range_parse)(struct mk_http_request *);
 #endif
 #if defined(STATS_ALL) || defined(MK_HTTP_INIT)
-static int (*__mk_http_init)(struct client_session *, struct session_request *);
+static int (*__mk_http_init)(struct mk_http_session *, struct mk_http_request *);
 #endif
 #if defined(STATS_ALL) || defined(MK_SCHED_GET_CONNECTION)
 static struct sched_connection *(*__mk_sched_get_connection)(struct sched_list_node *, int);
@@ -70,7 +70,7 @@ static struct sched_connection *(*__mk_sched_get_connection)(struct sched_list_n
 static int (*__mk_sched_remove_client)(struct sched_list_node *, int);
 #endif
 #if defined(STATS_ALL) || defined(MK_PLUGIN_STAGE_RUN)
-static int (*__mk_plugin_stage_run)(unsigned int, unsigned int, struct sched_connection *, struct client_session *, struct session_request *);
+static int (*__mk_plugin_stage_run)(unsigned int, unsigned int, struct sched_connection *, struct mk_http_session *, struct mk_http_request *);
 #endif
 #if defined(STATS_ALL) || defined(MK_PLUGIN_EVENT_READ)
 static int (*__mk_plugin_event_read)(int);
@@ -79,7 +79,7 @@ static int (*__mk_plugin_event_read)(int);
 static int (*__mk_plugin_event_write)(int);
 #endif
 #if defined(STATS_ALL) || defined(MK_HEADER_SEND)
-static int (*__mk_header_send)(int, struct client_session *, struct session_request *);
+static int (*__mk_header_send)(int, struct mk_http_session *, struct mk_http_request *);
 #endif
 #if defined(STATS_ALL) || defined(MK_CONN_READ)
 static int (*__mk_conn_read)(int);
@@ -148,9 +148,9 @@ void stats_fini(void)
 }
 
 #if defined(STATS_ALL) || defined(MK_SESSION_CREATE)
-struct client_session *mk_session_create(int socket, struct sched_list_node *sched)
+struct mk_http_session *mk_session_create(int socket, struct sched_list_node *sched)
 {
-    struct client_session *ret;
+    struct mk_http_session *ret;
     STATS_COUNTER_START(mk_session_create);
     ret = __mk_session_create(socket, sched);
     STATS_COUNTER_STOP(mk_session_create);
@@ -159,9 +159,9 @@ struct client_session *mk_session_create(int socket, struct sched_list_node *sch
 #endif
 
 #if defined(STATS_ALL) || defined(MK_SESSION_GET)
-struct client_session *mk_session_get(int socket)
+struct mk_http_session *mk_session_get(int socket)
 {
-    struct client_session *ret;
+    struct mk_http_session *ret;
     STATS_COUNTER_START(mk_session_get);
     ret = __mk_session_get(socket);
     STATS_COUNTER_STOP(mk_session_get);
@@ -192,7 +192,7 @@ int mk_http_request_end(int socket)
 #endif
 
 #if defined(STATS_ALL) || defined(MK_HTTP_RANGE_PARSE)
-int mk_http_range_parse(struct session_request *sr)
+int mk_http_range_parse(struct mk_http_request *sr)
 {
     int ret;
     STATS_COUNTER_START(mk_http_range_parse);
@@ -203,7 +203,7 @@ int mk_http_range_parse(struct session_request *sr)
 #endif
 
 #if defined(STATS_ALL) || defined(MK_HTTP_INIT)
-int mk_http_init(struct client_session *cs, struct session_request *sr)
+int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
     STATS_COUNTER_START(mk_http_init);
@@ -236,7 +236,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 #endif
 
 #if defined(STATS_ALL) || defined(MK_PLUGIN_STAGE_RUN)
-int mk_plugin_stage_run(unsigned int hook, unsigned int socket, struct sched_connection *conx, struct client_session *cs, struct session_request *sr)
+int mk_plugin_stage_run(unsigned int hook, unsigned int socket, struct sched_connection *conx, struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
     STATS_COUNTER_START(mk_plugin_stage_run);
@@ -269,7 +269,7 @@ int mk_plugin_event_write(int socket)
 #endif
 
 #if defined(STATS_ALL) || defined(MK_HEADER_SEND)
-int mk_header_send(int fd, struct client_session *cs, struct session_request *sr)
+int mk_header_send(int fd, struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret = 0;
     STATS_COUNTER_START(mk_header_send);

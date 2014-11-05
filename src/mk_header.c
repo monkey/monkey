@@ -25,7 +25,6 @@
 #include <monkey/mk_server.h>
 #include <monkey/mk_header.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_iov.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_config.h>
@@ -134,8 +133,8 @@ static void mk_header_iov_free(struct mk_iov *iov)
 }
 
 /* Send response headers */
-int mk_header_send(int fd, struct client_session *cs,
-                   struct session_request *sr)
+int mk_header_send(int fd, struct mk_http_session *cs,
+                   struct mk_http_request *sr)
 {
     int i=0;
     unsigned long len = 0;
@@ -344,7 +343,7 @@ int mk_header_send(int fd, struct client_session *cs,
     return 0;
 }
 
-void mk_header_set_http_status(struct session_request *sr, int status)
+void mk_header_set_http_status(struct mk_http_request *sr, int status)
 {
     mk_bug(!sr);
     sr->headers.status = status;

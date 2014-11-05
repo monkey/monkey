@@ -26,7 +26,6 @@
 #include <monkey/monkey.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_memory.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_header.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_iov.h>

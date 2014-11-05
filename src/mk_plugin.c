@@ -26,7 +26,6 @@
 #include <err.h>
 
 #include <monkey/mk_connection.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_file.h>
 #include <monkey/mk_http.h>
@@ -332,7 +331,7 @@ void mk_plugin_init()
 
     /* HTTP callbacks */
     api->http_request_end = mk_plugin_http_request_end;
-    api->http_request_error = mk_request_error;
+    api->http_request_error = mk_http_error;
 
     /* Memory callbacks */
     api->pointer_set = mk_ptr_set;
@@ -362,7 +361,7 @@ void mk_plugin_init()
     /* HTTP Callbacks */
     api->header_send = mk_header_send;
     api->header_add = mk_plugin_header_add;
-    api->header_get = mk_request_header_get;
+    //api->header_get = mk_request_header_get;
     api->header_set_http_status = mk_header_set_http_status;
 
     /* IOV callbacks */
@@ -609,7 +608,7 @@ void mk_plugin_exit_worker()
 int mk_plugin_stage_run(unsigned int hook,
                         unsigned int socket,
                         struct sched_connection *conx,
-                        struct client_session *cs, struct session_request *sr)
+                        struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
     struct plugin_stagem *stm;
@@ -948,12 +947,12 @@ int mk_plugin_http_request_end(int socket)
 {
     int ret;
     int con;
-    struct client_session *cs;
-    struct session_request *sr;
+    struct mk_http_session *cs;
+    struct mk_http_request *sr;
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", socket);
 
-    cs = mk_session_get(socket);
+    cs = mk_http_session_get(socket);
     if (!cs) {
         return -1;
     }
@@ -963,7 +962,7 @@ int mk_plugin_http_request_end(int socket)
         return -1;
     }
 
-    sr = mk_list_entry_last(&cs->request_list, struct session_request, _head);
+    sr = mk_list_entry_last(&cs->request_list, struct mk_http_request, _head);
     mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
 
     ret = mk_http_request_end(socket);
@@ -1322,7 +1321,7 @@ int mk_plugin_sched_remove_client(int socket)
     return mk_sched_remove_client(node, socket);
 }
 
-int mk_plugin_header_add(struct session_request *sr, char *row, int len)
+int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
 {
     mk_bug(!sr);
 

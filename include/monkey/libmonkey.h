@@ -120,7 +120,7 @@ enum mklib_cb {
     MKCB_CLOSE
 };
 
-/* struct session_request need not be exposed */
+/* struct mk_http_request need not be exposed */
 typedef void mklib_session;
 
 /* Called when a new connection arrives. Return MKLIB_FALSE to reject this connection. */

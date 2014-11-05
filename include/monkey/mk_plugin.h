@@ -23,7 +23,6 @@
 #include "monkey.h"
 #include "mk_kernel.h"
 #include "mk_config.h"
-#include "mk_request.h"
 #include "mk_memory.h"
 #include "mk_iov.h"
 #include "mk_socket.h"
@@ -93,9 +92,9 @@ struct plugin_core
 struct plugin_stage
 {
     int (*s10) (int, struct sched_connection *);
-    int (*s20) (struct client_session *, struct session_request *);
-    int (*s30) (struct plugin *, struct client_session *, struct session_request *);
-    int (*s40) (struct client_session *, struct session_request *);
+    int (*s20) (struct mk_http_session *, struct mk_http_request *);
+    int (*s30) (struct plugin *, struct mk_http_session *, struct mk_http_request *);
+    int (*s40) (struct mk_http_session *, struct mk_http_request *);
     int (*s50) (int);
 };
 
@@ -198,7 +197,7 @@ struct plugin_api
 
     /* HTTP request function */
     int   (*http_request_end) (int);
-    int   (*http_request_error) (int, struct client_session *, struct session_request *);
+    int   (*http_request_error) (int, struct mk_http_session *, struct mk_http_request *);
 
     /* memory functions */
     void *(*mem_alloc) (const size_t size);
@@ -226,10 +225,10 @@ struct plugin_api
     int  (*file_get_info) (const char *, struct file_info *);
 
     /* header */
-    int  (*header_send) (int, struct client_session *, struct session_request *);
-    mk_ptr_t (*header_get) (struct headers_toc *, const char *key_name, int key_len);
-    int  (*header_add) (struct session_request *, char *row, int len);
-    void (*header_set_http_status) (struct session_request *, int);
+    int  (*header_send) (int, struct mk_http_session *, struct mk_http_request *);
+    //mk_ptr_t (*header_get) (struct headers_toc *, const char *key_name, int key_len);
+    int  (*header_add) (struct mk_http_request *, char *row, int len);
+    void (*header_set_http_status) (struct mk_http_request *, int);
 
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);
@@ -338,7 +337,7 @@ void mk_plugin_event_init_list();
 int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
                         struct sched_connection *conx,
-                        struct client_session *cs, struct session_request *sr);
+                        struct mk_http_session *cs, struct mk_http_request *sr);
 
 void mk_plugin_core_process();
 void mk_plugin_core_thread();
@@ -378,8 +377,8 @@ mk_ptr_t *mk_plugin_time_now_human();
 
 int mk_plugin_sched_remove_client(int socket);
 
-int mk_plugin_header_add(struct session_request *sr, char *row, int len);
-int mk_plugin_header_get(struct session_request *sr,
+int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len);
+int mk_plugin_header_get(struct mk_http_request *sr,
                          mk_ptr_t query,
                          mk_ptr_t *result);
 

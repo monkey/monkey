@@ -105,7 +105,7 @@ struct sched_list_node
     pthread_t tid;
     pid_t pid;
 
-    struct client_session *request_handler;
+    struct mk_http_session *request_handler;
 
     /*
      * This variable is used to signal the active workers,

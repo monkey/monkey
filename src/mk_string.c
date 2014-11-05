@@ -25,7 +25,6 @@
 #include <stdarg.h>
 
 #include <monkey/mk_macros.h>
-#include <monkey/mk_request.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_string.h>

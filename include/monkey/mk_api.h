@@ -63,10 +63,10 @@ void MK_EXPORT _mkp_exit();
 int MK_EXPORT _mkp_core_prctx(struct server_config *config);
 void MK_EXPORT _mkp_core_thctx();
 int MK_EXPORT _mkp_stage_10(unsigned int socket, struct sched_connection *conx);
-int MK_EXPORT _mkp_stage_20(struct client_session *cs, struct session_request *sr);
-int MK_EXPORT _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
-                            struct session_request *sr);
-int MK_EXPORT _mkp_stage_40(struct client_session *cs, struct session_request *sr);
+int MK_EXPORT _mkp_stage_20(struct mk_http_session *cs, struct mk_http_request *sr);
+int MK_EXPORT _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
+                            struct mk_http_request *sr);
+int MK_EXPORT _mkp_stage_40(struct mk_http_session *cs, struct mk_http_request *sr);
 int MK_EXPORT _mkp_stage_50(int sockfd);
 int MK_EXPORT _mkp_network_io_accept(int server_fd);
 int MK_EXPORT _mkp_network_io_read(int socket_fd, void *buf, int count);

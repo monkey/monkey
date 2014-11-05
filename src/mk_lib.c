@@ -791,7 +791,7 @@ int mklib_get_request_header(const mklib_session *ms,
       const char *key,
       char **value)
 {
-   const struct session_request *sr = ms;
+   const struct mk_http_request *sr = ms;
    int i, n;
    size_t len, key_len = strlen(key), value_len;
    const struct header_toc_row *row;

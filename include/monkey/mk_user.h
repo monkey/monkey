@@ -17,7 +17,7 @@
  *  limitations under the License.
  */
 
-#include "mk_request.h"
+#include "mk_http.h"
 
 #ifndef MK_USER_H
 #define MK_USER_H
@@ -26,7 +26,7 @@
 #define MK_USER_HOME '~'
 
 /* user.c */
-int mk_user_init(struct client_session *cs, struct session_request *sr);
+int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr);
 int mk_user_set_uidgid(void);
 int mk_user_undo_uidgid(void);
 

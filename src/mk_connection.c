@@ -25,7 +25,7 @@
 int mk_conn_read(int socket)
 {
     int ret;
-    struct client_session *cs;
+    struct mk_http_session *cs;
     struct sched_list_node *sched;
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
@@ -43,7 +43,7 @@ int mk_conn_read(int socket)
     }
 
     sched = mk_sched_get_thread_conf();
-    cs = mk_session_get(socket);
+    cs = mk_http_session_get(socket);
     if (!cs) {
         /* Check if is this a new connection for the Scheduler */
         if (!mk_sched_get_connection(sched, socket)) {
@@ -62,14 +62,14 @@ int mk_conn_read(int socket)
 
         /* Create session for the client */
         MK_TRACE("[FD %i] Create session", socket);
-        cs = mk_session_create(socket, sched);
+        cs = mk_http_session_create(socket, sched);
         if (!cs) {
             return -1;
         }
     }
 
     /* Read incomming data */
-    ret = mk_handler_read(socket, cs);
+    ret = mk_http_handler_read(socket, cs);
     if (ret > 0) {
         if (mk_http_pending_request(cs) == 0) {
             mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
@@ -79,7 +79,7 @@ int mk_conn_read(int socket)
              * Request is incomplete and our buffer is full,
              * close connection
              */
-            mk_session_remove(socket);
+            mk_http_session_remove(socket);
             return -1;
         }
         else {
@@ -93,7 +93,7 @@ int mk_conn_read(int socket)
 int mk_conn_write(int socket)
 {
     int ret = -1;
-    struct client_session *cs;
+    struct mk_http_session *cs;
     struct sched_list_node *sched;
     struct sched_connection *conx;
 
@@ -130,7 +130,7 @@ int mk_conn_write(int socket)
     /* Get node from schedule list node which contains
      * the information regarding to the current client/socket
      */
-    cs = mk_session_get(socket);
+    cs = mk_http_session_get(socket);
     if (!cs) {
         /* This is a ghost connection that doesn't exist anymore.
          * Closing it could accidentally close some other thread's
@@ -140,7 +140,7 @@ int mk_conn_write(int socket)
         return 0;
     }
 
-    ret = mk_handler_write(socket, cs);
+    ret = mk_http_handler_write(socket, cs);
 
     /* if ret < 0, means that some error
      * happened in the writer call, in the
