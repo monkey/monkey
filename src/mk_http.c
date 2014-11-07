@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <monkey/mk_user.h>
 #include <monkey/monkey.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_http.h>
@@ -44,12 +45,12 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
 
-const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_HTTP_METHOD_GET_STR);
-const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_HTTP_METHOD_POST_STR);
-const mk_ptr_t mk_http_method_head_p = mk_ptr_init(MK_HTTP_METHOD_HEAD_STR);
-const mk_ptr_t mk_http_method_put_p = mk_ptr_init(MK_HTTP_METHOD_PUT_STR);
-const mk_ptr_t mk_http_method_delete_p = mk_ptr_init(MK_HTTP_METHOD_DELETE_STR);
-const mk_ptr_t mk_http_method_options_p = mk_ptr_init(MK_HTTP_METHOD_OPTIONS_STR);
+const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_METHOD_GET_STR);
+const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_METHOD_POST_STR);
+const mk_ptr_t mk_http_method_head_p = mk_ptr_init(MK_METHOD_HEAD_STR);
+const mk_ptr_t mk_http_method_put_p = mk_ptr_init(MK_METHOD_PUT_STR);
+const mk_ptr_t mk_http_method_delete_p = mk_ptr_init(MK_METHOD_DELETE_STR);
+const mk_ptr_t mk_http_method_options_p = mk_ptr_init(MK_METHOD_OPTIONS_STR);
 const mk_ptr_t mk_http_method_null_p = { NULL, 0 };
 
 const mk_ptr_t mk_http_protocol_09_p = mk_ptr_init(MK_HTTP_PROTOCOL_09_STR);
@@ -61,7 +62,7 @@ const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 static inline void mk_request_init(struct mk_http_request *request)
 {
     request->status = MK_TRUE;
-    request->method = MK_HTTP_METHOD_UNKNOWN;
+    request->method = MK_METHOD_UNKNOWN;
 
     request->file_info.size = -1;
 
@@ -70,6 +71,103 @@ static inline void mk_request_init(struct mk_http_request *request)
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
+}
+
+
+static int mk_request_process(struct mk_http_session *cs, struct mk_http_request *sr)
+{
+    int status = 0;
+    int socket = cs->socket;
+    char *temp;
+    struct mk_list *hosts = &config->hosts;
+    struct mk_list *alias;
+
+    mk_request_init(sr);
+
+    /*
+     * Process URI, if it contains ASCII encoded strings like '%20',
+     * it will return a new memory buffer with the decoded string, otherwise
+     * it returns NULL
+     */
+    temp = mk_utils_url_decode(sr->uri);
+    if (temp) {
+        sr->uri_processed.data = temp;
+        sr->uri_processed.len  = strlen(temp);
+    }
+    else {
+        sr->uri_processed.data = sr->uri.data;
+        sr->uri_processed.len  = sr->uri.len;
+    }
+
+    /* Always assign the first node 'default vhost' */
+    sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
+
+    sr->user_home = MK_FALSE;
+
+    /* Valid request URI? */
+    if (sr->uri_processed.data[0] != '/') {
+        mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    /* HTTP/1.1 needs Host header */
+    if (!sr->host.data && sr->protocol == MK_HTTP_PROTOCOL_11) {
+        mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+        return EXIT_NORMAL;
+    }
+
+    /* Validating protocol version */
+    if (sr->protocol == MK_HTTP_PROTOCOL_UNKNOWN) {
+        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, cs, sr);
+        return EXIT_ABORT;
+    }
+
+    /* Assign the first node alias */
+    alias = &sr->host_conf->server_names;
+    sr->host_alias = mk_list_entry_first(alias,
+                                         struct host_alias, _head);
+
+    if (sr->host.data) {
+        /* Match the virtual host */
+        mk_vhost_get(sr->host, &sr->host_conf, &sr->host_alias);
+
+        /* Check if this virtual host have some redirection */
+        if (sr->host_conf->header_redirect.data) {
+            mk_header_set_http_status(sr, MK_REDIR_MOVED);
+            sr->headers.location = mk_string_dup(sr->host_conf->header_redirect.data);
+            sr->headers.content_length = 0;
+            mk_header_send(cs->socket, cs, sr);
+            sr->headers.location = NULL;
+            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+            return 0;
+        }
+    }
+
+    /* Is requesting an user home directory ? */
+    if (config->user_dir &&
+        sr->uri_processed.len > 2 &&
+        sr->uri_processed.data[1] == MK_USER_HOME) {
+
+        if (mk_user_init(cs, sr) != 0) {
+            mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
+            return EXIT_ABORT;
+        }
+    }
+
+    /* Plugins Stage 20 */
+    int ret;
+    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, socket, NULL, cs, sr);
+    if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
+        MK_TRACE("STAGE 20 requested close conexion");
+        return EXIT_ABORT;
+    }
+
+    /* Normal HTTP process */
+    status = mk_http_init(cs, sr);
+
+    MK_TRACE("[FD %i] HTTP Init returning %i", socket, status);
+
+    return status;
 }
 
 /* This function allow the core to invoke the closing connection process
@@ -216,25 +314,19 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
     struct mk_list *sr_list;
 
     if (mk_list_is_empty(&cs->request_list) == 0) {
-        /* FIXME
-        if (mk_request_parse(cs) != 0) {
-            return -1;
-        }
-        */
+        /* FIXME: remove linked list... */
+        mk_list_add(&cs->sr_fixed._head, &cs->request_list);
     }
 
     sr_list = &cs->request_list;
-
     sr_node = mk_list_entry_first(sr_list, struct mk_http_request, _head);
 
     if (sr_node->bytes_to_send > 0) {
         /* Request with data to send by static file sender */
         final_status = mk_http_send_file(cs, sr_node);
     }
-    else if (sr_node->bytes_to_send < 0) {
-        /* FIXME
+    else if (sr_node->bytes_to_send <= 0) {
         final_status = mk_request_process(cs, sr_node);
-        */
     }
 
     /*
@@ -288,47 +380,47 @@ static mk_ptr_t *mk_http_error_page(char *title, mk_ptr_t message,
 
 int mk_http_method_check(mk_ptr_t method)
 {
-    if (strncmp(method.data, MK_HTTP_METHOD_GET_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_GET;
+    if (strncmp(method.data, MK_METHOD_GET_STR, method.len) == 0) {
+        return MK_METHOD_GET;
     }
 
-    if (strncmp(method.data, MK_HTTP_METHOD_POST_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_POST;
+    if (strncmp(method.data, MK_METHOD_POST_STR, method.len) == 0) {
+        return MK_METHOD_POST;
     }
 
-    if (strncmp(method.data, MK_HTTP_METHOD_HEAD_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_HEAD;
+    if (strncmp(method.data, MK_METHOD_HEAD_STR, method.len) == 0) {
+        return MK_METHOD_HEAD;
     }
 
-    if (strncmp(method.data, MK_HTTP_METHOD_PUT_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_PUT;
+    if (strncmp(method.data, MK_METHOD_PUT_STR, method.len) == 0) {
+        return MK_METHOD_PUT;
     }
 
-    if (strncmp(method.data, MK_HTTP_METHOD_DELETE_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_DELETE;
+    if (strncmp(method.data, MK_METHOD_DELETE_STR, method.len) == 0) {
+        return MK_METHOD_DELETE;
     }
 
-    if (strncmp(method.data, MK_HTTP_METHOD_OPTIONS_STR, method.len) == 0) {
-        return MK_HTTP_METHOD_OPTIONS;
+    if (strncmp(method.data, MK_METHOD_OPTIONS_STR, method.len) == 0) {
+        return MK_METHOD_OPTIONS;
     }
 
-    return MK_HTTP_METHOD_UNKNOWN;
+    return MK_METHOD_UNKNOWN;
 }
 
 mk_ptr_t mk_http_method_check_str(int method)
 {
     switch (method) {
-    case MK_HTTP_METHOD_GET:
+    case MK_METHOD_GET:
         return mk_http_method_get_p;
-    case MK_HTTP_METHOD_POST:
+    case MK_METHOD_POST:
         return mk_http_method_post_p;
-    case MK_HTTP_METHOD_HEAD:
+    case MK_METHOD_HEAD:
         return mk_http_method_head_p;
-    case MK_HTTP_METHOD_PUT:
+    case MK_METHOD_PUT:
         return mk_http_method_put_p;
-    case MK_HTTP_METHOD_DELETE:
+    case MK_METHOD_DELETE:
         return mk_http_method_delete_p;
-    case MK_HTTP_METHOD_OPTIONS:
+    case MK_METHOD_OPTIONS:
         return mk_http_method_options_p;
     }
     return mk_http_method_null_p;
@@ -442,7 +534,7 @@ int mk_http_method_get(char *body)
     /* Max method length is 7 (GET/POST/HEAD/PUT/DELETE/OPTIONS) */
     pos = mk_string_char_search(body, ' ', max_len_method);
     if (mk_unlikely(pos <= 2 || pos >= max_len_method)) {
-        return MK_HTTP_METHOD_UNKNOWN;
+        return MK_METHOD_UNKNOWN;
     }
 
     method.data = body;
@@ -636,8 +728,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
 
     if (sr->_content_length.data &&
-        (sr->method != MK_HTTP_METHOD_POST &&
-         sr->method != MK_HTTP_METHOD_PUT)) {
+        (sr->method != MK_METHOD_POST &&
+         sr->method != MK_METHOD_PUT)) {
         return mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
     }
 
@@ -747,8 +839,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
      * HEAD, but it does not care about them, so if any plugin did not worked
      * on it, Monkey will return error 501 (501 Not Implemented).
      */
-    if (sr->method == MK_HTTP_METHOD_PUT || sr->method == MK_HTTP_METHOD_DELETE ||
-        sr->method == MK_HTTP_METHOD_UNKNOWN) {
+    if (sr->method == MK_METHOD_PUT || sr->method == MK_METHOD_DELETE ||
+        sr->method == MK_METHOD_UNKNOWN) {
         return mk_http_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
@@ -765,9 +857,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
      * For OPTIONS method, we let the plugin handle it and
      * return without any content.
      */
-    if (sr->method == MK_HTTP_METHOD_OPTIONS) {
-        sr->headers.allow_methods.data = MK_HTTP_METHOD_AVAILABLE;
-        sr->headers.allow_methods.len = strlen(MK_HTTP_METHOD_AVAILABLE);
+    if (sr->method == MK_METHOD_OPTIONS) {
+        /* FIXME: OPTIONS NOT WORKING */
+        //sr->headers.allow_methods.data = MK_METHOD_AVAILABLE;
+        //sr->headers.allow_methods.len = strlen(MK_METHOD_AVAILABLE);
 
         mk_ptr_reset(&sr->headers.content_type);
         mk_header_send(cs->socket, cs, sr);
@@ -799,7 +892,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     sr->headers.last_modified = sr->file_info.last_modification;
 
-    if (sr->if_modified_since.data && sr->method == MK_HTTP_METHOD_GET) {
+    if (sr->if_modified_since.data && sr->method == MK_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
         time_t date_file_server;  /* Date server file */
 
@@ -829,7 +922,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
     /* Process methods */
-    if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_HEAD) {
+    if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_HEAD) {
         sr->headers.content_type = mime->type;
 
         /* HTTP Ranges */
@@ -865,7 +958,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
     /* Send file content */
-    if (sr->method == MK_HTTP_METHOD_GET || sr->method == MK_HTTP_METHOD_POST) {
+    if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_POST) {
         bytes = mk_http_send_file(cs, sr);
     }
 
@@ -1143,7 +1236,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     mk_header_send(cs->socket, cs, sr);
 
     if (page) {
-        if (sr->method != MK_HTTP_METHOD_HEAD)
+        if (sr->method != MK_METHOD_HEAD)
             mk_socket_send(cs->socket, page->data, page->len);
 
         mk_ptr_free(page);

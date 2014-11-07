@@ -72,23 +72,38 @@ struct row_entry mk_headers_table[] = {
     { 10, "User-Agent"          }
 };
 
-static inline int method_lookup(struct mk_http_parser *p, char *buffer)
+static inline int method_lookup(struct mk_http_request *req,
+                                struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
 
+    /* Method lenght */
     len = field_len();
+
+    /* Point the buffer */
+    req->method = MK_METHOD_UNKNOWN;
+    req->method_p.data = buffer + p->start;
+    req->method_p.len  = len;
+
     for (i = 0; i < MK_METHOD_SIZEOF; i++) {
         if (len != mk_methods_table[i].len) {
             continue;
         }
 
         if (strncmp(buffer + p->start, mk_methods_table[i].name, len) == 0) {
+            req->method = i;
             return i;
         }
     }
 
     return MK_METHOD_UNKNOWN;
+}
+
+static inline void request_set(mk_ptr_t *ptr, struct mk_http_parser *p, char *buffer)
+{
+    ptr->data = buffer + p->start;
+    ptr->len  = field_len();
 }
 
 static inline int header_lookup(struct mk_http_parser *req, char *buffer)
@@ -163,11 +178,11 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             case MK_ST_REQ_METHOD:                      /* HTTP Method */
                 if (buffer[i] == ' ') {
                     mark_end();
-                    method_lookup(p, buffer);
                     p->status = MK_ST_REQ_URI;
                     if (p->end < 2) {
                         return MK_HTTP_PARSER_ERROR;
                     }
+                    method_lookup(req, p, buffer);
                     parse_next();
                 }
                 break;
@@ -178,10 +193,12 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     if (field_len() < 1) {
                         return MK_HTTP_PARSER_ERROR;
                     }
+                    request_set(&req->uri, p, buffer);
                     parse_next();
                 }
                 else if (buffer[i] == '?') {
                     mark_end();
+                    request_set(&req->uri, p, buffer);
                     p->status = MK_ST_REQ_QUERY_STRING;
                     parse_next();
                 }
@@ -189,6 +206,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             case MK_ST_REQ_QUERY_STRING:                /* Query string */
                 if (buffer[i] == ' ') {
                     mark_end();
+                    request_set(&req->query_string, p, buffer);
                     p->status = MK_ST_REQ_PROT_VERSION;
                     parse_next();
                 }
@@ -199,6 +217,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     if (field_len() != 8) {
                         return MK_HTTP_PARSER_ERROR;
                     }
+                    request_set(&req->protocol_p, p, buffer);
                     p->status = MK_ST_FIRST_FINALIZING;
                     continue;
                 }

@@ -37,21 +37,12 @@
 /* Hard coded restrictions */
 #define MK_HTTP_DIRECTORY_BACKWARD ".."
 
-/* Methods */
-#define MK_HTTP_METHOD_UNKNOWN      -1
-#define MK_HTTP_METHOD_GET           0
-#define MK_HTTP_METHOD_POST          1
-#define MK_HTTP_METHOD_HEAD          2
-#define MK_HTTP_METHOD_PUT           3
-#define MK_HTTP_METHOD_DELETE        4
-#define MK_HTTP_METHOD_OPTIONS       5
-
-#define MK_HTTP_METHOD_GET_STR       "GET"
-#define MK_HTTP_METHOD_POST_STR      "POST"
-#define MK_HTTP_METHOD_HEAD_STR      "HEAD"
-#define MK_HTTP_METHOD_PUT_STR       "PUT"
-#define MK_HTTP_METHOD_DELETE_STR    "DELETE"
-#define MK_HTTP_METHOD_OPTIONS_STR   "OPTIONS"
+#define MK_METHOD_GET_STR       "GET"
+#define MK_METHOD_POST_STR      "POST"
+#define MK_METHOD_HEAD_STR      "HEAD"
+#define MK_METHOD_PUT_STR       "PUT"
+#define MK_METHOD_DELETE_STR    "DELETE"
+#define MK_METHOD_OPTIONS_STR   "OPTIONS"
 
 /* Headers */
 #define RH_ACCEPT "Accept:"
