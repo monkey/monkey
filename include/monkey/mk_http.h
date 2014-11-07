@@ -17,14 +17,16 @@
  *  limitations under the License.
  */
 
+#ifndef MK_HTTP_H
+#define MK_HTTP_H
+
+#include "mk_utils.h"
 #include "mk_memory.h"
 #include "mk_list.h"
 #include "mk_file.h"
 #include "mk_rbtree.h"
 #include "mk_scheduler.h"
-
-#ifndef MK_HTTP_H
-#define MK_HTTP_H
+#include "mk_http_parser.h"
 
 #define MK_CRLF "\r\n"
 
@@ -106,160 +108,6 @@ extern const mk_ptr_t mk_http_protocol_10_p;
 extern const mk_ptr_t mk_http_protocol_11_p;
 extern const mk_ptr_t mk_http_protocol_null_p;
 
-struct response_headers
-{
-    int status;
-
-    /* Connection flag, if equal -1, the connection header is ommited */
-    int connection;
-
-    /*
-     * If some plugins wants to set a customized HTTP status, here
-     * is the 'how and where'
-     */
-    mk_ptr_t custom_status;
-
-    /* Length of the content to send */
-    long content_length;
-
-    /* Private value, real length of the file requested */
-    long real_length;
-
-    int cgi;
-    int pconnections_left;
-    int breakline;
-
-    int transfer_encoding;
-
-    int ranges[2];
-
-    time_t last_modified;
-    mk_ptr_t allow_methods;
-    mk_ptr_t content_type;
-    mk_ptr_t content_encoding;
-    char *location;
-
-    /*
-     * This field allow plugins to add their own response
-     * headers
-     */
-    struct mk_iov *_extra_rows;
-
-    /* Flag to track if the response headers were sent */
-    int sent;
-
-};
-
-struct mk_http_request
-{
-    int status;
-    int protocol;
-    /* is keep-alive request ? */
-    int keep_alive;
-
-    /* is it serving a user's home directory ? */
-    int user_home;
-
-    /*-Connection-*/
-    long port;
-    /*------------*/
-
-    /*
-     * Static file file descriptor: the following twp fields represents an
-     * opened file in the file system and a flag saying which mechanism
-     * was used to open it.
-     *
-     *  - fd_file  : common file descriptor
-     *  - fd_is_fdt: set to MK_TRUE if fd_file was opened using Vhost FDT, or
-     *               MK_FALSE for the opposite case.
-     */
-    int fd_file;
-    int fd_is_fdt;
-
-
-    int headers_len;
-
-    /*----First header of client request--*/
-    int method;
-    mk_ptr_t method_p;
-    mk_ptr_t uri;                  /* original request */
-    mk_ptr_t uri_processed;        /* processed request (decoded) */
-
-    mk_ptr_t protocol_p;
-
-    mk_ptr_t body;
-
-    /* If request specify Connection: close, Monkey will
-     * close the connection after send the response, by
-     * default this var is set to VAR_OFF;
-     */
-    int close_now;
-
-    /*---Request headers--*/
-    int content_length;
-
-    mk_ptr_t _content_length;
-    mk_ptr_t content_type;
-    mk_ptr_t connection;
-
-    mk_ptr_t host;
-    mk_ptr_t host_port;
-    mk_ptr_t if_modified_since;
-    mk_ptr_t last_modified_since;
-    mk_ptr_t range;
-
-    /*---------------------*/
-
-    /* POST/PUT data */
-    mk_ptr_t data;
-    /*-----------------*/
-
-    /*-Internal-*/
-    mk_ptr_t real_path;        /* Absolute real path */
-
-    /*
-     * If a full URL length is less than MAX_PATH_BASE (defined in limits.h),
-     * it will be stored here and real_path will point this buffer
-     */
-    char real_path_static[MK_PATH_BASE];
-
-    /* Query string: ?.... */
-    mk_ptr_t query_string;
-
-
-    /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
-     * triggers the plugin STAGE_30 to look for a plugin handler. In some
-     * cases the plugin would overwrite the real path of the requested file
-     * and make Monkey handle the new path for the static file. At this point
-     * we need to block STAGE_30 calls from mk_http_init().
-     *
-     * For short.. if a plugin overwrites the real_path, let Monkey handle that
-     * and do not trigger more STAGE_30's.
-     */
-    int stage30_blocked;
-
-    /* Static file information */
-    long loop;
-    long bytes_to_send;
-    off_t bytes_offset;
-    struct file_info file_info;
-
-    /* Vhost */
-    int vhost_fdt_id;
-    unsigned int vhost_fdt_hash;
-
-    struct host       *host_conf;     /* root vhost config */
-    struct host_alias *host_alias;    /* specific vhost matched */
-
-    /* Response headers */
-    struct response_headers headers;
-
-    struct mk_list _head;
-
-    /* HTTP Headers Table of Content */
-    //struct headers_toc headers_toc;
-};
-
 /*
  * A HTTP session represents an incoming session
  * from a client, a session can be used for pipelined or
@@ -290,8 +138,32 @@ struct mk_http_session
 
     /* Initial fixed size buffer for small requests */
     char body_fixed[MK_REQUEST_CHUNK];
+
+    /*
+     * FIXME: in previous versions of Monkey we used to parse the complete request
+     * for pipelined requests and generate a linked lists of request. With the new
+     * parser we are taking the approach to parse one request and process it before
+     * parsing others, from that point of view we should not need a linked list
+     * of requests.
+     *
+     * Still testing...
+     */
     struct mk_http_request sr_fixed;
+
+    /*
+     * Parser context: we only held one parser per connection
+     * which is re-used everytime we have a new request.
+     */
+    struct mk_http_parser parser;
 };
+
+static inline void mk_http_status_completed(struct mk_http_session *cs)
+{
+    mk_bug(cs->status == MK_REQUEST_STATUS_COMPLETED);
+
+    cs->status = MK_REQUEST_STATUS_COMPLETED;
+    mk_list_del(&cs->request_incomplete);
+}
 
 int mk_http_method_check(mk_ptr_t method);
 mk_ptr_t mk_http_method_check_str(int method);

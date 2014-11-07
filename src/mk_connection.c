@@ -25,6 +25,7 @@
 int mk_conn_read(int socket)
 {
     int ret;
+    int status;
     struct mk_http_session *cs;
     struct sched_list_node *sched;
 
@@ -71,14 +72,12 @@ int mk_conn_read(int socket)
     /* Read incomming data */
     ret = mk_http_handler_read(socket, cs);
     if (ret > 0) {
-        if (mk_http_pending_request(cs) == 0) {
+        status = mk_http_parser(&cs->sr_fixed, &cs->parser, cs->body, cs->body_length + ret);
+        if (status == MK_HTTP_PARSER_OK) {
+            mk_http_status_completed(cs);
             mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
         }
-        else if (cs->body_length + 1 >= (unsigned int) config->max_request_size) {
-            /*
-             * Request is incomplete and our buffer is full,
-             * close connection
-             */
+        else if (status == MK_HTTP_PARSER_ERROR) {
             mk_http_session_remove(socket);
             return -1;
         }

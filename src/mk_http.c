@@ -951,47 +951,6 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
     return 0;
 }
 
-static inline void mk_http_status_completed(struct mk_http_session *cs)
-{
-    mk_bug(cs->status == MK_REQUEST_STATUS_COMPLETED);
-
-    cs->status = MK_REQUEST_STATUS_COMPLETED;
-    mk_list_del(&cs->request_incomplete);
-}
-
-/*
- * Check if the client request still has pending data.
- *
- * Return 0 when all parts of the expected data has arrived or -1 when
- * the connection is on a pending status due to HTTP spec.
- *
- * This function is called from request.c :: mk_handler_read(..)
- */
-int mk_http_pending_request(struct mk_http_session *cs)
-{
-    long content_length = 0;
-
-
-        if (content_length >= config->max_request_size) {
-            return 0;
-        }
-
-        /* Content-length is required, if is it not found,
-         * we pass as successful in order to raise the error
-         * later
-         */
-        if (content_length <= 0) {
-            mk_http_status_completed(cs);
-            return 0;
-        }
-        else {
-            return -1;
-        }
-
-    mk_http_status_completed(cs);
-    return 0;
-}
-
 int mk_http_request_end(int socket)
 {
     int ka;
@@ -1285,6 +1244,9 @@ struct mk_http_session *mk_http_session_create(int socket,
 
     /* Init session request list */
     mk_list_init(&cs->request_list);
+
+    /* Initialize the parser */
+    mk_http_parser_init(&cs->parser);
 
     /* Add this SESSION to the thread list */
 

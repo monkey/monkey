@@ -17,20 +17,17 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
+#ifndef MK_HTTP_PARSER_H
+#define MK_HTTP_PARSER_H
 
-#ifndef MK_HTTP_H
-#define MK_HTTP_H
-
-typedef struct {
-    char *data;
-    unsigned long len;
-} mk_ptr_t;
+#include <monkey/mk_memory.h>
+#include <monkey/mk_http.h>
+#include <monkey/mk_http_internal.h>
 
 /* General status */
-#define MK_HTTP_PENDING -10  /* cannot complete until more data arrives */
-#define MK_HTTP_ERROR    -1  /* found an error when parsing the string */
-#define MK_HTTP_OK        0
+#define MK_HTTP_PARSER_PENDING -10  /* cannot complete until more data arrives */
+#define MK_HTTP_PARSER_ERROR    -1  /* found an error when parsing the string */
+#define MK_HTTP_PARSER_OK        0
 
 /* Request levels
  * ==============
@@ -139,10 +136,6 @@ struct mk_http_parser {
     struct mk_http_header headers[MK_HEADER_SIZEOF];
 };
 
-struct mk_http_parser *mk_http_parser_new();
-int mk_http_parser(struct mk_http_parser *req, char *buffer, int len);
-
-
 #ifdef HTTP_STANDALONE
 
 /* ANSI Colors */
@@ -228,5 +221,10 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
     return 0;
 }
 #endif /* HTTP_STANDALONE */
+
+
+void mk_http_parser_init(struct mk_http_parser *p);
+int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
+                   char *buffer, int len);
 
 #endif /* MK_HTTP_H */
