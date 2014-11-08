@@ -119,9 +119,14 @@ struct mk_http_session
 
     /* red-black tree head */
     struct rb_node _rb_head;
+
+    /* head for mk_http_request list nodes, each request is linked here */
     struct mk_list request_list;
+
+    /* while a http_request don't complete a request, it's linked here */
     struct mk_list request_incomplete;
 
+    /* creation time for this HTTP session */
     time_t init_time;
 
     /* request body buffer */

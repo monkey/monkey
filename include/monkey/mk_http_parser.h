@@ -108,7 +108,6 @@ struct mk_http_header {
     mk_ptr_t val;
 };
 
-
 /* This structure is the 'Parser Context' */
 struct mk_http_parser {
     int i;

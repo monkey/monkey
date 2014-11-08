@@ -59,30 +59,48 @@ const mk_ptr_t mk_http_protocol_11_p = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 
 /* Create a memory allocation in order to handle the request data */
-static inline void mk_request_init(struct mk_http_request *request)
+void mk_request_init(struct mk_http_request *request)
 {
     request->status = MK_TRUE;
     request->method = MK_METHOD_UNKNOWN;
-
     request->file_info.size = -1;
-
+    request->bytes_offset  = 0;
     request->bytes_to_send = -1;
     request->fd_file = -1;
+    request->stage30_blocked = MK_FALSE;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
 }
 
+static inline int mk_http_point_header(mk_ptr_t *h,
+                                       struct mk_http_parser *parser, int key)
+{
+    struct mk_http_header *header;
 
-static int mk_request_process(struct mk_http_session *cs, struct mk_http_request *sr)
+    header = &parser->headers[key];
+    if (header->type == key) {
+        h->data = header->val.data;
+        h->len  = header->val.len;
+        return 0;
+    }
+    else {
+        h->data = NULL;
+        h->len  = -1;
+    }
+
+    return -1;
+}
+
+static int mk_http_request_prepare(struct mk_http_session *cs,
+                                   struct mk_http_request *sr)
 {
     int status = 0;
     int socket = cs->socket;
     char *temp;
     struct mk_list *hosts = &config->hosts;
     struct mk_list *alias;
-
-    mk_request_init(sr);
+    struct mk_http_header *header;
 
     /*
      * Process URI, if it contains ASCII encoded strings like '%20',
@@ -99,7 +117,7 @@ static int mk_request_process(struct mk_http_session *cs, struct mk_http_request
         sr->uri_processed.len  = sr->uri.len;
     }
 
-    /* Always assign the first node 'default vhost' */
+    /* Always assign the default vhost' */
     sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
 
     sr->user_home = MK_FALSE;
@@ -109,6 +127,20 @@ static int mk_request_process(struct mk_http_session *cs, struct mk_http_request
         mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
         return EXIT_NORMAL;
     }
+
+    /* Check if we have a Host header: Hostname ; port */
+    mk_http_point_header(&sr->host, &cs->parser, MK_HEADER_HOST);
+
+    /* Header: Connection */
+    mk_http_point_header(&sr->connection, &cs->parser, MK_HEADER_CONNECTION);
+
+    /* Header: Range */
+    mk_http_point_header(&sr->range, &cs->parser, MK_HEADER_RANGE);
+
+    /* Header: If-Modified-Since */
+    mk_http_point_header(&sr->if_modified_since,
+                         &cs->parser,
+                         MK_HEADER_IF_MODIFIED_SINCE);
 
     /* HTTP/1.1 needs Host header */
     if (!sr->host.data && sr->protocol == MK_HTTP_PROTOCOL_11) {
@@ -120,6 +152,27 @@ static int mk_request_process(struct mk_http_session *cs, struct mk_http_request
     if (sr->protocol == MK_HTTP_PROTOCOL_UNKNOWN) {
         mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, cs, sr);
         return EXIT_ABORT;
+    }
+
+    /* Default Keepalive is off */
+    if (sr->protocol == MK_HTTP_PROTOCOL_10) {
+        sr->keep_alive = MK_FALSE;
+        sr->close_now = MK_TRUE;
+    }
+    else if(sr->protocol == MK_HTTP_PROTOCOL_11) {
+        sr->keep_alive = MK_TRUE;
+        sr->close_now = MK_FALSE;
+    }
+
+    /* Content Length */
+    /* FIXME! */
+    header = &cs->parser.headers[7];
+    if (header->type == 7) {
+        sr->_content_length.data = header->val.data;
+        sr->_content_length.len  = header->val.len;
+    }
+    else {
+        sr->_content_length.data = NULL;
     }
 
     /* Assign the first node alias */
@@ -170,7 +223,8 @@ static int mk_request_process(struct mk_http_session *cs, struct mk_http_request
     return status;
 }
 
-/* This function allow the core to invoke the closing connection process
+/*
+ * This function allow the core to invoke the closing connection process
  * when some connection was not proceesed due to a premature close or similar
  * exception, it also take care of invoke the STAGE_40 and STAGE_50 plugins events
  */
@@ -312,46 +366,43 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
     int final_status = 0;
     struct mk_http_request *sr_node;
     struct mk_list *sr_list;
-
-    if (mk_list_is_empty(&cs->request_list) == 0) {
-        /* FIXME: remove linked list... */
-        mk_list_add(&cs->sr_fixed._head, &cs->request_list);
-    }
+    struct mk_list *sr_head;
 
     sr_list = &cs->request_list;
-    sr_node = mk_list_entry_first(sr_list, struct mk_http_request, _head);
+    mk_list_foreach(sr_head, sr_list) {
+        sr_node = mk_list_entry_first(sr_list, struct mk_http_request, _head);
 
-    if (sr_node->bytes_to_send > 0) {
-        /* Request with data to send by static file sender */
-        final_status = mk_http_send_file(cs, sr_node);
-    }
-    else if (sr_node->bytes_to_send <= 0) {
-        final_status = mk_request_process(cs, sr_node);
-    }
+        if (sr_node->bytes_to_send > 0) {
+            /* Request with data to send by static file sender */
+            final_status = mk_http_send_file(cs, sr_node);
+        }
+        else if (sr_node->bytes_to_send <= 0) {
+            final_status = mk_http_request_prepare(cs, sr_node);
+        }
 
-    /*
-     * If we got an error, we don't want to parse
-     * and send information for another pipelined request
-     */
-    if (final_status > 0) {
-        return final_status;
-    }
-    else {
-        /* STAGE_40, request has ended */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
-                            NULL, cs, sr_node);
-        switch (final_status) {
-        case EXIT_NORMAL:
-        case EXIT_ERROR:
-            if (sr_node->close_now == MK_TRUE) {
+        /*
+         * If we got an error, we don't want to parse
+         * and send information for another pipelined request
+         */
+        if (final_status > 0) {
+            return final_status;
+        }
+        else {
+            /* STAGE_40, request has ended */
+            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
+                                NULL, cs, sr_node);
+            switch (final_status) {
+            case EXIT_NORMAL:
+            case EXIT_ERROR:
+                if (sr_node->close_now == MK_TRUE) {
+                    return -1;
+                }
+                break;
+            case EXIT_ABORT:
                 return -1;
             }
-            break;
-        case EXIT_ABORT:
-            return -1;
         }
     }
-
     /*
      * If we are here, is because all pipelined request were
      * processed successfully, let's return 0
@@ -725,7 +776,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                sizeof(MK_HTTP_DIRECTORY_BACKWARD) - 1)) {
         return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
     }
-
 
     if (sr->_content_length.data &&
         (sr->method != MK_METHOD_POST &&
@@ -1338,6 +1388,10 @@ struct mk_http_session *mk_http_session_create(int socket,
     /* Init session request list */
     mk_list_init(&cs->request_list);
 
+    /* We have a static 'request' entry in our session, lets initialize it */
+    mk_list_add(&cs->sr_fixed._head, &cs->request_list);
+    mk_request_init(&cs->sr_fixed);
+
     /* Initialize the parser */
     mk_http_parser_init(&cs->parser);
 
@@ -1435,4 +1489,5 @@ void mk_http_request_ka_next(struct mk_http_session *cs)
     cs->init_time = log_current_utime;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     mk_list_add(&cs->request_incomplete, cs_incomplete);
+    mk_http_parser_init(&cs->parser);
 }

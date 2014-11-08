@@ -218,6 +218,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         return MK_HTTP_PARSER_ERROR;
                     }
                     request_set(&req->protocol_p, p, buffer);
+                    req->protocol=MK_HTTP_PROTOCOL_11;
                     p->status = MK_ST_FIRST_FINALIZING;
                     continue;
                 }
@@ -468,9 +469,14 @@ void mk_http_parser_init(struct mk_http_parser *p)
     p->chars  = -1;
 
     /* init headers */
+    p->header_key = -1;
+    p->header_sep = -1;
+    p->header_val = -1;
     p->header_min = -1;
     p->header_max = -1;
-    p->header_sep = -1;
+
     p->body_received  = 0;
     p->header_content_length = -1;
+
+    memset(&p->headers, '\0', sizeof(struct mk_http_header) * MK_HEADER_SIZEOF);
 }

@@ -69,20 +69,23 @@ int mk_conn_read(int socket)
         }
     }
 
-    /* Read incomming data */
+    /* Invoke the read handler, on this case we only support HTTP (for now :) */
     ret = mk_http_handler_read(socket, cs);
     if (ret > 0) {
-        status = mk_http_parser(&cs->sr_fixed, &cs->parser, cs->body, cs->body_length + ret);
+        status = mk_http_parser(&cs->sr_fixed, &cs->parser, cs->body,
+                                cs->body_length + ret);
         if (status == MK_HTTP_PARSER_OK) {
+            MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);
             mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
             mk_http_session_remove(socket);
+            MK_TRACE("[FD %i] HTTP_PARSER_ERROR", socket);
             return -1;
         }
         else {
-            MK_TRACE("[FD %i] waiting for pending data", socket);
+            MK_TRACE("[FD %i] HTTP_PARSER_PENDING", socket);
         }
     }
 
