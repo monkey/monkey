@@ -59,7 +59,7 @@ const mk_ptr_t mk_http_protocol_11_p = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 
 /* Create a memory allocation in order to handle the request data */
-void mk_request_init(struct mk_http_request *request)
+void mk_http_request_init(struct mk_http_request *request)
 {
     request->status = MK_TRUE;
     request->method = MK_METHOD_UNKNOWN;
@@ -241,7 +241,7 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
     if (mk_list_is_empty(sr_list) == 0) {
         sr = &cs->sr_fixed;
         memset(sr, 0, sizeof(struct mk_http_request));
-        mk_request_init(sr);
+        mk_http_request_init(sr);
         mk_list_add(&sr->_head, &cs->request_list);
     }
     else {
@@ -1387,10 +1387,6 @@ struct mk_http_session *mk_http_session_create(int socket,
 
     /* Init session request list */
     mk_list_init(&cs->request_list);
-
-    /* We have a static 'request' entry in our session, lets initialize it */
-    mk_list_add(&cs->sr_fixed._head, &cs->request_list);
-    mk_request_init(&cs->sr_fixed);
 
     /* Initialize the parser */
     mk_http_parser_init(&cs->parser);

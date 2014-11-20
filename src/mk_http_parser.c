@@ -153,6 +153,9 @@ static inline int header_lookup(struct mk_http_parser *req, char *buffer)
 
                 req->header_content_length = val;
             }
+            else if (i == MK_HEADER_CONNECTION) {
+                /* FIXME */
+            }
             return 0;
         }
     }

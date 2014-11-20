@@ -27,6 +27,7 @@ int mk_conn_read(int socket)
     int ret;
     int status;
     struct mk_http_session *cs;
+    struct mk_http_request *sr;
     struct sched_list_node *sched;
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
@@ -72,8 +73,18 @@ int mk_conn_read(int socket)
     /* Invoke the read handler, on this case we only support HTTP (for now :) */
     ret = mk_http_handler_read(socket, cs);
     if (ret > 0) {
-        status = mk_http_parser(&cs->sr_fixed, &cs->parser, cs->body,
-                                cs->body_length + ret);
+        if (mk_list_is_empty(&cs->request_list) == 0) {
+            /* Add the first entry */
+            sr = &cs->sr_fixed;
+            mk_list_add(&sr->_head, &cs->request_list);
+            mk_http_request_init(sr);
+        }
+        else {
+            sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
+        }
+
+        status = mk_http_parser(sr, &cs->parser,
+                                cs->body, cs->body_length + ret);
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);

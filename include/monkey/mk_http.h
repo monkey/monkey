@@ -192,5 +192,6 @@ void mk_http_request_free(struct mk_http_request *sr);
 void mk_http_request_free_list(struct mk_http_session *cs);
 
 void mk_http_request_ka_next(struct mk_http_session *cs);
+void mk_http_request_init(struct mk_http_request *request);
 
 #endif
