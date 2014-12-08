@@ -69,6 +69,7 @@ static int do_cgi(const char *const __restrict__ file,
     int env_llen = 256;
     const int socket = cs->socket;
     struct file_info finfo;
+    mk_ptr_t header;
 
     char *env[30];
 
@@ -96,6 +97,7 @@ static int do_cgi(const char *const __restrict__ file,
     char server_software[SHORTLEN];
     char server_protocol[SHORTLEN];
     char http_host[SHORTLEN];
+    char cookie[512];
 
     /* Check the interpreter exists */
     if (match->bin) {
@@ -167,6 +169,12 @@ static int do_cgi(const char *const __restrict__ file,
         env[envpos++] = content_type;
     }
 
+    header = mk_api->header_get(&sr->headers_toc, "COOKIE", 6);
+    if (header.len > 0) {
+        snprintf(cookie, sizeof(cookie) - 1,
+                 "HTTP_COOKIE=%.*s", (int) header.len - 1, header.data + 1);
+        env[envpos++] = cookie;
+    }
 
     /* Must be NULL-terminated */
     env[envpos] = NULL;
