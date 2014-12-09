@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_parser.h>
@@ -72,6 +73,27 @@ struct row_entry mk_headers_table[] = {
     { 10, "User-Agent"          }
 };
 
+/*
+ * expected: a known & expected value in lowercase
+ * value   : mk_ptr_t points the header value
+ *
+ * If it matches it return zero. Otherwise -1.
+ */
+static inline int header_cmp(char *expected, mk_ptr_t *val)
+{
+    int i;
+    int len = val->len;
+
+    for (i = 0; i < len; i++) {
+        if (expected[i] != tolower(val->data[i])) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+
 static inline int method_lookup(struct mk_http_request *req,
                                 struct mk_http_parser *p, char *buffer)
 {
@@ -106,16 +128,17 @@ static inline void request_set(mk_ptr_t *ptr, struct mk_http_parser *p, char *bu
     ptr->len  = field_len();
 }
 
-static inline int header_lookup(struct mk_http_parser *req, char *buffer)
+static inline int header_lookup(struct mk_http_request *req,
+                                struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
     struct mk_http_header *header;
     struct row_entry *h;
 
-    len = (req->header_sep - req->header_key);
+    len = (p->header_sep - p->header_key);
 
-    for (i = req->header_min; i <= req->header_max; i++) {
+    for (i = p->header_min; i <= p->header_max; i++) {
         h = &mk_headers_table[i];
 
         /* Check string length first */
@@ -123,17 +146,17 @@ static inline int header_lookup(struct mk_http_parser *req, char *buffer)
             continue;
         }
 
-        if (strncmp(buffer + req->header_key + 1,
+        if (strncmp(buffer + p->header_key + 1,
                     h->name + 1,
                     len - 1) == 0) {
 
             /* We got a header match, register the header index */
-            header = &req->headers[i];
+            header = &p->headers[i];
             header->type = i;
-            header->key.data = buffer + req->header_key;
+            header->key.data = buffer + p->header_key;
             header->key.len  = len;
-            header->val.data = buffer + req->header_val;
-            header->val.len  = req->end - req->header_val;
+            header->val.data = buffer + p->header_val;
+            header->val.len  = p->end - p->header_val;
 
             if (i == MK_HEADER_CONTENT_LENGTH) {
                 long val;
@@ -151,10 +174,26 @@ static inline int header_lookup(struct mk_http_parser *req, char *buffer)
                     return -1;
                 }
 
-                req->header_content_length = val;
+                p->header_content_length = val;
             }
             else if (i == MK_HEADER_CONNECTION) {
-                /* FIXME */
+                p->header_conn_close      = -1;
+                p->header_conn_keep_alive = -1;
+
+                /* Check Connection: Keep-Alive */
+                if (header->val.len == sizeof(MK_CONN_KEEP_ALIVE) - 1) {
+                    if (header_cmp(MK_CONN_KEEP_ALIVE, &header->val) == 0) {
+                        p->header_conn_close      = MK_FALSE;
+                        p->header_conn_keep_alive = MK_TRUE;
+                    }
+                }
+                /* Check Connection: Close */
+                else if (header->val.len == sizeof(MK_CONN_CLOSE) -1) {
+                    if (header_cmp(MK_CONN_CLOSE, &header->val) == 0) {
+                        p->header_conn_close      = MK_TRUE;
+                        p->header_conn_keep_alive = MK_FALSE;
+                    }
+                }
             }
             return 0;
         }
@@ -221,7 +260,12 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         return MK_HTTP_PARSER_ERROR;
                     }
                     request_set(&req->protocol_p, p, buffer);
-                    req->protocol=MK_HTTP_PROTOCOL_11;
+                     if (req->protocol_p.data[req->protocol_p.len - 1] == '1') {
+                        req->protocol = MK_HTTP_PROTOCOL_11;
+                    }
+                    else {
+                        req->protocol = MK_HTTP_PROTOCOL_10;
+                    }
                     p->status = MK_ST_FIRST_FINALIZING;
                     continue;
                 }
@@ -359,7 +403,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      * A header row has ended, lets lookup the header and populate
                      * our headers table index.
                      */
-                    ret = header_lookup(p, buffer);
+                    ret = header_lookup(req, p, buffer);
                     if (ret != 0) {
                         return MK_HTTP_PARSER_ERROR;
                     }

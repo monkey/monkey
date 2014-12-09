@@ -164,6 +164,17 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
         sr->close_now = MK_FALSE;
     }
 
+    if (sr->connection.data) {
+        if (cs->parser.header_conn_keep_alive == MK_TRUE) {
+            sr->keep_alive = MK_TRUE;
+            sr->close_now  = MK_FALSE;
+        }
+        else if (cs->parser.header_conn_close == MK_TRUE) {
+            sr->keep_alive = MK_FALSE;
+            sr->close_now  = MK_TRUE;
+        }
+    }
+
     /* Content Length */
     /* FIXME! */
     header = &cs->parser.headers[7];

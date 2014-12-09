@@ -68,6 +68,7 @@ struct mk_http_request
 {
     int status;
     int protocol;
+
     /* is keep-alive request ? */
     int keep_alive;
 
@@ -79,7 +80,7 @@ struct mk_http_request
     /*------------*/
 
     /*
-     * Static file file descriptor: the following twp fields represents an
+     * Static file descriptor: the following twp fields represents an
      * opened file in the file system and a flag saying which mechanism
      * was used to open it.
      *

@@ -102,6 +102,12 @@ enum mk_request_headers {
     MK_HEADER_SIZEOF
 };
 
+/* Expected Header values that are used to take logic
+ * decision.
+ */
+#define MK_CONN_KEEP_ALIVE     "keep-alive"
+#define MK_CONN_CLOSE          "close"
+
 struct mk_http_header {
     int type;
     mk_ptr_t key;
@@ -121,9 +127,14 @@ struct mk_http_parser {
     int end;
     int chars;
 
-    /* it stores the numeric value of Content-Length header */
     long body_received;
+
+    /* it stores the numeric value of Content-Length header */
     long header_content_length;
+
+    /* connection header value discovered */
+    int header_conn_close;
+    int header_conn_keep_alive;
 
     /* probable current header, fly parsing */
     int header_key;
@@ -133,7 +144,7 @@ struct mk_http_parser {
     int header_max;
 
     struct mk_http_header headers[MK_HEADER_SIZEOF];
-}  __attribute__ ((aligned (64)));
+} __attribute__ ((aligned (64)));
 
 #ifdef HTTP_STANDALONE
 
@@ -236,8 +247,6 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     p->header_val = -1;
     p->header_min = -1;
     p->header_max = -1;
-
-    //p->body_received  = 0;
     p->header_content_length = -1;
 }
 
