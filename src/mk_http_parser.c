@@ -460,26 +460,3 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
     }
     return MK_HTTP_PARSER_PENDING;
 }
-
-void mk_http_parser_init(struct mk_http_parser *p)
-{
-    p->i      = 0;
-    p->level  = REQ_LEVEL_FIRST;
-    p->status = MK_ST_REQ_METHOD;
-    p->length = 0;
-    p->start  = 0;
-    p->end    = 0;
-    p->chars  = -1;
-
-    /* init headers */
-    p->header_key = -1;
-    p->header_sep = -1;
-    p->header_val = -1;
-    p->header_min = -1;
-    p->header_max = -1;
-
-    p->body_received  = 0;
-    p->header_content_length = -1;
-
-    memset(&p->headers, '\0', sizeof(struct mk_http_header) * MK_HEADER_SIZEOF);
-}

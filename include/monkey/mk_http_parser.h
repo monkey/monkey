@@ -133,7 +133,7 @@ struct mk_http_parser {
     int header_max;
 
     struct mk_http_header headers[MK_HEADER_SIZEOF];
-};
+}  __attribute__ ((aligned (64)));
 
 #ifdef HTTP_STANDALONE
 
@@ -222,7 +222,25 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
 #endif /* HTTP_STANDALONE */
 
 
-void mk_http_parser_init(struct mk_http_parser *p);
+static inline void mk_http_parser_init(struct mk_http_parser *p)
+{
+    memset(p, '\0', sizeof(struct mk_http_parser));
+
+    p->level  = REQ_LEVEL_FIRST;
+    p->status = MK_ST_REQ_METHOD;
+    p->chars  = -1;
+
+    /* init headers */
+    p->header_key = -1;
+    p->header_sep = -1;
+    p->header_val = -1;
+    p->header_min = -1;
+    p->header_max = -1;
+
+    //p->body_received  = 0;
+    p->header_content_length = -1;
+}
+
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                    char *buffer, int len);
 
