@@ -67,6 +67,8 @@ void mk_http_request_init(struct mk_http_request *request)
     request->bytes_offset  = 0;
     request->bytes_to_send = -1;
     request->fd_file = -1;
+    request->fd_is_fdt = MK_FALSE;
+    request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
 
     /* Response Headers */
@@ -159,19 +161,25 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
         sr->keep_alive = MK_FALSE;
         sr->close_now = MK_TRUE;
     }
-    else if(sr->protocol == MK_HTTP_PROTOCOL_11) {
+    else if (sr->protocol == MK_HTTP_PROTOCOL_11) {
         sr->keep_alive = MK_TRUE;
         sr->close_now = MK_FALSE;
     }
 
     if (sr->connection.data) {
-        if (cs->parser.header_conn_keep_alive == MK_TRUE) {
+        if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_KA) {
             sr->keep_alive = MK_TRUE;
             sr->close_now  = MK_FALSE;
         }
-        else if (cs->parser.header_conn_close == MK_TRUE) {
+        else if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_CLOSE) {
             sr->keep_alive = MK_FALSE;
             sr->close_now  = MK_TRUE;
+        }
+        else {
+            if (sr->protocol == MK_HTTP_PROTOCOL_11) {
+                sr->keep_alive = MK_TRUE;
+                sr->close_now = MK_FALSE;
+            }
         }
     }
 

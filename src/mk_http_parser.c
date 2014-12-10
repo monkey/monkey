@@ -176,22 +176,20 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 p->header_content_length = val;
             }
             else if (i == MK_HEADER_CONNECTION) {
-                p->header_conn_close      = -1;
-                p->header_conn_keep_alive = -1;
-
                 /* Check Connection: Keep-Alive */
                 if (header->val.len == sizeof(MK_CONN_KEEP_ALIVE) - 1) {
                     if (header_cmp(MK_CONN_KEEP_ALIVE, &header->val) == 0) {
-                        p->header_conn_close      = MK_FALSE;
-                        p->header_conn_keep_alive = MK_TRUE;
+                        p->header_connection = MK_HTTP_PARSER_CONN_KA;
                     }
                 }
                 /* Check Connection: Close */
                 else if (header->val.len == sizeof(MK_CONN_CLOSE) -1) {
                     if (header_cmp(MK_CONN_CLOSE, &header->val) == 0) {
-                        p->header_conn_close      = MK_TRUE;
-                        p->header_conn_keep_alive = MK_FALSE;
+                        p->header_connection = MK_HTTP_PARSER_CONN_CLOSE;
                     }
+                }
+                else {
+                    p->header_connection = MK_HTTP_PARSER_CONN_UNKNOWN;
                 }
             }
             return 0;

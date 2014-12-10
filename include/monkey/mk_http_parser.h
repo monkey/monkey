@@ -29,6 +29,12 @@
 #define MK_HTTP_PARSER_ERROR    -1  /* found an error when parsing the string */
 #define MK_HTTP_PARSER_OK        0
 
+/* Connection header values */
+#define MK_HTTP_PARSER_CONN_EMPTY    0
+#define MK_HTTP_PARSER_CONN_UNKNOWN -1
+#define MK_HTTP_PARSER_CONN_KA       1
+#define MK_HTTP_PARSER_CONN_CLOSE    2
+
 /* Request levels
  * ==============
  *
@@ -132,9 +138,16 @@ struct mk_http_parser {
     /* it stores the numeric value of Content-Length header */
     long header_content_length;
 
-    /* connection header value discovered */
-    int header_conn_close;
-    int header_conn_keep_alive;
+    /*
+     * connection header value discovered: it can be set with
+     * values:
+     *
+     * MK_HTTP_PARSER_CONN_EMPTY  : header not set
+     * MK_HTTP_PARSER_CONN_UNKNOWN: unexpected value
+     * MK_HTTP_PARSER_CONN_KA     : keep-alive
+     * MK_HTTP_PARSER_CONN_CLOSE  : close
+     */
+    int header_connection;
 
     /* probable current header, fly parsing */
     int header_key;
