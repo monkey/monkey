@@ -229,7 +229,6 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     int fd;
     int ret = -1;
     int mask;
-    int remote_fd;
     int timeout_fd;
     uint64_t val;
     mk_event_loop_t *evl;
@@ -261,6 +260,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
                     ret = read(fd, &val, sizeof(val));
                     if (ret < 0) {
                         mk_libc_error("read");
+                        continue;
                     }
 
                     if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
@@ -283,13 +283,17 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
                     continue;
                 }
                 else if (listen && mk_server_listen_check(listen, fd)) {
-                    remote_fd = mk_server_listen_handler(sched, listen, fd);
-                    if (remote_fd < 0) {
-                        continue;
-                    }
-                    fd = remote_fd;
+                    /*
+                     * A new connection have been accepted..or failed, despite
+                     * the result, we let the loop continue processing the other
+                     * events triggered.
+                     */
+                    mk_server_listen_handler(sched, listen, fd);
+                    continue;
                 }
-                ret = mk_conn_read(fd);
+                else {
+                    ret = mk_conn_read(fd);
+                }
             }
             else if (mask & MK_EVENT_WRITE) {
                 MK_TRACE("[FD %i] EPoll Event WRITE", fd);

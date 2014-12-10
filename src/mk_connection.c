@@ -100,6 +100,10 @@ int mk_conn_read(int socket)
         }
     }
 
+    if (ret == -EAGAIN) {
+        return 1;
+    }
+
     return ret;
 }
 

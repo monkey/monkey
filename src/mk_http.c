@@ -334,7 +334,7 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
 
     if (bytes < 0) {
         if (errno == EAGAIN) {
-            return 1;
+            return -EAGAIN;
         }
         else {
             mk_http_session_remove(socket);

@@ -128,8 +128,7 @@ static inline void request_set(mk_ptr_t *ptr, struct mk_http_parser *p, char *bu
     ptr->len  = field_len();
 }
 
-static inline int header_lookup(struct mk_http_request *req,
-                                struct mk_http_parser *p, char *buffer)
+static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
@@ -403,7 +402,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      * A header row has ended, lets lookup the header and populate
                      * our headers table index.
                      */
-                    ret = header_lookup(req, p, buffer);
+                    ret = header_lookup(p, buffer);
                     if (ret != 0) {
                         return MK_HTTP_PARSER_ERROR;
                     }
@@ -502,5 +501,6 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
         }
 
     }
+
     return MK_HTTP_PARSER_PENDING;
 }
