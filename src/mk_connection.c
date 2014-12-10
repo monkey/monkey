@@ -84,7 +84,7 @@ int mk_conn_read(int socket)
         }
 
         status = mk_http_parser(sr, &cs->parser,
-                                cs->body, cs->body_length + ret);
+                                cs->body, cs->body_length);
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);

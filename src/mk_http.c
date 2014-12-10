@@ -1357,7 +1357,7 @@ struct mk_http_session *mk_http_session_get(int socket)
  * main list
  */
 struct mk_http_session *mk_http_session_create(int socket,
-                                              struct sched_list_node *sched)
+                                               struct sched_list_node *sched)
 {
     struct mk_http_session *cs;
     struct sched_connection *sc;
