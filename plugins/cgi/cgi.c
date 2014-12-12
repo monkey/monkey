@@ -66,6 +66,7 @@ static int do_cgi(const char *const __restrict__ file,
                   struct plugin *const plugin)
 {
     int ret;
+    int env_llen = 256;
     const int socket = cs->socket;
     struct file_info finfo;
 
@@ -83,15 +84,15 @@ static int do_cgi(const char *const __restrict__ file,
 
     char method[SHORTLEN];
     char *query = NULL;
-    char request_uri[PATHLEN];
-    char script_filename[PATHLEN];
+    char request_uri[env_llen];
+    char script_filename[env_llen];
     char script_name[PATHLEN];
-    char query_string[PATHLEN];
+    char query_string[env_llen];
     char remote_addr[INET6_ADDRSTRLEN+SHORTLEN];
     char tmpaddr[INET6_ADDRSTRLEN], *ptr = tmpaddr;
     char remote_port[SHORTLEN];
     char content_length[SHORTLEN];
-    char content_type[SHORTLEN];
+    char content_type[env_llen];
     char server_software[SHORTLEN];
     char server_protocol[SHORTLEN];
     char http_host[SHORTLEN];
@@ -128,21 +129,21 @@ static int do_cgi(const char *const __restrict__ file,
     if (sr->query_string.len) {
         query = mk_api->mem_alloc_z(sr->query_string.len + 1);
         memcpy(query, sr->query_string.data, sr->query_string.len);
-        snprintf(request_uri, PATHLEN, "REQUEST_URI=%s?%s", url, query);
+        snprintf(request_uri, env_llen, "REQUEST_URI=%s?%s", url, query);
     }
     else {
-        snprintf(request_uri, PATHLEN, "REQUEST_URI=%s", url);
+        snprintf(request_uri, env_llen, "REQUEST_URI=%s", url);
     }
     env[envpos++] = request_uri;
 
-    snprintf(script_filename, PATHLEN, "SCRIPT_FILENAME=%s", file);
+    snprintf(script_filename, env_llen, "SCRIPT_FILENAME=%s", file);
     env[envpos++] = script_filename;
 
-    snprintf(script_name, PATHLEN, "SCRIPT_NAME=%s", url);
+    snprintf(script_name, env_llen, "SCRIPT_NAME=%s", url);
     env[envpos++] = script_name;
 
     if (query) {
-        snprintf(query_string, PATHLEN, "QUERY_STRING=%s", query);
+        snprintf(query_string, env_llen, "QUERY_STRING=%s", query);
         env[envpos++] = query_string;
         mk_api->mem_free(query);
     }
@@ -162,7 +163,7 @@ static int do_cgi(const char *const __restrict__ file,
     }
 
     if (sr->content_type.len) {
-        snprintf(content_type, SHORTLEN, "CONTENT_TYPE=%.*s", (int)sr->content_type.len, sr->content_type.data);
+        snprintf(content_type, env_llen, "CONTENT_TYPE=%.*s", (int)sr->content_type.len, sr->content_type.data);
         env[envpos++] = content_type;
     }
 
