@@ -207,10 +207,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
 {
     int i;
     int ret;
-    int limit;
 
-    limit = len + p->i;
-    for (i = p->i; i < limit; p->i++, p->chars++, i++) {
+    for (i = p->i; i < len; p->i++, p->chars++, i++) {
         /* FIRST LINE LEVEL: Method, URI & Protocol */
         if (p->level == REQ_LEVEL_FIRST) {
             switch (p->status) {
@@ -440,7 +438,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
              * - A Body content (POST/PUT methods
              */
             if (p->header_content_length > 0) {
-                p->body_received += (limit - i);
+                p->body_received += (len - i);
 
                 if (p->body_received == p->header_content_length) {
                     return MK_HTTP_PARSER_OK;
@@ -456,7 +454,6 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
     /*
      * FIXME: the code above needs to be handled in a different way
      */
-
     if (p->level == REQ_LEVEL_FIRST) {
         if (p->status == MK_ST_REQ_METHOD) {
             if (p->i > 10) {
@@ -480,7 +477,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
     }
     else if (p->level == REQ_LEVEL_BODY) {
         if (p->header_content_length > 0) {
-            p->body_received += (limit - i);
+            p->body_received += (len - i);
             if (p->header_content_length == p->body_received) {
                 return MK_HTTP_PARSER_OK;
             }
