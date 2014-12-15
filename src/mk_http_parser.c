@@ -207,7 +207,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                     || (errno != 0 && val == 0)) {
                     return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
                 }
-                if (endptr == header->val.data || *endptr != '\0') {
+                if (endptr == header->val.data) {
                     return -1;
                 }
                 if (val < 0) {
