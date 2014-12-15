@@ -213,6 +213,11 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
                                          struct host_alias, _head);
 
     if (sr->host.data) {
+        /* Set the given port */
+        if (cs->parser.header_host_port > 0) {
+            sr->port = cs->parser.header_host_port;
+        }
+
         /* Match the virtual host */
         mk_vhost_get(sr->host, &sr->host_conf, &sr->host_alias);
 

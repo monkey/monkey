@@ -74,6 +74,19 @@ struct row_entry mk_headers_table[] = {
     { 10, "user-agent"          }
 };
 
+static inline int str_searchr(char *buf, char c, int len)
+{
+    int i;
+
+    for (i = len - 1; i >= 0; i--) {
+        if (buf[i] == c) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 /*
  * expected: a known & expected value in lowercase
  * value   : mk_ptr_t points the header value
@@ -132,6 +145,9 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
+    long val;
+    char *endptr;
+
     struct mk_http_header *header;
     struct row_entry *h;
 
@@ -154,16 +170,44 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             header->val.data = buffer + p->header_val;
             header->val.len  = p->end - p->header_val;
 
-            if (i == MK_HEADER_CONTENT_LENGTH) {
-                long val;
-                char *endptr;
+            if (i == MK_HEADER_HOST) {
+                /* Handle a possible port number in the Host header */
+                int sep = str_searchr(header->val.data, ':', header->val.len);
+                if (sep > 0) {
+                    int plen;
+                    short int port_size = 6;
+                    char port[port_size];
 
+                    plen = header->val.len - sep - 1;
+                    if (plen <= 0 || plen >= port_size) {
+                        return -MK_CLIENT_BAD_REQUEST;
+                    }
+                    memcpy(&port, header->val.data + sep + 1, plen);
+                    port[plen] = '\0';
+
+                    val = strtol(port, &endptr, 10);
+                    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+                        || (errno != 0 && val == 0)) {
+                        return -MK_CLIENT_BAD_REQUEST;
+                    }
+
+                    if (endptr == port || *endptr != '\0') {
+                        return -MK_CLIENT_BAD_REQUEST;
+                    }
+
+                    p->header_host_port = val;
+
+                    /* Re-set the Host header value without port */
+                    header->val.len -= sep;
+                }
+            }
+            else if (i == MK_HEADER_CONTENT_LENGTH) {
                 val = strtol(header->val.data, &endptr, 10);
                 if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
                     || (errno != 0 && val == 0)) {
                     return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
                 }
-                if (endptr == header->val.data) {
+                if (endptr == header->val.data || *endptr != '\0') {
                     return -1;
                 }
                 if (val < 0) {
@@ -219,6 +263,7 @@ static inline int mk_http_parser_ok(struct mk_http_request *req,
             return MK_HTTP_PARSER_ERROR;
         }
     }
+
     return MK_HTTP_PARSER_OK;
 }
 
@@ -445,9 +490,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      */
                     ret = header_lookup(p, buffer);
                     if (ret != 0) {
-                        if (ret == -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE) {
-                            mk_http_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE,
-                                          req->session, req);
+                        if (ret < -1) {
+                            mk_http_error(-ret, req->session, req);
                         }
                         return MK_HTTP_PARSER_ERROR;
                     }
