@@ -276,11 +276,14 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     p->status = MK_ST_REQ_PROT_VERSION;
                     parse_next();
                 }
+                else if (buffer[i] == '\r' || buffer[i] == '\n') {
+                    mk_http_error(MK_CLIENT_BAD_REQUEST, req->session, req);
+                    return MK_HTTP_PARSER_ERROR;
+                }
                 break;
             case MK_ST_REQ_PROT_VERSION:                /* Protocol Version */
                 if (buffer[i] == '\r') {
                     mark_end();
-
                     if (field_len() != 8) {
                         mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
                         return MK_HTTP_PARSER_ERROR;
