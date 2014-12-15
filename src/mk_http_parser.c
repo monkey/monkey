@@ -55,23 +55,23 @@ struct row_entry mk_methods_table[] = {
 };
 
 struct row_entry mk_headers_table[] = {
-    {  6, "Accept"              },
-    { 14, "Accept-Charset"      },
-    { 15, "Accept-Encoding"     },
-    { 15, "Accept-Language"     },
-    { 13, "Authorization"       },
-    {  6, "Cookie"              },
-    { 10, "Connection"          },
-    { 14, "Content-Length"      },
-    { 13, "Content-Range"       },
-    { 12, "Content-Type"        },
-    { 17, "If-Modified-Since"   },
-    {  4, "Host"                },
-    { 13, "Last-Modified"       },
-    { 19, "Last-Modified-Since" },
-    {  7, "Referer"             },
-    {  5, "Range"               },
-    { 10, "User-Agent"          }
+    {  6, "accept"              },
+    { 14, "accept-charset"      },
+    { 15, "accept-encoding"     },
+    { 15, "accept-language"     },
+    { 13, "authorization"       },
+    {  6, "cookie"              },
+    { 10, "connection"          },
+    { 14, "content-length"      },
+    { 13, "content-range"       },
+    { 12, "content-type"        },
+    { 17, "if-modified-since"   },
+    {  4, "host"                },
+    { 13, "last-modified"       },
+    { 19, "last-modified-since" },
+    {  7, "referer"             },
+    {  5, "range"               },
+    { 10, "user-agent"          }
 };
 
 /*
@@ -80,13 +80,12 @@ struct row_entry mk_headers_table[] = {
  *
  * If it matches it return zero. Otherwise -1.
  */
-static inline int header_cmp(char *expected, mk_ptr_t *val)
+static inline int header_cmp(const char *expected, char *value, int len)
 {
     int i;
-    int len = val->len;
 
     for (i = 0; i < len; i++) {
-        if (expected[i] != tolower(val->data[i])) {
+        if (expected[i] != tolower(value[i])) {
             return -1;
         }
     }
@@ -146,10 +145,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             continue;
         }
 
-        if (strncmp(buffer + p->header_key + 1,
-                    h->name + 1,
-                    len - 1) == 0) {
-
+        if (header_cmp(h->name + 1, buffer + p->header_key + 1, len - 1) == 0) {
             /* We got a header match, register the header index */
             header = &p->headers[i];
             header->type = i;
@@ -179,13 +175,15 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             else if (i == MK_HEADER_CONNECTION) {
                 /* Check Connection: Keep-Alive */
                 if (header->val.len == sizeof(MK_CONN_KEEP_ALIVE) - 1) {
-                    if (header_cmp(MK_CONN_KEEP_ALIVE, &header->val) == 0) {
+                    if (header_cmp(MK_CONN_KEEP_ALIVE,
+                                   header->val.data, header->val.len ) == 0) {
                         p->header_connection = MK_HTTP_PARSER_CONN_KA;
                     }
                 }
                 /* Check Connection: Close */
                 else if (header->val.len == sizeof(MK_CONN_CLOSE) -1) {
-                    if (header_cmp(MK_CONN_CLOSE, &header->val) == 0) {
+                    if (header_cmp(MK_CONN_CLOSE,
+                                   header->val.data, header->val.len) == 0) {
                         p->header_connection = MK_HTTP_PARSER_CONN_CLOSE;
                     }
                 }
@@ -364,30 +362,31 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      * small range set of probable headers comparison once we catch
                      * a header end.
                      */
-                    switch (buffer[i]) {
-                    case 'A':
+                    int s = tolower(buffer[i]);
+                    switch (s) {
+                    case 'a':
                         p->header_min = MK_HEADER_ACCEPT;
                         p->header_max = MK_HEADER_AUTHORIZATION;
                         break;
-                    case 'C':
+                    case 'c':
                         p->header_min = MK_HEADER_COOKIE;
                         p->header_max = MK_HEADER_CONTENT_TYPE;
                         break;
-                    case 'I':
+                    case 'i':
                         header_scope_eq(p, MK_HEADER_IF_MODIFIED_SINCE);
                         break;
-                    case 'H':
+                    case 'h':
                         header_scope_eq(p, MK_HEADER_HOST);
                         break;
-                    case 'L':
+                    case 'l':
                         p->header_min = MK_HEADER_LAST_MODIFIED;
                         p->header_max = MK_HEADER_LAST_MODIFIED_SINCE;
                         break;
-                    case 'R':
+                    case 'r':
                         p->header_min = MK_HEADER_REFERER;
                         p->header_max = MK_HEADER_RANGE;
                         break;
-                    case 'U':
+                    case 'u':
                         header_scope_eq(p, MK_HEADER_USER_AGENT);
                         break;
                     default:

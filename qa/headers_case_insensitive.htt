@@ -25,8 +25,12 @@ _REQ $HOST $PORT
 __POST / $HTTPVER
 __HOST: $HOST
 __CONNECTION: close
-__CONTENT_TYPE: text/plain
-__CONTENT_LENGTH: AUTO
+__CONTENT-TYPE: text/plain
+__CONTENT-LENGTH: AUTO
 __
 _-This is a test entity body.
+_EXPECT . "HTTP/1.1 200 OK"
+_WAIT
+_CLOSE
+
 END
