@@ -1249,22 +1249,22 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
         page = mk_http_error_page("Bad Request",
-                                           NULL,
-                                           sr->host_conf->host_signature);
+                                  NULL,
+                                  sr->host_conf->host_signature);
         break;
 
     case MK_CLIENT_FORBIDDEN:
         page = mk_http_error_page("Forbidden",
-                                           &sr->uri,
-                                           sr->host_conf->host_signature);
+                                  &sr->uri,
+                                  sr->host_conf->host_signature);
         break;
 
     case MK_CLIENT_NOT_FOUND:
         mk_string_build(&message.data, &message.len,
                         "The requested URL was not found on this server.");
         page = mk_http_error_page("Not Found",
-                                           &message,
-                                           sr->host_conf->host_signature);
+                                  &message,
+                                  sr->host_conf->host_signature);
         mk_ptr_free(&message);
         break;
 
@@ -1272,15 +1272,15 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         mk_string_build(&message.data, &message.len,
                         "The request entity is too large.");
         page = mk_http_error_page("Entity too large",
-                                           &message,
-                                           sr->host_conf->host_signature);
+                                  &message,
+                                  sr->host_conf->host_signature);
         mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_http_error_page("Method Not Allowed",
-                                           &sr->uri,
-                                           sr->host_conf->host_signature);
+                                  &sr->uri,
+                                  sr->host_conf->host_signature);
         break;
 
     case MK_CLIENT_REQUEST_TIMEOUT:
@@ -1289,21 +1289,21 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
     case MK_SERVER_NOT_IMPLEMENTED:
         page = mk_http_error_page("Method Not Implemented",
-                                           &sr->uri,
-                                           sr->host_conf->host_signature);
+                                  &sr->uri,
+                                  sr->host_conf->host_signature);
         break;
 
     case MK_SERVER_INTERNAL_ERROR:
         page = mk_http_error_page("Internal Server Error",
-                                           &sr->uri,
-                                           sr->host_conf->host_signature);
+                                  &sr->uri,
+                                  sr->host_conf->host_signature);
         break;
 
     case MK_SERVER_HTTP_VERSION_UNSUP:
         mk_ptr_reset(&message);
         page = mk_http_error_page("HTTP Version Not Supported",
-                                           &message,
-                                           sr->host_conf->host_signature);
+                                  &message,
+                                  sr->host_conf->host_signature);
         break;
     }
 
