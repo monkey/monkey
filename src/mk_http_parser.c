@@ -219,7 +219,6 @@ static inline int mk_http_parser_ok(struct mk_http_request *req,
             return MK_HTTP_PARSER_ERROR;
         }
     }
-
     return MK_HTTP_PARSER_OK;
 }
 
