@@ -165,7 +165,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 val = strtol(header->val.data, &endptr, 10);
                 if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
                     || (errno != 0 && val == 0)) {
-                    return -1;
+                    return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
                 }
                 if (endptr == header->val.data) {
                     return -1;
@@ -420,6 +420,10 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      */
                     ret = header_lookup(p, buffer);
                     if (ret != 0) {
+                        if (ret == -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE) {
+                            mk_http_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE,
+                                          req->session, req);
+                        }
                         return MK_HTTP_PARSER_ERROR;
                     }
                     parse_next();

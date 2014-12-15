@@ -75,6 +75,8 @@ void mk_http_request_init(struct mk_http_session *session,
     request->stage30_blocked = MK_FALSE;
     request->session = session;
     request->host_conf = mk_list_entry_first(host_list, struct host, _head);
+    request->uri_processed.data = NULL;
+    request->real_path.data = NULL;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
