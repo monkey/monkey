@@ -77,7 +77,7 @@ int mk_conn_read(int socket)
             /* Add the first entry */
             sr = &cs->sr_fixed;
             mk_list_add(&sr->_head, &cs->request_list);
-            mk_http_request_init(sr);
+            mk_http_request_init(cs, sr);
         }
         else {
             sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);

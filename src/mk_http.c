@@ -59,8 +59,11 @@ const mk_ptr_t mk_http_protocol_11_p = mk_ptr_init(MK_HTTP_PROTOCOL_11_STR);
 const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 
 /* Create a memory allocation in order to handle the request data */
-void mk_http_request_init(struct mk_http_request *request)
+void mk_http_request_init(struct mk_http_session *session,
+                          struct mk_http_request *request)
 {
+    struct mk_list *host_list = &config->hosts;
+
     request->status = MK_TRUE;
     request->method = MK_METHOD_UNKNOWN;
     request->file_info.size = -1;
@@ -70,6 +73,8 @@ void mk_http_request_init(struct mk_http_request *request)
     request->fd_is_fdt = MK_FALSE;
     request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
+    request->session = session;
+    request->host_conf = mk_list_entry_first(host_list, struct host, _head);
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
@@ -260,7 +265,7 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
     if (mk_list_is_empty(sr_list) == 0) {
         sr = &cs->sr_fixed;
         memset(sr, 0, sizeof(struct mk_http_request));
-        mk_http_request_init(sr);
+        mk_http_request_init(cs, sr);
         mk_list_add(&sr->_head, &cs->request_list);
     }
     else {

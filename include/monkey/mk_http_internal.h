@@ -142,7 +142,8 @@ struct mk_http_request
     mk_ptr_t query_string;
 
 
-    /* STAGE_30 block flag: in mk_http_init() when the file is not found, it
+    /*
+     * STAGE_30 block flag: in mk_http_init() when the file is not found, it
      * triggers the plugin STAGE_30 to look for a plugin handler. In some
      * cases the plugin would overwrite the real path of the requested file
      * and make Monkey handle the new path for the static file. At this point
@@ -165,6 +166,9 @@ struct mk_http_request
 
     struct host       *host_conf;     /* root vhost config */
     struct host_alias *host_alias;    /* specific vhost matched */
+
+    /* Parent Session */
+    struct mk_http_session *session;
 
     /* Response headers */
     struct response_headers headers;

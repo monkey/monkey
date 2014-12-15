@@ -27,6 +27,7 @@
 
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_parser.h>
+#include <monkey/mk_http_status.h>
 
 #define mark_end()                              \
     p->end = p->i;                              \
@@ -199,6 +200,25 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 }
 
 /*
+ * This function is invoked everytime the parser evaluate the request is
+ * OK. Here we perform some extra validations mostly based on some logic
+ * and protocol requirements according to the data received.
+ */
+static inline int mk_http_parser_ok(struct mk_http_request *req,
+                                    struct mk_http_parser *p) {
+    /* POST checks */
+    if (req->method == MK_METHOD_POST || req->method == MK_METHOD_PUT) {
+        /* validate Content-Length exists */
+        if (p->headers[MK_HEADER_CONTENT_LENGTH].type == 0) {
+            mk_http_error(MK_CLIENT_LENGTH_REQUIRED, req->session, req);
+            return MK_HTTP_PARSER_ERROR;
+        }
+    }
+
+    return MK_HTTP_PARSER_OK;
+}
+
+/*
  * Parse the protocol and point relevant fields, don't take logic decisions
  * based on this, just parse to locate things.
  */
@@ -276,7 +296,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 break;
             case MK_ST_BLOCK_END:
                 if (buffer[i] == '\n') {
-                    return MK_HTTP_PARSER_OK;
+                    return mk_http_parser_ok(req, p);
                 }
                 else {
                     return MK_HTTP_PARSER_ERROR;
@@ -441,13 +461,13 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 p->body_received += (len - i);
 
                 if (p->body_received == p->header_content_length) {
-                    return MK_HTTP_PARSER_OK;
+                    return mk_http_parser_ok(req, p);
                 }
                 else {
                     return MK_HTTP_PARSER_PENDING;
                 }
             }
-            return MK_HTTP_PARSER_OK;
+            return mk_http_parser_ok(req, p);
         }
     }
 
@@ -479,7 +499,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
         if (p->header_content_length > 0) {
             p->body_received += (len - i);
             if (p->header_content_length == p->body_received) {
-                return MK_HTTP_PARSER_OK;
+                return mk_http_parser_ok(req, p);
             }
             else {
                 return MK_HTTP_PARSER_PENDING;
@@ -490,7 +510,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             return MK_HTTP_PARSER_PENDING;
         }
         else if (p->chars == 0) {
-            return MK_HTTP_PARSER_OK;
+            return mk_http_parser_ok(req, p);
         }
         else {
         }
