@@ -64,6 +64,7 @@ void mk_http_request_init(struct mk_http_session *session,
 {
     struct mk_list *host_list = &config->hosts;
 
+
     request->status = MK_TRUE;
     request->method = MK_METHOD_UNKNOWN;
     request->file_info.size = -1;
@@ -77,6 +78,8 @@ void mk_http_request_init(struct mk_http_session *session,
     request->host_conf = mk_list_entry_first(host_list, struct host, _head);
     request->uri_processed.data = NULL;
     request->real_path.data = NULL;
+    request->keep_alive = MK_TRUE;
+    request->close_now = MK_TRUE;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);

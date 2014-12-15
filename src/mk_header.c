@@ -368,4 +368,5 @@ void mk_header_response_reset(struct response_headers *header)
     mk_ptr_reset(&header->content_encoding);
     header->location = NULL;
     header->_extra_rows = NULL;
+    header->allow_methods.len = 0;
 }
