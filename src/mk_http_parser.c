@@ -279,6 +279,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 if (buffer[i] == '\r') {
                     mark_end();
                     if (field_len() != 8) {
+                        mk_http_error(MK_CLIENT_BAD_REQUEST, req->session, req);
                         return MK_HTTP_PARSER_ERROR;
                     }
                     request_set(&req->protocol_p, p, buffer);
