@@ -206,6 +206,13 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
  */
 static inline int mk_http_parser_ok(struct mk_http_request *req,
                                     struct mk_http_parser *p) {
+
+    /* Validate HTTP Version */
+    if (req->protocol == MK_HTTP_PROTOCOL_UNKNOWN) {
+        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
+        return MK_HTTP_PARSER_ERROR;
+    }
+
     /* POST checks */
     if (req->method == MK_METHOD_POST || req->method == MK_METHOD_PUT) {
         /* validate Content-Length exists */
@@ -275,12 +282,16 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         return MK_HTTP_PARSER_ERROR;
                     }
                     request_set(&req->protocol_p, p, buffer);
-                     if (req->protocol_p.data[req->protocol_p.len - 1] == '1') {
+                    if (req->protocol_p.data[req->protocol_p.len - 1] == '1') {
                         req->protocol = MK_HTTP_PROTOCOL_11;
                     }
-                    else {
+                    else if (req->protocol_p.data[req->protocol_p.len - 1] == '0') {
                         req->protocol = MK_HTTP_PROTOCOL_10;
                     }
+                    else {
+                        req->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
+                    }
+
                     p->status = MK_ST_FIRST_FINALIZING;
                     continue;
                 }
