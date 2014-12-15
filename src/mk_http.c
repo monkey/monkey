@@ -64,7 +64,7 @@ void mk_http_request_init(struct mk_http_session *session,
 {
     struct mk_list *host_list = &config->hosts;
 
-
+    request->port = 0;
     request->status = MK_TRUE;
     request->uri.data = NULL;
     request->method = MK_METHOD_UNKNOWN;
