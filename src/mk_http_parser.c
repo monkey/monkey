@@ -259,12 +259,17 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     }
                     request_set(&req->uri, p, buffer);
                     parse_next();
+                    continue;
                 }
                 else if (buffer[i] == '?') {
                     mark_end();
                     request_set(&req->uri, p, buffer);
                     p->status = MK_ST_REQ_QUERY_STRING;
                     parse_next();
+                }
+                else if (buffer[i] == '\r' || buffer[i] == '\n') {
+                    mk_http_error(MK_CLIENT_BAD_REQUEST, req->session, req);
+                    return MK_HTTP_PARSER_ERROR;
                 }
                 break;
             case MK_ST_REQ_QUERY_STRING:                /* Query string */
@@ -278,10 +283,17 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             case MK_ST_REQ_PROT_VERSION:                /* Protocol Version */
                 if (buffer[i] == '\r') {
                     mark_end();
+
                     if (field_len() != 8) {
-                        mk_http_error(MK_CLIENT_BAD_REQUEST, req->session, req);
+                        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
                         return MK_HTTP_PARSER_ERROR;
                     }
+
+                    if (strncmp(buffer + p->start, "HTTP/1.", 7) != 0) {
+                        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
+                        return MK_HTTP_PARSER_ERROR;
+                    }
+
                     request_set(&req->protocol_p, p, buffer);
                     if (req->protocol_p.data[req->protocol_p.len - 1] == '1') {
                         req->protocol = MK_HTTP_PROTOCOL_11;

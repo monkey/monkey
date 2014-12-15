@@ -9,8 +9,7 @@
 #	June 23 2010
 #
 # COMMENTS
-#   Sending a bad request. This request contain double \\ and an
-#   unsupported protocol.
+#   Request without HTTP protocol version
 ################################################################################
 
 
@@ -18,7 +17,7 @@ INCLUDE __CONFIG
 
 CLIENT
 _REQ $HOST $PORT
-__GET /\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  a
+__GET /
 __Connection: close
 __
 _EXPECT . "HTTP/1.1 505 HTTP Version Not Supported"

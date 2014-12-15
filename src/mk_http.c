@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+;/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Server
  *  ==================
@@ -66,7 +66,10 @@ void mk_http_request_init(struct mk_http_session *session,
 
 
     request->status = MK_TRUE;
+    request->uri.data = NULL;
     request->method = MK_METHOD_UNKNOWN;
+    request->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
+    request->connection.len = -1;
     request->file_info.size = -1;
     request->bytes_offset  = 0;
     request->bytes_to_send = -1;
@@ -440,7 +443,7 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
 }
 
 /* Build error page */
-static mk_ptr_t *mk_http_error_page(char *title, mk_ptr_t message,
+static mk_ptr_t *mk_http_error_page(char *title, mk_ptr_t *message,
                                     char *signature)
 {
     char *temp;
@@ -449,11 +452,19 @@ static mk_ptr_t *mk_http_error_page(char *title, mk_ptr_t message,
     p = mk_mem_malloc(sizeof(mk_ptr_t));
     p->data = NULL;
 
-    temp = mk_ptr_to_buf(message);
+    if (message) {
+        temp = mk_ptr_to_buf(*message);
+    }
+    else {
+        temp = "";
+    }
+
     mk_string_build(&p->data, &p->len,
                     MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
 
-    mk_mem_free(temp);
+    if (message) {
+        mk_mem_free(temp);
+    }
 
     return p;
 }
@@ -1238,13 +1249,13 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
         page = mk_http_error_page("Bad Request",
-                                           sr->uri,
+                                           NULL,
                                            sr->host_conf->host_signature);
         break;
 
     case MK_CLIENT_FORBIDDEN:
         page = mk_http_error_page("Forbidden",
-                                           sr->uri,
+                                           &sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
@@ -1252,7 +1263,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         mk_string_build(&message.data, &message.len,
                         "The requested URL was not found on this server.");
         page = mk_http_error_page("Not Found",
-                                           message,
+                                           &message,
                                            sr->host_conf->host_signature);
         mk_ptr_free(&message);
         break;
@@ -1261,14 +1272,14 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         mk_string_build(&message.data, &message.len,
                         "The request entity is too large.");
         page = mk_http_error_page("Entity too large",
-                                           message,
+                                           &message,
                                            sr->host_conf->host_signature);
         mk_ptr_free(&message);
         break;
 
     case MK_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_http_error_page("Method Not Allowed",
-                                           sr->uri,
+                                           &sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
@@ -1278,20 +1289,20 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
     case MK_SERVER_NOT_IMPLEMENTED:
         page = mk_http_error_page("Method Not Implemented",
-                                           sr->uri,
+                                           &sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
     case MK_SERVER_INTERNAL_ERROR:
         page = mk_http_error_page("Internal Server Error",
-                                           sr->uri,
+                                           &sr->uri,
                                            sr->host_conf->host_signature);
         break;
 
     case MK_SERVER_HTTP_VERSION_UNSUP:
         mk_ptr_reset(&message);
         page = mk_http_error_page("HTTP Version Not Supported",
-                                           message,
+                                           &message,
                                            sr->host_conf->host_signature);
         break;
     }
