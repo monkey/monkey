@@ -149,6 +149,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
     char *endptr;
 
     struct mk_http_header *header;
+    struct mk_http_header *header_extra;
     struct row_entry *h;
 
     len = (p->header_sep - p->header_key);
@@ -238,7 +239,22 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             return 0;
         }
     }
-    return 0;
+
+    /*
+     * The header_lookup did not match any known header, so we register this
+     * entry into the headers_extra array.
+     */
+    if (p->headers_extra_count < MK_HEADER_EXTRA_SIZE) {
+        header_extra = &p->headers_extra[p->headers_extra_count];
+        header_extra->key.data = buffer + p->header_key;
+        header_extra->key.len  = len;
+        header_extra->val.data = buffer + p->header_val;
+        header_extra->val.len  = p->end - p->header_val;
+        p->headers_extra_count++;
+        return 0;
+    }
+
+    return -1;
 }
 
 /*

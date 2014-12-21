@@ -35,6 +35,8 @@
 #define MK_HTTP_PARSER_CONN_KA       1
 #define MK_HTTP_PARSER_CONN_CLOSE    2
 
+#define MK_HEADER_EXTRA_SIZE         8
+
 /* Request levels
  * ==============
  *
@@ -157,7 +159,14 @@ struct mk_http_parser {
     int header_min;
     int header_max;
 
+    int headers_extra_count;
+
+    /* Known headers */
     struct mk_http_header headers[MK_HEADER_SIZEOF];
+
+    /* Extra headers */
+    struct mk_http_header headers_extra[MK_HEADER_EXTRA_SIZE];
+
 } __attribute__ ((aligned (64)));
 
 #ifdef HTTP_STANDALONE
@@ -245,7 +254,6 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
     return 0;
 }
 #endif /* HTTP_STANDALONE */
-
 
 static inline void mk_http_parser_init(struct mk_http_parser *p)
 {
