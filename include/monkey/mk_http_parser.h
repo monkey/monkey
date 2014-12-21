@@ -274,6 +274,7 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     p->header_max = -1;
     p->header_content_length = -1;
     p->header_host_port = 0;
+    p->headers_extra_count = 0;
 }
 
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
