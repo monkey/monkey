@@ -106,6 +106,7 @@ enum mk_request_headers {
     MK_HEADER_LAST_MODIFIED_SINCE   ,
     MK_HEADER_REFERER               ,
     MK_HEADER_RANGE                 ,
+    MK_HEADER_UPGRADE               ,
     MK_HEADER_USER_AGENT            ,
     MK_HEADER_SIZEOF
 };

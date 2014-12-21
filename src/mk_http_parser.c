@@ -71,6 +71,7 @@ struct row_entry mk_headers_table[] = {
     { 19, "last-modified-since" },
     {  7, "referer"             },
     {  5, "range"               },
+    {  7, "upgrade"             },
     { 10, "user-agent"          }
 };
 
@@ -450,7 +451,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->header_max = MK_HEADER_RANGE;
                         break;
                     case 'u':
-                        header_scope_eq(p, MK_HEADER_USER_AGENT);
+                        p->header_min = MK_HEADER_UPGRADE;
+                        p->header_max = MK_HEADER_USER_AGENT;
                         break;
                     default:
                         p->header_key = -1;
