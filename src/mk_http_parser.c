@@ -233,6 +233,13 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                         p->header_connection = MK_HTTP_PARSER_CONN_CLOSE;
                     }
                 }
+                /* Check Connection: Upgrade */
+                else if (header->val.len == sizeof(MK_CONN_UPGRADE) -1) {
+                    if (header_cmp(MK_CONN_UPGRADE,
+                                   header->val.data, header->val.len) == 0) {
+                        p->header_connection = MK_HTTP_PARSER_CONN_UPGRADE;
+                    }
+                }
                 else {
                     p->header_connection = MK_HTTP_PARSER_CONN_UNKNOWN;
                 }

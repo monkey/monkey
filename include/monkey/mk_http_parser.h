@@ -34,6 +34,7 @@
 #define MK_HTTP_PARSER_CONN_UNKNOWN -1
 #define MK_HTTP_PARSER_CONN_KA       1
 #define MK_HTTP_PARSER_CONN_CLOSE    2
+#define MK_HTTP_PARSER_CONN_UPGRADE  3
 
 #define MK_HEADER_EXTRA_SIZE         8
 
@@ -116,6 +117,7 @@ enum mk_request_headers {
  */
 #define MK_CONN_KEEP_ALIVE     "keep-alive"
 #define MK_CONN_CLOSE          "close"
+#define MK_CONN_UPGRADE        "upgrade"
 
 struct mk_http_header {
     int type;
