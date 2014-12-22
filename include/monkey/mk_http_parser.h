@@ -20,6 +20,8 @@
 #ifndef MK_HTTP_PARSER_H
 #define MK_HTTP_PARSER_H
 
+#include <ctype.h>
+
 #include <monkey/mk_memory.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_internal.h>
@@ -101,18 +103,22 @@ enum mk_request_headers {
     MK_HEADER_CONTENT_LENGTH        ,
     MK_HEADER_CONTENT_RANGE         ,
     MK_HEADER_CONTENT_TYPE          ,
-    MK_HEADER_IF_MODIFIED_SINCE     ,
     MK_HEADER_HOST                  ,
+    MK_HEADER_IF_MODIFIED_SINCE     ,
     MK_HEADER_LAST_MODIFIED         ,
     MK_HEADER_LAST_MODIFIED_SINCE   ,
-    MK_HEADER_REFERER               ,
     MK_HEADER_RANGE                 ,
+    MK_HEADER_REFERER               ,
     MK_HEADER_UPGRADE               ,
     MK_HEADER_USER_AGENT            ,
-    MK_HEADER_SIZEOF
+    MK_HEADER_SIZEOF                ,
+
+    /* used by the core for custom headers */
+    MK_HEADER_OTHER
 };
 
-/* Expected Header values that are used to take logic
+/*
+ * Expected Header values that are used to take logic
  * decision.
  */
 #define MK_CONN_KEEP_ALIVE     "keep-alive"

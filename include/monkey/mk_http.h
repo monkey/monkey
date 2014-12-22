@@ -194,5 +194,7 @@ void mk_http_request_free_list(struct mk_http_session *cs);
 void mk_http_request_ka_next(struct mk_http_session *cs);
 void mk_http_request_init(struct mk_http_session *session,
                           struct mk_http_request *request);
+struct mk_http_header *mk_http_header_get(int name, struct mk_http_request *req,
+                                          const char *key, unsigned int len);
 
 #endif

@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <stdint.h>
 #include <limits.h>
-#include <ctype.h>
 
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_parser.h>
@@ -65,12 +64,12 @@ struct row_entry mk_headers_table[] = {
     { 14, "content-length"      },
     { 13, "content-range"       },
     { 12, "content-type"        },
-    { 17, "if-modified-since"   },
     {  4, "host"                },
+    { 17, "if-modified-since"   },
     { 13, "last-modified"       },
     { 19, "last-modified-since" },
-    {  7, "referer"             },
     {  5, "range"               },
+    {  7, "referer"             },
     {  7, "upgrade"             },
     { 10, "user-agent"          }
 };
@@ -87,26 +86,6 @@ static inline int str_searchr(char *buf, char c, int len)
 
     return -1;
 }
-
-/*
- * expected: a known & expected value in lowercase
- * value   : mk_ptr_t points the header value
- *
- * If it matches it return zero. Otherwise -1.
- */
-static inline int header_cmp(const char *expected, char *value, int len)
-{
-    int i;
-
-    for (i = 0; i < len; i++) {
-        if (expected[i] != tolower(value[i])) {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 
 static inline int method_lookup(struct mk_http_request *req,
                                 struct mk_http_parser *p, char *buffer)
@@ -142,12 +121,33 @@ static inline void request_set(mk_ptr_t *ptr, struct mk_http_parser *p, char *bu
     ptr->len  = field_len();
 }
 
+/*
+ * expected: a known & expected value in lowercase
+ * value   : the expected string value in the header
+ * len     : the value string length.
+ *
+ * If it matches it return zero. Otherwise -1.
+ */
+static inline int header_cmp(const char *expected, char *value, int len)
+{
+    int i;
+
+    for (i = 0; i < len; i++) {
+        if (expected[i] != tolower(value[i])) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
     long val;
     char *endptr;
+    char *tmp;
 
     struct mk_http_header *header;
     struct mk_http_header *header_extra;
@@ -222,7 +222,8 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 /* Check Connection: Keep-Alive */
                 if (header->val.len == sizeof(MK_CONN_KEEP_ALIVE) - 1) {
                     if (header_cmp(MK_CONN_KEEP_ALIVE,
-                                   header->val.data, header->val.len ) == 0) {
+                                   header->val.data,
+                                   header->val.len ) == 0) {
                         p->header_connection = MK_HTTP_PARSER_CONN_KA;
                     }
                 }
@@ -254,11 +255,18 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
      */
     if (p->headers_extra_count < MK_HEADER_EXTRA_SIZE) {
         header_extra = &p->headers_extra[p->headers_extra_count];
-        header_extra->key.data = buffer + p->header_key;
+        header_extra->key.data = tmp = buffer + p->header_key;
+
+        /* Transform the header key string to lowercase */
+        for (i = 0; i < len; i++) {
+            tmp[i] = tolower(tmp[i]);
+        }
+
         header_extra->key.len  = len;
         header_extra->val.data = buffer + p->header_val;
         header_extra->val.len  = p->end - p->header_val;
         p->headers_extra_count++;
+
         return 0;
     }
 
@@ -443,19 +451,19 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->header_min = MK_HEADER_COOKIE;
                         p->header_max = MK_HEADER_CONTENT_TYPE;
                         break;
-                    case 'i':
-                        header_scope_eq(p, MK_HEADER_IF_MODIFIED_SINCE);
-                        break;
                     case 'h':
                         header_scope_eq(p, MK_HEADER_HOST);
+                        break;
+                    case 'i':
+                        header_scope_eq(p, MK_HEADER_IF_MODIFIED_SINCE);
                         break;
                     case 'l':
                         p->header_min = MK_HEADER_LAST_MODIFIED;
                         p->header_max = MK_HEADER_LAST_MODIFIED_SINCE;
                         break;
                     case 'r':
-                        p->header_min = MK_HEADER_REFERER;
-                        p->header_max = MK_HEADER_RANGE;
+                        p->header_min = MK_HEADER_RANGE;
+                        p->header_max = MK_HEADER_REFERER;
                         break;
                     case 'u':
                         p->header_min = MK_HEADER_UPGRADE;

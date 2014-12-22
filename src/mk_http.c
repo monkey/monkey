@@ -1532,3 +1532,38 @@ void mk_http_request_ka_next(struct mk_http_session *cs)
     mk_list_add(&cs->request_incomplete, cs_incomplete);
     mk_http_parser_init(&cs->parser);
 }
+
+/*
+ * Lookup a known header or a non-known header. For unknown headers
+ * set the 'key' value wth a lowercase string
+ */
+struct mk_http_header *mk_http_header_get(int name, struct mk_http_request *req,
+                                          const char *key, unsigned int len)
+{
+    int i;
+    struct mk_http_parser *parser = &req->session->parser;
+    struct mk_http_header *header;
+
+    /* Known header */
+    if (name >= 0 && name < MK_HEADER_SIZEOF) {
+        return &parser->headers[name];
+    }
+
+    /* Check if want to retrieve a custom header */
+    if (name == MK_HEADER_OTHER) {
+        /* Iterate over the extra headers identified by the parser */
+        for (i = 0; i < parser->headers_extra_count; i++) {
+            header = &parser->headers_extra[i];
+            if (header->key.len != len) {
+                continue;
+            }
+
+            if (strncmp(header->key.data, key, len) == 0) {
+                return header;
+            }
+        }
+        return NULL;
+    }
+
+    return NULL;
+}

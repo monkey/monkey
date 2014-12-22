@@ -226,7 +226,8 @@ struct plugin_api
 
     /* header */
     int  (*header_send) (int, struct mk_http_session *, struct mk_http_request *);
-    //mk_ptr_t (*header_get) (struct headers_toc *, const char *key_name, int key_len);
+    struct mk_http_header *(*header_get) (int, struct mk_http_request *,
+                                          const char *, unsigned int);
     int  (*header_add) (struct mk_http_request *, char *row, int len);
     void (*header_set_http_status) (struct mk_http_request *, int);
 
