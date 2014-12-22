@@ -98,6 +98,7 @@ enum mk_request_headers {
     MK_HEADER_ACCEPT_ENCODING       ,
     MK_HEADER_ACCEPT_LANGUAGE       ,
     MK_HEADER_AUTHORIZATION         ,
+    MK_HEADER_CACHE_CONTROL         ,
     MK_HEADER_COOKIE                ,
     MK_HEADER_CONNECTION            ,
     MK_HEADER_CONTENT_LENGTH        ,

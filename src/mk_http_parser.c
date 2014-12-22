@@ -59,6 +59,7 @@ struct row_entry mk_headers_table[] = {
     { 15, "accept-encoding"     },
     { 15, "accept-language"     },
     { 13, "authorization"       },
+    { 13, "cache-control"       },
     {  6, "cookie"              },
     { 10, "connection"          },
     { 14, "content-length"      },
@@ -448,7 +449,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->header_max = MK_HEADER_AUTHORIZATION;
                         break;
                     case 'c':
-                        p->header_min = MK_HEADER_COOKIE;
+                        p->header_min = MK_HEADER_CACHE_CONTROL;
                         p->header_max = MK_HEADER_CONTENT_TYPE;
                         break;
                     case 'h':
