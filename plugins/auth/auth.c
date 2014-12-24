@@ -121,9 +121,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     mk_auth_conf_init_users_list();
 
     /* Set HTTP headers key */
-    auth_header_request.data = MK_AUTH_HEADER_REQUEST;
-    auth_header_request.len  = sizeof(MK_AUTH_HEADER_REQUEST) - 1;
-
     auth_header_basic.data = MK_AUTH_HEADER_BASIC;
     auth_header_basic.len  = sizeof(MK_AUTH_HEADER_BASIC) - 1;
 
@@ -145,17 +142,17 @@ void _mkp_core_thctx()
 
 /* Object handler */
 int _mkp_stage_30(struct plugin *plugin,
-                  struct client_session *cs,
-                  struct session_request *sr)
+                  struct mk_http_session *cs,
+                  struct mk_http_request *sr)
 {
     int val;
     short int is_restricted = MK_FALSE;
-    mk_ptr_t res;
-    (void) plugin;
     struct mk_list *vh_head;
     struct mk_list *loc_head;
     struct vhost *vh_entry = NULL;
     struct location *loc_entry;
+    struct mk_http_header *header;
+    (void) plugin;
 
     PLUGIN_TRACE("[FD %i] Handler received request");
 
@@ -196,13 +193,13 @@ int _mkp_stage_30(struct plugin *plugin,
     }
 
     /* Check authorization header */
-    res = mk_api->header_get(&sr->headers_toc,
-                             auth_header_request.data,
-                             auth_header_request.len);
+    header = mk_api->header_get(MK_HEADER_AUTHORIZATION,
+                                sr, NULL, 0);
 
-    if (res.data && res.len > 0) {
+    if (header) {
         /* Validate user */
-        val = mk_auth_validate_user(loc_entry->users, res.data, res.len);
+        val = mk_auth_validate_user(loc_entry->users,
+                                    header->val.data, header->val.len);
         if (val == 0) {
             /* user validated, success */
             PLUGIN_TRACE("[FD %i] user validated!", cs->socket);

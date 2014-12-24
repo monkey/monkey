@@ -23,7 +23,6 @@
 #include <monkey/mk_api.h>
 
 /* Header stuff */
-#define MK_AUTH_HEADER_REQUEST   "Authorization:"
 #define MK_AUTH_HEADER_BASIC     "Basic "
 #define MK_AUTH_HEADER_TITLE     "WWW-Authenticate: Basic realm=\"%s\""
 
