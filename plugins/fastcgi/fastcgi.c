@@ -53,7 +53,7 @@ static pthread_key_t fcgi_local_context;
 
 #define UNUSED_VARIABLE(var) (void)(var)
 
-static int fcgi_handle_cgi_header(struct session_request *sr,
+static int fcgi_handle_cgi_header(struct mk_http_request *sr,
                                   char *entry,
                                   size_t len)
 {
@@ -99,7 +99,7 @@ static int fcgi_handle_cgi_header(struct session_request *sr,
 	return -1;
 }
 
-static size_t fcgi_parse_cgi_headers(struct session_request *sr,
+static size_t fcgi_parse_cgi_headers(struct mk_http_request *sr,
                                      struct chunk_iov *iov)
 {
 	size_t cnt = 0, entry_len, i, len = iov->io[0].iov_len;
@@ -656,8 +656,8 @@ static int regex_match_location(const struct fcgi_config *config,
 	return -1;
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
-                  struct session_request *sr)
+int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
+                  struct mk_http_request *sr)
 {
 	char *uri = NULL;
 	struct fcgi_context *cntx;

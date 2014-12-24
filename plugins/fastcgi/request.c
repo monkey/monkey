@@ -162,10 +162,10 @@ int request_get_flag(const struct request *req, enum request_flags flag)
 }
 
 int request_assign(struct request *req,
-	int fd,
-	uint16_t clock_id,
-	struct client_session *cs,
-	struct session_request *sr)
+                   int fd,
+                   uint16_t clock_id,
+                   struct mk_http_session *cs,
+                   struct mk_http_request *sr)
 {
 	check_debug(!request_set_state(req, REQ_ASSIGNED),
 		"Failed to set request state.");

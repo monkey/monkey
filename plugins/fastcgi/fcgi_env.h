@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 size_t fcgi_env_write(uint8_t *ptr,
-		const size_t len,
-		struct client_session *cs,
-		struct session_request *sr);
+                      const size_t len,
+                      struct mk_http_session *cs,
+                      struct mk_http_request *sr);
 
 #endif // _FCGI_ENV_H_
