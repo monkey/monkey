@@ -71,8 +71,8 @@ struct cgi_request {
 
     struct mk_list _head;
 
-    struct session_request *sr;
-    struct client_session *cs;
+    struct mk_http_request *sr;
+    struct mk_http_session *cs;
 
     unsigned int in_len;
 
@@ -91,8 +91,9 @@ extern struct cgi_request **requests_by_socket;
 
 int swrite(const int fd, const void *buf, const size_t count);
 
-struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *sr,
-					struct client_session *cs);
+struct cgi_request *cgi_req_create(int fd, int socket,
+                                   struct mk_http_request *sr,
+                                   struct mk_http_session *cs);
 void cgi_req_add(struct cgi_request *r);
 int cgi_req_del(struct cgi_request *r);
 

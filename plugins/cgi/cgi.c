@@ -60,8 +60,8 @@ static void cgi_write_post(void *p)
 
 static int do_cgi(const char *const __restrict__ file,
                   const char *const __restrict__ url,
-                  struct session_request *const sr,
-                  struct client_session *const cs,
+                  struct mk_http_request *const sr,
+                  struct mk_http_session *const cs,
                   struct cgi_match_t *match,
                   struct plugin *const plugin)
 {
@@ -441,8 +441,9 @@ void _mkp_exit()
     mk_api->mem_free(requests_by_socket);
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
-                  struct session_request *sr)
+int _mkp_stage_30(struct plugin *plugin,
+                  struct mk_http_session *cs,
+                  struct mk_http_request *sr)
 {
     unsigned int i;
     char url[PATHLEN];

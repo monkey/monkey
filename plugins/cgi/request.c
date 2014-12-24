@@ -20,8 +20,9 @@
 
 #include "cgi.h"
 
-struct cgi_request *cgi_req_create(int fd, int socket, struct session_request *sr,
-					struct client_session *cs)
+struct cgi_request *cgi_req_create(int fd, int socket,
+                                   struct mk_http_request *sr,
+                                   struct mk_http_session *cs)
 {
     struct cgi_request *newcgi = mk_api->mem_alloc_z(sizeof(struct cgi_request));
     if (!newcgi) return NULL;
