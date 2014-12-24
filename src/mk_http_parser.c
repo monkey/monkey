@@ -172,6 +172,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             header->key.len  = len;
             header->val.data = buffer + p->header_val;
             header->val.len  = p->end - p->header_val;
+            mk_list_add(&header->_head, &p->header_list);
 
             if (i == MK_HEADER_HOST) {
                 /* Handle a possible port number in the Host header */
@@ -266,6 +267,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
         header_extra->key.len  = len;
         header_extra->val.data = buffer + p->header_val;
         header_extra->val.len  = p->end - p->header_val;
+        mk_list_add(&header_extra->_head, &p->header_list);
         p->headers_extra_count++;
 
         return 0;

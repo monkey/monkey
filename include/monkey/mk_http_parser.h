@@ -127,9 +127,20 @@ enum mk_request_headers {
 #define MK_CONN_UPGRADE        "upgrade"
 
 struct mk_http_header {
+    /* The header type/name, e.g: MK_HEADER_CONTENT_LENGTH */
     int type;
+
+    /* Reference the header Key name, e.g: 'Content-Lentth' */
     mk_ptr_t key;
+
+    /* Reference the header Value, e/g: '123456' */
     mk_ptr_t val;
+
+    /*
+     * Link to head list, it's used to reference this node and
+     * iterate it as a linked list
+     */
+    struct mk_list _head;
 };
 
 /* This structure is the 'Parser Context' */
@@ -176,6 +187,9 @@ struct mk_http_parser {
 
     /* Extra headers */
     struct mk_http_header headers_extra[MK_HEADER_EXTRA_SIZE];
+
+    /* Head of linked list for all headers found in the request */
+    struct mk_list header_list;
 
 } __attribute__ ((aligned (64)));
 
@@ -282,6 +296,9 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     p->header_content_length = -1;
     p->header_host_port = 0;
     p->headers_extra_count = 0;
+
+    /* init list header */
+    mk_list_init(&p->header_list);
 }
 
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
