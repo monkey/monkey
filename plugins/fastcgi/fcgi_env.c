@@ -30,24 +30,27 @@
 #include "protocol.h"
 
 #define __write_param(env, len, pos, key, value) do { \
-		check(len - pos > 8 + key.len + value.len, "Out of memory."); \
-		pos += fcgi_param_write(env + pos, key, value); \
+		check(len - pos > 8 + key.len + value.len, "Out of memory.");   \
+		pos += fcgi_param_write(env + pos, key, value);                 \
 	} while (0)
 
 size_t fcgi_env_write(uint8_t *ptr,
-		const size_t len,
-		struct mk_http_session *cs,
-		struct mk_http_request *sr)
+                      const size_t len,
+                      struct mk_http_session *cs,
+                      struct mk_http_request *sr)
 {
+    unsigned int i;
 	mk_ptr_t key, value;
-	char buffer[128];
+	char buffer[256];
 	char *tmpuri = NULL;
 	size_t pos = 0;
-	struct sockaddr_in addr;
 	socklen_t addr_len;
-	unsigned int i, j;
-	char *hinit, *hend;
-	size_t hlen;
+	struct sockaddr_in addr;
+    struct mk_http_parser *parser;
+    struct mk_http_header *header;
+    struct mk_list *head;
+
+    parser = &cs->parser;
 
 	mk_api->pointer_set(&key,   "GATEWAY_INTERFACE");
 	mk_api->pointer_set(&value, "CGI/1.1");
@@ -76,7 +79,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 
 	addr_len = sizeof(addr);
 	if (!getsockname(cs->socket, (struct sockaddr *)&addr, &addr_len)) {
-		if (!inet_ntop(AF_INET, &addr.sin_addr, buffer, 128)) {
+		if (!inet_ntop(AF_INET, &addr.sin_addr, buffer, 256)) {
 			log_warn("Failed to get bound address.");
 			buffer[0] = '\0';
 		}
@@ -84,7 +87,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
 
-		snprintf(buffer, 128, "%d", ntohs(addr.sin_port));
+		snprintf(buffer, 256, "%d", ntohs(addr.sin_port));
 		mk_api->pointer_set(&key,   "SERVER_PORT");
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
@@ -107,12 +110,12 @@ size_t fcgi_env_write(uint8_t *ptr,
 
 	addr_len = sizeof(addr);
 	if (!getpeername(cs->socket, (struct sockaddr *)&addr, &addr_len)) {
-		inet_ntop(AF_INET, &addr.sin_addr, buffer, 128);
+		inet_ntop(AF_INET, &addr.sin_addr, buffer, 256);
 		mk_api->pointer_set(&key,   "REMOTE_ADDR");
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
 
-		snprintf(buffer, 128, "%d", ntohs(addr.sin_port));
+		snprintf(buffer, 256, "%d", ntohs(addr.sin_port));
 		mk_api->pointer_set(&key,   "REMOTE_PORT");
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
@@ -145,7 +148,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 
 	if (sr->content_length > 0) {
 		mk_api->pointer_set(&key,   "CONTENT_LENGTH");
-		snprintf(buffer, 128, "%d", sr->content_length);
+		snprintf(buffer, 256, "%d", sr->content_length);
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
 	}
@@ -158,28 +161,24 @@ size_t fcgi_env_write(uint8_t *ptr,
 
 	strcpy(buffer, "HTTP_");
 
-	for (i = 0; i < (unsigned int)sr->headers_toc.length; i++) {
-		hinit = sr->headers_toc.rows[i].init;
-		hend = sr->headers_toc.rows[i].end;
-		hlen = hend - hinit;
+    mk_list_foreach(head, &parser->header_list) {
+        header = mk_list_entry(head, struct mk_http_header, _head);
 
-		for (j = 0; j < hlen; j++) {
-			if (hinit[j] == ':') {
-				break;
-			}
-			else if (hinit[j] != '-') {
-				buffer[5 + j] = toupper(hinit[j]);
-			}
+        for (i = 0; i < header->key.len; i++) {
+            if (header->key.data[i] != '-') {
+                buffer[5 + i] = toupper(header->key.data[i]);
+            }
 			else {
-				buffer[5 + j] = '_';
+				buffer[5 + i] = '_';
 			}
-		}
+        }
 
-		key = (mk_ptr_t){.len = 5 + j, .data = buffer};
-		value = (mk_ptr_t){.len = hlen - j - 2, .data = hinit + j + 2};
+		key = (mk_ptr_t){.len = 5 + i, .data = buffer};
+		value = (mk_ptr_t){.len = header->val.len, .data = header->val.data};
 
 		__write_param(ptr, len, pos, key, value);
-	}
+
+    }
 
 	if (tmpuri) mk_api->mem_free(tmpuri);
 	return pos;
