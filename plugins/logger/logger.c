@@ -496,7 +496,7 @@ void _mkp_core_thctx()
     pthread_setspecific(cache_ip_str, (void *) ip_str);
 }
 
-int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
+int _mkp_stage_40(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int i, http_status, ret, tmp;
     int array_len = ARRAY_SIZE(response_codes);
@@ -589,7 +589,7 @@ int _mkp_stage_40(struct client_session *cs, struct session_request *sr)
                               mk_logger_iov_space, MK_IOV_NOT_FREE_BUF);
 
         /* Content Length */
-        if (sr->method != MK_HTTP_METHOD_HEAD) {
+        if (sr->method != MK_METHOD_HEAD) {
             /* Int to mk_ptr_t */
             content_length = pthread_getspecific(cache_content_length);
 
