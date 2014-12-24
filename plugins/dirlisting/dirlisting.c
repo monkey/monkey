@@ -597,7 +597,8 @@ static int mk_dirhtml_entry_cmp(const void *a, const void *b)
     return strcasecmp((*f_a)->name, (*f_b)->name);
 }
 
-static int mk_dirhtml_send(int fd, struct session_request *sr, struct mk_iov *data)
+static int mk_dirhtml_send(int fd,
+                           struct mk_http_request *sr, struct mk_iov *data)
 {
     int n;
     unsigned long len;
@@ -639,7 +640,7 @@ static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
     mk_api->mem_free(toc);
 }
 
-int mk_dirhtml_init(struct client_session *cs, struct session_request *sr)
+int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     DIR *dir;
     unsigned int i = 0;
@@ -799,8 +800,8 @@ void _mkp_exit()
 {
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct client_session *cs,
-                  struct session_request *sr)
+int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
+                  struct mk_http_request *sr)
 {
     (void) plugin;
 
