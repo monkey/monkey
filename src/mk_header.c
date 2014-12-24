@@ -37,6 +37,19 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 
+
+#define MK_HEADER_SHORT_DATE       "Date: "
+#define MK_HEADER_SHORT_LOCATION   "Location: "
+#define MK_HEADER_SHORT_CT         "Content-Type: "
+#define MK_HEADER_ACCEPT_RANGES    "Accept-Ranges: bytes" MK_CRLF
+#define MK_HEADER_ALLOWED_METHODS  "Allow: "
+#define MK_HEADER_CONN_KA          "Connection: Keep-Alive" MK_CRLF
+#define MK_HEADER_CONN_CLOSE       "Connection: Close" MK_CRLF
+#define MK_HEADER_CONTENT_LENGTH   "Content-Length: "
+#define MK_HEADER_CONTENT_ENCODING "Content-Encoding: "
+#define MK_HEADER_TE_CHUNKED       "Transfer-Encoding: Chunked" MK_CRLF
+#define MK_HEADER_LAST_MODIFIED    "Last-Modified: "
+
 const mk_ptr_t mk_header_short_date = mk_ptr_init(MK_HEADER_SHORT_DATE);
 const mk_ptr_t mk_header_short_location = mk_ptr_init(MK_HEADER_SHORT_LOCATION);
 const mk_ptr_t mk_header_short_ct = mk_ptr_init(MK_HEADER_SHORT_CT);

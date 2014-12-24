@@ -197,9 +197,8 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Content Length */
-    /* FIXME! */
-    header = &cs->parser.headers[7];
-    if (header->type == 7) {
+    header = &cs->parser.headers[MK_HEADER_CONTENT_LENGTH];
+    if (header->type == MK_HEADER_CONTENT_LENGTH) {
         sr->_content_length.data = header->val.data;
         sr->_content_length.len  = header->val.len;
     }
