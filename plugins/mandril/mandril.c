@@ -214,7 +214,7 @@ static int mk_security_check_url(mk_ptr_t url)
     return 0;
 }
 
-mk_ptr_t parse_referer_host(mk_ptr_t ref)
+mk_ptr_t parse_referer_host(struct mk_http_header *header)
 {
     unsigned int i, beginHost, endHost;
     mk_ptr_t host;
@@ -223,23 +223,23 @@ mk_ptr_t parse_referer_host(mk_ptr_t ref)
     host.len = 0;
 
     // Find end of "protocol://"
-    for (i = 0; i < ref.len && !(ref.data[i] == '/' && ref.data[i+1] == '/'); i++);
-    if (i == ref.len) {
+    for (i = 0; i < header->val.len && !(header->val.data[i] == '/' && header->val.data[i+1] == '/'); i++);
+    if (i == header->val.len) {
         goto error;
     }
     beginHost = i + 2;
 
     // Find end of any "user:password@"
-    for (; i < ref.len && ref.data[i] != '@'; i++);
-    if (i < ref.len) {
+    for (; i < header->val.len && header->val.data[i] != '@'; i++);
+    if (i < header->val.len) {
         beginHost = i + 1;
     }
 
     // Find end of "host", (beginning of :port or /path)
-    for (i = beginHost; i < ref.len && ref.data[i] != ':' && ref.data[i] != '/'; i++);
+    for (i = beginHost; i < header->val.len && header->val.data[i] != ':' && header->val.data[i] != '/'; i++);
     endHost = i;
 
-    host.data = ref.data + beginHost;
+    host.data = header->val.data + beginHost;
     host.len = endHost - beginHost;
     return host;
 error:
@@ -249,7 +249,7 @@ error:
 }
 
 static int mk_security_check_hotlink(mk_ptr_t url, mk_ptr_t host,
-        mk_ptr_t referer)
+                                     struct mk_http_header *referer)
 {
     mk_ptr_t ref_host = parse_referer_host(referer);
     unsigned int domains_matched = 0;
@@ -343,12 +343,12 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
 }
 
 int _mkp_stage_30(struct plugin *p,
-        struct client_session *cs,
-        struct session_request *sr)
+        struct mk_http_session *cs,
+        struct mk_http_request *sr)
 {
-    mk_ptr_t referer;
     (void) p;
     (void) cs;
+    struct mk_http_header *header;
 
     PLUGIN_TRACE("[FD %i] Mandril validating URL", cs->socket);
 
@@ -359,8 +359,9 @@ int _mkp_stage_30(struct plugin *p,
     }
 
     PLUGIN_TRACE("[FD %d] Mandril validating hotlinking", cs->socket);
-    referer = mk_api->header_get(&sr->headers_toc, "Referer", strlen("Referer"));
-    if (mk_security_check_hotlink(sr->uri_processed, sr->host, referer) < 0) {
+
+    header = mk_api->header_get(MK_HEADER_REFERER, sr, NULL, 0);
+    if (mk_security_check_hotlink(sr->uri_processed, sr->host, header) < 0) {
         PLUGIN_TRACE("[FD %i] Close connection, deny hotlinking.", cs->socket);
         mk_api->header_set_http_status(sr, MK_CLIENT_FORBIDDEN);
         return MK_PLUGIN_RET_CLOSE_CONX;
