@@ -144,6 +144,8 @@ int mk_header_send(int fd, struct mk_http_session *cs,
     char *buffer = 0;
     mk_ptr_t response;
     struct response_headers *sh;
+    struct mk_list *head;
+    struct custom_header *entry;
     struct mk_iov *iov;
 
     sh = &sr->headers;
@@ -337,6 +339,15 @@ int mk_header_send(int fd, struct mk_http_session *cs,
                             (sh->real_length - 1), sh->real_length);
             mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
         }
+    }
+
+    /* Custom headers */
+    mk_list_foreach(head, &sr->host_conf->custom_headers) {
+        entry = mk_list_entry(head, struct custom_header, _head);
+
+        mk_iov_add_entry(iov, entry->response_header,
+                         strlen(entry->response_header),
+                         mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
     }
 
     mk_server_cork_flag(fd, TCP_CORK_ON);

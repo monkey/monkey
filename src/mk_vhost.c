@@ -297,10 +297,13 @@ struct host *mk_vhost_read(char *path)
     struct host *host;
     struct host_alias *new_alias;
     struct error_page *err_page;
+    struct custom_header *cust_header;
     struct mk_config *cnf;
     struct mk_config_section *section_host;
     struct mk_config_section *section_ep;
+    struct mk_config_section *section_custom_headers;
     struct mk_config_entry *entry_ep;
+    struct mk_config_entry *entry_ch;
     struct mk_string_line *entry;
     struct mk_list *head, *list;
 
@@ -325,6 +328,9 @@ struct host *mk_vhost_read(char *path)
 
     /* Init list for custom error pages */
     mk_list_init(&host->error_pages);
+
+    /* Init list for custom headers */
+    mk_list_init(&host->custom_headers);
 
     /* Init list for host name aliases */
     mk_list_init(&host->server_names);
@@ -433,6 +439,49 @@ struct host *mk_vhost_read(char *path)
             mk_list_add(&err_page->_head, &host->error_pages);
         }
     }
+
+    /* Custom Headers */
+    section_custom_headers = mk_config_section_get(cnf, "CUSTOM_HEADERS");
+    if (section_custom_headers) {
+        mk_list_foreach(head, &section_custom_headers->entries) {
+            entry_ch = mk_list_entry(head, struct mk_config_entry, _head);
+
+            char *ch_header = NULL;
+            char *ch_value = NULL;
+            unsigned long ch_len;
+
+            ch_header = entry_ch->key;
+            ch_value = entry_ch->val;
+
+            /* Validate custom headers
+               do not override default headers
+             */
+
+            cust_header = mk_mem_malloc_z(sizeof(struct custom_header));
+            cust_header->header = mk_string_dup(ch_header);
+            cust_header->value = mk_string_dup(ch_value);
+
+            mk_string_build(&cust_header->response_header, &ch_len, "%s: %s",
+                            cust_header->header, cust_header->value);
+
+            MK_TRACE("Custom header: %s -> %s", cust_header->header, cust_header->value);
+
+            /* Link custom header to the custom headers list */
+            mk_list_add(&cust_header->_head, &host->custom_headers);
+        }
+    }
+
+    /* Server Signature */
+    if (config->hideversion == MK_FALSE) {
+        mk_string_build(&host->host_signature, &len,
+                        "Monkey/%s", VERSION);
+    }
+    else {
+        mk_string_build(&host->host_signature, &len, "Monkey");
+    }
+    mk_string_build(&host->header_host_signature.data,
+                    &host->header_host_signature.len,
+                    "Server: %s", host->host_signature);
 
     return host;
 }

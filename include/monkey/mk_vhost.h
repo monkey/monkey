@@ -32,6 +32,14 @@ struct error_page {
     struct mk_list _head;
 };
 
+/* Custom header */
+struct custom_header {
+    char *header;
+    char *value;
+    char *response_header;
+    struct mk_list _head;
+};
+
 struct host
 {
     char *file;                   /* configuration file */
@@ -45,6 +53,9 @@ struct host
 
     /* custom error pages */
     struct mk_list error_pages;
+
+    /* custom headers */
+    struct mk_list custom_headers;
 
     /* link node */
     struct mk_list _head;
