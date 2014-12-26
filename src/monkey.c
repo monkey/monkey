@@ -102,6 +102,7 @@ static void mk_help(int rc)
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
     printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
     printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n\n");
+    printf("  -f, --forceful\t\t\tforcefully run multiple instances of Monkey\n\n");
 
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -b, --build\t\t\tprint build information\n");
@@ -117,6 +118,10 @@ static void mk_help(int rc)
 /* MAIN */
 int main(int argc, char **argv)
 {
+    char path[1000];
+    int counter_for_instances=0;
+    int forced_run= 0;
+    FILE *fp= popen("ps -e | grep 'monkey'","r");
     int opt;
     char *port_override = NULL;
     int workers_override = -1;
@@ -135,6 +140,7 @@ int main(int argc, char **argv)
         { "serverconf",             required_argument,  NULL, 's' },
         { "build",                  no_argument,        NULL, 'b' },
         { "daemon",                 no_argument,        NULL, 'D' },
+        { "forceful" ,              no_argument,        NULL, 'f' },
         { "port",                   required_argument,  NULL, 'p' },
         { "one-shot",               required_argument,  NULL, 'o' },
         { "transport",              required_argument,  NULL, 't' },
@@ -148,7 +154,7 @@ int main(int argc, char **argv)
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDfSvhp:o:t:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -191,9 +197,21 @@ int main(int argc, char **argv)
         case 'l':
             plugin_load_conf_file = optarg;
             break;
+        case 'f': forced_run=1;
+            break;
         case '?':
             mk_help(EXIT_FAILURE);
         }
+    }
+
+    while(fgets(path,sizeof(path)-1,fp)!=NULL)
+    {
+        counter_for_instances++;
+    }
+    if(counter_for_instances>1 && forced_run != 1)
+    {
+        printf("One instance of monkey is already running. The program will now exit\n");
+        exit(0);
     }
 
     /* setup basic configurations */
