@@ -50,8 +50,7 @@ extern __thread struct mk_list *worker_plugin_event_list;
 #define MK_PLUGIN_STAGE_50 (64)   /* Conection ended */
 
 /* Plugin: Network type */
-#define MK_PLUGIN_NETWORK_IO (128)
-#define MK_PLUGIN_NETWORK_IP (256)
+#define MK_PLUGIN_NETWORK_LAYER (128)
 
 /* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
@@ -59,6 +58,10 @@ extern __thread struct mk_list *worker_plugin_event_list;
 #define MK_PLUGIN_RET_END 200
 #define MK_PLUGIN_RET_CLOSE_CONX 300
 #define MK_PLUGIN_HEADER_EXTRA_ROWS  18
+
+/* Plugin types */
+#define MK_PLUGIN_STATIC     0   /* built-in into core */
+#define MK_PLUGIN_DYNAMIC    1   /* shared library     */
 
 /*
  * Event return values
@@ -82,69 +85,14 @@ extern __thread struct mk_list *worker_plugin_event_list;
 /* The plugin request to the caller skip event hooks */
 #define MK_PLUGIN_RET_EVENT_CONTINUE -600
 
-/* Contexts: process/thread */
-struct plugin_core
-{
-    int  (*prctx) (struct server_config *);
-    void (*thctx) ();
-};
-
 struct plugin_stage
 {
     int (*s10) (int, struct sched_connection *);
     int (*s20) (struct mk_http_session *, struct mk_http_request *);
-    int (*s30) (struct plugin *, struct mk_http_session *, struct mk_http_request *);
+    int (*s30) (struct mk_plugin *, struct mk_http_session *, struct mk_http_request *);
     int (*s40) (struct mk_http_session *, struct mk_http_request *);
     int (*s50) (int);
 };
-
-struct plugin_network_io
-{
-    int (*accept) (int);
-    int (*read) (int, void *, int);
-    int (*write) (int, const void *, size_t);
-    int (*writev) (int, struct mk_iov *);
-    int (*close) (int);
-    int (*connect) (char *, int);
-    int (*send_file) (int, int, off_t *, size_t);
-    int (*create_socket) (int, int, int);
-    int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
-    int (*server) (char *port, char *addr, int);
-    int (*buffer_size) ();
-};
-
-struct plugin
-{
-    char *shortname;
-    char *name;
-    char *version;
-    char *path;
-    void *handler;
-    unsigned int hooks;
-
-    /* Mandatory calls */
-    int (*init) (void *, char *);
-    int  (*exit) ();
-
-    /* Hook functions by type */
-    struct plugin_core core;
-    struct plugin_stage stage;
-    struct plugin_network_io net_io;
-
-    /* Epoll Events */
-    int (*event_read) (int);
-    int (*event_write) (int);
-    int (*event_error) (int);
-    int (*event_close) (int);
-    int (*event_timeout) (int);
-
-    /* Each plugin has a thread key for it's global data */
-    pthread_key_t *thread_key;
-
-    /* Next! */
-    struct mk_list _head;
-};
-
 
 /* Multiple plugins can work on multiple stages, we don't want
  * Monkey be comparing each plugin looking for a specific stage,
@@ -165,9 +113,6 @@ struct plugin_stagemap
     struct plugin_stagem *stage_40;
     struct plugin_stagem *stage_50;
 };
-
-/* Network map calls */
-extern struct plugin_network_io *plg_netiomap;
 
 /* API functions exported to plugins */
 struct plugin_api
@@ -321,11 +266,41 @@ struct plugin_event
     struct mk_list _head;
 };
 
-struct plugin_info {
+/* Info: used to register a plugin */
+struct mk_plugin {
+    /* Identification */
     const char *shortname;
     const char *name;
     const char *version;
     unsigned int hooks;
+
+    /* Init / Exit */
+    int (*init_plugin) (struct plugin_api **, char *);
+    int (*exit_plugin) ();
+
+    /* Init Levels */
+    int  (*master_init) (struct server_config *);
+    void (*worker_init) ();
+
+    struct mk_list _head;
+};
+
+/*
+ * Network plugin: a plugin that provides a network layer, eg: plain
+ * sockets or SSL.
+ */
+struct mk_plugin_network {
+    int (*accept) (int);
+    int (*read) (int, void *, int);
+    int (*write) (int, const void *, size_t);
+    int (*writev) (int, struct mk_iov *);
+    int (*close) (int);
+    int (*connect) (char *, int);
+    int (*send_file) (int, int, off_t *, size_t);
+    int (*create_socket) (int, int, int);
+    int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
+    int (*server) (char *port, char *addr, int);
+    int (*buffer_size) ();
 };
 
 void mk_plugin_init();

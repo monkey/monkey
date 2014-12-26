@@ -128,7 +128,7 @@ int mk_socket_set_tcp_reuseport(int sockfd)
 
 int mk_socket_close(int socket)
 {
-    return plg_netiomap->close(socket);
+    return config->network->close(socket);
 }
 
 int mk_socket_create()
@@ -147,7 +147,7 @@ int mk_socket_connect(char *host, int port)
 {
     int sockfd;
 
-    sockfd = plg_netiomap->connect(host, port);
+    sockfd = config->network->connect(host, port);
 
     return sockfd;
 }
@@ -169,7 +169,7 @@ int mk_socket_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd;
 
-    socket_fd = plg_netiomap->server(port, listen_addr, reuse_port);
+    socket_fd = config->network->server(port, listen_addr, reuse_port);
     if (socket_fd < 0) {
         exit(EXIT_FAILURE);
     }
@@ -180,13 +180,13 @@ int mk_socket_server(char *port, char *listen_addr, int reuse_port)
 /* NETWORK_IO plugin functions */
 int mk_socket_accept(int server_fd)
 {
-    return plg_netiomap->accept(server_fd);
+    return config->network->accept(server_fd);
 }
 
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
 {
     int bytes;
-    bytes = plg_netiomap->writev(socket_fd, mk_io);
+    bytes = config->network->writev(socket_fd, mk_io);
 
     if (config->safe_event_write == MK_TRUE) {
         mk_socket_safe_event_write(socket_fd);
@@ -197,7 +197,7 @@ int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
 int mk_socket_send(int socket_fd, const void *buf, size_t count)
 {
     int bytes;
-    bytes = plg_netiomap->write(socket_fd, buf, count);
+    bytes = config->network->write(socket_fd, buf, count);
 
     if (config->safe_event_write == MK_TRUE) {
         mk_socket_safe_event_write(socket_fd);
@@ -207,7 +207,7 @@ int mk_socket_send(int socket_fd, const void *buf, size_t count)
 
 int mk_socket_read(int socket_fd, void *buf, int count)
 {
-    return plg_netiomap->read(socket_fd, (void *)buf, count);
+    return config->network->read(socket_fd, (void *)buf, count);
 }
 
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
@@ -215,8 +215,8 @@ int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
 {
     int bytes;
 
-    bytes = plg_netiomap->send_file(socket_fd, file_fd,
-                                    file_offset, file_count);
+    bytes = config->network->send_file(socket_fd, file_fd,
+                                       file_offset, file_count);
 
     if (config->safe_event_write == MK_TRUE) {
         mk_socket_safe_event_write(socket_fd);

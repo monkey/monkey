@@ -38,12 +38,11 @@
 
 /* global vars */
 struct plugin_api *mk_api;
-struct plugin_info MK_EXPORT _plugin_info;
 
 pthread_key_t MK_EXPORT _mkp_data;
 
 #define MONKEY_PLUGIN(a, b, c, d)                   \
-    struct plugin_info MK_EXPORT _plugin_info = {a, b, c, d}
+    struct mk_plugin_info MK_EXPORT _plugin_info = {a, b, c, d}
 
 #ifdef TRACE
 #define PLUGIN_TRACE(...) \

@@ -56,7 +56,7 @@ static struct mk_list *mk_plugin_event_get_list()
     return worker_plugin_event_list;
 }
 
-void *mk_plugin_load(const char *path)
+void *mk_plugin_load_dynamic(const char *path)
 {
     void *handle;
 
@@ -125,6 +125,54 @@ static void mk_plugin_register_stagemap(struct plugin *p)
     if (p->hooks & MK_PLUGIN_STAGE_50) {
         mk_plugin_register_stagemap_add(&plg_stagemap->stage_50, p);
     }
+}
+
+/*
+ * Load a plugin into Monkey core, 'type' defines if it's a MK_PLUGIN_STATIC or
+ * a MK_PLUGIN_DYNAMIC. 'shortname' is mandatory and 'path' is only used when
+ * MK_PLUGIN_DYNAMIC is set and represents the absolute path of the shared
+ * library.
+ */
+struct mk_plugin *mk_plugin_load(int type, const char *shortname,
+                                 const char *path)
+{
+    char plugin_info[64];
+    void *handler;
+    struct mk_plugin *plugin;
+
+    /* Set main struct name to reference */
+    snprintf(plugin_info, sizeof(plugin_info) - 1, "mk_plugin_%s", shortname);
+
+    if (type == MK_PLUGIN_DYNAMIC) {
+        handler = mk_plugin_load_dynamic(path);
+        plugin  = mk_plugin_load_symbol(handler, plugin_info);
+
+        if (!plugin) {
+            mk_warn("Plugin '%s' is not registering properly", path);
+            return NULL;
+        }
+    }
+    else if (type == MK_PLUGIN_STATIC) {
+        /* fixme! */
+        plugin = *plugin_info;
+    }
+
+    /* Validate all callbacks are set */
+    if (!plugin->shortname || !plugin->name || !plugin->version ||
+        !plugin->hooks || !plugin->init || !plugin->exit) {
+        mk_warn("Plugin '%s' is not registering all fields properly",
+                shortname);
+        return NULL;
+    }
+
+    if (plugin->hooks & MK_PLUGIN_NETWORK_LAYER) {
+
+    }
+
+
+    /* Add Plugin to the end of the list */
+    mk_list_add(&plugin->_head, config->plugins);
+
 }
 
 struct plugin *mk_plugin_alloc(void *handler, const char *path)
@@ -250,7 +298,7 @@ struct plugin *mk_plugin_register(struct plugin *p)
     }
 
     /* NETWORK_IO Plugin */
-    if (p->hooks & MK_PLUGIN_NETWORK_IO) {
+    if (p->hooks & MK_PLUGIN_NETWORK_LAYER) {
 #ifdef TRACE
         /* Validate mandatory calls */
         if (!p->net_io.accept || !p->net_io.read || !p->net_io.write ||
@@ -495,7 +543,9 @@ void mk_plugin_read_config()
     mk_list_foreach(head, &section->entries) {
         entry = mk_list_entry(head, struct mk_config_entry, _head);
         if (strcasecmp(entry->key, "Load") == 0) {
-            handle = mk_plugin_load(entry->val);
+            handle = mk_plugin_load(MK_PLUGIN_DYNAMIC,
+                                    NULL,
+                                    entry->val);
 
             if (!handle) {
                 mk_warn("Invalid plugin '%s'", entry->val);

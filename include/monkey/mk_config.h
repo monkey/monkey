@@ -154,13 +154,16 @@ struct server_config
 
     /* Define the plugin who provides the transport layer */
     char *transport_layer;
-    struct plugin *transport_layer_plugin;
+    struct mk_plugin *transport_layer_plugin;
 
     /* Define the default mime type when is not possible to find the proper one */
     char *default_mimetype;
 
     /* source configuration */
     struct mk_config *config;
+
+    /* FIXME: temporal map of Network Layer plugin */
+    struct mk_plugin_network *network;
 };
 
 extern struct server_config *config;
