@@ -226,7 +226,7 @@ struct plugin_api
     int (*worker_rename) (const char *);
 
     /* event's functions */
-    int (*event_add) (int, int, struct plugin *, unsigned int);
+    int (*event_add) (int, int, struct mk_plugin *, unsigned int);
     int (*event_del) (int);
     struct plugin_event *(*event_get) (int);
 
@@ -260,28 +260,7 @@ extern pthread_key_t mk_plugin_event_k;
 struct plugin_event
 {
     int socket;
-
-    struct plugin *handler;
-
-    struct mk_list _head;
-};
-
-/* Info: used to register a plugin */
-struct mk_plugin {
-    /* Identification */
-    const char *shortname;
-    const char *name;
-    const char *version;
-    unsigned int hooks;
-
-    /* Init / Exit */
-    int (*init_plugin) (struct plugin_api **, char *);
-    int (*exit_plugin) ();
-
-    /* Init Levels */
-    int  (*master_init) (struct server_config *);
-    void (*worker_init) ();
-
+    struct mk_plugin *handler;
     struct mk_list _head;
 };
 
@@ -303,6 +282,33 @@ struct mk_plugin_network {
     int (*buffer_size) ();
 };
 
+/* Info: used to register a plugin */
+struct mk_plugin {
+    /* Identification */
+    const char *shortname;
+    const char *name;
+    const char *version;
+    unsigned int hooks;
+
+    /* Init / Exit */
+    int (*init_plugin) (struct plugin_api **, char *);
+    int (*exit_plugin) ();
+
+    /* Init Levels */
+    int  (*master_init) (struct server_config *);
+    void (*worker_init) ();
+
+    /* Callback references for plugin type */
+    struct mk_plugin_network *network;
+
+    /* Internal use variables */
+    void *handler;                 /* DSO handler                  */
+    char *path;                    /* Path for dynamic plugin      */
+    pthread_key_t *thread_key;     /* Worker thread key            */
+    struct mk_list _head;          /* Link to config->plugins list */
+};
+
+
 void mk_plugin_init();
 void mk_plugin_read_config();
 void mk_plugin_exit_all();
@@ -322,7 +328,7 @@ void mk_plugin_preworker_calls();
 
 /* Plugins events interface */
 int mk_plugin_event_add(int socket, int mode,
-                        struct plugin *handler,
+                        struct mk_plugin *handler,
                         unsigned int behavior);
 int mk_plugin_event_del(int socket);
 struct plugin_event *mk_plugin_event_get(int socket);
@@ -336,17 +342,18 @@ int mk_plugin_event_error(int socket);
 int mk_plugin_event_close(int socket);
 int mk_plugin_event_timeout(int socket);
 
-void *mk_plugin_load(const char *path);
+struct mk_plugin *mk_plugin_load(int type, const char *shortname,
+                                 const char *path);
 void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
 int mk_plugin_http_request_end(int socket);
 
 /* Register functions */
 struct plugin *mk_plugin_register(struct plugin *p);
-void mk_plugin_unregister(struct plugin *p);
+void mk_plugin_unregister(struct mk_plugin *p);
 
 struct plugin *mk_plugin_alloc(void *handler, const char *path);
-void mk_plugin_free(struct plugin *p);
+void mk_plugin_free(struct mk_plugin *p);
 
 int mk_plugin_time_now_unix();
 mk_ptr_t *mk_plugin_time_now_human();

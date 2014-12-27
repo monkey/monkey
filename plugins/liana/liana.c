@@ -286,7 +286,7 @@ int mk_liana_server(char *port, char *listen_addr, int reuse_port)
 
 struct mk_plugin mk_plugin_liana = {
     /* Identification */
-    .shortname     = "Liana",
+    .shortname     = "liana",
     .name          = "Liana Network Layer",
     .version       = VERSION,
     .hooks         = MK_PLUGIN_NETWORK_LAYER,
