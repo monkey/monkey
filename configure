@@ -887,7 +887,7 @@ LIBS = $LIBS
 	\$(CC_QUIET) -MM -MP \$(CFLAGS) \$(DEFS) -I\$(INCDIR) -I\$(INC_EXTRA) \$*.c -o \$*.d > /dev/null &2>&1
 
 clean:
-	rm -rf *.[od] *~ *.*so* \$(MONKEY_BIN_DIR)/mk_*
+	rm -rf *.[aod] *~ *.*so* \$(MONKEY_BIN_DIR)/mk_*
 EOF
 }
 
