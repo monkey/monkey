@@ -38,6 +38,7 @@
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_stats.h>
+#include <monkey/mk_static_plugins.h>
 
 enum {
     bufsize = 256
@@ -163,6 +164,19 @@ void mk_plugin_free(struct mk_plugin *p)
 
 void mk_plugin_init()
 {
+    struct mk_list *static_plugins;
+    struct mk_list *head, *tmp;
+    struct mk_plugin *plugin;
+
+    /* Load static plugins, iterate and re-set on global config */
+    static_plugins = mk_static_plugins();
+    mk_list_foreach_safe(head, tmp, static_plugins) {
+        plugin = mk_list_entry(head, struct mk_plugin, _head);
+        printf("Test Static: %s\n", plugin->shortname);
+        mk_list_add(&plugin->_head, config->plugins);
+    }
+
+
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     __builtin_prefetch(api);
 

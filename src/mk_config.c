@@ -51,6 +51,7 @@ struct server_config *config;
 gid_t EGID;
 gid_t EUID;
 
+
 /* Raise a configuration schema error */
 void mk_config_error(const char *path, int line, const char *msg)
 {

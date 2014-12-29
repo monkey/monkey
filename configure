@@ -202,9 +202,16 @@ main()
 	echo -e "\033[1m=== Plugins included ===\033[0m"
 	find $base_path/plugins/ -name Makefile -exec rm -rf {} \;
 
+
+        # Set an array of static plugins (if any)
+        IFS=","
+        set -- $static_plugins
+        static_array=$@
+        unset IFS
+
 	create_makefile_plugins $base_path $plugdir $prefix $bindir $mandir \
 		$sysconfdir $datadir $logdir $sysconfdir $datadir \
-		$logdir $mandir $enabled_plugins $disabled_plugins
+		$logdir $mandir $enabled_plugins $disabled_plugins $static_array
 
 	echo
 	echo -e "\033[1m=== Creating Makefiles and scripts ===\033[0m"
@@ -214,17 +221,22 @@ main()
 	make_conf  $base_path $lang $default_port $default_user $pidfile
 
 	echo "+ Creating src/Makefile"
-	create_makefile2 base_path mod_libs mod_obj make_script platform \
-                         malloc_libc malloc_jemalloc
+	create_makefile_core base_path mod_libs mod_obj make_script platform \
+                             malloc_libc malloc_jemalloc static_plugins
+
+	echo "+ Creating plugins/Make.static"
+	create_plugins_make_static static_array
 
 	echo "+ Creating plugins/Make.common"
 	create_plugins_make_common base_path bindir \
                          polarssl_headers polarssl_library polarssl_debug_level
 
+        create_header_static_plugins base_path sysconfdir static_array
+
 	echo "+ Creating include/monkey/mk_info.h"
 	create_info base_path sysconfdir \
                     SYSNAME __MONKEY__ __MONKEY_MINOR__ __MONKEY_PATCHLEVEL__ \
-                    cmd uname
+                    cmd uname static_array
 
 	echo "+ Creating bin/banana script"
 	create_banana_script bindir logdir default_port
@@ -365,6 +377,7 @@ PLUGINDIR=\$(DESTDIR)${plugdir}
 VERSION=$VERSION
 
 all: $all_deps
+	@\$(MAKE) -s -C $base_path/plugins -f Make.static all
 	@\$(MAKE) -s -C $base_path/src all
 	@\$(MAKE) -s -C plugins all
 	@echo "  DONE"
@@ -394,6 +407,17 @@ clean:
 distclean:
 	@(cd src; \$(MAKE) distclean)
 EOF
+}
+
+is_static_plugin() {
+    for p in $static_array;
+    do
+        if [ "$1" == "$p" ]; then
+            return 1
+        fi
+    done
+
+    return 0
 }
 
 # This function check if the plugin must be compiled/installed
@@ -632,7 +656,7 @@ EOF
 }
 
 # Create monkey/src/Makefile
-create_makefile2()
+create_makefile_core()
 {
 	if [ $platform == "generic" ]; then
 		libs="$libs -pthread"
@@ -674,6 +698,7 @@ OBJ     = monkey.o mk_mimetype.o mk_vhost.o \\
           mk_http.o mk_http_parser.o \\
           mk_file.o mk_socket.o mk_clock.o mk_cache.o mk_event.o \\
           mk_server.o mk_kernel.o mk_rbtree.o mk_plugin.o mk_lib.o
+STATIC_PLUGINS = $abs_static_plugins
 
 LIBOBJ  = \$(OBJ:.o=.lo)
 
@@ -688,7 +713,8 @@ libstats: libstats.so
 -include \$(OBJ:.o=.d)
 
 ../bin/monkey: \$(OBJ)
-	\$(CC_QUIET) \$(CFLAGS) \$(DEFS) \$(LDFLAGS) -o $p/\$@ \$(OBJ) $mod_obj $extra \$(LIBS)
+	\$(MAKE) -C ../plugins/ Make.static
+	\$(CC_QUIET) \$(CFLAGS) \$(STATIC_PLUGINS) \$(DEFS) \$(LDFLAGS) -o $p/\$@ \$(OBJ) $mod_obj $extra \$(LIBS) \$(STATIC_PLUGINS)
 
 $SONAME: \$(LIBOBJ)
 	\$(CC_QUIET) \$(CFLAGS) \$(LIBDEFS) \$(LDFLAGS) -Wl,-soname,$SONAME -shared -o \$@ $extraso \$(LIBOBJ) $mod_obj \$(LIBS)
@@ -768,10 +794,19 @@ create_makefile_plugins()
 			echo -e "+ ${name}${i:1}";
 		done
 
-		# Create Makefile
-		MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
-		MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
+                # Check if the plugin is static or dynamic
+                is_static_plugin $entry $static_array
+                static_check=$?
 
+		# Create Makefile
+                if [ $static_check == 0 ]; then
+		    MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
+		    MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
+                else
+		    MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) monkey-$entry.a && cd ..)\n"
+		    MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
+                    abs_static_plugins="$abs_static_plugins ../plugins/$entry/monkey-$entry.a"
+                fi
 
 		for d in `find $plugin_dir -type d`
 		do
@@ -781,25 +816,28 @@ create_makefile_plugins()
 			fi
 		done
 
-		# Add details to plugins.load using ABOUT file
-		if test -e $plugin_dir/ABOUT ; then
+
+                if [ $static_check == 0 ]; then
+		    # Add details to plugins.load using ABOUT file
+		    if test -e $plugin_dir/ABOUT ; then
 			cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
 			echo "    #" >> $plugins_load
-		else
+		    else
 			echo "    #" >> $plugins_load
-		fi
+		    fi
 
-		if ! test -e $plugin_dir/MANDATORY ; then
+		    if ! test -e $plugin_dir/MANDATORY ; then
 			comment="    # "
-		fi
+		    fi
 
-		if [ "$plugdir" != "$aux/plugins" ]; then
+		    if [ "$plugdir" != "$aux/plugins" ]; then
 			echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
-		else
+		    else
 			echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
-		fi
+		    fi
 
-		echo "" >> $plugins_load
+		    echo "" >> $plugins_load
+                fi
 
 		# Copy specific plugin configuration files
 		if [ -d "$plugin_dir/conf" ]; then
@@ -851,6 +889,17 @@ create_makefile_plugins()
 	fi
 }
 
+# Create plugins/Make.static
+create_plugins_make_static()
+{
+    echo "all:" > plugins/Make.static
+
+    for entry in $static_array;
+    do
+        echo "	\$(MAKE) -C $entry/ monkey-$entry.a" >> plugins/Make.static
+    done
+}
+
 # Create plugins/Make.common
 create_plugins_make_common()
 {
@@ -898,6 +947,10 @@ create_info()
 #ifndef MK_INFO_H
 #define MK_INFO_H
 
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_memory.h>
+#include <monkey/mk_list.h>
+
 #define OS "$SYSNAME"
 
 #define __MONKEY__            $__MONKEY__
@@ -914,13 +967,47 @@ create_info()
 #define PLUGDIR "$plugdir"
 #define PYTHONVERSION python$PYTHONVERSION
 
-#endif
 EOF
 
 	sed -i $OS_SED -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
 	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
 	    $base_path/$INCDIR/libmonkey.h
+
+    echo "#endif" >> $base_path/$INCDIR/mk_info.h
+}
+
+create_header_static_plugins()
+{
+    t=$base_path/$INCDIR/mk_static_plugins.h
+
+    echo "#include <monkey/mk_plugin.h>" > $t
+    echo >> $t
+
+    # main structures per plugin
+    for e in $static_array;
+    do
+        echo "struct mk_plugin mk_plugin_$e;" >> $t
+    done
+
+    echo >> $t
+    echo "static inline struct mk_list *mk_static_plugins()" >> $t
+    echo "{" >> $t
+    echo "    struct mk_list *list;" >> $t
+    echo "    struct mk_plugin *p;" >> $t
+    echo >> $t
+    echo "    list = mk_mem_malloc(sizeof(struct mk_list));" >> $t
+    echo "    mk_list_init(list);" >> $t
+
+    for e in $static_array;
+    do
+        echo "    p = &mk_plugin_$e;" >> $t
+        echo "    mk_list_add(&p->_head, list);" >> $t
+    done
+
+    echo >> $t
+    echo "    return list;" >> $t
+    echo "}" >> $t
 }
 
 create_conf()
@@ -1094,6 +1181,7 @@ systemddir=""
 platform="generic"
 build_sep=0
 linux_kqueue=0
+abs_static_plugins=""
 
 # Generic default values for monkey.conf
 default_port="2001"
@@ -1211,6 +1299,9 @@ for arg in $*; do
 		--disable-plugins*)
 			disabled_plugins=$optarg
 			;;
+		--static-plugins*)
+			static_plugins=$optarg
+			;;
 		--only-accept)
 			only_accept=1
 			;;
@@ -1321,6 +1412,7 @@ for arg in $*; do
 			echo "  --systemddir[=DIR]      Systemd directory path"
 			echo "  --enable-plugins=a,b    Enable the listed plugins"
 			echo "  --disable-plugins=a,b   Disable the listed plugins"
+			echo "  --static-plugins=a,b    Build plugins in static mode"
 			echo "  --only-accept           Use only accept(2)"
 			echo "  --only-accept4          Use only accept4(2) (default and preferred)"
 			echo
@@ -1476,7 +1568,7 @@ fi
 # Starting main function
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir pidfile plugdir platform only_accept only_accept4 \
-     SYSNAME VERSION enabled_plugins disabled_plugins \
+     SYSNAME VERSION enabled_plugins disabled_plugins static_plugins \
      no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname \
      polarssl_headers polarssl_library polarssl_debug_level target_os \
      OS_SED
