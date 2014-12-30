@@ -94,7 +94,7 @@ static int mk_plugin_init(struct plugin_api *api, struct mk_plugin *plugin)
     char *conf_dir = NULL;
     struct file_info f_info;
 
-    MK_TRACE("Load Plugin: '%s'", p->shortname);
+    MK_TRACE("Load Plugin: '%s'", plugin->shortname);
 
     snprintf(path, 1024, "%s/%s", config->serverconf, config->plugins_conf_dir);
     ret = mk_file_get_info(path, &f_info);
@@ -144,9 +144,12 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
             mk_warn("Plugin '%s' is not registering properly", path);
             return NULL;
         }
+        plugin->load_type = MK_PLUGIN_DYNAMIC;
+        plugin->handler   = handler;
     }
     else if (type == MK_PLUGIN_STATIC) {
         plugin = (struct mk_plugin *) data;
+        plugin->load_type = MK_PLUGIN_STATIC;
     }
 
     /* Validate all callbacks are set */
@@ -158,12 +161,6 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
     }
 
     if (plugin->hooks & MK_PLUGIN_NETWORK_LAYER) {
-        if (type == MK_PLUGIN_DYNAMIC) {
-            snprintf(symbol, sizeof(symbol) - 1,
-                     "mk_plugin_network_%s", shortname);
-            plugin->network = mk_plugin_load_symbol(handler, symbol);
-        }
-
         mk_bug(!plugin->network);
 
         /* Set Transport Layer */
@@ -190,15 +187,12 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
 
 void mk_plugin_unregister(struct mk_plugin *p)
 {
-    mk_list_del(&p->_head);
-    mk_plugin_free(p);
-}
-
-void mk_plugin_free(struct mk_plugin *p)
-{
     mk_mem_free(p->path);
-    mk_mem_free(p);
-    p = NULL;
+    mk_list_del(&p->_head);
+    if (p->load_type == MK_PLUGIN_DYNAMIC) {
+        dlclose(p->handler);
+    }
+
 }
 
 void mk_plugin_api_init()
@@ -349,17 +343,18 @@ void mk_plugin_load_all()
     struct mk_config_section *section;
     struct mk_config_entry *entry;
     struct mk_list *head;
+    struct mk_list *htmp;
     struct file_info f_info;
 
     /* Load static plugins */
     mk_static_plugins();
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach_safe(head, htmp, config->plugins) {
         p = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Load the static plugin */
         p = mk_plugin_load(MK_PLUGIN_STATIC,
                            p->shortname,
-                           p);
+                           (void *) p);
         if (!p) {
             mk_warn("Invalid plugin '%s'", p->shortname);
             continue;
@@ -367,7 +362,8 @@ void mk_plugin_load_all()
         ret = mk_plugin_init(api, p);
         if (ret < 0) {
             /* Free plugin, do not register */
-            MK_TRACE("Unregister plugin '%s'", p->shortname);
+            mk_warn("Plugin initialization failed: %s", p->shortname);
+            mk_plugin_unregister(p);
             continue;
         }
     }
@@ -395,7 +391,7 @@ void mk_plugin_load_all()
     }
 
     /* Read key entries */
-    mk_list_foreach(head, &section->entries) {
+    mk_list_foreach_safe(head, htmp, &section->entries) {
         entry = mk_list_entry(head, struct mk_config_entry, _head);
         if (strcasecmp(entry->key, "Load") == 0) {
 
@@ -418,7 +414,7 @@ void mk_plugin_load_all()
             if (ret < 0) {
                 /* Free plugin, do not register */
                 MK_TRACE("Unregister plugin '%s'", p->shortname);
-                mk_plugin_free(p);
+                mk_plugin_unregister(p);
                 continue;
             }
         }

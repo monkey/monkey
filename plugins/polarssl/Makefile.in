@@ -3,6 +3,7 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
+AR      = @echo "  AR   $(_PATH)/$@"; ar
 CFLAGS	= $CFLAGS $(MONKEY_POLARSSL_HEADERS)
 LDFLAGS = $LDFLAGS $(MONKEY_POLARSSL_LIBRARY) -lpolarssl
 DEFS    = $DEFS
@@ -12,3 +13,6 @@ OBJECTS = polarssl.o
 
 monkey-polarssl.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(DEFS) -shared -o $@ $^ -lc $(LDFLAGS)
+
+monkey-polarssl.a: $(OBJECTS)
+	$(AR) rcs $@ $(OBJECTS)

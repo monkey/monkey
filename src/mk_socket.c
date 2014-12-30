@@ -169,6 +169,11 @@ int mk_socket_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd;
 
+    if (!config->network) {
+        mk_err("No network layer plugin was found. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+
     socket_fd = config->network->server(port, listen_addr, reuse_port);
     if (socket_fd < 0) {
         exit(EXIT_FAILURE);

@@ -306,6 +306,9 @@ struct mk_plugin {
     char *path;                    /* Path for dynamic plugin      */
     pthread_key_t *thread_key;     /* Worker thread key            */
     struct mk_list _head;          /* Link to config->plugins list */
+
+    /* Load type: MK_PLUGIN_STATIC / MK_PLUGIN_DYNAMIC */
+    int load_type;
 };
 
 

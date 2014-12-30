@@ -69,11 +69,6 @@
 #error "One or more required POLARSSL modules not built."
 #endif
 
-MONKEY_PLUGIN("polarssl",         /* shortname */
-        "PolarSSL transport plugin", /* name */
-        "0.1",        /* version */
-        MK_PLUGIN_CORE_THCTX | MK_PLUGIN_NETWORK_IO);
-
 struct polar_config {
     char *cert_file;
     char *cert_chain_file;
@@ -494,7 +489,7 @@ static void config_free(struct polar_config *conf)
     if (conf->dh_param_file) mk_api->mem_free(conf->dh_param_file);
 }
 
-static void polar_exit(void)
+static int polar_exit(void)
 {
     struct mk_list *cur, *tmp;
     struct polar_thread_context *thctx;
@@ -526,6 +521,8 @@ static void polar_exit(void)
 #endif
 
     config_free(&server_context.config);
+
+    return 0;
 }
 
 /* Contexts may be requested from outside workers on exit so we should
@@ -650,12 +647,12 @@ static int context_unset(int fd, ssl_context *ssl)
     return 0;
 }
 
-int _mkp_network_io_buffer_size()
+int mk_polarssl_buffer_size()
 {
     return SSL_MAX_CONTENT_LEN;
 }
 
-int _mkp_network_io_read(int fd, void *buf, int count)
+int mk_polarssl_read(int fd, void *buf, int count)
 {
     size_t avail;
     ssl_context *ssl = context_get(fd);
@@ -684,7 +681,7 @@ int _mkp_network_io_read(int fd, void *buf, int count)
     return ret;
 }
 
-int _mkp_network_io_write(int fd, const void *buf, size_t count)
+int mk_polarssl_write(int fd, const void *buf, size_t count)
 {
     ssl_context *ssl = context_get(fd);
     if (!ssl) {
@@ -694,7 +691,7 @@ int _mkp_network_io_write(int fd, const void *buf, size_t count)
     return handle_return(ssl_write(ssl, buf, count));
 }
 
-int _mkp_network_io_writev(int fd, struct mk_iov *mk_io)
+int mk_polarssl_writev(int fd, struct mk_iov *mk_io)
 {
     ssl_context *ssl = context_get(fd);
     const int iov_len = mk_io->iov_idx;
@@ -726,7 +723,7 @@ int _mkp_network_io_writev(int fd, struct mk_iov *mk_io)
     return handle_return(ret);
 }
 
-int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
+int mk_polarssl_send_file(int fd, int file_fd, off_t *file_offset,
         size_t file_count)
 {
     ssl_context *ssl = context_get(fd);
@@ -778,7 +775,7 @@ int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
     }
 }
 
-int _mkp_network_io_close(int fd)
+int mk_polarssl_close(int fd)
 {
     ssl_context *ssl = context_get(fd);
 
@@ -794,7 +791,7 @@ int _mkp_network_io_close(int fd)
     return 0;
 }
 
-int _mkp_network_io_accept(int server_fd)
+int mk_polarssl_accept(int server_fd)
 {
     int remote_fd;
 
@@ -810,12 +807,12 @@ int _mkp_network_io_accept(int server_fd)
     return remote_fd;
 }
 
-int _mkp_network_io_create_socket(int domain, int type, int protocol)
+int mk_polarssl_create_socket(int domain, int type, int protocol)
 {
     return socket(domain, type, protocol);
 }
 
-int _mkp_network_io_connect(char *host, int port)
+int mk_polarssl_connect(char *host, int port)
 {
     int ret;
     int socket_fd = -1;
@@ -837,7 +834,7 @@ int _mkp_network_io_connect(char *host, int port)
         return -1;
     }
     for(rp = res; rp != NULL; rp = rp->ai_next) {
-        socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        socket_fd = mk_polarssl_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
             mk_warn("Error creating client socket, retrying");
@@ -861,7 +858,7 @@ int _mkp_network_io_connect(char *host, int port)
     return socket_fd;
 }
 
-int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t addrlen, int backlog)
+int mk_polarssl_bind(int socket_fd, const struct sockaddr *addr, socklen_t addrlen, int backlog)
 {
     int ret;
 
@@ -901,7 +898,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
     return ret;
 }
 
-int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
+int mk_polarssl_server(char *port, char *listen_addr, int reuse_port)
 {
     int socket_fd = -1;
     int ret;
@@ -920,7 +917,7 @@ int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
     }
 
     for(rp = res; rp != NULL; rp = rp->ai_next) {
-        socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        socket_fd = mk_polarssl_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
             mk_warn("Error creating server socket, retrying");
@@ -940,7 +937,7 @@ int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
             }
         }
 
-        ret = _mkp_network_io_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
+        ret = mk_polarssl_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
 
         if(ret == -1) {
             mk_err("Cannot listen on %s:%s\n", listen_addr, port);
@@ -956,7 +953,7 @@ int _mkp_network_io_server(char *port, char *listen_addr, int reuse_port)
     return socket_fd;
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_polarssl_plugin_init(struct plugin_api **api, char *confdir)
 {
     int ret = 0;
     struct polar_config conf;
@@ -964,12 +961,10 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     /* Evil global config stuff */
     mk_api = *api;
     if (mk_api->config->transport_layer &&
-        strcmp(mk_api->config->transport_layer, "polarssl")) {
+        strcmp(mk_api->config->transport_layer, "polarssl") == 0) {
         PLUGIN_TRACE("[polarssl] Not used as transport layer, unload.");
-        return -1;
+        mk_api->config->transport = MK_TRANSPORT_HTTPS;
     }
-    mk_api->config->transport = MK_TRANSPORT_HTTPS;
-
 
     memset(&conf, 0, sizeof(conf));
     if (config_parse(confdir, &conf)) {
@@ -982,14 +977,49 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return ret;
 }
 
-void _mkp_core_thctx(void)
+void mk_polarssl_worker_init(void)
 {
     if (polar_thread_init(&server_context.config)) {
         abort();
     }
 }
 
-void _mkp_exit()
+int mk_polarssl_plugin_exit()
 {
-    polar_exit();
+    return polar_exit();
 }
+
+
+/* Network Layer plugin Callbacks */
+struct mk_plugin_network mk_plugin_network_polarssl = {
+    .accept        = mk_polarssl_accept,
+    .read          = mk_polarssl_read,
+    .write         = mk_polarssl_write,
+    .writev        = mk_polarssl_writev,
+    .close         = mk_polarssl_close,
+    .connect       = mk_polarssl_connect,
+    .send_file     = mk_polarssl_send_file,
+    .create_socket = mk_polarssl_create_socket,
+    .bind          = mk_polarssl_bind,
+    .server        = mk_polarssl_server,
+    .buffer_size   = mk_polarssl_buffer_size
+};
+
+struct mk_plugin mk_plugin_polarssl = {
+    /* Identification */
+    .shortname     = "polarssl",
+    .name          = "PolarSSL",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_NETWORK_LAYER,
+
+    /* Init / Exit */
+    .init_plugin   = mk_polarssl_plugin_init,
+    .exit_plugin   = mk_polarssl_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = mk_polarssl_worker_init,
+
+    /* Type */
+    .network       = &mk_plugin_network_polarssl,
+};
