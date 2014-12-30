@@ -86,35 +86,6 @@ extern __thread struct mk_list *worker_plugin_event_list;
 /* The plugin request to the caller skip event hooks */
 #define MK_PLUGIN_RET_EVENT_CONTINUE -600
 
-struct plugin_stage
-{
-    int (*s10) (int, struct sched_connection *);
-    int (*s20) (struct mk_http_session *, struct mk_http_request *);
-    int (*s30) (struct mk_plugin *, struct mk_http_session *, struct mk_http_request *);
-    int (*s40) (struct mk_http_session *, struct mk_http_request *);
-    int (*s50) (int);
-};
-
-/* Multiple plugins can work on multiple stages, we don't want
- * Monkey be comparing each plugin looking for a specific stage,
- * so we create a Map of direct stage calls
- */
-struct plugin_stagem
-{
-    struct plugin *p;
-    struct plugin_stagem *next;
-};
-
-struct plugin_stagemap
-{
-    struct plugin_stagem *stage_10;
-    struct plugin_stagem *stage_15;
-    struct plugin_stagem *stage_20;
-    struct plugin_stagem *stage_30;
-    struct plugin_stagem *stage_40;
-    struct plugin_stagem *stage_50;
-};
-
 /* API functions exported to plugins */
 struct plugin_api
 {
@@ -358,7 +329,6 @@ int mk_plugin_event_timeout(int socket);
 
 struct mk_plugin *mk_plugin_load(int type, const char *shortname,
                                  void *data);
-void mk_plugin_register_to(struct plugin **st, struct plugin *p);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
 int mk_plugin_http_request_end(int socket);
 
