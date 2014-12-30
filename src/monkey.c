@@ -290,8 +290,8 @@ int main(int argc, char **argv)
     mk_clock_sequential_init();
 
     /* Load plugins */
-    mk_plugin_init();
-    mk_plugin_read_config();
+    mk_plugin_api_init();
+    mk_plugin_load_all();
 
     /* Running Monkey as daemon */
     if (config->is_daemon == MK_TRUE) {

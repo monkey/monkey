@@ -85,6 +85,37 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
     return s;
 }
 
+/* Initialize a plugin, trigger the init_plugin callback */
+static int mk_plugin_init(struct plugin_api *api, struct mk_plugin *plugin)
+{
+    int ret;
+    unsigned long len;
+    char path[1024];
+    char *conf_dir = NULL;
+    struct file_info f_info;
+
+    MK_TRACE("Load Plugin: '%s'", p->shortname);
+
+    snprintf(path, 1024, "%s/%s", config->serverconf, config->plugins_conf_dir);
+    ret = mk_file_get_info(path, &f_info);
+    if (ret == -1 || f_info.is_directory == MK_FALSE) {
+        snprintf(path, 1024, "%s", config->plugins_conf_dir);
+    }
+
+    /* Build plugin configuration path */
+    mk_string_build(&conf_dir,
+                    &len,
+                    "%s/%s/",
+                    path, plugin->shortname);
+
+    /* Init plugin */
+    ret = plugin->init_plugin(&api, conf_dir);
+    mk_mem_free(conf_dir);
+
+    return ret;
+}
+
+
 /*
  * Load a plugin into Monkey core, 'type' defines if it's a MK_PLUGIN_STATIC or
  * a MK_PLUGIN_DYNAMIC. 'shortname' is mandatory and 'path' is only used when
@@ -92,8 +123,9 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
  * library.
  */
 struct mk_plugin *mk_plugin_load(int type, const char *shortname,
-                                 const char *path)
+                                 void *data)
 {
+    char *path;
     char symbol[64];
     void *handler;
     struct mk_plugin *plugin;
@@ -101,6 +133,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
     /* Set main struct name to reference */
     snprintf(symbol, sizeof(symbol) - 1, "mk_plugin_%s", shortname);
     if (type == MK_PLUGIN_DYNAMIC) {
+        path = (char *) data;
         handler = mk_plugin_load_dynamic(path);
         if (!handler) {
             return NULL;
@@ -113,8 +146,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         }
     }
     else if (type == MK_PLUGIN_STATIC) {
-        /* fixme! */
-        //plugin = *plugin_info;
+        plugin = (struct mk_plugin *) data;
     }
 
     /* Validate all callbacks are set */
@@ -126,8 +158,13 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
     }
 
     if (plugin->hooks & MK_PLUGIN_NETWORK_LAYER) {
-        snprintf(symbol, sizeof(symbol) - 1, "mk_plugin_network_%s", shortname);
-        plugin->network = mk_plugin_load_symbol(handler, symbol);
+        if (type == MK_PLUGIN_DYNAMIC) {
+            snprintf(symbol, sizeof(symbol) - 1,
+                     "mk_plugin_network_%s", shortname);
+            plugin->network = mk_plugin_load_symbol(handler, symbol);
+        }
+
+        mk_bug(!plugin->network);
 
         /* Set Transport Layer */
         if (config->transport_layer &&
@@ -143,8 +180,10 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         }
     }
 
-    /* Add Plugin to the end of the list */
-    mk_list_add(&plugin->_head, config->plugins);
+    if (type == MK_PLUGIN_DYNAMIC) {
+        /* Add Plugin to the end of the list */
+        mk_list_add(&plugin->_head, config->plugins);
+    }
 
     return plugin;
 }
@@ -162,26 +201,11 @@ void mk_plugin_free(struct mk_plugin *p)
     p = NULL;
 }
 
-void mk_plugin_init()
+void mk_plugin_api_init()
 {
-    struct mk_list *static_plugins;
-    struct mk_list *head, *tmp;
-    struct mk_plugin *plugin;
-
-    /* Load static plugins, iterate and re-set on global config */
-    static_plugins = mk_static_plugins();
-    mk_list_foreach_safe(head, tmp, static_plugins) {
-        plugin = mk_list_entry(head, struct mk_plugin, _head);
-        printf("Test Static: %s\n", plugin->shortname);
-        mk_list_add(&plugin->_head, config->plugins);
-    }
-
-
+    /* Create an instance of the API */
     api = mk_mem_malloc_z(sizeof(struct plugin_api));
     __builtin_prefetch(api);
-
-    plg_stagemap = mk_mem_malloc_z(sizeof(struct plugin_stagemap));
-    plg_netiomap = NULL;
 
     /* Setup and connections list */
     api->config = config;
@@ -314,14 +338,12 @@ void mk_plugin_init()
 
 #ifndef SHAREDLIB
 
-void mk_plugin_read_config()
+void mk_plugin_load_all()
 {
     int ret;
-    char *path;
-    char *plugin_confdir = 0;
     char *tmp;
+    char *path;
     char shortname[64];
-    unsigned long len;
     struct mk_plugin *p;
     struct mk_config *cnf;
     struct mk_config_section *section;
@@ -329,11 +351,31 @@ void mk_plugin_read_config()
     struct mk_list *head;
     struct file_info f_info;
 
+    /* Load static plugins */
+    mk_static_plugins();
+    mk_list_foreach(head, config->plugins) {
+        p = mk_list_entry(head, struct mk_plugin, _head);
+
+        /* Load the static plugin */
+        p = mk_plugin_load(MK_PLUGIN_STATIC,
+                           p->shortname,
+                           p);
+        if (!p) {
+            mk_warn("Invalid plugin '%s'", p->shortname);
+            continue;
+        }
+        ret = mk_plugin_init(api, p);
+        if (ret < 0) {
+            /* Free plugin, do not register */
+            MK_TRACE("Unregister plugin '%s'", p->shortname);
+            continue;
+        }
+    }
+
     /* Read configuration file */
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", config->serverconf,
              config->plugin_load_conf_file);
-
     ret = mk_file_get_info(path, &f_info);
     if (ret == -1 || f_info.is_file == MK_FALSE) {
         snprintf(path, 1024, "%s", config->plugin_load_conf_file);
@@ -345,11 +387,6 @@ void mk_plugin_read_config()
         mk_mem_free(path);
         exit(EXIT_FAILURE);
     }
-
-    snprintf(path, 1024, "%s/%s", config->serverconf, config->plugins_conf_dir);
-    ret = mk_file_get_info(path, &f_info);
-    if (ret == -1 || f_info.is_directory == MK_FALSE)
-        snprintf(path, 1024, "%s", config->plugins_conf_dir);
 
     /* Read section 'PLUGINS' */
     section = mk_config_section_get(cnf, "PLUGINS");
@@ -377,32 +414,18 @@ void mk_plugin_read_config()
                 continue;
             }
 
-            /* Build plugin configuration path */
-            mk_string_build(&plugin_confdir,
-                    &len,
-                    "%s/%s/",
-                    path, p->shortname);
-
-            MK_TRACE("Load Plugin '%s@%s'", p->shortname, p->path);
-
-            /* Init plugin */
-            ret = p->init_plugin(&api, plugin_confdir);
+            ret = mk_plugin_init(api, p);
             if (ret < 0) {
                 /* Free plugin, do not register */
                 MK_TRACE("Unregister plugin '%s'", p->shortname);
-
                 mk_plugin_free(p);
-                mk_mem_free(plugin_confdir);
-                plugin_confdir  = NULL;
                 continue;
             }
-
-            mk_mem_free(plugin_confdir);
-            plugin_confdir = NULL;
         }
     }
 
     if (!config->transport_layer) {
+        mk_mem_free(path);
         mk_err("TransportLayer not defined in configuration");
         exit(EXIT_FAILURE);
     }

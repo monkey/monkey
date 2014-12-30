@@ -39,7 +39,6 @@
 int mk_liana_plugin_init(struct plugin_api **api, char *confdir)
 {
     (void) confdir;
-
     mk_api = *api;
     return 0;
 }
@@ -286,22 +285,6 @@ int mk_liana_server(char *port, char *listen_addr, int reuse_port)
     return socket_fd;
 }
 
-struct mk_plugin mk_plugin_liana = {
-    /* Identification */
-    .shortname     = "liana",
-    .name          = "Liana Network Layer",
-    .version       = VERSION,
-    .hooks         = MK_PLUGIN_NETWORK_LAYER,
-
-    /* Init / Exit */
-    .init_plugin   = mk_liana_plugin_init,
-    .exit_plugin   = mk_liana_plugin_exit,
-
-    /* Init Levels */
-    .master_init   = NULL,
-    .worker_init   = NULL
-};
-
 /* Network Layer plugin Callbacks */
 struct mk_plugin_network mk_plugin_network_liana = {
     .accept        = mk_liana_accept,
@@ -315,4 +298,23 @@ struct mk_plugin_network mk_plugin_network_liana = {
     .bind          = mk_liana_bind,
     .server        = mk_liana_server,
     .buffer_size   = mk_liana_buffer_size
+};
+
+struct mk_plugin mk_plugin_liana = {
+    /* Identification */
+    .shortname     = "liana",
+    .name          = "Liana Network Layer",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_NETWORK_LAYER,
+
+    /* Init / Exit */
+    .init_plugin   = mk_liana_plugin_init,
+    .exit_plugin   = mk_liana_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = NULL,
+
+    /* Type */
+    .network       = &mk_plugin_network_liana
 };

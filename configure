@@ -991,22 +991,18 @@ create_header_static_plugins()
     done
 
     echo >> $t
-    echo "static inline struct mk_list *mk_static_plugins()" >> $t
+    echo "void mk_static_plugins()" >> $t
     echo "{" >> $t
-    echo "    struct mk_list *list;" >> $t
     echo "    struct mk_plugin *p;" >> $t
     echo >> $t
-    echo "    list = mk_mem_malloc(sizeof(struct mk_list));" >> $t
-    echo "    mk_list_init(list);" >> $t
 
     for e in $static_array;
     do
         echo "    p = &mk_plugin_$e;" >> $t
-        echo "    mk_list_add(&p->_head, list);" >> $t
+        echo "    mk_list_add(&p->_head, config->plugins);" >> $t
     done
 
     echo >> $t
-    echo "    return list;" >> $t
     echo "}" >> $t
 }
 
