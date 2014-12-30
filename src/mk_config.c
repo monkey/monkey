@@ -248,7 +248,7 @@ struct mk_config *mk_config_create(const char *path)
     }
 
     if (section && n_keys == 0) {
-        mk_config_warning(path, line, "Section do not have keys");
+        /* No key, no warning */
     }
 
     /*
