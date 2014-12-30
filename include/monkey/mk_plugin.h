@@ -51,6 +51,7 @@ extern __thread struct mk_list *worker_plugin_event_list;
 
 /* Plugin: Network type */
 #define MK_PLUGIN_NETWORK_LAYER (128)
+#define MK_PLUGIN_STAGE         (256)
 
 /* Return values */
 #define MK_PLUGIN_RET_NOT_ME -1
@@ -282,6 +283,15 @@ struct mk_plugin_network {
     int (*buffer_size) ();
 };
 
+struct mk_plugin_stage {
+    int (*stage10) (int, struct sched_connection *);
+    int (*stage20) (struct mk_http_session *, struct mk_http_request *);
+    int (*stage30) (struct mk_plugin *, struct mk_http_session *,
+                    struct mk_http_request *);
+    int (*stage40) (struct mk_http_session *, struct mk_http_request *);
+    int (*stage50) (int);
+};
+
 /* Info: used to register a plugin */
 struct mk_plugin {
     /* Identification */
@@ -299,7 +309,8 @@ struct mk_plugin {
     void (*worker_init) ();
 
     /* Callback references for plugin type */
-    struct mk_plugin_network *network;
+    struct mk_plugin_network *network;        /* MK_NETWORK_LAYER   */
+    struct mk_plugin_stage   *stage;          /* MK_PLUGIN_STAGE    */
 
     /* Internal use variables */
     void *handler;                 /* DSO handler                  */

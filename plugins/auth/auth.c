@@ -29,11 +29,6 @@
 #include "sha1.h"
 #include "base64.h"
 
-MONKEY_PLUGIN("auth",              /* shortname */
-              "Authentication",    /* name */
-              VERSION,             /* version */
-              MK_PLUGIN_STAGE_30); /* hooks */
-
 static int mk_auth_validate_user(struct users_file *users,
                                  const char *credentials, unsigned int len)
 {
@@ -109,7 +104,7 @@ static int mk_auth_validate_user(struct users_file *users,
     return -1;
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_auth_plugin_init(struct plugin_api **api, char *confdir)
 {
     (void) confdir;
 
@@ -127,11 +122,12 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+int mk_auth_plugin_exit()
 {
+    return 0;
 }
 
-void _mkp_core_thctx()
+void mk_auth_worker_init()
 {
     char *user;
 
@@ -141,9 +137,9 @@ void _mkp_core_thctx()
 }
 
 /* Object handler */
-int _mkp_stage_30(struct plugin *plugin,
-                  struct mk_http_session *cs,
-                  struct mk_http_request *sr)
+int mk_auth_stage30(struct mk_plugin *plugin,
+                    struct mk_http_session *cs,
+                    struct mk_http_request *sr)
 {
     int val;
     short int is_restricted = MK_FALSE;
@@ -220,3 +216,26 @@ int _mkp_stage_30(struct plugin *plugin,
 
     return MK_PLUGIN_RET_END;
 }
+
+struct mk_plugin_stage mk_plugin_stage_auth = {
+    .stage30      = &mk_auth_stage30
+};
+
+struct mk_plugin mk_plugin_auth = {
+    /* Identification */
+    .shortname     = "auth",
+    .name          = "Basic Authentication",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_STAGE_30,
+
+    /* Init / Exit */
+    .init_plugin   = mk_auth_plugin_init,
+    .exit_plugin   = mk_auth_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = mk_auth_worker_init,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_auth
+};
