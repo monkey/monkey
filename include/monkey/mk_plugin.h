@@ -38,6 +38,13 @@ extern __thread struct mk_list *worker_plugin_event_list;
 #define MK_PLUGIN_ERROR -1      /* plugin execution error */
 #define MK_PLUGIN_
 
+/* Plugin: Stages */
+#define MK_PLUGIN_STAGE_10 (4)    /* Connection just accept()ed */
+#define MK_PLUGIN_STAGE_20 (8)    /* HTTP Request arrived */
+#define MK_PLUGIN_STAGE_30 (16)   /* Object handler  */
+#define MK_PLUGIN_STAGE_40 (32)   /* Content served */
+#define MK_PLUGIN_STAGE_50 (64)   /* Conection ended */
+
 /* Plugin: Network type */
 #define MK_PLUGIN_NETWORK_LAYER (128)
 #define MK_PLUGIN_STAGE         (256)
