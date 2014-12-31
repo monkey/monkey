@@ -164,12 +164,20 @@ struct server_config
 
     /* FIXME: temporal map of Network Layer plugin */
     struct mk_plugin_network *network;
+
+    /* Direct map to Stage plugins */
+    struct mk_list stage10_handler;
+    struct mk_list stage20_handler;
+    struct mk_list stage30_handler;
+    struct mk_list stage40_handler;
+    struct mk_list stage50_handler;
 };
 
 extern struct server_config *config;
 
 
 /* Functions */
+struct server_config *mk_config_init();
 void mk_config_start_configure(void);
 void mk_config_add_index(char *indexname);
 void mk_config_set_init_values(void);

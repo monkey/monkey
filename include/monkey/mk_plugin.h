@@ -236,6 +236,11 @@ struct plugin_event
     struct mk_list _head;
 };
 
+struct mk_plugin_stage_handler {
+
+    struct mk_list _head;
+};
+
 /*
  * Network plugin: a plugin that provides a network layer, eg: plain
  * sockets or SSL.
@@ -261,6 +266,12 @@ struct mk_plugin_stage {
                     struct mk_http_request *);
     int (*stage40) (struct mk_http_session *, struct mk_http_request *);
     int (*stage50) (int);
+
+    /* Just a reference to the parent plugin */
+    struct mk_plugin *plugin;
+
+    /* Only used when doing direct mapping from config->stageN_handler; */
+    struct mk_list _head;
 };
 
 /* Info: used to register a plugin */

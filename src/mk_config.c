@@ -52,6 +52,20 @@ gid_t EGID;
 gid_t EUID;
 
 
+struct server_config *mk_config_init()
+{
+    struct server_config *config;
+
+    config = mk_mem_malloc_z(sizeof(struct server_config));
+    mk_list_init(&config->stage10_handler);
+    mk_list_init(&config->stage20_handler);
+    mk_list_init(&config->stage30_handler);
+    mk_list_init(&config->stage40_handler);
+    mk_list_init(&config->stage50_handler);
+
+    return config;
+}
+
 /* Raise a configuration schema error */
 void mk_config_error(const char *path, int line, const char *msg)
 {

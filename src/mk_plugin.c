@@ -128,10 +128,10 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
     char *path;
     char symbol[64];
     void *handler;
-    struct mk_plugin *plugin;
+    struct mk_plugin *plugin = NULL;
+    struct mk_plugin_stage *stage;
 
     /* Set main struct name to reference */
-    snprintf(symbol, sizeof(symbol) - 1, "mk_plugin_%s", shortname);
     if (type == MK_PLUGIN_DYNAMIC) {
         path = (char *) data;
         handler = mk_plugin_load_dynamic(path);
@@ -139,6 +139,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
             return NULL;
         }
 
+        snprintf(symbol, sizeof(symbol) - 1, "mk_plugin_%s", shortname);
         plugin  = mk_plugin_load_symbol(handler, symbol);
         if (!plugin) {
             mk_warn("Plugin '%s' is not registering properly", path);
@@ -174,6 +175,41 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
             if (config->transport_buffer_size <= 0) {
                 config->transport_buffer_size = MK_REQUEST_CHUNK;
             }
+        }
+    }
+    if (plugin->hooks & MK_PLUGIN_STAGE) {
+        struct mk_plugin_stage *st;
+
+        stage = plugin->stage;
+        if (stage->stage10) {
+            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st->stage10 = stage->stage10;
+            st->plugin  = plugin;
+            mk_list_add(&st->_head, &config->stage10_handler);
+        }
+        if (stage->stage20) {
+            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st->stage20 = stage->stage20;
+            st->plugin  = plugin;
+            mk_list_add(&st->_head, &config->stage20_handler);
+        }
+        if (stage->stage30) {
+            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st->stage30 = stage->stage30;
+            st->plugin  = plugin;
+            mk_list_add(&st->_head, &config->stage30_handler);
+        }
+        if (stage->stage40) {
+            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st->stage40 = stage->stage20;
+            st->plugin  = plugin;
+            mk_list_add(&st->_head, &config->stage40_handler);
+        }
+        if (stage->stage50) {
+            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st->stage50 = stage->stage50;
+            st->plugin  = plugin;
+            mk_list_add(&st->_head, &config->stage50_handler);
         }
     }
 
@@ -491,7 +527,8 @@ int mk_plugin_stage_run(unsigned int hook,
 {
     int ret;
     struct plugin_stagem *stm;
-
+    struct mk_list *head;
+    struct mk_plugin_stage *stage;
 
 #ifdef SHAREDLIB
     struct sched_list_node *thconf = mk_sched_get_thread_conf();
@@ -523,40 +560,29 @@ int mk_plugin_stage_run(unsigned int hook,
 
     /* Connection just accept(ed) not assigned to worker thread */
     if (hook & MK_PLUGIN_STAGE_10) {
-        /*
-        stm = plg_stagemap->stage_10;
-        while (stm) {
-            MK_TRACE("[%s] STAGE 10", stm->p->shortname);
-            ret = stm->p->stage.s10(socket, conx);
+        mk_list_foreach(head, &config->stage10_handler) {
+            stage = mk_list_entry(head, struct mk_plugin_stage, _head);
+            ret = stage->stage10(socket, conx);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
                 MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
-
-            stm = stm->next;
         }
-        */
     }
 
     /* The HTTP Request stream has been just received */
     if (hook & MK_PLUGIN_STAGE_20) {
-        /*
-        stm = plg_stagemap->stage_20;
-        while (stm) {
-            MK_TRACE("[%s] STAGE 20", stm->p->shortname);
-
-            ret = stm->p->stage.s20(cs, sr);
+        mk_list_foreach(head, &config->stage20_handler) {
+            stage = mk_list_entry(head, struct mk_plugin_stage, _head);
+            ret = stage->stage20(cs, sr);
             switch (ret) {
             case MK_PLUGIN_RET_CLOSE_CONX:
                 MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");
 
                 return MK_PLUGIN_RET_CLOSE_CONX;
             }
-
-            stm = stm->next;
         }
-        */
     }
 
     /*
@@ -564,15 +590,9 @@ int mk_plugin_stage_run(unsigned int hook,
      * request, it decides what to do with the request
      */
     if (hook & MK_PLUGIN_STAGE_30) {
-        /* The request just arrived and is required to check who can
-         * handle it */
-
-        /*
-        stm = plg_stagemap->stage_30;
-        while (stm) {
-            MK_TRACE("[%s] STAGE 30", stm->p->shortname);
-            ret = stm->p->stage.s30(stm->p, cs, sr);
-
+        mk_list_foreach(head, &config->stage30_handler) {
+            stage = mk_list_entry(head, struct mk_plugin_stage, _head);
+            ret = stage->stage30(stage->plugin, cs, sr);
             switch (ret) {
                 case MK_PLUGIN_RET_NOT_ME:
                     break;
@@ -583,45 +603,32 @@ int mk_plugin_stage_run(unsigned int hook,
                 case MK_PLUGIN_RET_CONTINUE:
                     return ret;
                 default:
-                    mk_err("Plugin '%s' returns invalid value %i",
-                           stm->p->shortname, ret);
+                    mk_err("Plugin returns invalid value %i", ret);
                     exit(EXIT_FAILURE);
             }
-            stm = stm->next;
         }
-        */
     }
 
     /* The request has ended, the content has been served */
     if (hook & MK_PLUGIN_STAGE_40) {
-        /*
-        stm = plg_stagemap->stage_40;
-        while (stm) {
-            MK_TRACE("[%s] STAGE 40", stm->p->shortname);
-
-            stm->p->stage.s40(cs, sr);
-            stm = stm->next;
+        mk_list_foreach(head, &config->stage40_handler) {
+            stage = mk_list_entry(head, struct mk_plugin_stage, _head);
+            stage->stage40(cs, sr);
         }
-        */
     }
 
     /* The request has ended, the content has been served */
     if (hook & MK_PLUGIN_STAGE_50) {
-        /*
-        stm = plg_stagemap->stage_50;
-        while (stm) {
-            MK_TRACE("[%s] STAGE 50", stm->p->shortname);
-
-            ret = stm->p->stage.s50(socket);
+        mk_list_foreach(head, &config->stage50_handler) {
+            stage = mk_list_entry(head, struct mk_plugin_stage, _head);
+            ret = stage->stage50(socket);
             switch (ret) {
             case MK_PLUGIN_RET_NOT_ME:
                 break;
             case MK_PLUGIN_RET_CONTINUE:
                 return MK_PLUGIN_RET_CONTINUE;
             }
-            stm = stm->next;
         }
-        */
     }
 
 #ifdef SHAREDLIB

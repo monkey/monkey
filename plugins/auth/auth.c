@@ -226,7 +226,7 @@ struct mk_plugin mk_plugin_auth = {
     .shortname     = "auth",
     .name          = "Basic Authentication",
     .version       = VERSION,
-    .hooks         = MK_PLUGIN_STAGE_30,
+    .hooks         = MK_PLUGIN_STAGE,
 
     /* Init / Exit */
     .init_plugin   = mk_auth_plugin_init,

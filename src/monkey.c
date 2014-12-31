@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     }
 
     /* setup basic configurations */
-    config = mk_mem_malloc_z(sizeof(struct server_config));
+    config = mk_config_init();
 
     /* Init Kernel version data */
     mk_kernel_init();
