@@ -38,8 +38,6 @@ struct cgi_request *cgi_req_create(int fd, int socket,
 void cgi_req_add(struct cgi_request *r)
 {
     struct mk_list *list = pthread_getspecific(cgi_request_list);
-
-    mk_bug(!list);
     mk_list_add(&r->_head, list);
 }
 

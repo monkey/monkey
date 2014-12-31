@@ -26,13 +26,6 @@
 
 #include "cgi.h"
 
-
-MONKEY_PLUGIN("cgi",		/* shortname */
-              "CGI handler",	/* name */
-              VERSION,		/* version */
-              MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX);	/* hooks */
-
-
 int swrite(const int fd, const void *buf, const size_t count)
 {
     ssize_t pos = count, ret = 0;
@@ -63,7 +56,7 @@ static int do_cgi(const char *const __restrict__ file,
                   struct mk_http_request *const sr,
                   struct mk_http_session *const cs,
                   struct cgi_match_t *match,
-                  struct plugin *const plugin)
+                  struct mk_plugin *const plugin)
 {
     int ret;
     const int socket = cs->socket;
@@ -416,7 +409,7 @@ static void cgi_read_config(const char * const path)
     }
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_cgi_plugin_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
 
@@ -435,15 +428,17 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+int mk_cgi_plugin_exit()
 {
     regfree(&match_regex);
     mk_api->mem_free(requests_by_socket);
+
+    return 0;
 }
 
-int _mkp_stage_30(struct plugin *plugin,
-                  struct mk_http_session *cs,
-                  struct mk_http_request *sr)
+int mk_cgi_stage30(struct mk_plugin *plugin,
+                   struct mk_http_session *cs,
+                   struct mk_http_request *sr)
 {
     unsigned int i;
     char url[PATHLEN];
@@ -518,10 +513,34 @@ int _mkp_stage_30(struct plugin *plugin,
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-void _mkp_core_thctx(void)
+void mk_cgi_worker_init()
 {
     struct mk_list *list = mk_api->mem_alloc_z(sizeof(struct mk_list));
 
     mk_list_init(list);
     pthread_setspecific(cgi_request_list, (void *) list);
 }
+
+
+struct mk_plugin_stage mk_plugin_stage_cgi = {
+    .stage30      = &mk_cgi_stage30
+};
+
+struct mk_plugin mk_plugin_cgi = {
+    /* Identification */
+    .shortname     = "cgi",
+    .name          = "Common Gateway Interface",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_STAGE,
+
+    /* Init / Exit */
+    .init_plugin   = mk_cgi_plugin_init,
+    .exit_plugin   = mk_cgi_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = mk_cgi_worker_init,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_cgi
+};

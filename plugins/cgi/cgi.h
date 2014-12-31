@@ -18,8 +18,8 @@
  *  limitations under the License.
  */
 
-#ifndef CGI_H
-#define CGI_H
+#ifndef MK_CGI_H
+#define MK_CGI_H
 
 #define _GNU_SOURCE
 

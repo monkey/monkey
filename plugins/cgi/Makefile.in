@@ -3,6 +3,7 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
+AR      = @echo "  AR   $(_PATH)/$@"; ar
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
@@ -12,3 +13,6 @@ OBJECTS = cgi.o request.o event.o
 
 monkey-cgi.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+
+monkey-cgi.a: $(OBJECTS)
+	$(AR) rcs $@ $(OBJECTS)
