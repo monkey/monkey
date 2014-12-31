@@ -147,5 +147,5 @@ struct mk_plugin mk_plugin_cheetah = {
 
     /* Init Levels */
     .master_init   = mk_cheetah_master_init,
-    .worker_init   = NULL,
+    .worker_init   = NULL
 };

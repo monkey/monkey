@@ -155,7 +155,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
 
     /* Validate all callbacks are set */
     if (!plugin->shortname || !plugin->name || !plugin->version ||
-        !plugin->hooks || !plugin->init_plugin || !plugin->exit_plugin) {
+        !plugin->init_plugin || !plugin->exit_plugin) {
         mk_warn("Plugin '%s' is not registering all fields properly",
                 shortname);
         return NULL;
@@ -392,7 +392,6 @@ void mk_plugin_load_all()
                            p->shortname,
                            (void *) p);
         if (!p) {
-            mk_warn("Invalid plugin '%s'", p->shortname);
             continue;
         }
         ret = mk_plugin_init(api, p);
