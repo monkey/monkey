@@ -34,7 +34,7 @@
 #include "chunk.h"
 #include "request.h"
 
-const mk_ptr_t mk_iov_none = {
+const mk_ptr_t mk_fcgi_iov_none = {
 	.data = "",
 	.len = 0,
 };
@@ -86,7 +86,7 @@ static int fcgi_handle_cgi_header(struct mk_http_request *sr,
 		mk_api->iov_add_entry(sr->headers._extra_rows,
                               entry,
                               len,
-                              mk_iov_none,
+                              mk_fcgi_iov_none,
                               0);
 	}
 	return 0;
@@ -1053,11 +1053,11 @@ int _mkp_event_error(int socket)
 }
 
 
-struct mk_plugin_stage mk_plugin_stage_dirlisting = {
+struct mk_plugin_stage mk_plugin_stage_fastcgi = {
     .stage30      = &mk_fastcgi_stage30
 };
 
-struct mk_plugin mk_plugin_dirlisting = {
+struct mk_plugin mk_plugin_fastcgi = {
     /* Identification */
     .shortname     = "fastcgi",
     .name          = "FastCGI Client",
@@ -1073,7 +1073,5 @@ struct mk_plugin mk_plugin_dirlisting = {
     .worker_init   = NULL,
 
     /* Type */
-    .stage         = &mk_plugin_stage_dirlisting
+    .stage         = &mk_plugin_stage_fastcgi
 };
-
-struct mk_plugin *_plugin_info = &mk_plugin_dirlisting;
