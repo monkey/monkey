@@ -36,6 +36,8 @@
 #include "logger.h"
 #include "pointers.h"
 
+pthread_key_t _mkp_data;
+
 struct status_response {
     int   i_status;
     char *s_status;
@@ -131,7 +133,7 @@ static ssize_t _mk_logger_append(int pipe_fd_in,
 #endif
 }
 
-static void mk_logger_worker_init(void *args)
+static void mk_logger_start_worker(void *args)
 {
     int i;
     int fd;
@@ -455,11 +457,11 @@ int mk_logger_master_init(struct server_config *config)
         }
     }
 
-    mk_api->worker_spawn((void *) mk_logger_worker_init, NULL);
+    mk_api->worker_spawn((void *) mk_logger_start_worker, NULL);
     return 0;
 }
 
-void mk_plugin_worker_init()
+void mk_logger_worker_init()
 {
     struct mk_iov *iov_log;
     mk_ptr_t *content_length;
