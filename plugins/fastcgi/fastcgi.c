@@ -34,17 +34,12 @@
 #include "chunk.h"
 #include "request.h"
 
-MONKEY_PLUGIN("fastcgi",		/* shortname */
-              "FastCGI client",		/* name */
-              "0.2",			/* version */
-              MK_PLUGIN_STAGE_30 | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_CORE_PRCTX);
-
 const mk_ptr_t mk_iov_none = {
 	.data = "",
 	.len = 0,
 };
 
-static struct plugin * fcgi_global_plugin;
+static struct mk_plugin *fcgi_global_plugin;
 
 static struct fcgi_config fcgi_global_config;
 static struct fcgi_context_list fcgi_global_context_list;
@@ -189,7 +184,7 @@ int fcgi_server_connect(const struct fcgi_server *server)
 
 int fcgi_new_connection(int location_id)
 {
-	struct plugin *plugin = fcgi_global_plugin;
+	struct mk_plugin *plugin = fcgi_global_plugin;
 	struct fcgi_context *cntx;
 	struct fcgi_fd_list *fdl;
 	struct fcgi_fd *fd;
@@ -656,8 +651,8 @@ static int regex_match_location(const struct fcgi_config *config,
 	return -1;
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
-                  struct mk_http_request *sr)
+int mk_fastcgi_stage30(struct mk_plugin *plugin, struct mk_http_session *cs,
+                       struct mk_http_request *sr)
 {
 	char *uri = NULL;
 	struct fcgi_context *cntx;
@@ -729,7 +724,7 @@ int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
 	return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_fastcgi_plugin_init(struct plugin_api **api, char *confdir)
 {
 	mk_api = *api;
 
@@ -746,16 +741,18 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 	return -1;
 }
 
-void _mkp_exit()
+int mk_fastcgi_plugin_exit()
 {
 	fcgi_context_list_free(&fcgi_global_context_list);
 	fcgi_config_free(&fcgi_global_config);
+
+    return 0;
 }
 
-int _mkp_core_prctx(struct server_config *config)
+int mk_fastcgi_master_init(struct server_config *config)
 {
 	struct mk_list *h;
-	struct plugin *p;
+	struct mk_plugin *p;
 
 	check(!fcgi_context_list_init(&fcgi_global_context_list,
                                   &fcgi_global_config,
@@ -764,10 +761,9 @@ int _mkp_core_prctx(struct server_config *config)
           "Failed to init thread data list.");
 
 	mk_list_foreach(h, config->plugins) {
+		p = mk_list_entry(h, struct mk_plugin, _head);
 
-		p = mk_list_entry(h, struct plugin, _head);
-
-		if (p->shortname == _plugin_info.shortname) {
+		if (strcmp(p->shortname, "fastcgi") == 0) {
 			fcgi_global_plugin = p;
 		}
 	}
@@ -778,7 +774,7 @@ int _mkp_core_prctx(struct server_config *config)
 	return -1;
 }
 
-void _mkp_core_thctx(void)
+void mk_fastcgi_worker_init()
 {
 	int tid;
 	struct fcgi_context *cntx;
@@ -1055,3 +1051,29 @@ int _mkp_event_error(int socket)
 {
 	return hangup(socket);
 }
+
+
+struct mk_plugin_stage mk_plugin_stage_dirlisting = {
+    .stage30      = &mk_fastcgi_stage30
+};
+
+struct mk_plugin mk_plugin_dirlisting = {
+    /* Identification */
+    .shortname     = "fastcgi",
+    .name          = "FastCGI Client",
+    .version       = "0.3",
+    .hooks         = MK_PLUGIN_STAGE,
+
+    /* Init / Exit */
+    .init_plugin   = mk_fastcgi_plugin_init,
+    .exit_plugin   = mk_fastcgi_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = NULL,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_dirlisting
+};
+
+struct mk_plugin *_plugin_info = &mk_plugin_dirlisting;

@@ -4,6 +4,7 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
+AR      = @echo "  AR   $(_PATH)/$@"; ar
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
@@ -20,3 +21,6 @@ OBJECTS = fastcgi.o \
 
 monkey-fastcgi.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+
+monkey-fastcgi.a: $(OBJECTS)
+	$(AR) rcs $@ $(OBJECTS)

@@ -16,11 +16,11 @@
 
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
 
-#define log_err(M, ...) mk_err("[%s] (%s:%d: errno: %s) " M, _plugin_info.shortname, __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
+#define log_err(M, ...) mk_err("[fastcgi] (%s:%d: errno: %s) " M, __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
-#define log_warn(M, ...) mk_warn("[%s] (%s:%d: errno: %s) " M, _plugin_info.shortname, __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
+#define log_warn(M, ...) mk_warn("[fastcgi] (%s:%d: errno: %s) " M, __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
-#define log_info(M, ...) mk_info("[%s] (%s:%d) " M, _plugin_info.shortname, __FILE__, __LINE__, ##__VA_ARGS__)
+#define log_info(M, ...) mk_info("[fastcgi] (%s:%d) " M, __FILE__, __LINE__, ##__VA_ARGS__)
 
 #define check(A, M, ...) if (!(A)) { log_err(M, ##__VA_ARGS__); errno = 0; goto error; }
 
