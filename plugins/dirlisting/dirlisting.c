@@ -43,15 +43,10 @@
 
 #include "dirlisting.h"
 
-MONKEY_PLUGIN("dirlisting",          /* shortname */
-              "Directory Listing",   /* name */
-              VERSION,              /* version */
-              MK_PLUGIN_STAGE_30);   /* hooks */
-
 const mk_ptr_t mk_dirhtml_default_mime = mk_ptr_init(MK_DIRHTML_DEFAULT_MIME);
-const mk_ptr_t mk_iov_dash = mk_ptr_init("-");
-const mk_ptr_t mk_iov_none = mk_ptr_init("");
-const mk_ptr_t mk_iov_slash = mk_ptr_init("/");
+const mk_ptr_t mk_dir_iov_dash  = mk_ptr_init("-");
+const mk_ptr_t mk_dir_iov_none  = mk_ptr_init("");
+const mk_ptr_t mk_dir_iov_slash = mk_ptr_init("/");
 
 /* DIR_HTML logic:
  * ---------------
@@ -494,13 +489,13 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
         /* static */
         else {
             mk_api->iov_add_entry(iov, tpl->buf,
-                                  tpl->len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+                                  tpl->len, mk_dir_iov_none, MK_IOV_NOT_FREE_BUF);
         }
         tpl = tpl->next;
     }
 
     if (is_chunked == MK_TRUE) {
-        mk_api->iov_add_entry(iov, "\r\n", 2, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_api->iov_add_entry(iov, "\r\n", 2, mk_dir_iov_none, MK_IOV_NOT_FREE_BUF);
     }
 
     return (struct mk_iov *) iov;
@@ -680,12 +675,12 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Set %_html_title_% */
     title = mk_api->pointer_to_buf(sr->uri_processed);
-    values_global = mk_dirhtml_tag_assign(NULL, 0, mk_iov_none,
+    values_global = mk_dirhtml_tag_assign(NULL, 0, mk_dir_iov_none,
                                           title,
                                           (char **) _tags_global);
 
     /* Set %_theme_path_% */
-    mk_dirhtml_tag_assign(&values_global, 1, mk_iov_none,
+    mk_dirhtml_tag_assign(&values_global, 1, mk_dir_iov_none,
                           dirhtml_conf->theme_path, (char **) _tags_global);
 
     /* HTML Header */
@@ -723,10 +718,10 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
     for (i = 0; i < list_len; i++) {
         /* %_target_title_% */
         if (toc[i]->type == DT_DIR) {
-            sep = mk_iov_slash;
+            sep = mk_dir_iov_slash;
         }
         else {
-            sep = mk_iov_none;
+            sep = mk_dir_iov_none;
         }
 
         /* target title */
@@ -743,11 +738,11 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
                               toc[i]->name, (char **) _tags_entry);
 
         /* target modification time */
-        mk_dirhtml_tag_assign(&values_entry, 3, mk_iov_none,
+        mk_dirhtml_tag_assign(&values_entry, 3, mk_dir_iov_none,
                               toc[i]->ft_modif, (char **) _tags_entry);
 
         /* target size */
-        mk_dirhtml_tag_assign(&values_entry, 4, mk_iov_none,
+        mk_dirhtml_tag_assign(&values_entry, 4, mk_dir_iov_none,
                               toc[i]->size, (char **) _tags_entry);
 
         iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
@@ -789,19 +784,20 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
     return 0;
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_dirlisting_plugin_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
 
     return mk_dirhtml_conf(confdir);
 }
 
-void _mkp_exit()
+int mk_dirlisting_plugin_exit()
 {
+    return 0;
 }
 
-int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
-                  struct mk_http_request *sr)
+int mk_dirlisting_stage30(struct mk_plugin *plugin, struct mk_http_session *cs,
+                          struct mk_http_request *sr)
 {
     (void) plugin;
 
@@ -833,3 +829,26 @@ int _mkp_stage_30(struct plugin *plugin, struct mk_http_session *cs,
 
     return MK_PLUGIN_RET_END;
 }
+
+struct mk_plugin_stage mk_plugin_stage_dirlisting = {
+    .stage30      = &mk_dirlisting_stage30
+};
+
+struct mk_plugin mk_plugin_dirlisting = {
+    /* Identification */
+    .shortname     = "dirlisting",
+    .name          = "Directory Listing",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_STAGE,
+
+    /* Init / Exit */
+    .init_plugin   = mk_dirlisting_plugin_init,
+    .exit_plugin   = mk_dirlisting_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = NULL,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_dirlisting
+};
