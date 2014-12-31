@@ -3,6 +3,7 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
+AR      = @echo "  AR   $(_PATH)/$@"; ar
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS
@@ -12,3 +13,6 @@ CHEETAH_OBJECTS = cheetah.o loop.o cmd.o cutils.o
 
 monkey-cheetah.so: $(CHEETAH_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -o $@ $^ -lc
+
+monkey-cheetah.a: $(CHEETAH_OBJECTS)
+	$(AR) rcs $@ $(CHEETAH_OBJECTS)

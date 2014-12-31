@@ -30,11 +30,6 @@
 #include "cheetah.h"
 #include "loop.h"
 
-MONKEY_PLUGIN("cheetah",              /* shortname */
-              "Cheetah! Shell",       /* name */
-              VERSION,               /* version */
-              MK_PLUGIN_CORE_PRCTX);  /* hooks */
-
 void mk_cheetah_welcome_msg()
 {
     CHEETAH_WRITE("\n%s%s***%s Welcome to %sCheetah!%s, the %sMonkey Shell %s:) %s***%s\n",
@@ -114,7 +109,7 @@ static void mk_cheetah_init(void *args UNUSED_PARAM)
 /* This function is called when the plugin is loaded, it must
  * return
  */
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_cheetah_plugin_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
     init_time = time(NULL);
@@ -123,17 +118,34 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+int mk_cheetah_plugin_exit()
 {
     if (listen_mode == LISTEN_SERVER) {
         /* Remote named pipe */
         unlink(cheetah_server);
         mk_api->mem_free(cheetah_server);
     }
+
+    return 0;
 }
 
-int _mkp_core_prctx(struct server_config *config)
+int mk_cheetah_master_init(struct server_config *config)
 {
     mk_api->worker_spawn(mk_cheetah_init, config);
     return 0;
 }
+
+struct mk_plugin mk_plugin_cheetah = {
+    /* Identification */
+    .shortname     = "cheetah",
+    .name          = "Cheetah! Shell",
+    .version       = VERSION,
+
+    /* Init / Exit */
+    .init_plugin   = mk_cheetah_plugin_init,
+    .exit_plugin   = mk_cheetah_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = mk_cheetah_master_init,
+    .worker_init   = NULL,
+};

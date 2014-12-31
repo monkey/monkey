@@ -134,53 +134,30 @@ void mk_cheetah_cmd_uptime()
          (minutes > 1) ? "s" : "", seconds, (seconds > 1) ? "s" : "");
 }
 
-void mk_cheetah_cmd_plugins_print_stage(struct mk_list *list, const char *stage,
-                                        int stage_bw)
-{
-    struct plugin *p;
-    struct mk_list *head;
-
-    if (mk_list_is_empty(list) == 0) {
-        return;
-    }
-
-    CHEETAH_WRITE("%s[%s]%s", ANSI_BOLD ANSI_YELLOW, stage, ANSI_RESET);
-
-    mk_list_foreach(head, list) {
-        p = mk_list_entry(head, struct plugin, _head);
-        if (p->hooks & stage_bw) {
-            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                          p->shortname, p->name, p->version, p->path);
-        }
-    }
-
-    CHEETAH_WRITE("\n\n");
-}
-
 void mk_cheetah_cmd_plugins_print_core(struct mk_list *list)
 {
-    struct plugin *p;
+    struct mk_plugin *p;
     struct mk_list *head;
 
-    CHEETAH_WRITE("\n%s[CORE PROCESS CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+    CHEETAH_WRITE("\n%s[MASTER INIT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
     mk_list_foreach(head, list) {
-        p = mk_list_entry(head, struct plugin, _head);
+        p = mk_list_entry(head, struct mk_plugin, _head);
 
-        if (p->hooks & MK_PLUGIN_CORE_PRCTX) {
+        if (p->master_init) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
                           p->shortname, p->name, p->version, p->path);
         }
     }
 
-    CHEETAH_WRITE("\n\n%s[CORE THREAD CONTEXT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
+    CHEETAH_WRITE("\n\n%s[WORKER INIT]%s", ANSI_BOLD ANSI_BLUE, ANSI_RESET);
 
     mk_list_foreach(head, list) {
-        p = mk_list_entry(head, struct plugin, _head);
+        p = mk_list_entry(head, struct mk_plugin, _head);
 
-        if (p->hooks & MK_PLUGIN_CORE_THCTX) {
+        if (p->worker_init) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
-                   p->shortname, p->name, p->version, p->path);
+                          p->shortname, p->name, p->version, p->path);
         }
     }
 
@@ -189,14 +166,14 @@ void mk_cheetah_cmd_plugins_print_core(struct mk_list *list)
 
 void mk_cheetah_cmd_plugins_print_network(struct mk_list *list)
 {
-    struct plugin *p;
+    struct mk_plugin *p;
     struct mk_list *head;
 
     CHEETAH_WRITE("%s[NETWORK I/O]%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
 
     mk_list_foreach(head, list) {
-        p = mk_list_entry(head, struct plugin, _head);
-        if (p->hooks & MK_PLUGIN_NETWORK_IO) {
+        p = mk_list_entry(head, struct mk_plugin, _head);
+        if (p->hooks & MK_PLUGIN_NETWORK_LAYER) {
             CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
                           p->shortname, p->name, p->version, p->path);
         }
@@ -207,23 +184,66 @@ void mk_cheetah_cmd_plugins_print_network(struct mk_list *list)
 
 void mk_cheetah_cmd_plugins()
 {
-    struct mk_list *list = mk_api->plugins;
+    struct mk_plugin *p;
+    struct mk_plugin_stage *s;
+    struct mk_list *head;
 
-    CHEETAH_WRITE("List of plugins and hooks associated\n");
-
-    if (!list) {
-        return;
+    if (mk_list_is_empty(&config->stage10_handler)) {
+        CHEETAH_WRITE("%s[%sSTAGE_10%s]%s",
+                      ANSI_BOLD ANSI_YELLOW, ANSI_WHITE, ANSI_RESET);
+        mk_list_foreach(head, &config->stage10_handler) {
+            s = mk_list_entry(head, struct mk_plugin_stage, _head);
+            p = s->plugin;
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
+        }
     }
 
-    mk_cheetah_cmd_plugins_print_core(list);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_10", MK_PLUGIN_STAGE_10);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_20", MK_PLUGIN_STAGE_20);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_30", MK_PLUGIN_STAGE_30);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_40", MK_PLUGIN_STAGE_40);
-    mk_cheetah_cmd_plugins_print_stage(list, "STAGE_50", MK_PLUGIN_STAGE_50);
-    mk_cheetah_cmd_plugins_print_network(list);
+    if (mk_list_is_empty(&config->stage20_handler)) {
+        CHEETAH_WRITE("%s[%sSTAGE_20%s]%s",
+                      ANSI_BOLD ANSI_YELLOW, ANSI_WHITE, ANSI_RESET);
+        mk_list_foreach(head, &config->stage20_handler) {
+            s = mk_list_entry(head, struct mk_plugin_stage, _head);
+            p = s->plugin;
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
+        }
+    }
 
-    CHEETAH_WRITE("\n");
+    if (mk_list_is_empty(&config->stage30_handler)) {
+        CHEETAH_WRITE("%s[%sSTAGE_30%s]%s",
+                      ANSI_BOLD ANSI_YELLOW, ANSI_WHITE, ANSI_RESET);
+        mk_list_foreach(head, &config->stage30_handler) {
+            s = mk_list_entry(head, struct mk_plugin_stage, _head);
+            p = s->plugin;
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
+        }
+    }
+
+    if (mk_list_is_empty(&config->stage40_handler)) {
+        CHEETAH_WRITE("%s[%sSTAGE_40%s]%s",
+                      ANSI_BOLD ANSI_YELLOW, ANSI_WHITE, ANSI_RESET);
+        mk_list_foreach(head, &config->stage40_handler) {
+            s = mk_list_entry(head, struct mk_plugin_stage, _head);
+            p = s->plugin;
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
+        }
+    }
+
+    if (mk_list_is_empty(&config->stage50_handler)) {
+        CHEETAH_WRITE("%s[%sSTAGE_50%s]%s",
+                      ANSI_BOLD ANSI_YELLOW, ANSI_WHITE, ANSI_RESET);
+        mk_list_foreach(head, &config->stage50_handler) {
+            s = mk_list_entry(head, struct mk_plugin_stage, _head);
+            p = s->plugin;
+            CHEETAH_WRITE("\n  [%s] %s v%s on \"%s\"",
+                          p->shortname, p->name, p->version, p->path);
+        }
+    }
+
+    CHEETAH_WRITE("\n\n");
 }
 
 void mk_cheetah_cmd_vhosts()
