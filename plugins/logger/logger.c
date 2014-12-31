@@ -36,13 +36,6 @@
 #include "logger.h"
 #include "pointers.h"
 
-MONKEY_PLUGIN("logger", /* shortname */
-              "Logger", /* name */
-              VERSION, /* version */
-              /* hooks */
-              MK_PLUGIN_CORE_PRCTX | MK_PLUGIN_CORE_THCTX | MK_PLUGIN_STAGE_40);
-
-
 struct status_response {
     int   i_status;
     char *s_status;
@@ -345,7 +338,7 @@ static void mk_logger_print_details(void)
     fflush(stdout);
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_logger_plugin_init(struct plugin_api **api, char *confdir)
 {
     int fd;
     mk_api = *api;
@@ -377,7 +370,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+int mk_logger_plugin_exit()
 {
     struct mk_list *head, *tmp;
     struct log_target *entry;
@@ -391,9 +384,11 @@ void _mkp_exit()
     }
 
     mk_api->mem_free(mk_logger_master_path);
+
+    return 0;
 }
 
-int _mkp_core_prctx(struct server_config *config)
+int mk_logger_master_init(struct server_config *config)
 {
     (void) config;
     struct log_target *new;
@@ -464,7 +459,7 @@ int _mkp_core_prctx(struct server_config *config)
     return 0;
 }
 
-void _mkp_core_thctx()
+void mk_plugin_worker_init()
 {
     struct mk_iov *iov_log;
     mk_ptr_t *content_length;
@@ -496,7 +491,7 @@ void _mkp_core_thctx()
     pthread_setspecific(cache_ip_str, (void *) ip_str);
 }
 
-int _mkp_stage_40(struct mk_http_session *cs, struct mk_http_request *sr)
+int mk_logger_stage40(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int i, http_status, ret, tmp;
     int array_len = ARRAY_SIZE(response_codes);
@@ -725,3 +720,26 @@ int _mkp_stage_40(struct mk_http_session *cs, struct mk_http_request *sr)
 
     return 0;
 }
+
+struct mk_plugin_stage mk_plugin_stage_logger = {
+    .stage40      = &mk_logger_stage40
+};
+
+struct mk_plugin mk_plugin_logger = {
+    /* Identification */
+    .shortname     = "logger",
+    .name          = "Log Writer",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_STAGE,
+
+    /* Init / Exit */
+    .init_plugin   = mk_logger_plugin_init,
+    .exit_plugin   = mk_logger_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = mk_logger_master_init,
+    .worker_init   = mk_logger_worker_init,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_logger
+};
