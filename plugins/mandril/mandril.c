@@ -32,11 +32,6 @@
 #include <monkey/mk_api.h>
 #include "mandril.h"
 
-MONKEY_PLUGIN("mandril",  /* shortname */
-              "Mandril",  /* name */
-              VERSION,    /* version */
-              MK_PLUGIN_STAGE_10 | MK_PLUGIN_STAGE_30); /* hooks */
-
 static struct mk_config *conf;
 
 /* Read database configuration parameters */
@@ -311,7 +306,7 @@ static int mk_security_check_hotlink(mk_ptr_t url, mk_ptr_t host,
     return domains_matched >= 2 ? 0 : -1;
 }
 
-int _mkp_init(struct plugin_api **api, char *confdir)
+int mk_mandril_plugin_init(struct plugin_api **api, char *confdir)
 {
     mk_api = *api;
 
@@ -325,11 +320,12 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     return 0;
 }
 
-void _mkp_exit()
+int mk_mandril_plugin_exit()
 {
+    return 0;
 }
 
-int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
+int mk_mandril_stage10(int socket, struct sched_connection *conx)
 {
     (void) conx;
 
@@ -342,9 +338,9 @@ int _mkp_stage_10(unsigned int socket, struct sched_connection *conx)
     return MK_PLUGIN_RET_CONTINUE;
 }
 
-int _mkp_stage_30(struct plugin *p,
-        struct mk_http_session *cs,
-        struct mk_http_request *sr)
+int mk_mandril_stage30(struct mk_plugin *p,
+                       struct mk_http_session *cs,
+                       struct mk_http_request *sr)
 {
     (void) p;
     (void) cs;
@@ -369,3 +365,27 @@ int _mkp_stage_30(struct plugin *p,
 
     return MK_PLUGIN_RET_NOT_ME;
 }
+
+struct mk_plugin_stage mk_plugin_stage_mandril = {
+    .stage10      = &mk_mandril_stage10,
+    .stage30      = &mk_mandril_stage30
+};
+
+struct mk_plugin mk_plugin_mandril = {
+    /* Identification */
+    .shortname     = "mandril",
+    .name          = "Mandril Security",
+    .version       = VERSION,
+    .hooks         = MK_PLUGIN_STAGE,
+
+    /* Init / Exit */
+    .init_plugin   = mk_mandril_plugin_init,
+    .exit_plugin   = mk_mandril_plugin_exit,
+
+    /* Init Levels */
+    .master_init   = NULL,
+    .worker_init   = NULL,
+
+    /* Type */
+    .stage         = &mk_plugin_stage_mandril
+};
