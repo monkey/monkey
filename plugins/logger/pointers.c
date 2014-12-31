@@ -21,7 +21,7 @@
 #include "pointers.h"
 #include <monkey/mk_plugin.h>
 
-const mk_ptr_t mk_iov_none = mk_ptr_init("");
+const mk_ptr_t mk_logger_iov_none = mk_ptr_init("");
 
 /* Writter helpers */
 const mk_ptr_t mk_logger_iov_dash = mk_ptr_init(MK_LOGGER_IOV_DASH);
