@@ -2,7 +2,7 @@
 
 /*  Monkey HTTP Server
  *  ==================
- *  Copyright 2001-2014 Monkey Software LLC <eduardo@monkey.io>
+ *  Copyright 2001-2015 Monkey Software LLC <eduardo@monkey.io>
  *  Copyright (C) 2012, Lauri Kasanen <cand@gmx.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
