@@ -150,6 +150,7 @@ struct mk_http_parser {
     int status;  /* level status */
     int next;    /* something next after status ? */
     int length;
+    int method;
 
     /* lookup fields */
     int start;
@@ -286,6 +287,7 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     p->level  = REQ_LEVEL_FIRST;
     p->status = MK_ST_REQ_METHOD;
     p->chars  = -1;
+    p->method = -1;
 
     /* init headers */
     p->header_key = -1;

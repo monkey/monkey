@@ -102,6 +102,15 @@ static inline int method_lookup(struct mk_http_request *req,
     req->method_p.data = buffer + p->start;
     req->method_p.len  = len;
 
+    if (p->method >= 0) {
+        if (strncmp(buffer + p->start + 1,
+                    mk_methods_table[p->method].name + 1,
+                    len - 1) == 0) {
+            req->method = p->method;
+            return req->method;
+        }
+    }
+
     for (i = 0; i < MK_METHOD_SIZEOF; i++) {
         if (len != mk_methods_table[i].len) {
             continue;
@@ -310,6 +319,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                    char *buffer, int len)
 {
     int i;
+    int s;
     int ret;
 
     for (i = p->i; i < len; p->i++, p->chars++, i++) {
@@ -317,6 +327,26 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
         if (p->level == REQ_LEVEL_FIRST) {
             switch (p->status) {
             case MK_ST_REQ_METHOD:                      /* HTTP Method */
+                if (p->chars == -1) {
+                    switch (buffer[i]) {
+                    case 'G':
+                        p->method = MK_METHOD_GET;
+                        break;
+                    case 'P':
+                        p->method = MK_METHOD_POST;
+                        break;
+                    case 'H':
+                        p->method = MK_METHOD_HEAD;
+                        break;
+                    case 'D':
+                        p->method = MK_METHOD_DELETE;
+                        break;
+                    case 'O':
+                        p->method = MK_METHOD_OPTIONS;
+                        break;
+                    }
+                    continue;
+                }
                 if (buffer[i] == ' ') {
                     mark_end();
                     p->status = MK_ST_REQ_URI;
@@ -453,7 +483,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                      * small range set of probable headers comparison once we catch
                      * a header end.
                      */
-                    int s = tolower(buffer[i]);
+                    s = tolower(buffer[i]);
                     switch (s) {
                     case 'a':
                         p->header_min = MK_HEADER_ACCEPT;
