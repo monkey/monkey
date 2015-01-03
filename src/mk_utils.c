@@ -490,13 +490,13 @@ int mk_utils_register_pid()
     struct stat sb;
     struct mk_config_listener *listen;
 
-    if (config->pid_status == MK_TRUE)
+    if (mk_config->pid_status == MK_TRUE)
         return -1;
 
-    listen = mk_list_entry_first(&config->listeners,
+    listen = mk_list_entry_first(&mk_config->listeners,
                                  struct mk_config_listener, _head);
     mk_string_build(&filepath, &len, "%s.%s",
-            config->pid_file_path,
+            mk_config->pid_file_path,
             listen->port);
     if (!stat(filepath, &sb)) {
         /* file exists, perhaps previously kepts by SIGKILL */
@@ -529,7 +529,7 @@ int mk_utils_register_pid()
     }
 
     mk_mem_free(filepath);
-    config->pid_status = MK_TRUE;
+    mk_config->pid_status = MK_TRUE;
 
     return 0;
 }
@@ -541,17 +541,17 @@ int mk_utils_remove_pid()
     char *filepath = NULL;
     struct mk_config_listener *listen;
 
-    listen = mk_list_entry_first(&config->listeners,
+    listen = mk_list_entry_first(&mk_config->listeners,
                                  struct mk_config_listener, _head);
     mk_string_build(&filepath, &len, "%s.%s",
-                    config->pid_file_path,
+                    mk_config->pid_file_path,
                     listen->port);
     mk_user_undo_uidgid();
     if (unlink(filepath)) {
         mk_warn("cannot delete pidfile\n");
     }
     mk_mem_free(filepath);
-    config->pid_status = MK_FALSE;
+    mk_config->pid_status = MK_FALSE;
     return 0;
 }
 

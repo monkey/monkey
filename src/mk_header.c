@@ -212,7 +212,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
                     mk_ptr_t *ka_header = worker_cache_header_ka_max;
 
                     /* Compose header and add entries to iov */
-                    mk_string_itop(config->max_keep_alive_request - cs->counter_connections, ka_header);
+                    mk_string_itop(mk_config->max_keep_alive_request - cs->counter_connections, ka_header);
                     mk_iov_add_entry(iov, ka_format->data, ka_format->len,
                                      mk_iov_none, MK_IOV_NOT_FREE_BUF);
                     mk_iov_add_entry(iov, ka_header->data, ka_header->len,
@@ -295,7 +295,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
     }
 
     if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
-        config->resume == MK_TRUE) {
+        mk_config->resume == MK_TRUE) {
         buffer = 0;
 
         /* yyy- */

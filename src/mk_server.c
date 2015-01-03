@@ -48,20 +48,20 @@ unsigned int mk_server_capacity()
     getrlimit(RLIMIT_NOFILE, &lim);
     cur = lim.rlim_cur;
 
-    if (config->fd_limit > cur) {
-        lim.rlim_cur = config->fd_limit;
-        lim.rlim_max = config->fd_limit;
+    if (mk_config->fd_limit > cur) {
+        lim.rlim_cur = mk_config->fd_limit;
+        lim.rlim_max = mk_config->fd_limit;
 
         ret = setrlimit(RLIMIT_NOFILE, &lim);
         if (ret == -1) {
-            mk_warn("Could not increase FDLimit to %i.", config->fd_limit);
+            mk_warn("Could not increase FDLimit to %i.", mk_config->fd_limit);
         }
         else {
-            cur = config->fd_limit;
+            cur = mk_config->fd_limit;
         }
     }
-    else if (config->fd_limit > 0) {
-        cur = config->fd_limit;
+    else if (mk_config->fd_limit > 0) {
+        cur = mk_config->fd_limit;
     }
 
     return cur;
@@ -145,7 +145,7 @@ void mk_server_listen_free(struct mk_server_listen *server_listen)
     server_listen->count = 0;
 }
 
-int mk_server_listen_init(struct server_config *config,
+int mk_server_listen_init(struct mk_server_config *config,
                           struct mk_server_listen *server_listen)
 {
     int i = 0;
@@ -163,7 +163,7 @@ int mk_server_listen_init(struct server_config *config,
 
     reuse_port = config->scheduler_mode == MK_SCHEDULER_REUSEPORT;
 
-    mk_list_foreach(head, &config->listeners) {
+    mk_list_foreach(head, &mk_config->listeners) {
         count++;
     }
 
@@ -214,8 +214,8 @@ void mk_server_launch_workers()
     pthread_t skip;
 
     /* Launch workers */
-    for (i = 0; i < config->workers; i++) {
-        mk_sched_launch_thread(config->server_capacity, &skip, NULL);
+    for (i = 0; i < mk_config->workers; i++) {
+        mk_sched_launch_thread(mk_config->server_capacity, &skip, NULL);
     }
 }
 
@@ -249,7 +249,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     }
 
     /* create a new timeout file descriptor */
-    timeout_fd = mk_event_timeout_create(evl, config->timeout);
+    timeout_fd = mk_event_timeout_create(evl, mk_config->timeout);
 
     while (1) {
         mk_event_wait(evl);
@@ -326,11 +326,11 @@ void mk_server_loop(void)
     mk_info("HTTP Server started");
 
     /* check balancing mode, for reuse port just stay here forever */
-    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+    if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         while (1) sleep(60);
     }
 
-    if (mk_server_listen_init(config, &listen)) {
+    if (mk_server_listen_init(mk_config, &listen)) {
         mk_err("Failed to initialize listen sockets.");
         return;
     }
@@ -384,7 +384,7 @@ void mk_server_loop(void)
         struct sched_list_node *node;
 
         node = sched_list;
-        for (i=0; i < (unsigned int)config->workers; i++) {
+        for (i=0; i < (unsigned int) mk_config->workers; i++) {
             MK_TRACE("Worker Status");
             MK_TRACE(" WID %i / conx = %llu", node[i].idx, node[i].accepted_connections - node[i].closed_connections);
         }

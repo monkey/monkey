@@ -75,7 +75,7 @@ static inline int _next_target()
         return 0;
 
     /* Finds the lowest load worker */
-    for (i = 1; i < config->workers; i++) {
+    for (i = 1; i < mk_config->workers; i++) {
         tmp = sched_list[i].accepted_connections - sched_list[i].closed_connections;
         if (tmp < cur) {
             target = i;
@@ -90,7 +90,7 @@ static inline int _next_target()
      * If sched_list[target] worker is full then the whole server too, because
      * it has the lowest load.
      */
-    if (mk_unlikely(cur >= config->server_capacity)) {
+    if (mk_unlikely(cur >= mk_config->server_capacity)) {
         MK_TRACE("Too many clients: %i", config->server_capacity);
 
         /* Instruct to close the connection anyways, we lie, it will die */
@@ -174,7 +174,7 @@ void mk_sched_worker_free()
 
     /* Scheduler stuff */
     tid = pthread_self();
-    for (i = 0; i < config->workers; i++) {
+    for (i = 0; i < mk_config->workers; i++) {
         if (sched_list[i].tid == tid) {
             sl = &sched_list[i];
         }
@@ -224,7 +224,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     struct sched_connection *sched_conn;
     struct mk_list *av_queue = &sched->av_queue;
 
-    if ((config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
+    if ((mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
         mk_list_is_empty(av_queue) == 0) {
         mk_event_del(sched->loop, remote_fd);
         close(remote_fd);
@@ -344,12 +344,12 @@ static int mk_sched_register_thread()
     mk_list_init(&sl->incoming_queue);
 
     /* Set worker capacity based on Scheduler Balancing mode */
-    if (config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
-        capacity = (config->server_capacity / config->workers);
+    if (mk_config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
+        capacity = (mk_config->server_capacity / mk_config->workers);
     }
     else {
         /* FIXME: this needs progressive adaption */
-        capacity = config->server_capacity;
+        capacity = mk_config->server_capacity;
     }
 
 
@@ -438,8 +438,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     worker_sched_node = sched;
     mk_plugin_core_thread();
 
-    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        if (mk_server_listen_init(config, &server_listen)) {
+    if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        if (mk_server_listen_init(mk_config, &server_listen)) {
             mk_err("[sched] Failed to initialize listen sockets.");
             return 0;
         }
@@ -493,7 +493,7 @@ void mk_sched_init()
 {
     int size;
 
-    size = sizeof(struct sched_list_node) * config->workers;
+    size = sizeof(struct sched_list_node) * mk_config->workers;
     sched_list = mk_mem_malloc_z(size);
     mk_event_initialize();
 }
@@ -640,7 +640,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     /* PENDING CONN TIMEOUT */
     mk_list_foreach_safe(head, temp, &sched->incoming_queue) {
         entry_conn = mk_list_entry(head, struct sched_connection, status_queue);
-        client_timeout = entry_conn->arrive_time + config->timeout;
+        client_timeout = entry_conn->arrive_time + mk_config->timeout;
 
         /* Check timeout */
         if (client_timeout <= log_current_utime) {
@@ -654,10 +654,10 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
     mk_list_foreach_safe(head, temp, cs_incomplete) {
         cs_node = mk_list_entry(head, struct mk_http_session, request_incomplete);
         if (cs_node->counter_connections == 0) {
-            client_timeout = cs_node->init_time + config->timeout;
+            client_timeout = cs_node->init_time + mk_config->timeout;
         }
         else {
-            client_timeout = cs_node->init_time + config->keep_alive_timeout;
+            client_timeout = cs_node->init_time + mk_config->keep_alive_timeout;
         }
 
         /* Check timeout */

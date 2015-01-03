@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     }
 
     /* setup basic configurations */
-    config = mk_config_init();
+    mk_config = mk_config_init();
 
     /* Init Kernel version data */
     mk_kernel_init();
@@ -205,59 +205,59 @@ int main(int argc, char **argv)
 
     /* set configuration path */
     if (!path_config) {
-        config->path_config = MONKEY_PATH_CONF;
+        mk_config->path_config = MONKEY_PATH_CONF;
     }
     else {
-        config->path_config = path_config;
+        mk_config->path_config = path_config;
     }
 
     /* set target configuration file for the server */
     if (!server_conf_file) {
-        config->server_conf_file = MK_DEFAULT_CONFIG_FILE;
+        mk_config->server_conf_file = MK_DEFAULT_CONFIG_FILE;
     }
     else {
-        config->server_conf_file = server_conf_file;
+        mk_config->server_conf_file = server_conf_file;
     }
 
     if (run_daemon) {
-        config->is_daemon = MK_TRUE;
+        mk_config->is_daemon = MK_TRUE;
     }
     else {
-        config->is_daemon = MK_FALSE;
+        mk_config->is_daemon = MK_FALSE;
     }
 
     if (!mimes_conf_file) {
-        config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
+        mk_config->mimes_conf_file = MK_DEFAULT_MIMES_CONF_FILE;
     }
     else {
-        config->mimes_conf_file = mimes_conf_file;
+        mk_config->mimes_conf_file = mimes_conf_file;
     }
 
     if (!plugin_load_conf_file) {
-        config->plugin_load_conf_file = MK_DEFAULT_PLUGIN_LOAD_CONF_FILE;
+        mk_config->plugin_load_conf_file = MK_DEFAULT_PLUGIN_LOAD_CONF_FILE;
     }
     else {
-        config->plugin_load_conf_file = plugin_load_conf_file;
+        mk_config->plugin_load_conf_file = plugin_load_conf_file;
     }
 
     if (!sites_conf_dir) {
-        config->sites_conf_dir = MK_DEFAULT_SITES_CONF_DIR;
+        mk_config->sites_conf_dir = MK_DEFAULT_SITES_CONF_DIR;
     }
     else {
-        config->sites_conf_dir = sites_conf_dir;
+        mk_config->sites_conf_dir = sites_conf_dir;
     }
 
     if (!plugins_conf_dir) {
-        config->plugins_conf_dir = MK_DEFAULT_PLUGINS_CONF_DIR;
+        mk_config->plugins_conf_dir = MK_DEFAULT_PLUGINS_CONF_DIR;
     }
     else {
-        config->plugins_conf_dir = plugins_conf_dir;
+        mk_config->plugins_conf_dir = plugins_conf_dir;
     }
 
     /* Override some configuration */
-    config->one_shot = one_shot;
-    config->port_override = port_override;
-    config->transport_layer = transport_layer;
+    mk_config->one_shot = one_shot;
+    mk_config->port_override = port_override;
+    mk_config->transport_layer = transport_layer;
 
 #ifdef TRACE
     monkey_init_time = time(NULL);
@@ -276,10 +276,10 @@ int main(int argc, char **argv)
 
     /* Override number of thread workers */
     if (workers_override >= 0) {
-        config->workers = workers_override;
+        mk_config->workers = workers_override;
     }
     else {
-        config->workers = -1;
+        mk_config->workers = -1;
     }
 
     /* Core and Scheduler setup */
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
     mk_plugin_load_all();
 
     /* Running Monkey as daemon */
-    if (config->is_daemon == MK_TRUE) {
+    if (mk_config->is_daemon == MK_TRUE) {
         mk_utils_set_daemon();
     }
 
@@ -327,13 +327,13 @@ int main(int argc, char **argv)
         int i, ready = 0;
 
         pthread_mutex_lock(&mutex_worker_init);
-        for (i = 0; i < config->workers; i++) {
+        for (i = 0; i < mk_config->workers; i++) {
             if (sched_list[i].initialized)
                 ready++;
         }
         pthread_mutex_unlock(&mutex_worker_init);
 
-        if (ready == config->workers) break;
+        if (ready == mk_config->workers) break;
         usleep(10000);
     }
 
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
     /* Server loop, let's listen for incomming clients */
     mk_server_loop();
 
-    mk_mem_free(config);
+    mk_mem_free(mk_config);
     return 0;
 }
 #endif

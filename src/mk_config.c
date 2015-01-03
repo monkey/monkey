@@ -47,16 +47,16 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_mimetype.h>
 
-struct server_config *config;
+struct mk_server_config *mk_config;
 gid_t EGID;
 gid_t EUID;
 
 
-struct server_config *mk_config_init()
+struct mk_server_config *mk_config_init()
 {
-    struct server_config *config;
+    struct mk_server_config *config;
 
-    config = mk_mem_malloc_z(sizeof(struct server_config));
+    config = mk_mem_malloc_z(sizeof(struct mk_server_config));
     mk_list_init(&config->stage10_handler);
     mk_list_init(&config->stage20_handler);
     mk_list_init(&config->stage30_handler);
@@ -329,7 +329,7 @@ void mk_config_listeners_free()
     struct mk_list *head;
     struct mk_config_listener *l;
 
-    mk_list_foreach_safe(head, tmp, &config->listeners) {
+    mk_list_foreach_safe(head, tmp, &mk_config->listeners) {
         l = mk_list_entry(head, struct mk_config_listener, _head);
         mk_list_del(&l->_head);
         mk_mem_free(l->address);
@@ -343,25 +343,25 @@ void mk_config_free_all()
     mk_vhost_free_all();
     mk_mimetype_free_all();
 
-    if (config->config) mk_config_free(config->config);
+    if (mk_config->config) mk_config_free(mk_config->config);
 
-    if (config->serverconf) mk_mem_free(config->serverconf);
-    if (config->pid_file_path) mk_mem_free(config->pid_file_path);
-    if (config->user_dir) mk_mem_free(config->user_dir);
+    if (mk_config->serverconf) mk_mem_free(mk_config->serverconf);
+    if (mk_config->pid_file_path) mk_mem_free(mk_config->pid_file_path);
+    if (mk_config->user_dir) mk_mem_free(mk_config->user_dir);
 
     /* free config->index_files */
-    if (config->index_files) {
-        mk_string_split_free(config->index_files);
+    if (mk_config->index_files) {
+        mk_string_split_free(mk_config->index_files);
     }
 
-    if (config->user) mk_mem_free(config->user);
-    if (config->transport_layer) mk_mem_free(config->transport_layer);
+    if (mk_config->user) mk_mem_free(mk_config->user);
+    if (mk_config->transport_layer) mk_mem_free(mk_config->transport_layer);
 
     mk_config_listeners_free();
 
-    mk_ptr_free(&config->server_software);
-    mk_mem_free(config->plugins);
-    mk_mem_free(config);
+    mk_ptr_free(&mk_config->server_software);
+    mk_mem_free(mk_config->plugins);
+    mk_mem_free(mk_config);
 }
 
 void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
@@ -418,13 +418,13 @@ static void mk_details_listen(struct mk_list *listen)
 void mk_details(void)
 {
     printf(MK_BANNER_ENTRY "Process ID is %i\n", getpid());
-    mk_details_listen(&config->listeners);
+    mk_details_listen(&mk_config->listeners);
     printf(MK_BANNER_ENTRY
            "%i threads, may handle up to %i client connections\n",
-           config->workers, config->server_capacity);
+           mk_config->workers, mk_config->server_capacity);
     printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
-           config->transport_layer_plugin->shortname,
-           config->transport);
+           mk_config->transport_layer_plugin->shortname,
+           mk_config->transport);
 
 #ifdef __linux__
     char tmp[64];
@@ -508,7 +508,7 @@ error:
         if (port) mk_mem_free(port);
     }
 
-    if (mk_list_is_empty(&config->listeners) == 0) {
+    if (mk_list_is_empty(&mk_config->listeners) == 0) {
         mk_warn("[config] No valid Listen entries found, set default");
         mk_config_listener_add(NULL, NULL);
     }
@@ -525,10 +525,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     struct mk_config *cnf;
     struct mk_config_section *section;
 
-    config->serverconf = mk_string_dup(path_conf);
+    mk_config->serverconf = mk_string_dup(path_conf);
 
-    if (stat(config->serverconf, &checkdir) == -1) {
-        mk_err("ERROR: Cannot find/open '%s'", config->serverconf);
+    if (stat(mk_config->serverconf, &checkdir) == -1) {
+        mk_err("ERROR: Cannot find/open '%s'", mk_config->serverconf);
         exit(EXIT_FAILURE);
     }
 
@@ -536,7 +536,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     cnf = mk_config_create(tmp);
     if (!cnf) {
         mk_mem_free(tmp);
-        mk_err("Cannot read '%s'", config->server_conf_file);
+        mk_err("Cannot read '%s'", mk_config->server_conf_file);
         exit(EXIT_FAILURE);
     }
     section = mk_config_section_get(cnf, "SERVER");
@@ -546,116 +546,116 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Map source configuration */
-    config->config = cnf;
+    mk_config->config = cnf;
 
     /* Listen */
-    if (!config->port_override) {
+    if (!mk_config->port_override) {
         if (mk_config_listen_read(section)) {
             mk_err("[config] Failed to read listen sections.");
         }
     }
     else {
-        mk_config_listener_add(NULL, config->port_override);
+        mk_config_listener_add(NULL, mk_config->port_override);
     }
 
     /* Number of thread workers */
-    if (config->workers == -1) {
-        config->workers = (size_t) mk_config_section_getval(section,
-                                                            "Workers",
-                                                            MK_CONFIG_VAL_NUM);
+    if (mk_config->workers == -1) {
+        mk_config->workers = (size_t) mk_config_section_getval(section,
+                                                               "Workers",
+                                                               MK_CONFIG_VAL_NUM);
     }
 
-    if (config->workers < 1) {
-        config->workers = sysconf(_SC_NPROCESSORS_ONLN);
-        if (config->workers < 1) {
+    if (mk_config->workers < 1) {
+        mk_config->workers = sysconf(_SC_NPROCESSORS_ONLN);
+        if (mk_config->workers < 1) {
             mk_config_print_error_msg("Workers", tmp);
         }
     }
 
     /* Timeout */
-    config->timeout = (size_t) mk_config_section_getval(section,
-                                                     "Timeout", MK_CONFIG_VAL_NUM);
-    if (config->timeout < 1) {
+    mk_config->timeout = (size_t) mk_config_section_getval(section,
+                                                           "Timeout", MK_CONFIG_VAL_NUM);
+    if (mk_config->timeout < 1) {
         mk_config_print_error_msg("Timeout", tmp);
     }
 
     /* KeepAlive */
-    config->keep_alive = (size_t) mk_config_section_getval(section,
-                                                        "KeepAlive",
-                                                        MK_CONFIG_VAL_BOOL);
-    if (config->keep_alive == MK_ERROR) {
+    mk_config->keep_alive = (size_t) mk_config_section_getval(section,
+                                                              "KeepAlive",
+                                                              MK_CONFIG_VAL_BOOL);
+    if (mk_config->keep_alive == MK_ERROR) {
         mk_config_print_error_msg("KeepAlive", tmp);
     }
 
     /* MaxKeepAliveRequest */
-    config->max_keep_alive_request = (size_t)
+    mk_config->max_keep_alive_request = (size_t)
         mk_config_section_getval(section,
                                  "MaxKeepAliveRequest",
                                  MK_CONFIG_VAL_NUM);
 
-    if (config->max_keep_alive_request == 0) {
+    if (mk_config->max_keep_alive_request == 0) {
         mk_config_print_error_msg("MaxKeepAliveRequest", tmp);
     }
 
     /* KeepAliveTimeout */
-    config->keep_alive_timeout = (size_t) mk_config_section_getval(section,
-                                                                "KeepAliveTimeout",
-                                                                MK_CONFIG_VAL_NUM);
-    if (config->keep_alive_timeout == 0) {
+    mk_config->keep_alive_timeout = (size_t) mk_config_section_getval(section,
+                                                                      "KeepAliveTimeout",
+                                                                      MK_CONFIG_VAL_NUM);
+    if (mk_config->keep_alive_timeout == 0) {
         mk_config_print_error_msg("KeepAliveTimeout", tmp);
     }
 
     /* Pid File */
-    config->pid_file_path = mk_config_section_getval(section,
+    mk_config->pid_file_path = mk_config_section_getval(section,
                                                      "PidFile", MK_CONFIG_VAL_STR);
 
     /* Home user's directory /~ */
-    config->user_dir = mk_config_section_getval(section,
+    mk_config->user_dir = mk_config_section_getval(section,
                                                 "UserDir", MK_CONFIG_VAL_STR);
 
     /* Index files */
-    config->index_files = mk_config_section_getval(section,
+    mk_config->index_files = mk_config_section_getval(section,
                                                    "Indexfile", MK_CONFIG_VAL_LIST);
 
     /* HideVersion Variable */
-    config->hideversion = (size_t) mk_config_section_getval(section,
+    mk_config->hideversion = (size_t) mk_config_section_getval(section,
                                                          "HideVersion",
                                                          MK_CONFIG_VAL_BOOL);
-    if (config->hideversion == MK_ERROR) {
+    if (mk_config->hideversion == MK_ERROR) {
         mk_config_print_error_msg("HideVersion", tmp);
     }
 
     /* User Variable */
-    config->user = mk_config_section_getval(section, "User", MK_CONFIG_VAL_STR);
+    mk_config->user = mk_config_section_getval(section, "User", MK_CONFIG_VAL_STR);
 
     /* Resume */
-    config->resume = (size_t) mk_config_section_getval(section,
+    mk_config->resume = (size_t) mk_config_section_getval(section,
                                                     "Resume", MK_CONFIG_VAL_BOOL);
-    if (config->resume == MK_ERROR) {
+    if (mk_config->resume == MK_ERROR) {
         mk_config_print_error_msg("Resume", tmp);
     }
 
     /* Max Request Size */
-    config->max_request_size = (size_t) mk_config_section_getval(section,
+    mk_config->max_request_size = (size_t) mk_config_section_getval(section,
                                                               "MaxRequestSize",
                                                               MK_CONFIG_VAL_NUM);
-    if (config->max_request_size <= 0) {
+    if (mk_config->max_request_size <= 0) {
         mk_config_print_error_msg("MaxRequestSize", tmp);
     }
     else {
-        config->max_request_size *= 1024;
+        mk_config->max_request_size *= 1024;
     }
 
     /* Symbolic Links */
-    config->symlink = (size_t) mk_config_section_getval(section,
+    mk_config->symlink = (size_t) mk_config_section_getval(section,
                                                      "SymLink", MK_CONFIG_VAL_BOOL);
-    if (config->symlink == MK_ERROR) {
+    if (mk_config->symlink == MK_ERROR) {
         mk_config_print_error_msg("SymLink", tmp);
     }
 
     /* Transport Layer plugin */
-    if (!config->transport_layer) {
-        config->transport_layer = mk_config_section_getval(section,
+    if (!mk_config->transport_layer) {
+        mk_config->transport_layer = mk_config_section_getval(section,
                                                            "TransportLayer",
                                                            MK_CONFIG_VAL_STR);
     }
@@ -664,30 +664,30 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     mk_mem_free(tmp);
     tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
     if (!tmp) {
-        config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
+        mk_config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     }
     else {
-        mk_string_build(&config->default_mimetype, &len, "%s\r\n", tmp);
+        mk_string_build(&mk_config->default_mimetype, &len, "%s\r\n", tmp);
     }
 
     /* File Descriptor Table (FDT) */
-    config->fdt = (size_t) mk_config_section_getval(section,
+    mk_config->fdt = (size_t) mk_config_section_getval(section,
                                                     "FDT",
                                                     MK_CONFIG_VAL_BOOL);
 
     /* FIXME: Overcapacity not ready */
-    config->fd_limit = (size_t) mk_config_section_getval(section,
+    mk_config->fd_limit = (size_t) mk_config_section_getval(section,
                                                            "FDLimit",
                                                            MK_CONFIG_VAL_NUM);
     /* Get each worker clients capacity based on FDs system limits */
-    config->server_capacity = mk_server_capacity();
+    mk_config->server_capacity = mk_server_capacity();
 
 
-    if (!config->one_shot) {
+    if (!mk_config->one_shot) {
         mk_vhost_init(path_conf);
     }
     else {
-        mk_vhost_set_single(config->one_shot);
+        mk_vhost_set_single(mk_config->one_shot);
     }
 
     mk_mem_free(tmp);
@@ -699,22 +699,22 @@ void mk_config_start_configure(void)
     unsigned long len;
 
     mk_config_set_init_values();
-    mk_config_read_files(config->path_config, config->server_conf_file);
+    mk_config_read_files(mk_config->path_config, mk_config->server_conf_file);
 
     /* Load mimes */
     mk_mimetype_read_config();
 
-    mk_ptr_reset(&config->server_software);
+    mk_ptr_reset(&mk_config->server_software);
 
     /* Basic server information */
-    if (config->hideversion == MK_FALSE) {
-        mk_string_build(&config->server_software.data,
+    if (mk_config->hideversion == MK_FALSE) {
+        mk_string_build(&mk_config->server_software.data,
                         &len, "Monkey/%s (%s)", VERSION, OS);
-        config->server_software.len = len;
+        mk_config->server_software.len = len;
     }
     else {
-        mk_string_build(&config->server_software.data, &len, "Monkey Server");
-        config->server_software.len = len;
+        mk_string_build(&mk_config->server_software.data, &len, "Monkey Server");
+        mk_config->server_software.len = len;
     }
 }
 
@@ -749,7 +749,7 @@ struct mk_config_listener *mk_config_listener_add(char *address, char *port)
     }
 
     /* Before to add a new listener, lets make sure it's not a duplicated */
-    mk_list_foreach(head, &config->listeners) {
+    mk_list_foreach(head, &mk_config->listeners) {
         check = mk_list_entry(head, struct mk_config_listener, _head);
         if (strcmp(listen->address, check->address) == 0 &&
             strcmp(listen->port, check->port) == 0) {
@@ -764,55 +764,55 @@ struct mk_config_listener *mk_config_listener_add(char *address, char *port)
         }
     }
 
-    mk_list_add(&listen->_head, &config->listeners);
+    mk_list_add(&listen->_head, &mk_config->listeners);
     return listen;
 }
 
 void mk_config_set_init_values(void)
 {
     /* Init values */
-    config->is_seteuid = MK_FALSE;
-    config->timeout = 15;
-    config->hideversion = MK_FALSE;
-    config->keep_alive = MK_TRUE;
-    config->keep_alive_timeout = 15;
-    config->max_keep_alive_request = 50;
-    config->resume = MK_TRUE;
-    config->standard_port = 80;
-    config->symlink = MK_FALSE;
-    config->nhosts = 0;
-    mk_list_init(&config->hosts);
-    config->user = NULL;
-    config->open_flags = O_RDONLY | O_NONBLOCK;
-    config->index_files = NULL;
-    config->user_dir = NULL;
+    mk_config->is_seteuid = MK_FALSE;
+    mk_config->timeout = 15;
+    mk_config->hideversion = MK_FALSE;
+    mk_config->keep_alive = MK_TRUE;
+    mk_config->keep_alive_timeout = 15;
+    mk_config->max_keep_alive_request = 50;
+    mk_config->resume = MK_TRUE;
+    mk_config->standard_port = 80;
+    mk_config->symlink = MK_FALSE;
+    mk_config->nhosts = 0;
+    mk_list_init(&mk_config->hosts);
+    mk_config->user = NULL;
+    mk_config->open_flags = O_RDONLY | O_NONBLOCK;
+    mk_config->index_files = NULL;
+    mk_config->user_dir = NULL;
 
     /* TCP REUSEPORT: available on Linux >= 3.9 */
-    if (config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
-        config->scheduler_mode = MK_SCHEDULER_REUSEPORT;
+    if (mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
+        mk_config->scheduler_mode = MK_SCHEDULER_REUSEPORT;
     }
     else {
-        config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+        mk_config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
     }
 
     /* TCP Auto Corking: only available on Linux >= 3.14 */
-    if (config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
-        config->manual_tcp_cork = MK_FALSE;
+    if (mk_config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
+        mk_config->manual_tcp_cork = MK_FALSE;
     }
     else {
-        config->manual_tcp_cork = MK_TRUE;
+        mk_config->manual_tcp_cork = MK_TRUE;
     }
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
      * so we are setting a maximum request size to 32 KB */
-    config->max_request_size = MK_REQUEST_CHUNK * 8;
+    mk_config->max_request_size = MK_REQUEST_CHUNK * 8;
 
     /* Plugins */
-    config->plugins = mk_mem_malloc(sizeof(struct mk_list));
+    mk_config->plugins = mk_mem_malloc(sizeof(struct mk_list));
 
     /* Internals */
-    config->safe_event_write = MK_FALSE;
+    mk_config->safe_event_write = MK_FALSE;
 
     /*
      * Transport type: useful to build redirection headers, values:
@@ -822,13 +822,13 @@ void mk_config_set_init_values(void)
      *
      * we set default to 'http'
      */
-    config->transport = MK_TRANSPORT_HTTP;
+    mk_config->transport = MK_TRANSPORT_HTTP;
 
     /* Init plugin list */
-    mk_list_init(config->plugins);
+    mk_list_init(mk_config->plugins);
 
     /* Init listeners */
-    mk_list_init(&config->listeners);
+    mk_list_init(&mk_config->listeners);
 }
 
 
@@ -837,13 +837,13 @@ void mk_config_sanity_check()
     /* Check O_NOATIME for current user, flag will just be used
      * if running user is allowed to.
      */
-    int fd, flags = config->open_flags;
+    int fd, flags = mk_config->open_flags;
 
     flags |= O_NOATIME;
-    fd = open(config->path_config, flags);
+    fd = open(mk_config->path_config, flags);
 
     if (fd > -1) {
-        config->open_flags = flags;
+        mk_config->open_flags = flags;
         close(fd);
     }
 }

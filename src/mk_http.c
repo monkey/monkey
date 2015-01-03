@@ -62,7 +62,7 @@ const mk_ptr_t mk_http_protocol_null_p = { NULL, 0 };
 void mk_http_request_init(struct mk_http_session *session,
                           struct mk_http_request *request)
 {
-    struct mk_list *host_list = &config->hosts;
+    struct mk_list *host_list = &mk_config->hosts;
 
     request->port = 0;
     request->status = MK_TRUE;
@@ -113,7 +113,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     int status = 0;
     int socket = cs->socket;
     char *temp;
-    struct mk_list *hosts = &config->hosts;
+    struct mk_list *hosts = &mk_config->hosts;
     struct mk_list *alias;
     struct mk_http_header *header;
 
@@ -233,7 +233,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Is requesting an user home directory ? */
-    if (config->user_dir &&
+    if (mk_config->user_dir &&
         sr->uri_processed.len > 2 &&
         sr->uri_processed.data[1] == MK_USER_HOME) {
 
@@ -268,7 +268,7 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
 {
     struct mk_http_request *sr;
     struct mk_list *sr_list = &cs->request_list;
-    struct mk_list *host_list = &config->hosts;
+    struct mk_list *host_list = &mk_config->hosts;
 
     /*
      * If the connection is too premature, we need to allocate a temporal session_request
@@ -310,16 +310,16 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
     int total_bytes = 0;
     char *tmp = 0;
 
-    MK_TRACE("MAX REQUEST SIZE: %i", config->max_request_size);
+    MK_TRACE("MAX REQUEST SIZE: %i", mk_config->max_request_size);
 
  try_pending:
 
     available = cs->body_size - cs->body_length;
     if (available <= 0) {
         /* Reallocate buffer size if pending data does not have space */
-        new_size = cs->body_size + config->transport_buffer_size;
-        if (new_size > config->max_request_size) {
-            MK_TRACE("Requested size is > config->max_request_size");
+        new_size = cs->body_size + mk_config->transport_buffer_size;
+        if (new_size > mk_config->max_request_size) {
+            MK_TRACE("Requested size is > mk_config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
             return -1;
         }
@@ -528,7 +528,7 @@ static int mk_http_range_set(struct mk_http_request *sr, long file_size)
     sr->bytes_to_send = file_size;
     sr->bytes_offset = 0;
 
-    if (config->resume == MK_TRUE && sr->range.data) {
+    if (mk_config->resume == MK_TRUE && sr->range.data) {
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             sr->bytes_offset = sh->ranges[0];
@@ -700,18 +700,18 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
 
     /* FIXME: should we done something similar for SSL = 443 */
     if (sr->host.data && sr->port > 0) {
-        if (sr->port != config->standard_port) {
+        if (sr->port != mk_config->standard_port) {
             port_redirect = sr->port;
         }
     }
 
     if (port_redirect > 0) {
         mk_string_build(&real_location, &len, "%s://%s:%i%s",
-                        config->transport, host, port_redirect, location);
+                        mk_config->transport, host, port_redirect, location);
     }
     else {
         mk_string_build(&real_location, &len, "%s://%s%s",
-                        config->transport, host, location);
+                        mk_config->transport, host, location);
     }
 
     MK_TRACE("Redirecting to '%s'", real_location);
@@ -725,7 +725,7 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     sr->headers.location = real_location;
     sr->headers.cgi = SH_NOCGI;
     sr->headers.pconnections_left =
-        (config->max_keep_alive_request - cs->counter_connections);
+        (mk_config->max_keep_alive_request - cs->counter_connections);
 
     ret = mk_header_send(cs->socket, cs, sr);
     if (ret >= 0) {
@@ -750,9 +750,9 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux, const unsigned int f
     struct mk_list *head;
 
     mk_ptr_reset(&f);
-    if (!config->index_files) return f;
+    if (!mk_config->index_files) return f;
 
-    mk_list_foreach(head, config->index_files) {
+    mk_list_foreach(head, mk_config->index_files) {
         entry = mk_list_entry(head, struct mk_string_line, _head);
         len = snprintf(file_aux, flen, "%s%s", pathfile, entry->val);
         if (mk_unlikely(len > flen)) {
@@ -896,7 +896,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Check symbolic link file */
     if (sr->file_info.is_link == MK_TRUE) {
-        if (config->symlink == MK_FALSE) {
+        if (mk_config->symlink == MK_FALSE) {
             return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
         else {
@@ -940,7 +940,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* counter connections */
     sr->headers.pconnections_left = (int)
-        (config->max_keep_alive_request - cs->counter_connections);
+        (mk_config->max_keep_alive_request - cs->counter_connections);
 
     /* Set default value */
     mk_header_set_http_status(sr, MK_HTTP_OK);
@@ -1020,7 +1020,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         sr->headers.content_type = mime->type;
 
         /* HTTP Ranges */
-        if (sr->range.data != NULL && config->resume == MK_TRUE) {
+        if (sr->range.data != NULL && mk_config->resume == MK_TRUE) {
             if (mk_http_range_parse(sr) < 0) {
                 sr->headers.ranges[0] = -1;
                 sr->headers.ranges[1] = -1;
@@ -1109,7 +1109,7 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
 
     sr_head = &cs->request_list;
     sr_node = mk_list_entry_last(sr_head, struct mk_http_request, _head);
-    if (config->keep_alive == MK_FALSE || sr_node->keep_alive == MK_FALSE) {
+    if (mk_config->keep_alive == MK_FALSE || sr_node->keep_alive == MK_FALSE) {
         return -1;
     }
 
@@ -1131,7 +1131,7 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
     }
 
     /* Client has reached keep-alive connections limit */
-    if (cs->counter_connections >= config->max_keep_alive_request) {
+    if (cs->counter_connections >= mk_config->max_keep_alive_request) {
         return -1;
     }
 
@@ -1230,7 +1230,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
             }
 
             /* open file */
-            fd = open(entry->real_path, config->open_flags);
+            fd = open(entry->real_path, mk_config->open_flags);
             if (fd == -1) {
                 break;
             }
@@ -1414,9 +1414,9 @@ struct mk_http_session *mk_http_session_create(int socket,
     cs->init_time = sc->arrive_time;
 
     /* alloc space for body content */
-    if (config->transport_buffer_size > MK_REQUEST_CHUNK) {
-        cs->body = mk_mem_malloc(config->transport_buffer_size);
-        cs->body_size = config->transport_buffer_size;
+    if (mk_config->transport_buffer_size > MK_REQUEST_CHUNK) {
+        cs->body = mk_mem_malloc(mk_config->transport_buffer_size);
+        cs->body_size = mk_config->transport_buffer_size;
     }
     else {
         /* Buffer size based in Chunk bytes */

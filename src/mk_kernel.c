@@ -117,7 +117,7 @@ int mk_kernel_features()
         flags |= MK_KERNEL_TCP_FASTOPEN;
     }
 
-    config->kernel_features = flags;
+    mk_config->kernel_features = flags;
     return flags;
 }
 
@@ -126,17 +126,17 @@ int mk_kernel_features_print(char *buffer, size_t size)
     int offset = 0;
     int features = 0;
 
-    if (config->kernel_features & MK_KERNEL_TCP_FASTOPEN) {
+    if (mk_config->kernel_features & MK_KERNEL_TCP_FASTOPEN) {
         offset += snprintf(buffer, size - offset, "%s", "TCP_FASTOPEN ");
         features++;
     }
 
-    if (config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
+    if (mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
         offset += snprintf(buffer + offset, size - offset, "%s", "SO_REUSEPORT ");
         features++;
     }
 
-    if (config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
+    if (mk_config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
         snprintf(buffer + offset, size - offset, "%s", "TCP_AUTOCORKING ");
         features++;
     }

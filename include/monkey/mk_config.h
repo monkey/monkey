@@ -82,7 +82,7 @@ struct mk_config_listener
 };
 
 /* Base struct of server */
-struct server_config
+struct mk_server_config
 {
     int server_fd;                /* server socket file descriptor */
     int kernel_features;          /* Hold different server setup status */
@@ -173,11 +173,12 @@ struct server_config
     struct mk_list stage50_handler;
 };
 
-extern struct server_config *config;
+/* Global context of the server */
+struct mk_server_config *mk_config;
 
 
 /* Functions */
-struct server_config *mk_config_init();
+struct mk_server_config *mk_config_init();
 void mk_config_start_configure(void);
 void mk_config_add_index(char *indexname);
 void mk_config_set_init_values(void);

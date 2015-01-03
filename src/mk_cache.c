@@ -58,7 +58,7 @@ void mk_cache_worker_init()
     worker_cache_header_ka = mk_mem_malloc_z(sizeof(mk_ptr_t));
     mk_string_build(&worker_cache_header_ka->data, &worker_cache_header_ka->len,
                     "Keep-Alive: timeout=%i, max=",
-                    config->keep_alive_timeout);
+                    mk_config->keep_alive_timeout);
 
     /* Cache header response -> max=%i */
     worker_cache_header_ka_max = mk_mem_malloc_z(sizeof(mk_ptr_t));

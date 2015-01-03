@@ -37,7 +37,7 @@ struct mk_server_listen
 
 static inline int mk_server_cork_flag(int fd, int state)
 {
-    if (config->manual_tcp_cork == MK_FALSE) {
+    if (mk_config->manual_tcp_cork == MK_FALSE) {
         return 0;
     }
 
@@ -50,7 +50,7 @@ int mk_server_listen_handler(struct sched_list_node *sched,
         struct mk_server_listen *listen,
         int server_fd);
 void mk_server_listen_free(struct mk_server_listen *server_listen);
-int mk_server_listen_init(struct server_config *config,
+int mk_server_listen_init(struct mk_server_config *config,
         struct mk_server_listen *server_listen);
 unsigned int mk_server_capacity();
 void mk_server_launch_workers(void);

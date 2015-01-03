@@ -126,10 +126,13 @@ void mk_mimetype_read_config()
     mimetype_rb_head = RB_ROOT;
 
     /* Read mime types configuration file */
-    snprintf(path, MK_MAX_PATH, "%s/%s", config->serverconf, config->mimes_conf_file);
+    snprintf(path, MK_MAX_PATH, "%s/%s",
+             mk_config->serverconf,
+             mk_config->mimes_conf_file);
+
     ret = mk_file_get_info(path, &f_info);
     if (ret == -1 || f_info.is_file == MK_FALSE)
-        snprintf(path, MK_MAX_PATH, "%s", config->mimes_conf_file);
+        snprintf(path, MK_MAX_PATH, "%s", mk_config->mimes_conf_file);
 
     cnf = mk_config_create(path);
     if (!cnf) {
@@ -158,7 +161,7 @@ void mk_mimetype_read_config()
     /* Set default mime type */
     mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
-    mk_ptr_set(&mimetype_default->type, config->default_mimetype);
+    mk_ptr_set(&mimetype_default->type, mk_config->default_mimetype);
 
     mk_config_free(cnf);
 }

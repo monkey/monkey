@@ -129,7 +129,7 @@ int mk_cheetah_plugin_exit()
     return 0;
 }
 
-int mk_cheetah_master_init(struct server_config *config)
+int mk_cheetah_master_init(struct mk_server_config *config)
 {
     mk_api->worker_spawn(mk_cheetah_init, config);
     return 0;

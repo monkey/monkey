@@ -82,12 +82,12 @@ int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr)
         user_uri[sr->uri_processed.len - offset - limit] = '\0';
 
         mk_string_build(&sr->real_path.data, &sr->real_path.len,
-                        "%s/%s%s", s_user->pw_dir, config->user_dir, user_uri);
+                        "%s/%s%s", s_user->pw_dir, mk_config->user_dir, user_uri);
         mk_mem_free(user_uri);
     }
     else {
         mk_string_build(&sr->real_path.data, &sr->real_path.len,
-                        "%s/%s", s_user->pw_dir, config->user_dir);
+                        "%s/%s", s_user->pw_dir, mk_config->user_dir);
     }
 
     sr->user_home = MK_TRUE;
@@ -102,7 +102,7 @@ int mk_user_set_uidgid()
     struct passwd *usr;
 
     /* Launched by root ? */
-    if (geteuid() == 0 && config->user) {
+    if (geteuid() == 0 && mk_config->user) {
         struct rlimit rl;
 
         if (getrlimit(RLIMIT_NOFILE, &rl)) {
@@ -110,12 +110,12 @@ int mk_user_set_uidgid()
         }
 
         /* Check if user exists  */
-        if ((usr = getpwnam(config->user)) == NULL) {
-            mk_err("Invalid user '%s'", config->user);
+        if ((usr = getpwnam(mk_config->user)) == NULL) {
+            mk_err("Invalid user '%s'", mk_config->user);
             goto out;
         }
 
-        if (initgroups(config->user, usr->pw_gid) != 0) {
+        if (initgroups(mk_config->user, usr->pw_gid) != 0) {
             mk_err("Initgroups() failed");
         }
 
@@ -128,7 +128,7 @@ int mk_user_set_uidgid()
             mk_err("I cannot change the UID to %u", usr->pw_uid);
         }
 
-        config->is_seteuid = MK_TRUE;
+        mk_config->is_seteuid = MK_TRUE;
     }
 
     out:
@@ -143,7 +143,7 @@ int mk_user_set_uidgid()
 /* Return process to the original user */
 int mk_user_undo_uidgid()
 {
-    if (config->is_seteuid == MK_TRUE) {
+    if (mk_config->is_seteuid == MK_TRUE) {
         if (setegid(0) < 0) {
             mk_err("Can't restore effective GID");
         }

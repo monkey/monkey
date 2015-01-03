@@ -56,7 +56,7 @@ int mk_vhost_fdt_worker_init()
     struct vhost_fdt_hash_table *ht;
     struct vhost_fdt_hash_chain *hc;
 
-    if (config->fdt == MK_FALSE) {
+    if (mk_config->fdt == MK_FALSE) {
         return -1;
     }
 
@@ -81,7 +81,7 @@ int mk_vhost_fdt_worker_init()
     list = mk_mem_malloc_z(sizeof(struct mk_list));
     mk_list_init(list);
 
-    mk_list_foreach(head, &config->hosts) {
+    mk_list_foreach(head, &mk_config->hosts) {
         h = mk_list_entry(head, struct host, _head);
 
         fdt = mk_mem_malloc(sizeof(struct vhost_fdt_host));
@@ -115,7 +115,7 @@ int mk_vhost_fdt_worker_exit()
     struct mk_list *tmp;
     struct vhost_fdt_host *fdt;
 
-    if (config->fdt == MK_FALSE) {
+    if (mk_config->fdt == MK_FALSE) {
         return -1;
     }
 
@@ -176,7 +176,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
-    if (config->fdt == MK_FALSE) {
+    if (mk_config->fdt == MK_FALSE) {
         return open(sr->real_path.data, sr->file_info.flags_read_only);
     }
 
@@ -235,7 +235,7 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
-    if (config->fdt == MK_FALSE) {
+    if (mk_config->fdt == MK_FALSE) {
         return close(sr->fd_file);
     }
 
@@ -436,7 +436,7 @@ struct host *mk_vhost_read(char *path)
     }
 
     /* Server Signature */
-    if (config->hideversion == MK_FALSE) {
+    if (mk_config->hideversion == MK_FALSE) {
         mk_string_build(&host->host_signature, &len,
                         "Monkey/%s", VERSION);
     }
@@ -482,7 +482,7 @@ void mk_vhost_set_single(char *path)
     }
 
     /* Server Signature */
-    if (config->hideversion == MK_FALSE) {
+    if (mk_config->hideversion == MK_FALSE) {
         mk_string_build(&host->host_signature, &len,
                         "Monkey/%s", VERSION);
     }
@@ -494,7 +494,7 @@ void mk_vhost_set_single(char *path)
                     &host->header_host_signature.len,
                     "Server: %s", host->host_signature);
 
-    mk_list_add(&host->_head, &config->hosts);
+    mk_list_add(&host->_head, &mk_config->hosts);
 }
 
 /* Given a configuration directory, start reading the virtual host entries */
@@ -511,11 +511,11 @@ void mk_vhost_init(char *path)
     int ret;
 
     /* Read default virtual host file */
-    mk_string_build(&sites, &len, "%s/%s/", path, config->sites_conf_dir);
+    mk_string_build(&sites, &len, "%s/%s/", path, mk_config->sites_conf_dir);
     ret = mk_file_get_info(sites, &f_info);
     if (ret == -1 || f_info.is_directory == MK_FALSE) {
         mk_mem_free(sites);
-        sites = config->sites_conf_dir;
+        sites = mk_config->sites_conf_dir;
     }
 
     mk_string_build(&buf, &len, "%s/default", sites);
@@ -524,8 +524,8 @@ void mk_vhost_init(char *path)
     if (!p_host) {
         mk_err("Error parsing main configuration file 'default'");
     }
-    mk_list_add(&p_host->_head, &config->hosts);
-    config->nhosts++;
+    mk_list_add(&p_host->_head, &mk_config->hosts);
+    mk_config->nhosts++;
     mk_mem_free(buf);
     buf = NULL;
 
@@ -560,8 +560,8 @@ void mk_vhost_init(char *path)
             continue;
         }
         else {
-            mk_list_add(&p_host->_head, &config->hosts);
-            config->nhosts++;
+            mk_list_add(&p_host->_head, &mk_config->hosts);
+            mk_config->nhosts++;
         }
     }
     closedir(dir);
@@ -576,7 +576,7 @@ int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
     struct host_alias *entry_alias;
     struct mk_list *head_vhost, *head_alias;
 
-    mk_list_foreach(head_vhost, &config->hosts) {
+    mk_list_foreach(head_vhost, &mk_config->hosts) {
         entry_host = mk_list_entry(head_vhost, struct host, _head);
         mk_list_foreach(head_alias, &entry_host->server_names) {
             entry_alias = mk_list_entry(head_alias, struct host_alias, _head);
@@ -602,7 +602,7 @@ void mk_vhost_free_all()
     struct mk_list *head_error;
     struct mk_list *tmp1, *tmp2;
 
-    mk_list_foreach_safe(head_host, tmp1, &config->hosts) {
+    mk_list_foreach_safe(head_host, tmp1, &mk_config->hosts) {
         host = mk_list_entry(head_host, struct host, _head);
         mk_list_del(&host->_head);
 

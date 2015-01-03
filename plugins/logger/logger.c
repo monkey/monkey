@@ -390,7 +390,7 @@ int mk_logger_plugin_exit()
     return 0;
 }
 
-int mk_logger_master_init(struct server_config *config)
+int mk_logger_master_init(struct mk_server_config *config)
 {
     (void) config;
     struct log_target *new;

@@ -96,10 +96,10 @@ static int mk_plugin_init(struct plugin_api *api, struct mk_plugin *plugin)
 
     MK_TRACE("Load Plugin: '%s'", plugin->shortname);
 
-    snprintf(path, 1024, "%s/%s", config->serverconf, config->plugins_conf_dir);
+    snprintf(path, 1024, "%s/%s", mk_config->serverconf, mk_config->plugins_conf_dir);
     ret = mk_file_get_info(path, &f_info);
     if (ret == -1 || f_info.is_directory == MK_FALSE) {
-        snprintf(path, 1024, "%s", config->plugins_conf_dir);
+        snprintf(path, 1024, "%s", mk_config->plugins_conf_dir);
     }
 
     /* Build plugin configuration path */
@@ -165,15 +165,15 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         mk_bug(!plugin->network);
 
         /* Set Transport Layer */
-        if (config->transport_layer &&
-            strcmp(config->transport_layer, plugin->shortname) == 0) {
-            config->transport_layer_plugin = plugin;
-            config->network = plugin->network;
+        if (mk_config->transport_layer &&
+            strcmp(mk_config->transport_layer, plugin->shortname) == 0) {
+            mk_config->transport_layer_plugin = plugin;
+            mk_config->network = plugin->network;
 
             /* Ask the transport layer if it's using any buffer size */
-            config->transport_buffer_size = plugin->network->buffer_size();
-            if (config->transport_buffer_size <= 0) {
-                config->transport_buffer_size = MK_REQUEST_CHUNK;
+            mk_config->transport_buffer_size = plugin->network->buffer_size();
+            if (mk_config->transport_buffer_size <= 0) {
+                mk_config->transport_buffer_size = MK_REQUEST_CHUNK;
             }
         }
     }
@@ -185,37 +185,37 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
             st->stage10 = stage->stage10;
             st->plugin  = plugin;
-            mk_list_add(&st->_head, &config->stage10_handler);
+            mk_list_add(&st->_head, &mk_config->stage10_handler);
         }
         if (stage->stage20) {
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
             st->stage20 = stage->stage20;
             st->plugin  = plugin;
-            mk_list_add(&st->_head, &config->stage20_handler);
+            mk_list_add(&st->_head, &mk_config->stage20_handler);
         }
         if (stage->stage30) {
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
             st->stage30 = stage->stage30;
             st->plugin  = plugin;
-            mk_list_add(&st->_head, &config->stage30_handler);
+            mk_list_add(&st->_head, &mk_config->stage30_handler);
         }
         if (stage->stage40) {
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
             st->stage40 = stage->stage20;
             st->plugin  = plugin;
-            mk_list_add(&st->_head, &config->stage40_handler);
+            mk_list_add(&st->_head, &mk_config->stage40_handler);
         }
         if (stage->stage50) {
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
             st->stage50 = stage->stage50;
             st->plugin  = plugin;
-            mk_list_add(&st->_head, &config->stage50_handler);
+            mk_list_add(&st->_head, &mk_config->stage50_handler);
         }
     }
 
     if (type == MK_PLUGIN_DYNAMIC) {
         /* Add Plugin to the end of the list */
-        mk_list_add(&plugin->_head, config->plugins);
+        mk_list_add(&plugin->_head, mk_config->plugins);
     }
 
     return plugin;
@@ -238,7 +238,7 @@ void mk_plugin_api_init()
     __builtin_prefetch(api);
 
     /* Setup and connections list */
-    api->config = config;
+    api->config = mk_config;
     api->sched_list = sched_list;
 
     /* API plugins funcions */
@@ -363,7 +363,7 @@ void mk_plugin_api_init()
     api->stacktrace = (void *) mk_utils_stacktrace;
     api->kernel_version = mk_kernel_version;
     api->kernel_features_print = mk_kernel_features_print;
-    api->plugins = config->plugins;
+    api->plugins = mk_config->plugins;
 }
 
 #ifndef SHAREDLIB
@@ -384,7 +384,7 @@ void mk_plugin_load_all()
 
     /* Load static plugins */
     mk_static_plugins();
-    mk_list_foreach_safe(head, htmp, config->plugins) {
+    mk_list_foreach_safe(head, htmp, mk_config->plugins) {
         p = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Load the static plugin */
@@ -405,11 +405,11 @@ void mk_plugin_load_all()
 
     /* Read configuration file */
     path = mk_mem_malloc_z(1024);
-    snprintf(path, 1024, "%s/%s", config->serverconf,
-             config->plugin_load_conf_file);
+    snprintf(path, 1024, "%s/%s", mk_config->serverconf,
+             mk_config->plugin_load_conf_file);
     ret = mk_file_get_info(path, &f_info);
     if (ret == -1 || f_info.is_file == MK_FALSE) {
-        snprintf(path, 1024, "%s", config->plugin_load_conf_file);
+        snprintf(path, 1024, "%s", mk_config->plugin_load_conf_file);
     }
 
     cnf = mk_config_create(path);
@@ -455,7 +455,7 @@ void mk_plugin_load_all()
         }
     }
 
-    if (!config->transport_layer) {
+    if (!mk_config->transport_layer) {
         mk_mem_free(path);
         mk_err("TransportLayer not defined in configuration");
         exit(EXIT_FAILURE);
@@ -476,13 +476,13 @@ void mk_plugin_exit_all()
     struct mk_list *head, *tmp;
 
     /* Plugins */
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         node->exit_plugin();
     }
 
     /* Plugin interface it self */
-    mk_list_foreach_safe(head, tmp, config->plugins) {
+    mk_list_foreach_safe(head, tmp, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         mk_list_del(&node->_head);
         mk_mem_free(node->path);
@@ -559,7 +559,7 @@ int mk_plugin_stage_run(unsigned int hook,
 
     /* Connection just accept(ed) not assigned to worker thread */
     if (hook & MK_PLUGIN_STAGE_10) {
-        mk_list_foreach(head, &config->stage10_handler) {
+        mk_list_foreach(head, &mk_config->stage10_handler) {
             stage = mk_list_entry(head, struct mk_plugin_stage, _head);
             ret = stage->stage10(socket, conx);
             switch (ret) {
@@ -572,7 +572,7 @@ int mk_plugin_stage_run(unsigned int hook,
 
     /* The HTTP Request stream has been just received */
     if (hook & MK_PLUGIN_STAGE_20) {
-        mk_list_foreach(head, &config->stage20_handler) {
+        mk_list_foreach(head, &mk_config->stage20_handler) {
             stage = mk_list_entry(head, struct mk_plugin_stage, _head);
             ret = stage->stage20(cs, sr);
             switch (ret) {
@@ -589,7 +589,7 @@ int mk_plugin_stage_run(unsigned int hook,
      * request, it decides what to do with the request
      */
     if (hook & MK_PLUGIN_STAGE_30) {
-        mk_list_foreach(head, &config->stage30_handler) {
+        mk_list_foreach(head, &mk_config->stage30_handler) {
             stage = mk_list_entry(head, struct mk_plugin_stage, _head);
             ret = stage->stage30(stage->plugin, cs, sr);
             switch (ret) {
@@ -610,7 +610,7 @@ int mk_plugin_stage_run(unsigned int hook,
 
     /* The request has ended, the content has been served */
     if (hook & MK_PLUGIN_STAGE_40) {
-        mk_list_foreach(head, &config->stage40_handler) {
+        mk_list_foreach(head, &mk_config->stage40_handler) {
             stage = mk_list_entry(head, struct mk_plugin_stage, _head);
             stage->stage40(cs, sr);
         }
@@ -618,7 +618,7 @@ int mk_plugin_stage_run(unsigned int hook,
 
     /* The request has ended, the content has been served */
     if (hook & MK_PLUGIN_STAGE_50) {
-        mk_list_foreach(head, &config->stage50_handler) {
+        mk_list_foreach(head, &mk_config->stage50_handler) {
             stage = mk_list_entry(head, struct mk_plugin_stage, _head);
             ret = stage->stage50(socket);
             switch (ret) {
@@ -717,12 +717,12 @@ void mk_plugin_core_process()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init plugin */
         if (node->master_init) {
-            node->master_init(config);
+            node->master_init(mk_config);
         }
     }
 }
@@ -737,7 +737,7 @@ void mk_plugin_core_thread()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init plugin thread context */
@@ -757,7 +757,7 @@ void mk_plugin_preworker_calls()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init pthread keys */
@@ -1007,7 +1007,7 @@ int mk_plugin_event_read(int socket)
         */
     }
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
 
@@ -1064,7 +1064,7 @@ int mk_plugin_event_write(int socket)
         */
     }
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
 
@@ -1110,7 +1110,7 @@ int mk_plugin_event_error(int socket)
         */
     }
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
 
@@ -1156,7 +1156,7 @@ int mk_plugin_event_close(int socket)
         */
     }
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
 
@@ -1202,7 +1202,7 @@ int mk_plugin_event_timeout(int socket)
         */
     }
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
 

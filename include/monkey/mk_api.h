@@ -59,7 +59,7 @@ pthread_key_t MK_EXPORT _mkp_data;
 /* Hook defines */
 int MK_EXPORT _mkp_init(struct plugin_api **api, char *confdir);
 void MK_EXPORT _mkp_exit();
-int MK_EXPORT _mkp_core_prctx(struct server_config *config);
+int MK_EXPORT _mkp_core_prctx(struct mk_server_config *config);
 void MK_EXPORT _mkp_core_thctx();
 int MK_EXPORT _mkp_stage_10(unsigned int socket, struct sched_connection *conx);
 int MK_EXPORT _mkp_stage_20(struct mk_http_session *cs, struct mk_http_request *sr);

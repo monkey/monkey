@@ -101,7 +101,7 @@ struct plugin_api
     int (*socket_send_file) (int, int, off_t *, size_t);
     int (*socket_ip_str) (int, char **, int, unsigned long *);
 
-    struct server_config *config;
+    struct mk_server_config *config;
     struct mk_list *plugins;
     struct sched_list_node *sched_list;
 
@@ -283,7 +283,7 @@ struct mk_plugin {
     int (*exit_plugin) ();
 
     /* Init Levels */
-    int  (*master_init) (struct server_config *);
+    int  (*master_init) (struct mk_server_config *);
     void (*worker_init) ();
 
     /* Callback references for plugin type */
