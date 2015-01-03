@@ -43,7 +43,7 @@
 #include <monkey/mk_linuxtrace.h>
 #include <monkey/mk_stats.h>
 #include <monkey/mk_server.h>
-
+#include <monkey/mk_plugin_stage.h>
 
 struct sched_list_node *sched_list;
 
@@ -239,9 +239,7 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     sched_conn->arrive_time = log_current_utime;
 
     /* Before to continue, we need to run plugin stage 10 */
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_10,
-                              remote_fd,
-                              sched_conn, NULL, NULL);
+    ret = mk_plugin_stage_run_10(remote_fd, sched_conn);
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
@@ -534,7 +532,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 #endif
 
         /* Invoke plugins in stage 50 */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_50, remote_fd, NULL, NULL, NULL);
+        mk_plugin_stage_run_50(remote_fd);
 
         sched->closed_connections++;
 

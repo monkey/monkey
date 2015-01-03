@@ -39,6 +39,7 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_stats.h>
 #include <monkey/mk_static_plugins.h>
+#include <monkey/mk_plugin_stage.h>
 
 enum {
     bufsize = 256
@@ -853,7 +854,7 @@ int mk_plugin_http_request_end(int socket)
     }
 
     sr = mk_list_entry_last(&cs->request_list, struct mk_http_request, _head);
-    mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket, NULL, cs, sr);
+    mk_plugin_stage_run_40(cs, sr);
 
     ret = mk_http_request_end(socket);
     MK_TRACE(" ret = %i", ret);

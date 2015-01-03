@@ -44,6 +44,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_plugin_stage.h>
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_METHOD_POST_STR);
@@ -111,7 +112,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
                                    struct mk_http_request *sr)
 {
     int status = 0;
-    int socket = cs->socket;
     char *temp;
     struct mk_list *hosts = &mk_config->hosts;
     struct mk_list *alias;
@@ -245,7 +245,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
 
     /* Plugins Stage 20 */
     int ret;
-    ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_20, socket, NULL, cs, sr);
+    ret = mk_plugin_stage_run_20(cs, sr);
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
         return EXIT_ABORT;
@@ -292,12 +292,11 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
         mk_http_error(http_status, cs, sr);
 
         /* STAGE_40, request has ended */
-        mk_plugin_stage_run(MK_PLUGIN_STAGE_40, cs->socket,
-                            NULL, cs, sr);
+        mk_plugin_stage_run_40(cs, sr);
     }
 
     /* STAGE_50, connection closed and remove the http_session */
-    mk_plugin_stage_run(MK_PLUGIN_STAGE_50, cs->socket, NULL, NULL, NULL);
+    mk_plugin_stage_run_50(cs->socket);
     mk_http_session_remove(cs->socket);
 }
 
@@ -403,6 +402,7 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
     struct mk_http_request *sr_node;
     struct mk_list *sr_list;
     struct mk_list *sr_head;
+    (void) socket;
 
     sr_list = &cs->request_list;
     mk_list_foreach(sr_head, sr_list) {
@@ -425,8 +425,7 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
         }
         else {
             /* STAGE_40, request has ended */
-            mk_plugin_stage_run(MK_PLUGIN_STAGE_40, socket,
-                                NULL, cs, sr_node);
+            mk_plugin_stage_run_40(cs, sr_node);
             switch (final_status) {
             case EXIT_NORMAL:
             case EXIT_ERROR:
@@ -833,7 +832,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
          * check if some plugin would like to handle it
          */
         MK_TRACE("No file, look for handler plugin");
-        ret = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
+        ret = mk_plugin_stage_run_30(cs, sr);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             if (sr->headers.status > 0) {
                 return mk_http_error(sr->headers.status, cs, sr);
@@ -911,7 +910,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
-        ret  = mk_plugin_stage_run(MK_PLUGIN_STAGE_30, cs->socket, NULL, cs, sr);
+        ret = mk_plugin_stage_run_30(cs, sr);
         MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
         switch (ret) {
         case MK_PLUGIN_RET_CONTINUE:
