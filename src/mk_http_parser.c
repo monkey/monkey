@@ -447,8 +447,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 if (p->chars == 0) {
                     /*
                      * We reach the start of a Header row, lets catch the most
-                     * probable header. Note that we don't accept headers starting
-                     * in lowercase.
+                     * probable header.
                      *
                      * The goal of this 'first row character lookup', is to define a
                      * small range set of probable headers comparison once we catch
@@ -489,6 +488,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->header_max = -1;
                     };
                     p->header_key = i;
+                    continue;
                 }
 
                 /* Found key/value separator */
@@ -529,8 +529,6 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         return MK_HTTP_PARSER_ERROR;
                     }
 
-                    p->status = MK_ST_HEADER_END;
-
                     /*
                      * A header row has ended, lets lookup the header and populate
                      * our headers table index.
@@ -553,6 +551,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                             parse_next();
                         }
                     }
+
+                    p->status = MK_ST_HEADER_END;
                     parse_next();
                 }
                 else if (buffer[i] == '\n' && buffer[i - 1] != '\r') {
@@ -586,7 +586,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
              * Reaching this level can means two things:
              *
              * - A Pipeline Request
-             * - A Body content (POST/PUT methods
+             * - A Body content (POST/PUT methods)
              */
             if (p->header_content_length > 0) {
                 p->body_received += (len - i);
