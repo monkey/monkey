@@ -385,6 +385,16 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         req->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
                     }
 
+                    /* Try to catch next LF */
+                    if (i < len) {
+                        if (buffer[i+1] == '\n') {
+                            i++;
+                            p->i = i;
+                            p->level = REQ_LEVEL_CONTINUE;
+                            parse_next();
+                        }
+                    }
+
                     p->status = MK_ST_FIRST_FINALIZING;
                     continue;
                 }
@@ -518,6 +528,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     if (field_len() <= 0) {
                         return MK_HTTP_PARSER_ERROR;
                     }
+
                     p->status = MK_ST_HEADER_END;
 
                     /*
@@ -530,6 +541,17 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                             mk_http_error(-ret, req->session, req);
                         }
                         return MK_HTTP_PARSER_ERROR;
+                    }
+
+                    /* Try to catch next LF */
+                    if (i < len) {
+                        if (buffer[i+1] == '\n') {
+                            i++;
+                            p->i = i;
+                            p->status = MK_ST_HEADER_KEY;
+                            p->chars = -1;
+                            parse_next();
+                        }
                     }
                     parse_next();
                 }
