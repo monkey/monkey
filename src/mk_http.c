@@ -1063,15 +1063,43 @@ int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     long int nbytes = 0;
 
-    if (sr->bytes_offset == 0) {
-        mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-    }
+#if defined(__APPLE__)
+        /*
+         * Disable TCP_CORK right away, according to:
+         *
+         *  ---
+         *  commit 81e8b869d70f9da93ddfbfb17ec7f12ce3c28fc6
+         *  Author: Sonny Karlsson <ksonny@lotrax.org>
+         *  Date:   Sat Oct 18 12:11:49 2014 +0200
+         *
+         *  http: Remove cork before first call to sendfile().
+         *
+         *  This removes a large delay on Mac OS X when headers and file content
+         *  does not fill a single frame.
+         *  Deactivating TCP_NOPUSH does not cause pending frames to be sent until
+         *  the next write operation.
+         *  ---
+         */
+
+        if (sr->bytes_offset == 0) {
+            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+        }
+#endif
 
     nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
                                  &sr->bytes_offset, sr->bytes_to_send);
     if (nbytes > 0) {
         sr->bytes_to_send -= nbytes;
+
+#if defined(__linux__)
+        /* Disable TCP_CORK after our first round of bytes */
+        if (sr->bytes_offset == nbytes) {
+            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+        }
+#endif
     }
+
+
 
     sr->loop++;
 
