@@ -31,7 +31,7 @@ struct mimetype
 {
     char *name;
     mk_ptr_t type;
-
+    mk_ptr_t header_type;
     struct mk_list _head;
     struct rb_node _rb_head;
 };

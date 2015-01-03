@@ -33,8 +33,8 @@ extern mk_ptr_t header_current_time;
 
 pthread_t mk_clock_tid;
 
-#define GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT\r\n"
-#define HEADER_TIME_BUFFER_SIZE 32
+#define GMT_DATEFORMAT "Date: %a, %d %b %Y %H:%M:%S GMT\r\n"
+#define HEADER_TIME_BUFFER_SIZE 64
 #define LOG_TIME_BUFFER_SIZE 30
 
 void *mk_clock_worker_init(void *args);

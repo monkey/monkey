@@ -65,6 +65,7 @@ static void mk_clock_log_set_time(time_t utime)
 
 static void mk_clock_header_set_time(time_t utime)
 {
+    int len;
     struct tm *gmt_tm;
     struct tm result;
     char *time_string;
@@ -72,9 +73,10 @@ static void mk_clock_header_set_time(time_t utime)
     time_string = _next_buffer(&header_current_time, header_time_buffers);
 
     gmt_tm = gmtime_r(&utime, &result);
-    strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
+    len = strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
 
     header_current_time.data = time_string;
+    header_current_time.len  = len;
 }
 
 void *mk_clock_worker_init(void *args UNUSED_PARAM)

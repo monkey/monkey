@@ -75,6 +75,11 @@ int mk_mimetype_add(char *name, const char *type)
     new_mime->name = mk_string_dup(name);
     new_mime->type.data = mk_mem_malloc(len);
     new_mime->type.len = len - 1;
+    new_mime->header_type.data = mk_mem_malloc(len + 32);
+    new_mime->header_type.len = snprintf(new_mime->header_type.data,
+                                         len + 32,
+                                         "Content-Type: %s\r\n",
+                                         type);
     strcpy(new_mime->type.data, type);
     strcat(new_mime->type.data, MK_CRLF);
     new_mime->type.data[len-1] = '\0';

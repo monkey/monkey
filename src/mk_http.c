@@ -1017,7 +1017,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Process methods */
     if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_HEAD) {
-        sr->headers.content_type = mime->type;
+        sr->headers.content_type = mime->header_type;
 
         /* HTTP Ranges */
         if (sr->range.data != NULL && mk_config->resume == MK_TRUE) {

@@ -445,7 +445,7 @@ struct host *mk_vhost_read(char *path)
     }
     mk_string_build(&host->header_host_signature.data,
                     &host->header_host_signature.len,
-                    "Server: %s", host->host_signature);
+                    "Server: %s\r\n", host->host_signature);
 
     return host;
 }
