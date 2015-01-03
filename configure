@@ -1000,7 +1000,7 @@ create_header_static_plugins()
     for e in $static_array;
     do
         echo "    p = &mk_plugin_$e;" >> $t
-        echo "    mk_list_add(&p->_head, config->plugins);" >> $t
+        echo "    mk_list_add(&p->_head, mk_config->plugins);" >> $t
     done
 
     echo >> $t
