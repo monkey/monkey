@@ -129,12 +129,6 @@ static const struct header_status_response status_response[] = {
 static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-static int mk_header_iov_add_entry(struct mk_iov *mk_io, mk_ptr_t data,
-                            mk_ptr_t sep, int free)
-{
-    return mk_iov_add_entry(mk_io, data.data, data.len, sep, free);
-}
-
 static inline struct mk_iov *mk_header_iov_get()
 {
     return worker_cache_iov_header;
@@ -178,29 +172,33 @@ int mk_header_send(int fd, struct mk_http_session *cs,
     /* Invalid status set */
     mk_bug(i == status_response_len);
 
-    mk_header_iov_add_entry(iov, response, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(iov, response.data, response.len, MK_IOV_NOT_FREE_BUF);
 
     /* Server details */
-    mk_iov_add_entry(iov,
-                     sr->host_conf->header_host_signature.data,
-                     sr->host_conf->header_host_signature.len,
-                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(iov,
+               sr->host_conf->header_host_signature.data,
+               sr->host_conf->header_host_signature.len,
+               MK_IOV_NOT_FREE_BUF);
 
     /* Date */
-    mk_iov_add_entry(iov,
-                     header_current_time.data,
-                     header_current_time.len,
-                     mk_iov_none,
-                     MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(iov,
+               header_current_time.data,
+               header_current_time.len,
+               MK_IOV_NOT_FREE_BUF);
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
         mk_ptr_t *lm = worker_cache_header_lm;
         lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
 
-        mk_iov_add_entry(iov, mk_header_last_modified.data,
-                         mk_header_last_modified.len,
-                         *lm, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   mk_header_last_modified.data,
+                   mk_header_last_modified.len,
+                   MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   lm->data,
+                   lm->len,
+                   MK_IOV_NOT_FREE_BUF);
     }
 
     /* Connection */
@@ -214,49 +212,56 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
                     /* Compose header and add entries to iov */
                     mk_string_itop(mk_config->max_keep_alive_request - cs->counter_connections, ka_header);
-                    mk_iov_add_entry(iov, ka_format->data, ka_format->len,
-                                     mk_iov_none, MK_IOV_NOT_FREE_BUF);
-                    mk_iov_add_entry(iov, ka_header->data, ka_header->len,
-                                     mk_header_conn_ka, MK_IOV_NOT_FREE_BUF);
+                    mk_iov_add(iov, ka_format->data, ka_format->len,
+                               MK_IOV_NOT_FREE_BUF);
+                    mk_iov_add(iov, ka_header->data, ka_header->len,
+                               MK_IOV_NOT_FREE_BUF);
+                    mk_iov_add(iov,
+                               mk_header_conn_ka.data,
+                               mk_header_conn_ka.len,
+                               MK_IOV_NOT_FREE_BUF);
                 }
             }
         }
         else {
-            mk_iov_add_entry(iov,
-                             mk_header_conn_close.data,
-                             mk_header_conn_close.len,
-                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_iov_add(iov,
+                       mk_header_conn_close.data,
+                       mk_header_conn_close.len,
+                       MK_IOV_NOT_FREE_BUF);
         }
-
     }
 
     /* Location */
     if (sh->location != NULL) {
-        mk_iov_add_entry(iov,
-                         mk_header_short_location.data,
-                         mk_header_short_location.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   mk_header_short_location.data,
+                   mk_header_short_location.len,
+                   MK_IOV_NOT_FREE_BUF);
 
-        mk_iov_add_entry(iov,
-                         sh->location,
-                         strlen(sh->location), mk_iov_crlf, MK_IOV_FREE_BUF);
+        mk_iov_add(iov,
+                   sh->location,
+                   strlen(sh->location),
+                   MK_IOV_FREE_BUF);
     }
 
     /* allowed methods */
     if (sh->allow_methods.len > 0) {
-        mk_iov_add_entry(iov,
-                         mk_header_allow.data,
-                         mk_header_allow.len,
-                         sh->allow_methods, MK_IOV_NOT_FREE_BUF) ;
+        mk_iov_add(iov,
+                   mk_header_allow.data,
+                   mk_header_allow.len,
+                   MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   sh->allow_methods.data,
+                   sh->allow_methods.len,
+                   MK_IOV_NOT_FREE_BUF);
     }
 
     /* Content type */
     if (sh->content_type.len > 0) {
-        mk_iov_add_entry(iov,
-                         sh->content_type.data,
-                         sh->content_type.len,
-                         mk_iov_none,
-                         MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   sh->content_type.data,
+                   sh->content_type.len,
+                   MK_IOV_NOT_FREE_BUF);
     }
 
     /*
@@ -266,22 +271,22 @@ int mk_header_send(int fd, struct mk_http_session *cs,
     if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
         switch (sh->transfer_encoding) {
         case MK_HEADER_TE_TYPE_CHUNKED:
-            mk_iov_add_entry(iov,
-                             mk_header_te_chunked.data,
-                             mk_header_te_chunked.len,
-                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_iov_add(iov,
+                       mk_header_te_chunked.data,
+                       mk_header_te_chunked.len,
+                       MK_IOV_NOT_FREE_BUF);
             break;
         }
     }
 
     /* Content-Encoding */
     if (sh->content_encoding.len > 0) {
-        mk_iov_add_entry(iov, mk_header_content_encoding.data,
-                         mk_header_content_encoding.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
-        mk_iov_add_entry(iov, sh->content_encoding.data,
-                         sh->content_encoding.len,
-                         mk_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov, mk_header_content_encoding.data,
+                   mk_header_content_encoding.len,
+                   MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov, sh->content_encoding.data,
+                   sh->content_encoding.len,
+                   MK_IOV_NOT_FREE_BUF);
     }
 
     /* Content-Length */
@@ -291,9 +296,14 @@ int mk_header_send(int fd, struct mk_http_session *cs,
         mk_string_itop(sh->content_length, cl);
 
         /* Set headers */
-        mk_iov_add_entry(iov, mk_header_content_length.data,
-                         mk_header_content_length.len,
-                         *cl, MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   mk_header_content_length.data,
+                   mk_header_content_length.len,
+                   MK_IOV_NOT_FREE_BUF);
+        mk_iov_add(iov,
+                   cl->data,
+                   cl->len,
+                   MK_IOV_NOT_FREE_BUF);
     }
 
     if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
@@ -304,33 +314,33 @@ int mk_header_send(int fd, struct mk_http_session *cs,
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %d-%ld/%ld",
+                            "%s bytes %d-%ld/%ld\r\n",
                             RH_CONTENT_RANGE,
                             sh->ranges[0],
                             (sh->real_length - 1), sh->real_length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
         }
 
         /* yyy-xxx */
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %d-%d/%ld",
+                            "%s bytes %d-%d/%ld\r\n",
                             RH_CONTENT_RANGE,
                             sh->ranges[0], sh->ranges[1], sh->real_length);
 
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
         }
 
         /* -xxx */
         if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
             mk_string_build(&buffer,
                             &len,
-                            "%s bytes %ld-%ld/%ld",
+                            "%s bytes %ld-%ld/%ld\r\n",
                             RH_CONTENT_RANGE,
                             (sh->real_length - sh->ranges[1]),
                             (sh->real_length - 1), sh->real_length);
-            mk_iov_add_entry(iov, buffer, len, mk_iov_crlf, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
         }
     }
 
@@ -338,12 +348,12 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
-            mk_iov_add_entry(iov, mk_iov_crlf.data, mk_iov_crlf.len,
-                             mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_iov_add(iov, mk_iov_crlf.data, mk_iov_crlf.len,
+                       MK_IOV_NOT_FREE_BUF);
         }
         else {
-            mk_iov_add_entry(sr->headers._extra_rows, mk_iov_crlf.data,
-                             mk_iov_crlf.len, mk_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_iov_add(sr->headers._extra_rows, mk_iov_crlf.data,
+                       mk_iov_crlf.len, MK_IOV_NOT_FREE_BUF);
         }
     }
 

@@ -287,7 +287,7 @@ void mk_plugin_api_init()
     api->iov_realloc = mk_iov_realloc;
     api->iov_free = mk_iov_free;
     api->iov_free_marked = mk_iov_free_marked;
-    api->iov_add_entry =  mk_iov_add_entry;
+    api->iov_add =  mk_iov_add;
     api->iov_set_entry =  mk_iov_set_entry;
     api->iov_send =  mk_iov_send;
     api->iov_print =  mk_iov_print;
@@ -1261,8 +1261,11 @@ int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
         mk_bug(!sr->headers._extra_rows);
     }
 
-    mk_iov_add_entry(sr->headers._extra_rows, row, len,
-                     mk_iov_crlf, MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(sr->headers._extra_rows, row, len,
+               MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(sr->headers._extra_rows,
+               mk_iov_crlf.data, mk_iov_crlf.len,
+               MK_IOV_NOT_FREE_BUF);
     return 0;
 }
 

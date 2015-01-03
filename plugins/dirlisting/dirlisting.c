@@ -475,10 +475,12 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
             val = values;
             while (val) {
                 if (val->tags == tpl->tags && val->tag_id == tpl->tag_id) {
-                    mk_api->iov_add_entry(iov,
-                                          val->value,
-                                          val->len,
-                                          val->sep, MK_IOV_NOT_FREE_BUF);
+                    mk_api->iov_add(iov,
+                                    val->value, val->len,
+                                    MK_IOV_NOT_FREE_BUF);
+                    mk_api->iov_add(iov,
+                                    val->sep.data, val->sep.len,
+                                    MK_IOV_NOT_FREE_BUF);
                     break;
                 }
                 else {
@@ -488,14 +490,15 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
         }
         /* static */
         else {
-            mk_api->iov_add_entry(iov, tpl->buf,
-                                  tpl->len, mk_dir_iov_none, MK_IOV_NOT_FREE_BUF);
+            mk_api->iov_add(iov,
+                            tpl->buf, tpl->len,
+                            MK_IOV_NOT_FREE_BUF);
         }
         tpl = tpl->next;
     }
 
     if (is_chunked == MK_TRUE) {
-        mk_api->iov_add_entry(iov, "\r\n", 2, mk_dir_iov_none, MK_IOV_NOT_FREE_BUF);
+        mk_api->iov_add(iov, "\r\n", 2, MK_IOV_NOT_FREE_BUF);
     }
 
     return (struct mk_iov *) iov;

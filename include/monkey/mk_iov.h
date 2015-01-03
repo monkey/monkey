@@ -83,29 +83,13 @@ static inline void _mk_iov_set_free(struct mk_iov *mk_io, void *buf)
     mk_io->buf_idx++;
 }
 
-static inline int mk_iov_add_entry(struct mk_iov *mk_io, void *buf, int len,
-                                   mk_ptr_t sep, int free)
+static inline int mk_iov_add(struct mk_iov *mk_io, void *buf, int len,
+                             int free)
 {
     mk_io->io[mk_io->iov_idx].iov_base = (unsigned char *) buf;
     mk_io->io[mk_io->iov_idx].iov_len = len;
     mk_io->iov_idx++;
     mk_io->total_len += len;
-
-#ifdef DEBUG_IOV
-    if (mk_io->iov_idx > mk_io->size) {
-        printf("\nDEBUG IOV :: ERROR, Broken array size in:");
-        printf("\n          '''%s'''", buf);
-        fflush(stdout);
-    }
-#endif
-
-    /* Add separator */
-    if (sep.len > 0) {
-        mk_io->io[mk_io->iov_idx].iov_base = sep.data;
-        mk_io->io[mk_io->iov_idx].iov_len = sep.len;
-        mk_io->iov_idx++;
-        mk_io->total_len += sep.len;
-    }
 
     if (free == MK_IOV_FREE_BUF) {
         _mk_iov_set_free(mk_io, buf);
@@ -115,6 +99,5 @@ static inline int mk_iov_add_entry(struct mk_iov *mk_io, void *buf, int len,
 
     return mk_io->iov_idx;
 }
-
 
 #endif

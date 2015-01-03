@@ -83,11 +83,8 @@ static int fcgi_handle_cgi_header(struct mk_http_request *sr,
                                                          MK_PLUGIN_HEADER_EXTRA_ROWS * 2,
                                                          0);
 		}
-		mk_api->iov_add_entry(sr->headers._extra_rows,
-                              entry,
-                              len,
-                              mk_fcgi_iov_none,
-                              0);
+		mk_api->iov_add(sr->headers._extra_rows,
+                        entry, len, MK_IOV_NOT_FREE_BUF);
 	}
 	return 0;
  error:
