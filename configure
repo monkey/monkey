@@ -410,6 +410,27 @@ EOF
 }
 
 is_static_plugin() {
+
+    check=plugins/$1/STATIC
+
+    if [ -f $check ]; then
+        found=0
+        # Populate the static_array if required
+        for p in $static_array;
+        do
+            if [ "$1" == "$p" ]; then
+                found=1
+            fi
+        done
+
+        if [ $found == 0 ]; then
+            # Append to array
+            static_array+=$1
+        fi
+
+        return 1
+    fi
+
     for p in $static_array;
     do
         if [ "$1" == "$p" ]; then
