@@ -55,6 +55,7 @@
 #include <monkey/mk_user.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_macros.h>
+#include <monkey/mk_tls.h>
 
 /* Date helpers */
 static const char mk_date_wd[][6]  = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
@@ -64,7 +65,7 @@ static const char mk_date_ym[][5] = {"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Ju
 static int mk_utils_gmt_cache_get(char **data, time_t date)
 {
     unsigned int i;
-    struct mk_gmt_cache *gcache = mk_cache_get_utils_gmtext();
+    struct mk_gmt_cache *gcache = MK_TLS_GET(mk_tls_cache_gmtext);
 
     if (mk_unlikely(!gcache)) {
         return MK_FALSE;
@@ -84,7 +85,7 @@ static int mk_utils_gmt_cache_get(char **data, time_t date)
 static void mk_utils_gmt_cache_add(char *data, time_t time)
 {
     unsigned int i, min = 0;
-    struct mk_gmt_cache *gcache = mk_cache_get_utils_gmtext();
+    struct mk_gmt_cache *gcache = MK_TLS_GET(mk_tls_cache_gmtext);
 
     for (i = 1; i < MK_GMT_CACHES; i++) {
         if (gcache[i].hits < gcache[min].hits)
@@ -124,7 +125,7 @@ int mk_utils_utime2gmt(char **data, time_t date)
     }
 
     /* Convert unix time to struct tm */
-    gtm = mk_cache_get_utils_gmtime();
+    gtm = MK_TLS_GET(mk_tls_cache_gmtime);
 
     /* If this function was invoked from a non-thread context it should exit */
     mk_bug(!gtm);

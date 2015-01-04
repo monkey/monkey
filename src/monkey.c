@@ -45,6 +45,7 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
+#include <monkey/mk_tls.h>
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -317,6 +318,7 @@ int main(int argc, char **argv)
     mk_plugin_core_process();
 
     /* Launch monkey http workers */
+    MK_TLS_INIT();
     mk_server_launch_workers();
 
     /* Print server details */

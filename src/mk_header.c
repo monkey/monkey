@@ -36,7 +36,7 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
-
+#include <monkey/mk_tls.h>
 
 #define MK_HEADER_SHORT_DATE       "Date: "
 #define MK_HEADER_SHORT_LOCATION   "Location: "
@@ -129,10 +129,6 @@ static const struct header_status_response status_response[] = {
 static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-static inline struct mk_iov *mk_header_iov_get()
-{
-    return worker_cache_iov_header;
-}
 
 static void mk_header_iov_free(struct mk_iov *iov)
 {
@@ -152,7 +148,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
     sh = &sr->headers;
 
-    iov = mk_header_iov_get();
+    iov = MK_TLS_GET(mk_tls_cache_iov_header);
 
     /* HTTP Status Code */
     if (sh->status == MK_CUSTOM_STATUS) {
@@ -188,7 +184,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
-        mk_ptr_t *lm = worker_cache_header_lm;
+        mk_ptr_t *lm = MK_TLS_GET(mk_tls_cache_header_lm);
         lm->len = mk_utils_utime2gmt(&lm->data, sh->last_modified);
 
         mk_iov_add(iov,
@@ -207,8 +203,8 @@ int mk_header_send(int fd, struct mk_http_session *cs,
             if (sr->connection.len > 0) {
                 if (sr->protocol != MK_HTTP_PROTOCOL_11) {
                     /* Get cached mk_ptr_ts */
-                    mk_ptr_t *ka_format = worker_cache_header_ka;
-                    mk_ptr_t *ka_header = worker_cache_header_ka_max;
+                    mk_ptr_t *ka_format = MK_TLS_GET(mk_tls_cache_header_ka);
+                    mk_ptr_t *ka_header = MK_TLS_GET(mk_tls_cache_header_ka_max);
 
                     /* Compose header and add entries to iov */
                     mk_string_itop(mk_config->max_keep_alive_request - cs->counter_connections, ka_header);
@@ -292,7 +288,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
     /* Content-Length */
     if (sh->content_length >= 0 && sh->transfer_encoding != 0) {
         /* Map content length to MK_POINTER */
-        mk_ptr_t *cl = worker_cache_header_cl;
+        mk_ptr_t *cl = MK_TLS_GET(mk_tls_cache_header_cl);
         mk_string_itop(sh->content_length, cl);
 
         /* Set headers */
