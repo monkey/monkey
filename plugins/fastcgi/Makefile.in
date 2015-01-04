@@ -4,7 +4,7 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
-AR      = @echo "  AR   $(_PATH)/$@"; ar
+AR      = @echo "  AR   $(_PATH)/$@"; $AR
 CFLAGS	= $CFLAGS
 LDFLAGS = $LDFLAGS
 DEFS    = $DEFS

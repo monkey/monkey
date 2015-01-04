@@ -322,6 +322,7 @@ main()
 	echo "#ifndef MK_ENV_H" > include/monkey/mk_env.h
 	echo "#define MK_ENV_H" >> include/monkey/mk_env.h
 	echo "#define CC \"${CC}\"" >> include/monkey/mk_env.h
+	echo "#define AR \"${AR}\"" >> include/monkey/mk_env.h
 	echo "#endif" >> include/monkey/mk_env.h
 }
 
@@ -834,7 +835,7 @@ create_makefile_plugins()
 		do
 			if [ -f "${d}/Makefile.in" ];
 			then
-				sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" $d/Makefile.in > $d/Makefile
+				sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" -e "s|\$AR|$AR|" $d/Makefile.in > $d/Makefile
 			fi
 		done
 
@@ -1473,6 +1474,10 @@ if test -z "$CC" ; then
 		echo "I'm a Monkey not a compiler! how do you suppose to compile me ? Install a compiler!"
 		exit 1
 	fi
+fi
+
+if test -z "$AR"; then
+    AR="ar"
 fi
 
 # Check dependencies for building the
