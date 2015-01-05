@@ -28,8 +28,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "liana.h"
-
 #if defined (__linux__)
 #include <sys/sendfile.h>
 #endif
