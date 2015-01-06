@@ -84,8 +84,3 @@ void mk_ptr_set(mk_ptr_t *p, char *data)
     p->data = data;
     p->len = strlen(data);
 }
-
-void mk_mem_pointers_init()
-{
-    mk_iov_separators_init();
-}

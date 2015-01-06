@@ -305,9 +305,6 @@ int main(int argc, char **argv)
     /* Workers: logger and clock */
     mk_clock_tid = mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
 
-    /* Init mk pointers */
-    mk_mem_pointers_init();
-
     /* Init thread keys */
     mk_thread_keys_init();
 
