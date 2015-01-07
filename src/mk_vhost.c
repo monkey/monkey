@@ -171,6 +171,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     if (hc) {
         /* Increment the readers and return the shared FD */
         hc->readers++;
+        sr->fd_is_fdt = MK_TRUE;
         return hc->fd;
     }
 

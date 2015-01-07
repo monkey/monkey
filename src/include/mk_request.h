@@ -171,7 +171,6 @@ struct session_request
     int fd_file;
     int fd_is_fdt;
 
-
     int headers_len;
 
     /*----First header of client request--*/
