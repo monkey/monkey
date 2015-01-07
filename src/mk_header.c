@@ -129,15 +129,21 @@ static const struct header_status_response status_response[] = {
 static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-
-static void mk_header_iov_free(struct mk_iov *iov)
+static void cb_stream_iov_free(struct mk_stream *stream)
 {
+    struct mk_iov *iov = stream->data;
+    mk_iov_free_marked(iov);
+}
+
+static void cb_stream_iov_extended_free(struct mk_stream *stream)
+{
+    struct mk_iov *iov = stream->data;
     mk_iov_free_marked(iov);
 }
 
 /* Send response headers */
-int mk_header_send(int fd, struct mk_http_session *cs,
-                   struct mk_http_request *sr)
+int mk_header_prepare(struct mk_http_session *cs,
+                      struct mk_http_request *sr)
 {
     int i=0;
     unsigned long len = 0;
@@ -340,7 +346,7 @@ int mk_header_send(int fd, struct mk_http_session *cs,
         }
     }
 
-    mk_server_cork_flag(fd, TCP_CORK_ON);
+    //mk_server_cork_flag(fd, TCP_CORK_ON);
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
@@ -353,16 +359,32 @@ int mk_header_send(int fd, struct mk_http_session *cs,
         }
     }
 
-    mk_socket_sendv(fd, iov);
+    /*
+     * Configure the Stream to dispatch the headers
+     */
+
+    /* Reset callbacks for headers stream */
+    mk_stream_set(&sr->headers_stream,
+                  MK_STREAM_IOV, &cs->channel,
+                  iov,
+                  -1,
+                  cb_stream_iov_free, NULL, NULL);
+    mk_channel_append_stream(&cs->channel, &sr->headers_stream);
+
+    //mk_socket_sendv(fd, iov);
     if (sr->headers._extra_rows) {
-        mk_socket_sendv(fd, sr->headers._extra_rows);
-        mk_iov_free(sr->headers._extra_rows);
-        sr->headers._extra_rows = NULL;
+        mk_stream_set(&sr->headers_extra_stream,
+                      MK_STREAM_IOV, &cs->channel,
+                      sr->headers._extra_rows, -1,
+                      cb_stream_iov_extended_free, NULL, NULL);
+
+        //mk_socket_sendv(fd, sr->headers._extra_rows);
+        //mk_iov_free(sr->headers._extra_rows);
+        //sr->headers._extra_rows = NULL;
     }
 
-    mk_header_iov_free(iov);
+    //mk_header_iov_free(iov);
     sh->sent = MK_TRUE;
-
     return 0;
 }
 

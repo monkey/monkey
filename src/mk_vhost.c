@@ -190,6 +190,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     if (hc) {
         /* Increment the readers and return the shared FD */
         hc->readers++;
+        sr->vhost_fdt_enabled = MK_TRUE;
         return hc->fd;
     }
 
@@ -217,9 +218,9 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
             hc->readers++;
             ht->av_slots--;
 
-            sr->vhost_fdt_id   = id;
-            sr->vhost_fdt_hash = hash;
-            sr->fd_is_fdt      = MK_TRUE;
+            sr->vhost_fdt_id      = id;
+            sr->vhost_fdt_hash    = hash;
+            sr->vhost_fdt_enabled = MK_TRUE;
 
             return fd;
         }
@@ -236,7 +237,7 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
     struct vhost_fdt_hash_chain *hc;
 
     if (mk_config->fdt == MK_FALSE) {
-        return close(sr->fd_file);
+        return close(sr->file_stream.fd);
     }
 
     id   = sr->vhost_fdt_id;
@@ -244,7 +245,7 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
 
     ht = mk_vhost_fdt_table_lookup(id, sr->host_conf);
     if (mk_unlikely(!ht)) {
-        return close(sr->fd_file);
+        return close(sr->file_stream.fd);
     }
 
     /* We got the hash table, now look around the chains array */
@@ -256,13 +257,13 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
             hc->fd   = -1;
             hc->hash = 0;
             ht->av_slots++;
-            return close(sr->fd_file);
+            return close(sr->file_stream.fd);
         }
         else {
             return 0;
         }
     }
-    return close(sr->fd_file);
+    return close(sr->file_stream.fd);
 }
 
 

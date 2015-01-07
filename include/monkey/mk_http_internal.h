@@ -20,6 +20,8 @@
 #ifndef MK_HTTP_INTERNAL_H
 #define MK_HTTP_INTERNAL_H
 
+#include <monkey/mk_stream.h>
+
 struct response_headers
 {
     int status;
@@ -79,18 +81,11 @@ struct mk_http_request
     long port;
     /*------------*/
 
-    /*
-     * Static file descriptor: the following twp fields represents an
-     * opened file in the file system and a flag saying which mechanism
-     * was used to open it.
-     *
-     *  - fd_file  : common file descriptor
-     *  - fd_is_fdt: set to MK_TRUE if fd_file was opened using Vhost FDT, or
-     *               MK_FALSE for the opposite case.
-     */
-    int fd_file;
-    int fd_is_fdt;
-
+    /* Streams handling: headers and static file */
+    mk_stream_t headers_stream;
+    mk_stream_t headers_extra_stream;
+    mk_stream_t file_stream;
+    mk_stream_t page_stream;
 
     int headers_len;
 
@@ -163,6 +158,7 @@ struct mk_http_request
     /* Vhost */
     int vhost_fdt_id;
     unsigned int vhost_fdt_hash;
+    int vhost_fdt_enabled;
 
     struct host       *host_conf;     /* root vhost config */
     struct host_alias *host_alias;    /* specific vhost matched */

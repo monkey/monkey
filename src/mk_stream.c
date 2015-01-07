@@ -55,6 +55,23 @@ mk_channel_t *mk_channel_new(int type, int fd)
     return channel;
 }
 
+static inline size_t channel_write_stream_file(mk_channel_t *channel,
+                                               mk_stream_t *stream)
+{
+    long int bytes = 0;
+
+    MK_TRACE("[CH %i] STREAM_FILE %i, bytes=%lu",
+             channel->fd, stream->fd, stream->bytes_total);
+
+    /* Direct write */
+    bytes = mk_socket_send_file(channel->fd,
+                                stream->fd,
+                                &stream->bytes_offset,
+                                stream->bytes_total
+                                );
+    return bytes;
+}
+
 int mk_channel_write(mk_channel_t *channel)
 {
     size_t bytes = -1;
@@ -78,15 +95,7 @@ int mk_channel_write(mk_channel_t *channel)
      */
     if (channel->type == MK_CHANNEL_SOCKET) {
         if (stream->type == MK_STREAM_FILE) {
-            MK_TRACE("[CH %i] STREAM_FILE %i, bytes=%lu",
-                     channel->fd, stream->fd, stream->bytes_total);
-
-            /* Direct write */
-            bytes = mk_socket_send_file(channel->fd,
-                                        stream->fd,
-                                        &stream->bytes_offset,
-                                        stream->bytes_total
-                                        );
+            bytes = channel_write_stream_file(channel, stream);
         }
         else if (stream->type == MK_STREAM_IOV) {
             MK_TRACE("[CH %i] STREAM_IOV, bytes=%lu",

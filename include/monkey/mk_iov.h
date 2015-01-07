@@ -96,6 +96,10 @@ static inline int mk_iov_add(struct mk_iov *mk_io, void *buf, int len,
         _mk_iov_set_free(mk_io, buf);
     }
 
+    if (mk_io->iov_idx > mk_io->size) {
+        printf("iov idx=%i size=%i\n", mk_io->iov_idx, mk_io->size);
+    }
+
     mk_bug(mk_io->iov_idx > mk_io->size);
 
     return mk_io->iov_idx;

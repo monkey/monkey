@@ -162,6 +162,35 @@ static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
     stream->bytes_total -= bytes;
 }
 
+static inline void mk_channel_debug(mk_channel_t *channel)
+{
+    int i;
+    struct mk_list *head;
+    mk_stream_t *stream;
+
+    mk_list_foreach(head, &channel->streams) {
+        stream = mk_list_entry(head, mk_stream_t, _head);
+        switch (stream->type) {
+        case MK_STREAM_RAW:
+            printf("%i) STREAM RAW\n", i);
+            break;
+        case MK_STREAM_IOV:
+            printf("%i) STREAM IOV\n", i);
+            break;
+        case MK_STREAM_PTR:
+            printf("%i) STREAM PTR\n", i);
+            break;
+        case MK_STREAM_FILE:
+            printf("%i) STREAM FILE\n", i);
+            break;
+        case MK_STREAM_SOCKET:
+            printf("%i) STREAM SOCKET\n", i);
+            break;
+        }
+        i++;
+    }
+}
+
 mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
                            void *data, size_t size,
                            void (*cb_finished) (mk_stream_t *),
