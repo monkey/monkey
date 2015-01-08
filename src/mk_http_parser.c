@@ -140,9 +140,21 @@ static inline void request_set(mk_ptr_t *ptr, struct mk_http_parser *p, char *bu
  */
 static inline int header_cmp(const char *expected, char *value, int len)
 {
-    int i;
+    int i = 0;
 
-    for (i = 0; i < len; i++) {
+    if (len >= 8) {
+        if (expected[0] != tolower(value[0])) return -1;
+        if (expected[1] != tolower(value[1])) return -1;
+        if (expected[2] != tolower(value[2])) return -1;
+        if (expected[3] != tolower(value[3])) return -1;
+        if (expected[4] != tolower(value[4])) return -1;
+        if (expected[5] != tolower(value[5])) return -1;
+        if (expected[6] != tolower(value[6])) return -1;
+        if (expected[7] != tolower(value[7])) return -1;
+        i = 8;
+    }
+
+    for (; i < len; i++) {
         if (expected[i] != tolower(value[i])) {
             return -1;
         }
