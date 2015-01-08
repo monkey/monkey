@@ -613,15 +613,12 @@ int mk_http_send_file(struct client_session *cs, struct session_request *sr)
 
     nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
                                  &sr->bytes_offset, sr->bytes_to_send);
-
     if (nbytes > 0) {
         sr->bytes_to_send -= nbytes;
-        if (sr->bytes_to_send == 0) {
+        if (sr->bytes_offset == nbytes) {
             mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
         }
     }
-
-    sr->loop++;
 
     /*
      * In some circumstances when writing data, the connection can get broken.
