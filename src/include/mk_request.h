@@ -236,7 +236,6 @@ struct session_request
     int stage30_blocked;
 
     /* Static file information */
-    long loop;
     long bytes_to_send;
     off_t bytes_offset;
     struct file_info file_info;
