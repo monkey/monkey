@@ -157,10 +157,11 @@ struct mk_http_parser {
     int end;
     int chars;
 
-    long body_received;
-
     /* it stores the numeric value of Content-Length header */
     int  header_host_port;
+
+    long body_received;
+
     long header_content_length;
 
     /*
@@ -192,7 +193,7 @@ struct mk_http_parser {
     /* Head of linked list for all headers found in the request */
     struct mk_list header_list;
 
-} __attribute__ ((aligned (64)));
+};
 
 #ifdef HTTP_STANDALONE
 
