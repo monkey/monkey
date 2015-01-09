@@ -172,8 +172,8 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
     /* Server details */
     mk_iov_add(iov,
-               sr->host_conf->header_host_signature.data,
-               sr->host_conf->header_host_signature.len,
+               mk_config->server_signature_header,
+               mk_config->server_signature_header_len,
                MK_IOV_NOT_FREE_BUF);
 
     /* Date */

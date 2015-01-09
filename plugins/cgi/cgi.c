@@ -103,7 +103,8 @@ static int do_cgi(const char *const __restrict__ file,
     snprintf(method, SHORTLEN, "REQUEST_METHOD=%.*s", (int) sr->method_p.len, sr->method_p.data);
     env[envpos++] = method;
 
-    snprintf(server_software, SHORTLEN, "SERVER_SOFTWARE=%s", sr->host_conf->host_signature);
+    snprintf(server_software, SHORTLEN, "SERVER_SOFTWARE=%s",
+             mk_api->config->server_signature);
     env[envpos++] = server_software;
 
     snprintf(http_host, SHORTLEN, "HTTP_HOST=%.*s", (int) sr->host.len, sr->host.data);

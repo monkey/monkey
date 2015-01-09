@@ -297,8 +297,6 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     p->header_min = -1;
     p->header_max = -1;
     p->header_content_length = -1;
-    p->header_host_port = 0;
-    p->headers_extra_count = 0;
 
     /* init list header */
     mk_list_init(&p->header_list);

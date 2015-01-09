@@ -61,7 +61,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 	__write_param(ptr, len, pos, key, value);
 
 	mk_api->pointer_set(&key,   "SERVER_SOFTWARE");
-	mk_api->pointer_set(&value, sr->host_conf->host_signature);
+	mk_api->pointer_set(&value, mk_api->config->server_signature);
 	__write_param(ptr, len, pos, key, value);
 
 	mk_api->pointer_set(&key,   "DOCUMENT_ROOT");

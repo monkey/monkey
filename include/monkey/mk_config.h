@@ -159,6 +159,10 @@ struct mk_server_config
     /* Define the default mime type when is not possible to find the proper one */
     char *default_mimetype;
 
+    char server_signature[16];
+    char server_signature_header[32];
+    int  server_signature_header_len;
+
     /* source configuration */
     struct mk_config *config;
 

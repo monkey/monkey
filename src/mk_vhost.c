@@ -291,7 +291,6 @@ int mk_vhost_close(struct mk_http_request *sr)
  */
 struct host *mk_vhost_read(char *path)
 {
-    unsigned long len = 0;
     char *tmp;
     char *host_low;
     struct stat checkdir;
@@ -435,18 +434,6 @@ struct host *mk_vhost_read(char *path)
         }
     }
 
-    /* Server Signature */
-    if (mk_config->hideversion == MK_FALSE) {
-        mk_string_build(&host->host_signature, &len,
-                        "Monkey/%s", VERSION);
-    }
-    else {
-        mk_string_build(&host->host_signature, &len, "Monkey");
-    }
-    mk_string_build(&host->header_host_signature.data,
-                    &host->header_host_signature.len,
-                    "Server: %s\r\n", host->host_signature);
-
     return host;
 }
 
@@ -455,7 +442,6 @@ void mk_vhost_set_single(char *path)
     struct host *host;
     struct host_alias *halias;
     struct stat checkdir;
-    unsigned long len = 0;
 
     /* Set the default host */
     host = mk_mem_malloc_z(sizeof(struct host));
@@ -480,20 +466,6 @@ void mk_vhost_set_single(char *path)
         mk_err("DocumentRoot variable in %s has an invalid directory path", path);
         exit(EXIT_FAILURE);
     }
-
-    /* Server Signature */
-    if (mk_config->hideversion == MK_FALSE) {
-        mk_string_build(&host->host_signature, &len,
-                        "Monkey/%s", VERSION);
-    }
-    else {
-        mk_string_build(&host->host_signature, &len, "Monkey");
-    }
-
-    mk_string_build(&host->header_host_signature.data,
-                    &host->header_host_signature.len,
-                    "Server: %s", host->host_signature);
-
     mk_list_add(&host->_head, &mk_config->hosts);
 }
 
@@ -626,8 +598,6 @@ void mk_vhost_free_all()
         }
 
         mk_ptr_free(&host->documentroot);
-        mk_mem_free(host->host_signature);
-        mk_ptr_free(&host->header_host_signature);
 
         /* Free source configuration */
         if (host->config) mk_config_free(host->config);

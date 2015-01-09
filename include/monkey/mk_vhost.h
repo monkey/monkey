@@ -38,9 +38,6 @@ struct host
     struct mk_list server_names;  /* host names (a b c...) */
 
     mk_ptr_t documentroot;
-
-    char *host_signature;
-    mk_ptr_t header_host_signature;
     mk_ptr_t header_redirect;
 
     /* source configuration */
