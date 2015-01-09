@@ -170,16 +170,15 @@ int mk_header_send(int fd, struct mk_http_session *cs,
 
     mk_iov_add(iov, response.data, response.len, MK_IOV_NOT_FREE_BUF);
 
-    /* Server details */
+    /*
+     * Preset headers (mk_clock.c):
+     *
+     * - Server
+     * - Date
+     */
     mk_iov_add(iov,
-               mk_config->server_signature_header,
-               mk_config->server_signature_header_len,
-               MK_IOV_NOT_FREE_BUF);
-
-    /* Date */
-    mk_iov_add(iov,
-               header_current_time.data,
-               header_current_time.len,
+               headers_preset.data,
+               headers_preset.len,
                MK_IOV_NOT_FREE_BUF);
 
     /* Last-Modified */

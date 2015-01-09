@@ -29,11 +29,12 @@ extern time_t log_current_utime;
 extern time_t monkey_init_time;
 
 extern mk_ptr_t log_current_time;
-extern mk_ptr_t header_current_time;
+extern mk_ptr_t headers_preset;
 
 pthread_t mk_clock_tid;
 
 #define GMT_DATEFORMAT "Date: %a, %d %b %Y %H:%M:%S GMT\r\n"
+#define HEADER_PRESET_SIZE 128
 #define HEADER_TIME_BUFFER_SIZE 64
 #define LOG_TIME_BUFFER_SIZE 30
 

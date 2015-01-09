@@ -23,6 +23,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <monkey/mk_config.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_utils.h>
@@ -31,7 +32,7 @@ time_t log_current_utime;
 time_t monkey_init_time;
 
 mk_ptr_t log_current_time = { NULL, LOG_TIME_BUFFER_SIZE - 2 };
-mk_ptr_t header_current_time = { NULL, HEADER_TIME_BUFFER_SIZE - 1 };
+mk_ptr_t headers_preset = { NULL, HEADER_PRESET_SIZE - 1 };
 
 static char *log_time_buffers[2];
 static char *header_time_buffers[2];
@@ -63,20 +64,30 @@ static void mk_clock_log_set_time(time_t utime)
     log_current_time.data = time_string;
 }
 
-static void mk_clock_header_set_time(time_t utime)
+static void mk_clock_headers_preset(time_t utime)
 {
-    int len;
+    int len1;
+    int len2;
     struct tm *gmt_tm;
     struct tm result;
-    char *time_string;
+    char *buffer;
 
-    time_string = _next_buffer(&header_current_time, header_time_buffers);
+    buffer = _next_buffer(&headers_preset, header_time_buffers);
 
     gmt_tm = gmtime_r(&utime, &result);
-    len = strftime(time_string, HEADER_TIME_BUFFER_SIZE, GMT_DATEFORMAT, gmt_tm);
 
-    header_current_time.data = time_string;
-    header_current_time.len  = len;
+    len1 = snprintf(buffer,
+                    HEADER_TIME_BUFFER_SIZE,
+                    "%s",
+                    mk_config->server_signature_header);
+
+    len2 = strftime(buffer + len1,
+                    HEADER_PRESET_SIZE - len1,
+                    GMT_DATEFORMAT,
+                    gmt_tm);
+
+    headers_preset.data = buffer;
+    headers_preset.len  = len1 + len2;
 }
 
 void *mk_clock_worker_init(void *args UNUSED_PARAM)
@@ -93,9 +104,8 @@ void *mk_clock_worker_init(void *args UNUSED_PARAM)
 
         if(cur_time != ((time_t)-1)) {
             mk_clock_log_set_time(cur_time);
-            mk_clock_header_set_time(cur_time);
+            mk_clock_headers_preset(cur_time);
         }
-
         sleep(1);
     }
 
@@ -119,8 +129,8 @@ void mk_clock_sequential_init()
     /* Time when monkey was started */
     monkey_init_time = time(NULL);
 
-    header_time_buffers[0] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
-    header_time_buffers[1] = mk_mem_malloc_z(HEADER_TIME_BUFFER_SIZE);
+    header_time_buffers[0] = mk_mem_malloc_z(HEADER_PRESET_SIZE);
+    header_time_buffers[1] = mk_mem_malloc_z(HEADER_PRESET_SIZE);
 
     log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
     log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
@@ -129,8 +139,8 @@ void mk_clock_sequential_init()
     /* Set the time once */
     time_t cur_time = time(NULL);
 
-    if(cur_time != ((time_t)-1)) {
+    if (cur_time != ((time_t)-1)) {
         mk_clock_log_set_time(cur_time);
-        mk_clock_header_set_time(cur_time);
+        mk_clock_headers_preset(cur_time);
     }
 }
