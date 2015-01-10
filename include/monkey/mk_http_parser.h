@@ -281,6 +281,18 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
 }
 #endif /* HTTP_STANDALONE */
 
+#define mk_http_set_minor_version(c)                \
+    if (c == '1') {                                 \
+        req->protocol = MK_HTTP_PROTOCOL_11;        \
+    }                                               \
+    else if (c == '0') {                            \
+        req->protocol = MK_HTTP_PROTOCOL_10;        \
+    }                                               \
+    else {                                          \
+        req->protocol = MK_HTTP_PROTOCOL_UNKNOWN;   \
+    }
+
+
 static inline void mk_http_parser_init(struct mk_http_parser *p)
 {
     memset(p, '\0', sizeof(struct mk_http_parser));

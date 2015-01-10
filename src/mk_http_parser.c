@@ -332,6 +332,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
 {
     int i;
     int s;
+    int tmp;
     int ret;
 
     for (i = p->i; i < len; p->i++, p->chars++, i++) {
@@ -404,27 +405,53 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 }
                 break;
             case MK_ST_REQ_PROT_VERSION:                /* Protocol Version */
-                if (buffer[i] == '\r') {
-                    mark_end();
-                    if (field_len() != 8) {
-                        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
-                        return MK_HTTP_PARSER_ERROR;
-                    }
+                /*
+                 * Most of the time we already have the strin version in our
+                 * buffer, for that case try to match the version and avoid
+                 * loop rounds.
+                 */
+                if (p->chars == 0 && i + 7 <= len) {
+                    tmp = p->start;
+                    if (buffer[tmp] == 'H' &&
+                        buffer[tmp + 1] == 'T' &&
+                        buffer[tmp + 2] == 'T' &&
+                        buffer[tmp + 3] == 'P' &&
+                        buffer[tmp + 4] == '/' &&
+                        buffer[tmp + 5] == '1' &&
+                        buffer[tmp + 6] == '.') {
 
-                    if (strncmp(buffer + p->start, "HTTP/1.", 7) != 0) {
-                        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
-                        return MK_HTTP_PARSER_ERROR;
-                    }
+                        i += 7;
+                        p->i = i;
+                        p->chars += 7;
 
-                    request_set(&req->protocol_p, p, buffer);
-                    if (req->protocol_p.data[req->protocol_p.len - 1] == '1') {
-                        req->protocol = MK_HTTP_PROTOCOL_11;
-                    }
-                    else if (req->protocol_p.data[req->protocol_p.len - 1] == '0') {
-                        req->protocol = MK_HTTP_PROTOCOL_10;
+                        request_set(&req->protocol_p, p, buffer);
+                        mk_http_set_minor_version(buffer[tmp + 7]);
+                        continue;
                     }
                     else {
-                        req->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
+                        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP,
+                                      req->session, req);
+                        return MK_HTTP_PARSER_ERROR;
+                    }
+
+                }
+
+                if (buffer[i] == '\r') {
+                    if (!req->protocol_p.data) {
+                        mark_end();
+                        if (field_len() != 8) {
+                            mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP,
+                                          req->session, req);
+                            return MK_HTTP_PARSER_ERROR;
+                        }
+
+                        if (strncmp(buffer + p->start, "HTTP/1.", 7) != 0) {
+                            mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, req->session, req);
+                            return MK_HTTP_PARSER_ERROR;
+                        }
+
+                        request_set(&req->protocol_p, p, buffer);
+                        mk_http_set_minor_version(req->protocol_p.data[req->protocol_p.len - 1]);
                     }
 
                     /* Try to catch next LF */
