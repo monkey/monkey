@@ -86,7 +86,39 @@ struct header_status_response {
     char *response;
 };
 
+/* Header field names */
+#define MK_HF_DATE "Date"
+#define MK_HF_LOCATION "Location"
+#define MK_HF_CONTENT_TYPE "Content-Type"
+#define MK_HF_ACCEPT_RANGES "Accept-Ranges"
+#define MK_HF_ALLOW "Allow"
+#define MK_HF_CONNECTION "Connection"
+#define MK_HF_CONTENT_LENGTH "Content-Length"
+#define MK_HF_CONTENT_ENCODING "Content-Encoding"
+#define MK_HF_TRANSFER_ENCODING "Transfer-Encoding"
+#define MK_HF_LAST_MODIFIED "Last-Modified"
+
+/* Short header values */
+#define MK_HEADER_SHORT_DATE MK_HF_DATE ": "
+#define MK_HEADER_SHORT_LOCATION MK_HF_LOCATION ": "
+#define MK_HEADER_SHORT_CT MK_HF_CONTENT_TYPE ": "
+
+/* Accept ranges */
+#define MK_HEADER_ACCEPT_RANGES MK_HF_ACCEPT_RANGES ": bytes" MK_CRLF
+
+/* Allowed methods */
+#define MK_HEADER_ALLOWED_METHODS MK_HF_ALLOW ": "
+
+#define MK_HEADER_CONN_KA MK_HF_CONNECTION ": Keep-Alive" MK_CRLF
+#define MK_HEADER_CONN_CLOSE MK_HF_CONNECTION ": Close" MK_CRLF
+#define MK_HEADER_CONTENT_LENGTH MK_HF_CONTENT_LENGTH ": "
+#define MK_HEADER_CONTENT_ENCODING MK_HF_CONTENT_ENCODING ": "
+
+/* Transfer Encoding */
 #define MK_HEADER_TE_TYPE_CHUNKED 0
+#define MK_HEADER_TE_CHUNKED MK_HF_TRANSFER_ENCODING ": Chunked" MK_CRLF
+
+#define MK_HEADER_LAST_MODIFIED MK_HF_LAST_MODIFIED ": "
 
 extern const mk_ptr_t mk_header_short_date;
 extern const mk_ptr_t mk_header_short_location;

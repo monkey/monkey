@@ -24,11 +24,24 @@
 #ifndef MK_VHOST_H
 #define MK_VHOST_H
 
+struct denied_response_header {
+    char *header;
+    int  length;
+};
+
 /* Custom error page */
 struct error_page {
     short int status;
     char *file;
     char *real_path;
+    struct mk_list _head;
+};
+
+/* Custom header */
+struct custom_header {
+    char *header;
+    char *value;
+    char *response_header;
     struct mk_list _head;
 };
 
@@ -45,6 +58,9 @@ struct host
 
     /* custom error pages */
     struct mk_list error_pages;
+
+    /* custom headers */
+    struct mk_list custom_headers;
 
     /* link node */
     struct mk_list _head;
