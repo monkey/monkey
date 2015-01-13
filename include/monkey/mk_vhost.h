@@ -24,6 +24,11 @@
 #ifndef MK_VHOST_H
 #define MK_VHOST_H
 
+struct denied_response_header {
+    char *header;
+    int  length;
+};
+
 /* Custom error page */
 struct error_page {
     short int status;

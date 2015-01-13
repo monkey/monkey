@@ -36,6 +36,24 @@
 #include <monkey/mk_info.h>
 #include <monkey/mk_file.h>
 
+#define header_entry(str) {str, sizeof(str) - 1}
+
+static const struct denied_response_header denied_header[] = {
+    header_entry(MK_HF_DATE),
+    header_entry(MK_HF_LOCATION),
+    header_entry(MK_HF_CONTENT_TYPE),
+    header_entry(MK_HF_ACCEPT_RANGES),
+    header_entry(MK_HF_ALLOW),
+    header_entry(MK_HF_CONNECTION),
+    header_entry(MK_HF_CONTENT_LENGTH),
+    header_entry(MK_HF_CONTENT_ENCODING),
+    header_entry(MK_HF_TRANSFER_ENCODING),
+    header_entry(MK_HF_LAST_MODIFIED)
+};
+
+static const int denied_header_len =
+    (sizeof(denied_header)/(sizeof(denied_header[0])));
+
 /* Initialize Virtual Host FDT mutex */
 pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -291,6 +309,8 @@ int mk_vhost_close(struct mk_http_request *sr)
  */
 struct host *mk_vhost_read(char *path)
 {
+    int i;
+    unsigned long len = 0;
     char *tmp;
     char *host_low;
     struct stat checkdir;
@@ -446,6 +466,7 @@ struct host *mk_vhost_read(char *path)
         mk_list_foreach(head, &section_custom_headers->entries) {
             entry_ch = mk_list_entry(head, struct mk_config_entry, _head);
 
+            int denied = MK_FALSE;
             char *ch_header = NULL;
             char *ch_value = NULL;
             unsigned long ch_len;
@@ -456,6 +477,18 @@ struct host *mk_vhost_read(char *path)
             /* Validate custom headers
                do not override default headers
              */
+            for (i = 0; i < denied_header_len; i++) {
+                if(strncmp(mk_string_tolower(ch_header),
+                   mk_string_tolower(denied_header[i].header),
+                   denied_header[i].length) == 0) {
+                    denied = MK_TRUE;
+                    break;
+                }
+            }
+
+            if (denied) {
+                continue;
+            }
 
             cust_header = mk_mem_malloc_z(sizeof(struct custom_header));
             cust_header->header = mk_string_dup(ch_header);
