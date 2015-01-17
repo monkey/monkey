@@ -138,7 +138,8 @@ struct plugin_api
     int  (*file_get_info) (const char *, struct file_info *);
 
     /* header */
-    int  (*header_send) (int, struct mk_http_session *, struct mk_http_request *);
+    int  (*header_prepare) (struct mk_http_session *,
+                            struct mk_http_request *);
     struct mk_http_header *(*header_get) (int, struct mk_http_request *,
                                           const char *, unsigned int);
     int  (*header_add) (struct mk_http_request *, char *row, int len);

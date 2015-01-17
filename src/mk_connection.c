@@ -159,20 +159,20 @@ int mk_conn_write(int socket)
 
     ret = mk_http_handler_write(socket, cs);
 
-    /* if ret < 0, means that some error
-     * happened in the writer call, in the
-     * other hand, 0 means a successful request
-     * processed, if ret > 0 means that some data
-     * still need to be send.
+    /*
+     * if ret < 0, means that some error happened in the writer call,
+     * in the other hand, 0 means a successful request processed, if
+     * ret > 0 means that some data still need to be send.
      */
-    if (ret < 0) {
+    if (ret < MK_CHANNEL_ERROR) {
         mk_sched_drop_connection(socket);
         return -1;
     }
-    else if (ret == 0) {
+    else if (ret == MK_CHANNEL_DONE) {
+        MK_TRACE("[FD %i] Request End");
         return mk_http_request_end(socket);
     }
-    else if (ret > 0) {
+    else if (ret == MK_CHANNEL_FLUSH) {
         return 0;
     }
 

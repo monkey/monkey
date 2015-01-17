@@ -715,7 +715,7 @@ DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
 OBJ     = monkey.o mk_mimetype.o mk_vhost.o \\
           mk_header.o mk_config.o mk_signals.o \\
-          mk_user.o mk_utils.o mk_scheduler.o \\
+          mk_user.o mk_utils.o mk_stream.o mk_scheduler.o \\
           mk_string.o mk_memory.o mk_connection.o mk_iov.o \\
           mk_http.o mk_http_parser.o \\
           mk_file.o mk_socket.o mk_clock.o mk_cache.o mk_event.o \\

@@ -76,6 +76,7 @@ int mk_iov_set_entry(struct mk_iov *mk_io, void *buf, int len,
 void mk_iov_separators_init(void);
 void mk_iov_free_marked(struct mk_iov *mk_io);
 void mk_iov_print(struct mk_iov *mk_io);
+int mk_iov_consume(struct mk_iov *mk_io, size_t bytes);
 
 static inline void _mk_iov_set_free(struct mk_iov *mk_io, void *buf)
 {
@@ -93,6 +94,10 @@ static inline int mk_iov_add(struct mk_iov *mk_io, void *buf, int len,
 
     if (free == MK_IOV_FREE_BUF) {
         _mk_iov_set_free(mk_io, buf);
+    }
+
+    if (mk_io->iov_idx > mk_io->size) {
+        printf("iov idx=%i size=%i\n", mk_io->iov_idx, mk_io->size);
     }
 
     mk_bug(mk_io->iov_idx > mk_io->size);

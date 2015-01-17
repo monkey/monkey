@@ -1,4 +1,4 @@
-;/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Server
  *  ==================
@@ -72,10 +72,9 @@ void mk_http_request_init(struct mk_http_session *session,
     request->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
     request->connection.len = -1;
     request->file_info.size = -1;
-    request->bytes_offset  = 0;
-    request->bytes_to_send = -1;
-    request->fd_file = -1;
-    request->fd_is_fdt = MK_FALSE;
+    request->file_stream.bytes_total = -1;
+    request->file_stream.bytes_offset = 0;
+    request->vhost_fdt_enabled = MK_FALSE;
     request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
     request->session = session;
@@ -163,12 +162,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
         return EXIT_NORMAL;
     }
 
-    /* Validating protocol version */
-    if (sr->protocol == MK_HTTP_PROTOCOL_UNKNOWN) {
-        mk_http_error(MK_SERVER_HTTP_VERSION_UNSUP, cs, sr);
-        return EXIT_ABORT;
-    }
-
     /* Default Keepalive is off */
     if (sr->protocol == MK_HTTP_PROTOCOL_10) {
         sr->keep_alive = MK_FALSE;
@@ -225,8 +218,9 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
             mk_header_set_http_status(sr, MK_REDIR_MOVED);
             sr->headers.location = mk_string_dup(sr->host_conf->header_redirect.data);
             sr->headers.content_length = 0;
-            mk_header_send(cs->socket, cs, sr);
             sr->headers.location = NULL;
+            mk_header_prepare(cs, sr);
+            mk_channel_write(&cs->channel);
             mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
             return 0;
         }
@@ -254,7 +248,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     /* Normal HTTP process */
     status = mk_http_init(cs, sr);
 
-    MK_TRACE("[FD %i] HTTP Init returning %i", socket, status);
+    MK_TRACE("[FD %i] HTTP Init returning %i", cs->socket, status);
 
     return status;
 }
@@ -398,50 +392,57 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
 
 int mk_http_handler_write(int socket, struct mk_http_session *cs)
 {
+    int ret;
     int final_status = 0;
     struct mk_http_request *sr_node;
     struct mk_list *sr_list;
     struct mk_list *sr_head;
     (void) socket;
 
-    sr_list = &cs->request_list;
-    mk_list_foreach(sr_head, sr_list) {
-        sr_node = mk_list_entry_first(sr_list, struct mk_http_request, _head);
-
-        if (sr_node->bytes_to_send > 0) {
-            /* Request with data to send by static file sender */
-            final_status = mk_http_send_file(cs, sr_node);
-        }
-        else if (sr_node->bytes_to_send <= 0) {
+    /* Check if our embedded channel have some data to stream out */
+    ret = mk_channel_write(&cs->channel);
+    if (ret == MK_CHANNEL_ERROR) {
+        return MK_CHANNEL_ERROR;
+    }
+    else if (ret == MK_CHANNEL_FLUSH) {
+        return MK_CHANNEL_FLUSH;
+    }
+    else if (ret == MK_CHANNEL_DONE) {
+        return MK_CHANNEL_DONE;
+    }
+    else if (ret == MK_CHANNEL_EMPTY) {
+        sr_list = &cs->request_list;
+        mk_list_foreach(sr_head, sr_list) {
+            sr_node = mk_list_entry_first(sr_list,
+                                          struct mk_http_request, _head);
             final_status = mk_http_request_prepare(cs, sr_node);
-        }
-
-        /*
-         * If we got an error, we don't want to parse
-         * and send information for another pipelined request
-         */
-        if (final_status > 0) {
-            return final_status;
-        }
-        else {
-            /* STAGE_40, request has ended */
-            mk_plugin_stage_run_40(cs, sr_node);
-            switch (final_status) {
-            case EXIT_NORMAL:
-            case EXIT_ERROR:
-                if (sr_node->close_now == MK_TRUE) {
+            /*
+             * If we got an error, we don't want to parse
+             * and send information for another pipelined request
+             */
+            if (final_status >= 0) {
+                return MK_CHANNEL_FLUSH;
+            }
+            else {
+                /* STAGE_40, request has ended */
+                mk_plugin_stage_run_40(cs, sr_node);
+                switch (final_status) {
+                case EXIT_NORMAL:
+                case EXIT_ERROR:
+                    if (sr_node->close_now == MK_TRUE) {
+                        return -1;
+                    }
+                    break;
+                case EXIT_ABORT:
                     return -1;
                 }
-                break;
-            case EXIT_ABORT:
-                return -1;
             }
         }
+        /*
+         * If we are here, is because all pipelined request were
+         * processed successfully, let's return 0
+         */
     }
-    /*
-     * If we are here, is because all pipelined request were
-     * processed successfully, let's return 0
-     */
     return 0;
 }
 
@@ -468,7 +469,6 @@ static mk_ptr_t *mk_http_error_page(char *title, mk_ptr_t *message,
     if (message) {
         mk_mem_free(temp);
     }
-
     return p;
 }
 
@@ -520,37 +520,38 @@ mk_ptr_t mk_http_method_check_str(int method)
     return mk_http_method_null_p;
 }
 
-static int mk_http_range_set(struct mk_http_request *sr, long file_size)
+static int mk_http_range_set(struct mk_http_request *sr, size_t file_size)
 {
     struct response_headers *sh = &sr->headers;
 
-    sr->bytes_to_send = file_size;
-    sr->bytes_offset = 0;
+    sr->file_stream.bytes_total  = file_size;
+    sr->file_stream.bytes_offset = 0;
 
     if (mk_config->resume == MK_TRUE && sr->range.data) {
         /* yyy- */
         if (sh->ranges[0] >= 0 && sh->ranges[1] == -1) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = file_size - sr->bytes_offset;
+            sr->file_stream.bytes_offset = sh->ranges[0];
+            sr->file_stream.bytes_total = file_size - sr->file_stream.bytes_offset;
         }
 
         /* yyy-xxx */
         if (sh->ranges[0] >= 0 && sh->ranges[1] >= 0) {
-            sr->bytes_offset = sh->ranges[0];
-            sr->bytes_to_send = labs(sh->ranges[1] - sh->ranges[0]) + 1;
+            sr->file_stream.bytes_offset = sh->ranges[0];
+            sr->file_stream.bytes_total = labs(sh->ranges[1] - sh->ranges[0]) + 1;
         }
 
         /* -xxx */
         if (sh->ranges[0] == -1 && sh->ranges[1] > 0) {
-            sr->bytes_to_send = sh->ranges[1];
-            sr->bytes_offset = file_size - sh->ranges[1];
+            sr->file_stream.bytes_total = sh->ranges[1];
+            sr->file_stream.bytes_offset = file_size - sh->ranges[1];
         }
 
-        if (sr->bytes_offset >= file_size || sr->bytes_to_send > file_size) {
+        if ((size_t) sr->file_stream.bytes_offset >= file_size ||
+            sr->file_stream.bytes_total > file_size) {
             return -1;
         }
 
-        lseek(sr->fd_file, sr->bytes_offset, SEEK_SET);
+        lseek(sr->file_stream.fd, sr->file_stream.bytes_offset, SEEK_SET);
     }
     return 0;
 }
@@ -672,7 +673,6 @@ mk_ptr_t mk_http_protocol_check_str(int protocol)
 static int mk_http_directory_redirect_check(struct mk_http_session *cs,
                                             struct mk_http_request *sr)
 {
-    int ret;
     int port_redirect = 0;
     char *host;
     char *location = 0;
@@ -726,10 +726,10 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     sr->headers.pconnections_left =
         (mk_config->max_keep_alive_request - cs->counter_connections);
 
-    ret = mk_header_send(cs->socket, cs, sr);
-    if (ret >= 0) {
-        mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-    }
+
+    mk_header_prepare(cs, sr);
+    mk_channel_write(&cs->channel);
+    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
 
     /*
      *  we do not free() real_location
@@ -741,7 +741,8 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
 }
 
 /* Look for some  index.xxx in pathfile */
-mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux, const unsigned int flen)
+mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
+                            const unsigned int flen)
 {
     unsigned long len;
     mk_ptr_t f;
@@ -769,10 +770,27 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux, const unsigned int f
     return f;
 }
 
+void mk_http_cb_file_finished(struct mk_stream *stream)
+{
+    MK_TRACE("File finished");
+}
+
+#if defined (__linux__)
+void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
+{
+    /*
+     * This callback is invoked just once as we want to turn off
+     * the TCP Cork. We do this just overriding the callback for
+     * the file stream.
+     */
+    mk_server_cork_flag(stream->fd, TCP_CORK_OFF);
+    stream->cb_bytes_consumed = NULL;
+}
+#endif
+
 int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
-    int bytes = 0;
     struct mimetype *mime;
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
@@ -956,7 +974,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         //sr->headers.allow_methods.len = strlen(MK_METHOD_AVAILABLE);
 
         mk_ptr_reset(&sr->headers.content_type);
-        mk_header_send(cs->socket, cs, sr);
+        mk_header_prepare(cs, sr);
+        mk_channel_write(&cs->channel);
         return EXIT_NORMAL;
     }
     else {
@@ -995,7 +1014,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         if (date_file_server <= date_client &&
             date_client > 0) {
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
-            mk_header_send(cs->socket, cs, sr);
+            mk_header_prepare(cs, sr);
+            mk_channel_write(&cs->channel);
             return EXIT_NORMAL;
         }
     }
@@ -1006,12 +1026,12 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Open file */
     if (mk_likely(sr->file_info.size > 0)) {
-        sr->fd_file = mk_vhost_open(sr);
-        if (sr->fd_file == -1) {
+        sr->file_stream.fd = mk_vhost_open(sr);
+        if (sr->file_stream.fd == -1) {
             MK_TRACE("open() failed");
             return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
-        sr->bytes_to_send = sr->file_info.size;
+        sr->file_stream.bytes_total = sr->file_info.size;
     }
 
     /* Process methods */
@@ -1044,81 +1064,41 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
     /* Send headers */
-    mk_header_send(cs->socket, cs, sr);
-
+    mk_header_prepare(cs, sr);
     if (mk_unlikely(sr->headers.content_length == 0)) {
         return 0;
     }
 
     /* Send file content */
     if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_POST) {
-        bytes = mk_http_send_file(cs, sr);
+        /* Note: bytes and offsets are set after the Range check */
+        sr->file_stream.type = MK_STREAM_FILE;
+        mk_channel_append_stream(&cs->channel, &sr->file_stream);
     }
-
-    return bytes;
-}
-
-int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr)
-{
-    long int nbytes = 0;
-
-#if defined(__APPLE__)
-        /*
-         * Disable TCP_CORK right away, according to:
-         *
-         *  ---
-         *  commit 81e8b869d70f9da93ddfbfb17ec7f12ce3c28fc6
-         *  Author: Sonny Karlsson <ksonny@lotrax.org>
-         *  Date:   Sat Oct 18 12:11:49 2014 +0200
-         *
-         *  http: Remove cork before first call to sendfile().
-         *
-         *  This removes a large delay on Mac OS X when headers and file content
-         *  does not fill a single frame.
-         *  Deactivating TCP_NOPUSH does not cause pending frames to be sent until
-         *  the next write operation.
-         *  ---
-         */
-
-        if (sr->bytes_offset == 0) {
-            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-        }
-#endif
-
-    nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
-                                 &sr->bytes_offset, sr->bytes_to_send);
-    if (nbytes > 0) {
-        sr->bytes_to_send -= nbytes;
-
-#if defined(__linux__)
-        /* Disable TCP_CORK after our first round of bytes */
-        if (sr->bytes_offset == nbytes) {
-            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-        }
-#endif
-    }
-
-
-
-    sr->loop++;
 
     /*
-     * In some circumstances when writing data, the connection can get broken.
-     * So, we must be aware of that.
-     *
-     * Also, if for some reason the file that is being served changes it's size
-     * we can get a zero bytes send as return value. We need to validate the
-     * return values <= zero
+     * Enable TCP Cork for the remote socket. It will be disabled
+     * later by the file stream on the channel after send the first
+     * file bytes.
      */
-    if (mk_unlikely(nbytes <= 0)) {
-        if (errno != EAGAIN) {
-            MK_TRACE("sendfile() = %i", nbytes);
-            return EXIT_ABORT;
-        }
-        MK_TRACE("sendfile() = EAGAIN");
-    }
+#if defined(__linux__)
+    sr->file_stream.cb_bytes_consumed = mk_http_cb_file_on_consume;
+#endif
+    sr->file_stream.cb_finished       = mk_http_cb_file_finished;
 
-    return sr->bytes_to_send;
+    /*
+     * Enable CORK/NO_PUSH
+     * -------------------
+     * If it was compiled for Linux, it will turn the Cork off after
+     * send the first round of bytes from the target static file.
+     *
+     * For OSX, it sets TCP_NOPUSH off after send all HTTP headers. Refer
+     * to mk_header.c for more details.
+     */
+    mk_server_cork_flag(cs->socket, TCP_CORK_ON);
+
+    /* Start sending data to the channel */
+    return mk_channel_write(&cs->channel);
 }
 
 /*
@@ -1224,11 +1204,20 @@ int mk_http_request_end(int socket)
     return -1;
 }
 
+void cb_stream_page_finished(mk_stream_t *stream)
+{
+    mk_ptr_t *page = stream->data;
+
+    mk_ptr_free(page);
+    mk_mem_free(page);
+}
+
 /* Send error responses */
 int mk_http_error(int http_status, struct mk_http_session *cs,
                   struct mk_http_request *sr) {
     int ret, fd;
-    mk_ptr_t message, *page = 0;
+    mk_ptr_t message;
+    mk_ptr_t *page = NULL;
     struct error_page *entry;
     struct mk_list *head;
     struct file_info finfo;
@@ -1262,16 +1251,20 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                 break;
             }
 
-            sr->fd_file   = fd;
-            sr->fd_is_fdt = MK_FALSE;
-            sr->bytes_to_send = finfo.size;
+            /* Outgoing headers */
             sr->headers.content_length = finfo.size;
             sr->headers.real_length    = finfo.size;
+            mk_header_prepare(cs, sr);
 
+            /* Stream setup */
             memcpy(&sr->file_info, &finfo, sizeof(struct file_info));
+            sr->file_stream.type         = MK_STREAM_FILE;
+            sr->file_stream.fd           = fd;
+            sr->file_stream.bytes_total  = finfo.size;
+            sr->file_stream.bytes_offset = 0;
+            mk_channel_append_stream(&cs->channel, &sr->file_stream);
 
-            mk_header_send(cs->socket, cs, sr);
-            return mk_http_send_file(cs, sr);
+            return mk_channel_write(&cs->channel);
         }
     }
 
@@ -1351,22 +1344,27 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         mk_ptr_reset(&sr->headers.content_type);
     }
     else {
-        mk_ptr_set(&sr->headers.content_type, "text/html\r\n");
+        mk_ptr_set(&sr->headers.content_type, "Content-Type: text/html\r\n");
     }
 
-    mk_header_send(cs->socket, cs, sr);
-
+    mk_header_prepare(cs, sr);
     if (page) {
-        if (sr->method != MK_METHOD_HEAD)
-            mk_socket_send(cs->socket, page->data, page->len);
+        if (sr->method != MK_METHOD_HEAD) {
+            mk_stream_set(&sr->page_stream,
+                          MK_STREAM_PTR,
+                          &cs->channel,
+                          page,
+                          -1,
+                          cb_stream_page_finished, NULL, NULL);
 
-        mk_ptr_free(page);
-        mk_mem_free(page);
+            mk_channel_append_stream(&cs->channel, &sr->page_stream);
+            mk_channel_write(&cs->channel);
+        }
     }
 
     /* Turn off TCP_CORK */
     mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-    return EXIT_ERROR;
+    return EXIT_NORMAL;
 }
 
 /*
@@ -1437,6 +1435,11 @@ struct mk_http_session *mk_http_session_create(int socket,
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     mk_list_add(&cs->request_incomplete, cs_incomplete);
 
+    /* Stream channel */
+    cs->channel.type = MK_CHANNEL_SOCKET;
+    cs->channel.fd   = socket;
+    mk_list_init(&cs->channel.streams);
+
     /* creation time in unix time */
     cs->init_time = sc->arrive_time;
 
@@ -1453,8 +1456,6 @@ struct mk_http_session *mk_http_session_create(int socket,
 
     /* Current data length */
     cs->body_length = 0;
-
-    cs->body_pos_end = -1;
 
     /* Init session request list */
     mk_list_init(&cs->request_list);
@@ -1505,13 +1506,11 @@ struct mk_http_session *mk_http_session_create(int socket,
 
 void mk_http_request_free(struct mk_http_request *sr)
 {
-    if (sr->fd_file > 0) {
-        if (sr->fd_is_fdt == MK_TRUE) {
-            mk_vhost_close(sr);
-        }
-        else {
-            close(sr->fd_file);
-        }
+    if (sr->vhost_fdt_enabled == MK_TRUE) {
+        mk_vhost_close(sr);
+    }
+    else {
+        close(sr->file_stream.fd);
     }
 
     if (sr->headers.location) {
@@ -1548,7 +1547,6 @@ void mk_http_request_free_list(struct mk_http_session *cs)
 
 void mk_http_request_ka_next(struct mk_http_session *cs)
 {
-    cs->body_pos_end = -1;
     cs->body_length = 0;
     cs->counter_connections++;
 

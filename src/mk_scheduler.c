@@ -91,7 +91,7 @@ static inline int _next_target()
      * it has the lowest load.
      */
     if (mk_unlikely(cur >= mk_config->server_capacity)) {
-        MK_TRACE("Too many clients: %i", config->server_capacity);
+        MK_TRACE("Too many clients: %i", mk_config->server_capacity);
 
         /* Instruct to close the connection anyways, we lie, it will die */
         return -1;

@@ -164,6 +164,30 @@ void mk_iov_print(struct mk_iov *mk_io)
     }
 }
 
-void mk_iov_separators_init()
+int mk_iov_consume(struct mk_iov *mk_io, size_t bytes)
 {
+    int idx;
+    size_t len;
+
+    for (idx = 0; idx < mk_io->iov_idx; idx++) {
+        len = mk_io->io[idx].iov_len;
+
+        if (bytes < len) {
+            mk_io->io[idx].iov_base += bytes;
+            mk_io->io[idx].iov_len   = (len - bytes);
+            break;
+        }
+        else if (bytes == len) {
+            /* this entry was consumed */
+            mk_io->io[idx].iov_len = 0;
+            break;
+        }
+        else if (bytes > len) {
+            mk_io->io[idx].iov_len = 0;
+            bytes -= len;
+        }
+    }
+
+    mk_io->total_len -= bytes;
+    return 0;
 }

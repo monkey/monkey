@@ -62,7 +62,7 @@ int mk_socket_set_cork_flag(int fd, int state)
 
 #if defined (__linux__)
     return setsockopt(fd, SOL_TCP, TCP_CORK, &state, sizeof(state));
-#else
+#elif defined (__APPLE__)
     return setsockopt(fd, SOL_TCP, TCP_NOPUSH, &state, sizeof(state));
 #endif
 }

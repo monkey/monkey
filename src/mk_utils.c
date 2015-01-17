@@ -395,7 +395,7 @@ void mk_utils_trace(const char *component, int color, const char *function,
 
     va_start( args, format );
 
-    printf("~ %s%2lu.%lu%s %s[%s%s%s|%s:%i%s] %s%s()%s ",
+    printf("~ %s%2lu.%lu%s %s[%s%s%s|%s:%-3i%s] %s%s()%s ",
            cyan_color, (tv.tv_sec - monkey_init_time), tv.tv_usec, reset_color,
            magenta_color, color_component, component, color_fileline, file,
            line, magenta_color,
