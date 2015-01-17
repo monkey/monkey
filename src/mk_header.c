@@ -129,10 +129,31 @@ static const struct header_status_response status_response[] = {
 static const int status_response_len =
     (sizeof(status_response)/(sizeof(status_response[0])));
 
-static void cb_stream_iov_free(struct mk_stream *stream)
+static void mk_header_cb_finished(struct mk_stream *stream)
 {
     struct mk_iov *iov = stream->data;
     mk_iov_free_marked(iov);
+
+#if defined(__APPLE__)
+        /*
+         * Disable TCP_CORK right away, according to:
+         *
+         *  ---
+         *  commit 81e8b869d70f9da93ddfbfb17ec7f12ce3c28fc6
+         *  Author: Sonny Karlsson <ksonny@lotrax.org>
+         *  Date:   Sat Oct 18 12:11:49 2014 +0200
+         *
+         *  http: Remove cork before first call to sendfile().
+         *
+         *  This removes a large delay on Mac OS X when headers and file content
+         *  does not fill a single frame.
+         *  Deactivating TCP_NOPUSH does not cause pending frames to be sent until
+         *  the next write operation.
+         *  ---
+         */
+
+    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+#endif
 }
 
 static void cb_stream_iov_extended_free(struct mk_stream *stream)
@@ -346,8 +367,6 @@ int mk_header_prepare(struct mk_http_session *cs,
         }
     }
 
-    //mk_server_cork_flag(fd, TCP_CORK_ON);
-
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
             mk_iov_add(iov, mk_iov_crlf.data, mk_iov_crlf.len,
@@ -368,22 +387,16 @@ int mk_header_prepare(struct mk_http_session *cs,
                   MK_STREAM_IOV, &cs->channel,
                   iov,
                   -1,
-                  cb_stream_iov_free, NULL, NULL);
+                  mk_header_cb_finished, NULL, NULL);
     mk_channel_append_stream(&cs->channel, &sr->headers_stream);
 
-    //mk_socket_sendv(fd, iov);
     if (sr->headers._extra_rows) {
         mk_stream_set(&sr->headers_extra_stream,
                       MK_STREAM_IOV, &cs->channel,
                       sr->headers._extra_rows, -1,
                       cb_stream_iov_extended_free, NULL, NULL);
-
-        //mk_socket_sendv(fd, sr->headers._extra_rows);
-        //mk_iov_free(sr->headers._extra_rows);
-        //sr->headers._extra_rows = NULL;
     }
 
-    //mk_header_iov_free(iov);
     sh->sent = MK_TRUE;
     return 0;
 }

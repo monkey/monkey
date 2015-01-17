@@ -37,9 +37,9 @@
 
 /* Channel return values for write event */
 #define MK_CHANNEL_ERROR  -1  /* exception when flusing data  */
-#define MK_CHANNEL_EMPTY   0  /* no streams available         */
+#define MK_CHANNEL_DONE    0  /* channel consumed all streams */
 #define MK_CHANNEL_FLUSH   1  /* channel flushed some data    */
-#define MK_CHANNEL_DONE    2  /* channel consumed all streams */
+#define MK_CHANNEL_EMPTY   2  /* no streams available         */
 #define MK_CHANNEL_UNKNOWN 4  /* unhandled                    */
 
 /* Channel status */
@@ -80,7 +80,7 @@ typedef struct mk_stream {
 
     /*
      * Based on the stream type, 'data' could reference a RAW buffer
-     * of a mk_iov struct.
+     * or a mk_iov struct.
      */
     void *data;
 
@@ -164,7 +164,7 @@ static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
 
 static inline void mk_channel_debug(mk_channel_t *channel)
 {
-    int i;
+    int i = 0;
     struct mk_list *head;
     mk_stream_t *stream;
 

@@ -21,6 +21,7 @@
 #include <monkey/mk_socket.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_stream.h>
+#include <monkey/mk_server.h>
 
 /* Create a new stream instance */
 mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
@@ -69,6 +70,9 @@ static inline size_t channel_write_stream_file(mk_channel_t *channel,
                                 &stream->bytes_offset,
                                 stream->bytes_total
                                 );
+    MK_TRACE("[CH=%d] [FD=%i] WRITE STREAM FILE: %lu bytes",
+             channel->fd, stream->fd, bytes);
+
     return bytes;
 }
 
@@ -79,10 +83,8 @@ int mk_channel_write(mk_channel_t *channel)
     mk_ptr_t *ptr;
     mk_stream_t *stream;
 
-    MK_TRACE("[CH %i] channel write", channel->fd);
-
     if (mk_list_is_empty(&channel->streams) == 0) {
-        MK_TRACE("[CH %i] channel is empty", channel->fd);
+        MK_TRACE("[CH %i] CHANNEL_EMPTY", channel->fd);
         return MK_CHANNEL_EMPTY;
     }
 
@@ -98,7 +100,7 @@ int mk_channel_write(mk_channel_t *channel)
             bytes = channel_write_stream_file(channel, stream);
         }
         else if (stream->type == MK_STREAM_IOV) {
-            MK_TRACE("[CH %i] STREAM_IOV, bytes=%lu",
+            MK_TRACE("[CH %i] STREAM_IOV, wrote %lu bytes",
                      channel->fd, stream->bytes_total);
 
             iov   = stream->data;
@@ -114,6 +116,7 @@ int mk_channel_write(mk_channel_t *channel)
                      channel->fd, stream->bytes_total);
 
             ptr = stream->data;
+            printf("data='%s'\n", ptr->data);
             bytes = mk_socket_send(channel->fd, ptr->data, ptr->len);
             if (bytes > 0) {
                 /* FIXME OFFSET */
@@ -135,6 +138,12 @@ int mk_channel_write(mk_channel_t *channel)
                 mk_stream_unlink(stream);
             }
 
+            if (mk_list_is_empty(&channel->streams) == 0) {
+                MK_TRACE("[CH %i] CHANNEL_DONE", channel->fd);
+                return MK_CHANNEL_DONE;
+            }
+
+            MK_TRACE("[CH %i] CHANNEL_FLUSH", channel->fd);
             return MK_CHANNEL_FLUSH;
         }
         else if (bytes <= 0) {

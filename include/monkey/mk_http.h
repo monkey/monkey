@@ -116,8 +116,6 @@ struct mk_http_session
     unsigned int body_size;
     unsigned int body_length;
 
-    int body_pos_end;
-
     /* red-black tree head */
     struct rb_node _rb_head;
 
@@ -162,6 +160,9 @@ static inline void mk_http_status_completed(struct mk_http_session *cs)
     mk_list_del(&cs->request_incomplete);
 }
 
+int mk_http_error(int http_status, struct mk_http_session *cs,
+                      struct mk_http_request *sr);
+
 int mk_http_method_check(mk_ptr_t method);
 mk_ptr_t mk_http_method_check_str(int method);
 int mk_http_method_get(char *body);
@@ -176,8 +177,6 @@ int mk_http_pending_request(struct mk_http_session *cs);
 int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr);
 int mk_http_request_end(int socket);
 
-int mk_http_error(int http_status, struct mk_http_session *cs,
-                  struct mk_http_request *sr);
 
 /* http session */
 void mk_http_session_remove(int socket);
