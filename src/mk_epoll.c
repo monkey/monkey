@@ -214,10 +214,11 @@ int mk_epoll_create()
 
 void *mk_epoll_init(int server_fd, int efd, int max_events)
 {
-    int i, fd, ret = -1;
+    int i, fd;
     int num_fds;
     int fds_timeout;
     int remote_fd;
+    ssize_t ret = -1;
     struct epoll_event *events;
     struct sched_list_node *sched;
 

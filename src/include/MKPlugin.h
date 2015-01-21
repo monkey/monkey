@@ -73,7 +73,7 @@ int MK_EXPORT _mkp_network_io_write(int socket_fd, const void *buf, size_t count
 int MK_EXPORT _mkp_network_io_writev(int socket_fd, struct mk_iov *mk_io);
 int MK_EXPORT _mkp_network_io_close(int socket_fd);
 int MK_EXPORT _mkp_network_io_connect(char *host, int port);
-int MK_EXPORT _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
+ssize_t MK_EXPORT _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
                                         size_t file_count);
 int MK_EXPORT _mkp_network_io_create_socket(int domain, int type, int protocol);
 int MK_EXPORT _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr,

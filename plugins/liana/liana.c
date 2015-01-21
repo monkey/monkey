@@ -162,8 +162,8 @@ int _mkp_network_io_connect(char *host, int port)
     return socket_fd;
 }
 
-int _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
-                              size_t file_count)
+ssize_t _mkp_network_io_send_file(int socket_fd, int file_fd, off_t *file_offset,
+                                  size_t file_count)
 {
     ssize_t bytes_written = -1;
 

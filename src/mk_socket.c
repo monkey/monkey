@@ -197,10 +197,10 @@ int mk_socket_read(int socket_fd, void *buf, int count)
     return plg_netiomap->read(socket_fd, (void *)buf, count);
 }
 
-int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
-                        size_t file_count)
+ssize_t mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
+                            size_t file_count)
 {
-    int bytes;
+    ssize_t bytes;
 
     bytes = plg_netiomap->send_file(socket_fd, file_fd,
                                     file_offset, file_count);

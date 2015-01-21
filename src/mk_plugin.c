@@ -194,7 +194,7 @@ struct plugin *mk_plugin_alloc(void *handler, const char *path)
     p->net_io.connect = (int (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_connect");
 
-    p->net_io.send_file = (int (*)())
+    p->net_io.send_file = (ssize_t (*)())
         mk_plugin_load_symbol(handler, "_mkp_network_io_send_file");
 
     p->net_io.create_socket = (int (*)())
