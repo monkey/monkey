@@ -94,9 +94,9 @@ int mk_conn_read(int socket)
     return ret;
 }
 
-int mk_conn_write(int socket)
+ssize_t mk_conn_write(int socket)
 {
-    int ret = -1;
+    ssize_t ret = -1;
     struct client_session *cs;
     struct sched_list_node *sched;
     struct sched_connection *conx;

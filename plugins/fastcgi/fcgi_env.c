@@ -145,7 +145,7 @@ size_t fcgi_env_write(uint8_t *ptr,
 
 	if (sr->content_length > 0) {
 		mk_api->pointer_set(&key,   "CONTENT_LENGTH");
-		snprintf(buffer, 128, "%d", sr->content_length);
+		snprintf(buffer, 128, "%zd", sr->content_length);
 		mk_api->pointer_set(&value, buffer);
 		__write_param(ptr, len, pos, key, value);
 	}

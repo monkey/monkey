@@ -89,7 +89,7 @@ static inline void mk_request_init(struct session_request *request)
 
     request->file_info.size = -1;
 
-    request->bytes_to_send = -1;
+    request->bytes_to_send = 0;
     request->fd_file = -1;
 
     /* Response Headers */
@@ -515,9 +515,9 @@ static void mk_request_premature_close(int http_status, struct client_session *c
     mk_session_remove(cs->socket);
 }
 
-static int mk_request_process(struct client_session *cs, struct session_request *sr)
+static ssize_t mk_request_process(struct client_session *cs, struct session_request *sr)
 {
-    int status = 0;
+    ssize_t status = 0;
     int socket = cs->socket;
     struct mk_list *hosts = &config->hosts;
     struct mk_list *alias;
@@ -602,8 +602,7 @@ static int mk_request_process(struct client_session *cs, struct session_request 
 
     /* Normal HTTP process */
     status = mk_http_init(cs, sr);
-
-    MK_TRACE("[FD %i] HTTP Init returning %i", socket, status);
+    MK_TRACE("[FD %i] HTTP Init returning %zu", socket, status);
 
     return status;
 }
@@ -723,9 +722,9 @@ int mk_handler_read(int socket, struct client_session *cs)
     return bytes;
 }
 
-int mk_handler_write(int socket, struct client_session *cs)
+ssize_t mk_handler_write(int socket, struct client_session *cs)
 {
-    int final_status = 0;
+    ssize_t final_status = 0;
     struct session_request *sr_node;
     struct mk_list *sr_list, *sr_head;
 
@@ -743,7 +742,7 @@ int mk_handler_write(int socket, struct client_session *cs)
             /* Request with data to send by static file sender */
             final_status = mk_http_send_file(cs, sr_node);
         }
-        else if (sr_node->bytes_to_send < 0) {
+        else if (sr_node->bytes_to_send <= 0) {
             final_status = mk_request_process(cs, sr_node);
         }
 

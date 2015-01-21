@@ -325,10 +325,10 @@ static int mk_http_directory_redirect_check(struct client_session *cs,
     return -1;
 }
 
-int mk_http_init(struct client_session *cs, struct session_request *sr)
+ssize_t mk_http_init(struct client_session *cs, struct session_request *sr)
 {
     int ret;
-    int bytes = 0;
+    ssize_t bytes = 0;
     struct mimetype *mime;
 
     MK_TRACE("HTTP Protocol Init");
@@ -560,7 +560,7 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
             MK_TRACE("open() failed");
             return mk_request_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
-        sr->bytes_to_send = sr->file_info.size;
+        sr->bytes_to_send = (ssize_t) sr->file_info.size;
     }
 
     /* Process methods */
@@ -607,12 +607,13 @@ int mk_http_init(struct client_session *cs, struct session_request *sr)
     return bytes;
 }
 
-int mk_http_send_file(struct client_session *cs, struct session_request *sr)
+ssize_t mk_http_send_file(struct client_session *cs, struct session_request *sr)
 {
-    long int nbytes = 0;
+    ssize_t nbytes = 0;
 
     nbytes = mk_socket_send_file(cs->socket, sr->fd_file,
                                  &sr->bytes_offset, sr->bytes_to_send);
+
     if (nbytes > 0) {
         sr->bytes_to_send -= nbytes;
         if (sr->bytes_offset == nbytes) {

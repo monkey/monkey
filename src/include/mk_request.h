@@ -102,10 +102,10 @@ struct response_headers
     mk_ptr_t custom_status;
 
     /* Length of the content to send */
-    long content_length;
+    off_t content_length;
 
     /* Private value, real length of the file requested */
-    long real_length;
+    off_t real_length;
 
     int cgi;
     int pconnections_left;
@@ -194,7 +194,7 @@ struct session_request
     int close_now;
 
     /*---Request headers--*/
-    int content_length;
+    ssize_t content_length;
 
     mk_ptr_t content_type;
     mk_ptr_t connection;
@@ -236,7 +236,7 @@ struct session_request
     int stage30_blocked;
 
     /* Static file information */
-    long bytes_to_send;
+    off_t bytes_to_send;
     off_t bytes_offset;
     struct file_info file_info;
 
@@ -311,7 +311,7 @@ void mk_session_remove(int socket);
 void mk_request_init_error_msgs(void);
 
 int mk_handler_read(int socket, struct client_session *cs);
-int mk_handler_write(int socket, struct client_session *cs);
+ssize_t mk_handler_write(int socket, struct client_session *cs);
 
 void mk_request_ka_next(struct client_session *cs);
 #endif
