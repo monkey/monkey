@@ -135,7 +135,7 @@ int mk_liana_connect(char *host, int port)
         mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
     }
-    for(rp = res; rp != NULL; rp = rp->ai_next) {
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
         socket_fd = mk_liana_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
@@ -146,7 +146,6 @@ int mk_liana_connect(char *host, int port)
         if (connect(socket_fd,
                     (struct sockaddr *) rp->ai_addr, rp->ai_addrlen) == -1) {
             close(socket_fd);
-            mk_err("Can't connect to %s, retrying", host);
             continue;
         }
 

@@ -103,12 +103,13 @@ static void mk_help(int rc)
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
     printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
     printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n");
-    printf("  -B, --balancing-mode\t\t\tforce old balancing mode\n\n");
+    printf("  -B, --balancing-mode\t\t\tforce old balancing mode\n");
+    printf("  -T, --allow-shared-sockets\t\tif Listen is busy, try shared TCP sockets\n\n");
 
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  -b, --build\t\t\tprint build information\n");
-    printf("  -v, --version\t\t\tshow version number\n");
-    printf("  -h, --help\t\t\tprint this help\n\n");
+    printf("  -b, --build\t\t\t\tprint build information\n");
+    printf("  -v, --version\t\t\t\tshow version number\n");
+    printf("  -h, --help\t\t\t\tprint this help\n\n");
 
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  http://monkey-project.com/documentation\n\n");
@@ -124,6 +125,7 @@ int main(int argc, char **argv)
     int workers_override = -1;
     int run_daemon = 0;
     int balancing_mode = MK_FALSE;
+    int allow_shared_sockets = MK_FALSE;
     char *one_shot = NULL;
     char *transport_layer = NULL;
     char *path_config = NULL;
@@ -149,10 +151,11 @@ int main(int argc, char **argv)
         { "plugins-conf-dir",       required_argument,  NULL, 'P' },
         { "sites-conf-dir",         required_argument,  NULL, 'S' },
         { "balancing-mode",         no_argument,        NULL, 'B' },
+        { "allow-shared-sockets",   no_argument,        NULL, 'T' },
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:B", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:BT", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -194,6 +197,9 @@ int main(int argc, char **argv)
             break;
         case 'B':
             balancing_mode = MK_TRUE;
+            break;
+        case 'T':
+            allow_shared_sockets = MK_TRUE;
             break;
         case 'l':
             plugin_load_conf_file = optarg;
@@ -321,6 +327,13 @@ int main(int argc, char **argv)
 
     /* Configuration sanity check */
     mk_config_sanity_check();
+
+    if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT &&
+        mk_config_listen_check_busy() == MK_TRUE &&
+        allow_shared_sockets == MK_FALSE) {
+        mk_warn("Some Listen interface is busy, re-try using -T. Aborting.");
+        exit(EXIT_FAILURE);
+    }
 
     /* Invoke Plugin PRCTX hooks */
     mk_plugin_core_process();

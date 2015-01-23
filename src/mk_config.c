@@ -446,6 +446,29 @@ static void mk_config_print_error_msg(char *variable, char *path)
     exit(EXIT_FAILURE);
 }
 
+/*
+ * Check if at least one of the Listen interfaces are being used by another
+ * process.
+ */
+int mk_config_listen_check_busy()
+{
+    int fd;
+    struct mk_list *head;
+    struct mk_config_listener *listen;
+
+    mk_list_foreach(head, &mk_config->listeners) {
+        listen = mk_list_entry(head, struct mk_config_listener, _head);
+
+        fd = mk_socket_connect(listen->address, atol(listen->port));
+        if (fd != -1) {
+            close(fd);
+            return MK_TRUE;
+        }
+    }
+
+    return MK_FALSE;
+}
+
 static int mk_config_listen_read(struct mk_config_section *section)
 {
     long port_num;
