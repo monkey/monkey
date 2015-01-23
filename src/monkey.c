@@ -95,6 +95,7 @@ static void mk_help(int rc)
     printf("  -c, --configdir=DIR\t\t\tspecify configuration files directory\n");
     printf("  -s, --serverconf=FILE\t\t\tspecify main server configuration file\n");
     printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
+    printf("  -I, --pid-file\t\t\tset full path for the PID file (override config)\n");
     printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
     printf("  -o, --one-shot=DIR\t\t\tone-shot, serve a single directory\n");
     printf("  -t, --transport=TRANSPORT\t\tspecify transport layer (override config)\n");
@@ -127,6 +128,7 @@ int main(int argc, char **argv)
     int balancing_mode = MK_FALSE;
     int allow_shared_sockets = MK_FALSE;
     char *one_shot = NULL;
+    char *pid_file = NULL;
     char *transport_layer = NULL;
     char *path_config = NULL;
     char *server_conf_file = NULL;
@@ -140,6 +142,7 @@ int main(int argc, char **argv)
         { "serverconf",             required_argument,  NULL, 's' },
         { "build",                  no_argument,        NULL, 'b' },
         { "daemon",                 no_argument,        NULL, 'D' },
+        { "pid-file",               required_argument,  NULL, 'I' },
         { "port",                   required_argument,  NULL, 'p' },
         { "one-shot",               required_argument,  NULL, 'o' },
         { "transport",              required_argument,  NULL, 't' },
@@ -155,7 +158,8 @@ int main(int argc, char **argv)
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:BT", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDI:Svhp:o:t:w:c:s:m:l:P:S:BT",
+                              long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -167,6 +171,9 @@ int main(int argc, char **argv)
             mk_help(EXIT_SUCCESS);
         case 'D':
             run_daemon = 1;
+            break;
+        case 'I':
+            pid_file = optarg;
             break;
         case 'p':
             port_override = optarg;
@@ -230,6 +237,13 @@ int main(int argc, char **argv)
     }
     else {
         mk_config->server_conf_file = server_conf_file;
+    }
+
+    if (!pid_file) {
+        mk_config->pid_file_path = NULL;
+    }
+    else {
+        mk_config->pid_file_path = pid_file;
     }
 
     if (run_daemon) {

@@ -629,8 +629,11 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Pid File */
-    mk_config->pid_file_path = mk_config_section_getval(section,
-                                                     "PidFile", MK_CONFIG_VAL_STR);
+    if (!mk_config->pid_file_path) {
+        mk_config->pid_file_path = mk_config_section_getval(section,
+                                                            "PidFile",
+                                                            MK_CONFIG_VAL_STR);
+    }
 
     /* Home user's directory /~ */
     mk_config->user_dir = mk_config_section_getval(section,

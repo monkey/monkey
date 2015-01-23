@@ -485,26 +485,19 @@ int mk_utils_register_pid()
 {
     int fd;
     char pidstr[MK_MAX_PID_LEN];
-    unsigned long len = 0;
-    char *filepath = NULL;
     struct flock lock;
     struct stat sb;
-    struct mk_config_listener *listen;
 
     if (mk_config->pid_status == MK_TRUE)
         return -1;
 
-    listen = mk_list_entry_first(&mk_config->listeners,
-                                 struct mk_config_listener, _head);
-    mk_string_build(&filepath, &len, "%s.%s",
-            mk_config->pid_file_path,
-            listen->port);
-    if (!stat(filepath, &sb)) {
+    if (!stat(mk_config->pid_file_path, &sb)) {
         /* file exists, perhaps previously kepts by SIGKILL */
-        unlink(filepath);
+        unlink(mk_config->pid_file_path);
     }
 
-    if ((fd = open(filepath, O_WRONLY | O_CREAT | O_CLOEXEC, 0444)) < 0) {
+    if ((fd = open(mk_config->pid_file_path,
+                   O_WRONLY | O_CREAT | O_CLOEXEC, 0444)) < 0) {
         mk_err("Error: I can't log pid of monkey");
         exit(EXIT_FAILURE);
     }
@@ -529,7 +522,6 @@ int mk_utils_register_pid()
         exit(EXIT_FAILURE);
     }
 
-    mk_mem_free(filepath);
     mk_config->pid_status = MK_TRUE;
 
     return 0;
@@ -538,20 +530,10 @@ int mk_utils_register_pid()
 /* Remove PID file */
 int mk_utils_remove_pid()
 {
-    unsigned long len = 0;
-    char *filepath = NULL;
-    struct mk_config_listener *listen;
-
-    listen = mk_list_entry_first(&mk_config->listeners,
-                                 struct mk_config_listener, _head);
-    mk_string_build(&filepath, &len, "%s.%s",
-                    mk_config->pid_file_path,
-                    listen->port);
     mk_user_undo_uidgid();
-    if (unlink(filepath)) {
+    if (unlink(mk_config->pid_file_path)) {
         mk_warn("cannot delete pidfile\n");
     }
-    mk_mem_free(filepath);
     mk_config->pid_status = MK_FALSE;
     return 0;
 }
