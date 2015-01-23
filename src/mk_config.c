@@ -485,7 +485,7 @@ static int mk_config_listen_read(struct mk_config_section *section)
         }
 
         if (entry->val[0] == '[') {
-            // IPv6 address
+            /* IPv6 address */
             divider = strchr(entry->val, ']');
             if (divider == NULL) {
                 mk_err("[config] Expected closing ']' in IPv6 address.");
@@ -500,7 +500,7 @@ static int mk_config_listen_read(struct mk_config_section *section)
             port = mk_string_dup(divider + 2);
         }
         else if (strchr(entry->val, ':') != NULL) {
-            // IPv4 address
+            /* IPv4 address */
             divider = strrchr(entry->val, ':');
             if (divider == NULL || divider[1] == '\0') {
                 mk_err("[config] Expected ':port' after IPv4 address.");
@@ -511,9 +511,9 @@ static int mk_config_listen_read(struct mk_config_section *section)
             port = mk_string_dup(divider + 1);
         }
         else {
-            // Port only
+            /* Port only */
             address = NULL;
-            port = entry->val;
+            port = mk_string_dup(entry->val);
         }
 
         port_num = strtol(port, NULL, 10);

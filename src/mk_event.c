@@ -137,6 +137,14 @@ mk_event_loop_t *mk_event_loop_create(int size)
     return loop;
 }
 
+/* Destroy a loop context */
+void mk_event_loop_destroy(mk_event_loop_t *loop)
+{
+    _mk_event_loop_destroy(loop->data);
+    mk_mem_free(loop->events);
+    mk_mem_free(loop);
+}
+
 /* Register or modify an event */
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data)
 {

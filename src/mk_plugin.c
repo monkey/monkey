@@ -487,8 +487,10 @@ void mk_plugin_exit_all()
         node = mk_list_entry(head, struct mk_plugin, _head);
         mk_list_del(&node->_head);
         mk_mem_free(node->path);
-        dlclose(node->handler);
-        mk_mem_free(node);
+        if (node->load_type == MK_PLUGIN_DYNAMIC) {
+            dlclose(node->handler);
+            mk_mem_free(node);
+        }
     }
     mk_mem_free(api);
     mk_mem_free(plg_stagemap);

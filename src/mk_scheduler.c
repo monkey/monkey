@@ -187,6 +187,7 @@ void mk_sched_worker_free()
     /* Free master array (av queue & busy queue) */
     mk_mem_free(sl->sched_array);
     mk_mem_free(cs_list);
+    mk_mem_free(cs_incomplete);
     pthread_mutex_unlock(&mutex_worker_exit);
 }
 

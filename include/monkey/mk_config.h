@@ -17,14 +17,14 @@
  *  limitations under the License.
  */
 
-#include "mk_memory.h"
-#include "mk_list.h"
-
 #ifndef MK_CONFIG_H
 #define MK_CONFIG_H
 
 #include <unistd.h>
 #include <sys/types.h>
+
+#include <monkey/mk_memory.h>
+#include <monkey/mk_list.h>
 
 #ifndef O_NOATIME
 #define O_NOATIME       01000000

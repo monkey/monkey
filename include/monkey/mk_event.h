@@ -99,6 +99,7 @@ static inline struct mk_event_fd_state *mk_event_get_state(int fd)
 
 int mk_event_initialize();
 mk_event_loop_t *mk_event_loop_create(int size);
+void mk_event_loop_destroy(mk_event_loop_t *loop);
 int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);
 int mk_event_del(mk_event_loop_t *loop, int fd);
 int mk_event_timeout_create(mk_event_loop_t *loop, int expire);

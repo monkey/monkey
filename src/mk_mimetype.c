@@ -199,6 +199,7 @@ void mk_mimetype_free_all()
         mime = mk_list_entry(head, struct mimetype, _head);
         mk_ptr_free(&mime->type);
         mk_mem_free(mime->name);
+        mk_mem_free(mime->header_type.data);
         mk_mem_free(mime);
     }
 

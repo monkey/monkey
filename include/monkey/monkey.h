@@ -43,5 +43,6 @@ extern gid_t EUID;
 
 void mk_details(void);
 void mk_thread_keys_init();
+void mk_exit_all();
 
 #endif

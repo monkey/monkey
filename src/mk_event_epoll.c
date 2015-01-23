@@ -54,6 +54,13 @@ static inline void *_mk_event_loop_create(int size)
     return ctx;
 }
 
+/* Close handlers and memory */
+static inline void _mk_event_loop_destroy(mk_event_ctx_t *ctx)
+{
+    close(ctx->efd);
+    mk_mem_free(ctx->events);
+    mk_mem_free(ctx);
+}
 
 /*
  * It register certain events for the file descriptor in question, if

@@ -55,6 +55,14 @@ static inline void *_mk_event_loop_create(int size)
     return ctx;
 }
 
+/* Close handlers and memory */
+static inline void _mk_event_loop_destroy(mk_event_ctx_t *ctx)
+{
+    close(ctx->kfd);
+    mk_mem_free(ctx->events);
+    mk_mem_free(ctx);
+}
+
 static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 {
     int ret;

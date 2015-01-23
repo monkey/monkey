@@ -139,7 +139,7 @@ error:
 
 void mk_server_listen_free(struct mk_server_listen *server_listen)
 {
-    free(server_listen->listen_list);
+    mk_mem_free(server_listen->listen_list);
     server_listen->listen_list = NULL;
     server_listen->count = 0;
 }
@@ -199,6 +199,7 @@ int mk_server_listen_init(struct mk_server_config *config,
     server_listen->count = count;
     server_listen->listen_list = listen_list;
     return 0;
+
 error:
     if (listen_list != NULL) free(listen_list);
     return -1;
@@ -371,6 +372,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
                         continue;
                     }
                     else if (val == MK_SCHEDULER_SIGNAL_FREE_ALL) {
+                        mk_event_loop_destroy(evl);
                         mk_sched_worker_free();
                         return;
                     }

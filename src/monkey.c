@@ -118,6 +118,33 @@ static void mk_help(int rc)
     exit(rc);
 }
 
+void mk_exit_all()
+{
+    int i;
+    int n;
+    uint64_t val;
+
+    /* Distribute worker signals to stop working */
+    val = MK_SCHEDULER_SIGNAL_FREE_ALL;
+    for (i = 0; i < mk_config->workers; i++) {
+        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
+        if (n < 0) {
+            perror("write");
+        }
+    }
+
+    /* Wait for workers to finish */
+    for (i = 0; i < mk_config->workers; i++) {
+        pthread_join(sched_list[i].tid, NULL);
+    }
+
+    mk_utils_remove_pid();
+    mk_plugin_exit_all();
+    mk_config_free_all();
+    mk_mem_free(sched_list);
+    mk_clock_exit();
+}
+
 /* MAIN */
 int main(int argc, char **argv)
 {
