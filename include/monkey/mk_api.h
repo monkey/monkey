@@ -46,7 +46,7 @@ pthread_key_t MK_EXPORT _mkp_data;
 
 #ifdef TRACE
 #define PLUGIN_TRACE(...) \
-    mk_api->trace(_plugin_info.shortname,     \
+    mk_api->trace("",                         \
                   MK_TRACE_PLUGIN,            \
                   __FUNCTION__,               \
                   __FILE__,                   \
