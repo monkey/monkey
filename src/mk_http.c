@@ -772,12 +772,16 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
 
 void mk_http_cb_file_finished(struct mk_stream *stream)
 {
+    (void) stream;
+
     MK_TRACE("File finished");
 }
 
 #if defined (__linux__)
 void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
 {
+    (void) bytes;
+
     /*
      * This callback is invoked just once as we want to turn off
      * the TCP Cork. We do this just overriding the callback for
