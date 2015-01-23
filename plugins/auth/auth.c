@@ -158,7 +158,7 @@ int mk_auth_stage30(struct mk_plugin *plugin,
         if (vh_entry->host == sr->host_conf) {
             PLUGIN_TRACE("[FD %i] host matched %s",
                          cs->socket,
-                         vh_entry->host->host_signature);
+                         mk_api->config->server_signature);
             break;
         }
     }
