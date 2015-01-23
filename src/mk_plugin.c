@@ -282,6 +282,13 @@ void mk_plugin_api_init()
     api->header_get = mk_http_header_get;
     api->header_set_http_status = mk_header_set_http_status;
 
+    /* Channels / Streams */
+    api->stream_new    = mk_stream_new;
+    api->channel_new   = mk_channel_new;
+    api->channel_write = mk_channel_write;
+    api->channel_append_stream = mk_channel_append_stream;
+    api->stream_set = mk_stream_set;
+
     /* IOV callbacks */
     api->iov_create  = mk_iov_create;
     api->iov_realloc = mk_iov_realloc;
