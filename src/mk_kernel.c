@@ -25,6 +25,7 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_scheduler.h>
 
 int mk_kernel_init()
 {
@@ -90,8 +91,8 @@ int mk_kernel_features()
     int flags = 0;
 
     /*
-     * FIXME: TCP Auto Corking:
-     *
+     * TCP Auto Corking (disabled by #175)
+     * -----------------------------------
      * I found that running some benchmarks on Linux 3.16 with
      * tcp_autocorking enabled, it lead to lower performance, looks like
      * a manual cork fits better for our needs.
@@ -105,8 +106,8 @@ int mk_kernel_features()
         mk_socket_tcp_autocorking() == MK_TRUE) {
         flags |= MK_KERNEL_TCP_AUTOCORKING;
     }
-
     */
+
     /* SO_REUSEPORT */
     if (mk_kernel_runver >= MK_KERNEL_VERSION(3, 9, 0)) {
         flags |= MK_KERNEL_SO_REUSEPORT;
@@ -132,6 +133,10 @@ int mk_kernel_features_print(char *buffer, size_t size)
     }
 
     if (mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
+        if (mk_config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
+            offset += snprintf(buffer + offset, size - offset,
+                               "%s!%s", ANSI_BOLD ANSI_RED, ANSI_RESET);
+        }
         offset += snprintf(buffer + offset, size - offset, "%s", "SO_REUSEPORT ");
         features++;
     }

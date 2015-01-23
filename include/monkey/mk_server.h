@@ -23,6 +23,8 @@
 #ifndef MK_SERVER_H
 #define MK_SERVER_H
 
+#define MK_SERVER_SIGNAL_START     0xEEEEEEEE
+
 struct mk_server_listen_entry
 {
     struct mk_config_listener *listen;
@@ -54,7 +56,8 @@ int mk_server_listen_init(struct mk_server_config *config,
         struct mk_server_listen *server_listen);
 unsigned int mk_server_capacity();
 void mk_server_launch_workers(void);
-void mk_server_loop(void);
+void mk_server_loop();
+void mk_server_loop_balancer();
 void mk_server_worker_loop(struct mk_server_listen *listen);
 
 #endif

@@ -452,6 +452,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     /* init server thread loop */
     mk_server_worker_loop(&server_listen);
+
     return 0;
 }
 

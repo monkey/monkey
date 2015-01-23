@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <poll.h>
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -85,8 +84,8 @@ error:
 }
 
 int mk_server_listen_handler(struct sched_list_node *sched,
-        struct mk_server_listen *listen,
-        int server_fd)
+                             struct mk_server_listen *listen,
+                             int server_fd)
 {
     struct mk_server_listen_entry *listen_entry;
     struct sched_list_node *local_sched;
@@ -217,11 +216,93 @@ void mk_server_launch_workers()
     for (i = 0; i < mk_config->workers; i++) {
         mk_sched_launch_thread(mk_config->server_capacity, &skip, NULL);
     }
+
+    /* Wait until all workers report as ready */
+    while (1) {
+        int ready = 0;
+
+        pthread_mutex_lock(&mutex_worker_init);
+        for (i = 0; i < mk_config->workers; i++) {
+            if (sched_list[i].initialized)
+                ready++;
+        }
+        pthread_mutex_unlock(&mutex_worker_init);
+
+        if (ready == mk_config->workers) break;
+        usleep(10000);
+    }
+}
+
+
+void mk_server_loop_balancer()
+{
+    int i;
+    int fd;
+    int mask;
+    struct sched_list_node *sched;
+    struct mk_server_listen listen;
+    mk_event_loop_t *evl;
+
+    /* Init the listeners */
+    if (mk_server_listen_init(mk_config, &listen)) {
+        mk_err("Failed to initialize listen sockets.");
+        return;
+    }
+
+    /* Create an event loop context */
+    evl = mk_event_loop_create(MK_EVENT_QUEUE_SIZE);
+    if (!evl) {
+        mk_err("Could not initialize event loop");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Register the listeners */
+    for (i = 0; (unsigned) i < listen.count; i++) {
+        mk_event_add(evl, listen.listen_list[i].server_fd, MK_EVENT_READ, NULL);
+    }
+
+    while (1) {
+        mk_event_wait(evl);
+        mk_event_foreach(evl, fd, mask) {
+            if (mask & MK_EVENT_READ) {
+                /*
+                 * Accept connection: determinate which thread may work on this
+                 * new connection.
+                 */
+                sched = mk_sched_next_target();
+                if (sched != NULL) {
+                    mk_server_listen_handler(sched, &listen, fd);
+#ifdef TRACE
+                    struct sched_list_node *node;
+
+                    node = sched_list;
+                    for (i = 0; i < mk_config->workers; i++) {
+                        MK_TRACE("Worker Status");
+                        MK_TRACE(" WID %i / conx = %llu",
+                                 node[i].idx,
+                                 node[i].accepted_connections -
+                                 node[i].closed_connections);
+                    }
+#endif
+                }
+                else {
+                    mk_warn("[server] Over capacity.");
+                }
+            }
+            else if (mask & MK_EVENT_CLOSE) {
+                mk_err("[server] Error on socket %d: %s",
+                       fd, strerror(errno));
+            }
+        }
+    }
 }
 
 /*
- * This function is called from the Scheduler and runs in a thread
- * context. This is the real thread server loop.
+ * This function is called when the scheduler is running in the REUSEPORT
+ * mode. That means that each worker is listening on shared TCP ports.
+ *
+ * When using shared TCP ports the Kernel decides to which worker the
+ * connection will be assigned.
  */
 void mk_server_worker_loop(struct mk_server_listen *listen)
 {
@@ -238,6 +319,28 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
     evl = sched->loop;
+
+    /*
+     * The worker will NOT process any connection until the master
+     * process through mk_server_loop() send us the green light
+     * signal MK_SERVER_SIGNAL_START.
+     */
+    mk_event_wait(evl);
+    mk_event_foreach(evl, fd, mask) {
+        if (mask & MK_EVENT_READ) {
+            if (fd == sched->signal_channel_r) {
+                ret = read(fd, &val, sizeof(val));
+                if (ret < 0) {
+                    mk_libc_error("read");
+                    continue;
+                }
+
+                if (val == MK_SERVER_SIGNAL_START) {
+                    break;
+                }
+            }
+        }
+    }
 
     /* Register listeners */
     for (i = 0; i < (int) listen->count; i++) {
@@ -313,82 +416,35 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
 
 void mk_server_loop(void)
 {
-    struct sched_list_node *sched;
-    struct mk_server_listen listen;
-    struct pollfd *fds;
-    int ret;
-    unsigned int i;
-    unsigned int count;
+    int n;
+    int i;
+    uint64_t val;
 
     /* Rename worker */
     mk_utils_worker_rename("monkey: server");
 
     mk_info("HTTP Server started");
 
-    /* check balancing mode, for reuse port just stay here forever */
+    /* Wake up workers */
+    val = MK_SERVER_SIGNAL_START;
+    for (i = 0; i < mk_config->workers; i++) {
+        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
+        if (n < 0) {
+            perror("write");
+        }
+    }
+
+    /*
+     * When using REUSEPORT mode on the Scheduler, we need to signal
+     * them so they can start processing connections.
+     */
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        /* Hang here */
         while (1) sleep(60);
-    }
-
-    if (mk_server_listen_init(mk_config, &listen)) {
-        mk_err("Failed to initialize listen sockets.");
         return;
     }
-
-    fds = calloc(listen.count, sizeof(*fds));
-    if (fds == NULL) {
-        mk_err("Failed to initialize listen sockets.");
-        mk_server_listen_free(&listen);
-        return;
-    }
-    count = listen.count;
-    for (i = 0; i < count; i++) {
-        fds[i].events = POLLIN | POLLERR | POLLHUP;
-        fds[i].fd = listen.listen_list[i].server_fd;
-    }
-
-    while (1) {
-        ret = poll(fds, count, 30000);
-        if (mk_unlikely(ret < 0)) {
-            mk_err("[server] Error in poll(): %s", strerror(errno));
-            continue;
-        }
-        else if (mk_unlikely(ret == 0)) {
-            continue;
-        }
-
-        for (i = 0; i < count; i++) {
-            if (fds[i].revents == 0) {
-                continue;
-            }
-            else if (fds[i].revents & POLLIN) {
-                // Accept connection
-                sched = mk_sched_next_target();
-                if (sched != NULL) {
-                    mk_server_listen_handler(sched, &listen, fds[i].fd);
-                }
-                else {
-                    mk_warn("[server] Over capacity.");
-                }
-            }
-            else if (fds[i].revents & (POLLERR | POLLHUP)) {
-                // Error occurred
-                mk_err("[server] Error on socket %d: %s",
-                        fds[i].fd,
-                        strerror(errno));
-            }
-            fds[i].revents = 0;
-        }
-
-#ifdef TRACE
-        struct sched_list_node *node;
-
-        node = sched_list;
-        for (i=0; i < (unsigned int) mk_config->workers; i++) {
-            MK_TRACE("Worker Status");
-            MK_TRACE(" WID %i / conx = %llu", node[i].idx, node[i].accepted_connections - node[i].closed_connections);
-        }
-#endif
+    else {
+        mk_server_loop_balancer();
     }
 }
 

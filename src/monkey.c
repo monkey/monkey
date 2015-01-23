@@ -90,8 +90,8 @@ static void mk_build_info(void)
 
 static void mk_help(int rc)
 {
-    printf("Usage : monkey [-c directory] [-p TCP_PORT ] [-w N] [-D] [-v] [-h]\n\n");
-    printf("%sAvailable options%s\n", ANSI_BOLD, ANSI_RESET);
+    printf("Usage : monkey [OPTION]\n\n");
+    printf("%sAvailable Options%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -c, --configdir=DIR\t\t\tspecify configuration files directory\n");
     printf("  -s, --serverconf=FILE\t\t\tspecify main server configuration file\n");
     printf("  -D, --daemon\t\t\t\trun Monkey as daemon (background mode)\n");
@@ -102,7 +102,8 @@ static void mk_help(int rc)
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
     printf("  -l, --plugins-load-conf-file=FILE\tspecify plugins.load configuration file\n");
     printf("  -S, --sites-conf-dir=dir\t\tspecify sites configuration directory\n");
-    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n\n");
+    printf("  -P, --plugins-conf-dir=dir\t\tspecify plugin configuration directory\n");
+    printf("  -B, --balancing-mode\t\t\tforce old balancing mode\n\n");
 
     printf("%sInformational%s\n", ANSI_BOLD, ANSI_RESET);
     printf("  -b, --build\t\t\tprint build information\n");
@@ -122,6 +123,7 @@ int main(int argc, char **argv)
     char *port_override = NULL;
     int workers_override = -1;
     int run_daemon = 0;
+    int balancing_mode = MK_FALSE;
     char *one_shot = NULL;
     char *transport_layer = NULL;
     char *path_config = NULL;
@@ -146,10 +148,11 @@ int main(int argc, char **argv)
         { "plugin-load-conf-file",  required_argument,  NULL, 'l' },
         { "plugins-conf-dir",       required_argument,  NULL, 'P' },
         { "sites-conf-dir",         required_argument,  NULL, 'S' },
+        { "balancing-mode",         no_argument,        NULL, 'B' },
         { NULL, 0, NULL, 0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "bDSvhp:o:t:w:c:s:m:l:P:S:B", long_opts, NULL)) != -1) {
         switch (opt) {
         case 'b':
             mk_build_info();
@@ -188,6 +191,9 @@ int main(int argc, char **argv)
             break;
         case 'S':
             sites_conf_dir = optarg;
+            break;
+        case 'B':
+            balancing_mode = MK_TRUE;
             break;
         case 'l':
             plugin_load_conf_file = optarg;
@@ -287,6 +293,11 @@ int main(int argc, char **argv)
     mk_config_start_configure();
     mk_sched_init();
 
+
+    if (balancing_mode == MK_TRUE) {
+        mk_config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+    }
+
     /* Clock init that must happen before starting threads */
     mk_clock_sequential_init();
 
@@ -320,21 +331,6 @@ int main(int argc, char **argv)
 
     /* Print server details */
     mk_details();
-
-    /* Wait until all workers report as ready */
-    while (1) {
-        int i, ready = 0;
-
-        pthread_mutex_lock(&mutex_worker_init);
-        for (i = 0; i < mk_config->workers; i++) {
-            if (sched_list[i].initialized)
-                ready++;
-        }
-        pthread_mutex_unlock(&mutex_worker_init);
-
-        if (ready == mk_config->workers) break;
-        usleep(10000);
-    }
 
     /* Change process owner */
     mk_user_set_uidgid();
