@@ -25,9 +25,6 @@
 #include "mk_utils.h"
 #include "mk_macros.h"
 
-#define MK_IOV_FREE_BUF 1
-#define MK_IOV_NOT_FREE_BUF 0
-
 /* iov separators */
 #define MK_IOV_CRLF "\r\n"
 #define MK_IOV_CRLFCRLF "\r\n\r\n"
@@ -92,7 +89,7 @@ static inline int mk_iov_add(struct mk_iov *mk_io, void *buf, int len,
     mk_io->iov_idx++;
     mk_io->total_len += len;
 
-    if (free == MK_IOV_FREE_BUF) {
+    if (free == MK_TRUE) {
         _mk_iov_set_free(mk_io, buf);
     }
 

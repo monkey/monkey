@@ -1082,10 +1082,10 @@ int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
     }
 
     mk_iov_add(sr->headers._extra_rows, row, len,
-               MK_IOV_NOT_FREE_BUF);
+               MK_FALSE);
     mk_iov_add(sr->headers._extra_rows,
                mk_iov_crlf.data, mk_iov_crlf.len,
-               MK_IOV_NOT_FREE_BUF);
+               MK_FALSE);
     return 0;
 }
 

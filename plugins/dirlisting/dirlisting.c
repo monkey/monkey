@@ -477,10 +477,10 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
                 if (val->tags == tpl->tags && val->tag_id == tpl->tag_id) {
                     mk_api->iov_add(iov,
                                     val->value, val->len,
-                                    MK_IOV_NOT_FREE_BUF);
+                                    MK_FALSE);
                     mk_api->iov_add(iov,
                                     val->sep.data, val->sep.len,
-                                    MK_IOV_NOT_FREE_BUF);
+                                    MK_FALSE);
                     break;
                 }
                 else {
@@ -492,13 +492,13 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
         else {
             mk_api->iov_add(iov,
                             tpl->buf, tpl->len,
-                            MK_IOV_NOT_FREE_BUF);
+                            MK_FALSE);
         }
         tpl = tpl->next;
     }
 
     if (is_chunked == MK_TRUE) {
-        mk_api->iov_add(iov, "\r\n", 2, MK_IOV_NOT_FREE_BUF);
+        mk_api->iov_add(iov, "\r\n", 2, MK_FALSE);
     }
 
     return (struct mk_iov *) iov;
@@ -607,7 +607,7 @@ static int mk_dirhtml_send(int fd,
         mk_api->str_build(&buf, &len, "%lx\r\n", data->total_len - 2);
 
         /* Add chunked information */
-        mk_api->iov_set_entry(data, buf, len, MK_IOV_FREE_BUF, 0);
+        mk_api->iov_set_entry(data, buf, len, MK_TRUE, 0);
     }
     n = (int) mk_api->socket_sendv(fd, data);
     return n;

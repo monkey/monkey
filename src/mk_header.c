@@ -195,7 +195,7 @@ int mk_header_prepare(struct mk_http_session *cs,
     /* Invalid status set */
     mk_bug(i == status_response_len);
 
-    mk_iov_add(iov, response.data, response.len, MK_IOV_NOT_FREE_BUF);
+    mk_iov_add(iov, response.data, response.len, MK_FALSE);
 
     /*
      * Preset headers (mk_clock.c):
@@ -206,7 +206,7 @@ int mk_header_prepare(struct mk_http_session *cs,
     mk_iov_add(iov,
                headers_preset.data,
                headers_preset.len,
-               MK_IOV_NOT_FREE_BUF);
+               MK_FALSE);
 
     /* Last-Modified */
     if (sh->last_modified > 0) {
@@ -216,11 +216,11 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_iov_add(iov,
                    mk_header_last_modified.data,
                    mk_header_last_modified.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
         mk_iov_add(iov,
                    lm->data,
                    lm->len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
     }
 
     /* Connection */
@@ -235,13 +235,13 @@ int mk_header_prepare(struct mk_http_session *cs,
                     /* Compose header and add entries to iov */
                     mk_string_itop(mk_config->max_keep_alive_request - cs->counter_connections, ka_header);
                     mk_iov_add(iov, ka_format->data, ka_format->len,
-                               MK_IOV_NOT_FREE_BUF);
+                               MK_FALSE);
                     mk_iov_add(iov, ka_header->data, ka_header->len,
-                               MK_IOV_NOT_FREE_BUF);
+                               MK_FALSE);
                     mk_iov_add(iov,
                                mk_header_conn_ka.data,
                                mk_header_conn_ka.len,
-                               MK_IOV_NOT_FREE_BUF);
+                               MK_FALSE);
                 }
             }
         }
@@ -249,7 +249,7 @@ int mk_header_prepare(struct mk_http_session *cs,
             mk_iov_add(iov,
                        mk_header_conn_close.data,
                        mk_header_conn_close.len,
-                       MK_IOV_NOT_FREE_BUF);
+                       MK_FALSE);
         }
     }
 
@@ -258,12 +258,12 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_iov_add(iov,
                    mk_header_short_location.data,
                    mk_header_short_location.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
 
         mk_iov_add(iov,
                    sh->location,
                    strlen(sh->location),
-                   MK_IOV_FREE_BUF);
+                   MK_TRUE);
     }
 
     /* allowed methods */
@@ -271,11 +271,11 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_iov_add(iov,
                    mk_header_allow.data,
                    mk_header_allow.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
         mk_iov_add(iov,
                    sh->allow_methods.data,
                    sh->allow_methods.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
     }
 
     /* Content type */
@@ -283,7 +283,7 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_iov_add(iov,
                    sh->content_type.data,
                    sh->content_type.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
     }
 
     /*
@@ -296,7 +296,7 @@ int mk_header_prepare(struct mk_http_session *cs,
             mk_iov_add(iov,
                        mk_header_te_chunked.data,
                        mk_header_te_chunked.len,
-                       MK_IOV_NOT_FREE_BUF);
+                       MK_FALSE);
             break;
         }
     }
@@ -305,10 +305,10 @@ int mk_header_prepare(struct mk_http_session *cs,
     if (sh->content_encoding.len > 0) {
         mk_iov_add(iov, mk_header_content_encoding.data,
                    mk_header_content_encoding.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
         mk_iov_add(iov, sh->content_encoding.data,
                    sh->content_encoding.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
     }
 
     /* Content-Length */
@@ -321,11 +321,11 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_iov_add(iov,
                    mk_header_content_length.data,
                    mk_header_content_length.len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
         mk_iov_add(iov,
                    cl->data,
                    cl->len,
-                   MK_IOV_NOT_FREE_BUF);
+                   MK_FALSE);
     }
 
     if ((sh->content_length != 0 && (sh->ranges[0] >= 0 || sh->ranges[1] >= 0)) &&
@@ -340,7 +340,7 @@ int mk_header_prepare(struct mk_http_session *cs,
                             RH_CONTENT_RANGE,
                             sh->ranges[0],
                             (sh->real_length - 1), sh->real_length);
-            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_TRUE);
         }
 
         /* yyy-xxx */
@@ -351,7 +351,7 @@ int mk_header_prepare(struct mk_http_session *cs,
                             RH_CONTENT_RANGE,
                             sh->ranges[0], sh->ranges[1], sh->real_length);
 
-            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_TRUE);
         }
 
         /* -xxx */
@@ -362,18 +362,18 @@ int mk_header_prepare(struct mk_http_session *cs,
                             RH_CONTENT_RANGE,
                             (sh->real_length - sh->ranges[1]),
                             (sh->real_length - 1), sh->real_length);
-            mk_iov_add(iov, buffer, len, MK_IOV_FREE_BUF);
+            mk_iov_add(iov, buffer, len, MK_TRUE);
         }
     }
 
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
             mk_iov_add(iov, mk_iov_crlf.data, mk_iov_crlf.len,
-                       MK_IOV_NOT_FREE_BUF);
+                       MK_FALSE);
         }
         else {
             mk_iov_add(sr->headers._extra_rows, mk_iov_crlf.data,
-                       mk_iov_crlf.len, MK_IOV_NOT_FREE_BUF);
+                       mk_iov_crlf.len, MK_FALSE);
         }
     }
 

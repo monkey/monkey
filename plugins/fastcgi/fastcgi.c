@@ -378,7 +378,7 @@ int fcgi_send_response_headers(struct request *req)
           "Failed to drop from req->iov.");
 	req->sr->headers.content_length = chunk_iov_length(&req->iov);
 
-	mk_api->header_send(req->fd, req->cs, req->sr);
+	mk_api->header_prepare(req->cs, req->sr);
 	req->sr->headers.location = NULL;
 
 	request_set_flag(req, REQ_HEADERS_SENT);

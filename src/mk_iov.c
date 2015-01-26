@@ -97,7 +97,7 @@ int mk_iov_set_entry(struct mk_iov *mk_io, void *buf, int len,
     mk_io->io[idx].iov_len = len;
     mk_io->total_len += len;
 
-    if (free == MK_IOV_FREE_BUF) {
+    if (free == MK_TRUE) {
         _mk_iov_set_free(mk_io, buf);
     }
 
