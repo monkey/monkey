@@ -35,7 +35,7 @@ int mk_conn_read(int socket)
     /* Plugin hook */
     ret = mk_plugin_event_read(socket);
 
-    switch(ret) {
+    switch (ret) {
     case MK_PLUGIN_RET_EVENT_OWNED:
         return MK_PLUGIN_RET_CONTINUE;
     case MK_PLUGIN_RET_EVENT_CLOSE:
@@ -169,7 +169,7 @@ int mk_conn_write(int socket)
         return -1;
     }
     else if (ret == MK_CHANNEL_DONE) {
-        MK_TRACE("[FD %i] Request End");
+        MK_TRACE("[FD %i] Request End", socket);
         return mk_http_request_end(socket);
     }
     else if (ret == MK_CHANNEL_FLUSH) {

@@ -787,7 +787,7 @@ void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
      * the TCP Cork. We do this just overriding the callback for
      * the file stream.
      */
-    mk_server_cork_flag(stream->fd, TCP_CORK_OFF);
+    mk_server_cork_flag(stream->channel->fd, TCP_CORK_OFF);
     stream->cb_bytes_consumed = NULL;
 }
 #endif
@@ -1029,6 +1029,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     sr->headers.real_length = sr->file_info.size;
 
     /* Open file */
+    sr->file_stream.channel = &cs->channel;
+
     if (mk_likely(sr->file_info.size > 0)) {
         sr->file_stream.fd = mk_vhost_open(sr);
         if (sr->file_stream.fd == -1) {
