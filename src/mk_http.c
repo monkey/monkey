@@ -705,11 +705,11 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     }
 
     if (port_redirect > 0) {
-        mk_string_build(&real_location, &len, "%s://%s:%i%s",
+        mk_string_build(&real_location, &len, "%s://%s:%i%s\r\n",
                         mk_config->transport, host, port_redirect, location);
     }
     else {
-        mk_string_build(&real_location, &len, "%s://%s%s",
+        mk_string_build(&real_location, &len, "%s://%s%s\r\n",
                         mk_config->transport, host, location);
     }
 
