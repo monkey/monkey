@@ -148,6 +148,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         }
         plugin->load_type = MK_PLUGIN_DYNAMIC;
         plugin->handler   = handler;
+        plugin->path      = mk_string_dup(path);
     }
     else if (type == MK_PLUGIN_STATIC) {
         plugin = (struct mk_plugin *) data;
@@ -493,10 +494,9 @@ void mk_plugin_exit_all()
     mk_list_foreach_safe(head, tmp, mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         mk_list_del(&node->_head);
-        mk_mem_free(node->path);
         if (node->load_type == MK_PLUGIN_DYNAMIC) {
+            mk_mem_free(node->path);
             dlclose(node->handler);
-            mk_mem_free(node);
         }
     }
     mk_mem_free(api);
