@@ -1361,6 +1361,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           &cs->channel,
                           page,
                           -1,
+                          NULL,
                           cb_stream_page_finished, NULL, NULL);
 
             mk_channel_append_stream(&cs->channel, &sr->page_stream);

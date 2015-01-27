@@ -147,6 +147,7 @@ struct plugin_api
 
     /* channel / stream handling */
     mk_stream_t *(*stream_new) (int, mk_channel_t *, void *, size_t,
+                                void *,
                                 void (*) (mk_stream_t *),
                                 void (*) (mk_stream_t *, long),
                                 void (*) (mk_stream_t *, int));
@@ -154,6 +155,7 @@ struct plugin_api
     int (*channel_write) (mk_channel_t *);
     void (*channel_append_stream) (mk_channel_t *, mk_stream_t *stream);
     void (*stream_set) (mk_stream_t *, int, mk_channel_t *, void *, size_t,
+                        void *,
                         void (*) (mk_stream_t *),
                         void (*) (mk_stream_t *, long),
                         void (*) (mk_stream_t *, int));

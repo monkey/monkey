@@ -108,6 +108,7 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
                                  mk_channel_t *channel,
                                  void *buffer,
                                  size_t size,
+                                 void *data,
                                  void (*cb_finished) (mk_stream_t *),
                                  void (*cb_bytes_consumed) (mk_stream_t *, long),
                                  void (*cb_exception) (mk_stream_t *, int))
@@ -119,6 +120,7 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
     stream->channel     = channel;
     stream->bytes_total = size;
     stream->buffer      = buffer;
+    stream->data        = data;
 
     if (type == MK_STREAM_IOV) {
         iov = buffer;
@@ -195,7 +197,7 @@ static inline void mk_channel_debug(mk_channel_t *channel)
 }
 
 mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
-                           void *data, size_t size,
+                           void *buffer, size_t size, void *data,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int));

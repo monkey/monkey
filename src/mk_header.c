@@ -386,6 +386,7 @@ int mk_header_prepare(struct mk_http_session *cs,
                   MK_STREAM_IOV, &cs->channel,
                   iov,
                   -1,
+                  NULL,
                   mk_header_cb_finished, NULL, NULL);
     mk_channel_append_stream(&cs->channel, &sr->headers_stream);
 
@@ -393,6 +394,7 @@ int mk_header_prepare(struct mk_http_session *cs,
         mk_stream_set(&sr->headers_extra_stream,
                       MK_STREAM_IOV, &cs->channel,
                       sr->headers._extra_rows, -1,
+                      NULL,
                       cb_stream_iov_extended_free, NULL, NULL);
     }
 

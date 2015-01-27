@@ -25,7 +25,7 @@
 
 /* Create a new stream instance */
 mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
-                           void *data, size_t size,
+                           void *buffer, size_t size, void *data,
                            void (*cb_finished) (mk_stream_t *),
                            void (*cb_bytes_consumed) (mk_stream_t *, long),
                            void (*cb_exception) (mk_stream_t *, int))
@@ -33,7 +33,9 @@ mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
     mk_stream_t *stream;
 
     stream = mk_mem_malloc(sizeof(mk_stream_t));
-    mk_stream_set(stream, type, channel, data, size,
+    mk_stream_set(stream, type, channel,
+                  buffer, size,
+                  data,
                   cb_finished,
                   cb_bytes_consumed,
                   cb_exception);
