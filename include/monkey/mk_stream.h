@@ -84,6 +84,9 @@ typedef struct mk_stream {
      */
     void *buffer;
 
+    /* Some data the user may want to reference with the stream (optional) */
+    void *data;
+
     /* callbacks */
     void (*cb_finished) (struct mk_stream *);
     void (*cb_ok) (struct mk_stream *);
