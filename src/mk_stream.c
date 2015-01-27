@@ -103,7 +103,7 @@ int mk_channel_write(mk_channel_t *channel)
             MK_TRACE("[CH %i] STREAM_IOV, wrote %lu bytes",
                      channel->fd, stream->bytes_total);
 
-            iov   = stream->data;
+            iov   = stream->buffer;
             bytes = mk_socket_sendv(channel->fd, iov);
 
             if (bytes > 0) {
@@ -115,7 +115,7 @@ int mk_channel_write(mk_channel_t *channel)
             MK_TRACE("[CH %i] STREAM_PTR, bytes=%lu",
                      channel->fd, stream->bytes_total);
 
-            ptr = stream->data;
+            ptr = stream->buffer;
             printf("data='%s'\n", ptr->data);
             bytes = mk_socket_send(channel->fd, ptr->data, ptr->len);
             if (bytes > 0) {

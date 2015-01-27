@@ -82,7 +82,7 @@ typedef struct mk_stream {
      * Based on the stream type, 'data' could reference a RAW buffer
      * or a mk_iov struct.
      */
-    void *data;
+    void *buffer;
 
     /* callbacks */
     void (*cb_finished) (struct mk_stream *);
@@ -103,7 +103,7 @@ static inline void mk_channel_append_stream(mk_channel_t *channel,
 
 static inline void mk_stream_set(mk_stream_t *stream, int type,
                                  mk_channel_t *channel,
-                                 void *data,
+                                 void *buffer,
                                  size_t size,
                                  void (*cb_finished) (mk_stream_t *),
                                  void (*cb_bytes_consumed) (mk_stream_t *, long),
@@ -115,14 +115,14 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
     stream->type        = type;
     stream->channel     = channel;
     stream->bytes_total = size;
-    stream->data        = data;
+    stream->buffer      = buffer;
 
     if (type == MK_STREAM_IOV) {
-        iov = data;
+        iov = buffer;
         stream->bytes_total = iov->total_len;
     }
     else if (type == MK_STREAM_PTR) {
-        ptr = data;
+        ptr = buffer;
         stream->bytes_total = ptr->len;
     }
 

@@ -131,7 +131,7 @@ static const int status_response_len =
 
 static void mk_header_cb_finished(struct mk_stream *stream)
 {
-    struct mk_iov *iov = stream->data;
+    struct mk_iov *iov = stream->buffer;
     mk_iov_free_marked(iov);
 
 #if defined(__APPLE__)
@@ -158,7 +158,7 @@ static void mk_header_cb_finished(struct mk_stream *stream)
 
 static void cb_stream_iov_extended_free(struct mk_stream *stream)
 {
-    struct mk_iov *iov = stream->data;
+    struct mk_iov *iov = stream->buffer;
     mk_iov_free_marked(iov);
 }
 

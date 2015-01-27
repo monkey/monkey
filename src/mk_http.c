@@ -1212,7 +1212,7 @@ int mk_http_request_end(int socket)
 
 void cb_stream_page_finished(mk_stream_t *stream)
 {
-    mk_ptr_t *page = stream->data;
+    mk_ptr_t *page = stream->buffer;
 
     mk_ptr_free(page);
     mk_mem_free(page);
