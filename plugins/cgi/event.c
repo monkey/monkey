@@ -175,7 +175,7 @@ int _mkp_event_write(int socket)
                 }
             }
 
-            mk_api->header_send(socket, r->cs, r->sr);
+            mk_api->header_prepare(r->cs, r->sr);
 
             r->status_done = 1;
         }

@@ -706,7 +706,7 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
     qsort(toc, list_len, sizeof(*toc), mk_dirhtml_entry_cmp);
 
     /* Sending headers */
-    n = mk_api->header_send(cs->socket, cs, sr);
+    n = mk_api->header_prepare(cs, sr);
     if (n < 0) {
         goto exit;
     }
