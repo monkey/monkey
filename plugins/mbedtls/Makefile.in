@@ -1,14 +1,14 @@
-all: monkey-polarssl.so
+all: monkey-mbedtls.so
 include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
 CFLAGS	= $CFLAGS
-LDFLAGS = $LDFLAGS -lpolarssl
+LDFLAGS = $LDFLAGS -lmbedtls
 DEFS    = $DEFS
-OBJECTS = polarssl.o
+OBJECTS = mbedtls.o
 
 -include $(OBJECTS:.o=.d)
 
-monkey-polarssl.so: $(OBJECTS)
+monkey-mbedtls.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(DEFS) -shared -o $@ $^ -lc $(LDFLAGS)

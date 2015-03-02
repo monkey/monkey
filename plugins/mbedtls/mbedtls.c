@@ -39,14 +39,8 @@
 #include <polarssl/ctr_drbg.h>
 #include <polarssl/certs.h>
 #include <polarssl/x509.h>
-
-#if (POLARSSL_VERSION_NUMBER >= 0x01020000)
 #include <polarssl/ssl_cache.h>
-#endif // POLARSSL_VERSION_NUMBER
-
-#if (POLARSSL_VERSION_NUMBER >= 0x01030000)
 #include <polarssl/pk.h>
-#endif
 
 #include "MKPlugin.h"
 
@@ -59,20 +53,20 @@
 #endif
 
 #if (POLARSSL_VERSION_NUMBER < 0x01010000)
-#error "Require polarssl 1.1 or higher."
+#error "Require mbedTLS 1.3.10 or higher."
 #endif
 
 #if (!defined(POLARSSL_BIGNUM_C) || !defined(POLARSSL_ENTROPY_C) || \
         !defined(POLARSSL_SSL_TLS_C) || !defined(POLARSSL_SSL_SRV_C) || \
         !defined(POLARSSL_NET_C) || !defined(POLARSSL_RSA_C) || \
         !defined(POLARSSL_CTR_DRBG_C))
-#error "One or more required POLARSSL modules not built."
+#error "One or more required mbedTLS modules not built."
 #endif
 
-MONKEY_PLUGIN("polarssl",         /* shortname */
-        "PolarSSL transport plugin", /* name */
-        "0.1",        /* version */
-        MK_PLUGIN_CORE_THCTX | MK_PLUGIN_NETWORK_IO);
+MONKEY_PLUGIN("mbedtls"          ,         /* shortname */
+              "mbedTLS plugin",            /* name */
+              "0.2",                       /* version */
+              MK_PLUGIN_CORE_THCTX | MK_PLUGIN_NETWORK_IO);
 
 struct polar_config {
     char *cert_file;
@@ -82,6 +76,7 @@ struct polar_config {
 };
 
 #if defined(POLARSSL_SSL_CACHE_C)
+
 struct polar_sessions {
     pthread_mutex_t _mutex;
     ssl_cache_context cache;
@@ -100,16 +95,10 @@ struct polar_context_head {
 };
 
 struct polar_thread_context {
-
     struct polar_context_head *contexts;
 
     ctr_drbg_context ctr_drbg;
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    rsa_context rsa;
-#else
     pk_context pkey;
-#endif
-
     struct mk_list _head;
 };
 
@@ -117,13 +106,8 @@ struct polar_server_context {
 
     struct polar_config config;
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    x509_cert cert;
-    x509_cert ca_cert;
-#else
     x509_crt cert;
     x509_crt ca_cert;
-#endif
 
     pthread_mutex_t _mutex;
     dhm_context dhm;
@@ -191,19 +175,19 @@ static int handle_return(int ret)
 #endif
     if (ret < 0) {
         switch( ret )
-        {
+            {
             case POLARSSL_ERR_NET_WANT_READ:
             case POLARSSL_ERR_NET_WANT_WRITE:
                 if (errno != EAGAIN)
                     errno = EAGAIN;
-		return -1;
+                return -1;
             case POLARSSL_ERR_SSL_CONN_EOF:
                 return 0;
             default:
                 if (errno == EAGAIN)
-		    errno = 0;
+                    errno = 0;
                 return -1;
-        }
+            }
     }
     else {
         return ret;
@@ -233,28 +217,28 @@ static int config_parse(const char *confdir, struct polar_config *conf)
             continue;
         }
         conf->cert_file = mk_api->config_section_getval(section,
-                "CertificateFile",
-                MK_CONFIG_VAL_STR);
+                                                        "CertificateFile",
+                                                        MK_CONFIG_VAL_STR);
         conf->cert_chain_file = mk_api->config_section_getval(section,
-                "CertificateChainFile",
-                MK_CONFIG_VAL_STR);
+                                                              "CertificateChainFile",
+                                                              MK_CONFIG_VAL_STR);
         conf->key_file = mk_api->config_section_getval(section,
-                "RSAKeyFile",
-                MK_CONFIG_VAL_STR);
+                                                       "RSAKeyFile",
+                                                       MK_CONFIG_VAL_STR);
         conf->dh_param_file = mk_api->config_section_getval(section,
-                "DHParameterFile",
-                MK_CONFIG_VAL_STR);
+                                                            "DHParameterFile",
+                                                            MK_CONFIG_VAL_STR);
     }
     mk_api->config_free(conf_head);
 
-fallback:
+ fallback:
     if (conf->cert_file == NULL) {
         mk_api->str_build(&conf->cert_file, &len,
-                "%ssrv_cert.pem", confdir);
+                          "%ssrv_cert.pem", confdir);
     }
     if (conf->key_file == NULL) {
         mk_api->str_build(&conf->key_file, &len,
-                "%srsa.pem", confdir);
+                          "%srsa.pem", confdir);
     }
     if (conf->dh_param_file == NULL) {
         mk_api->str_build(&conf->dh_param_file, &len,
@@ -270,28 +254,20 @@ static int polar_load_certs(const struct polar_config *conf)
 
     assert(conf->cert_file != NULL);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_crtfile(&server_context.cert, conf->cert_file);
-#else
     ret = x509_crt_parse_file(&server_context.cert, conf->cert_file);
-#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
         mk_err("[polarssl] Load cert '%s' failed: %s",
-                conf->cert_file,
-                err_buf);
+               conf->cert_file,
+               err_buf);
 
 #if defined(POLARSSL_CERTS_C)
         mk_warn("[polarssl] Using test certificates, "
                 "please set 'CertificateFile' in polarssl.conf");
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_crt(&server_context.cert,
-                (unsigned char *)test_srv_crt, strlen(test_srv_crt));
-#else
         ret = x509_crt_parse(&server_context.cert,
-                (unsigned char *)test_srv_crt, strlen(test_srv_crt));
-#endif
+                             (unsigned char *)test_srv_crt, strlen(test_srv_crt));
+
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_err("[polarssl] Load built-in cert failed: %s", err_buf);
@@ -302,13 +278,9 @@ static int polar_load_certs(const struct polar_config *conf)
 #endif // defined(POLARSSL_CERTS_C)
     }
     else if (conf->cert_chain_file != NULL) {
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_crtfile(server_context.ca_cert.next,
-		conf->cert_chain_file);
-#else
-	ret = x509_crt_parse_file(server_context.ca_cert.next,
-		conf->cert_chain_file);
-#endif
+        ret = x509_crt_parse_file(server_context.ca_cert.next,
+                                  conf->cert_chain_file);
+
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_warn("[polarssl] Load cert chain '%s' failed: %s",
@@ -321,41 +293,30 @@ static int polar_load_certs(const struct polar_config *conf)
 }
 
 static int polar_load_key(struct polar_thread_context *thread_context,
-		const struct polar_config *conf)
+                          const struct polar_config *conf)
 {
     char err_buf[72];
     int ret;
 
     assert(conf->key_file);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_keyfile(&thread_context->rsa, conf->key_file, NULL);
-#else
     ret = pk_parse_keyfile(&thread_context->pkey, conf->key_file, NULL);
-#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
         MK_TRACE("[polarssl] Load key '%s' failed: %s",
-                conf->key_file,
-                err_buf);
+                 conf->key_file,
+                 err_buf);
 
 #if defined(POLARSSL_CERTS_C)
-
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_key(&thread_context->rsa,
-                (unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
-#else
-	ret = pk_parse_key(&thread_context->pkey,
-		(unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
-#endif
+        ret = pk_parse_key(&thread_context->pkey,
+                           (unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
             mk_err("[polarssl] Failed to load built-in RSA key: %s", err_buf);
             return -1;
         }
-#else
+#endif
         return -1;
-#endif // defined(POLARSSL_CERTS_C)
     }
     return 0;
 }
@@ -367,11 +328,7 @@ static int polar_load_dh_param(const struct polar_config *conf)
 
     assert(conf->dh_param_file);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_dhmfile(&server_context.dhm, conf->dh_param_file);
-#else
     ret = dhm_parse_dhmfile(&server_context.dhm, conf->dh_param_file);
-#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
 
@@ -441,7 +398,7 @@ static int polar_thread_init(const struct polar_config *conf)
     pthread_mutex_unlock(&server_context._mutex);
 
     ret = ctr_drbg_init(&thctx->ctr_drbg,
-            entropy_func_safe, &server_context.entropy,
+                        entropy_func_safe, &server_context.entropy,
             NULL, 0);
     if (ret) {
         mk_err("crt_drbg_init failed: %d", ret);
@@ -449,11 +406,7 @@ static int polar_thread_init(const struct polar_config *conf)
         return -1;
     }
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    rsa_init(&thctx->rsa, RSA_PKCS_V15, 0);
-#else
     pk_init(&thctx->pkey);
-#endif
 
     PLUGIN_TRACE("[polarssl] Load RSA key.");
     if (polar_load_key(thctx, conf)) {
@@ -499,13 +452,8 @@ static void polar_exit(void)
     struct mk_list *cur, *tmp;
     struct polar_thread_context *thctx;
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    x509_free(&server_context.cert);
-    x509_free(&server_context.ca_cert);
-#else
     x509_crt_free(&server_context.cert);
     x509_crt_free(&server_context.ca_cert);
-#endif
     dhm_free(&server_context.dhm);
 
     mk_list_foreach_safe(cur, tmp, &server_context.threads._head) {
@@ -513,11 +461,7 @@ static void polar_exit(void)
         contexts_free(thctx->contexts);
         mk_api->mem_free(thctx);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-	rsa_free(&thctx->rsa);
-#else
-	pk_free(&thctx->pkey);
-#endif
+        pk_free(&thctx->pkey);
     }
     pthread_mutex_destroy(&server_context._mutex);
 
@@ -528,7 +472,8 @@ static void polar_exit(void)
     config_free(&server_context.config);
 }
 
-/* Contexts may be requested from outside workers on exit so we should
+/*
+ * Contexts may be requested from outside workers on exit so we should
  * be prepared for an empty context.
  */
 static ssl_context *context_get(int fd)
@@ -610,17 +555,13 @@ static ssl_context *context_new(int fd)
         ssl_set_dbg(ssl, polar_debug, 0);
 #endif
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ssl_set_own_cert(ssl, &server_context.cert, &thctx->rsa);
-#else
         ssl_set_own_cert(ssl, &server_context.cert, &thctx->pkey);
         ssl_set_session_tickets(ssl, SSL_SESSION_TICKETS_ENABLED);
-#endif
         ssl_set_ca_chain(ssl, &server_context.ca_cert, NULL, NULL);
         ssl_set_dh_param_ctx(ssl, &server_context.dhm);
 
-	ssl_set_session_cache(ssl, polar_cache_get, &global_sessions,
-			polar_cache_set, &global_sessions);
+        ssl_set_session_cache(ssl, polar_cache_get, &global_sessions,
+                              polar_cache_set, &global_sessions);
 
         ssl_set_bio(ssl, net_recv, &(*cur)->fd, net_send, &(*cur)->fd);
     }
@@ -726,8 +667,8 @@ int _mkp_network_io_writev(int fd, struct mk_iov *mk_io)
     return handle_return(ret);
 }
 
-int _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
-        size_t file_count)
+ssize_t _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
+                                  size_t file_count)
 {
     ssl_context *ssl = context_get(fd);
     unsigned char *buf;
@@ -832,11 +773,11 @@ int _mkp_network_io_connect(char *host, int port)
 
     ret = getaddrinfo(host, port_str, &hints, &res);
     mk_api->mem_free(port_str);
-    if(ret != 0) {
+    if (ret != 0) {
         mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
     }
-    for(rp = res; rp != NULL; rp = rp->ai_next) {
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
         socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
@@ -893,7 +834,7 @@ int _mkp_network_io_bind(int socket_fd, const struct sockaddr *addr, socklen_t a
 
     ret = listen(socket_fd, backlog);
 
-    if(ret == -1 ) {
+    if (ret == -1 ) {
         mk_warn("Error setting up the listener");
         return -1;
     }
@@ -919,12 +860,12 @@ int _mkp_network_io_server(int port, char *listen_addr, int reuse_port)
 
     ret = getaddrinfo(listen_addr, port_str, &hints, &res);
     mk_api->mem_free(port_str);
-    if(ret != 0) {
+    if (ret != 0) {
         mk_err("Can't get addr info: %s", gai_strerror(ret));
         return -1;
     }
 
-    for(rp = res; rp != NULL; rp = rp->ai_next) {
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
         socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
         if( socket_fd == -1) {
@@ -974,7 +915,6 @@ int _mkp_init(struct plugin_api **api, char *confdir)
         return -1;
     }
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
-
 
     memset(&conf, 0, sizeof(conf));
     if (config_parse(confdir, &conf)) {
