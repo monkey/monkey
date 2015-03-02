@@ -666,23 +666,28 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 int mk_sched_update_conn_status(struct sched_list_node *sched,
                                 int remote_fd, int status)
 {
-    struct sched_connection *sched_conn;
+    struct sched_connection *conn;
 
     if (mk_unlikely(!sched)) {
         return -1;
     }
 
-    sched_conn = mk_sched_get_connection(sched, remote_fd);
-    mk_bug(!sched_conn);
-    sched_conn->status = status;
+    conn = mk_sched_get_connection(sched, remote_fd);
+    mk_bug(!conn);
+
+    if (status == conn->status) {
+        return 0;
+    }
+
+    if (conn->status == MK_SCHEDULER_CONN_PENDING) {
+        mk_list_del(&conn->status_queue);
+    }
 
     /* Incoming queue check */
     if (status == MK_SCHEDULER_CONN_PENDING) {
-        mk_list_add(&sched_conn->status_queue, &sched->incoming_queue);
-    }
-    else if (status != MK_SCHEDULER_CONN_PROCESS) {
-        mk_list_del(&sched_conn->status_queue);
+        mk_list_add(&conn->status_queue, &sched->incoming_queue);
     }
 
+    conn->status = status;
     return 0;
 }
