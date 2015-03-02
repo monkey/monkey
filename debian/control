@@ -2,7 +2,7 @@ Source: monkey
 Section: httpd
 Priority: optional
 Maintainer: Eduardo Silva <eduardo@monkey.io>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libpolarssl-dev
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev
 Standards-Version: 3.9.1
 Homepage: http://monkey-project.com
 Vcs-Git: https://github.com/monkey/monkey.git
@@ -16,17 +16,17 @@ Description: Fast and lightweight Web Server for Linux.
  and CPU consumption, the perfect solution for embedded environments. It
  also provides a flexible API and plugins interface.
 
-Package: monkey-polarssl
+Package: monkey-mbedtls
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, monkey
-Description: SSL transport layer for Monkey Web Server based in PolarSSL.
+Description: SSL transport layer for Monkey Web Server based in mbedTLS.
  This plugin enable Monkey Web Server with SSL encryption through the third
- party PolarSSL library.
+ party mbedTLS library.
 
 Package: monkey-dev
 Architecture: any
 Depends: ${misc:Depends}, monkey (= ${binary:Version})
-Description: Monkey HTTP Daemon development files
+Description: Monkey HTTP Server development files
  This package distributes the C headers files required to perform
  the development of a Monkey plugin. This package is not related to the
  library version of Monkey.
@@ -35,12 +35,12 @@ Package: monkey-doc
 Section: doc
 Architecture: all
 Description: Monkey documentation
- Monkey HTTP Daemon documentation.
+ Monkey HTTP Server documentation.
 
 Package: libmonkey
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Monkey HTTP Daemon library
+Description: Monkey HTTP Server library
  LibMonkey is the shared library version of Monkey HTTP daemon, it
  can be linked by third party programs that requires to use a fast web server or
  HTTP stack in their main program.
