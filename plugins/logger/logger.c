@@ -30,7 +30,9 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <syslog.h>
 #include <monkey/mk_api.h>
+#include <monkey/mk_info.h>
 
 /* Local Headers */
 #include "logger.h"
@@ -245,13 +247,27 @@ static void mk_logger_start_worker(void *args)
 
                 continue;
             }
-
-            lseek(flog, 0, SEEK_END);
-            slen = _mk_logger_append(fd, flog, bytes);
-            if (mk_unlikely(slen == -1)) {
-                mk_warn("Could not write to log file: splice() = %ld", slen);
-            }
-
+            #ifdef syslog
+                int consumed = 0;
+                    char buf[255];
+                    do {
+                        slen = read(events[i].data.fd, buf, 255);
+                        if (slen > 0) {
+                            consumed += slen;
+                            syslog(LOG_INFO, "%s", buf);
+                        }
+                        else {
+                            break;
+                        }
+                    } while (consumed < bytes);
+            #else
+                lseek(flog, 0, SEEK_END);
+                slen = _mk_logger_append(fd, flog, bytes);
+                if (mk_unlikely(slen == -1)) {
+                    mk_warn("Could not write to log file: splice() = %ld", slen);
+                }
+            #endif
+                
             PLUGIN_TRACE("written %i bytes", bytes);
             close(flog);
         }
