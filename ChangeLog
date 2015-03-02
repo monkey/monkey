@@ -1,3 +1,312 @@
+commit c2a223f33c2a5d7a655125b7dc91d49ea1bf6898
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 15:51:29 2015 -0600
+
+    HTML: update to v1.5.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit aafe727cd73a7090fbc6c221b30fffa09e3d7a5d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 15:48:22 2015 -0600
+
+    Debian: update scripts for 1.5.6 changes
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6dcb3ccae92c5a538bbc4b8a82c75d7adb7e516a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 15:22:41 2015 -0600
+
+    Scheduler: pack sched connections
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f610a8b52c05e46a9a1c41cfb323ee64093ab3b8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 14:49:22 2015 -0600
+
+    Scheduler: fix wrong handling of incoming queue.
+    
+    Under high load with many invalid (not finished) connections, the
+    scheduler incoming queue may generate invalid references.
+    
+    This patch solves the problem validating the sched node status.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b5780c0fbd48ab619d80c070b7847cf08a50e4e4
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 12:05:14 2015 -0600
+
+    mbedTLS: migration continue from polarssl
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 50ff71403b150999a1448dc05e3c0f267720a5f1
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 11:21:13 2015 -0600
+
+    Conf: rename template, layer polarssl -> mbedtls
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c885c7349c0f313f111026f8da9edc48a53ea13f
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 11:18:57 2015 -0600
+
+    Configure: options to set mbedTLS specifics.
+    
+    This patch add 3 options to the configure script:
+    
+      --mbedtls-headers       Path to mbedTLS headers
+      --mbedtls-library       Path to mbedTLS library
+      --mbedtls-debug-level   Set mbedTLS debug level (not implemented)
+    
+    the first two aims to make things easier when using a custom or
+    compiled from scratch version of mbedTLS library.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 161e296ee0e264400e21e76689f33b6281ff1d78
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 2 10:49:42 2015 -0600
+
+    SSL: Rebrand PolarSSL as mbedTLS
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d9730c2b1dea9196cfb57739f5f91127f2f3abec
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Jan 21 14:42:32 2015 -0600
+
+    Core: fix data type for static files length
+    
+    This patch makes Monkey behave right when handling big files.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ebbfaa19bb06d4b13d72f05e776ddd9e4d43875c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Jan 8 11:37:36 2015 -0600
+
+    API: Export symbol for _mkp_network_io_buffer_size on plugins
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 81cc9677562af1b563939b9eff2b483a72e5ec38
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Jan 8 11:37:03 2015 -0600
+
+    HTTP: improve send_file CORK usage and remove counter
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0252044973da64bedd0ac16a3124ece08e6b8317
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 24 23:28:24 2014 -0600
+
+    Conf: validate sections
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6f7e988dd7273f68ba3739b79c73001a75ada76e
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 27 09:45:36 2014 -0600
+
+    Auth: if no global config exists, just skip stage 30
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e3b7d82261464ccb2023227391059e8dace07b8d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 27 09:41:48 2014 -0600
+
+    Auth: validate that config have been loaded
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6c3734517016a639fa1b34b155252a1a9f8dd037
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 11 22:22:51 2014 -0600
+
+    Config: on config create, do not leak file handler
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a5795b525f91b49ca6e3119e81b80458dbe4ddf3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 11 22:21:44 2014 -0600
+
+    Config: abort if SECTION config is not found
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d048de321e408f67347f6e9cc68835cafdfa1921
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Jan 7 11:31:03 2015 -0600
+
+    Vhost: FDT: set request FDT flag to true when using shared FD
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 34810f148896d45b217537abe574f573296a5ea2
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 14 23:40:49 2014 -0600
+
+    PolarSSL: new get_bytes_avail() call
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4c4f14c8af1bf990a69fc1756795e69817df1df9
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 14 23:38:20 2014 -0600
+
+    PolarSSL: let io_read return more bytes than consumed
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f6333907a8768503102fb6965676c7a0cafb1dea
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 14 23:28:54 2014 -0600
+
+    Request: initialize max_read
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0776c0c786be4b34b242acc275d97006341c874d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 14 23:12:35 2014 -0600
+
+    Core: adaptive network buffer size (Fix #163)
+    
+    Monkey stack allows to a plugin to handle the network operations
+    in a low level layer, at that area the plugins Liana and PolarSSL
+    are the main ones in charge to add support for plain communication
+    and further SSL.
+    
+    When working over plain sockets, the Networking plugin (liana) just
+    perform direct read from the system call to the clien_session buffer,
+    so it will read as of buffer capacity and then continue after each
+    event triggered by the Kernel. In the opposite side, when the plugin
+    requires some data processing after read(2) and before to return the
+    control to Monkey core, we may face a double-buffering and that is
+    the case of the PolarSSL plugin, where by obvious reasons it needs
+    it own buffer.
+    
+    By RFC defition, SSL/TLS defines a maximum transaction of 2^14 bytes,
+    which is 16KB, so if we get an Event notification from the Kernel and the
+    plugin processed a number of bytes grater that the available on the caller
+    buffer (client_session), we may ended up with some un-read bytes in the
+    SSL layer.
+    
+    This patch implements a few mechanisms to avoid the situation described:
+    
+    1. The Plugin API at Networking level now implements a new callback
+       called 'buffer_size', so from now all Networking plugins requires
+       to implement it. Monkey core will call it with the purpose to ask if
+       the plugin is implementing it own buffering and the size of it.
+    
+    2. When initializing plugins and check the Networking plugin buffer size,
+       If it returns something >= MK_REQUEST_CHUNK, the Configuration will be
+       set to that value. Note that from that moment every request will require
+       two memory allocations (a workaround for custom systems will in the next
+       patch).
+    
+    3. When invoking a Network read, now a plugin may be able to return a greater
+       number of bytes requested by the caller. If this is faced, it means the
+       Network plugin have some pending data to be read, so now the Request handler
+       will consume that amount of data before to return to process other events.
+    
+    note: as said a new patch will come to fix the need of double-memory allocation
+          per request.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+    
+    Conflicts:
+    	src/mk_http.c
+    	src/mk_request.c
+
+commit 689ae0eda98de1f2f30a15109c64c4445a5bc317
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Aug 1 20:14:14 2014 -0600
+
+    String: performance improvement converting uint64_t to string (4x)
+    
+    Based on the trick given by A. Alexandrescu on Facebook Engineering
+    blog, this patch replace the old mk_str_itop() with the faster
+    algorithm proposed.
+    
+    More details about the implementation here:
+    
+     https://www.facebook.com/notes/facebook-engineering/three-optimization-tips-for-c/10151361643253920
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 975c8230873e6a18fd8e97548d10b340ebef1fd2
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Dec 12 15:05:17 2014 -0600
+
+    CGI: define new length for environment variables
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f7610d665032f445c570d242d30e2c58d8fb16b0
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 8 16:59:26 2014 -0600
+
+    CGI: lookup and set Cookie HTTP Header
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 32571c9a31135b344027c8051fc7b621c3c285dd
+Merge: 799c9f4 b8a6429
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Nov 4 11:15:49 2014 -0600
+
+    Merge branch 'v1.5-fixes' of https://github.com/monkey/monkey into v1.5-fixes
+
+commit b8a6429998915f3685aab2d6c89014ffaf79a1e1
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 25 12:08:43 2014 -0600
+
+    Configure: bump to v1.5.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 799c9f453781c1ee266a0e9925604a4aa1277e0b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Nov 4 11:10:45 2014 -0600
+
+    Kernel: disable TCP_AUTOCORKING (#175)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+    
+    Conflicts:
+    	src/mk_kernel.c
+
+commit 8770dcc06f41dca2ef979a1ae5709da02263216a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 23 14:44:07 2014 -0600
+
+    Scheduler: proper handling when dropping connections
+    
+    This patch implements a new function at scheduler level that is
+    used to cleanup a complete connection.
+    
+    It helps to fix an issue when connections are dropped from different
+    sources such as: timeouts, I/O errors, incomplete requests, etc.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9162ced23c504ca1707c780d004c39b557655e20
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 18 19:36:26 2014 -0600
+
+    Release: Monkey HTTP Server v1.5.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 3d8a78ce03a416bc945aeca9c7ac47d9920c8e43
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sat Oct 18 19:30:35 2014 -0600
