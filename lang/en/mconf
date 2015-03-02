@@ -133,7 +133,7 @@ cat > conf/monkey.conf <<EOF
     # the plugin is loaded by 'plugins.load' file.
     #
     #    HTTP  is provided by liana
-    #    HTTPS is provided by polarssl
+    #    HTTPS is provided by mbedtls
 
     TransportLayer liana
 
