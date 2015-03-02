@@ -3,8 +3,8 @@ include ../Make.common
 
 CC	= @echo "  CC   $(_PATH)/$@"; $CC
 CC_QUIET= @echo -n; $CC
-CFLAGS	= $CFLAGS
-LDFLAGS = $LDFLAGS -lmbedtls
+CFLAGS  = $CFLAGS $(MONKEY_MBEDTLS_HEADERS)
+LDFLAGS = $LDFLAGS $(MONKEY_MBEDTLS_LIBRARY) -lmbedtls
 DEFS    = $DEFS
 OBJECTS = mbedtls.o
 

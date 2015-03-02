@@ -196,7 +196,7 @@ main()
                          malloc_libc malloc_jemalloc
 
 	echo "+ Creating plugins/Make.common"
-	create_plugins_make_common bindir
+	create_plugins_make_common bindir mbedtls_headers mbedtls_library mbedtls_debug_level
 
 	echo "+ Creating src/include/mk_info.h"
 	create_info sysconfdir \
@@ -799,8 +799,20 @@ create_plugins_make_common()
 {
 	LIBS=''
 	if [ $malloc_jemalloc == 1 ]; then
-		LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
+	    LIBS=`pwd`/deps/jemalloc/lib/libjemalloc.a
 	fi
+
+        if [ -n $mbedtls_headers ]; then
+            MK_MBEDTLS_HEADERS="-I$mbedtls_headers"
+        fi
+        if [ -n $mbedtls_library ] ; then
+            MK_MBEDTLS_LIBRARY="-L$mbedtls_library -Wl,-rpath=$mbedtls_library"
+        fi
+
+        if [ -n $mbedtls_debug_level ] ; then
+            MK_MBEDTLS_DEBUG_LEVEL="$mbedtls_debug_level"
+        fi
+
 	cat > plugins/Make.common <<EOF
 _PATH     = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 INC_EXTRA = "./"
@@ -808,6 +820,9 @@ INCDIR    = ../../src/include -I\$(INC_EXTRA)
 MONKEY_OBJECTS = \$(wildcard ../../src/*.o)
 MONKEY_OBJECTS_N = \$(filter-out ../../src/monkey.o, \$(MONKEY_OBJECTS))
 MONKEY_BIN_DIR = $bindir
+MONKEY_MBEDTLS_HEADERS = $MK_MBEDTLS_HEADERS
+MONKEY_MBEDTLS_LIBRARY = $MK_MBEDTLS_LIBRARY
+MONKEY_MBEDTLS_DEBUG_LEVEL = $MK_MBEDTLS_DEBUG_LEVEL
 LIBS = $LIBS
 
 .c.o:
@@ -1032,6 +1047,11 @@ only_accept4=0
 malloc_libc=0
 malloc_jemalloc=1
 
+# mbedTLS
+mbedtls_headers=""
+mbedtls_library=""
+mbedtls_debug_level=0
+
 for arg in $*; do
 
 	case "$arg" in
@@ -1142,6 +1162,15 @@ for arg in $*; do
 				systemddir=/lib/systemd/system
 			fi
 			;;
+                --mbedtls-headers*)
+                        mbedtls_headers=$optarg
+                        ;;
+                --mbedtls-library*)
+                        mbedtls_library=$optarg
+                        ;;
+                --mbedtls-debug-level*)
+                        mbedtls_debug_level=$optarg
+                        ;;
 		--version*)
 			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
 			echo "Copyright 2001-2014 - Eduardo Silva <eduardo@monkey.io>"
@@ -1197,6 +1226,11 @@ for arg in $*; do
 			echo "  --enable-relaxed-plugins Allow the application to make the library load arbitrary plugins."
 			echo "                          WARNING security risk, do not enable in distro packages!"
 			echo
+                        echo -e $bldwht"mbedTLS plugin options:" $txtrst
+                        echo "  --mbedtls-headers      Set the path for mbedTLS headers"
+                        echo "  --mbedtls-library      Set the path where the mbedTLS library can be found"
+                        echo "  --mbedtls-debug-level  Set mbedTLS debug level"
+                        echo
 			echo -e $bldwht"Installation Directories:" $txtrst
 			echo "  --prefix=PREFIX         Root prefix directory"
 			echo "  --bindir=BINDIR         Binary files (executables)"
@@ -1325,6 +1359,7 @@ uname=`uname -a`
 main prefix lang bindir mandir  sysconfdir datadir \
      logdir pidfile plugdir platform only_accept only_accept4 \
      SYSNAME VERSION enabled_plugins disabled_plugins \
-     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname
+     no_backtrace linux_trace malloc_libc malloc_jemalloc cmd uname \
+     mbedtls_headers mbedtls_library mbedtls_debug_level
 
 exit 0
