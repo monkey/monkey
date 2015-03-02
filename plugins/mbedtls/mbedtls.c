@@ -170,7 +170,7 @@ static int handle_return(int ret)
     char err_buf[72];
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        PLUGIN_TRACE("[polarssl] SSL error: %s", err_buf);
+        PLUGIN_TRACE("[mbedtls] SSL error: %s", err_buf);
     }
 #endif
     if (ret < 0) {
@@ -202,7 +202,7 @@ static int config_parse(const char *confdir, struct polar_config *conf)
     struct mk_config *conf_head;
     struct mk_list *head;
 
-    mk_api->str_build(&conf_path, &len, "%spolarssl.conf", confdir);
+    mk_api->str_build(&conf_path, &len, "%smbedtls.conf", confdir);
     conf_head = mk_api->config_create(conf_path);
     mk_api->mem_free(conf_path);
 
@@ -257,22 +257,24 @@ static int polar_load_certs(const struct polar_config *conf)
     ret = x509_crt_parse_file(&server_context.cert, conf->cert_file);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        mk_err("[polarssl] Load cert '%s' failed: %s",
+        mk_warn("[mbedtls] Load cert '%s' failed: %s",
                conf->cert_file,
                err_buf);
 
 #if defined(POLARSSL_CERTS_C)
-        mk_warn("[polarssl] Using test certificates, "
-                "please set 'CertificateFile' in polarssl.conf");
+        mk_warn("[mbedtls] Using test certificates, "
+                "please set 'CertificateFile' in mbedtls.conf");
 
         ret = x509_crt_parse(&server_context.cert,
                              (unsigned char *)test_srv_crt, strlen(test_srv_crt));
 
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load built-in cert failed: %s", err_buf);
+            mk_err("[mbedtls] Load built-in cert failed: %s", err_buf);
             return -1;
         }
+
+        return 0;
 #else
         return -1;
 #endif // defined(POLARSSL_CERTS_C)
@@ -283,7 +285,7 @@ static int polar_load_certs(const struct polar_config *conf)
 
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_warn("[polarssl] Load cert chain '%s' failed: %s",
+            mk_warn("[mbedtls] Load cert chain '%s' failed: %s",
                     conf->cert_chain_file,
                     err_buf);
         }
@@ -303,7 +305,7 @@ static int polar_load_key(struct polar_thread_context *thread_context,
     ret = pk_parse_keyfile(&thread_context->pkey, conf->key_file, NULL);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        MK_TRACE("[polarssl] Load key '%s' failed: %s",
+        MK_TRACE("[mbedtls] Load key '%s' failed: %s",
                  conf->key_file,
                  err_buf);
 
@@ -312,7 +314,7 @@ static int polar_load_key(struct polar_thread_context *thread_context,
                            (unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Failed to load built-in RSA key: %s", err_buf);
+            mk_err("[mbedtls] Failed to load built-in RSA key: %s", err_buf);
             return -1;
         }
 #endif
@@ -335,13 +337,13 @@ static int polar_load_dh_param(const struct polar_config *conf)
         ret = mpi_read_string(&server_context.dhm.P, 16, my_dhm_P);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load DH parameter failed: %s", err_buf);
+            mk_err("[mbedtls] Load DH parameter failed: %s", err_buf);
             return -1;
         }
         ret = mpi_read_string(&server_context.dhm.G, 16, my_dhm_G);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load DH parameter failed: %s", err_buf);
+            mk_err("[mbedtls] Load DH parameter failed: %s", err_buf);
             return -1;
         }
     }
@@ -367,11 +369,11 @@ static int polar_init(void)
 
     pthread_mutex_unlock(&server_context._mutex);
 
-    PLUGIN_TRACE("[polarssl] Load certificates.");
+    PLUGIN_TRACE("[mbedtls] Load certificates.");
     if (polar_load_certs(&server_context.config)) {
         return -1;
     }
-    PLUGIN_TRACE("[polarssl] Load DH parameters.");
+    PLUGIN_TRACE("[mbedtls] Load DH parameters.");
     if (polar_load_dh_param(&server_context.config)) {
         return -1;
     }
@@ -384,7 +386,7 @@ static int polar_thread_init(const struct polar_config *conf)
     struct polar_thread_context *thctx;
     int ret;
 
-    PLUGIN_TRACE("[polarssl] Init thread context.");
+    PLUGIN_TRACE("[mbedtls] Init thread context.");
 
     thctx = mk_api->mem_alloc(sizeof(*thctx));
     if (thctx == NULL) {
@@ -408,12 +410,12 @@ static int polar_thread_init(const struct polar_config *conf)
 
     pk_init(&thctx->pkey);
 
-    PLUGIN_TRACE("[polarssl] Load RSA key.");
+    PLUGIN_TRACE("[mbedtls] Load RSA key.");
     if (polar_load_key(thctx, conf)) {
         return -1;
     }
 
-    PLUGIN_TRACE("[polarssl] Set local thread context.");
+    PLUGIN_TRACE("[mbedtls] Set local thread context.");
     pthread_setspecific(local_context, thctx);
 
     return 0;
@@ -690,7 +692,7 @@ ssize_t _mkp_network_io_send_file(int fd, int file_fd, off_t *file_offset,
             ret = 0;
         }
         else if (used < 0) {
-            mk_err("[polarssl] Read from file failed: %s", strerror(errno));
+            mk_err("[mbedtls] Read from file failed: %s", strerror(errno));
             ret = -1;
         }
         else if (remain > 0) {
@@ -780,7 +782,7 @@ int _mkp_network_io_connect(char *host, int port)
     for (rp = res; rp != NULL; rp = rp->ai_next) {
         socket_fd = _mkp_network_io_create_socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
-        if( socket_fd == -1) {
+        if (socket_fd == -1) {
             mk_warn("Error creating client socket, retrying");
             continue;
         }
@@ -910,8 +912,8 @@ int _mkp_init(struct plugin_api **api, char *confdir)
     /* Evil global config stuff */
     mk_api = *api;
     if (mk_api->config->transport_layer &&
-        strcmp(mk_api->config->transport_layer, "polarssl")) {
-        PLUGIN_TRACE("[polarssl] Not used as transport layer, unload.");
+        strcmp(mk_api->config->transport_layer, "mbedtls")) {
+        PLUGIN_TRACE("[mbedtls] Not used as transport layer, unload.");
         return -1;
     }
     mk_api->config->transport = MK_TRANSPORT_HTTPS;
@@ -930,7 +932,7 @@ int _mkp_init(struct plugin_api **api, char *confdir)
 void _mkp_core_thctx(void)
 {
     if (polar_thread_init(&server_context.config)) {
-        abort();
+        exit(EXIT_FAILURE);
     }
 }
 
