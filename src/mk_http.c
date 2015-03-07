@@ -1037,7 +1037,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             MK_TRACE("open() failed");
             return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
-        sr->file_stream.bytes_total = sr->file_info.size;
+        sr->file_stream.bytes_offset = 0;
+        sr->file_stream.bytes_total  = sr->file_info.size;
     }
 
     /* Process methods */

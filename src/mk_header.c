@@ -388,7 +388,6 @@ int mk_header_prepare(struct mk_http_session *cs,
                   -1,
                   NULL,
                   mk_header_cb_finished, NULL, NULL);
-    mk_channel_append_stream(&cs->channel, &sr->headers_stream);
 
     if (sr->headers._extra_rows) {
         mk_stream_set(&sr->headers_extra_stream,

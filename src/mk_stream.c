@@ -134,6 +134,8 @@ int mk_channel_write(mk_channel_t *channel)
             }
 
             if (stream->bytes_total == 0) {
+                MK_TRACE("Stream done, unlinking");
+
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
                 }

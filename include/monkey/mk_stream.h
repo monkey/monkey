@@ -116,11 +116,11 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
     mk_ptr_t *ptr;
     struct mk_iov *iov;
 
-    stream->type        = type;
-    stream->channel     = channel;
-    stream->bytes_total = size;
-    stream->buffer      = buffer;
-    stream->data        = data;
+    stream->type         = type;
+    stream->channel      = channel;
+    stream->bytes_offset = 0;
+    stream->buffer       = buffer;
+    stream->data         = data;
 
     if (type == MK_STREAM_IOV) {
         iov = buffer;
@@ -130,11 +130,16 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
         ptr = buffer;
         stream->bytes_total = ptr->len;
     }
+    else {
+        stream->bytes_total = size;
+    }
 
     /* callbacks */
     stream->cb_finished       = cb_finished;
     stream->cb_bytes_consumed = cb_bytes_consumed;
     stream->cb_exception      = cb_exception;
+
+    mk_list_add(&stream->_head, &channel->streams);
 }
 
 static inline void mk_stream_unlink(mk_stream_t *stream)
@@ -177,21 +182,22 @@ static inline void mk_channel_debug(mk_channel_t *channel)
         stream = mk_list_entry(head, mk_stream_t, _head);
         switch (stream->type) {
         case MK_STREAM_RAW:
-            printf("%i) STREAM RAW\n", i);
+            printf("%i) STREAM RAW   : ", i);
             break;
         case MK_STREAM_IOV:
-            printf("%i) STREAM IOV\n", i);
+            printf("%i) STREAM IOV   : ", i);
             break;
         case MK_STREAM_PTR:
-            printf("%i) STREAM PTR\n", i);
+            printf("%i) STREAM PTR   : ", i);
             break;
         case MK_STREAM_FILE:
-            printf("%i) STREAM FILE\n", i);
+            printf("%i) STREAM FILE  : ", i);
             break;
         case MK_STREAM_SOCKET:
-            printf("%i) STREAM SOCKET\n", i);
+            printf("%i) STREAM SOCKET: ", i);
             break;
         }
+        printf("bytes=%lu/%lu\n", stream->bytes_offset, stream->bytes_total);
         i++;
     }
 }
