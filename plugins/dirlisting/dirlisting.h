@@ -24,7 +24,7 @@
 #define MK_DIRHTML_H
 
 #define MK_DIRHTML_URL "/_mktheme"
-#define MK_DIRHTML_DEFAULT_MIME "text/html\r\n"
+#define MK_DIRHTML_DEFAULT_MIME "Content-Type: text/html\r\n"
 
 /* For every directory requested, don't send more than
  * this limit of entries.
@@ -44,17 +44,23 @@
 #define MK_DIRHTML_TAG_END "_%"
 #define MK_DIRHTML_SIZE_DIR "-"
 
+/* Stream state */
+#define MK_DIRHTML_STATE_HTTP_HEADER   0
+#define MK_DIRHTML_STATE_TPL_HEADER    1
+#define MK_DIRHTML_STATE_BODY          2
+#define MK_DIRHTML_STATE_FOOTER        3
+
 char *_tags_global[] = { "%_html_title_%",
-    "%_theme_path_%",
-    NULL
+                         "%_theme_path_%",
+                         NULL
 };
 
 char *_tags_entry[] = { "%_target_title_%",
-    "%_target_url_%",
-    "%_target_name_%",
-    "%_target_time_%",
-    "%_target_size_%",
-    NULL
+                        "%_target_url_%",
+                        "%_target_name_%",
+                        "%_target_time_%",
+                        "%_target_size_%",
+                        NULL
 };
 
 struct plugin_api *mk_api;
@@ -74,6 +80,35 @@ struct dirhtml_config
 {
     char *theme;
     char *theme_path;
+};
+
+/* Represent a request context */
+struct mk_dirhtml_request
+{
+    /* State */
+    int state;
+
+    /* Target directory */
+    DIR *dir;
+
+    /* Table of Content */
+    unsigned int toc_idx;
+    unsigned long toc_len;
+    struct mk_f_list **toc;
+
+    /* Streams to be used */
+    struct mk_stream header;
+    struct mk_stream body;
+    struct mk_stream footer;
+
+    /* Reference IOV stuff */
+    struct mk_iov *iov_header;
+    struct mk_iov *iov_entry;
+    struct mk_iov *iov_footer;
+
+    /* Session data */
+    struct mk_http_session *cs;
+    struct mk_http_request *sr;
 };
 
 

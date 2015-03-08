@@ -70,6 +70,7 @@ typedef struct {
 typedef struct mk_stream {
     int type;
     int fd;
+    int preserve;
 
     /* bytes info */
     size_t bytes_total;
@@ -178,23 +179,24 @@ static inline void mk_channel_debug(mk_channel_t *channel)
     struct mk_list *head;
     mk_stream_t *stream;
 
+    printf("\n*** Channel ***\n");
     mk_list_foreach(head, &channel->streams) {
         stream = mk_list_entry(head, mk_stream_t, _head);
         switch (stream->type) {
         case MK_STREAM_RAW:
-            printf("%i) STREAM RAW   : ", i);
+            printf("%i) [%p] STREAM RAW   : ", i, stream);
             break;
         case MK_STREAM_IOV:
-            printf("%i) STREAM IOV   : ", i);
+            printf("%i) [%p] STREAM IOV   : ", i, stream);
             break;
         case MK_STREAM_PTR:
-            printf("%i) STREAM PTR   : ", i);
+            printf("%i) [%p] STREAM PTR   : ", i, stream);
             break;
         case MK_STREAM_FILE:
-            printf("%i) STREAM FILE  : ", i);
+            printf("%i) [%p] STREAM FILE  : ", i, stream);
             break;
         case MK_STREAM_SOCKET:
-            printf("%i) STREAM SOCKET: ", i);
+            printf("%i) [%p] STREAM SOCKET: ", i, stream);
             break;
         }
         printf("bytes=%lu/%lu\n", stream->bytes_offset, stream->bytes_total);

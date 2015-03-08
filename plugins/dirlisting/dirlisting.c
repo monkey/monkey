@@ -48,30 +48,13 @@ const mk_ptr_t mk_dir_iov_dash  = mk_ptr_init("-");
 const mk_ptr_t mk_dir_iov_none  = mk_ptr_init("");
 const mk_ptr_t mk_dir_iov_slash = mk_ptr_init("/");
 
-/* DIR_HTML logic:
- * ---------------
- * [Monkey Start]
- * |
- * *--> mk_dirhtml_conf()
- *      |
- *      *--> mk_dirhtml_read_config()
- *      *--> mk_dirhtml_theme_load()
- *           |
- *           *--> mk_dirhtml_load_file() (FILE_HEADER, FILE_ENTRY, FILE_FOOTER)
- *           *--> mk_dirhtml_template_create()
- *                |
- *                *-->
- *
- *
- *
- */
-
 /* Function wrote by Max (Felipe Astroza), thanks! */
 static char *mk_dirhtml_human_readable_size(off_t size)
 {
     unsigned long u = 1024, i, len;
     char *buf = NULL;
-    static const char *__units[] = { "b", "K", "M", "G",
+    static const char *__units[] = {
+        "b", "K", "M", "G",
         "T", "P", "E", "Z", "Y", NULL
     };
 
@@ -132,24 +115,12 @@ static struct mk_f_list *mk_dirhtml_create_element(char *file,
 }
 
 static struct mk_f_list *mk_dirhtml_create_list(DIR * dir, char *path,
-                                         unsigned long *list_len)
+                                                unsigned long *list_len)
 {
     unsigned long len;
     char *full_path = NULL;
     struct dirent *ent;
     struct mk_f_list *list = 0, *entry = 0, *last = 0;
-
-    /* Before to send the information, we need to build
-     * the list of entries, this really sucks because the user
-     * always will want to have the information sorted, why we don't
-     * add some spec to the HTTP protocol in order to send the information
-     * in a generic way and let the client choose how to show it
-     * as they does browsing a FTP server ???, we can save bandweight,
-     * let the cool firefox developers create different templates and
-     * we are going to have a more happy end users.
-     *
-     * that kind of ideas comes when you are in an airport just waiting :)
-     */
 
     while ((ent = readdir(dir)) != NULL) {
         if ((ent->d_name[0] == '.') && (strcmp(ent->d_name, "..") != 0))
@@ -501,7 +472,7 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
         mk_api->iov_add(iov, "\r\n", 2, MK_FALSE);
     }
 
-    return (struct mk_iov *) iov;
+    return iov;
 }
 
 struct dirhtml_value *mk_dirhtml_tag_assign(struct dirhtml_value **values,
@@ -595,32 +566,6 @@ static int mk_dirhtml_entry_cmp(const void *a, const void *b)
     return strcasecmp((*f_a)->name, (*f_b)->name);
 }
 
-static int mk_dirhtml_send(int fd,
-                           struct mk_http_request *sr, struct mk_iov *data)
-{
-    int n;
-    unsigned long len;
-    char *buf = 0;
-
-    if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
-        /* Chunk header */
-        mk_api->str_build(&buf, &len, "%lx\r\n", data->total_len - 2);
-
-        /* Add chunked information */
-        mk_api->iov_set_entry(data, buf, len, MK_TRUE, 0);
-    }
-    n = (int) mk_api->socket_sendv(fd, data);
-    return n;
-}
-
-static int mk_dirhtml_send_chunked_end(int fd)
-{
-    char *_end = "0\r\n\r\n";
-    int len = 5;
-
-    return mk_api->socket_send(fd, _end, len);
-}
-
 static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
 {
     unsigned int i;
@@ -638,27 +583,153 @@ static void mk_dirhtml_free_list(struct mk_f_list **toc, unsigned long len)
     mk_api->mem_free(toc);
 }
 
+static inline struct mk_iov *enqueue_row(int i, struct mk_dirhtml_request *request)
+{
+    mk_ptr_t sep;
+    struct mk_iov *iov_entry;
+    struct dirhtml_value *values_entry = NULL;
+
+    /* %_target_title_% */
+    if (request->toc[i]->type == DT_DIR) {
+        sep = mk_dir_iov_slash;
+    }
+    else {
+        sep = mk_dir_iov_none;
+    }
+
+    /* target title */
+    values_entry = mk_dirhtml_tag_assign(NULL, 0, sep,
+                                         request->toc[i]->name,
+                                         (char **) _tags_entry);
+
+    /* target url */
+    mk_dirhtml_tag_assign(&values_entry, 1, sep,
+                          request->toc[i]->name, (char **) _tags_entry);
+
+    /* target name */
+    mk_dirhtml_tag_assign(&values_entry, 2, sep,
+                          request->toc[i]->name, (char **) _tags_entry);
+
+    /* target modification time */
+    mk_dirhtml_tag_assign(&values_entry, 3, mk_dir_iov_none,
+                          request->toc[i]->ft_modif, (char **) _tags_entry);
+
+    /* target size */
+    mk_dirhtml_tag_assign(&values_entry, 4, mk_dir_iov_none,
+                          request->toc[i]->size, (char **) _tags_entry);
+
+    iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
+                                         values_entry, 0);
+
+    /* free entry list */
+    mk_dirhtml_tag_free_list(&values_entry);
+    return iov_entry;
+}
+
+/* Release all resources for a given Request context */
+void mk_dirhtml_cleanup(struct mk_dirhtml_request *req)
+{
+    PLUGIN_TRACE("release resources");
+
+    mk_api->iov_free(req->iov_header);
+    if (req->iov_entry) {
+        mk_api->iov_free(req->iov_entry);
+    }
+    mk_api->iov_free(req->iov_footer);
+    mk_dirhtml_free_list(req->toc, req->toc_len);
+    mk_api->mem_free(req);
+}
+
+void mk_dirhtml_cb_complete(mk_stream_t *stream)
+{
+    struct mk_dirhtml_request *req = stream->data;
+    mk_dirhtml_cleanup(req);
+}
+
+void mk_dirhtml_cb_error(mk_stream_t *stream, int status)
+{
+#ifndef TRACE
+    (void) status;
+#endif
+    struct mk_dirhtml_request *req = stream->data;
+
+    PLUGIN_TRACE("exception: %i", status);
+    mk_dirhtml_cleanup(req);
+}
+
+void mk_dirhtml_cb_body_rows(mk_stream_t *stream)
+{
+    struct mk_dirhtml_request *req = stream->data;
+    mk_channel_t *channel = stream->channel;
+
+    if (req->toc_idx >= req->toc_len) {
+        req->body.preserve = MK_FALSE;
+
+        /* No more rows to add, just link the page footer */
+        mk_api->stream_set(&req->footer,           /* stream            */
+                           MK_STREAM_IOV,          /* type              */
+                           channel,                /* channel           */
+                           req->iov_footer,        /* buffer            */
+                           -1,                     /* buffer size       */
+                           req,                    /* custom data       */
+                           mk_dirhtml_cb_complete, /* on_finish         */
+                           NULL,                   /* on_bytes_consumed */
+                           mk_dirhtml_cb_error);   /* on_error          */
+        return;
+    }
+
+    if (req->toc_idx > 0) {
+        mk_api->iov_free(req->iov_entry);
+        mk_list_del(&stream->_head);
+    }
+
+    req->iov_entry = enqueue_row(req->toc_idx, req);
+    mk_api->stream_set(&req->body,
+                       MK_STREAM_IOV,
+                       channel,
+                       req->iov_entry,
+                       -1,
+                       (void *) req,
+                       mk_dirhtml_cb_body_rows,
+                       NULL,
+                       mk_dirhtml_cb_error);
+    req->body.preserve = MK_TRUE;
+    req->toc_idx++;
+}
+
+/*
+ * The HTTP Headers were sent, now start registering the
+ * rows for each directory entry.
+ */
+void cb_header_finish(mk_stream_t *stream)
+{
+    mk_dirhtml_cb_body_rows(stream);
+}
+
 int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     DIR *dir;
     unsigned int i = 0;
-    int is_chunked = MK_FALSE, n;
+    int is_chunked = MK_FALSE;
     char *title = 0;
-    mk_ptr_t sep;
-
-    /* file info */
-    unsigned long list_len = 0;
-
-    struct mk_f_list *file_list, *entry, **toc;
-    struct mk_iov *iov_header, *iov_footer, *iov_entry;
+    struct mk_f_list *file_list, *entry;
     struct dirhtml_value *values_global = 0;
-    struct dirhtml_value *values_entry = 0;
+    struct mk_dirhtml_request *request;
 
     if (!(dir = opendir(sr->real_path.data))) {
         return -1;
     }
 
-    file_list = mk_dirhtml_create_list(dir, sr->real_path.data, &list_len);
+    /* Create the main context */
+    request = mk_api->mem_alloc(sizeof(struct mk_dirhtml_request));
+    request->state   = MK_DIRHTML_STATE_HTTP_HEADER;
+    request->dir     = dir;
+    request->toc_idx = 0;
+    request->cs      = cs;
+    request->sr      = sr;
+
+    file_list = mk_dirhtml_create_list(dir, sr->real_path.data,
+                                       &request->toc_len);
 
     /* Building headers */
     mk_api->header_set_http_status(sr, MK_HTTP_OK);
@@ -668,7 +739,7 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
     sr->headers.content_length = -1;
 
     if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
-        sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        //sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
         is_chunked = MK_TRUE;
     }
 
@@ -687,102 +758,46 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
                           dirhtml_conf->theme_path, (char **) _tags_global);
 
     /* HTML Header */
-    iov_header = mk_dirhtml_theme_compose(mk_dirhtml_tpl_header,
-                                          values_global, is_chunked);
+    request->iov_header = mk_dirhtml_theme_compose(mk_dirhtml_tpl_header,
+                                                   values_global, is_chunked);
 
     /* HTML Footer */
-    iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer,
-                                          values_global, is_chunked);
+    request->iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer,
+                                                   values_global, is_chunked);
 
     /* Creating table of contents and sorting */
-    toc = mk_api->mem_alloc(sizeof(struct mk_f_list *) * list_len);
+    request->toc = mk_api->mem_alloc(sizeof(struct mk_f_list *) * request->toc_len);
     entry = file_list;
+
     i = 0;
     while (entry) {
-        toc[i] = entry;
+        request->toc[i] = entry;
         i++;
         entry = entry->next;
     }
-    qsort(toc, list_len, sizeof(*toc), mk_dirhtml_entry_cmp);
+    qsort(request->toc,
+          request->toc_len,
+          sizeof(*request->toc),
+          mk_dirhtml_entry_cmp);
 
-    /* Sending headers */
-    n = mk_api->header_send(cs->socket, cs, sr);
-    if (n < 0) {
-        goto exit;
-    }
+    /* Prepare HTTP response headers */
+    mk_api->header_prepare(cs, sr);
 
-    n = mk_dirhtml_send(cs->socket, sr, iov_header);
+    mk_api->stream_set(&request->header,     /* stream            */
+                       MK_STREAM_IOV,        /* type              */
+                       &cs->channel,         /* channel           */
+                       request->iov_header,  /* buffer            */
+                       -1,                   /* buffer size       */
+                       request,              /* custom data       */
+                       cb_header_finish,     /* on_finish         */
+                       NULL,                 /* on_bytes_consumed */
+                       mk_dirhtml_cb_error); /* on_error          */
 
-    if (n < 0) {
-        goto exit;
-    }
-
-    /* sending TOC */
-    for (i = 0; i < list_len; i++) {
-        /* %_target_title_% */
-        if (toc[i]->type == DT_DIR) {
-            sep = mk_dir_iov_slash;
-        }
-        else {
-            sep = mk_dir_iov_none;
-        }
-
-        /* target title */
-        values_entry = mk_dirhtml_tag_assign(NULL, 0, sep,
-                                             toc[i]->name,
-                                             (char **) _tags_entry);
-
-        /* target url */
-        mk_dirhtml_tag_assign(&values_entry, 1, sep,
-                              toc[i]->name, (char **) _tags_entry);
-
-        /* target name */
-        mk_dirhtml_tag_assign(&values_entry, 2, sep,
-                              toc[i]->name, (char **) _tags_entry);
-
-        /* target modification time */
-        mk_dirhtml_tag_assign(&values_entry, 3, mk_dir_iov_none,
-                              toc[i]->ft_modif, (char **) _tags_entry);
-
-        /* target size */
-        mk_dirhtml_tag_assign(&values_entry, 4, mk_dir_iov_none,
-                              toc[i]->size, (char **) _tags_entry);
-
-        iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
-                                             values_entry, is_chunked);
-
-        /* send entry */
-        n = mk_dirhtml_send(cs->socket, sr, iov_entry);
-
-        if ((i % 20) == 0) {
-            mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
-            mk_api->socket_cork_flag(cs->socket, TCP_CORK_ON);
-        }
-
-        if (n < 0) {
-            break;
-        }
-
-        /* free entry list */
-        mk_dirhtml_tag_free_list(&values_entry);
-        mk_api->iov_free(iov_entry);
-    }
-
-    n = mk_dirhtml_send(cs->socket, sr, iov_footer);
-    mk_api->socket_cork_flag(cs->socket, TCP_CORK_OFF);
-
-    if (sr->protocol >= MK_HTTP_PROTOCOL_11 && n >= 0) {
-        mk_dirhtml_send_chunked_end(cs->socket);
-    }
-
- exit:
-    closedir(dir);
-
-    mk_api->mem_free(title);
-    mk_dirhtml_tag_free_list(&values_global);
-    mk_api->iov_free(iov_header);
-    mk_api->iov_free(iov_footer);
-    mk_dirhtml_free_list(toc, list_len);
+    /*
+     * Dispatch, once we get a callback on mk_dirhtml_cb_finish, we
+     * continue appending data to the channel
+     */
+    mk_api->channel_write(&cs->channel);
 
     return 0;
 }
@@ -814,21 +829,15 @@ int mk_dirlisting_stage30(struct mk_plugin *plugin, struct mk_http_session *cs,
         return MK_PLUGIN_RET_NOT_ME;
     }
 
-    /*
-     * We cannot return to this request later if it fails,
-     * so change to blocking and back.
-     */
-    fcntl(cs->socket, F_SETFL, fcntl(cs->socket, F_GETFL, 0) & ~O_NONBLOCK);
-
     PLUGIN_TRACE("Dirlisting attending socket %i", cs->socket);
     if (mk_dirhtml_init(cs, sr)) {
-        /* If we failed here, we cannot return RET_END - that causes a mk_bug.
-           dirhtml_init only fails if opendir fails. Usually we're at full
-           capacity then and can't open new files. */
+        /*
+         * If we failed here, we cannot return RET_END - that causes a mk_bug.
+         * dirhtml_init only fails if opendir fails. Usually we're at full
+         * capacity then and can't open new files.
+         */
         return MK_PLUGIN_RET_CLOSE_CONX;
     }
-
-    mk_api->socket_set_nonblocking(cs->socket);
 
     return MK_PLUGIN_RET_END;
 }

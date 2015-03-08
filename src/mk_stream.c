@@ -139,7 +139,10 @@ int mk_channel_write(mk_channel_t *channel)
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
                 }
-                mk_stream_unlink(stream);
+
+                if (stream->preserve == MK_FALSE) {
+                    mk_stream_unlink(stream);
+                }
             }
 
             if (mk_list_is_empty(&channel->streams) == 0) {
