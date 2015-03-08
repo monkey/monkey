@@ -991,6 +991,12 @@ create_info()
 #define PYTHONVERSION python$PYTHONVERSION
 
 EOF
+	if [ "$syslog_enable" = "1" ]
+	then
+		str='#define SYSLOG\n'
+	fi
+
+	echo -e $str >> $base_path/$INCDIR/mk_info.h
 
 	sed -i $OS_SED -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
 	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
@@ -1324,6 +1330,9 @@ for arg in $*; do
 		--static-plugins*)
 			static_plugins=$optarg
 			;;
+		--enable-syslog*)
+			syslog_enable=1
+			;;
 		--only-accept)
 			only_accept=1
 			;;
@@ -1410,6 +1419,7 @@ for arg in $*; do
                         echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
 			echo "  --platform=PLATFORM     Target platform: 'generic' or 'android' (default: generic)"
 			echo "  --pthread-tls           Use Posix thread keys instead of compiler TLS"
+			echo "  --enable-syslog         Force logger to utilize Syslog for logging"
 			echo
 			echo -e $bldwht"Shared library options:" $txtrst
 			echo "  --enable-shared         Build Monkey as a shared library in addition to a stand-alone server"
