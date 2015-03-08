@@ -420,8 +420,7 @@ static int mk_dirhtml_template_len(struct dirhtml_template *tpl)
 }
 
 static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template,
-                                        struct dirhtml_value *values,
-                                        int is_chunked)
+                                               struct dirhtml_value *values)
 {
     /*
      * template = struct { char buf ; int len, int tag }
@@ -466,10 +465,6 @@ static struct mk_iov *mk_dirhtml_theme_compose(struct dirhtml_template *template
                             MK_FALSE);
         }
         tpl = tpl->next;
-    }
-
-    if (is_chunked == MK_TRUE) {
-        mk_api->iov_add(iov, "\r\n", 2, MK_FALSE);
     }
 
     return iov;
@@ -619,7 +614,7 @@ static inline struct mk_iov *enqueue_row(int i, struct mk_dirhtml_request *reque
                           request->toc[i]->size, (char **) _tags_entry);
 
     iov_entry = mk_dirhtml_theme_compose(mk_dirhtml_tpl_entry,
-                                         values_entry, 0);
+                                         values_entry);
 
     /* free entry list */
     mk_dirhtml_tag_free_list(&values_entry);
@@ -710,7 +705,6 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     DIR *dir;
     unsigned int i = 0;
-    int is_chunked = MK_FALSE;
     char *title = 0;
     struct mk_f_list *file_list, *entry;
     struct dirhtml_value *values_global = 0;
@@ -739,8 +733,7 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
     sr->headers.content_length = -1;
 
     if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
-        //sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
-        is_chunked = MK_TRUE;
+        sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
     }
 
     /*
@@ -759,11 +752,11 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* HTML Header */
     request->iov_header = mk_dirhtml_theme_compose(mk_dirhtml_tpl_header,
-                                                   values_global, is_chunked);
+                                                   values_global);
 
     /* HTML Footer */
     request->iov_footer = mk_dirhtml_theme_compose(mk_dirhtml_tpl_footer,
-                                                   values_global, is_chunked);
+                                                   values_global);
 
     /* Creating table of contents and sorting */
     request->toc = mk_api->mem_alloc(sizeof(struct mk_f_list *) * request->toc_len);

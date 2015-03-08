@@ -68,9 +68,10 @@ typedef struct {
  * from a specific resource given it's type.
  */
 typedef struct mk_stream {
-    int type;
-    int fd;
-    int preserve;
+    int type;              /* stream type                      */
+    int fd;                /* file descriptor                  */
+    int preserve;          /* preserve stream? (do not unlink) */
+    int encoding;          /* some output encoding ?           */
 
     /* bytes info */
     size_t bytes_total;
