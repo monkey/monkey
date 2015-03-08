@@ -146,19 +146,19 @@ struct plugin_api
     void (*header_set_http_status) (struct mk_http_request *, int);
 
     /* channel / stream handling */
-    mk_stream_t *(*stream_new) (int, mk_channel_t *, void *, size_t,
+    struct mk_stream *(*stream_new) (int, struct mk_channel *, void *, size_t,
                                 void *,
-                                void (*) (mk_stream_t *),
-                                void (*) (mk_stream_t *, long),
-                                void (*) (mk_stream_t *, int));
-    mk_channel_t *(*channel_new) (int, int);
-    int (*channel_write) (mk_channel_t *);
-    void (*channel_append_stream) (mk_channel_t *, mk_stream_t *stream);
-    void (*stream_set) (mk_stream_t *, int, mk_channel_t *, void *, size_t,
+                                void (*) (struct mk_stream *),
+                                void (*) (struct mk_stream *, long),
+                                void (*) (struct mk_stream *, int));
+    struct mk_channel *(*channel_new) (int, int);
+    int (*channel_write) (struct mk_channel *);
+    void (*channel_append_stream) (struct mk_channel *, struct mk_stream *stream);
+    void (*stream_set) (struct mk_stream *, int, struct mk_channel *, void *, size_t,
                         void *,
-                        void (*) (mk_stream_t *),
-                        void (*) (mk_stream_t *, long),
-                        void (*) (mk_stream_t *, int));
+                        void (*) (struct mk_stream *),
+                        void (*) (struct mk_stream *, long),
+                        void (*) (struct mk_stream *, int));
 
     /* iov functions */
     struct mk_iov *(*iov_create) (int, int);

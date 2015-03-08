@@ -82,10 +82,10 @@ struct mk_http_request
     /*------------*/
 
     /* Streams handling: headers and static file */
-    mk_stream_t headers_stream;
-    mk_stream_t headers_extra_stream;
-    mk_stream_t file_stream;
-    mk_stream_t page_stream;
+    struct mk_stream headers_stream;
+    struct mk_stream headers_extra_stream;
+    struct mk_stream file_stream;
+    struct mk_stream page_stream;
 
     int headers_len;
 

@@ -111,7 +111,7 @@ struct mk_http_session
     int pipelined;              /* Pipelined request */
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
-    mk_channel_t channel;
+    struct mk_channel channel;
 
     unsigned int body_size;
     unsigned int body_length;

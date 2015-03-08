@@ -56,18 +56,18 @@
  * A channel represents an end-point of a stream, for short
  * where the stream data consumed is send to.
  */
-typedef struct {
+struct mk_channel {
     int type;
     int fd;
     int status;
     struct mk_list streams;
-} mk_channel_t;
+};
 
 /*
  * A stream represents an Input of data that can be consumed
  * from a specific resource given it's type.
  */
-typedef struct mk_stream {
+struct mk_stream {
     int type;              /* stream type                      */
     int fd;                /* file descriptor                  */
     int preserve;          /* preserve stream? (do not unlink) */
@@ -78,7 +78,7 @@ typedef struct mk_stream {
     off_t  bytes_offset;
 
     /* the outgoing channel, we do this for all streams */
-    mk_channel_t *channel;
+    struct mk_channel *channel;
 
     /*
      * Based on the stream type, 'data' could reference a RAW buffer
@@ -97,23 +97,23 @@ typedef struct mk_stream {
 
     /* Link to the Channel parent */
     struct mk_list _head;
-} mk_stream_t;
+};
 
 /* exported functions */
-static inline void mk_channel_append_stream(mk_channel_t *channel,
-                                            mk_stream_t *stream)
+static inline void mk_channel_append_stream(struct mk_channel *channel,
+                                            struct mk_stream *stream)
 {
     mk_list_add(&stream->_head, &channel->streams);
 }
 
-static inline void mk_stream_set(mk_stream_t *stream, int type,
-                                 mk_channel_t *channel,
+static inline void mk_stream_set(struct mk_stream *stream, int type,
+                                 struct mk_channel *channel,
                                  void *buffer,
                                  size_t size,
                                  void *data,
-                                 void (*cb_finished) (mk_stream_t *),
-                                 void (*cb_bytes_consumed) (mk_stream_t *, long),
-                                 void (*cb_exception) (mk_stream_t *, int))
+                                 void (*cb_finished) (struct mk_stream *),
+                                 void (*cb_bytes_consumed) (struct mk_stream *, long),
+                                 void (*cb_exception) (struct mk_stream *, int))
 {
     mk_ptr_t *ptr;
     struct mk_iov *iov;
@@ -144,13 +144,13 @@ static inline void mk_stream_set(mk_stream_t *stream, int type,
     mk_list_add(&stream->_head, &channel->streams);
 }
 
-static inline void mk_stream_unlink(mk_stream_t *stream)
+static inline void mk_stream_unlink(struct mk_stream *stream)
 {
     mk_list_del(&stream->_head);
 }
 
 /* Mark a specific number of bytes served (just on successfull flush) */
-static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
+static inline void mk_stream_bytes_consumed(struct mk_stream *stream, long bytes)
 {
 #ifdef TRACE
     char *fmt;
@@ -174,15 +174,15 @@ static inline void mk_stream_bytes_consumed(mk_stream_t *stream, long bytes)
     stream->bytes_total -= bytes;
 }
 
-static inline void mk_channel_debug(mk_channel_t *channel)
+static inline void mk_channel_debug(struct mk_channel *channel)
 {
     int i = 0;
     struct mk_list *head;
-    mk_stream_t *stream;
+    struct mk_stream *stream;
 
     printf("\n*** Channel ***\n");
     mk_list_foreach(head, &channel->streams) {
-        stream = mk_list_entry(head, mk_stream_t, _head);
+        stream = mk_list_entry(head, struct mk_stream, _head);
         switch (stream->type) {
         case MK_STREAM_RAW:
             printf("%i) [%p] STREAM RAW   : ", i, stream);
@@ -205,12 +205,12 @@ static inline void mk_channel_debug(mk_channel_t *channel)
     }
 }
 
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
                            void *buffer, size_t size, void *data,
-                           void (*cb_finished) (mk_stream_t *),
-                           void (*cb_bytes_consumed) (mk_stream_t *, long),
-                           void (*cb_exception) (mk_stream_t *, int));
-mk_channel_t *mk_channel_new(int type, int fd);
-int mk_channel_write(mk_channel_t *channel);
+                           void (*cb_finished) (struct mk_stream *),
+                           void (*cb_bytes_consumed) (struct mk_stream *, long),
+                           void (*cb_exception) (struct mk_stream *, int));
+struct mk_channel *mk_channel_new(int type, int fd);
+int mk_channel_write(struct mk_channel *channel);
 
 #endif

@@ -24,15 +24,15 @@
 #include <monkey/mk_server.h>
 
 /* Create a new stream instance */
-mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
+struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
                            void *buffer, size_t size, void *data,
-                           void (*cb_finished) (mk_stream_t *),
-                           void (*cb_bytes_consumed) (mk_stream_t *, long),
-                           void (*cb_exception) (mk_stream_t *, int))
+                           void (*cb_finished) (struct mk_stream *),
+                           void (*cb_bytes_consumed) (struct mk_stream *, long),
+                           void (*cb_exception) (struct mk_stream *, int))
 {
-    mk_stream_t *stream;
+    struct mk_stream *stream;
 
-    stream = mk_mem_malloc(sizeof(mk_stream_t));
+    stream = mk_mem_malloc(sizeof(struct mk_stream));
     mk_stream_set(stream, type, channel,
                   buffer, size,
                   data,
@@ -45,11 +45,11 @@ mk_stream_t *mk_stream_new(int type, mk_channel_t *channel,
 
 
 /* Create a new channel */
-mk_channel_t *mk_channel_new(int type, int fd)
+struct mk_channel *mk_channel_new(int type, int fd)
 {
-    mk_channel_t *channel;
+    struct mk_channel *channel;
 
-    channel = mk_mem_malloc(sizeof(mk_channel_t));
+    channel = mk_mem_malloc(sizeof(struct mk_channel));
     channel->type = type;
     channel->fd   = fd;
 
@@ -58,8 +58,8 @@ mk_channel_t *mk_channel_new(int type, int fd)
     return channel;
 }
 
-static inline size_t channel_write_stream_file(mk_channel_t *channel,
-                                               mk_stream_t *stream)
+static inline size_t channel_write_stream_file(struct mk_channel *channel,
+                                               struct mk_stream *stream)
 {
     long int bytes = 0;
 
@@ -78,12 +78,12 @@ static inline size_t channel_write_stream_file(mk_channel_t *channel,
     return bytes;
 }
 
-int mk_channel_write(mk_channel_t *channel)
+int mk_channel_write(struct mk_channel *channel)
 {
     size_t bytes = -1;
     struct mk_iov *iov;
     mk_ptr_t *ptr;
-    mk_stream_t *stream;
+    struct mk_stream *stream;
 
     if (mk_list_is_empty(&channel->streams) == 0) {
         MK_TRACE("[CH %i] CHANNEL_EMPTY", channel->fd);
@@ -91,7 +91,7 @@ int mk_channel_write(mk_channel_t *channel)
     }
 
     /* Get the input source */
-    stream = mk_list_entry_first(&channel->streams, mk_stream_t, _head);
+    stream = mk_list_entry_first(&channel->streams, struct mk_stream, _head);
 
     /*
      * Based on the Stream type we consume on that way, not all inputs

@@ -1211,7 +1211,7 @@ int mk_http_request_end(int socket)
     return -1;
 }
 
-void cb_stream_page_finished(mk_stream_t *stream)
+void cb_stream_page_finished(struct mk_stream *stream)
 {
     mk_ptr_t *page = stream->buffer;
 
