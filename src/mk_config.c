@@ -434,6 +434,22 @@ void mk_details(void)
     }
 #endif
 
+    struct plugin *node;
+    struct mk_list *head;
+    printf(MK_BANNER_ENTRY "Loaded plugins: ");
+    int started = 0;
+    mk_list_foreach(head, config->plugins) {
+        node = mk_list_entry(head, struct plugin, _head);
+        if (started == 0)
+        {
+            started = -1;
+        }
+        else {
+            printf(", ");
+        }
+        printf(node->shortname);
+    }
+
     fflush(stdout);
 }
 
