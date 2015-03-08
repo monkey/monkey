@@ -635,13 +635,13 @@ void mk_dirhtml_cleanup(struct mk_dirhtml_request *req)
     mk_api->mem_free(req);
 }
 
-void mk_dirhtml_cb_complete(mk_stream_t *stream)
+void mk_dirhtml_cb_complete(struct mk_stream *stream)
 {
     struct mk_dirhtml_request *req = stream->data;
     mk_dirhtml_cleanup(req);
 }
 
-void mk_dirhtml_cb_error(mk_stream_t *stream, int status)
+void mk_dirhtml_cb_error(struct mk_stream *stream, int status)
 {
 #ifndef TRACE
     (void) status;
@@ -652,10 +652,10 @@ void mk_dirhtml_cb_error(mk_stream_t *stream, int status)
     mk_dirhtml_cleanup(req);
 }
 
-void mk_dirhtml_cb_body_rows(mk_stream_t *stream)
+void mk_dirhtml_cb_body_rows(struct mk_stream *stream)
 {
     struct mk_dirhtml_request *req = stream->data;
-    mk_channel_t *channel = stream->channel;
+    struct mk_channel *channel = stream->channel;
 
     if (req->toc_idx >= req->toc_len) {
         req->body.preserve = MK_FALSE;
@@ -696,7 +696,7 @@ void mk_dirhtml_cb_body_rows(mk_stream_t *stream)
  * The HTTP Headers were sent, now start registering the
  * rows for each directory entry.
  */
-void cb_header_finish(mk_stream_t *stream)
+void cb_header_finish(struct mk_stream *stream)
 {
     mk_dirhtml_cb_body_rows(stream);
 }
