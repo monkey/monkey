@@ -120,10 +120,6 @@ struct sched_list_node
      * the available and busy queue entries.
      */
     struct sched_connection *sched_array;
-
-#ifdef SHAREDLIB
-    mklib_ctx ctx;
-#endif
 };
 
 extern __thread struct sched_list_node *worker_sched_node;
@@ -135,9 +131,6 @@ struct sched_list_node *sched_list;
 /* Struct under thread context */
 typedef struct
 {
-#ifdef SHAREDLIB
-    mklib_ctx ctx;
-#endif
 } sched_thread_conf;
 
 extern pthread_mutex_t mutex_worker_init;

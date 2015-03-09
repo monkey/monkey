@@ -17,25 +17,17 @@
  *  limitations under the License.
  */
 
-/* If a library, do not interfere with the app's signals */
-#ifndef SHAREDLIB
-
-#define _GNU_SOURCE
-
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_signals.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
 #include <monkey/monkey.h>
+
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 /*
  * Some old uclib versions do not implment the sys_siglist, this is mostly
@@ -120,5 +112,3 @@ void mk_signal_init()
     sigaction(SIGINT,  &act, NULL);
     sigaction(SIGTERM, &act, NULL);
 }
-
-#endif // !SHAREDLIB

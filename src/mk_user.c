@@ -17,15 +17,6 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <grp.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_user.h>
 #include <monkey/mk_http.h>
@@ -35,6 +26,11 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_macros.h>
+
+#include <pwd.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#include <grp.h>
 
 int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
@@ -94,8 +90,6 @@ int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr)
     return 0;
 }
 
-#ifndef SHAREDLIB
-
 /* Change process user */
 int mk_user_set_uidgid()
 {
@@ -153,5 +147,3 @@ int mk_user_undo_uidgid()
     }
     return 0;
 }
-
-#endif // !SHAREDLIB

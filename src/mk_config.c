@@ -17,22 +17,6 @@
  *  limitations under the License.
  */
 
-/* isblank is not in C89 */
-#define _GNU_SOURCE
-
-#include <dirent.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <limits.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_kernel.h>
 #include <monkey/mk_config.h>
@@ -46,6 +30,12 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_mimetype.h>
+
+#include <dirent.h>
+#include <netinet/in.h>
+#include <sys/stat.h>
+#include <ctype.h>
+#include <limits.h>
 
 struct mk_server_config *mk_config;
 gid_t EGID;
@@ -399,8 +389,6 @@ void *mk_config_section_getval(struct mk_config_section *section, char *key, int
     }
     return NULL;
 }
-
-#ifndef SHAREDLIB
 
 static void mk_details_listen(struct mk_list *listen)
 {
@@ -759,8 +747,6 @@ void mk_config_start_configure(void)
         mk_config->server_software.len = len;
     }
 }
-
-#endif // !SHAREDLIB
 
 /* Register a new listener into the main configuration */
 struct mk_config_listener *mk_config_listener_add(char *address, char *port)

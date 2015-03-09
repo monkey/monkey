@@ -17,24 +17,20 @@
  *  limitations under the License.
  */
 
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
-#include <monkey/mk_socket.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_event.h>
 #include <monkey/mk_connection.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 /* Return the number of clients that can be attended  */
 unsigned int mk_server_capacity()
@@ -204,8 +200,6 @@ error:
     if (listen_list != NULL) free(listen_list);
     return -1;
 }
-
-#ifndef SHAREDLIB
 
 /* Here we launch the worker threads to attend clients */
 void mk_server_launch_workers()
@@ -449,5 +443,3 @@ void mk_server_loop(void)
         mk_server_loop_balancer();
     }
 }
-
-#endif // !SHAREDLIB

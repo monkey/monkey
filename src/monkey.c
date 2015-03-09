@@ -54,7 +54,6 @@ void mk_thread_keys_init(void)
     pthread_key_create(&mk_utils_error_key, NULL);
 }
 
-#ifndef SHAREDLIB
 static void mk_version(void)
 {
     printf("Monkey HTTP Server v%i.%i.%i\n",
@@ -388,4 +387,3 @@ int main(int argc, char **argv)
     mk_mem_free(mk_config);
     return 0;
 }
-#endif

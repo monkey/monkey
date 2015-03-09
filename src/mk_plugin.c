@@ -17,12 +17,6 @@
  *  limitations under the License.
  */
 
-#define _GNU_SOURCE
-
-
-#include <dlfcn.h>
-#include <err.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_connection.h>
 #include <monkey/mk_utils.h>
@@ -36,6 +30,9 @@
 #include <monkey/mk_stats.h>
 #include <monkey/mk_static_plugins.h>
 #include <monkey/mk_plugin_stage.h>
+
+#include <dlfcn.h>
+#include <err.h>
 
 enum {
     bufsize = 256
@@ -371,8 +368,6 @@ void mk_plugin_api_init()
     api->plugins = mk_config->plugins;
 }
 
-#ifndef SHAREDLIB
-
 void mk_plugin_load_all()
 {
     int ret;
@@ -471,8 +466,6 @@ void mk_plugin_load_all()
     mk_mem_free(path);
     mk_config_free(cnf);
 }
-
-#endif //!SHAREDLIB
 
 /* Invoke all plugins 'exit' hook and free resources by the plugin interface */
 void mk_plugin_exit_all()

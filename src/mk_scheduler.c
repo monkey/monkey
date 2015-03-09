@@ -371,14 +371,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     struct sched_list_node *sched = NULL;
     struct mk_server_listen server_listen;
 
-#ifdef STATS
-    stats = mk_mem_malloc_z(sizeof(struct stats));
-#endif
-
-#ifndef SHAREDLIB
     /* Avoid SIGPIPE signals */
     mk_signal_thread_sigpipe_safe();
-#endif
 
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
@@ -413,12 +407,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
      *  thinfo->closed_connections = 1000;
      */
 
-#ifdef SHAREDLIB
-#ifdef STATS
-    thconf->ctx->worker_info[wid]->stats = stats;
-#endif
     //thinfo->ctx = thconf->ctx;
-#endif
 
     mk_mem_free(thread_conf);
 
@@ -461,9 +450,6 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED
 
     /* Thread data */
     thconf = mk_mem_malloc_z(sizeof(sched_thread_conf));
-#ifdef SHAREDLIB
-    thconf->ctx = ctx;
-#endif
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

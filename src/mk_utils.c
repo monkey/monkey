@@ -17,31 +17,6 @@
  *  limitations under the License.
  */
 
-#define _GNU_SOURCE
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <errno.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <inttypes.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-
-#if defined (__linux__)
-#include <sys/prctl.h>
-#endif
-
-/* stacktrace */
-#include <dlfcn.h>
-#ifndef NO_BACKTRACE
-#include <execinfo.h>
-#endif
 
 /* local headers */
 #include <monkey/monkey.h>
@@ -56,6 +31,24 @@
 #include <monkey/mk_cache.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_tls.h>
+
+#include <assert.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <time.h>
+#include <inttypes.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+
+#if defined (__linux__)
+#include <sys/prctl.h>
+#endif
+
+/* stacktrace */
+#include <dlfcn.h>
+#ifndef NO_BACKTRACE
+#include <execinfo.h>
+#endif
 
 /* Date helpers */
 static const char mk_date_wd[][6]  = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
@@ -444,8 +437,6 @@ int mk_utils_print_errno(int n)
 
 #endif
 
-#ifndef SHAREDLIB
-
 /* Run current process in background mode (daemon, evil Monkey >:) */
 int mk_utils_set_daemon()
 {
@@ -537,8 +528,6 @@ int mk_utils_remove_pid()
     mk_config->pid_status = MK_FALSE;
     return 0;
 }
-
-#endif // !SHAREDLIB
 
 void mk_print(int type, const char *format, ...)
 {
