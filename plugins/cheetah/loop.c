@@ -17,15 +17,12 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <monkey/mk_api.h>
 
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
 /* Monkey Plugin Interface */
-#include <monkey/mk_api.h>
 #include "cheetah.h"
 #include "cutils.h"
 #include "cmd.h"

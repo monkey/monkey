@@ -17,10 +17,6 @@
  *  limitations under the License.
  */
 
-/* System headers */
-#include <stdlib.h>
-#include <string.h>
-
 /* Monkey Plugin Interface */
 #include <monkey/mk_api.h>
 

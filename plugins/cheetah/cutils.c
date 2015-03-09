@@ -17,14 +17,12 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <monkey/mk_api.h>
+
 #include <pwd.h>
 #include <stdarg.h>
 #include <string.h>
 
-#include <monkey/mk_api.h>
 #include "cheetah.h"
 #include "cutils.h"
 
