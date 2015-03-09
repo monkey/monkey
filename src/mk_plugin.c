@@ -790,8 +790,10 @@ static inline int mk_plugin_event_check_return(const char *hook, int ret)
 
 int mk_plugin_event_read(int socket)
 {
-    int ret;
-    struct mk_plugin *node;
+#warning "FIXME: waiting for architecture changes"
+
+    //int ret;
+    //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
     struct mk_event_fd_state *state;
@@ -825,8 +827,9 @@ int mk_plugin_event_read(int socket)
     }
 
     mk_list_foreach(head, mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
+
+        node = mk_list_entry(head, struct mk_plugin, _head);
 
         if (node->event_read) {
             ret = node->event_read(socket);
@@ -848,8 +851,10 @@ int mk_plugin_event_read(int socket)
 
 int mk_plugin_event_write(int socket)
 {
-    int ret;
-    struct mk_plugin *node;
+#warning "FIXME: waiting for architecture changes"
+
+    //int ret;
+    //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
     struct mk_event_fd_state *state;
@@ -882,8 +887,9 @@ int mk_plugin_event_write(int socket)
     }
 
     mk_list_foreach(head, mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
+
+        node = mk_list_entry(head, struct mk_plugin, _head);
 
         if (node->event_write) {
 
@@ -906,8 +912,10 @@ int mk_plugin_event_write(int socket)
 
 int mk_plugin_event_error(int socket)
 {
-    int ret;
-    struct mk_plugin *node;
+#warning "FIXME: waiting for architecture changes"
+
+    //int ret;
+    //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
 
@@ -928,8 +936,9 @@ int mk_plugin_event_error(int socket)
     }
 
     mk_list_foreach(head, mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
+
+        node = mk_list_entry(head, struct mk_plugin, _head);
 
         if (node->event_error) {
             ret = node->event_error(socket);
@@ -951,8 +960,10 @@ int mk_plugin_event_error(int socket)
 
 int mk_plugin_event_close(int socket)
 {
-    int ret;
-    struct mk_plugin *node;
+#warning "FIXME: waiting for architecture changes"
+
+    //int ret;
+    //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
 
@@ -974,8 +985,9 @@ int mk_plugin_event_close(int socket)
     }
 
     mk_list_foreach(head, mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
+
+        node = mk_list_entry(head, struct mk_plugin, _head);
 
         if (node->event_close) {
             ret = node->event_close(socket);
@@ -997,8 +1009,8 @@ int mk_plugin_event_close(int socket)
 
 int mk_plugin_event_timeout(int socket)
 {
-    int ret;
-    struct mk_plugin *node;
+    //int ret;
+    //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
 
@@ -1020,8 +1032,9 @@ int mk_plugin_event_timeout(int socket)
     }
 
     mk_list_foreach(head, mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
         /* FIXME: events handler disabled
+
+        node = mk_list_entry(head, struct mk_plugin, _head);
 
         if (node->event_timeout) {
             ret = node->event_timeout(socket);
