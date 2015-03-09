@@ -247,36 +247,3 @@ int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)
     *len = strlen(*buf);
     return 0;
 }
-
-int mk_socket_tcp_autocorking()
-{
-    int fd;
-    int read_ret;
-    int ret = MK_FALSE;
-    char buf[2];
-    struct stat st;
-
-    ret = stat(TCP_CORKING_PATH, &st);
-    if (ret == -1) {
-        return MK_FALSE;
-    }
-
-    fd = open(TCP_CORKING_PATH, O_RDONLY);
-    if (fd == -1) {
-        return MK_FALSE;
-    }
-
-    read_ret = read(fd, buf, 1);
-    if (read_ret == -1) {
-        return MK_FALSE;
-    }
-
-    close(fd);
-    buf[1] = '\0';
-
-    if (strncmp(buf, "1", 1) == 0) {
-        return MK_TRUE;
-    }
-
-    return MK_FALSE;
-}

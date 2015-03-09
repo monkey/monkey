@@ -92,6 +92,5 @@ int mk_socket_read(int socket_fd, void *buf, int count);
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
                         size_t file_count);
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len);
-int mk_socket_tcp_autocorking();
 
 #endif
