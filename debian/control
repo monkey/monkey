@@ -26,7 +26,7 @@ Description: SSL transport layer for Monkey Web Server based in PolarSSL.
 Package: monkey-dev
 Architecture: any
 Depends: ${misc:Depends}, monkey (= ${binary:Version})
-Description: Monkey HTTP Daemon development files
+Description: Monkey HTTP Server development files
  This package distributes the C headers files required to perform
  the development of a Monkey plugin. This package is not related to the
  library version of Monkey.
@@ -35,12 +35,4 @@ Package: monkey-doc
 Section: doc
 Architecture: all
 Description: Monkey documentation
- Monkey HTTP Daemon documentation.
-
-Package: libmonkey
-Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Monkey HTTP Daemon library
- LibMonkey is the shared library version of Monkey HTTP daemon, it
- can be linked by third party programs that requires to use a fast web server or
- HTTP stack in their main program.
+ Monkey HTTP Server documentation.
