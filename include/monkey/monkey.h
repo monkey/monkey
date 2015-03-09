@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-/*  Monkey HTTP Daemon
+/*  Monkey HTTP Server
  *  ------------------
  *  Copyright (C) 2001-2015, Eduardo Silva P. <edsiper@gmail.com>
  *
