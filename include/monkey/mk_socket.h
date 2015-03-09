@@ -20,11 +20,14 @@
 #ifndef MK_SOCKET_H
 #define MK_SOCKET_H
 
-#include <sys/uio.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <sys/uio.h>
 #include <netinet/in.h>
 
-#include "mk_iov.h"
+#include <monkey/mk_iov.h>
 
 #ifndef SOCK_NONBLOCK
 #define SOCK_NONBLOCK 04000
@@ -50,6 +53,25 @@
 
 #define TCP_CORKING_PATH  "/proc/sys/net/ipv4/tcp_autocorking"
 
+static inline int mk_socket_accept(int server_fd)
+{
+    int remote_fd;
+
+    struct sockaddr sock_addr;
+    socklen_t socket_size = sizeof(struct sockaddr);
+
+#ifdef ACCEPT_GENERIC
+    remote_fd = accept(server_fd, &sock_addr, &socket_size);
+    mk_socket_set_nonblocking(remote_fd);
+#else
+    remote_fd = accept4(server_fd, &sock_addr, &socket_size,
+                        SOCK_NONBLOCK | SOCK_CLOEXEC);
+#endif
+
+    return remote_fd;
+}
+
+
 int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_tcp_fastopen(int sockfd);
 int mk_socket_set_tcp_nodelay(int sockfd);
@@ -64,7 +86,6 @@ int mk_socket_connect(char *host, int port);
 int mk_socket_reset(int socket);
 int mk_socket_server(char *port, char *listen_addr, int reuse_port);
 
-int mk_socket_accept(int server_fd);
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io);
 int mk_socket_send(int socket_fd, const void *buf, size_t count);
 int mk_socket_read(int socket_fd, void *buf, int count);

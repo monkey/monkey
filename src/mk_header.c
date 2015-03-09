@@ -17,10 +17,6 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_header.h>

@@ -17,14 +17,6 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <string.h>
-
 #include <monkey/monkey.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_vhost.h>
@@ -44,6 +36,8 @@
 #include <monkey/mk_stats.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>
+
+#include <sys/syscall.h>
 
 struct sched_list_node *sched_list;
 

@@ -21,7 +21,6 @@
 #define MK_CONFIG_H
 
 #include <unistd.h>
-#include <sys/types.h>
 
 #include <monkey/mk_memory.h>
 #include <monkey/mk_list.h>

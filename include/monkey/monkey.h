@@ -22,10 +22,17 @@
 #ifndef MK_MONKEY_H
 #define MK_MONKEY_H
 
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <pthread.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include "mk_memory.h"
+
+#include <monkey/mk_memory.h>
 
 /* Max Path lenth */
 #define MK_MAX_PATH 1024

@@ -17,14 +17,7 @@
  *  limitations under the License.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <fcntl.h>
-
+#include <monkey/monkey.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_utils.h>
@@ -35,6 +28,10 @@
 #include <monkey/mk_memory.h>
 #include <monkey/mk_info.h>
 #include <monkey/mk_file.h>
+
+#include <sys/stat.h>
+#include <dirent.h>
+#include <fcntl.h>
 
 /* Initialize Virtual Host FDT mutex */
 pthread_mutex_t mk_vhost_fdt_mutex = PTHREAD_MUTEX_INITIALIZER;

@@ -258,7 +258,6 @@ struct mk_plugin_stage_handler {
  * sockets or SSL.
  */
 struct mk_plugin_network {
-    int (*accept) (int);
     int (*read) (int, void *, int);
     int (*write) (int, const void *, size_t);
     int (*writev) (int, struct mk_iov *);

@@ -17,11 +17,12 @@
  *  limitations under the License.
  */
 
-#include <limits.h>
-
 /* dir_html.c */
 #ifndef MK_DIRHTML_H
 #define MK_DIRHTML_H
+
+#include <dirent.h>
+#include <limits.h>
 
 #define MK_DIRHTML_URL "/_mktheme"
 #define MK_DIRHTML_DEFAULT_MIME "Content-Type: text/html\r\n"

@@ -19,15 +19,11 @@
 
 #define _GNU_SOURCE
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
 #include <dlfcn.h>
 #include <err.h>
 
+#include <monkey/monkey.h>
 #include <monkey/mk_connection.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_file.h>

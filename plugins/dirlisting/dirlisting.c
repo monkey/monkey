@@ -26,22 +26,12 @@
  * 2002 - Original version written by Daniel R. Ome
  */
 
-#include <dirent.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <time.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 #include <monkey/mk_api.h>
-
 #include "dirlisting.h"
+
+#include <time.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 const mk_ptr_t mk_dirhtml_default_mime = mk_ptr_init(MK_DIRHTML_DEFAULT_MIME);
 const mk_ptr_t mk_dir_iov_dash  = mk_ptr_init("-");

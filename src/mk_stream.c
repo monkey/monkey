@@ -17,11 +17,11 @@
  *  limitations under the License.
  */
 
-#include <monkey/mk_list.h>
+#include <monkey/monkey.h>
 #include <monkey/mk_socket.h>
+#include <monkey/mk_list.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_stream.h>
-#include <monkey/mk_server.h>
 
 /* Create a new stream instance */
 struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,

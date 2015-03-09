@@ -46,22 +46,6 @@ int mk_liana_plugin_exit()
     return 0;
 }
 
-int mk_liana_accept(int server_fd)
-{
-    int remote_fd;
-    struct sockaddr sock_addr;
-    socklen_t socket_size = sizeof(struct sockaddr);
-
-#ifdef ACCEPT_GENERIC
-    remote_fd = accept(server_fd, &sock_addr, &socket_size);
-    mk_api->socket_set_nonblocking(remote_fd);
-#else
-    remote_fd = accept4(server_fd, &sock_addr, &socket_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
-#endif
-
-    return remote_fd;
-}
-
 int mk_liana_buffer_size()
 {
     return -1;
@@ -284,7 +268,6 @@ int mk_liana_server(char *port, char *listen_addr, int reuse_port)
 
 /* Network Layer plugin Callbacks */
 struct mk_plugin_network mk_plugin_network_liana = {
-    .accept        = mk_liana_accept,
     .read          = mk_liana_read,
     .write         = mk_liana_write,
     .writev        = mk_liana_writev,

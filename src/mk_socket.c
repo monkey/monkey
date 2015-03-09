@@ -17,31 +17,21 @@
  *  limitations under the License.
  */
 
-#define _GNU_SOURCE
-
 #if defined(__APPLE__)
 #define SOL_TCP IPPROTO_TCP
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <time.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-
 #include <monkey/monkey.h>
+#include <monkey/mk_socket.h>
 #include <monkey/mk_kernel.h>
 #include <monkey/mk_file.h>
-#include <monkey/mk_socket.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
+
+#include <time.h>
+#include <netinet/tcp.h>
 
 static void mk_socket_safe_event_write(int socket)
 {
@@ -183,11 +173,6 @@ int mk_socket_server(char *port, char *listen_addr, int reuse_port)
 }
 
 /* NETWORK_IO plugin functions */
-int mk_socket_accept(int server_fd)
-{
-    return mk_config->network->accept(server_fd);
-}
-
 int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
 {
     int bytes;
