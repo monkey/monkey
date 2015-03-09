@@ -148,7 +148,7 @@ static void mk_header_cb_finished(struct mk_stream *stream)
          *  ---
          */
 
-    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+    mk_server_cork_flag(stream->channel->fd, TCP_CORK_OFF);
 #endif
 }
 
