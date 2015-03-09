@@ -18,18 +18,16 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
+/* Monkey API */
+#include <monkey/mk_api.h>
 
-/* network */
+
+/* system */
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/stat.h>
 
-/* Monkey API */
-#include <monkey/mk_api.h>
 #include "mandril.h"
 
 static struct mk_config *conf;
