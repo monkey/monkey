@@ -984,12 +984,8 @@ create_info()
 
 EOF
 
-	sed -i $OS_SED -e "s@#define MONKEY__.*@#define MONKEY__            $__MONKEY__@" \
-	    -e "s@#define MONKEY_MINOR__.*@#define MONKEY_MINOR__      $__MONKEY_MINOR__@" \
-	    -e "s@#define MONKEY_PATCHLEVEL__.*@#define MONKEY_PATCHLEVEL__ $__MONKEY_PATCHLEVEL__@" \
-	    $base_path/$INCDIR/libmonkey.h
 
-    echo "#endif" >> $base_path/$INCDIR/mk_info.h
+echo "#endif" >> $base_path/$INCDIR/mk_info.h
 }
 
 create_header_static_plugins()

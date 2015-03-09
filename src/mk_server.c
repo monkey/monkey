@@ -209,7 +209,7 @@ void mk_server_launch_workers()
 
     /* Launch workers */
     for (i = 0; i < mk_config->workers; i++) {
-        mk_sched_launch_thread(mk_config->server_capacity, &skip, NULL);
+        mk_sched_launch_thread(mk_config->server_capacity, &skip);
     }
 
     /* Wait until all workers report as ready */

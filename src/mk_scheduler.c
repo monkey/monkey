@@ -441,7 +441,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 }
 
 /* Create thread which will be listening for incomings requests */
-int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx UNUSED_PARAM)
+int mk_sched_launch_thread(int max_events, pthread_t *tout)
 {
     pthread_t tid;
     pthread_attr_t attr;

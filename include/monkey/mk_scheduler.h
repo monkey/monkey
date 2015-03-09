@@ -23,7 +23,6 @@
 #include <arpa/inet.h>
 
 #include <monkey/mk_list.h>
-#include <monkey/mk_lib.h>
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_event.h>
 
@@ -139,7 +138,7 @@ pthread_mutex_t mutex_port_init;
 
 struct sched_list_node *mk_sched_next_target();
 void mk_sched_init();
-int mk_sched_launch_thread(int max_events, pthread_t *tout, mklib_ctx ctx);
+int mk_sched_launch_thread(int max_events, pthread_t *tout);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct sched_list_node *mk_sched_get_handler_owner(void);
 
