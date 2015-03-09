@@ -19,7 +19,7 @@
  */
 
 #define _GNU_SOURCE
-#include <stdlib.h>
+
 #include <sys/uio.h> /* struct iovec, writev */
 #include <limits.h>
 

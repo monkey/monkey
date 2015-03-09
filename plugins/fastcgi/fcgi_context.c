@@ -18,10 +18,7 @@
  *  limitations under the License.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <pthread.h>
-
+#include <monkey/mk_api.h>
 #include "fcgi_context.h"
 
 #include "dbg.h"

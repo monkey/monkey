@@ -18,14 +18,10 @@
  *  limitations under the License.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <monkey/mk_api.h>
 
 #include "dbg.h"
 #include "fcgi_config.h"
-#include <monkey/mk_api.h>
 
 void fcgi_config_free(struct fcgi_config *config)
 {

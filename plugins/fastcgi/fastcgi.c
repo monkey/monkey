@@ -18,12 +18,10 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>  /* sscanf */
-#include <string.h> /* memcpy */
+#include <monkey/mk_api.h>
+
 #include <sys/un.h> /* sockaddr_un */
 #include <regex.h>  /* regex_t, regcomp */
-
-#include <monkey/mk_api.h>
 
 #include "dbg.h"
 #include "fcgi_config.h"
@@ -84,7 +82,7 @@ static int fcgi_handle_cgi_header(struct mk_http_request *sr,
                                                          0);
 		}
 		mk_api->iov_add(sr->headers._extra_rows,
-                        entry, len, MK_IOV_NOT_FREE_BUF);
+                        entry, len, MK_FALSE);
 	}
 	return 0;
  error:

@@ -18,8 +18,7 @@
  *  limitations under the License.
  */
 
-#include <stdlib.h>
-
+#include <monkey/mk_api.h>
 #include "dbg.h"
 #include "protocol.h"
 

@@ -18,7 +18,8 @@
  *  limitations under the License.
  */
 
-#include <stdlib.h>
+#include <monkey/mk_api.h>
+
 #ifdef DEBUG
 #include <stdio.h> /* printf */
 #endif
