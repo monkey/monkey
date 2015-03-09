@@ -706,11 +706,11 @@ create_makefile_core()
 _PATH   = \$(patsubst \$(monkey_root)/%, %, \$(CURDIR))
 CC      = @printf "  CC   \$(_PATH)/\$@"; $CC
 CC_QUIET= @echo; $CC
-CFLAGS  = $CFLAGS -rdynamic
+CFLAGS  = $CFLAGS
 DEFS    += $DEFS
 LIBDEFS = -DSHAREDLIB -fPIC \$(DEFS)
 INCDIR  = ../include/
-LDFLAGS = $LDFLAGS
+LDFLAGS = $LDFLAGS -rdynamic
 DESTDIR = ../bin/monkey
 LIBS    = -ldl $libs
 OBJ     = monkey.o mk_mimetype.o mk_vhost.o \\
