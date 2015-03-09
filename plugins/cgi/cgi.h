@@ -21,17 +21,12 @@
 #ifndef MK_CGI_H
 #define MK_CGI_H
 
-#define _GNU_SOURCE
+#include <monkey/mk_api.h>
 
-#include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <regex.h>
-#include <unistd.h>
 #include <signal.h>
 #include <libgen.h>
-
-#include <monkey/mk_api.h>
 
 enum {
     PATHLEN = 1024,

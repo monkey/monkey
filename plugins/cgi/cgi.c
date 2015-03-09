@@ -18,13 +18,11 @@
  *  limitations under the License.
  */
 
+#include "cgi.h"
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-
-#include "cgi.h"
 
 int swrite(const int fd, const void *buf, const size_t count)
 {
