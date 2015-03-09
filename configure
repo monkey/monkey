@@ -719,7 +719,7 @@ OBJ     = monkey.o mk_mimetype.o mk_vhost.o \\
           mk_string.o mk_memory.o mk_connection.o mk_iov.o \\
           mk_http.o mk_http_parser.o \\
           mk_file.o mk_socket.o mk_clock.o mk_cache.o mk_event.o \\
-          mk_server.o mk_kernel.o mk_rbtree.o mk_plugin.o mk_lib.o
+          mk_server.o mk_kernel.o mk_rbtree.o mk_plugin.o
 STATIC_DEPS    = \$(MK_STATIC_DEPS)
 STATIC_PLUGINS = $abs_static_plugins
 
@@ -730,8 +730,6 @@ LIBOBJ  = \$(OBJ:.o=.lo)
 all: $alltarget
 
 lib: $SONAME
-
-libstats: libstats.so
 
 -include \$(OBJ:.o=.d)
 
@@ -744,12 +742,6 @@ $SONAME: \$(LIBOBJ)
 	ln -sf $SONAME libmonkey.so
 
 \$(LIBOBJ): \$(OBJ)
-
-libstats.so: mk_stats.o
-	\$(CC_QUIET) \$(CFLAGS) $^ -o \$@ -shared -ldl -lrt
-
-mk_stats.o: mk_stats.c
-	\$(CC_QUIET) -c -fPIC $^ -o \$@ \$(CFLAGS) \$(DEFS) -I\$(INCDIR) -ldl
 
 clean:
 	rm -rf *.[od] $SONAME libmonkey.so libstats.so *.lo
