@@ -153,7 +153,7 @@ static inline void mk_stream_unlink(struct mk_stream *stream)
 static inline void mk_stream_bytes_consumed(struct mk_stream *stream, long bytes)
 {
 #ifdef TRACE
-    char *fmt;
+    char *fmt = NULL;
 
     if (stream->type == MK_STREAM_RAW) {
         fmt = "[STREAM_RAW %p] bytes consumed %lu/%lu";
@@ -166,6 +166,9 @@ static inline void mk_stream_bytes_consumed(struct mk_stream *stream, long bytes
     }
     else if (stream->type == MK_STREAM_SOCKET) {
         fmt = "[STREAM_SOCK %p] bytes consumed %lu/%lu";
+    }
+    else {
+        fmt = "[STREAM_UNKW %p] bytes consumed %lu/%lu";
     }
 
     MK_TRACE(fmt, stream, stream->bytes_total, bytes);
