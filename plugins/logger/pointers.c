@@ -17,9 +17,10 @@
  *  limitations under the License.
  */
 
+#include <monkey/mk_plugin.h>
+
 #include "logger.h"
 #include "pointers.h"
-#include <monkey/mk_plugin.h>
 
 const mk_ptr_t mk_logger_iov_none = mk_ptr_init("");
 
