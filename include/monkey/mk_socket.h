@@ -53,25 +53,6 @@
 
 #define TCP_CORKING_PATH  "/proc/sys/net/ipv4/tcp_autocorking"
 
-static inline int mk_socket_accept(int server_fd)
-{
-    int remote_fd;
-
-    struct sockaddr sock_addr;
-    socklen_t socket_size = sizeof(struct sockaddr);
-
-#ifdef ACCEPT_GENERIC
-    remote_fd = accept(server_fd, &sock_addr, &socket_size);
-    mk_socket_set_nonblocking(remote_fd);
-#else
-    remote_fd = accept4(server_fd, &sock_addr, &socket_size,
-                        SOCK_NONBLOCK | SOCK_CLOEXEC);
-#endif
-
-    return remote_fd;
-}
-
-
 int mk_socket_set_cork_flag(int fd, int state);
 int mk_socket_set_tcp_fastopen(int sockfd);
 int mk_socket_set_tcp_nodelay(int sockfd);
@@ -92,5 +73,24 @@ int mk_socket_read(int socket_fd, void *buf, int count);
 int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
                         size_t file_count);
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len);
+
+
+static inline int mk_socket_accept(int server_fd)
+{
+    int remote_fd;
+
+    struct sockaddr sock_addr;
+    socklen_t socket_size = sizeof(struct sockaddr);
+
+#ifdef ACCEPT_GENERIC
+    remote_fd = accept(server_fd, &sock_addr, &socket_size);
+    mk_socket_set_nonblocking(remote_fd);
+#else
+    remote_fd = accept4(server_fd, &sock_addr, &socket_size,
+                        SOCK_NONBLOCK | SOCK_CLOEXEC);
+#endif
+
+    return remote_fd;
+}
 
 #endif
