@@ -6,10 +6,8 @@
  * See README for more details.
  */
 
-#include <stdlib.h>
-#include <string.h>
-
 #include <monkey/mk_api.h>
+
 #include "base64.h"
 
 #ifdef MALLOC_JEMALLOC

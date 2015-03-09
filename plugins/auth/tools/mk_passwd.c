@@ -1,12 +1,11 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-#include <stdio.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include <monkey/monkey.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_macros.h>
+
+#include <getopt.h>
+
 #include "sha1.h"
 #include "base64.h"
 
