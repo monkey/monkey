@@ -656,7 +656,8 @@ int mk_http_keepalive_check(struct client_session *cs)
     }
 
     sr_head = &cs->request_list;
-    sr_node = mk_list_entry_last(sr_head, struct session_request, _head);
+    sr_node = mk_list_entry_first(sr_head, struct session_request, _head);
+
     if (config->keep_alive == MK_FALSE || sr_node->keep_alive == MK_FALSE) {
         return -1;
     }
@@ -793,20 +794,27 @@ int mk_http_request_end(int socket)
 
     /* Check if we have some enqueued pipeline requests */
     if (cs->pipelined == MK_TRUE) {
+        struct session_request *last_sr;
+
+        last_sr = mk_list_entry_last(&cs->request_list,
+                                     struct session_request,
+                                     _head);
         sr =  mk_list_entry_first(&cs->request_list, struct session_request, _head);
+
         MK_TRACE("[FD %i] Pipeline finishing %p", socket, sr);
 
-        /* Remove node and release resources */
-        mk_list_del(&sr->_head);
-        mk_request_free(sr);
+        if (last_sr != sr) {
+            /* Remove node and release resources */
+            mk_list_del(&sr->_head);
+            mk_request_free(sr);
 
-
-        if (mk_list_is_empty(&cs->request_list) != 0) {
+            if (mk_list_is_empty(&cs->request_list) != 0) {
 #ifdef TRACE
-            sr = mk_list_entry_first(&cs->request_list, struct session_request, _head);
-            MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
+                sr = mk_list_entry_first(&cs->request_list, struct session_request, _head);
+                MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
 #endif
-            return 0;
+                return 0;
+            }
         }
     }
 
