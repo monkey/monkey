@@ -22,6 +22,10 @@
 #ifndef MK_FILE_H
 #define MK_FILE_H
 
+#define MK_FILE_EXISTS 1
+#define MK_FILE_READ   2
+#define MK_FILE_EXEC   4
+
 struct file_info
 {
     off_t size;
@@ -38,7 +42,7 @@ struct file_info
     unsigned char read_access;
 };
 
-int mk_file_get_info(const char *path, struct file_info *f_info);
+int mk_file_get_info(const char *path, struct file_info *f_info, int mode);
 char *mk_file_to_buffer(const char *path);
 
 #endif

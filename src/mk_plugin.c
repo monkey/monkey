@@ -91,7 +91,7 @@ static int mk_plugin_init(struct plugin_api *api, struct mk_plugin *plugin)
     MK_TRACE("Load Plugin: '%s'", plugin->shortname);
 
     snprintf(path, 1024, "%s/%s", mk_config->serverconf, mk_config->plugins_conf_dir);
-    ret = mk_file_get_info(path, &f_info);
+    ret = mk_file_get_info(path, &f_info, MK_FILE_READ);
     if (ret == -1 || f_info.is_directory == MK_FALSE) {
         snprintf(path, 1024, "%s", mk_config->plugins_conf_dir);
     }
@@ -407,7 +407,7 @@ void mk_plugin_load_all()
     path = mk_mem_malloc_z(1024);
     snprintf(path, 1024, "%s/%s", mk_config->serverconf,
              mk_config->plugin_load_conf_file);
-    ret = mk_file_get_info(path, &f_info);
+    ret = mk_file_get_info(path, &f_info, MK_FILE_READ);
     if (ret == -1 || f_info.is_file == MK_FALSE) {
         snprintf(path, 1024, "%s", mk_config->plugin_load_conf_file);
     }

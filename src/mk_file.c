@@ -34,7 +34,7 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_macros.h>
 
-int mk_file_get_info(const char *path, struct file_info *f_info)
+int mk_file_get_info(const char *path, struct file_info *f_info, int mode)
 {
     struct stat f, target;
 
@@ -74,24 +74,22 @@ int mk_file_get_info(const char *path, struct file_info *f_info)
         f_info->is_file = MK_FALSE;
     }
 
-    /* Checking read access */
-    if (((target.st_mode & S_IRUSR) && target.st_uid == EUID) ||
-        ((target.st_mode & S_IRGRP) && target.st_gid == EGID) ||
-        (target.st_mode & S_IROTH)) {
-        f_info->read_access = MK_TRUE;
+    /* Check read access */
+    if (mode & MK_FILE_READ) {
+        if (((target.st_mode & S_IRUSR) && target.st_uid == EUID) ||
+            ((target.st_mode & S_IRGRP) && target.st_gid == EGID) ||
+            (target.st_mode & S_IROTH)) {
+            f_info->read_access = MK_TRUE;
+        }
     }
-#ifdef TRACE
-    else {
-        MK_TRACE("Target has not read acess");
-    }
-#endif
 
-    /* Checking execution access */
-    if ((target.st_mode & S_IXUSR && target.st_uid == EUID) ||
-        (target.st_mode & S_IXGRP && target.st_gid == EGID) ||
-        (target.st_mode & S_IXOTH)) {
-        f_info->exec_access = MK_TRUE;
-
+    /* Checking execution */
+    if (mode & MK_FILE_EXEC) {
+        if ((target.st_mode & S_IXUSR && target.st_uid == EUID) ||
+            (target.st_mode & S_IXGRP && target.st_gid == EGID) ||
+            (target.st_mode & S_IXOTH)) {
+            f_info->exec_access = MK_TRUE;
+        }
     }
 
     /* Suggest open(2) flags */
@@ -121,7 +119,7 @@ char *mk_file_to_buffer(const char *path)
     long bytes;
     struct file_info finfo;
 
-    if (mk_file_get_info(path, &finfo) != 0) {
+    if (mk_file_get_info(path, &finfo, MK_FILE_READ) != 0) {
         return NULL;
     }
 

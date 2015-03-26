@@ -135,7 +135,7 @@ void mk_mimetype_read_config()
              mk_config->serverconf,
              mk_config->mimes_conf_file);
 
-    ret = mk_file_get_info(path, &f_info);
+    ret = mk_file_get_info(path, &f_info, MK_FILE_EXISTS);
     if (ret == -1 || f_info.is_file == MK_FALSE)
         snprintf(path, MK_MAX_PATH, "%s", mk_config->mimes_conf_file);
 

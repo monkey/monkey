@@ -849,7 +849,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
 
-    if (mk_file_get_info(sr->real_path.data, &sr->file_info) != 0) {
+    if (mk_file_get_info(sr->real_path.data,
+                         &sr->file_info,
+                         MK_FILE_READ) != 0) {
         /* if the requested resource doesn't exist,
          * check if some plugin would like to handle it
          */
@@ -911,7 +913,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 sr->real_path.data = mk_string_dup(index_file.data);
             }
 
-            mk_file_get_info(sr->real_path.data, &sr->file_info);
+            mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
         }
     }
 
@@ -1247,7 +1249,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
             }
 
             /* validate error file */
-            ret = mk_file_get_info(entry->real_path, &finfo);
+            ret = mk_file_get_info(entry->real_path, &finfo, MK_FILE_READ);
             if (ret == -1) {
                 break;
             }

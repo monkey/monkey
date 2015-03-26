@@ -135,7 +135,7 @@ struct plugin_api
 
     /* file functions */
     char *(*file_to_buffer) (const char *);
-    int  (*file_get_info) (const char *, struct file_info *);
+    int  (*file_get_info) (const char *, struct file_info *, int);
 
     /* header */
     int  (*header_prepare) (struct mk_http_session *,

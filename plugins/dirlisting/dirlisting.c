@@ -76,7 +76,7 @@ static struct mk_f_list *mk_dirhtml_create_element(char *file,
 
     entry = mk_api->mem_alloc_z(sizeof(struct mk_f_list));
 
-    if (mk_api->file_get_info(full_path, &entry->info) != 0) {
+    if (mk_api->file_get_info(full_path, &entry->info, MK_FILE_READ) != 0) {
         mk_api->mem_free(entry);
         return NULL;
     }
@@ -198,7 +198,8 @@ int mk_dirhtml_read_config(char *path)
 
     mk_api->mem_free(default_file);
 
-    if (mk_api->file_get_info(dirhtml_conf->theme_path, &finfo) != 0) {
+    if (mk_api->file_get_info(dirhtml_conf->theme_path,
+                              &finfo, MK_FILE_READ) != 0) {
         mk_warn("Dirlisting: cannot load theme from '%s'", dirhtml_conf->theme_path);
         mk_warn("Dirlisting: unloading plugin");
         return -1;

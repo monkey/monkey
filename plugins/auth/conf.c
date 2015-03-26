@@ -46,7 +46,7 @@ static struct users_file *mk_auth_conf_add_users(char *users_path)
         }
     }
 
-    if (mk_api->file_get_info(users_path, &finfo) != 0) {
+    if (mk_api->file_get_info(users_path, &finfo, MK_FILE_READ) != 0) {
         mk_warn("Auth: Invalid users file '%s'", users_path);
         return NULL;
     }

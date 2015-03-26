@@ -482,7 +482,7 @@ void mk_vhost_init(char *path)
 
     /* Read default virtual host file */
     mk_string_build(&sites, &len, "%s/%s/", path, mk_config->sites_conf_dir);
-    ret = mk_file_get_info(sites, &f_info);
+    ret = mk_file_get_info(sites, &f_info, MK_FILE_EXISTS);
     if (ret == -1 || f_info.is_directory == MK_FALSE) {
         mk_mem_free(sites);
         sites = mk_config->sites_conf_dir;
