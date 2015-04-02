@@ -19,7 +19,7 @@ set(MK_VERSION_STR "${MK_VERSION_MAJOR}.${MK_VERSION_MINOR}.${MK_VERSION_PATCH}"
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h.in"
-  "${PROJECT_BINARY_DIR}/include/monkey/mk_info.h"
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h"
   )
 
 # ============================================
@@ -83,6 +83,36 @@ if(WITH_BACKTRACE)
     set(WITH_BACKTRACE No)
   endif()
 endif()
+
+# ============================================
+# =========== CONFIGURATION FILES=============
+# ============================================
+
+# Default values for conf/monkey.conf
+set(MK_CONF_LISTEN       "2001")
+set(MK_CONF_WORKERS      "0")
+set(MK_CONF_TIMEOUT      "15")
+set(MK_CONF_PIDFILE      "monkey.pid")
+set(MK_CONF_USERDIR      "public_html")
+set(MK_CONF_INDEXFILE    "index.html index.htm index.php")
+set(MK_CONF_HIDEVERSION  "Off")
+set(MK_CONF_RESUME       "On")
+set(MK_CONF_USER         "www-data")
+set(MK_CONF_KA           "On")
+set(MK_CONF_KA_TIMEOUT   "5")
+set(MK_CONF_KA_MAXREQ    "1000")
+set(MK_CONF_REQ_SIZE     "32")
+set(MK_CONF_SYMLINK      "Off")
+set(MK_CONF_TRANSPORT    "liana")
+set(MK_CONF_DEFAULT_MIME "text/plain")
+set(MK_CONF_FDT          "On")
+set(MK_CONF_OVERCAPACITY "Resist")
+
+# Generate conf/monkey.conf
+configure_file(
+  "${PROJECT_SOURCE_DIR}/lang/en/mconf"
+  "${PROJECT_SOURCE_DIR}/conf/monkey.conf"
+  )
 
 # General Headers
 include_directories(include/)

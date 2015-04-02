@@ -1,6 +1,4 @@
-
-cat > conf/monkey.conf <<EOF
-# Monkey HTTP Daemon - Configuration
+# Monkey HTTP Server - Configuration
 # ==================================
 # These are the main variables and their descriptions, defined in respect
 # to the configuration of the different types of directives.
@@ -19,7 +17,7 @@ cat > conf/monkey.conf <<EOF
     # Listen 127.0.0.01:2001
     # Listen [::1]:2001
 
-    Listen 2001
+    Listen @MK_CONF_LISTEN@
 
     # Workers:
     # --------
@@ -29,7 +27,7 @@ cat > conf/monkey.conf <<EOF
     # number of file descriptors allowed by the system. If this variable
     # is set to 0 monkey will launch one thread per processor.
 
-    Workers 0
+    Workers @MK_CONF_WORKERS@
 
     # Timeout:
     # --------
@@ -37,40 +35,39 @@ cat > conf/monkey.conf <<EOF
     # wait to receive the information or waiting time for the remote host to
     # accept an answer. (Timeout > 0)
 
-    Timeout 15
+    Timeout @MK_CONF_TIMEOUT@
 
     # PidFile:
     # --------
     # File where the server guards the process number when starting.
     # Note that the filename will have the port number appended to it.
 
-    PidFile #PIDFILE#
+    PidFile @MK_CONF_PIDFILE@
 
     # UserDir:
     # --------
     # Directory name for users home (/~user).
 
-    UserDir public_html
+    UserDir @MK_CONF_USERDIR@
 
     # Indexfile:
     # ----------
     # Number of the initial file of aperture when calling a directory.
 
-    Indexfile index.html index.htm index.php
+    Indexfile @MK_CONF_INDEXFILE@
 
     # HideVersion:
     # ------------
     # For security reasons, sometimes people want to hide the version of his
     # own webserver to clients (values on/off).
 
-    HideVersion off
-
+    HideVersion @MK_CONF_HIDEVERSION@
 
     # Resume:
     # -------
     # Allow clients to request files by ranges (values on/off).
 
-    Resume on
+    Resume @MK_CONF_RESUME@
 
     # User:
     # -----
@@ -79,7 +76,7 @@ cat > conf/monkey.conf <<EOF
     # to execute Monkey with root privileges. If it's started by a user that
     # that doesn't have root privileges, this variable will be omitted.
 
-    User #USER#
+    User @MK_CONF_USER@
 
     # -----------------
     #  ADVANCED CONFIG
@@ -90,20 +87,20 @@ cat > conf/monkey.conf <<EOF
     # ----------
     # Allow persistent connections. (on/off)
 
-    KeepAlive on
+    KeepAlive @MK_CONF_KA@
 
     # KeepAliveTimeout
     # ----------------
     # Number of seconds to wait for the next request in a persistent
     # connection (value > 0).
 
-    KeepAliveTimeout 5
+    KeepAliveTimeout @MK_CONF_KA_TIMEOUT@
 
     # MaxKeepAliveRequest:
     # --------------------
     # Maximum number of requests per connection. (value > 0)
 
-    MaxKeepAliveRequest 1000
+    MaxKeepAliveRequest @MK_CONF_KA_MAXREQ@
 
     # MaxRequestSize:
     # ---------------
@@ -115,13 +112,13 @@ cat > conf/monkey.conf <<EOF
     # The value defined must be greater than zero. Default value defined
     # is 32.
 
-    MaxRequestSize 32
+    MaxRequestSize @MK_CONF_REQ_SIZE@
 
     # SymLink:
     # --------
     # Allow request to symbolic link files.
 
-    SymLink Off
+    SymLink @MK_CONF_SYMLINK@
 
     # TransportLayer:
     # ---------------
@@ -132,14 +129,14 @@ cat > conf/monkey.conf <<EOF
     #    HTTP  is provided by liana
     #    HTTPS is provided by polarssl
 
-    TransportLayer liana
+    TransportLayer @MK_CONF_TRANSPORT@
 
     # DefaultMimeType:
     # ----------------
     # If a static content is requested and it does not contain a known extension,
     # Monkey will send the mime type specified on this directive.
 
-    DefaultMimeType text/plain
+    DefaultMimeType @MK_CONF_DEFAULT_MIME@
 
     # FDT:
     # ----
@@ -151,7 +148,7 @@ cat > conf/monkey.conf <<EOF
     #
     # The overhead in memory of this feature is around ~5KB per worker.
 
-    FDT On
+    FDT @MK_CONF_FDT@
 
     # OverCapacity:
     # -------------
@@ -165,7 +162,7 @@ cat > conf/monkey.conf <<EOF
     #
     # The default behavior is 'Resist'.
 
-    OverCapacity Resist
+    OverCapacity @MK_CONF_OVERCAPACITY@
 
     # FDLimit:
     # --------
@@ -179,5 +176,3 @@ cat > conf/monkey.conf <<EOF
     # Monkey needs to be started by root user.
     #
     # FDLimit 4096
-
-EOF
