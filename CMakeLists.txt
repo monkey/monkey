@@ -12,9 +12,15 @@ include(CheckIncludeFile)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra")
 
 # Monkey Version
-set(MK_VER_MAJOR  1)
-set(MK_VER_MINOR  6)
-set(MK_VER_PATCH  0)
+set(MK_VERSION_MAJOR  1)
+set(MK_VERSION_MINOR  6)
+set(MK_VERSION_PATCH  0)
+set(MK_VERSION_STR "${MK_VERSION_MAJOR}.${MK_VERSION_MINOR}.${MK_VERSION_PATCH}")
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h.in"
+  "${PROJECT_BINARY_DIR}/include/monkey/mk_info.h"
+  )
 
 # ============================================
 # ============= BUILD OPTIONS ================
