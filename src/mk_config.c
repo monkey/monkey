@@ -708,7 +708,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     if (mk_config->hideversion == MK_FALSE) {
         snprintf(mk_config->server_signature,
                  sizeof(mk_config->server_signature) - 1,
-                 "Monkey/%s", VERSION);
+                 "Monkey/%s", MK_VERSION_STR);
     }
     else {
         snprintf(mk_config->server_signature,
@@ -739,7 +739,7 @@ void mk_config_start_configure(void)
     /* Basic server information */
     if (mk_config->hideversion == MK_FALSE) {
         mk_string_build(&mk_config->server_software.data,
-                        &len, "Monkey/%s (%s)", VERSION, OS);
+                        &len, "Monkey/%s (%s)", MK_VERSION_STR, MK_BUILD_OS);
         mk_config->server_software.len = len;
     }
     else {

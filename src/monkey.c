@@ -56,8 +56,7 @@ void mk_thread_keys_init(void)
 
 static void mk_version(void)
 {
-    printf("Monkey HTTP Server v%i.%i.%i\n",
-           __MONKEY__, __MONKEY_MINOR__, __MONKEY_PATCHLEVEL__);
+    printf("Monkey HTTP Server v%s\n", MK_VERSION_STR);
     printf("Built : %s (%s %i.%i.%i)\n",
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     printf("Home  : http://monkey-project.com\n");
@@ -69,14 +68,14 @@ static void mk_build_info(void)
     mk_version();
 
     printf("\n");
-    printf("%s[system: %s]%s\n", ANSI_BOLD, OS, ANSI_RESET);
+    printf("%s[system: %s]%s\n", ANSI_BOLD, MK_BUILD_OS, ANSI_RESET);
     printf("%s", MK_BUILD_UNAME);
 
     printf("\n\n%s[configure]%s\n", ANSI_BOLD, ANSI_RESET);
     printf("%s", MK_BUILD_CMD);
 
     printf("\n\n%s[setup]%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("configuration dir: %s\n", MONKEY_PATH_CONF);
+    printf("configuration dir: %s\n", MK_PATH_CONF);
     printf("\n\n");
 }
 
@@ -244,7 +243,7 @@ int main(int argc, char **argv)
 
     /* set configuration path */
     if (!path_config) {
-        mk_config->path_config = MONKEY_PATH_CONF;
+        mk_config->path_config = MK_PATH_CONF;
     }
     else {
         mk_config->path_config = path_config;
