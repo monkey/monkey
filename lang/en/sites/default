@@ -1,4 +1,3 @@
-cat > conf/sites/default <<EOF
 # Default Host - Configuration
 # ============================
 # Here the variable principals of the program are defined in respect
@@ -11,7 +10,7 @@ cat > conf/sites/default <<EOF
     # you are working in a local network just set your IP address or if you
     # are working like localhost set your loopback address (127.0.0.1).
 
-    ServerName 127.0.0.1
+    ServerName @MK_VH_SERVERNAME@
 
     # DocumentRoot:
     # -------------
@@ -21,7 +20,7 @@ cat > conf/sites/default <<EOF
     # Example:
     #      DocumentRoot /home/krypton/htdocs
 
-    DocumentRoot $datadir
+    DocumentRoot @MK_VH_DOCUMENT_ROOT@
 
     # Redirect:
     # ---------
@@ -37,13 +36,13 @@ cat > conf/sites/default <<EOF
     # ----------
     # Registration file of correct request.
 
-    AccessLog $logdir/access.log
+    AccessLog @MK_VH_LOG_ACCESS@/access.log
 
     # ErrorLog:
     # ---------
     # Registration file of incorrect request.
 
-    ErrorLog $logdir/error.log
+    ErrorLog @MK_VH_LOG_ERROR@/error.log
 
 [ERROR_PAGES]
     404  404.html
@@ -51,5 +50,3 @@ cat > conf/sites/default <<EOF
 #[CGI]
     # Per-vhost CGI matching, same rules as with the global match
     # Match /cgi-bin/.*\.cgi
-
-EOF

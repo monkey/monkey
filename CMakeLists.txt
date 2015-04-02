@@ -108,10 +108,22 @@ set(MK_CONF_DEFAULT_MIME "text/plain")
 set(MK_CONF_FDT          "On")
 set(MK_CONF_OVERCAPACITY "Resist")
 
+# Default values for conf/sites/default
+set(MK_VH_SERVERNAME     "127.0.0.1")
+set(MK_VH_DOCUMENT_ROOT  MK_DATADIR)
+set(MK_VH_LOG_ACCESS     MK_LOGDIR)
+set(MK_VH_LOG_ERROR      MK_LOGDIR)
+
 # Generate conf/monkey.conf
 configure_file(
   "${PROJECT_SOURCE_DIR}/lang/en/mconf"
   "${PROJECT_SOURCE_DIR}/conf/monkey.conf"
+  )
+
+# Generate conf/sites/default
+configure_file(
+  "${PROJECT_SOURCE_DIR}/lang/en/sites/default"
+  "${PROJECT_SOURCE_DIR}/conf/sites/default"
   )
 
 # General Headers
