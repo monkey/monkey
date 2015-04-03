@@ -327,7 +327,7 @@ static void mk_logger_print_details(void)
            current->tm_hour,
            current->tm_min,
            current->tm_sec);
-    printf("   version          : %s\n", VERSION);
+    printf("   version          : %s\n", MK_VERSION_STR);
     printf("   number of workers: %i\n", mk_api->config->workers);
     mk_logger_print_listeners();
     fflush(stdout);
@@ -824,7 +824,7 @@ struct mk_plugin mk_plugin_logger = {
     /* Identification */
     .shortname     = "logger",
     .name          = "Log Writer",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_STAGE,
 
     /* Init / Exit */
