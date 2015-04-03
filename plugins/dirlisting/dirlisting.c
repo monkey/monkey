@@ -834,7 +834,7 @@ struct mk_plugin mk_plugin_dirlisting = {
     /* Identification */
     .shortname     = "dirlisting",
     .name          = "Directory Listing",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_STAGE,
 
     /* Init / Exit */
