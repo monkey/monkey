@@ -373,7 +373,7 @@ struct mk_plugin mk_plugin_mandril = {
     /* Identification */
     .shortname     = "mandril",
     .name          = "Mandril Security",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_STAGE,
 
     /* Init / Exit */
