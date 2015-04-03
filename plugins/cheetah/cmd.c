@@ -432,7 +432,7 @@ void mk_cheetah_cmd_status()
     int nthreads = mk_api->config->workers;
     char tmp[64];
 
-    CHEETAH_WRITE("Monkey Version     : %s\n", VERSION);
+    CHEETAH_WRITE("Monkey Version     : %s\n", MK_VERSION_STR);
     CHEETAH_WRITE("Configuration path : %s\n", mk_api->config->serverconf);
 
     CHEETAH_WRITE("Cheetah! mode      : ");

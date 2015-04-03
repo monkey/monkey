@@ -135,7 +135,7 @@ struct mk_plugin mk_plugin_cheetah = {
     /* Identification */
     .shortname     = "cheetah",
     .name          = "Cheetah! Shell",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
 
     /* Init / Exit */
     .init_plugin   = mk_cheetah_plugin_init,
