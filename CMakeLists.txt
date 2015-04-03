@@ -32,29 +32,29 @@ configure_file(
 # ============================================
 
 # Monkey Core
-option(WITH_ACCEPT         "Use accept(2) system call"   No)
-option(WITH_ACCEPT4        "Use accept4(2) system call" Yes)
-option(WITH_LINUX_KQUEUE   "Use Linux kqueue emulator"   No)
-option(WITH_TRACE          "Enable Trace mode"           No)
-option(WITH_UCLIB          "Enable uClib libc support"   No)
-option(WITH_MUSL           "Enable Musl libc support"    No)
-option(WITH_BACKTRACE      "Enable Backtrace feature"   Yes)
-option(WITH_LINUX_TRACE    "Enable Lttng support"        No)
-option(WITH_PTHREAD_TLS    "Use old Pthread TLS mode"    No)
-option(WITH_SYSTEM_MALLOC  "Use system memory allocator" No)
+option(WITH_ACCEPT         "Use accept(2) system call"    No)
+option(WITH_ACCEPT4        "Use accept4(2) system call"  Yes)
+option(WITH_LINUX_KQUEUE   "Use Linux kqueue emulator"    No)
+option(WITH_TRACE          "Enable Trace mode"            No)
+option(WITH_UCLIB          "Enable uClib libc support"    No)
+option(WITH_MUSL           "Enable Musl libc support"     No)
+option(WITH_BACKTRACE      "Enable Backtrace feature"    Yes)
+option(WITH_LINUX_TRACE    "Enable Lttng support"         No)
+option(WITH_PTHREAD_TLS    "Use old Pthread TLS mode"     No)
+option(WITH_SYSTEM_MALLOC  "Use system memory allocator"  No)
 
 # Plugins: what should be build ?, these options
 # will be processed later on the plugins/CMakeLists.txt file
-option(WITH_PLUGIN_AUTH          "Basic authentication"     Yes)
-option(WITH_PLUGIN_CGI           "CGI support"               No)
-option(WITH_PLUGIN_CHEETAH       "Cheetah Shell Interface"   No)
-option(WITH_PLUGIN_DIRLISTING    "Directory Listing"         No)
-option(WITH_PLUGIN_FASTCGI       "FastCGI"                   No)
-option(WITH_PLUGIN_LIANA         "Basic network layer"      Yes)
-option(WITH_PLUGIN_LOGGER        "Log Writer"                No)
-option(WITH_PLUGIN_MANDRIL       "Security"                  No)
-option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"           No)
-option(WITH_PLUGIN_PROXY_REVERSE "Proxy reverse"             No)
+option(WITH_PLUGIN_AUTH          "Basic authentication"    Yes)
+option(WITH_PLUGIN_CGI           "CGI support"              No)
+option(WITH_PLUGIN_CHEETAH       "Cheetah Shell Interface"  No)
+option(WITH_PLUGIN_DIRLISTING    "Directory Listing"        No)
+option(WITH_PLUGIN_FASTCGI       "FastCGI"                  No)
+option(WITH_PLUGIN_LIANA         "Basic network layer"     Yes)
+option(WITH_PLUGIN_LOGGER        "Log Writer"               No)
+option(WITH_PLUGIN_MANDRIL       "Security"                 No)
+option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"          No)
+option(WITH_PLUGIN_PROXY_REVERSE "Proxy reverse"            No)
 
 # ===========================================
 # ============== DEPENDENCIES ===============

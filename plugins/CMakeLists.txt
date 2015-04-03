@@ -2,6 +2,7 @@
 macro(MONKEY_PLUGIN name src)
   add_library(monkey-${name}-shared SHARED ${src})
   set_target_properties(monkey-${name}-shared PROPERTIES OUTPUT_NAME monkey-${name})
+  set_target_properties(monkey-${name}-shared PROPERTIES PREFIX "")
 endmacro()
 
 # This macro determinate if the plugin is enabled through the
