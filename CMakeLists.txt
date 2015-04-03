@@ -47,7 +47,7 @@ option(WITH_SYSTEM_MALLOC  "Use system memory allocator"  No)
 # will be processed later on the plugins/CMakeLists.txt file
 option(WITH_PLUGIN_AUTH          "Basic authentication"    Yes)
 option(WITH_PLUGIN_CGI           "CGI support"              No)
-option(WITH_PLUGIN_CHEETAH       "Cheetah Shell Interface"  No)
+option(WITH_PLUGIN_CHEETAH       "Cheetah Shell Interface" Yes)
 option(WITH_PLUGIN_DIRLISTING    "Directory Listing"        No)
 option(WITH_PLUGIN_FASTCGI       "FastCGI"                  No)
 option(WITH_PLUGIN_LIANA         "Basic network layer"     Yes)

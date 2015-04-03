@@ -89,7 +89,7 @@ static int do_cgi(const char *const __restrict__ file,
 
     /* Check the interpreter exists */
     if (match->bin) {
-        ret = mk_api->file_get_info(match->bin, &finfo);
+        ret = mk_api->file_get_info(match->bin, &finfo, MK_FILE_EXEC);
 
         if (ret == -1 ||
             (finfo.is_file == MK_FALSE && finfo.is_link == MK_FALSE) ||
@@ -529,7 +529,7 @@ struct mk_plugin mk_plugin_cgi = {
     /* Identification */
     .shortname     = "cgi",
     .name          = "Common Gateway Interface",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_STAGE,
 
     /* Init / Exit */
