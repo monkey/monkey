@@ -22,6 +22,11 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h"
   )
 
+configure_file(
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h.in"
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h"
+  )
+
 # ============================================
 # ============= BUILD OPTIONS ================
 # ============================================
