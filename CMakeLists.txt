@@ -54,7 +54,6 @@ option(WITH_PLUGIN_LIANA         "Basic network layer"     Yes)
 option(WITH_PLUGIN_LOGGER        "Log Writer"              Yes)
 option(WITH_PLUGIN_MANDRIL       "Security"                Yes)
 option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"          No)
-option(WITH_PLUGIN_PROXY_REVERSE "Proxy reverse"            No)
 
 # ===========================================
 # ============== DEPENDENCIES ===============
