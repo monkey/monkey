@@ -284,7 +284,7 @@ struct mk_plugin mk_plugin_liana = {
     /* Identification */
     .shortname     = "liana",
     .name          = "Liana Network Layer",
-    .version       = VERSION,
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_NETWORK_LAYER,
 
     /* Init / Exit */
