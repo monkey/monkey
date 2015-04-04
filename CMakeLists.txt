@@ -57,6 +57,39 @@ option(WITH_PLUGIN_LOGGER        "Log Writer"              Yes)
 option(WITH_PLUGIN_MANDRIL       "Security"                Yes)
 option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"          No)
 
+
+# This variable allows to define a list of plugins that must
+# be included when building the project. The value are the plugins
+# names separated by a colon, e.g: -DWITH_PLUGINS=cgi,mbedtls
+if(WITH_PLUGINS)
+  string(REPLACE "," ";" plugins ${WITH_PLUGINS})
+  foreach(name ${plugins})
+    message(STATUS "Plugin force enable: ${name}")
+    string(TOUPPER ${name} NAME)
+    set(WITH_PLUGIN_${NAME} 1)
+  endforeach()
+endif()
+
+if(WITHOUT_PLUGINS)
+  string(REPLACE "," ";" plugins ${WITHOUT_PLUGINS})
+  foreach(name ${plugins})
+    message(STATUS "Plugin force disable: ${name}")
+    string(TOUPPER ${name} NAME)
+    set(WITH_PLUGIN_${NAME} 0)
+  endforeach()
+endif()
+
+if(STATIC_PLUGINS)
+  set(STATIC_PLUGINS "${STATIC_PLUGINS},liana")
+else()
+  set(STATIC_PLUGINS "liana")
+endif()
+
+# Variable to be populated by plugins/CMakeLists.txt. It will contain the
+# code required to initialize any static plugin.
+set(STATIC_PLUGINS_INIT "")
+set(STATIC_PLUGINS_LIBS "")
+
 # ===========================================
 # ============== DEPENDENCIES ===============
 # ===========================================
@@ -201,7 +234,6 @@ configure_file(
 
 # General Headers
 include_directories(include/)
-
 
 add_subdirectory(plugins/)
 

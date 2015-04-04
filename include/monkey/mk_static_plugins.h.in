@@ -1,0 +1,10 @@
+#include <monkey/mk_plugin.h>
+
+@STATIC_PLUGINS_DECL@
+
+void mk_static_plugins()
+{
+    struct mk_plugin *p;
+
+    @STATIC_PLUGINS_INIT@
+}
