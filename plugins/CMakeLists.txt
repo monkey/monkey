@@ -1,4 +1,4 @@
-# Check if a plugin will be linked statically
+# CHECK_STATIC_PLUGIN: Check if a plugin will be linked statically
 macro(CHECK_STATIC_PLUGIN name)
   string(REPLACE "," ";" plugins ${STATIC_PLUGINS})
   list(FIND plugins ${name} found)
@@ -9,7 +9,7 @@ macro(CHECK_STATIC_PLUGIN name)
   endif()
 endmacro()
 
-# Used by plugins to create the targets
+# MONKEY_PLUGIN: Used by plugins to register and create the targets
 macro(MONKEY_PLUGIN name src)
   CHECK_STATIC_PLUGIN(${name})
   if(IS_STATIC)
@@ -23,25 +23,33 @@ macro(MONKEY_PLUGIN name src)
   endif()
 endmacro()
 
-# This macro determinate if the plugin is enabled through the
+# MK_BUILD_PLUGIN: This macro determinate if the plugin is enabled through the
 # option WITH_PLUGIN_NAME defined on the root CMakeLists.txt
 macro(MK_BUILD_PLUGIN name)
   set(mode "")
-  CHECK_STATIC_PLUGIN(${name})
-  if(IS_STATIC)
-    set(mode "[== static ==]")
-    set(STATIC_PLUGINS_LIBS "${STATIC_PLUGINS_LIBS} monkey-${name}-static")
-    set(STATIC_PLUGINS_INIT "${STATIC_PLUGINS_INIT}\n    p = &mk_plugin_${name};\n    mk_list_add(&p->_head, mk_config->plugins);\n")
-    set(STATIC_PLUGINS_DECL "${STATIC_PLUGINS_DECL}struct mk_plugin mk_plugin_${name};\n")
-  endif()
-
   string(TOUPPER ${name} NAME)
+
+  # Check if the plugin is enabled
   set(option WITH_PLUGIN_${NAME})
   if(${option})
-    message(STATUS "Plugin ${name} enabled ${mode}")
     add_subdirectory(${name})
-  endif()
 
+    # Is this a static plugin ?
+    CHECK_STATIC_PLUGIN(${name})
+    if(IS_STATIC)
+      # Let Monkey and CMake aware about this is a static plugin. A static plugin
+      # requires a different handling: link the object and register the plugin
+      # struct reference on mk_static_plugins.h
+      set(STATIC_PLUGINS_LIBS "${STATIC_PLUGINS_LIBS} monkey-${name}-static")
+      set(STATIC_PLUGINS_INIT "${STATIC_PLUGINS_INIT}\n    p = &mk_plugin_${name};\n    mk_list_add(&p->_head, mk_config->plugins);\n")
+      set(STATIC_PLUGINS_DECL "${STATIC_PLUGINS_DECL}struct mk_plugin mk_plugin_${name};\n")
+
+      # append message to stdout
+      set(mode "[== static ==]")
+    endif()
+
+    message(STATUS "Plugin ${name} enabled ${mode}")
+  endif()
 endmacro()
 
 # Try to configure/build all plugins
