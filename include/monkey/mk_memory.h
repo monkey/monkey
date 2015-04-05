@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #ifdef MALLOC_JEMALLOC
-#include "../../deps/jemalloc/include/jemalloc/jemalloc.h"
+#include <jemalloc/jemalloc.h>
 #endif
 
 #include "mk_macros.h"

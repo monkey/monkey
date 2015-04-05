@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(monkey C)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 
 # CMake includes
 include(CheckSymbolExists)
@@ -179,7 +180,7 @@ else()
   # Link to Jemalloc as an external dependency
   ExternalProject_Add(jemalloc
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/jemalloc
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/deps/jemalloc/configure --with-jemalloc-prefix=je_ --prefix=<INSTALL_DIR>
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/deps/jemalloc/configure --with-jemalloc-prefix=je_ --enable-cc-silence --prefix=<INSTALL_DIR>
     CFLAGS=-std=gnu99\ -Wall\ -pipe\ -g3\ -O3\ -funroll-loops
     BUILD_COMMAND ${MAKE}
     INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/
@@ -188,6 +189,7 @@ else()
   add_library(libjemalloc STATIC IMPORTED)
   set_target_properties(libjemalloc PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/lib/libjemalloc_pic.a")
   add_dependencies(libjemalloc jemalloc)
+  include_directories("${CMAKE_CURRENT_BINARY_DIR}/include/")
 endif()
 
 # ============================================
