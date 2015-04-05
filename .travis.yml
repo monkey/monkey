@@ -11,4 +11,4 @@ notifications:
 #  - sudo apt-get update -qq
 #  - sudo apt-get install -y libpolarssl-dev
 
-script: ./configure --trace --enable-plugins=* --disable-plugins=polarssl,proxy_reverse,cgi,fastcgi && make
+script: ./configure --trace && make
