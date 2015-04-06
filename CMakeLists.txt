@@ -250,12 +250,6 @@ configure_file(
   "${PROJECT_BINARY_DIR}/conf/monkey.mime"
   )
 
-# Generate conf/plugins.load
-configure_file(
-  "${PROJECT_SOURCE_DIR}/conf/plugins.load.in"
-  "${PROJECT_BINARY_DIR}/conf/plugins.load"
-  )
-
 # Generate conf/sites/default
 configure_file(
   "${PROJECT_SOURCE_DIR}/conf/sites/default.in"
@@ -266,8 +260,6 @@ configure_file(
 include_directories(include/)
 
 add_subdirectory(plugins/)
-
-#message(FATAL_ERROR "->${STATIC_PLUGINS_INIT}")
 
 # Instruct CMake to build the Monkey Core
 add_subdirectory(src/)

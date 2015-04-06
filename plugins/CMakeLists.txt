@@ -47,6 +47,8 @@ macro(MK_BUILD_PLUGIN name)
 
       # append message to stdout
       set(mode "[== static ==]")
+    else()
+      set(MK_LOAD_PLUGINS "${MK_LOAD_PLUGINS}    Load ${CMAKE_CURRENT_BINARY_DIR}/lib/monkey-${name}.so\n")
     endif()
 
     message(STATUS "Plugin ${name} enabled ${mode}")
@@ -64,7 +66,14 @@ MK_BUILD_PLUGIN("logger")
 MK_BUILD_PLUGIN("mandril")
 MK_BUILD_PLUGIN("mbedtls")
 
+# Generate include/monkey/mk_static_plugins.h
 configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_static_plugins.h.in"
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_static_plugins.h"
+  )
+
+# Generate conf/plugins.load
+configure_file(
+  "${PROJECT_SOURCE_DIR}/conf/plugins.load.in"
+  "${PROJECT_BINARY_DIR}/conf/plugins.load"
   )

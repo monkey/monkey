@@ -7,5 +7,4 @@
 # Please check the following list of available plugins:
 
 [PLUGINS]
-
-    @MK_LOAD_PLUGINS@
+@MK_LOAD_PLUGINS@
