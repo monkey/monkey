@@ -241,11 +241,18 @@ else()
     set(MK_PATH_LOG ${INSTALL_LOGDIR} CACHE STRING "Server logs")
   endif()
 
-  # Cusomt PIDFILE
+  # Custom PIDFILE
   if(NOT PID_FILE)
     set(MK_PATH_PIDFILE ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/run CACHE STRING "Server PID")
   else()
     set(MK_PATH_PIDFILE ${PID_FILE} CACHE STRING "Server PID")
+  endif()
+
+  # Custom WEBROOT
+  if(NOT INSTALL_WEBROOTDIR)
+    set(MK_PATH_WWW ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/www/monkey CACHE STRING "Server Web documents")
+  else()
+    set(MK_PATH_WWW ${INSTALL_WEBROOTDIR} CACHE STRING "Server Web documents")
   endif()
 endif()
 
@@ -267,9 +274,10 @@ add_subdirectory(plugins/)
 
 # Instruct CMake to build the Monkey Core
 add_subdirectory(src/)
-
 add_subdirectory(conf/)
+add_subdirectory(htdocs/)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_LOG})
 install(DIRECTORY DESTINATION ${MK_PATH_PIDFILE})
+install(DIRECTORY DESTINATION ${MK_PATH_WWW})
