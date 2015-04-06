@@ -19,19 +19,12 @@ set(MK_VERSION_MINOR  6)
 set(MK_VERSION_PATCH  0)
 set(MK_VERSION_STR "${MK_VERSION_MAJOR}.${MK_VERSION_MINOR}.${MK_VERSION_PATCH}")
 
-configure_file(
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h.in"
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h"
-  )
-
-configure_file(
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h.in"
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h"
-  )
-
 # ============================================
 # ============= BUILD OPTIONS ================
 # ============================================
+
+# Project
+option(BUILD_LOCAL         "Build locally, no install"    No)
 
 # Monkey Core
 option(WITH_DEBUG          "Build with debug symbols"     No)
@@ -222,22 +215,59 @@ set(MK_VH_DOCUMENT_ROOT  MK_DATADIR)
 set(MK_VH_LOG_ACCESS     MK_LOGDIR)
 set(MK_VH_LOG_ERROR      MK_LOGDIR)
 
+
+# Paths
+if(BUILD_LOCAL)
+  # This mode aims to be backward compatible with older versions of Monkey where
+  # a './configure && make' were enough to have the server running without installing
+  # any component.
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  set(MK_PATH_CONF        "${CMAKE_CURRENT_BINARY_DIR}/conf/")
+  set(MK_VH_DOCUMENT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/../htdocs/")
+else()
+
+endif()
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h.in"
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h"
+  )
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h.in"
+  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h"
+  )
+
 # Generate conf/monkey.conf
 configure_file(
-  "${PROJECT_SOURCE_DIR}/lang/en/mconf"
-  "${PROJECT_SOURCE_DIR}/conf/monkey.conf"
+  "${PROJECT_SOURCE_DIR}/conf/monkey.conf.in"
+  "${PROJECT_BINARY_DIR}/conf/monkey.conf"
+  )
+
+# Generate (copy) conf/monkey.mime
+configure_file(
+  "${PROJECT_SOURCE_DIR}/conf/monkey.mime.in"
+  "${PROJECT_BINARY_DIR}/conf/monkey.mime"
+  )
+
+# Generate conf/plugins.load
+configure_file(
+  "${PROJECT_SOURCE_DIR}/conf/plugins.load.in"
+  "${PROJECT_BINARY_DIR}/conf/plugins.load"
   )
 
 # Generate conf/sites/default
 configure_file(
-  "${PROJECT_SOURCE_DIR}/lang/en/sites/default"
-  "${PROJECT_SOURCE_DIR}/conf/sites/default"
+  "${PROJECT_SOURCE_DIR}/conf/sites/default.in"
+  "${PROJECT_BINARY_DIR}/conf/sites/default"
   )
 
 # General Headers
 include_directories(include/)
 
 add_subdirectory(plugins/)
+
+#message(FATAL_ERROR "->${STATIC_PLUGINS_INIT}")
 
 # Instruct CMake to build the Monkey Core
 add_subdirectory(src/)

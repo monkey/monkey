@@ -257,6 +257,9 @@ for arg in $*; do
 		--plugdir*)
 			plugdir=$optarg
 			;;
+                --local*)
+                        cmake_opts+="-DBUILD_LOCAL=1 "
+                        ;;
 		--debug*)
                         cmake_opts+="-DWITH_DEBUG=1 "
 			;;

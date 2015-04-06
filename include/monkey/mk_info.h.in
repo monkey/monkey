@@ -36,10 +36,10 @@
 /* Build system information */
 #define MK_BUILD_OS        "@CMAKE_SYSTEM_NAME@"
 #define MK_BUILD_UNAME     "@CMAKE_SYSTEM@"
-#define MK_BUILD_CMD       "@MK_BUILD_CMD"
+#define MK_BUILD_CMD       "@MK_BUILD_CMD@"
 
 /* Default paths */
-#define MK_PATH_CONF       "/home/edsiper/coding/monkey/conf"
+#define MK_PATH_CONF       "@MK_PATH_CONF@"
 #define MK_PLUGIN_DIR      "/home/edsiper/coding/monkey/plugins"
 
 #endif

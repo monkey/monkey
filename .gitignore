@@ -3,7 +3,6 @@
 *.so*
 *.pyc
 bin/*
-conf/*
 Makefile
 mk_env.h
 mk_info.h

@@ -20,6 +20,7 @@ macro(MONKEY_PLUGIN name src)
     add_library(monkey-${name}-shared SHARED ${src})
     set_target_properties(monkey-${name}-shared PROPERTIES OUTPUT_NAME monkey-${name})
     set_target_properties(monkey-${name}-shared PROPERTIES PREFIX "")
+    install(TARGETS monkey-${name}-shared LIBRARY DESTINATION lib)
   endif()
 endmacro()
 
@@ -40,7 +41,7 @@ macro(MK_BUILD_PLUGIN name)
       # Let Monkey and CMake aware about this is a static plugin. A static plugin
       # requires a different handling: link the object and register the plugin
       # struct reference on mk_static_plugins.h
-      set(STATIC_PLUGINS_LIBS "${STATIC_PLUGINS_LIBS} monkey-${name}-static")
+      set(STATIC_PLUGINS_LIBS "${STATIC_PLUGINS_LIBS}monkey-${name}-static" PARENT_SCOPE)
       set(STATIC_PLUGINS_INIT "${STATIC_PLUGINS_INIT}\n    p = &mk_plugin_${name};\n    mk_list_add(&p->_head, mk_config->plugins);\n")
       set(STATIC_PLUGINS_DECL "${STATIC_PLUGINS_DECL}struct mk_plugin mk_plugin_${name};\n")
 
