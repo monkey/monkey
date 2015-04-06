@@ -40,9 +40,8 @@
     # PidFile:
     # --------
     # File where the server guards the process number when starting.
-    # Note that the filename will have the port number appended to it.
 
-    PidFile @MK_CONF_PIDFILE@
+    PidFile @MK_PATH_PIDFILE@/@MK_CONF_PIDFILE@
 
     # UserDir:
     # --------

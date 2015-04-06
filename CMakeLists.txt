@@ -240,6 +240,13 @@ else()
   else()
     set(MK_PATH_LOG ${INSTALL_LOGDIR} CACHE STRING "Server logs")
   endif()
+
+  # Cusomt PIDFILE
+  if(NOT PID_FILE)
+    set(MK_PATH_PIDFILE ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/run CACHE STRING "Server PID")
+  else()
+    set(MK_PATH_PIDFILE ${PID_FILE} CACHE STRING "Server PID")
+  endif()
 endif()
 
 configure_file(
@@ -265,3 +272,4 @@ add_subdirectory(conf/)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_LOG})
+install(DIRECTORY DESTINATION ${MK_PATH_PIDFILE})

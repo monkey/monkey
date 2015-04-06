@@ -103,7 +103,7 @@ for arg in $*; do
 	    cmake_opts+="-DINSTALL_LOGDIR='$optarg' "
 	    ;;
 	--pidfile*)
-	    pidfile=$optarg
+            cmake_opts+="-DPID_FILE='$optarg' "
 	    ;;
         --local*)
             cmake_opts+="-DBUILD_LOCAL=1 "
