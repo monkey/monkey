@@ -6,3 +6,5 @@ set(src
   )
 
 MONKEY_PLUGIN(auth "${src}")
+
+add_subdirectory(tools)
