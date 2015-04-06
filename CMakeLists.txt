@@ -254,6 +254,13 @@ else()
   else()
     set(MK_PATH_WWW ${INSTALL_WEBROOTDIR} CACHE STRING "Server Web documents")
   endif()
+
+  # Headers
+  if(NOT INSTALL_INCLUDEDIR)
+    set(MK_PATH_HEADERS ${CMAKE_INSTALL_INCLUDEDIR}/monkey CACHE STRING "Server header files (development)")
+  else()
+    set(MK_PATH_HEADERS ${INSTALL_INCLUDEDIR} CACHE STRING "Server header files (development)")
+  endif()
 endif()
 
 configure_file(
@@ -276,6 +283,7 @@ add_subdirectory(plugins/)
 add_subdirectory(src/)
 add_subdirectory(conf/)
 add_subdirectory(htdocs/)
+add_subdirectory(include/)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_LOG})

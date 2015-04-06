@@ -98,7 +98,7 @@ for arg in $*; do
 	    cmake_opts+="-DCMAKE_INSTALL_LIBDIR='$optarg' "
 	    ;;
 	--includedir*)
-	    cmake_opts+="-DCMAKE_INSTALL_INCLUDEDIR='$optarg' "
+	    cmake_opts+="-DINSTALL_INCLUDEDIR='$optarg' "
 	    ;;
 	--logdir*)
 	    cmake_opts+="-DINSTALL_LOGDIR='$optarg' "
