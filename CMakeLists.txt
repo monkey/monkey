@@ -9,6 +9,7 @@ include(CheckSymbolExists)
 include(CheckLibraryExists)
 include(CheckIncludeFile)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 # Set default compiler options
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra")
@@ -222,10 +223,15 @@ if(BUILD_LOCAL)
   # a './configure && make' were enough to have the server running without installing
   # any component.
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib/monkey")
   set(MK_PATH_CONF        "${CMAKE_CURRENT_BINARY_DIR}/conf/")
   set(MK_VH_DOCUMENT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/../htdocs/")
 else()
-
+  if(NOT INSTALL_SYSCONFDIR)
+    set(MK_PATH_CONF ${CMAKE_INSTALL_FULL_SYSCONFDIR}/monkey/ CACHE STRING "Server configuration")
+  else()
+    set(MK_PATH_CONF ${INSTALL_SYSCONFDIR}/ CACHE STRING "Server configuration")
+  endif()
 endif()
 
 configure_file(
@@ -238,23 +244,6 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h"
   )
 
-# Generate conf/monkey.conf
-configure_file(
-  "${PROJECT_SOURCE_DIR}/conf/monkey.conf.in"
-  "${PROJECT_BINARY_DIR}/conf/monkey.conf"
-  )
-
-# Generate (copy) conf/monkey.mime
-configure_file(
-  "${PROJECT_SOURCE_DIR}/conf/monkey.mime.in"
-  "${PROJECT_BINARY_DIR}/conf/monkey.mime"
-  )
-
-# Generate conf/sites/default
-configure_file(
-  "${PROJECT_SOURCE_DIR}/conf/sites/default.in"
-  "${PROJECT_BINARY_DIR}/conf/sites/default"
-  )
 
 # General Headers
 include_directories(include/)
@@ -263,3 +252,5 @@ add_subdirectory(plugins/)
 
 # Instruct CMake to build the Monkey Core
 add_subdirectory(src/)
+
+add_subdirectory(conf/)

@@ -24,142 +24,6 @@ YELLOW="\033[1;33m"
 RED="\033[0;31m"
 BLUE="\033[0;34m"
 
-# Main function
-create_makefile_plugins()
-{
-        dir=$basepath
-	makefile="plugins/Makefile"
-	plugins_load="conf/plugins.load"
-
-	echo -n > $plugins_load
-	echo "# Monkey Plugins Loader" >> $plugins_load
-	echo "# =====================" >> $plugins_load
-	echo "# Monkey plugins are extended functionalities for Monkey," >> $plugins_load
-	echo "# the main directive to load a plugin is LoadPlugin plus" >> $plugins_load
-	echo "# the absolute path for the desired plugin." >> $plugins_load
-	echo "#" >> $plugins_load
-	echo "# Please check the following list of available plugins:" >> $plugins_load
-	echo "" >> $plugins_load
-	echo "[PLUGINS]" >> $plugins_load
-	echo "" >> $plugins_load
-
-
-	for plugin_dir in $base_path/plugins/*;
-	do
-		# Skip non-directories
-		if ! test -d "$plugin_dir" ; then
-			continue
-		fi
-
-		# Get plugin name and check if we should skip it
-		entry=`echo $plugin_dir | awk -F "/" '{print $NF}'`
-		skip_plugin $entry $enabled_plugins $disabled_plugins
-		disabled=$?
-
-		if [ $disabled == 1 ]; then
-			continue
-		fi
-
-		comment="    "
-		for i in $entry; do name=`echo -n "${i:0:1}" | tr "[:lower:]" "[:upper:]"`;
-			echo -e "+ ${name}${i:1}";
-		done
-
-                # Check if the plugin is static or dynamic
-                is_static_plugin $entry $static_array
-                static_check=$?
-
-		# Create Makefile
-                if [ $static_check == 0 ]; then
-		    MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) && cd ..)\n"
-		    MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
-                else
-		    MAKE_ALL="${MAKE_ALL}\t@(cd $entry && \$(MAKE) monkey-$entry.a && cd ..)\n"
-		    MAKE_CLEAN="${MAKE_CLEAN}\t@(cd $entry && \$(MAKE) clean && cd ..)\n"
-                    abs_static_plugins="$abs_static_plugins ../plugins/$entry/monkey-$entry.a"
-                fi
-
-		for d in `find $plugin_dir -type d`
-		do
-			if [ -f "${d}/Makefile.in" ];
-			then
-				sed -e "s|\$CC|$CC|" -e "s|\$CFLAGS|$CFLAGS|" -e "s|\$LDFLAGS|$LDFLAGS|" -e "s|\$DEFS|$DEFS|" -e "s|\$AR|$AR|" $d/Makefile.in > $d/Makefile
-			fi
-		done
-
-
-                if [ $static_check == 0 ]; then
-		    # Add details to plugins.load using ABOUT file
-		    if test -e $plugin_dir/ABOUT ; then
-			cat $plugin_dir/ABOUT | sed -e 's/^/    # /' >> $plugins_load
-			echo "    #" >> $plugins_load
-		    else
-			echo "    #" >> $plugins_load
-		    fi
-
-		    if ! test -e $plugin_dir/MANDATORY ; then
-			comment="    # "
-		    fi
-
-		    if [ "$plugdir" != "$aux/plugins" ]; then
-			echo "${comment}Load $plugdir/monkey-$entry.so" >> $plugins_load
-		    else
-			echo "${comment}Load $dir/$plugin_dir/monkey-$entry.so" >> $plugins_load
-		    fi
-
-		    echo "" >> $plugins_load
-                fi
-
-		# Copy specific plugin configuration files
-		if [ -d "$plugin_dir/conf" ]; then
-			target="conf/plugins/$entry/"
-			mkdir -p $target
-			cp -r $plugin_dir/conf/* $target/
-
-		        # Replace configuration variables:
-			find $target/* -type f -exec sed -i $OS_SED "s,#PREFIX#,$prefix," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#BINDIR#,$bindir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#LIBDIR#,$libdir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#MANDIR#,$mandir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#SYSCONFDIR#,$sysconfdir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#DATADIR#,$datadir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#LOGDIR#,$logdir," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#PIDFILE#,$pidfile," {} ';'
-			find $target/* -type f -exec sed -i $OS_SED "s,#PLUGDIR#,$plugdir," {} ';'
-		fi
-
-		# Distribute binary scripts provided by plugins
-		if test -e $plugin_dir/bin ; then
-			cp -r $plugin_dir/bin/* bin/
-		fi
-	done
-
-	echo "all:" > $base_path/$makefile
-	echo -e $MAKE_ALL >> $base_path/$makefile
-	echo "" >> $base_path/$makefile
-	echo "clean:" >> $base_path/$makefile
-	echo -e $MAKE_CLEAN >> $base_path/$makefile
-
-# Add 'install' option to Makefile if plugdir was specified
-	if [ "$plugdir" != "" ]; then
-		echo -e "\ninstall:" >> $base_path/$makefile
-		echo -e "\tinstall -d $plugdir" >> $base_path/$makefile
-
-		for plugin_dir in plugins/*;
-		do
-		# Get plugin name and check if we should skip it
-			entry=`echo $plugin_dir | awk -F "/" '{print $2}'`
-			skip_plugin $entry $enabled_plugins $disabled_plugins
-			disabled=$?
-			if [ $disabled == 1 ]; then
-				continue
-			fi
-
-			echo -e "\tinstall -m 644 $dir/$plugin_dir/monkey-$entry.so $plugdir/" >> $makefile
-		done
-	fi
-}
-
 create_monkey_systemd_script()
 {
 	if [ $systemddir ]; then
@@ -207,163 +71,147 @@ systemddir=""
 cmake_opts=""
 
 for arg in $*; do
-
-	case "$arg" in
-		-*=*)
-			optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
-		*)
-			optarg= ;;
-	esac
-
-	case "$arg" in
-		--prefix*)
-			prefix=$optarg
-			bindir="$optarg/bin"
-			libdir="$optarg/lib"
-			incdir="$optarg/include"
-			mandir="$optarg/man"
-			sysconfdir="$optarg/conf"
-			datadir="$optarg/htdocs"
-			logdir="$optarg/logs"
-			plugdir="$optarg/plugins"
-			;;
-		--bindir*)
-			bindir=$optarg
-			;;
-		--mandir*)
-			mandir=$optarg
-			;;
-		--sysconfdir*)
-			sysconfdir=$optarg
-			;;
-		--datadir*)
-			datadir=$optarg
-			;;
-		--libdir*)
-			libdir=$optarg
-			;;
-		--includedir*)
-			incdir=$optarg
-			;;
-		--incdir*)
-			incdir=$optarg
-			;;
-		--logdir*)
-			logdir=$optarg
-			;;
-		--pidfile*)
-			pidfile=$optarg
-			;;
-		--plugdir*)
-			plugdir=$optarg
-			;;
-                --local*)
-                        cmake_opts+="-DBUILD_LOCAL=1 "
-                        ;;
-		--debug*)
-                        cmake_opts+="-DWITH_DEBUG=1 "
-			;;
-		--trace*)
-		        cmake_opts+="-DWITH_TRACE=1 "
-			;;
-		--no-backtrace*)
-		        cmake_opts+="-DWITH_BACKTRACE=0 "
-			;;
-                --linux-trace*)
-                        cmake_opts+="-DWITH_LINUX_TRACE=1 "
-                        ;;
-                --pthread-tls*)
-                        cmake_opts+="-DWITH_PTHREAD_TLS=1 "
-                        ;;
-                --malloc-libc*)
-                        cmake_opts+="-DWITH_SYSTEM_MALLOC=1 "
-                        ;;
-		--uclib-mode*)
-                        cmake_opts+="-DWITH_UCLIB=1 "
-			;;
-		--musl-mode*)
-                        cmake_opts+="-DWITH_MUSL=1 "
-			;;
-		--enable-plugins*)
-		        cmake_opts+="-DWITH_PLUGINS='$optarg' "
-			;;
-		--disable-plugins*)
-                        cmake_opts+="-DWITHOUT_PLUGINS='$optarg' "
-			;;
-		--static-plugins*)
-			cmake_opts+="-DSTATIC_PLUGINS='$optarg' "
-			;;
-		--only-accept)
-                        cmake_opts+="-DWITH_ACCEPT=1 -DWITH_ACCEPT4=0 "
-			;;
-		--only-accept4)
-                        cmake_opts+="-DWITH_ACCEPT=0 -DWITH_ACCEPT4=1 "
-			;;
-		--default-port*)
-			default_port=$optarg
-			;;
-		--default-user*)
-			default_user=$optarg
-			;;
-		--systemddir*)
-			if [ $optarg ] ; then
-				systemddir=$optarg
-			else
-				systemddir=/lib/systemd/system
-			fi
-			;;
-		--linux-kqueue*)
-                        cmake_opts+="-DWITH_LINUX_KQUEUE=1 "
-			;;
-		--version*)
-			echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
-			echo "Copyright 2001-2015, Eduardo Silva <eduardo@monkey.io>"
-			echo "http://monkey-project.com"
-                        echo
-			exit 1
-			;;
-		*)
-			echo "Usage: ./configure [OPTION]... [VAR=VALUE]..."
-			echo
-			echo -e $bldwht"Optional Commands:" $txtrst
-			echo "  --help        Display this help and exit"
-			echo "  --version     Display version information and exit"
-			echo
-			echo -e $bldwht"Build options:"  $txtrst
-			echo "  --debug                 Compile Monkey with debugging symbols"
-			echo "  --trace                 Enable trace messages (don't use in production)"
-			echo "  --no-backtrace          Disable backtrace feature"
-			echo "  --linux-trace           Enable Linux Trace Toolkit"
-			echo "  --musl-mode             Enable musl compatibility mode"
-			echo "  --uclib-mode            Enable uClib compatibility mode"
-                        echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
-			echo "  --pthread-tls           Use Posix thread keys instead of compiler TLS"
-			echo
-			echo -e $bldwht"Installation Directories:" $txtrst
-			echo "  --prefix=PREFIX         Root prefix directory"
-			echo "  --bindir=BINDIR         Binary files (executables)"
-			echo "  --libdir=LIBDIR         Libraries"
-			echo "  --incdir=INCDIR         Header install path"
-			echo "  --sysconfdir=SYSCONFDIR Configuration files"
-			echo "  --datadir=DATADIR       Specific Monkey data files"
-			echo "  --mandir=MANDIR         Manpages - documentation"
-			echo "  --logdir=LOGDIR         Log files"
-			echo "  --pidfile=PIDFILE       Path to file to store PID"
-			echo "  --plugdir=PLUGDIR       Plugins directory path"
-			echo "  --systemddir[=DIR]      Systemd directory path"
-			echo "  --enable-plugins=a,b    Enable the listed plugins"
-			echo "  --disable-plugins=a,b   Disable the listed plugins"
-			echo "  --static-plugins=a,b    Build plugins in static mode"
-			echo "  --only-accept           Use only accept(2)"
-			echo "  --only-accept4          Use only accept4(2) (default and preferred)"
-			echo
-			echo -e $bldwht"Override Server Configuration:" $txtrst
-			echo "  --default-port=PORT     Override default TCP port (default: 2001)"
-			echo "  --default-user=USER     Override default web user (default: www-data)"
-			echo
-			exit 1
-			;;
-	esac
+    case "$arg" in
+	-*=*)
+	    optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+	*)
+	    optarg= ;;
+    esac
+    case "$arg" in
+	--prefix*)
+            cmake_opts+="-DCMAKE_INSTALL_PREFIX='$optarg' "
+	    ;;
+	--sbindir*)
+            cmake_opts+="-DCMAKE_INSTALL_SBINDIR='$optarg' "
+	    ;;
+	--mandir*)
+	    cmake_opts+="-DCMAKE_INSTALL_MANDIR='$optarg' "
+	    ;;
+	--sysconfdir*)
+	    cmake_opts+="-DINSTALL_SYSCONFDIR='$optarg' "
+	    ;;
+	--datadir*)
+	    cmake_opts+="-DCMAKE_INSTALL_DATADIR='$optarg' "
+	    ;;
+	--libdir*)
+	    cmake_opts+="-DCMAKE_INSTALL_LIBDIR='$optarg' "
+	    ;;
+	--includedir*)
+	    cmake_opts+="-DCMAKE_INSTALL_INCLUDEDIR='$optarg' "
+	    ;;
+	--logdir*)
+	    logdir=$optarg
+	    ;;
+	--pidfile*)
+	    pidfile=$optarg
+	    ;;
+        --local*)
+            cmake_opts+="-DBUILD_LOCAL=1 "
+            ;;
+	--debug*)
+            cmake_opts+="-DWITH_DEBUG=1 "
+	    ;;
+	--trace*)
+	    cmake_opts+="-DWITH_TRACE=1 "
+	    ;;
+	--no-backtrace*)
+	    cmake_opts+="-DWITH_BACKTRACE=0 "
+	    ;;
+        --linux-trace*)
+            cmake_opts+="-DWITH_LINUX_TRACE=1 "
+            ;;
+        --pthread-tls*)
+            cmake_opts+="-DWITH_PTHREAD_TLS=1 "
+            ;;
+        --malloc-libc*)
+            cmake_opts+="-DWITH_SYSTEM_MALLOC=1 "
+            ;;
+	--uclib-mode*)
+            cmake_opts+="-DWITH_UCLIB=1 "
+	    ;;
+	--musl-mode*)
+            cmake_opts+="-DWITH_MUSL=1 "
+	    ;;
+	--enable-plugins*)
+	    cmake_opts+="-DWITH_PLUGINS='$optarg' "
+	    ;;
+	--disable-plugins*)
+            cmake_opts+="-DWITHOUT_PLUGINS='$optarg' "
+	    ;;
+	--static-plugins*)
+	    cmake_opts+="-DSTATIC_PLUGINS='$optarg' "
+	    ;;
+	--only-accept)
+            cmake_opts+="-DWITH_ACCEPT=1 -DWITH_ACCEPT4=0 "
+	    ;;
+	--only-accept4)
+            cmake_opts+="-DWITH_ACCEPT=0 -DWITH_ACCEPT4=1 "
+	    ;;
+	--default-port*)
+	    default_port=$optarg
+	    ;;
+	--default-user*)
+	    default_user=$optarg
+	    ;;
+	--systemddir*)
+	    if [ $optarg ] ; then
+		systemddir=$optarg
+	    else
+		systemddir=/lib/systemd/system
+	    fi
+	    ;;
+	--linux-kqueue*)
+            cmake_opts+="-DWITH_LINUX_KQUEUE=1 "
+	    ;;
+	--version*)
+	    echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
+	    echo "Copyright 2001-2015, Eduardo Silva <eduardo@monkey.io>"
+	    echo "http://monkey-project.com"
+            echo
+	    exit 1
+	    ;;
+	*)
+	    echo "Usage: ./configure [OPTION]... [VAR=VALUE]..."
+	    echo
+	    echo -e $bldwht"Optional Commands:" $txtrst
+	    echo "  --help        Display this help and exit"
+	    echo "  --version     Display version information and exit"
+	    echo
+	    echo -e $bldwht"Build options:"  $txtrst
+            echo "  --local                 Build locally, don't install (dev mode)"
+	    echo "  --debug                 Compile Monkey with debugging symbols"
+	    echo "  --trace                 Enable trace messages (don't use in production)"
+	    echo "  --no-backtrace          Disable backtrace feature"
+	    echo "  --linux-trace           Enable Linux Trace Toolkit"
+	    echo "  --musl-mode             Enable musl compatibility mode"
+	    echo "  --uclib-mode            Enable uClib compatibility mode"
+            echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
+	    echo "  --pthread-tls           Use Posix thread keys instead of compiler TLS"
+	    echo
+	    echo -e $bldwht"Installation Directories:" $txtrst
+	    echo "  --prefix=PREFIX         Root prefix directory"
+	    echo "  --sbindir=BINDIR        Binary files (executables)"
+	    echo "  --libdir=LIBDIR         Libraries"
+	    echo "  --incdir=INCDIR         Header install path"
+	    echo "  --sysconfdir=SYSCONFDIR Configuration files"
+	    echo "  --datadir=DATADIR       Specific Monkey data files"
+	    echo "  --mandir=MANDIR         Manpages - documentation"
+	    echo "  --logdir=LOGDIR         Log files"
+	    echo "  --pidfile=PIDFILE       Path to file to store PID"
+	    echo "  --systemddir[=DIR]      Systemd directory path"
+	    echo "  --enable-plugins=a,b    Enable the listed plugins"
+	    echo "  --disable-plugins=a,b   Disable the listed plugins"
+	    echo "  --static-plugins=a,b    Build plugins in static mode"
+	    echo "  --only-accept           Use only accept(2)"
+	    echo "  --only-accept4          Use only accept4(2) (default and preferred)"
+	    echo
+	    echo -e $bldwht"Override Server Configuration:" $txtrst
+	    echo "  --default-port=PORT     Override default TCP port (default: 2001)"
+	    echo "  --default-user=USER     Override default web user (default: www-data)"
+	    echo
+	    exit 1
+	    ;;
+    esac
 done
 
 echo -en $RED"********************************************\n"
