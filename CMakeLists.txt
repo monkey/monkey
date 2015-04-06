@@ -227,10 +227,18 @@ if(BUILD_LOCAL)
   set(MK_PATH_CONF        "${CMAKE_CURRENT_BINARY_DIR}/conf/")
   set(MK_VH_DOCUMENT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/../htdocs/")
 else()
+  # Custom SYSCONFDIR
   if(NOT INSTALL_SYSCONFDIR)
     set(MK_PATH_CONF ${CMAKE_INSTALL_FULL_SYSCONFDIR}/monkey/ CACHE STRING "Server configuration")
   else()
     set(MK_PATH_CONF ${INSTALL_SYSCONFDIR}/ CACHE STRING "Server configuration")
+  endif()
+
+  # Custom LOGDIR
+  if(NOT INSTALL_LOGDIR)
+    set(MK_PATH_LOG ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/log/monkey CACHE STRING "Server logs")
+  else()
+    set(MK_PATH_LOG ${INSTALL_LOGDIR} CACHE STRING "Server logs")
   endif()
 endif()
 
@@ -254,3 +262,6 @@ add_subdirectory(plugins/)
 add_subdirectory(src/)
 
 add_subdirectory(conf/)
+
+# Install (missings ?) paths
+install(DIRECTORY DESTINATION ${MK_PATH_LOG})
