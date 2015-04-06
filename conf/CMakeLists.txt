@@ -19,6 +19,7 @@ configure_file(
 if(NOT BUILD_LOCAL)
   install(FILES
       ${PROJECT_BINARY_DIR}/conf/monkey.conf
+      ${PROJECT_BINARY_DIR}/conf/monkey.mime
       ${PROJECT_BINARY_DIR}/conf/plugins.load
     DESTINATION
       ${MK_PATH_CONF})
