@@ -180,8 +180,11 @@ int mk_dirhtml_read_config(char *path)
 
     mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
     conf = mk_api->config_create(default_file);
-    section = mk_api->config_section_get(conf, "DIRLISTING");
+    if (!conf) {
+        return -1;
+    }
 
+    section = mk_api->config_section_get(conf, "DIRLISTING");
     if (!section) {
         mk_err("Could not find DIRLISTING tag in configuration file");
         exit(EXIT_FAILURE);
