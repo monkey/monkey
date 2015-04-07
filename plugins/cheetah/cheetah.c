@@ -37,7 +37,7 @@ void mk_cheetah_welcome_msg()
     CHEETAH_FLUSH();
 }
 
-static void mk_cheetah_config(char *path)
+static int mk_cheetah_config(char *path)
 {
     unsigned long len;
     char *listen = NULL;
@@ -53,11 +53,15 @@ static void mk_cheetah_config(char *path)
     /* read configuration file */
     mk_api->str_build(&default_file, &len, "%scheetah.conf", path);
     conf = mk_api->config_create(default_file);
+    if (!conf) {
+        return -1;
+    }
+
     section = mk_api->config_section_get(conf, "CHEETAH");
 
     if (!section) {
         CHEETAH_WRITE("\nError, could not find CHEETAH tag");
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     /* no longer needed */
@@ -75,7 +79,7 @@ static void mk_cheetah_config(char *path)
     }
     else {
         printf("\nCheetah! Error: Invalid LISTEN value");
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     /* Cheetah cannot work in STDIN mode if Monkey is working in background */
@@ -84,6 +88,8 @@ static void mk_cheetah_config(char *path)
         fflush(stdout);
         listen_mode = LISTEN_SERVER;
     }
+
+    return 0;
 }
 
 static void mk_cheetah_init(void *args UNUSED_PARAM)
@@ -107,11 +113,12 @@ static void mk_cheetah_init(void *args UNUSED_PARAM)
  */
 int mk_cheetah_plugin_init(struct plugin_api **api, char *confdir)
 {
+    int ret;
     mk_api = *api;
     init_time = time(NULL);
 
-    mk_cheetah_config(confdir);
-    return 0;
+    ret = mk_cheetah_config(confdir);
+    return ret;
 }
 
 int mk_cheetah_plugin_exit()
