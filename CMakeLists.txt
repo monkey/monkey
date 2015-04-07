@@ -52,6 +52,11 @@ option(WITH_PLUGIN_LOGGER        "Log Writer"              Yes)
 option(WITH_PLUGIN_MANDRIL       "Security"                Yes)
 option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"          No)
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(WITH_ACCEPT        1)
+  set(WITH_ACCEPT4       0)
+  set(WITH_SYSTEM_MALLOC 1)
+endif()
 
 # This variable allows to define a list of plugins that must
 # be included when building the project. The value are the plugins
