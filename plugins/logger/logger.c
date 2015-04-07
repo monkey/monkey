@@ -263,7 +263,6 @@ static int mk_logger_read_config(char *path)
     mk_api->str_build(&default_file, &len, "%slogger.conf", path);
     conf = mk_api->config_create(default_file);
     if (!conf) {
-        mk_err("Logger: configuration file cannot be opened %s", default_file);
         return -1;
     }
 
