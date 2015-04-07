@@ -19,4 +19,4 @@
     # mode, so any Monkey output (stdout) will be redirected to the file
     # specified here. The server port will be appended to the filename.
 
-    MasterLog #LOGDIR#/master.log
+    MasterLog @MK_PATH_LOG@/master.log

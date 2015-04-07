@@ -4,3 +4,4 @@ set(src
   )
 
 MONKEY_PLUGIN(logger "${src}")
+add_subdirectory(conf)
