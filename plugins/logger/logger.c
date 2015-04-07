@@ -264,7 +264,7 @@ static int mk_logger_read_config(char *path)
     conf = mk_api->config_create(default_file);
     if (!conf) {
         mk_err("Logger: configuration file cannot be opened %s", default_file);
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     section = mk_api->config_section_get(conf, "LOGGER");
