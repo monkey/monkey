@@ -24,34 +24,6 @@ YELLOW="\033[1;33m"
 RED="\033[0;31m"
 BLUE="\033[0;34m"
 
-create_monkey_systemd_script()
-{
-	if [ $systemddir ]; then
-        echo "+ Creating systemd.service unit file"
-		cat > monkey.service << EOF
-[Unit]
-Description=Monkey HTTP Server
-Requires=network.target
-After=network.target
-
-[Service]
-Type=fork
-ExecStart=$bindir/monkey -D
-PIDFile=$pidfile.$default_port
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-	fi
-}
-
-
-#---------------------------#
-# End Functions
-#---------------------------#
-
-
 #---------------------------#
 # Starting configure
 #---------------------------#
