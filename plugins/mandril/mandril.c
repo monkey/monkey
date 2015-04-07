@@ -52,8 +52,14 @@ static int mk_security_conf(char *confdir)
     /* Read configuration */
     mk_api->str_build(&conf_path, &len, "%s/mandril.conf", confdir);
     conf = mk_api->config_create(conf_path);
-    section = mk_api->config_section_get(conf, "RULES");
+    if (!conf) {
+        return -1;
+    }
 
+    section = mk_api->config_section_get(conf, "RULES");
+    if (!section) {
+        return -1;
+    }
 
     mk_list_foreach(head, &section->entries) {
         entry = mk_list_entry(head, struct mk_config_entry, _head);
