@@ -3,3 +3,4 @@ set(src
   )
 
 MONKEY_PLUGIN(mandril "${src}")
+add_subdirectory(conf)
