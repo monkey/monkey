@@ -6,11 +6,14 @@
  * See README for more details.
  */
 
-#include <monkey/mk_api.h>
+#ifdef _FORCE_SYSMALLOC
+#undef MALLOC_JEMALLOC
+#endif
 
+#include <monkey/mk_api.h>
 #include "base64.h"
 
-#ifdef MALLOC_JEMALLOC
+#if defined(MALLOC_JEMALLOC)
 #define __mem_alloc    mk_api->mem_alloc
 #define __mem_free     mk_api->mem_free
 #else
@@ -50,7 +53,7 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 		out = __mem_alloc(olen);
 	}
 	else {
-		out = __mem_alloc(olen);
+                out = __mem_alloc(olen);
         }
 
 	if (out == NULL)

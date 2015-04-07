@@ -1,5 +1,9 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+#ifdef MALLOC_JEMALLOC
+#undef MALLOC_JEMALLOC
+#endif
+
 #include <monkey/monkey.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_macros.h>

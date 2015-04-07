@@ -5,6 +5,6 @@ set(src
   sha1.c
   )
 
-MONKEY_PLUGIN(auth "${src}")
-
 add_subdirectory(tools)
+
+MONKEY_PLUGIN(auth "${src}")
