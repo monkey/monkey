@@ -1,4 +1,4 @@
-set(conf_dir "${MK_PATH_CONF}/dirlisting/")
+set(conf_dir "${MK_PATH_CONF}/plugins/dirlisting/")
 
 install(DIRECTORY DESTINATION ${conf_dir})
 
