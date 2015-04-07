@@ -6,3 +6,4 @@ set(src
   )
 
 MONKEY_PLUGIN(cheetah "${src}")
+add_subdirectory(conf)
