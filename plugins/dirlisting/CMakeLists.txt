@@ -3,3 +3,5 @@ set(src
   )
 
 MONKEY_PLUGIN(dirlisting "${src}")
+
+add_subdirectory(conf)

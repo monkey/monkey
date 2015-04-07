@@ -55,19 +55,6 @@ EOF
 #---------------------------#
 # Starting configure
 #---------------------------#
-aux=`pwd`
-
-prefix="$aux"
-bindir="$aux/bin"
-libdir="$aux/lib"
-incdir=""
-mandir="$aux/man"
-sysconfdir="$aux/conf"
-datadir="$aux/htdocs"
-logdir="$aux/logs"
-pidfile="$logdir/monkey.pid"
-plugdir="$aux/plugins"
-systemddir=""
 cmake_opts=""
 
 for arg in $*; do
