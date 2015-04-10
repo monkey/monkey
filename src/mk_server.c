@@ -404,6 +404,7 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
 
             if (ret < 0) {
                 MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
+                mk_sched_remove_client(sched, fd);
                 mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
             }
         }

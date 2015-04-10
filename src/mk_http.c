@@ -72,6 +72,7 @@ void mk_http_request_init(struct mk_http_session *session,
     request->protocol = MK_HTTP_PROTOCOL_UNKNOWN;
     request->connection.len = -1;
     request->file_info.size = -1;
+    request->file_stream.fd = 0;
     request->file_stream.bytes_total = -1;
     request->file_stream.bytes_offset = 0;
     request->vhost_fdt_enabled = MK_FALSE;
@@ -1519,7 +1520,7 @@ void mk_http_request_free(struct mk_http_request *sr)
     if (sr->vhost_fdt_enabled == MK_TRUE) {
         mk_vhost_close(sr);
     }
-    else {
+    else if(sr->file_stream.fd > 0) {
         close(sr->file_stream.fd);
     }
 
