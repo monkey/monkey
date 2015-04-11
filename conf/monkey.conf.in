@@ -45,7 +45,7 @@
 
     # UserDir:
     # --------
-    # Directory name for users home (/~user).
+    # Directory name for users home (~/user).
 
     UserDir @MK_CONF_USERDIR@
 
