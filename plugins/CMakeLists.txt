@@ -1,3 +1,5 @@
+set(static_plugins "" CACHE INTERNAL "static_plugins")
+
 # CHECK_STATIC_PLUGIN: Check if a plugin will be linked statically
 macro(CHECK_STATIC_PLUGIN name)
   string(REPLACE "," ";" plugins ${STATIC_PLUGINS})
@@ -48,7 +50,7 @@ macro(MK_BUILD_PLUGIN name)
       # Let Monkey and CMake aware about this is a static plugin. A static plugin
       # requires a different handling: link the object and register the plugin
       # struct reference on mk_static_plugins.h
-      set(STATIC_PLUGINS_LIBS "${STATIC_PLUGINS_LIBS}monkey-${name}-static" PARENT_SCOPE)
+      set(static_plugins "${static_plugins}monkey-${name}-static;")
       set(STATIC_PLUGINS_INIT "${STATIC_PLUGINS_INIT}\n    p = &mk_plugin_${name};\n    mk_list_add(&p->_head, mk_config->plugins);\n")
       set(STATIC_PLUGINS_DECL "${STATIC_PLUGINS_DECL}struct mk_plugin mk_plugin_${name};\n")
 
@@ -87,3 +89,5 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/conf/plugins.load.in"
   "${PROJECT_BINARY_DIR}/conf/plugins.load"
   )
+
+set(STATIC_PLUGINS_LIBS "${static_plugins}" PARENT_SCOPE)
