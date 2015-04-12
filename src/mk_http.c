@@ -1367,14 +1367,13 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           -1,
                           NULL,
                           cb_stream_page_finished, NULL, NULL);
-
-            mk_channel_append_stream(&cs->channel, &sr->page_stream);
-            mk_channel_write(&cs->channel);
         }
     }
-
     /* Turn off TCP_CORK */
     mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
+
+    mk_channel_write(&cs->channel);
+
     return EXIT_NORMAL;
 }
 
