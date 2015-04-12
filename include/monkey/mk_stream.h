@@ -123,6 +123,7 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
     stream->bytes_offset = 0;
     stream->buffer       = buffer;
     stream->data         = data;
+    stream->preserve     = MK_FALSE;
 
     if (type == MK_STREAM_IOV) {
         iov = buffer;
