@@ -118,7 +118,6 @@ int mk_channel_write(struct mk_channel *channel)
                      channel->fd, stream->bytes_total);
 
             ptr = stream->buffer;
-            printf("data='%s'\n", ptr->data);
             bytes = mk_socket_send(channel->fd, ptr->data, ptr->len);
             if (bytes > 0) {
                 /* FIXME OFFSET */
