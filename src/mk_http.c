@@ -75,6 +75,7 @@ void mk_http_request_init(struct mk_http_session *session,
     request->file_stream.fd = 0;
     request->file_stream.bytes_total = -1;
     request->file_stream.bytes_offset = 0;
+    request->file_stream.preserve = MK_FALSE;
     request->vhost_fdt_enabled = MK_FALSE;
     request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
