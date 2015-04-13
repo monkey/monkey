@@ -294,7 +294,11 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
         return 0;
     }
 
-    return -1;
+    /*
+     * Header is unknown and we cannot store it on our extra headers
+     * list as it's already full. Request is too large.
+     */
+    return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
 }
 
 /*
