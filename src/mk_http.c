@@ -423,7 +423,7 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
              * and send information for another pipelined request
              */
             if (final_status >= 0) {
-                return MK_CHANNEL_FLUSH;
+                return final_status;
             }
             else {
                 /* STAGE_40, request has ended */
