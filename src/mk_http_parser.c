@@ -584,13 +584,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             /* Parsing the header value */
             else if (p->status == MK_ST_HEADER_VALUE) {
                 /* Trim left, set starts only when found something != ' ' */
-                if (buffer[i] == '\r' || buffer[i] == '\n') {
-                    return MK_HTTP_PARSER_ERROR;
-                }
-                else if (buffer[i] != ' ') {
-                    p->status = MK_ST_HEADER_VAL_STARTS;
-                    p->start = p->header_val = i;
-                }
+                p->status = MK_ST_HEADER_VAL_STARTS;
+                p->start = p->header_val = i;
                 continue;
             }
             /* New header row starts */
@@ -598,7 +593,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 /* Maybe there is no more headers and we reach the end ? */
                 if (buffer[i] == '\r') {
                     mark_end();
-                    if (field_len() <= 0) {
+                    if (field_len() < 0) { //by rfc 2616 the length of content may be zero
                         return MK_HTTP_PARSER_ERROR;
                     }
 
