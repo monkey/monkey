@@ -80,7 +80,8 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
 
 int mk_channel_write(struct mk_channel *channel)
 {
-    size_t bytes = -1;
+    //size_t bytes = -1;
+    ssize_t bytes = -1;//it should be signed,since "if (bytes <= 0)" below
     struct mk_iov *iov;
     mk_ptr_t *ptr;
     struct mk_stream *stream;
