@@ -65,10 +65,10 @@
 #define MK_REQUEST_STATUS_INCOMPLETE -1
 #define MK_REQUEST_STATUS_COMPLETED 0
 
-#define EXIT_NORMAL 0
-#define EXIT_ERROR -1
-#define EXIT_ABORT -2
-#define EXIT_PCONNECTION 24
+#define MK_EXIT_OK           0
+#define MK_EXIT_ERROR       -1
+#define MK_EXIT_ABORT       -2
+#define MK_EXIT_PCONNECTION 24
 
 /* Available methods */
 #define MK_HTTP_METHOD_AVAILABLE   \

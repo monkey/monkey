@@ -141,7 +141,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     /* Valid request URI? */
     if (sr->uri_processed.data[0] != '/') {
         mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
+        return MK_EXIT_OK;
     }
 
     /* Check if we have a Host header: Hostname ; port */
@@ -161,7 +161,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     /* HTTP/1.1 needs Host header */
     if (!sr->host.data && sr->protocol == MK_HTTP_PROTOCOL_11) {
         mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
-        return EXIT_NORMAL;
+        return MK_EXIT_OK;
     }
 
     /* Default Keepalive is off */
@@ -222,8 +222,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
             sr->headers.content_length = 0;
             sr->headers.location = NULL;
             mk_header_prepare(cs, sr);
-            mk_channel_write(&cs->channel);
-            mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
             return 0;
         }
     }
@@ -235,7 +233,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
 
         if (mk_user_init(cs, sr) != 0) {
             mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
-            return EXIT_ABORT;
+            return MK_EXIT_ABORT;
         }
     }
 
@@ -244,7 +242,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     ret = mk_plugin_stage_run_20(cs, sr);
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
-        return EXIT_ABORT;
+        return MK_EXIT_ABORT;
     }
 
     /* Normal HTTP process */
@@ -395,56 +393,57 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
 int mk_http_handler_write(int socket, struct mk_http_session *cs)
 {
     int ret;
-    int final_status = 0;
     struct mk_http_request *sr_node;
     struct mk_list *sr_list;
     struct mk_list *sr_head;
     (void) socket;
 
+    if (mk_channel_is_empty(&cs->channel) == 0) {
+        sr_node = mk_list_entry_first(&cs->request_list,
+                                      struct mk_http_request, _head);
+         mk_http_request_prepare(cs, sr_node);
+    }
+
     /* Check if our embedded channel have some data to stream out */
     ret = mk_channel_write(&cs->channel);
-    if (ret == MK_CHANNEL_ERROR) {
-        return MK_CHANNEL_ERROR;
+    return ret;
+    if (ret & (MK_CHANNEL_ERROR | MK_CHANNEL_FLUSH | MK_CHANNEL_DONE)) {
+        return ret;
     }
-    else if (ret == MK_CHANNEL_FLUSH) {
-        return MK_CHANNEL_FLUSH;
-    }
-    else if (ret == MK_CHANNEL_DONE) {
-        return MK_CHANNEL_DONE;
-    }
-    else if (ret == MK_CHANNEL_EMPTY) {
+
+    if (ret & MK_CHANNEL_EMPTY) {
         sr_list = &cs->request_list;
         mk_list_foreach(sr_head, sr_list) {
             sr_node = mk_list_entry_first(sr_list,
                                           struct mk_http_request, _head);
-            final_status = mk_http_request_prepare(cs, sr_node);
-            /*
-             * If we got an error, we don't want to parse
-             * and send information for another pipelined request
+            ret = mk_http_request_prepare(cs, sr_node);
+
+            /* There is no more information to send, a request was served, or
+             * it maybe failed.
              */
-            if (final_status >= 0) {
-                return final_status;
-            }
-            else {
+            if (ret & MK_CHANNEL_DONE) {
                 /* STAGE_40, request has ended */
                 mk_plugin_stage_run_40(cs, sr_node);
-                switch (final_status) {
-                case EXIT_NORMAL:
-                case EXIT_ERROR:
+            }
+
+
+                switch (ret) {
+                case MK_EXIT_OK:
+                case MK_EXIT_ERROR:
                     if (sr_node->close_now == MK_TRUE) {
                         return -1;
                     }
                     break;
-                case EXIT_ABORT:
+                case MK_EXIT_ABORT:
                     return -1;
                 }
-            }
         }
+    }
         /*
          * If we are here, is because all pipelined request were
          * processed successfully, let's return 0
          */
-    }
+
     return 0;
 }
 
@@ -730,13 +729,8 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
 
 
     mk_header_prepare(cs, sr);
-    mk_channel_write(&cs->channel);
-    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
 
-    /*
-     *  we do not free() real_location
-     *  as it's freed by iov
-     */
+    /* we do not free() real_location as it's freed by iov */
     mk_mem_free(location);
     sr->headers.location = NULL;
     return -1;
@@ -832,7 +826,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
             if (ret < 0) {
                 MK_TRACE("Error composing real path");
-                return EXIT_ERROR;
+                return MK_EXIT_ERROR;
             }
         }
     }
@@ -871,7 +865,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             return MK_PLUGIN_RET_CONTINUE;
         }
         else if (ret == MK_PLUGIN_RET_END) {
-            return EXIT_NORMAL;
+            return MK_EXIT_OK;
         }
 
         if (sr->file_info.exists == MK_FALSE) {
@@ -949,7 +943,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
         case MK_PLUGIN_RET_END:
-            return EXIT_NORMAL;
+            return MK_EXIT_OK;
         }
     }
 
@@ -983,8 +977,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
         mk_ptr_reset(&sr->headers.content_type);
         mk_header_prepare(cs, sr);
-        mk_channel_write(&cs->channel);
-        return EXIT_NORMAL;
+        return MK_EXIT_OK;
     }
     else {
         mk_ptr_reset(&sr->headers.allow_methods);
@@ -1023,18 +1016,16 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             date_client > 0) {
             mk_header_set_http_status(sr, MK_NOT_MODIFIED);
             mk_header_prepare(cs, sr);
-            mk_channel_write(&cs->channel);
-            return EXIT_NORMAL;
+            return MK_EXIT_OK;
         }
     }
 
     /* Object size for log and response headers */
     sr->headers.content_length = sr->file_info.size;
     sr->headers.real_length = sr->file_info.size;
-
-    /* Open file */
     sr->file_stream.channel = &cs->channel;
 
+    /* Open file */
     if (mk_likely(sr->file_info.size > 0)) {
         sr->file_stream.fd = mk_vhost_open(sr);
         if (sr->file_stream.fd == -1) {
@@ -1109,7 +1100,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     mk_server_cork_flag(cs->socket, TCP_CORK_ON);
 
     /* Start sending data to the channel */
-    return mk_channel_write(&cs->channel);
+    return MK_EXIT_OK;
 }
 
 /*
@@ -1223,7 +1214,7 @@ void cb_stream_page_finished(struct mk_stream *stream)
     mk_mem_free(page);
 }
 
-/* Send error responses */
+/* Enqueue an error response. This function always returns MK_EXIT_OK */
 int mk_http_error(int http_status, struct mk_http_session *cs,
                   struct mk_http_request *sr) {
     int ret, fd;
@@ -1275,7 +1266,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
             sr->file_stream.bytes_offset = 0;
             mk_channel_append_stream(&cs->channel, &sr->file_stream);
 
-            return mk_channel_write(&cs->channel);
+            return MK_EXIT_OK;
         }
     }
 
@@ -1284,7 +1275,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
         page = mk_http_error_page("Bad Request",
-                                  NULL,
+                                  &sr->uri,
                                   mk_config->server_signature);
         break;
 
@@ -1370,12 +1361,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           cb_stream_page_finished, NULL, NULL);
         }
     }
-
-    /* Turn off TCP_CORK */
-    mk_server_cork_flag(cs->socket, TCP_CORK_OFF);
-    mk_channel_write(&cs->channel);
-
-    return EXIT_NORMAL;
+    return MK_EXIT_OK;
 }
 
 /*

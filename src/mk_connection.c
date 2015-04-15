@@ -91,7 +91,8 @@ int mk_conn_read(int socket)
             mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
-            if (mk_list_is_empty(&cs->channel.streams) != 0) {
+            /* The HTTP parser may enqueued some response error */
+            if (mk_channel_is_empty(&cs->channel) != 0) {
                 mk_channel_write(&cs->channel);
             }
             mk_http_session_remove(socket);
@@ -140,7 +141,6 @@ int mk_conn_write(int socket)
             MK_TRACE("[FD %i] Close requested", socket);
             return -1;
         }
-
         mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
         return 0;
     }
@@ -160,6 +160,10 @@ int mk_conn_write(int socket)
         return 0;
     }
 
+    if (mk_channel_is_empty(&cs->channel) == 0) {
+
+    }
+
     ret = mk_http_handler_write(socket, cs);
 
     /*
@@ -167,7 +171,7 @@ int mk_conn_write(int socket)
      * in the other hand, 0 means a successful request processed, if
      * ret > 0 means that some data still need to be send.
      */
-    if (ret < MK_CHANNEL_ERROR) {
+    if (ret <= MK_CHANNEL_ERROR) {
         mk_sched_drop_connection(socket);
         return -1;
     }

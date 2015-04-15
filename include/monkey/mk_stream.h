@@ -36,11 +36,11 @@
 
 
 /* Channel return values for write event */
-#define MK_CHANNEL_ERROR  -1  /* exception when flusing data  */
-#define MK_CHANNEL_DONE    0  /* channel consumed all streams */
-#define MK_CHANNEL_FLUSH   1  /* channel flushed some data    */
-#define MK_CHANNEL_EMPTY   2  /* no streams available         */
-#define MK_CHANNEL_UNKNOWN 4  /* unhandled                    */
+#define MK_CHANNEL_DONE     1  /* channel consumed all streams */
+#define MK_CHANNEL_ERROR    2  /* exception when flusing data  */
+#define MK_CHANNEL_FLUSH    4  /* channel flushed some data    */
+#define MK_CHANNEL_EMPTY    8  /* no streams available         */
+#define MK_CHANNEL_UNKNOWN 16  /* unhandled                    */
 
 /* Channel status */
 #define MK_CHANNEL_DISABLED 0 /* channel is sleeping */
@@ -98,6 +98,11 @@ struct mk_stream {
     /* Link to the Channel parent */
     struct mk_list _head;
 };
+
+static inline int mk_channel_is_empty(struct mk_channel *channel)
+{
+    return mk_list_is_empty(&channel->streams);
+}
 
 /* exported functions */
 static inline void mk_channel_append_stream(struct mk_channel *channel,
