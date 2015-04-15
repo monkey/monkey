@@ -61,7 +61,7 @@ struct mk_channel *mk_channel_new(int type, int fd)
 static inline size_t channel_write_stream_file(struct mk_channel *channel,
                                                struct mk_stream *stream)
 {
-    long int bytes = 0;
+    ssize_t bytes = 0;
 
     MK_TRACE("[CH %i] STREAM_FILE %i, bytes=%lu",
              channel->fd, stream->fd, stream->bytes_total);
@@ -80,7 +80,7 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
 
 int mk_channel_write(struct mk_channel *channel)
 {
-    size_t bytes = -1;
+    ssize_t bytes = -1;
     struct mk_iov *iov;
     mk_ptr_t *ptr;
     struct mk_stream *stream;
