@@ -151,8 +151,8 @@ int mk_liana_send_file(int socket_fd, int file_fd, off_t *file_offset,
 #if defined (__linux__)
     ret = sendfile(socket_fd, file_fd, file_offset, file_count);
     if (ret == -1 && errno != EAGAIN) {
-        mk_err("[FD %i] error from sendfile(): %s",
-                socket_fd, strerror(errno));
+        PLUGIN_TRACE("[FD %i] error from sendfile(): %s",
+                     socket_fd, strerror(errno));
     }
     return ret;
 #elif defined (__APPLE__)
@@ -161,8 +161,8 @@ int mk_liana_send_file(int socket_fd, int file_fd, off_t *file_offset,
 
     ret = sendfile(file_fd, socket_fd, offset, &len, NULL, 0);
     if (ret == -1 && errno != EAGAIN) {
-        mk_err("[FD %i] error from sendfile(): %s",
-                socket_fd, strerror(errno));
+        PLUGIN_TRACE("[FD %i] error from sendfile(): %s",
+                     socket_fd, strerror(errno));
     }
     else if (len > 0) {
         *file_offset += len;
