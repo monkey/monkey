@@ -27,10 +27,10 @@
 
 static inline void *_mk_event_loop_create(int size)
 {
-    mk_event_ctx_t *ctx;
+    struct mk_event_ctx *ctx;
 
     /* Main event context */
-    ctx = mk_mem_malloc_z(sizeof(mk_event_ctx_t));
+    ctx = mk_mem_malloc_z(sizeof(struct mk_event_ctx));
     if (!ctx) {
         return NULL;
     }
@@ -55,7 +55,7 @@ static inline void *_mk_event_loop_create(int size)
 }
 
 /* Close handlers and memory */
-static inline void _mk_event_loop_destroy(mk_event_ctx_t *ctx)
+static inline void _mk_event_loop_destroy(struct mk_event_ctx *ctx)
 {
     close(ctx->efd);
     mk_mem_free(ctx->events);
@@ -66,44 +66,47 @@ static inline void _mk_event_loop_destroy(mk_event_ctx_t *ctx)
  * It register certain events for the file descriptor in question, if
  * the file descriptor have not been registered, create a new entry.
  */
-static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
+static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
+                                int type, uint32_t events, void *data)
 {
     int op;
     int ret;
-    struct mk_event_fd_state *fds;
-    struct epoll_event event = {0, {0}};
+    struct mk_event *event;
+    struct epoll_event ep_event = {0, {0}};
 
     /* Verify the FD status and desired operation */
-    fds = mk_event_get_state(fd);
-    if (fds->mask == MK_EVENT_EMPTY) {
+    event = (struct mk_event *) data;
+    if (event->mask == MK_EVENT_EMPTY) {
         op = EPOLL_CTL_ADD;
+        event->fd   = fd;
+        event->type = type;
     }
     else {
         op = EPOLL_CTL_MOD;
     }
 
-    event.data.fd = fd;
-    event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+    ep_event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+    ep_event.data.ptr = data;
 
     if (events & MK_EVENT_READ) {
-        event.events |= EPOLLIN;
+        ep_event.events |= EPOLLIN;
     }
     if (events & MK_EVENT_WRITE) {
-        event.events |= EPOLLOUT;
+        ep_event.events |= EPOLLOUT;
     }
 
-    ret = epoll_ctl(ctx->efd, op, fd, &event);
+    ret = epoll_ctl(ctx->efd, op, fd, &ep_event);
     if (ret < 0) {
         mk_libc_error("epoll_ctl");
         return -1;
     }
 
-    fds->mask = events;
+    event->mask = events;
     return ret;
 }
 
 /* Delete an event */
-static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
+static inline int _mk_event_del(struct mk_event_ctx *ctx, int fd)
 {
     int ret;
 
@@ -118,11 +121,15 @@ static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
 }
 
 /* Register a timeout file descriptor */
-static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
+static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
+                                           int expire, void *data)
 {
     int ret;
     int timer_fd;
     struct itimerspec its;
+    struct mk_event *event;
+
+    mk_bug(!data);
 
     /* expiration interval */
     its.it_interval.tv_sec  = expire;
@@ -144,8 +151,14 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
         return -1;
     }
 
+    event = data;
+    event->fd   = timer_fd;
+    event->type = MK_EVENT_NOTIFICATION;
+    event->mask = MK_EVENT_EMPTY;
+
     /* register the timer into the epoll queue */
-    ret = _mk_event_add(ctx, timer_fd, MK_EVENT_READ);
+    ret = _mk_event_add(ctx, timer_fd,
+                        MK_EVENT_NOTIFICATION, MK_EVENT_READ, data);
     if (ret != 0) {
         close(timer_fd);
         return ret;
@@ -154,10 +167,13 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     return timer_fd;
 }
 
-static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *w_fd)
+static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
+                                           int *r_fd, int *w_fd,
+                                           void *data)
 {
     int fd;
     int ret;
+    struct mk_event *event;
 
     fd = eventfd(0, EFD_CLOEXEC);
     if (fd == -1) {
@@ -165,7 +181,13 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *
         return -1;
     }
 
-    ret = _mk_event_add(ctx, fd, MK_EVENT_READ);
+    event = data;
+    event->fd   = fd;
+    event->type = MK_EVENT_NOTIFICATION;
+    event->mask = MK_EVENT_EMPTY;
+
+    ret = _mk_event_add(ctx, fd,
+                        MK_EVENT_NOTIFICATION, MK_EVENT_READ, data);
     if (ret != 0) {
         close(fd);
         return ret;
@@ -175,30 +197,11 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *
     return 0;
 }
 
-static inline int _mk_event_wait(mk_event_loop_t *loop)
+static inline int _mk_event_wait(struct mk_event_loop *loop)
 {
-    mk_event_ctx_t *ctx = loop->data;
+    struct mk_event_ctx *ctx = loop->data;
 
     loop->n_events = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
-    return loop->n_events;
-}
-
-static inline int _mk_event_translate(mk_event_loop_t *loop)
-{
-    int i;
-    int fd;
-    struct mk_event_fd_state *st;
-    mk_event_ctx_t *ctx = loop->data;
-
-    for (i = 0; i < loop->n_events; i++) {
-        fd = ctx->events[i].data.fd;
-        st = &mk_events_fdt->states[fd];
-
-        loop->events[i].fd   = fd;
-        loop->events[i].mask = ctx->events[i].events;
-        loop->events[i].data = st->data;
-    }
-
     return loop->n_events;
 }
 

@@ -22,17 +22,18 @@
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
 
-int mk_conn_read(int socket)
+int mk_conn_read(struct mk_sched_conn *conn)
 {
     int ret;
     int status;
+    int socket = conn->event.fd;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
     struct sched_list_node *sched;
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
 
-    /* Plugin hook */
+    /* Plugin hook
     ret = mk_plugin_event_read(socket);
 
     switch (ret) {
@@ -41,16 +42,16 @@ int mk_conn_read(int socket)
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
     case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break; /* just return controller to invoker */
+    break;
     }
-
+    */
     sched = mk_sched_get_thread_conf();
     cs = mk_http_session_get(socket);
     if (!cs) {
         /* Check if is this a new connection for the Scheduler */
         if (!mk_sched_get_connection(sched, socket)) {
             MK_TRACE("[FD %i] Registering new connection");
-            if (mk_sched_register_client(socket, sched) == -1) {
+            if (mk_sched_add_connection(socket, sched) == NULL) {
                 MK_TRACE("[FD %i] Close requested", socket);
                 return -1;
             }
@@ -58,7 +59,8 @@ int mk_conn_read(int socket)
              * New connections are not registered yet into the
              * events loop, we need to do it manually:
              */
-            mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
+            mk_event_add(sched->loop, socket,
+                         MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
             return 0;
         }
 
@@ -88,7 +90,8 @@ int mk_conn_read(int socket)
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);
-            mk_event_add(sched->loop, socket, MK_EVENT_WRITE, NULL);
+            mk_event_add(sched->loop, socket,
+                         MK_EVENT_CONNECTION, MK_EVENT_WRITE, conn);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
             /* The HTTP parser may enqueued some response error */
@@ -111,16 +114,15 @@ int mk_conn_read(int socket)
     return ret;
 }
 
-int mk_conn_write(int socket)
+int mk_conn_write(struct mk_sched_conn *conn)
 {
     int ret = -1;
+    int socket = conn->event.fd;
     struct mk_http_session *cs;
-    struct sched_list_node *sched;
-    struct sched_connection *conx;
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
-    /* Plugin hook */
+    /* Plugin hook
     ret = mk_plugin_event_write(socket);
     switch(ret) {
     case MK_PLUGIN_RET_EVENT_OWNED:
@@ -128,24 +130,10 @@ int mk_conn_write(int socket)
     case MK_PLUGIN_RET_EVENT_CLOSE:
         return -1;
     case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break; /* just return controller to invoker */
+        break;
     }
-
+    */
     MK_TRACE("[FD %i] Normal connection write handling", socket);
-
-    sched = mk_sched_get_thread_conf();
-    conx = mk_sched_get_connection(sched, socket);
-    if (!conx) {
-        MK_TRACE("[FD %i] Registering new connection");
-        if (mk_sched_register_client(socket, sched) == -1) {
-            MK_TRACE("[FD %i] Close requested", socket);
-            return -1;
-        }
-        mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
-        return 0;
-    }
-
-    mk_sched_update_conn_status(sched, socket, MK_SCHEDULER_CONN_PROCESS);
 
     /* Get node from schedule list node which contains
      * the information regarding to the current client/socket

@@ -20,8 +20,7 @@
 #ifndef MK_PLUGIN_STAGE_H
 #define MK_PLUGIN_STAGE_H
 
-static inline int mk_plugin_stage_run_10(int socket,
-                                         struct sched_connection *conx)
+static inline int mk_plugin_stage_run_10(int socket)
 {
     int ret;
     struct mk_list *head;
@@ -29,7 +28,7 @@ static inline int mk_plugin_stage_run_10(int socket,
 
     mk_list_foreach(head, &mk_config->stage10_handler) {
         stage = mk_list_entry(head, struct mk_plugin_stage, _head);
-        ret = stage->stage10(socket, conx);
+        ret = stage->stage10(socket);
         switch (ret) {
         case MK_PLUGIN_RET_CLOSE_CONX:
             MK_TRACE("return MK_PLUGIN_RET_CLOSE_CONX");

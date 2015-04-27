@@ -23,7 +23,12 @@
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
 
-/* Event types */
+/* Events family */
+#define MK_EVENT_NOTIFICATION    0
+#define MK_EVENT_LISTENER        1
+#define MK_EVENT_CONNECTION      2
+
+/* Event types for file descriptors  */
 #define MK_EVENT_EMPTY           0
 #define MK_EVENT_READ            1
 #define MK_EVENT_WRITE           4
@@ -56,57 +61,36 @@
     #include <monkey/mk_event_kqueue.h>
 #endif
 
-
-/*
- * Events File Descriptor Table (EFDT)
- * ===================================
- * It exposes a global array to hold file descriptor statuses.
- */
-
-struct mk_event_fd_state {
+/* Event reported by the event loop */
+struct mk_event {
     int      fd;
-    uint32_t mask;
-    void *data;
-};
-
-typedef struct {
-    int size;
-    struct mk_event_fd_state *states;
-} mk_event_fdt_t;
-
-/* ---- end of EFDT ---- */
-
-typedef struct {
-    int      fd;
+    int      type;
     uint32_t mask;
     void    *data;
-} mk_event_t;
+};
 
-typedef struct {
+struct mk_event_loop {
     int size;                  /* size of events array */
     int n_events;              /* number of events reported */
-    mk_event_t *events;        /* copy or reference of events triggered */
+    struct mk_event *events;   /* copy or reference of events triggered */
     void *data;                /* mk_event_ctx_t from backend */
-} mk_event_loop_t;
+};
 
 
-mk_event_fdt_t *mk_events_fdt;
-
-static inline struct mk_event_fd_state *mk_event_get_state(int fd)
-{
-    return &mk_events_fdt->states[fd];
-}
+struct mk_event_fdt *mk_events_fdt;
 
 int mk_event_initialize();
-mk_event_loop_t *mk_event_loop_create(int size);
-void mk_event_loop_destroy(mk_event_loop_t *loop);
-int mk_event_add(mk_event_loop_t *loop, int fd, int mask, void *data);
-int mk_event_del(mk_event_loop_t *loop, int fd);
-int mk_event_timeout_create(mk_event_loop_t *loop, int expire);
-int mk_event_channel_create(mk_event_loop_t *loop, int *r_fd, int *w_fd);
-int mk_event_wait(mk_event_loop_t *loop);
-int mk_event_translate(mk_event_loop_t *loop);
+struct mk_event_loop *mk_event_loop_create(int size);
+void mk_event_loop_destroy(struct mk_event_loop *loop);
+int mk_event_add(struct mk_event_loop *loop, int fd,
+                 int type, uint32_t mask, void *data);
+int mk_event_del(struct mk_event_loop *loop, int fd);
+int mk_event_timeout_create(struct mk_event_loop *loop, int expire, void *data);
+int mk_event_channel_create(struct mk_event_loop *loop,
+                            int *r_fd, int *w_fd, void *data);
+int mk_event_wait(struct mk_event_loop *loop);
+int mk_event_translate(struct mk_event_loop *loop);
 char *mk_event_backend();
-mk_event_fdt_t *mk_event_get_fdt();
+struct mk_event_fdt *mk_event_get_fdt();
 
 #endif

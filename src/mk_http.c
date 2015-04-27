@@ -1199,7 +1199,8 @@ int mk_http_request_end(int socket)
     }
     else {
         mk_http_request_ka_next(cs);
-        mk_event_add(sched->loop, socket, MK_EVENT_READ, NULL);
+        mk_event_add(sched->loop, socket,
+                     MK_EVENT_CONNECTION, MK_EVENT_READ, NULL);
         return 0;
     }
 
@@ -1415,7 +1416,7 @@ struct mk_http_session *mk_http_session_create(int socket,
                                                struct sched_list_node *sched)
 {
     struct mk_http_session *cs;
-    struct sched_connection *sc;
+    struct mk_sched_conn *sc;
 
     sc = mk_sched_get_connection(sched, socket);
 

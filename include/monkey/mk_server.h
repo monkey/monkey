@@ -22,20 +22,27 @@
 
 #include <monkey/mk_socket.h>
 #include <monkey/mk_config.h>
+#include <monkey/mk_event.h>
 
 #define MK_SERVER_SIGNAL_START     0xEEEEEEEE
 
-struct mk_server_listen_entry
-{
-    struct mk_config_listener *listen;
-    int server_fd;
-};
-
 struct mk_server_listen
 {
-    unsigned int count;
-    struct mk_server_listen_entry *listen_list;
+    struct mk_event event;
+
+    int server_fd;
+    struct mk_config_listener *listen;
+    struct mk_list _head;
 };
+
+struct mk_server_timeout {
+    struct mk_event event;
+};
+
+extern __thread struct mk_list *server_listen;
+extern __thread struct mk_server_timeout *server_timeout;
+
+struct sched_list_node;
 
 static inline int mk_server_cork_flag(int fd, int state)
 {
@@ -46,14 +53,12 @@ static inline int mk_server_cork_flag(int fd, int state)
     return mk_socket_set_cork_flag(fd, state);
 }
 
-struct sched_list_node;
+
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
 int mk_server_listen_handler(struct sched_list_node *sched,
-        struct mk_server_listen *listen,
-        int server_fd);
-void mk_server_listen_free(struct mk_server_listen *server_listen);
-int mk_server_listen_init(struct mk_server_config *config,
-                          struct mk_server_listen *server_listen);
+                             int server_fd);
+void mk_server_listen_free();
+int mk_server_listen_init(struct mk_server_config *config);
 unsigned int mk_server_capacity();
 void mk_server_launch_workers(void);
 void mk_server_loop();

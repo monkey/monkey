@@ -32,6 +32,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+__thread struct mk_list *server_listen;
+__thread struct mk_server_timeout *server_timeout;
+
 /* Return the number of clients that can be attended  */
 unsigned int mk_server_capacity()
 {
@@ -62,129 +65,111 @@ unsigned int mk_server_capacity()
     return cur;
 }
 
-int mk_server_listen_check(struct mk_server_listen *listen, int server_fd)
-{
-    struct mk_server_listen_entry *listen_entry;
-    unsigned int i;
-
-    if (listen == NULL)
-        goto error;
-
-    for (i = 0; i < listen->count; i++) {
-        listen_entry = &listen->listen_list[i];
-        if (listen_entry->server_fd == server_fd)
-            return MK_TRUE;
-    }
-error:
-    return MK_FALSE;
-}
-
 int mk_server_listen_handler(struct sched_list_node *sched,
-                             struct mk_server_listen *listen,
                              int server_fd)
 {
-    struct mk_server_listen_entry *listen_entry;
-    struct sched_list_node *local_sched;
-    unsigned int i;
+    int ret;
     int client_fd = -1;
-    int result;
+    struct mk_sched_conn *conn;
 
-    if (listen == NULL)
+    if (server_listen == NULL) {
         goto error;
-
-    local_sched = mk_sched_get_thread_conf();
-
-    for (i = 0; i < listen->count; i++) {
-        listen_entry = &listen->listen_list[i];
-        if (listen_entry->server_fd != server_fd)
-            continue;
-
-        if (mk_sched_check_capacity(sched) == -1)
-            goto error;
-
-        client_fd = mk_socket_accept(server_fd);
-        if (mk_unlikely(client_fd == -1)) {
-            MK_TRACE("[server] Accept connection failed: %s", strerror(errno));
-            goto error;
-        }
-
-        result = mk_event_add(sched->loop, client_fd, MK_EVENT_READ, NULL);
-        if (mk_unlikely(result != 0)) {
-            mk_err("[server] Error registering file descriptor: %s",
-                   strerror(errno));
-            goto error;
-        }
-
-        if (sched == local_sched) {
-            result = mk_sched_register_client(client_fd, sched);
-            if (mk_unlikely(result != 0)) {
-                mk_err("[server] Failed to register client.");
-                goto error;
-            }
-        }
-
-        sched->accepted_connections++;
-        MK_TRACE("[server] New connection arrived: FD %i", client_fd);
-        return client_fd;
     }
+
+    if (mk_sched_check_capacity(sched) == -1) {
+        goto error;
+    }
+
+    client_fd = mk_socket_accept(server_fd);
+    if (mk_unlikely(client_fd == -1)) {
+        MK_TRACE("[server] Accept connection failed: %s", strerror(errno));
+        goto error;
+    }
+
+    conn = mk_sched_add_connection(client_fd, sched);
+    if (mk_unlikely(!conn)) {
+        mk_err("[server] Failed to register client.");
+        goto error;
+    }
+
+    ret = mk_event_add(sched->loop, client_fd,
+                       MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
+    if (mk_unlikely(ret != 0)) {
+        mk_err("[server] Error registering file descriptor: %s",
+               strerror(errno));
+        goto error;
+    }
+
+    sched->accepted_connections++;
+    MK_TRACE("[server] New connection arrived: FD %i", client_fd);
+    return client_fd;
+
 error:
-    if (client_fd != -1)
+    if (client_fd != -1) {
         mk_socket_close(client_fd);
+    }
     return -1;
 }
 
-void mk_server_listen_free(struct mk_server_listen *server_listen)
+void mk_server_listen_free()
 {
-    mk_mem_free(server_listen->listen_list);
-    server_listen->listen_list = NULL;
-    server_listen->count = 0;
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_server_listen *listener;
+
+    mk_list_foreach_safe(head, tmp, server_listen) {
+        listener = mk_list_entry(head, struct mk_server_listen, _head);
+        mk_list_del(&listener->_head);
+        mk_mem_free(listener);
+    }
 }
 
-int mk_server_listen_init(struct mk_server_config *config,
-                          struct mk_server_listen *server_listen)
+int mk_server_listen_init(struct mk_server_config *config)
 {
     int i = 0;
-    unsigned int count = 0;
     int server_fd;
     int reuse_port;
     struct mk_list *head;
+    struct mk_event *event;
+    struct mk_server_listen *listener;
     struct mk_config_listener *listen;
-    struct mk_server_listen_entry *listen_list = NULL;
 
-    if (config == NULL)
+    if (config == NULL) {
         goto error;
-    if (server_listen == NULL)
-        goto error;
+    }
+
+    server_listen = malloc(sizeof(struct mk_list));
+    mk_list_init(server_listen);
 
     reuse_port = config->scheduler_mode == MK_SCHEDULER_REUSEPORT;
-
-    mk_list_foreach(head, &mk_config->listeners) {
-        count++;
-    }
-
-    listen_list = calloc(count, sizeof(*listen_list));
-    if (listen_list == NULL) {
-        mk_err("[server] Calloc failed: %s", strerror(errno));
-        goto error;
-    }
 
     mk_list_foreach(head, &config->listeners) {
         listen = mk_list_entry(head, struct mk_config_listener, _head);
 
         server_fd = mk_socket_server(listen->port,
-                listen->address,
-                reuse_port);
+                                     listen->address,
+                                     reuse_port);
         if (server_fd >= 0) {
             if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
 #if defined (__linux__)
                 mk_warn("[server] Could not set TCP_DEFER_ACCEPT");
 #endif
             }
-            listen_list[i].listen = listen;
-            listen_list[i].server_fd = server_fd;
+
+            listener = mk_mem_malloc(sizeof(struct mk_server_listen));
+
+            /* configure the internal event_state */
+            event = &listener->event;
+            event->fd   = server_fd;
+            event->type = MK_EVENT_LISTENER;
+            event->mask = MK_EVENT_EMPTY;
+
+            /* continue with listener setup and linking */
+            listener->server_fd = server_fd;
+            listener->listen    = listen;
+            mk_list_add(&listener->_head, server_listen);
         }
         else {
-            listen_list[i].server_fd = -1;
             mk_warn("[server] Failed to bind server socket to %s:%s.",
                     listen->address,
                     listen->port);
@@ -192,12 +177,9 @@ int mk_server_listen_init(struct mk_server_config *config,
         i += 1;
     }
 
-    server_listen->count = count;
-    server_listen->listen_list = listen_list;
     return 0;
 
 error:
-    if (listen_list != NULL) free(listen_list);
     return -1;
 }
 
@@ -232,14 +214,14 @@ void mk_server_launch_workers()
 void mk_server_loop_balancer()
 {
     int i;
-    int fd;
-    int mask;
+    struct mk_list *head;
+    struct mk_server_listen *listener;
+    struct mk_event *event;
+    struct mk_event_loop *evl;
     struct sched_list_node *sched;
-    struct mk_server_listen listen;
-    mk_event_loop_t *evl;
 
     /* Init the listeners */
-    if (mk_server_listen_init(mk_config, &listen)) {
+    if (mk_server_listen_init(mk_config)) {
         mk_err("Failed to initialize listen sockets.");
         return;
     }
@@ -252,21 +234,24 @@ void mk_server_loop_balancer()
     }
 
     /* Register the listeners */
-    for (i = 0; (unsigned) i < listen.count; i++) {
-        mk_event_add(evl, listen.listen_list[i].server_fd, MK_EVENT_READ, NULL);
+    mk_list_foreach(head, server_listen) {
+        listener = mk_list_entry(head, struct mk_server_listen, _head);
+        mk_event_add(evl, listener->server_fd,
+                     MK_EVENT_LISTENER, MK_EVENT_READ,
+                     listener);
     }
 
     while (1) {
         mk_event_wait(evl);
-        mk_event_foreach(evl, fd, mask) {
-            if (mask & MK_EVENT_READ) {
+        mk_event_foreach(event, evl) {
+            if (event->mask & MK_EVENT_READ) {
                 /*
                  * Accept connection: determinate which thread may work on this
                  * new connection.
                  */
                 sched = mk_sched_next_target();
                 if (sched != NULL) {
-                    mk_server_listen_handler(sched, &listen, fd);
+                    mk_server_listen_handler(sched, event->fd);
 #ifdef TRACE
                     struct sched_list_node *node;
 
@@ -284,9 +269,9 @@ void mk_server_loop_balancer()
                     mk_warn("[server] Over capacity.");
                 }
             }
-            else if (mask & MK_EVENT_CLOSE) {
+            else if (event->mask & MK_EVENT_CLOSE) {
                 mk_err("[server] Error on socket %d: %s",
-                       fd, strerror(errno));
+                       event->fd, strerror(errno));
             }
         }
     }
@@ -299,17 +284,17 @@ void mk_server_loop_balancer()
  * When using shared TCP ports the Kernel decides to which worker the
  * connection will be assigned.
  */
-void mk_server_worker_loop(struct mk_server_listen *listen)
+void mk_server_worker_loop()
 {
-    int i;
-    int fd;
     int ret = -1;
-    int mask;
     int timeout_fd;
     uint64_t val;
-    mk_event_loop_t *evl;
+    struct mk_event *event;
+    struct mk_event_loop *evl;
+    struct mk_list *head;
+    struct mk_sched_conn *conn;
     struct sched_list_node *sched;
-    struct mk_server_listen_entry *listen_entry;
+    struct mk_server_listen *listener;
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
@@ -321,48 +306,80 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
      * signal MK_SERVER_SIGNAL_START.
      */
     mk_event_wait(evl);
-    mk_event_foreach(evl, fd, mask) {
-        if (mask & MK_EVENT_READ) {
-            if (fd == sched->signal_channel_r) {
-                ret = read(fd, &val, sizeof(val));
+    mk_event_foreach(event, evl) {
+        if ((event->mask & MK_EVENT_READ) &&
+            event->type == MK_EVENT_NOTIFICATION) {
+            if (event->fd == sched->signal_channel_r) {
+                ret = read(event->fd, &val, sizeof(val));
+                if (ret < 0) {
+                    mk_libc_error("read");
+                    continue;
+                }
+                if (val == MK_SERVER_SIGNAL_START) {
+                    MK_TRACE("Worker %i started (SIGNAL_START)", sched->idx);
+                    break;
+                }
+            }
+        }
+        else {
+            /* FIXME */
+        }
+    }
+
+    /* Register listeners */
+    mk_list_foreach(head, server_listen) {
+        listener = mk_list_entry(head, struct mk_server_listen, _head);
+        mk_event_add(sched->loop, listener->server_fd,
+                     MK_EVENT_LISTENER, MK_EVENT_READ,
+                     listener);
+    }
+
+    /* create a new timeout file descriptor */
+    server_timeout = mk_mem_malloc(sizeof(struct mk_server_timeout));
+    timeout_fd = mk_event_timeout_create(evl, mk_config->timeout, server_timeout);
+
+    while (1) {
+        mk_event_wait(evl);
+        mk_event_foreach(event, evl) {
+            if (event->type == MK_EVENT_CONNECTION) {
+                conn = (struct mk_sched_conn *) event;
+
+                if (event->mask & MK_EVENT_READ) {
+                    ret = mk_conn_read(conn);
+                }
+                else if (event->mask & MK_EVENT_WRITE) {
+                    MK_TRACE("[FD %i] EPoll Event WRITE", event->fd);
+                    ret = mk_conn_write(conn);
+                }
+                else if (event->mask & MK_EVENT_CLOSE) {
+                    ret = -1;
+                }
+
+                if (ret < 0) {
+                    MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i",
+                             event->fd, ret);
+                    mk_conn_close(event->fd, MK_EP_SOCKET_CLOSED);
+                }
+            }
+            else if (event->type == MK_EVENT_LISTENER) {
+                /*
+                 * A new connection have been accepted..or failed, despite
+                 * the result, we let the loop continue processing the other
+                 * events triggered.
+                 */
+                mk_server_listen_handler(sched, event->fd);
+                continue;
+            }
+            else if (event->type == MK_EVENT_NOTIFICATION) {
+                ret = read(event->fd, &val, sizeof(val));
                 if (ret < 0) {
                     mk_libc_error("read");
                     continue;
                 }
 
-                if (val == MK_SERVER_SIGNAL_START) {
-                    break;
-                }
-            }
-        }
-    }
-
-    /* Register listeners */
-    for (i = 0; i < (int) listen->count; i++) {
-        listen_entry = &listen->listen_list[i];
-        if (listen_entry->server_fd < 0)
-            continue;
-
-        mk_event_add(sched->loop, listen_entry->server_fd, MK_EVENT_READ, NULL);
-    }
-
-    /* create a new timeout file descriptor */
-    timeout_fd = mk_event_timeout_create(evl, mk_config->timeout);
-
-    while (1) {
-        mk_event_wait(evl);
-        mk_event_foreach(evl, fd, mask) {
-            if (mask & MK_EVENT_READ) {
-                /* Check if we have a worker signal */
-                if (mk_unlikely(fd == sched->signal_channel_r)) {
-                    ret = read(fd, &val, sizeof(val));
-                    if (ret < 0) {
-                        mk_libc_error("read");
-                        continue;
-                    }
-
+                if (event->fd == sched->signal_channel_r) {
                     if (val == MK_SCHEDULER_SIGNAL_DEADBEEF) {
-                        mk_sched_sync_counters();
+                        //FIXME:mk_sched_sync_counters();
                         continue;
                     }
                     else if (val == MK_SCHEDULER_SIGNAL_FREE_ALL) {
@@ -371,40 +388,10 @@ void mk_server_worker_loop(struct mk_server_listen *listen)
                         return;
                     }
                 }
-                else if (mk_unlikely(fd == timeout_fd)) {
-                    ret = read(fd, &val, sizeof(val));
-                    if (ret < 0) {
-                        mk_libc_error("read");
-                    }
-                    else {
-                        mk_sched_check_timeouts(sched);
-                    }
-                    continue;
+                else if (event->fd == timeout_fd) {
+                    mk_sched_check_timeouts(sched);
                 }
-                else if (listen && mk_server_listen_check(listen, fd)) {
-                    /*
-                     * A new connection have been accepted..or failed, despite
-                     * the result, we let the loop continue processing the other
-                     * events triggered.
-                     */
-                    mk_server_listen_handler(sched, listen, fd);
-                    continue;
-                }
-                else {
-                    ret = mk_conn_read(fd);
-                }
-            }
-            else if (mask & MK_EVENT_WRITE) {
-                MK_TRACE("[FD %i] EPoll Event WRITE", fd);
-                ret = mk_conn_write(fd);
-            }
-            else if (mask & MK_EVENT_CLOSE) {
-                ret = -1;
-            }
-
-            if (ret < 0) {
-                MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i", fd, ret);
-                mk_conn_close(fd, MK_EP_SOCKET_CLOSED);
+                continue;
             }
         }
     }

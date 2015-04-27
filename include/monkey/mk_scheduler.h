@@ -52,13 +52,10 @@
 extern __thread struct rb_root *cs_list;
 extern __thread struct mk_list *cs_incomplete;
 
-#ifdef STATS
-extern __thread struct stats *stats;
-#endif
-
-struct sched_connection
+struct mk_sched_conn
 {
-    int socket;                  /* file descriptor            */
+    struct mk_event event;
+
     int status;                  /* connection status          */
     time_t arrive_time;          /* arrived time               */
     struct mk_list _head;        /* list head: av/busy         */
@@ -66,11 +63,12 @@ struct sched_connection
     struct rb_node _rb_head; /* red-black tree head */
 };
 
-/* Global struct */
+/* Global struct per worker: this is a structure that lives at
+ * */
 struct sched_list_node
 {
     /* The event loop on this scheduler thread */
-    mk_event_loop_t *loop;
+    struct mk_event_loop *loop;
 
     unsigned long long accepted_connections;
     unsigned long long closed_connections;
@@ -86,8 +84,8 @@ struct sched_list_node
      * Available and busy queue: provides a fast lookup
      * for available and used slot connections
      */
-    struct mk_list busy_queue;
-    struct mk_list av_queue;
+    //struct mk_list busy_queue;
+    //struct mk_list av_queue;
 
     /*
      * The incoming queue represents client connections that
@@ -113,16 +111,14 @@ struct sched_list_node
      */
     int signal_channel_r;
     int signal_channel_w;
-
-    /*
-     * Reference of the memory array that contains all entries for
-     * the available and busy queue entries.
-     */
-    struct sched_connection *sched_array;
 };
 
-extern __thread struct sched_list_node *worker_sched_node;
+struct mk_sched_notif {
+    struct mk_event event;
+};
 
+extern __thread struct mk_sched_notif  *worker_sched_notif;
+extern __thread struct sched_list_node *worker_sched_node;
 
 /* global scheduler list */
 struct sched_list_node *sched_list;
@@ -157,9 +153,10 @@ void mk_sched_update_thread_status(struct sched_list_node *sched,
 
 int mk_sched_drop_connection(int socket);
 int mk_sched_check_timeouts(struct sched_list_node *sched);
-int mk_sched_register_client(int remote_fd, struct sched_list_node *sched);
+struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
+                                              struct sched_list_node *sched);
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
-struct sched_connection *mk_sched_get_connection(struct sched_list_node
+struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node
                                                      *sched, int remote_fd);
 int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);

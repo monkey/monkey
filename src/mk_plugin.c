@@ -301,7 +301,6 @@ void mk_plugin_api_init()
     api->ev_timeout_create = mk_event_timeout_create;
     api->ev_channel_create = mk_event_channel_create;
     api->ev_wait = mk_event_wait;
-    api->ev_translate = mk_event_translate;
     api->ev_backend = mk_event_backend;
 
     /* Red-Black tree */
@@ -640,7 +639,8 @@ int mk_plugin_event_add(int socket, int mode,
      * The thread event info has been registered, now we need
      * to register the socket involved to the thread epoll array
      */
-    return mk_event_add(sched->loop, socket, mode, NULL);
+    //return mk_event_add(sched->loop, socket, mode, NULL);
+    return 0;
 }
 
 int mk_plugin_http_request_end(int socket)
@@ -684,6 +684,8 @@ int mk_plugin_http_request_end(int socket)
 int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior)
 {
     struct sched_list_node *sched;
+    (void) mode;
+    (void) socket;
     (void) behavior;
 
     sched = mk_sched_get_thread_conf();
@@ -692,7 +694,8 @@ int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavi
         return -1;
     }
 
-    return mk_event_add(sched->loop, socket, mode, NULL);
+    //return mk_event_add(sched->loop, socket, mode, NULL);
+    return 0;
 }
 
 struct plugin_event *mk_plugin_event_get(int socket)
@@ -789,7 +792,7 @@ int mk_plugin_event_read(int socket)
     //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
-    struct mk_event_fd_state *state;
+    struct mk_event *state = NULL;
 
     MK_TRACE("[FD %i] Plugin Read Event", socket);
 
@@ -798,7 +801,7 @@ int mk_plugin_event_read(int socket)
      * that is still an active connection and was not closed
      * in the middle by a timeout.
      */
-    state = mk_event_get_state(socket);
+    //state = mk_event_get_state(socket);
     if (state->mask & MK_EVENT_EMPTY) {
         MK_TRACE("[FD %i] Connection already closed", socket);
         return -1;
@@ -850,7 +853,7 @@ int mk_plugin_event_write(int socket)
     //struct mk_plugin *node;
     struct mk_list *head;
     struct plugin_event *event;
-    struct mk_event_fd_state *state;
+    struct mk_event *state;
 
     MK_TRACE("[FD %i] Plugin event write", socket);
 
@@ -859,7 +862,7 @@ int mk_plugin_event_write(int socket)
      * that is still an active connection and was not closed
      * in the middle by a timeout.
      */
-    state = mk_event_get_state(socket);
+    //state = mk_event_get_state(socket);
     if (state->mask & MK_EVENT_EMPTY) {
         MK_TRACE("[FD %i] Connection already closed", socket);
         return -1;

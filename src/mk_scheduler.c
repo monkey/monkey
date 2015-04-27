@@ -33,7 +33,6 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_linuxtrace.h>
-#include <monkey/mk_stats.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>
 
@@ -47,11 +46,8 @@ pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
 
 __thread struct rb_root *cs_list;
 __thread struct mk_list *cs_incomplete;
+__thread struct mk_sched_notif *worker_sched_notif;
 __thread struct sched_list_node *worker_sched_node;
-
-#ifdef STATS
-__thread struct stats *stats;
-#endif
 
 /*
  * Returns the worker id which should take a new incomming connection,
@@ -105,44 +101,6 @@ struct sched_list_node *mk_sched_next_target()
 }
 
 /*
- * This function synchronize the worker scheduler counters in case
- * we face the ULONG_MAX bug, this is an unexpected behavior but
- * until it become fixed this routine must run with mutual exclusion
- * to avoid data corruption.
- */
-int mk_sched_sync_counters()
-{
-    uint64_t n = 0;
-    struct mk_list *head;
-    struct sched_list_node *sched;
-
-    /* we only aim to fix the value of closed_connections */
-    pthread_mutex_lock(&mutex_sched_init);
-    sched = mk_sched_get_thread_conf();
-
-    MK_LT_SCHED(sched->signal_channel, "SYNC COUNTERS");
-
-    if (sched->closed_connections > sched->accepted_connections) {
-        /* Count the real number of active connections */
-        mk_list_foreach(head, &sched->busy_queue) {
-            n++;
-        }
-
-        /*
-         * At this point we have N active connections in the busy
-         * queue, lets assume that we need to close N to reach the number
-         * of accepted connections.
-         */
-        sched->accepted_connections = n;
-        sched->closed_connections   = 0;
-        sched->over_capacity        = 0;
-    }
-    pthread_mutex_unlock(&mutex_sched_init);
-
-    return 0;
-}
-
-/*
  * This function is invoked when the core triggers a MK_SCHED_SIGNAL_FREE_ALL
  * event through the signal channels, it means the server will stop working
  * so this is the last call to release all memory resources in use. Of course
@@ -179,7 +137,6 @@ void mk_sched_worker_free()
     //sl->request_handler;
 
     /* Free master array (av queue & busy queue) */
-    mk_mem_free(sl->sched_array);
     mk_mem_free(cs_list);
     mk_mem_free(cs_incomplete);
     pthread_mutex_unlock(&mutex_worker_exit);
@@ -193,19 +150,7 @@ void mk_sched_worker_free()
  */
 int mk_sched_check_capacity(struct sched_list_node *sched)
 {
-    if (mk_list_is_empty(&sched->av_queue) == 0) {
-        /* The server is over capacity */
-        sched->over_capacity++;
-        if (sched->over_capacity % 5000) {
-            //mk_warn("Scheduler: Server is over capacity\n"
-            //        "- more than 5000 attemps stalled\n"
-            //        "- increasing worker %lu capacity by 10%%",
-            //        syscall(__NR_gettid));
-            sched->over_capacity = 0;
-        }
-        return -1;
-    }
-
+    (void) sched;
     return 0;
 }
 
@@ -213,36 +158,34 @@ int mk_sched_check_capacity(struct sched_list_node *sched)
  * Register a new client connection into the scheduler, this call takes place
  * inside the worker/thread context.
  */
-int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
+struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
+                                              struct sched_list_node *sched)
 {
     int ret;
-    struct sched_connection *sched_conn;
-    struct mk_list *av_queue = &sched->av_queue;
-
-    if ((mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) &&
-        mk_list_is_empty(av_queue) == 0) {
-        mk_event_del(sched->loop, remote_fd);
-        close(remote_fd);
-        return -1;
-    }
-
-    sched_conn = mk_list_entry_first(av_queue, struct sched_connection, _head);
-
-    /* Socket and status */
-    sched_conn->socket = remote_fd;
-    sched_conn->status = MK_SCHEDULER_CONN_PENDING;
-    sched_conn->arrive_time = log_current_utime;
+    struct mk_sched_conn *conn;
+    struct mk_event *event;
 
     /* Before to continue, we need to run plugin stage 10 */
-    ret = mk_plugin_stage_run_10(remote_fd, sched_conn);
+    ret = mk_plugin_stage_run_10(remote_fd);
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_event_del(sched->loop, remote_fd);
         mk_socket_close(remote_fd);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
-        return -1;
+        return NULL;
     }
+
+    conn = mk_mem_malloc(sizeof(struct mk_sched_conn));
+    if (!conn) {
+        return NULL;
+    }
+
+    event = &conn->event;
+    event->fd   = remote_fd;
+    event->type = MK_EVENT_CONNECTION;
+    event->mask = MK_EVENT_EMPTY;
+    conn->status = MK_SCHEDULER_CONN_PENDING;
+    conn->arrive_time = log_current_utime;
 
     /* Register the entry in the red-black tree queue for fast lookup */
     struct rb_node **new = &(sched->rb_queue.rb_node);
@@ -250,12 +193,12 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
 
     /* Figure out where to put new node */
     while (*new) {
-        struct sched_connection *this = container_of(*new, struct sched_connection, _rb_head);
+        struct mk_sched_conn *this = container_of(*new, struct mk_sched_conn, _rb_head);
 
         parent = *new;
-        if (sched_conn->socket < this->socket)
+        if (conn->event.fd < this->event.fd)
             new = &((*new)->rb_left);
-        else if (sched_conn->socket > this->socket)
+        else if (conn->event.fd > this->event.fd)
             new = &((*new)->rb_right);
         else {
             mk_bug(1);
@@ -264,20 +207,13 @@ int mk_sched_register_client(int remote_fd, struct sched_list_node *sched)
     }
 
     /* Add new node and rebalance tree. */
-    rb_link_node(&sched_conn->_rb_head, parent, new);
-    rb_insert_color(&sched_conn->_rb_head, &sched->rb_queue);
-
-    /* Move to busy queue */
-    mk_list_del(&sched_conn->_head);
-    mk_list_add(&sched_conn->_head, &sched->busy_queue);
-
-    /* As the connection is still pending, add it to the incoming_queue */
-    mk_list_add(&sched_conn->status_queue, &sched->incoming_queue);
+    rb_link_node(&conn->_rb_head, parent, new);
+    rb_insert_color(&conn->_rb_head, &sched->rb_queue);
 
     /* Linux trace message */
     MK_LT_SCHED(remote_fd, "REGISTERED");
 
-    return 0;
+    return conn;
 }
 
 static void mk_sched_thread_lists_init()
@@ -291,9 +227,7 @@ static void mk_sched_thread_lists_init()
 /* Register thread information. The caller thread is the thread information's owner */
 static int mk_sched_register_thread()
 {
-    int i;
     int capacity;
-    struct sched_connection *sched_conn;
     struct sched_list_node *sl;
     static int wid = 0;
 
@@ -332,8 +266,6 @@ static int mk_sched_register_thread()
 
     /* Initialize lists */
     sl->rb_queue = RB_ROOT;
-    mk_list_init(&sl->busy_queue);
-    mk_list_init(&sl->av_queue);
     mk_list_init(&sl->incoming_queue);
 
     /* Set worker capacity based on Scheduler Balancing mode */
@@ -345,17 +277,6 @@ static int mk_sched_register_thread()
         capacity = mk_config->server_capacity;
     }
 
-
-    /* Start filling the array */
-    sl->sched_array = mk_mem_malloc_z(sizeof(struct sched_connection) *
-                                      capacity);
-    for (i = 0; i < capacity; i++) {
-        sched_conn = &sl->sched_array[i];
-        sched_conn->status = MK_SCHEDULER_CONN_AVAILABLE;
-        sched_conn->socket = -1;
-        sched_conn->arrive_time = 0;
-        mk_list_add(&sched_conn->_head, &sl->av_queue);
-    }
     sl->request_handler = NULL;
 
     return sl->idx;
@@ -391,10 +312,17 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
         exit(EXIT_FAILURE);
     }
 
+    /*
+     * Create the notification instance and link it to the worker
+     * thread-scope list.
+     */
+    worker_sched_notif = mk_mem_malloc(sizeof(struct mk_sched_notif));
+
     /* Register the scheduler channel to signal active workers */
     ret = mk_event_channel_create(sched->loop,
                                   &sched->signal_channel_r,
-                                  &sched->signal_channel_w);
+                                  &sched->signal_channel_w,
+                                  worker_sched_notif);
     if (ret < 0) {
         exit(EXIT_FAILURE);
     }
@@ -421,7 +349,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_plugin_core_thread();
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        if (mk_server_listen_init(mk_config, &server_listen)) {
+        if (mk_server_listen_init(mk_config)) {
             mk_err("[sched] Failed to initialize listen sockets.");
             return 0;
         }
@@ -475,7 +403,6 @@ void mk_sched_init()
 
     size = sizeof(struct sched_list_node) * mk_config->workers;
     sched_list = mk_mem_malloc_z(size);
-    mk_event_initialize();
 }
 
 void mk_sched_set_request_list(struct rb_root *list)
@@ -485,7 +412,7 @@ void mk_sched_set_request_list(struct rb_root *list)
 
 int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 {
-    struct sched_connection *sc;
+    struct mk_sched_conn *sc;
 
     /*
      * Close socket and change status: we must invoke mk_epoll_del()
@@ -521,20 +448,6 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
         /* Unlink from the red-black tree */
         rb_erase(&sc->_rb_head, &sched->rb_queue);
 
-        /* Unlink from busy queue and put it in available queue again */
-        mk_list_del(&sc->_head);
-        mk_list_add(&sc->_head, &sched->av_queue);
-
-        /* If pending, remove from sched->incoming_queue */
-        if (sc->status == MK_SCHEDULER_CONN_PENDING) {
-            mk_list_del(&sc->status_queue);
-        }
-
-        /* Change node status */
-        sc->status = MK_SCHEDULER_CONN_AVAILABLE;
-        sc->socket = -1;
-
-
         /* Only close if this was our connection.
          *
          * This has to happen _after_ the busy list removal,
@@ -553,11 +466,11 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     return -1;
 }
 
-struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
+struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node *sched,
                                                  int remote_fd)
 {
     struct rb_node *node;
-    struct sched_connection *this;
+    struct mk_sched_conn *this;
 
     /*
      * In some cases the sched node can be NULL when is a premature close,
@@ -573,10 +486,10 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
 
   	node = sched->rb_queue.rb_node;
   	while (node) {
-  		this = container_of(node, struct sched_connection, _rb_head);
-		if (remote_fd < this->socket)
+        this = container_of(node, struct mk_sched_conn, _rb_head);
+		if (remote_fd < this->event.fd)
   			node = node->rb_left;
-		else if (remote_fd > this->socket)
+		else if (remote_fd > this->event.fd)
   			node = node->rb_right;
 		else {
             MK_LT_SCHED(remote_fd, "GET_CONNECTION");
@@ -596,7 +509,7 @@ struct sched_connection *mk_sched_get_connection(struct sched_list_node *sched,
  */
 int mk_sched_drop_connection(int socket)
 {
-    struct sched_connection *conn;
+    struct mk_sched_conn *conn;
     struct sched_list_node *sched;
 
     mk_http_session_remove(socket);
@@ -613,21 +526,21 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
 {
     int client_timeout;
     struct mk_http_session *cs_node;
-    struct sched_connection *entry_conn;
+    struct mk_sched_conn *sched_conn;
     struct mk_list *head;
     struct mk_list *temp;
 
     /* PENDING CONN TIMEOUT */
     mk_list_foreach_safe(head, temp, &sched->incoming_queue) {
-        entry_conn = mk_list_entry(head, struct sched_connection, status_queue);
-        client_timeout = entry_conn->arrive_time + mk_config->timeout;
+        sched_conn = mk_list_entry(head, struct mk_sched_conn, status_queue);
+        client_timeout = sched_conn->arrive_time + mk_config->timeout;
 
         /* Check timeout */
         if (client_timeout <= log_current_utime) {
             MK_TRACE("Scheduler, closing fd %i due TIMEOUT (incoming queue)",
-                     entry_conn->socket);
-            MK_LT_SCHED(entry_conn->socket, "TIMEOUT_CONN_PENDING");
-            mk_sched_drop_connection(entry_conn->socket);
+                     sched_conn->event.fd);
+            MK_LT_SCHED(entry_conn->event.fd, "TIMEOUT_CONN_PENDING");
+            mk_sched_drop_connection(sched_conn->event.fd);
         }
     }
 
@@ -649,35 +562,5 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
         }
     }
 
-    return 0;
-}
-
-
-int mk_sched_update_conn_status(struct sched_list_node *sched,
-                                int remote_fd, int status)
-{
-    struct sched_connection *conn;
-
-    if (mk_unlikely(!sched)) {
-        return -1;
-    }
-
-    conn = mk_sched_get_connection(sched, remote_fd);
-    mk_bug(!conn);
-
-    if (status == conn->status) {
-        return 0;
-    }
-
-    if (conn->status == MK_SCHEDULER_CONN_PENDING) {
-        mk_list_del(&conn->status_queue);
-    }
-
-    /* Incoming queue check */
-    if (status == MK_SCHEDULER_CONN_PENDING) {
-        mk_list_add(&conn->status_queue, &sched->incoming_queue);
-    }
-
-    conn->status = status;
     return 0;
 }

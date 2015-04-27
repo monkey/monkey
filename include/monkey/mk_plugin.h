@@ -174,14 +174,13 @@ struct plugin_api
     void *(*plugin_load_symbol) (void *, const char *);
 
     /* core events mechanism */
-    mk_event_loop_t *(*ev_loop_create) (int);
-    mk_event_fdt_t *(*ev_get_fdt) ();
-    int (*ev_add) (mk_event_loop_t *, int, int, void *);
-    int (*ev_del) (mk_event_loop_t *, int);
-    int (*ev_timeout_create) (mk_event_loop_t *, int);
-    int (*ev_channel_create) (mk_event_loop_t *, int *, int *);
-    int (*ev_wait) (mk_event_loop_t *);
-    int (*ev_translate) (mk_event_loop_t *);
+    struct mk_event_loop *(*ev_loop_create) (int);
+    struct mk_event_fdt *(*ev_get_fdt) ();
+    int (*ev_add) (struct mk_event_loop *, int, int, uint32_t, void *);
+    int (*ev_del) (struct mk_event_loop *, int);
+    int (*ev_timeout_create) (struct mk_event_loop *, int, void *);
+    int (*ev_channel_create) (struct mk_event_loop *, int *, int *, void *);
+    int (*ev_wait) (struct mk_event_loop *);
     char *(*ev_backend) ();
 
     /* Mime type */
@@ -201,8 +200,8 @@ struct plugin_api
 
     /* Scheduler */
     int (*sched_remove_client) (int);
-    struct sched_connection *(*sched_get_connection) (struct sched_list_node *,
-                                                      int);
+    struct mk_sched_conn *(*sched_get_connection)(struct sched_list_node *,
+                                                  int);
     struct sched_list_node *(*sched_worker_info)();
 
     /* worker's functions */
@@ -271,7 +270,7 @@ struct mk_plugin_network {
 };
 
 struct mk_plugin_stage {
-    int (*stage10) (int, struct sched_connection *);
+    int (*stage10) (int);
     int (*stage20) (struct mk_http_session *, struct mk_http_request *);
     int (*stage30) (struct mk_plugin *, struct mk_http_session *,
                     struct mk_http_request *);
@@ -325,7 +324,7 @@ void mk_plugin_event_init_list();
 
 int mk_plugin_stage_run(unsigned int stage,
                         unsigned int socket,
-                        struct sched_connection *conx,
+                        struct mk_sched_conn *conx,
                         struct mk_http_session *cs, struct mk_http_request *sr);
 
 void mk_plugin_core_process();

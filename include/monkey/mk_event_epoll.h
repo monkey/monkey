@@ -22,34 +22,23 @@
 #ifndef MK_EVENT_EPOLL_H
 #define MK_EVENT_EPOLL_H
 
-typedef struct {
+struct mk_event_ctx {
     int efd;
     int queue_size;
     struct epoll_event *events;
-} mk_event_ctx_t;
+};
 
-#define mk_event_foreach(evl, fd, mask)                                 \
-    int __i = 0;                                                        \
-    mk_event_ctx_t *ctx = evl->data;                                    \
-    struct mk_event_fd_state *st = NULL;                                \
+#define mk_event_foreach(event, evl)                                    \
+    int __i;                                                            \
+    struct mk_event_ctx *ctx = evl->data;                               \
                                                                         \
     if (evl->n_events > 0) {                                            \
-        fd   = ctx->events[__i].data.fd;                                \
-        mask = ctx->events[__i].events;                                 \
-        st = mk_event_get_state(fd);                                    \
-                                                                        \
-        evl->events[__i].fd   = fd;                                     \
-        evl->events[__i].mask = mask;                                   \
-        evl->events[__i].data = st->data;                               \
+        event = ctx->events[0].data.ptr;                                \
     }                                                                   \
                                                                         \
     for (__i = 0;                                                       \
          __i < evl->n_events;                                           \
          __i++,                                                         \
-             fd = ctx->events[__i].data.fd,                             \
-             mask = ctx->events[__i].events,                            \
-             evl->events[__i].fd   = fd,                                \
-             evl->events[__i].mask = mask,                              \
-             evl->events[__i].data = st->data)
-
+             event = ctx->events[__i].data.ptr                          \
+         )
 #endif
