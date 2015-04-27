@@ -40,6 +40,8 @@ pthread_key_t cache_ip_str;
 
 struct log_target
 {
+    struct mk_event event;
+
     /* Pipes */
     int fd_access[2];
     int fd_error[2];

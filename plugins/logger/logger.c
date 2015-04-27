@@ -128,9 +128,7 @@ static ssize_t _mk_logger_append(int pipe_fd_in,
 
 static void mk_logger_start_worker(void *args)
 {
-    int i;
     int fd;
-    int nfds;
     int bytes, err;
     int max_events = mk_api->config->nhosts;
     int flog;
@@ -141,7 +139,8 @@ static void mk_logger_start_worker(void *args)
     (void) args;
     struct mk_list *head;
     struct log_target *entry;
-    mk_event_loop_t *evl;
+    struct mk_event *event;
+    struct mk_event_loop *evl;
 
     /* pipe_size:
      * ----------
@@ -174,14 +173,19 @@ static void mk_logger_start_worker(void *args)
     /* Registering targets for virtualhosts */
     mk_list_foreach(head, &targets_list) {
         entry = mk_list_entry(head, struct log_target, _head);
+        event = &entry->event;
 
         /* Add access log file */
         if (entry->fd_access[0] > 0) {
-            mk_api->ev_add(evl, entry->fd_access[0], MK_EVENT_READ, NULL);
+            event->mask = MK_EVENT_EMPTY;
+            mk_api->ev_add(evl, entry->fd_access[0],
+                           MK_EVENT_CONNECTION, MK_EVENT_READ, entry);
         }
         /* Add error log file */
         if (entry->fd_error[0] > 0) {
-            mk_api->ev_add(evl, entry->fd_error[0], MK_EVENT_READ, NULL);
+            event->mask = MK_EVENT_EMPTY;
+            mk_api->ev_add(evl, entry->fd_error[0],
+                           MK_EVENT_CONNECTION, MK_EVENT_READ, entry);
         }
     }
 
@@ -199,9 +203,8 @@ static void mk_logger_start_worker(void *args)
         clk = mk_api->time_unix();
 
         /* translate the backend events triggered */
-        nfds = mk_api->ev_translate(evl);
-        for (i = 0; i < nfds; i++) {
-            fd = evl->events[i].fd;
+        mk_event_foreach(event, evl) {
+            fd = event->fd;
 
             target = mk_logger_match_by_fd(fd);
             if (!target) {
