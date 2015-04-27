@@ -261,6 +261,7 @@ void mk_server_loop_balancer()
                 if (sched != NULL) {
                     mk_server_listen_handler(sched, event->fd);
 #ifdef TRACE
+                    int i;
                     struct sched_list_node *node;
 
                     node = sched_list;
