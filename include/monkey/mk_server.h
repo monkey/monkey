@@ -63,6 +63,6 @@ unsigned int mk_server_capacity();
 void mk_server_launch_workers(void);
 void mk_server_loop();
 void mk_server_loop_balancer();
-void mk_server_worker_loop(struct mk_server_listen *listen);
+void mk_server_worker_loop();
 
 #endif
