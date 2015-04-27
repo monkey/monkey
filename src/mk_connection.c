@@ -153,13 +153,12 @@ int mk_conn_write(struct mk_sched_conn *conn)
     }
 
     ret = mk_http_handler_write(socket, cs);
-
     /*
      * if ret < 0, means that some error happened in the writer call,
      * in the other hand, 0 means a successful request processed, if
      * ret > 0 means that some data still need to be send.
      */
-    if (ret <= MK_CHANNEL_ERROR) {
+    if (ret == MK_CHANNEL_ERROR) {
         mk_sched_drop_connection(socket);
         return -1;
     }
