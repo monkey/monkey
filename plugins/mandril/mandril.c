@@ -329,10 +329,8 @@ int mk_mandril_plugin_exit()
     return 0;
 }
 
-int mk_mandril_stage10(int socket, struct sched_connection *conx)
+int mk_mandril_stage10(int socket)
 {
-    (void) conx;
-
     /* Validate ip address with Mandril rules */
     if (mk_security_check_ip(socket) != 0) {
         PLUGIN_TRACE("[FD %i] Mandril close connection", socket);
