@@ -143,18 +143,6 @@ void mk_sched_worker_free()
 }
 
 /*
- * It checks that current worker (under sched context) have enough
- * capacity for a new connection. If its not the case, the connection
- * is held until it can be accepted, then it counts up to 5000 fails
- * of this type and then increase capacity by 10%.
- */
-int mk_sched_check_capacity(struct sched_list_node *sched)
-{
-    (void) sched;
-    return 0;
-}
-
-/*
  * Register a new client connection into the scheduler, this call takes place
  * inside the worker/thread context.
  */
@@ -282,7 +270,7 @@ static int mk_sched_register_thread()
     return sl->idx;
 }
 
-/* created thread, all this calls are in the thread context */
+/* created thread, all these calls are in the thread context */
 void *mk_sched_launch_worker_loop(void *thread_conf)
 {
     int ret;
@@ -290,9 +278,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     unsigned long len;
     char *thread_name = 0;
     struct sched_list_node *sched = NULL;
-    struct mk_server_listen server_listen;
 
-    /* Avoid SIGPIPE signals */
+    /* Avoid SIGPIPE signals on this thread */
     mk_signal_thread_sigpipe_safe();
 
     /* Init specific thread cache */
@@ -349,7 +336,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_plugin_core_thread();
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        if (mk_server_listen_init(mk_config)) {
+        if (mk_server_listen_init(mk_config) == NULL) {
             mk_err("[sched] Failed to initialize listen sockets.");
             return 0;
         }
@@ -363,7 +350,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     pthread_mutex_unlock(&mutex_worker_init);
 
     /* init server thread loop */
-    mk_server_worker_loop(&server_listen);
+    mk_server_worker_loop();
 
     return 0;
 }

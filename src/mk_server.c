@@ -72,14 +72,6 @@ int mk_server_listen_handler(struct sched_list_node *sched,
     int client_fd = -1;
     struct mk_sched_conn *conn;
 
-    if (server_listen == NULL) {
-        goto error;
-    }
-
-    if (mk_sched_check_capacity(sched) == -1) {
-        goto error;
-    }
-
     client_fd = mk_socket_accept(server_fd);
     if (mk_unlikely(client_fd == -1)) {
         MK_TRACE("[server] Accept connection failed: %s", strerror(errno));
@@ -108,6 +100,7 @@ error:
     if (client_fd != -1) {
         mk_socket_close(client_fd);
     }
+
     return -1;
 }
 
@@ -124,12 +117,13 @@ void mk_server_listen_free()
     }
 }
 
-int mk_server_listen_init(struct mk_server_config *config)
+struct mk_list *mk_server_listen_init(struct mk_server_config *config)
 {
     int i = 0;
     int server_fd;
     int reuse_port;
     struct mk_list *head;
+    struct mk_list *listeners;
     struct mk_event *event;
     struct mk_server_listen *listener;
     struct mk_config_listener *listen;
@@ -138,10 +132,12 @@ int mk_server_listen_init(struct mk_server_config *config)
         goto error;
     }
 
-    server_listen = malloc(sizeof(struct mk_list));
-    mk_list_init(server_listen);
+    listeners = malloc(sizeof(struct mk_list));
+    mk_list_init(listeners);
 
-    reuse_port = config->scheduler_mode == MK_SCHEDULER_REUSEPORT;
+    if (config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        reuse_port = MK_TRUE;
+    }
 
     mk_list_foreach(head, &config->listeners) {
         listen = mk_list_entry(head, struct mk_config_listener, _head);
@@ -167,7 +163,7 @@ int mk_server_listen_init(struct mk_server_config *config)
             /* continue with listener setup and linking */
             listener->server_fd = server_fd;
             listener->listen    = listen;
-            mk_list_add(&listener->_head, server_listen);
+            mk_list_add(&listener->_head, listeners);
         }
         else {
             mk_warn("[server] Failed to bind server socket to %s:%s.",
@@ -177,10 +173,14 @@ int mk_server_listen_init(struct mk_server_config *config)
         i += 1;
     }
 
-    return 0;
+    if (reuse_port == MK_TRUE) {
+        server_listen = listeners;
+    }
+
+    return listeners;
 
 error:
-    return -1;
+    return NULL;
 }
 
 /* Here we launch the worker threads to attend clients */
@@ -211,17 +211,25 @@ void mk_server_launch_workers()
 }
 
 
+/*
+ * The loop_balancer() runs in the main process context and is considered
+ * the old-fashion way to handle connections. It have an event queue waiting
+ * for connections, once one arrives, it decides which worker (thread) may
+ * handle it registering the accept(2)ed file descriptor on the worker
+ * event monitored queue.
+ */
 void mk_server_loop_balancer()
 {
-    int i;
     struct mk_list *head;
+    struct mk_list *listeners;
     struct mk_server_listen *listener;
     struct mk_event *event;
     struct mk_event_loop *evl;
     struct sched_list_node *sched;
 
     /* Init the listeners */
-    if (mk_server_listen_init(mk_config)) {
+    listeners = mk_server_listen_init(mk_config);
+    if (!listeners) {
         mk_err("Failed to initialize listen sockets.");
         return;
     }
@@ -234,7 +242,7 @@ void mk_server_loop_balancer()
     }
 
     /* Register the listeners */
-    mk_list_foreach(head, server_listen) {
+    mk_list_foreach(head, listeners) {
         listener = mk_list_entry(head, struct mk_server_listen, _head);
         mk_event_add(evl, listener->server_fd,
                      MK_EVENT_LISTENER, MK_EVENT_READ,
@@ -326,12 +334,14 @@ void mk_server_worker_loop()
         }
     }
 
-    /* Register listeners */
-    mk_list_foreach(head, server_listen) {
-        listener = mk_list_entry(head, struct mk_server_listen, _head);
-        mk_event_add(sched->loop, listener->server_fd,
-                     MK_EVENT_LISTENER, MK_EVENT_READ,
-                     listener);
+    if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        /* Register listeners */
+        mk_list_foreach(head, server_listen) {
+            listener = mk_list_entry(head, struct mk_server_listen, _head);
+            mk_event_add(sched->loop, listener->server_fd,
+                         MK_EVENT_LISTENER, MK_EVENT_READ,
+                         listener);
+        }
     }
 
     /* create a new timeout file descriptor */
@@ -422,8 +432,8 @@ void mk_server_loop(void)
      * them so they can start processing connections.
      */
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        /* Hang here */
-        while (1) sleep(60);
+        /* Hang here, basically do nothing as threads are doing the job  */
+        while (1) sleep(86400);
         return;
     }
     else {

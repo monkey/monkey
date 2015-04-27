@@ -161,7 +161,6 @@ struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node
 int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
                                 int status);
 int mk_sched_sync_counters();
-int mk_sched_check_capacity(struct sched_list_node *sched);
 void mk_sched_worker_free();
 
 #endif
