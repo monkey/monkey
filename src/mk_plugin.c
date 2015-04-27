@@ -27,7 +27,6 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_vhost.h>
-#include <monkey/mk_stats.h>
 #include <monkey/mk_static_plugins.h>
 #include <monkey/mk_plugin_stage.h>
 
