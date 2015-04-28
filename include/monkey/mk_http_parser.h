@@ -145,24 +145,23 @@ struct mk_http_header {
 
 /* This structure is the 'Parser Context' */
 struct mk_http_parser {
-    int i;
-    int level;   /* request level */
-    int status;  /* level status */
-    int next;    /* something next after status ? */
-    int length;
-    int method;
+    int                        i;
+    int                        level;   /* request level */
+    int                        status;  /* level status  */
+    int                        next;    /* something next after status ? */
+    int                        length;
+    int                        method;
 
     /* lookup fields */
-    int start;
-    int end;
-    int chars;
+    int                        start;
+    int                        end;
+    int                        chars;
 
     /* it stores the numeric value of Content-Length header */
-    int  header_host_port;
+    int                        header_host_port;
 
-    long body_received;
-
-    long header_content_length;
+    long int                   body_received;
+    long int                   header_content_length;
 
     /*
      * connection header value discovered: it can be set with
@@ -173,27 +172,26 @@ struct mk_http_parser {
      * MK_HTTP_PARSER_CONN_KA     : keep-alive
      * MK_HTTP_PARSER_CONN_CLOSE  : close
      */
-    int header_connection;
+    int                        header_connection;
 
     /* probable current header, fly parsing */
-    int header_key;
-    int header_sep;
-    int header_val;
-    int header_min;
-    int header_max;
-
-    int headers_extra_count;
+    int                        header_key;
+    int                        header_sep;
+    int                        header_val;
+    int                        header_min;
+    int                        header_max;
+    int                        headers_extra_count;
 
     /* Known headers */
-    struct mk_http_header headers[MK_HEADER_SIZEOF];
-
-    /* Extra headers */
-    struct mk_http_header headers_extra[MK_HEADER_EXTRA_SIZE];
+    struct mk_http_header      headers[MK_HEADER_SIZEOF];
 
     /* Head of linked list for all headers found in the request */
-    struct mk_list header_list;
+    struct mk_list             header_list;
 
+    /* Extra headers */
+    struct mk_http_header      headers_extra[MK_HEADER_EXTRA_SIZE];
 };
+
 
 #ifdef HTTP_STANDALONE
 
