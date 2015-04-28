@@ -236,7 +236,10 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
     struct vhost_fdt_hash_chain *hc;
 
     if (mk_config->fdt == MK_FALSE || sr->vhost_fdt_enabled == MK_FALSE) {
-        return close(sr->file_stream.fd);
+        if (sr->file_stream.fd > 0) {
+            return close(sr->file_stream.fd);
+        }
+        return -1;
     }
 
     id   = sr->vhost_fdt_id;
