@@ -187,6 +187,8 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     if (hc) {
         /* Increment the readers and return the shared FD */
         hc->readers++;
+        sr->vhost_fdt_id      = id;
+        sr->vhost_fdt_hash    = hash;
         sr->vhost_fdt_enabled = MK_TRUE;
         return hc->fd;
     }
@@ -233,7 +235,7 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
-    if (mk_config->fdt == MK_FALSE) {
+    if (mk_config->fdt == MK_FALSE || sr->vhost_fdt_enabled == MK_FALSE) {
         return close(sr->file_stream.fd);
     }
 
@@ -250,6 +252,8 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
     if (hc) {
         /* Increment the readers and check if we should close */
         hc->readers--;
+        sr->vhost_fdt_enabled = MK_FALSE;
+
         if (hc->readers == 0) {
             hc->fd   = -1;
             hc->hash = 0;

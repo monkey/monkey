@@ -76,6 +76,8 @@ void mk_http_request_init(struct mk_http_session *session,
     request->file_stream.bytes_total = -1;
     request->file_stream.bytes_offset = 0;
     request->file_stream.preserve = MK_FALSE;
+    request->vhost_fdt_id = 0;
+    request->vhost_fdt_hash = 0;
     request->vhost_fdt_enabled = MK_FALSE;
     request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
@@ -1505,12 +1507,8 @@ struct mk_http_session *mk_http_session_create(int socket,
 
 void mk_http_request_free(struct mk_http_request *sr)
 {
-    if (sr->vhost_fdt_enabled == MK_TRUE) {
-        mk_vhost_close(sr);
-    }
-    else if(sr->file_stream.fd > 0) {
-        close(sr->file_stream.fd);
-    }
+    /* Let the vhost interface to handle the session close */
+    mk_vhost_close(sr);
 
     if (sr->headers.location) {
         mk_mem_free(sr->headers.location);
