@@ -506,6 +506,7 @@ int mk_sched_drop_connection(int socket)
     if (conn) {
         mk_sched_remove_client(sched, socket);
     }
+
     return 0;
 }
 

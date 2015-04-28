@@ -356,11 +356,11 @@ void mk_server_worker_loop()
                 conn = (struct mk_sched_conn *) event;
 
                 if (event->mask & MK_EVENT_READ) {
-                    ret = mk_conn_read(conn);
+                    ret = mk_conn_read(conn, sched);
                 }
                 else if (event->mask & MK_EVENT_WRITE) {
                     MK_TRACE("[FD %i] EPoll Event WRITE", event->fd);
-                    ret = mk_conn_write(conn);
+                    ret = mk_conn_write(conn, sched);
                 }
                 else if (event->mask & MK_EVENT_CLOSE) {
                     ret = -1;

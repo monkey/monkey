@@ -664,7 +664,7 @@ int mk_plugin_http_request_end(int socket)
     sr = mk_list_entry_last(&cs->request_list, struct mk_http_request, _head);
     mk_plugin_stage_run_40(cs, sr);
 
-    ret = mk_http_request_end(socket);
+    ret = mk_http_request_end(socket, NULL);
     MK_TRACE(" ret = %i", ret);
 
     if (ret < 0) {

@@ -22,8 +22,10 @@
 
 #include <monkey/mk_scheduler.h>
 
-int mk_conn_read(struct mk_sched_conn *conn);
-int mk_conn_write(struct mk_sched_conn *conn);
+int mk_conn_read(struct mk_sched_conn *conn,
+                 struct sched_list_node *sched);
+int mk_conn_write(struct mk_sched_conn *conn,
+                  struct sched_list_node *sched);
 int mk_conn_close(int socket, int event);
 
 #endif

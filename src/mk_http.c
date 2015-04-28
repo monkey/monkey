@@ -1147,15 +1147,15 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
     return 0;
 }
 
-int mk_http_request_end(int socket)
+int mk_http_request_end(struct mk_sched_conn *conn,
+                        struct sched_list_node *sched)
 {
     int ka;
+    int socket;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
-    struct mk_sched_conn *conn;
-    struct sched_list_node *sched;
 
-    sched = mk_sched_get_thread_conf();
+    socket = conn->event.fd;
     cs = mk_http_session_get(socket);
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
@@ -1200,7 +1200,6 @@ int mk_http_request_end(int socket)
     }
     else {
         mk_http_request_ka_next(cs);
-        conn = mk_sched_get_connection(sched, socket);
         mk_event_add(sched->loop, socket,
                      MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
         return 0;

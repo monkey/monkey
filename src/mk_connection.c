@@ -22,14 +22,14 @@
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_macros.h>
 
-int mk_conn_read(struct mk_sched_conn *conn)
+int mk_conn_read(struct mk_sched_conn *conn,
+                 struct sched_list_node *sched)
 {
     int ret;
     int status;
     int socket = conn->event.fd;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
-    struct sched_list_node *sched;
 
     MK_TRACE("[FD %i] Connection Handler / read", socket);
 
@@ -45,27 +45,10 @@ int mk_conn_read(struct mk_sched_conn *conn)
     break;
     }
     */
-    sched = mk_sched_get_thread_conf();
     cs = mk_http_session_get(socket);
     if (!cs) {
-        /* Check if is this a new connection for the Scheduler */
-        if (!mk_sched_get_connection(sched, socket)) {
-            MK_TRACE("[FD %i] Registering new connection");
-            if (mk_sched_add_connection(socket, sched) == NULL) {
-                MK_TRACE("[FD %i] Close requested", socket);
-                return -1;
-            }
-            /*
-             * New connections are not registered yet into the
-             * events loop, we need to do it manually:
-             */
-            mk_event_add(sched->loop, socket,
-                         MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
-            return 0;
-        }
-
         /* Create session for the client */
-        MK_TRACE("[FD %i] Create session", socket);
+        MK_TRACE("[FD %i] Create HTTP session", socket);
         cs = mk_http_session_create(socket, sched);
         if (!cs) {
             return -1;
@@ -114,7 +97,8 @@ int mk_conn_read(struct mk_sched_conn *conn)
     return ret;
 }
 
-int mk_conn_write(struct mk_sched_conn *conn)
+int mk_conn_write(struct mk_sched_conn *conn,
+                  struct sched_list_node *sched)
 {
     int ret = -1;
     int socket = conn->event.fd;
@@ -164,7 +148,7 @@ int mk_conn_write(struct mk_sched_conn *conn)
     }
     else if (ret == MK_CHANNEL_DONE) {
         MK_TRACE("[FD %i] Request End", socket);
-        return mk_http_request_end(socket);
+        return mk_http_request_end(conn, sched);
     }
     else if (ret == MK_CHANNEL_FLUSH) {
         return 0;

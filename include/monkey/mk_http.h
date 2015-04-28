@@ -175,7 +175,8 @@ int mk_http_keepalive_check(struct mk_http_session *cs);
 
 int mk_http_pending_request(struct mk_http_session *cs);
 int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr);
-int mk_http_request_end(int socket);
+int mk_http_request_end(struct mk_sched_conn *conn,
+                        struct sched_list_node *sched);
 
 
 /* http session */
