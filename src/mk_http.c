@@ -1286,9 +1286,6 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
     switch (http_status) {
     case MK_CLIENT_BAD_REQUEST:
-        page = mk_http_error_page("Bad Request",
-                                  &sr->uri,
-                                  mk_config->server_signature);
         break;
 
     case MK_CLIENT_FORBIDDEN:
