@@ -97,7 +97,6 @@ struct sched_list_node
 
     short int idx;
     unsigned char initialized;
-    int epoll_fd;
 
     pthread_t tid;
     pid_t pid;
