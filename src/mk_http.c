@@ -1263,12 +1263,20 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
             mk_header_prepare(cs, sr);
 
             /* Stream setup */
-            memcpy(&sr->file_info, &finfo, sizeof(struct file_info));
             sr->file_stream.type         = MK_STREAM_FILE;
             sr->file_stream.fd           = fd;
             sr->file_stream.bytes_total  = finfo.size;
             sr->file_stream.bytes_offset = 0;
-            mk_channel_append_stream(&cs->channel, &sr->file_stream);
+
+            mk_stream_set(&sr->file_stream,
+                          MK_STREAM_FILE,
+                          &cs->channel,
+                          NULL,
+                          finfo.size,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
 
             return MK_EXIT_OK;
         }
