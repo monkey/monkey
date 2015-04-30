@@ -434,6 +434,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
 
         /* Unlink from the red-black tree */
         rb_erase(&sc->_rb_head, &sched->rb_queue);
+        mk_mem_free(sc);
 
         /* Only close if this was our connection.
          *
