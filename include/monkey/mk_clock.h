@@ -33,7 +33,7 @@ extern mk_ptr_t headers_preset;
 
 pthread_t mk_clock_tid;
 
-#define GMT_DATEFORMAT "Date: %a, %d %b %Y %H:%M:%S GMT\r\n"
+#define MK_CLOCK_GMT_DATEFORMAT "Date: %a, %d %b %Y %H:%M:%S GMT\r\n"
 #define HEADER_PRESET_SIZE 128
 #define HEADER_TIME_BUFFER_SIZE 64
 #define LOG_TIME_BUFFER_SIZE 30

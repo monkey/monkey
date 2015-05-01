@@ -83,7 +83,7 @@ static void mk_clock_headers_preset(time_t utime)
 
     len2 = strftime(buffer + len1,
                     HEADER_PRESET_SIZE - len1,
-                    GMT_DATEFORMAT,
+                    MK_CLOCK_GMT_DATEFORMAT,
                     gmt_tm);
 
     headers_preset.data = buffer;
