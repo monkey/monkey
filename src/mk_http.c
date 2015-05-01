@@ -1285,15 +1285,11 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     mk_ptr_reset(&message);
 
     switch (http_status) {
-    case MK_CLIENT_BAD_REQUEST:
-        break;
-
     case MK_CLIENT_FORBIDDEN:
         page = mk_http_error_page("Forbidden",
                                   &sr->uri,
                                   mk_config->server_signature);
         break;
-
     case MK_CLIENT_NOT_FOUND:
         mk_string_build(&message.data, &message.len,
                         "The requested URL was not found on this server.");
@@ -1302,7 +1298,6 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                                   mk_config->server_signature);
         mk_ptr_free(&message);
         break;
-
     case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
         mk_string_build(&message.data, &message.len,
                         "The request entity is too large.");
@@ -1311,39 +1306,28 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                                   mk_config->server_signature);
         mk_ptr_free(&message);
         break;
-
     case MK_CLIENT_METHOD_NOT_ALLOWED:
         page = mk_http_error_page("Method Not Allowed",
                                   &sr->uri,
                                   mk_config->server_signature);
         break;
-
-    case MK_CLIENT_REQUEST_TIMEOUT:
-    case MK_CLIENT_LENGTH_REQUIRED:
-        break;
-
     case MK_SERVER_NOT_IMPLEMENTED:
         page = mk_http_error_page("Method Not Implemented",
                                   &sr->uri,
                                   mk_config->server_signature);
         break;
-
     case MK_SERVER_INTERNAL_ERROR:
         page = mk_http_error_page("Internal Server Error",
                                   &sr->uri,
-                                  mk_config->server_signature);
-        break;
-
-    case MK_SERVER_HTTP_VERSION_UNSUP:
-        mk_ptr_reset(&message);
-        page = mk_http_error_page("HTTP Version Not Supported",
-                                  &message,
                                   mk_config->server_signature);
         break;
     }
 
     if (page) {
         sr->headers.content_length = page->len;
+    }
+    else {
+        sr->headers.content_length = 0;
     }
 
     sr->headers.location = NULL;
