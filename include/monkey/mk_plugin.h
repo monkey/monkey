@@ -192,11 +192,11 @@ struct plugin_api
     void (*rb_link_node) (struct rb_node *, struct rb_node *, struct rb_node **);
 
     /* configuration reader functions */
-    struct mk_config *(*config_create) (const char *);
-    void (*config_free) (struct mk_config *);
-    struct mk_config_section *(*config_section_get) (struct mk_config *,
-                                                     const char *);
-    void *(*config_section_getval) (struct mk_config_section *, char *, int);
+    struct mk_rconf *(*config_create) (const char *);
+    void (*config_free) (struct mk_rconf *);
+    struct mk_rconf_section *(*config_section_get) (struct mk_rconf *,
+                                                    const char *);
+    void *(*config_section_get_key) (struct mk_rconf_section *, char *, int);
 
     /* Scheduler */
     int (*sched_remove_client) (int);

@@ -38,40 +38,6 @@
 #define MK_DEFAULT_LISTEN_PORT              "2001"
 #define MK_WORKERS_DEFAULT                  1
 
-#define VALUE_ON "on"
-#define VALUE_OFF "off"
-
-#define MK_CONFIG_VAL_STR 0
-#define MK_CONFIG_VAL_NUM 1
-#define MK_CONFIG_VAL_BOOL 2
-#define MK_CONFIG_VAL_LIST 3
-
-/* Indented configuration */
-struct mk_config
-{
-    int created;
-    char *file;
-
-    /* list of sections */
-    struct mk_list sections;
-};
-
-struct mk_config_section
-{
-    char *name;
-
-    struct mk_list entries;
-    struct mk_list _head;
-};
-
-struct mk_config_entry
-{
-    char *key;
-    char *val;
-
-    struct mk_list _head;
-};
-
 struct mk_config_listener
 {
     char *address;
@@ -163,7 +129,7 @@ struct mk_server_config
     int  server_signature_header_len;
 
     /* source configuration */
-    struct mk_config *config;
+    struct mk_rconf *config;
 
     /* FIXME: temporal map of Network Layer plugin */
     struct mk_plugin_network *network;
@@ -189,24 +155,14 @@ void mk_config_set_init_values(void);
 /* config helpers */
 void mk_config_error(const char *path, int line, const char *msg);
 
-struct mk_config *mk_config_create(const char *path);
-struct mk_config_section *mk_config_section_get(struct mk_config *conf,
-                                                const char *section_name);
-struct mk_config_section *mk_config_section_add(struct mk_config *conf,
-                                                char *section_name);
-void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode);
-
 struct mk_config_listener *mk_config_listener_add(char *address, char *port);
 
 int mk_config_listen_check_busy();
 void mk_config_listeners_free();
-void mk_config_free(struct mk_config *cnf);
-void mk_config_free_all();
-void mk_config_free_entries(struct mk_config_section *section);
-
 
 int mk_config_get_bool(char *value);
 void mk_config_read_hosts(char *path);
 void mk_config_sanity_check(void);
+void mk_config_free_all();
 
 #endif

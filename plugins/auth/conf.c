@@ -183,16 +183,16 @@ int mk_auth_conf_init_users_list()
                 users_path = NULL;
 
                 /* Get section keys */
-                location = mk_api->config_section_getval(section,
-                                                         "Location",
-                                                         MK_CONFIG_VAL_STR);
-                title = mk_api->config_section_getval(section,
-                                                      "Title",
-                                                      MK_CONFIG_VAL_STR);
+                location = mk_api->config_section_get_key(section,
+                                                          "Location",
+                                                          MK_CONFIG_VAL_STR);
+                title = mk_api->config_section_get_key(section,
+                                                       "Title",
+                                                       MK_CONFIG_VAL_STR);
 
-                users_path = mk_api->config_section_getval(section,
-                                                           "Users",
-                                                           MK_CONFIG_VAL_STR);
+                users_path = mk_api->config_section_get_key(section,
+                                                            "Users",
+                                                            MK_CONFIG_VAL_STR);
 
                 /* get or create users file entry */
                 uf = mk_auth_conf_add_users(users_path);

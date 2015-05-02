@@ -19,6 +19,7 @@
 
 #include <monkey/monkey.h>
 #include <monkey/mk_kernel.h>
+#include <monkey/mk_rconf.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_string.h>
 #include <monkey/mk_utils.h>
@@ -31,11 +32,11 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_mimetype.h>
 
+#include <ctype.h>
+#include <limits.h>
 #include <dirent.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
-#include <ctype.h>
-#include <limits.h>
 
 struct mk_server_config *mk_config;
 gid_t EGID;
@@ -54,263 +55,6 @@ struct mk_server_config *mk_config_init()
     mk_list_init(&config->stage50_handler);
 
     return config;
-}
-
-/* Raise a configuration schema error */
-void mk_config_error(const char *path, int line, const char *msg)
-{
-    mk_err("File %s", path);
-    mk_err("Error in line %i: %s", line, msg);
-    exit(EXIT_FAILURE);
-}
-
-/* Raise a warning */
-void mk_config_warning(const char *path, int line, const char *msg)
-{
-    mk_warn("Config file warning '%s':\n"
-            "\t\t\t\tat line %i: %s",
-            path, line, msg);
-}
-
-/* Returns a configuration section by [section name] */
-struct mk_config_section *mk_config_section_get(struct mk_config *conf,
-                                                const char *section_name)
-{
-    struct mk_config_section *section;
-    struct mk_list *head;
-
-    mk_list_foreach(head, &conf->sections) {
-        section = mk_list_entry(head, struct mk_config_section, _head);
-        if (strcasecmp(section->name, section_name) == 0) {
-            return section;
-        }
-    }
-
-    return NULL;
-}
-
-/* Register a new section into the configuration struct */
-struct mk_config_section *mk_config_section_add(struct mk_config *conf,
-                                                char *section_name)
-{
-    struct mk_config_section *new;
-
-    /* Alloc section node */
-    new = mk_mem_malloc(sizeof(struct mk_config_section));
-    new->name = mk_string_dup(section_name);
-    mk_list_init(&new->entries);
-    mk_list_add(&new->_head, &conf->sections);
-
-    return new;
-}
-
-/* Register a key/value entry in the last section available of the struct */
-static void mk_config_entry_add(struct mk_config *conf,
-                         const char *key, const char *val)
-{
-    struct mk_config_section *section;
-    struct mk_config_entry *new;
-    struct mk_list *head = &conf->sections;
-
-    if (mk_list_is_empty(&conf->sections) == 0) {
-        mk_err("Error: there are not sections available on %s!", conf->file);
-        return;
-    }
-
-    /* Last section */
-    section = mk_list_entry_last(head, struct mk_config_section, _head);
-
-    /* Alloc new entry */
-    new = mk_mem_malloc(sizeof(struct mk_config_entry));
-    new->key = mk_string_dup(key);
-    new->val = mk_string_dup(val);
-
-    mk_list_add(&new->_head, &section->entries);
-}
-
-struct mk_config *mk_config_create(const char *path)
-{
-    int i;
-    int len;
-    int line = 0;
-    int indent_len = -1;
-    int n_keys = 0;
-    char buf[255];
-    char *section = NULL;
-    char *indent = NULL;
-    char *key, *val;
-    struct mk_config *conf = NULL;
-    struct mk_config_section *current = NULL;
-    FILE *f;
-
-    /* Open configuration file */
-    if ((f = fopen(path, "r")) == NULL) {
-        mk_warn("Config: I cannot open %s file", path);
-        return NULL;
-    }
-
-    /* Alloc configuration node */
-    conf = mk_mem_malloc_z(sizeof(struct mk_config));
-    conf->created = time(NULL);
-    conf->file = mk_string_dup(path);
-    mk_list_init(&conf->sections);
-
-    /* looking for configuration directives */
-    while (fgets(buf, 255, f)) {
-        len = strlen(buf);
-        if (buf[len - 1] == '\n') {
-            buf[--len] = 0;
-            if (len && buf[len - 1] == '\r') {
-                buf[--len] = 0;
-            }
-        }
-
-        /* Line number */
-        line++;
-
-        if (!buf[0]) {
-            continue;
-        }
-
-        /* Skip commented lines */
-        if (buf[0] == '#') {
-            continue;
-        }
-
-        /* Section definition */
-        if (buf[0] == '[') {
-            int end = -1;
-            end = mk_string_char_search(buf, ']', len);
-            if (end > 0) {
-                /*
-                 * Before to add a new section, lets check the previous
-                 * one have at least one key set
-                 */
-                if (current && n_keys == 0) {
-                    mk_config_warning(path, line, "Previous section did not have keys");
-                }
-
-                /* Create new section */
-                section = mk_string_copy_substr(buf, 1, end);
-                current = mk_config_section_add(conf, section);
-                mk_mem_free(section);
-                n_keys = 0;
-                continue;
-            }
-            else {
-                mk_config_error(path, line, "Bad header definition");
-            }
-        }
-
-        /* No separator defined */
-        if (!indent) {
-            i = 0;
-
-            do { i++; } while (i < len && isblank(buf[i]));
-
-            indent = mk_string_copy_substr(buf, 0, i);
-            indent_len = strlen(indent);
-
-            /* Blank indented line */
-            if (i == len) {
-                continue;
-            }
-        }
-
-
-        /* Validate indentation level */
-        if (strncmp(buf, indent, indent_len) != 0 ||
-            isblank(buf[indent_len]) != 0) {
-            mk_config_error(path, line, "Invalid indentation level");
-        }
-
-        if (buf[indent_len] == '#' || indent_len == len) {
-            continue;
-        }
-
-        /* Get key and val */
-        i = mk_string_char_search(buf + indent_len, ' ', len - indent_len);
-        key = mk_string_copy_substr(buf + indent_len, 0, i);
-        val = mk_string_copy_substr(buf + indent_len + i, 1, len - indent_len - i);
-
-        if (!key || !val || i < 0) {
-            mk_config_error(path, line, "Each key must have a value");
-        }
-
-        /* Trim strings */
-        mk_string_trim(&key);
-        mk_string_trim(&val);
-
-        /* Register entry: key and val are copied as duplicated */
-        mk_config_entry_add(conf, key, val);
-
-        /* Free temporal key and val */
-        mk_mem_free(key);
-        mk_mem_free(val);
-
-        n_keys++;
-    }
-
-    if (section && n_keys == 0) {
-        /* No key, no warning */
-    }
-
-    /*
-    struct mk_config_section *s;
-    struct mk_config_entry *e;
-
-    s = conf->section;
-    while(s) {
-        printf("\n[%s]", s->name);
-        e = s->entry;
-        while(e) {
-            printf("\n   %s = %s", e->key, e->val);
-            e = e->next;
-        }
-        s = s->next;
-    }
-    fflush(stdout);
-    */
-    fclose(f);
-    if (indent) mk_mem_free(indent);
-    return conf;
-}
-
-void mk_config_free(struct mk_config *conf)
-{
-    struct mk_config_section *section;
-    struct mk_list *head, *tmp;
-
-    /* Free sections */
-    mk_list_foreach_safe(head, tmp, &conf->sections) {
-        section = mk_list_entry(head, struct mk_config_section, _head);
-        mk_list_del(&section->_head);
-
-        /* Free section entries */
-        mk_config_free_entries(section);
-
-        /* Free section node */
-        mk_mem_free(section->name);
-        mk_mem_free(section);
-    }
-    if (conf->file) mk_mem_free(conf->file);
-    if (conf) mk_mem_free(conf);
-}
-
-void mk_config_free_entries(struct mk_config_section *section)
-{
-    struct mk_config_entry *entry;
-    struct mk_list *head, *tmp;
-
-    mk_list_foreach_safe(head, tmp, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
-        mk_list_del(&entry->_head);
-
-        /* Free memory assigned */
-        mk_mem_free(entry->key);
-        mk_mem_free(entry->val);
-        mk_mem_free(entry);
-    }
 }
 
 void mk_config_listeners_free()
@@ -333,61 +77,40 @@ void mk_config_free_all()
     mk_vhost_free_all();
     mk_mimetype_free_all();
 
-    if (mk_config->config) mk_config_free(mk_config->config);
+    if (mk_config->config) {
+        mk_rconf_free(mk_config->config);
+    }
 
-    if (mk_config->serverconf) mk_mem_free(mk_config->serverconf);
-    if (mk_config->pid_file_path) mk_mem_free(mk_config->pid_file_path);
-    if (mk_config->user_dir) mk_mem_free(mk_config->user_dir);
+    if (mk_config->serverconf) {
+        mk_mem_free(mk_config->serverconf);
+    }
+
+    if (mk_config->pid_file_path) {
+        mk_mem_free(mk_config->pid_file_path);
+    }
+
+    if (mk_config->user_dir) {
+        mk_mem_free(mk_config->user_dir);
+    }
 
     /* free config->index_files */
     if (mk_config->index_files) {
         mk_string_split_free(mk_config->index_files);
     }
 
-    if (mk_config->user) mk_mem_free(mk_config->user);
-    if (mk_config->transport_layer) mk_mem_free(mk_config->transport_layer);
+    if (mk_config->user) {
+        mk_mem_free(mk_config->user);
+    }
+
+    if (mk_config->transport_layer) {
+        mk_mem_free(mk_config->transport_layer);
+    }
 
     mk_config_listeners_free();
 
     mk_ptr_free(&mk_config->server_software);
     mk_mem_free(mk_config->plugins);
     mk_mem_free(mk_config);
-}
-
-void *mk_config_section_getval(struct mk_config_section *section, char *key, int mode)
-{
-    int on, off;
-    struct mk_config_entry *entry;
-    struct mk_list *head;
-
-    mk_list_foreach(head, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
-
-        if (strcasecmp(entry->key, key) == 0) {
-            switch (mode) {
-            case MK_CONFIG_VAL_STR:
-                return (void *) mk_string_dup(entry->val);
-            case MK_CONFIG_VAL_NUM:
-                return (void *) strtol(entry->val, (char **) NULL, 10);
-            case MK_CONFIG_VAL_BOOL:
-                on = strcasecmp(entry->val, VALUE_ON);
-                off = strcasecmp(entry->val, VALUE_OFF);
-
-                if (on != 0 && off != 0) {
-                    return (void *) -1;
-                }
-                else if (on >= 0) {
-                    return (void *) MK_TRUE;
-                }
-                else {
-                    return (void *) MK_FALSE;
-                }
-            case MK_CONFIG_VAL_LIST:
-                return (void *)mk_string_split_line(entry->val);
-            }
-        }
-    }
-    return NULL;
 }
 
 static void mk_details_listen(struct mk_list *listen)
@@ -457,62 +180,77 @@ int mk_config_listen_check_busy()
     return MK_FALSE;
 }
 
-static int mk_config_listen_read(struct mk_config_section *section)
+static int mk_config_listen_read(struct mk_rconf_section *section)
 {
+    int i = 0;
     long port_num;
     char *address = NULL;
     char *port = NULL;
     char *divider;
+    struct mk_list *head;
+    struct mk_list *list;
     struct mk_list *cur;
-    struct mk_config_entry *entry;
+    struct mk_string_line *field;
+    struct mk_rconf_entry *entry;
 
     mk_list_foreach(cur, &section->entries) {
-        entry = mk_list_entry(cur, struct mk_config_entry, _head);
+        entry = mk_list_entry(cur, struct mk_rconf_entry, _head);
         if (strcasecmp(entry->key, "Listen")) {
             continue;
         }
 
-        if (entry->val[0] == '[') {
-            /* IPv6 address */
-            divider = strchr(entry->val, ']');
-            if (divider == NULL) {
-                mk_err("[config] Expected closing ']' in IPv6 address.");
-                goto error;
+        list = mk_string_split_line(entry->val);
+        if (!list) {
+            goto error;
+        }
+
+        mk_list_foreach(head, list) {
+            field = mk_list_entry(head, struct mk_string_line, _head);
+
+            if (i == 0) {
+                if (entry->val[0] == '[') {
+                    /* IPv6 address */
+                    divider = strchr(entry->val, ']');
+                    if (divider == NULL) {
+                        mk_err("[config] Expected closing ']' in IPv6 address.");
+                        goto error;
+                    }
+                    if (divider[1] != ':' || divider[2] == '\0') {
+                        mk_err("[config] Expected ':port' after IPv6 address.");
+                        goto error;
+                    }
+
+                    address = mk_string_copy_substr(entry->val + 1, 0, divider - entry->val - 1);
+                    port = mk_string_dup(divider + 2);
+                }
+                else if (strchr(entry->val, ':') != NULL) {
+                    /* IPv4 address */
+                    divider = strrchr(entry->val, ':');
+                    if (divider == NULL || divider[1] == '\0') {
+                        mk_err("[config] Expected ':port' after IPv4 address.");
+                        goto error;
+                    }
+
+                    address = mk_string_copy_substr(entry->val, 0, divider - entry->val);
+                    port = mk_string_dup(divider + 1);
+                }
+                else {
+                    /* Port only */
+                    address = NULL;
+                    port = mk_string_dup(entry->val);
+                }
+
+                port_num = strtol(port, NULL, 10);
+                if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
+                    mk_warn("Using defaults, could not understand \"Listen %s\"",
+                            entry->val);
+                    port = NULL;
+                }
+
+                /* register the new listener */
+                mk_config_listener_add(address, port);
             }
-            if (divider[1] != ':' || divider[2] == '\0') {
-                mk_err("[config] Expected ':port' after IPv6 address.");
-                goto error;
-            }
-
-            address = mk_string_copy_substr(entry->val + 1, 0, divider - entry->val - 1);
-            port = mk_string_dup(divider + 2);
         }
-        else if (strchr(entry->val, ':') != NULL) {
-            /* IPv4 address */
-            divider = strrchr(entry->val, ':');
-            if (divider == NULL || divider[1] == '\0') {
-                mk_err("[config] Expected ':port' after IPv4 address.");
-                goto error;
-            }
-
-            address = mk_string_copy_substr(entry->val, 0, divider - entry->val);
-            port = mk_string_dup(divider + 1);
-        }
-        else {
-            /* Port only */
-            address = NULL;
-            port = mk_string_dup(entry->val);
-        }
-
-        port_num = strtol(port, NULL, 10);
-        if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
-            mk_warn("Using defaults, could not understand \"Listen %s\"",
-                    entry->val);
-            port = NULL;
-        }
-
-        /* register the new listener */
-        mk_config_listener_add(address, port);
 
 error:
         if (address) mk_mem_free(address);
@@ -533,8 +271,8 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     unsigned long len;
     char *tmp = NULL;
     struct stat checkdir;
-    struct mk_config *cnf;
-    struct mk_config_section *section;
+    struct mk_rconf *cnf;
+    struct mk_rconf_section *section;
 
     mk_config->serverconf = mk_string_dup(path_conf);
 
@@ -544,13 +282,13 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     mk_string_build(&tmp, &len, "%s/%s", path_conf, file_conf);
-    cnf = mk_config_create(tmp);
+    cnf = mk_rconf_create(tmp);
     if (!cnf) {
         mk_mem_free(tmp);
         mk_err("Cannot read '%s'", mk_config->server_conf_file);
         exit(EXIT_FAILURE);
     }
-    section = mk_config_section_get(cnf, "SERVER");
+    section = mk_rconf_section_get(cnf, "SERVER");
     if (!section) {
         mk_err("ERROR: No 'SERVER' section defined");
         exit(EXIT_FAILURE);
@@ -571,9 +309,9 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
 
     /* Number of thread workers */
     if (mk_config->workers == -1) {
-        mk_config->workers = (size_t) mk_config_section_getval(section,
+        mk_config->workers = (size_t) mk_rconf_section_get_key(section,
                                                                "Workers",
-                                                               MK_CONFIG_VAL_NUM);
+                                                               MK_RCONF_NUM);
     }
 
     if (mk_config->workers < 1) {
@@ -584,75 +322,75 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Timeout */
-    mk_config->timeout = (size_t) mk_config_section_getval(section,
-                                                           "Timeout", MK_CONFIG_VAL_NUM);
+    mk_config->timeout = (size_t) mk_rconf_section_get_key(section,
+                                                           "Timeout", MK_RCONF_NUM);
     if (mk_config->timeout < 1) {
         mk_config_print_error_msg("Timeout", tmp);
     }
 
     /* KeepAlive */
-    mk_config->keep_alive = (size_t) mk_config_section_getval(section,
+    mk_config->keep_alive = (size_t) mk_rconf_section_get_key(section,
                                                               "KeepAlive",
-                                                              MK_CONFIG_VAL_BOOL);
+                                                              MK_RCONF_BOOL);
     if (mk_config->keep_alive == MK_ERROR) {
         mk_config_print_error_msg("KeepAlive", tmp);
     }
 
     /* MaxKeepAliveRequest */
     mk_config->max_keep_alive_request = (size_t)
-        mk_config_section_getval(section,
+        mk_rconf_section_get_key(section,
                                  "MaxKeepAliveRequest",
-                                 MK_CONFIG_VAL_NUM);
+                                 MK_RCONF_NUM);
 
     if (mk_config->max_keep_alive_request == 0) {
         mk_config_print_error_msg("MaxKeepAliveRequest", tmp);
     }
 
     /* KeepAliveTimeout */
-    mk_config->keep_alive_timeout = (size_t) mk_config_section_getval(section,
+    mk_config->keep_alive_timeout = (size_t) mk_rconf_section_get_key(section,
                                                                       "KeepAliveTimeout",
-                                                                      MK_CONFIG_VAL_NUM);
+                                                                      MK_RCONF_NUM);
     if (mk_config->keep_alive_timeout == 0) {
         mk_config_print_error_msg("KeepAliveTimeout", tmp);
     }
 
     /* Pid File */
     if (!mk_config->pid_file_path) {
-        mk_config->pid_file_path = mk_config_section_getval(section,
+        mk_config->pid_file_path = mk_rconf_section_get_key(section,
                                                             "PidFile",
-                                                            MK_CONFIG_VAL_STR);
+                                                            MK_RCONF_STR);
     }
 
     /* Home user's directory /~ */
-    mk_config->user_dir = mk_config_section_getval(section,
-                                                "UserDir", MK_CONFIG_VAL_STR);
+    mk_config->user_dir = mk_rconf_section_get_key(section,
+                                                   "UserDir", MK_RCONF_STR);
 
     /* Index files */
-    mk_config->index_files = mk_config_section_getval(section,
-                                                   "Indexfile", MK_CONFIG_VAL_LIST);
+    mk_config->index_files = mk_rconf_section_get_key(section,
+                                                      "Indexfile", MK_RCONF_LIST);
 
     /* HideVersion Variable */
-    mk_config->hideversion = (size_t) mk_config_section_getval(section,
+    mk_config->hideversion = (size_t) mk_rconf_section_get_key(section,
                                                          "HideVersion",
-                                                         MK_CONFIG_VAL_BOOL);
+                                                         MK_RCONF_BOOL);
     if (mk_config->hideversion == MK_ERROR) {
         mk_config_print_error_msg("HideVersion", tmp);
     }
 
     /* User Variable */
-    mk_config->user = mk_config_section_getval(section, "User", MK_CONFIG_VAL_STR);
+    mk_config->user = mk_rconf_section_get_key(section, "User", MK_RCONF_STR);
 
     /* Resume */
-    mk_config->resume = (size_t) mk_config_section_getval(section,
-                                                    "Resume", MK_CONFIG_VAL_BOOL);
+    mk_config->resume = (size_t) mk_rconf_section_get_key(section,
+                                                          "Resume", MK_RCONF_BOOL);
     if (mk_config->resume == MK_ERROR) {
         mk_config_print_error_msg("Resume", tmp);
     }
 
     /* Max Request Size */
-    mk_config->max_request_size = (size_t) mk_config_section_getval(section,
+    mk_config->max_request_size = (size_t) mk_rconf_section_get_key(section,
                                                               "MaxRequestSize",
-                                                              MK_CONFIG_VAL_NUM);
+                                                              MK_RCONF_NUM);
     if (mk_config->max_request_size <= 0) {
         mk_config_print_error_msg("MaxRequestSize", tmp);
     }
@@ -661,22 +399,22 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* Symbolic Links */
-    mk_config->symlink = (size_t) mk_config_section_getval(section,
-                                                     "SymLink", MK_CONFIG_VAL_BOOL);
+    mk_config->symlink = (size_t) mk_rconf_section_get_key(section,
+                                                     "SymLink", MK_RCONF_BOOL);
     if (mk_config->symlink == MK_ERROR) {
         mk_config_print_error_msg("SymLink", tmp);
     }
 
     /* Transport Layer plugin */
     if (!mk_config->transport_layer) {
-        mk_config->transport_layer = mk_config_section_getval(section,
+        mk_config->transport_layer = mk_rconf_section_get_key(section,
                                                            "TransportLayer",
-                                                           MK_CONFIG_VAL_STR);
+                                                           MK_RCONF_STR);
     }
 
     /* Default Mimetype */
     mk_mem_free(tmp);
-    tmp = mk_config_section_getval(section, "DefaultMimeType", MK_CONFIG_VAL_STR);
+    tmp = mk_rconf_section_get_key(section, "DefaultMimeType", MK_RCONF_STR);
     if (!tmp) {
         mk_config->default_mimetype = mk_string_dup(MIMETYPE_DEFAULT_TYPE);
     }
@@ -685,14 +423,14 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     }
 
     /* File Descriptor Table (FDT) */
-    mk_config->fdt = (size_t) mk_config_section_getval(section,
+    mk_config->fdt = (size_t) mk_rconf_section_get_key(section,
                                                     "FDT",
-                                                    MK_CONFIG_VAL_BOOL);
+                                                    MK_RCONF_BOOL);
 
     /* FIXME: Overcapacity not ready */
-    mk_config->fd_limit = (size_t) mk_config_section_getval(section,
+    mk_config->fd_limit = (size_t) mk_rconf_section_get_key(section,
                                                            "FDLimit",
-                                                           MK_CONFIG_VAL_NUM);
+                                                           MK_RCONF_NUM);
     /* Get each worker clients capacity based on FDs system limits */
     mk_config->server_capacity = mk_server_capacity();
 

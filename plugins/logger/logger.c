@@ -273,9 +273,9 @@ static int mk_logger_read_config(char *path)
     if (section) {
 
         /* FlushTimeout */
-        timeout = (size_t) mk_api->config_section_getval(section,
-                                                         "FlushTimeout",
-                                                         MK_CONFIG_VAL_NUM);
+        timeout = (size_t) mk_api->config_section_get_key(section,
+                                                          "FlushTimeout",
+                                                          MK_CONFIG_VAL_NUM);
         if (timeout <= 0) {
             mk_err("FlushTimeout does not have a proper value");
             exit(EXIT_FAILURE);
@@ -284,9 +284,9 @@ static int mk_logger_read_config(char *path)
         PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
 
         /* MasterLog */
-        logfilename = mk_api->config_section_getval(section,
-                                                    "MasterLog",
-                                                    MK_CONFIG_VAL_STR);
+        logfilename = mk_api->config_section_get_key(section,
+                                                     "MasterLog",
+                                                     MK_CONFIG_VAL_STR);
         if (logfilename == NULL) {
             mk_err("MasterLog does not have a proper value");
             exit(EXIT_FAILURE);
@@ -414,12 +414,12 @@ int mk_logger_master_init(struct mk_server_config *config)
         section = mk_api->config_section_get(entry_host->config, "LOGGER");
         if (section) {
             /* Read configuration entries */
-            access_file_name = (char *) mk_api->config_section_getval(section,
-                                                                      "AccessLog",
+            access_file_name = (char *) mk_api->config_section_get_key(section,
+                                                                       "AccessLog",
+                                                                       MK_CONFIG_VAL_STR);
+            error_file_name = (char *) mk_api->config_section_get_key(section,
+                                                                      "ErrorLog",
                                                                       MK_CONFIG_VAL_STR);
-            error_file_name = (char *) mk_api->config_section_getval(section,
-                                                                     "ErrorLog",
-                                                                     MK_CONFIG_VAL_STR);
 
             if (access_file_name || error_file_name) {
                 new = mk_api->mem_alloc(sizeof(struct log_target));

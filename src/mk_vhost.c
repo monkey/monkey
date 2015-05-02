@@ -22,7 +22,7 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_macros.h>
-#include <monkey/mk_config.h>
+#include <monkey/mk_rconf.h>
 #include <monkey/mk_string.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_memory.h>
@@ -302,22 +302,22 @@ struct host *mk_vhost_read(char *path)
     struct host *host;
     struct host_alias *new_alias;
     struct error_page *err_page;
-    struct mk_config *cnf;
-    struct mk_config_section *section_host;
-    struct mk_config_section *section_ep;
-    struct mk_config_entry *entry_ep;
+    struct mk_rconf *cnf;
+    struct mk_rconf_section *section_host;
+    struct mk_rconf_section *section_ep;
+    struct mk_rconf_entry *entry_ep;
     struct mk_string_line *entry;
     struct mk_list *head, *list;
 
     /* Read configuration file */
-    cnf = mk_config_create(path);
+    cnf = mk_rconf_create(path);
     if (!cnf) {
         mk_err("Configuration error, aborting.");
         exit(EXIT_FAILURE);
     }
 
     /* Read tag 'HOST' */
-    section_host = mk_config_section_get(cnf, "HOST");
+    section_host = mk_rconf_section_get(cnf, "HOST");
     if (!section_host) {
         mk_err("Invalid config file %s", path);
         return NULL;
@@ -335,7 +335,7 @@ struct host *mk_vhost_read(char *path)
     mk_list_init(&host->server_names);
 
     /* Lookup Servername */
-    list = mk_config_section_getval(section_host, "Servername", MK_CONFIG_VAL_LIST);
+    list = mk_rconf_section_get_key(section_host, "Servername", MK_RCONF_LIST);
     if (!list) {
         mk_err("Hostname does not contain a Servername");
         exit(EXIT_FAILURE);
@@ -363,12 +363,12 @@ struct host *mk_vhost_read(char *path)
     mk_string_split_free(list);
 
     /* Lookup document root handled by a mk_ptr_t */
-    host->documentroot.data = mk_config_section_getval(section_host,
+    host->documentroot.data = mk_rconf_section_get_key(section_host,
                                                        "DocumentRoot",
-                                                       MK_CONFIG_VAL_STR);
+                                                       MK_RCONF_STR);
     if (!host->documentroot.data) {
         mk_err("Missing DocumentRoot entry on %s file", path);
-        mk_config_free(cnf);
+        mk_rconf_free(cnf);
         mk_mem_free(host->file);
         mk_mem_free(host);
         return NULL;
@@ -385,7 +385,7 @@ struct host *mk_vhost_read(char *path)
     }
 
     if (mk_list_is_empty(&host->server_names) == 0) {
-        mk_config_free(cnf);
+        mk_rconf_free(cnf);
         mk_mem_free(host->file);
         mk_mem_free(host);
         return NULL;
@@ -395,9 +395,9 @@ struct host *mk_vhost_read(char *path)
     host->header_redirect.data = NULL;
     host->header_redirect.len  = 0;
 
-    tmp = mk_config_section_getval(section_host,
+    tmp = mk_rconf_section_get_key(section_host,
                                    "Redirect",
-                                   MK_CONFIG_VAL_STR);
+                                   MK_RCONF_STR);
     if (tmp) {
         host->header_redirect.data = mk_string_dup(tmp);
         host->header_redirect.len  = strlen(tmp);
@@ -405,10 +405,10 @@ struct host *mk_vhost_read(char *path)
     }
 
     /* Error Pages */
-    section_ep = mk_config_section_get(cnf, "ERROR_PAGES");
+    section_ep = mk_rconf_section_get(cnf, "ERROR_PAGES");
     if (section_ep) {
         mk_list_foreach(head, &section_ep->entries) {
-            entry_ep = mk_list_entry(head, struct mk_config_entry, _head);
+            entry_ep = mk_list_entry(head, struct mk_rconf_entry, _head);
 
             int ep_status = -1;
             char *ep_file = NULL;
@@ -605,7 +605,7 @@ void mk_vhost_free_all()
         mk_ptr_free(&host->documentroot);
 
         /* Free source configuration */
-        if (host->config) mk_config_free(host->config);
+        if (host->config) mk_rconf_free(host->config);
         mk_mem_free(host);
     }
 }

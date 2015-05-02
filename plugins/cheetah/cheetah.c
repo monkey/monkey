@@ -68,8 +68,8 @@ static int mk_cheetah_config(char *path)
     mk_api->mem_free(default_file);
 
     /* Listen directive */
-    listen = mk_api->config_section_getval(section, "Listen",
-                                           MK_CONFIG_VAL_STR);
+    listen = mk_api->config_section_get_key(section, "Listen",
+                                            MK_CONFIG_VAL_STR);
 
     if (strcasecmp(listen, LISTEN_STDIN_STR) == 0) {
         listen_mode = LISTEN_STDIN;

@@ -192,8 +192,8 @@ int mk_dirhtml_read_config(char *path)
 
     /* alloc dirhtml config struct */
     dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
-    dirhtml_conf->theme = mk_api->config_section_getval(section, "Theme",
-                                                        MK_CONFIG_VAL_STR);
+    dirhtml_conf->theme = mk_api->config_section_get_key(section, "Theme",
+                                                         MK_CONFIG_VAL_STR);
     dirhtml_conf->theme_path = NULL;
 
     mk_api->str_build(&dirhtml_conf->theme_path, &len,

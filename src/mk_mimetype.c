@@ -30,6 +30,7 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
+#include <monkey/mk_rconf.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_macros.h>
 #include <monkey/mk_file.h>
@@ -119,9 +120,9 @@ int mk_mimetype_add(char *name, const char *type)
 void mk_mimetype_read_config()
 {
     char path[MK_MAX_PATH];
-    struct mk_config *cnf;
-    struct mk_config_section *section;
-    struct mk_config_entry *entry;
+    struct mk_rconf *cnf;
+    struct mk_rconf_section *section;
+    struct mk_rconf_entry *entry;
     struct mk_list *head;
     struct file_info f_info;
     int ret;
@@ -139,20 +140,20 @@ void mk_mimetype_read_config()
     if (ret == -1 || f_info.is_file == MK_FALSE)
         snprintf(path, MK_MAX_PATH, "%s", mk_config->mimes_conf_file);
 
-    cnf = mk_config_create(path);
+    cnf = mk_rconf_create(path);
     if (!cnf) {
         exit(EXIT_FAILURE);
     }
 
     /* Get MimeTypes tag */
-    section = mk_config_section_get(cnf, "MIMETYPES");
+    section = mk_rconf_section_get(cnf, "MIMETYPES");
     if (!section) {
         mk_err("Error: Invalid mime type file");
         exit(EXIT_FAILURE);
     }
 
     mk_list_foreach(head, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        entry = mk_list_entry(head, struct mk_rconf_entry, _head);
         if (!entry->key || !entry->val) {
             continue;
         }
@@ -168,7 +169,7 @@ void mk_mimetype_read_config()
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
     mk_ptr_set(&mimetype_default->type, mk_config->default_mimetype);
 
-    mk_config_free(cnf);
+    mk_rconf_free(cnf);
 }
 
 struct mimetype *mk_mimetype_find(mk_ptr_t *filename)

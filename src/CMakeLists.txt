@@ -3,6 +3,7 @@ set(src
   mk_mimetype.c
   mk_vhost.c
   mk_header.c
+  mk_rconf.c
   mk_config.c
   mk_signals.c
   mk_user.c

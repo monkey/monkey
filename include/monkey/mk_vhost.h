@@ -41,7 +41,7 @@ struct host
     mk_ptr_t header_redirect;
 
     /* source configuration */
-    struct mk_config *config;
+    struct mk_rconf *config;
 
     /* custom error pages */
     struct mk_list error_pages;

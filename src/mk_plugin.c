@@ -28,6 +28,7 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_static_plugins.h>
 #include <monkey/mk_plugin_stage.h>
+#include <monkey/mk_rconf.h>
 
 #include <dlfcn.h>
 #include <err.h>
@@ -326,10 +327,10 @@ void mk_plugin_api_init()
     api->socket_ip_str = mk_socket_ip_str;
 
     /* Config Callbacks */
-    api->config_create = mk_config_create;
-    api->config_free = mk_config_free;
-    api->config_section_get = mk_config_section_get;
-    api->config_section_getval = mk_config_section_getval;
+    api->config_create = mk_rconf_create;
+    api->config_free = mk_rconf_free;
+    api->config_section_get = mk_rconf_section_get;
+    api->config_section_get_key = mk_rconf_section_get_key;
 
     /* Scheduler and Event callbacks */
     api->sched_get_connection = mk_sched_get_connection;
@@ -372,9 +373,9 @@ void mk_plugin_load_all()
     char *path;
     char shortname[64];
     struct mk_plugin *p;
-    struct mk_config *cnf;
-    struct mk_config_section *section;
-    struct mk_config_entry *entry;
+    struct mk_rconf *cnf;
+    struct mk_rconf_section *section;
+    struct mk_rconf_entry *entry;
     struct mk_list *head;
     struct mk_list *htmp;
     struct file_info f_info;
@@ -409,7 +410,7 @@ void mk_plugin_load_all()
         snprintf(path, 1024, "%s", mk_config->plugin_load_conf_file);
     }
 
-    cnf = mk_config_create(path);
+    cnf = mk_rconf_create(path);
     if (!cnf) {
         mk_err("Configuration error, aborting.");
         mk_mem_free(path);
@@ -417,14 +418,14 @@ void mk_plugin_load_all()
     }
 
     /* Read section 'PLUGINS' */
-    section = mk_config_section_get(cnf, "PLUGINS");
+    section = mk_rconf_section_get(cnf, "PLUGINS");
     if (!section) {
         exit(EXIT_FAILURE);
     }
 
     /* Read key entries */
     mk_list_foreach_safe(head, htmp, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        entry = mk_list_entry(head, struct mk_rconf_entry, _head);
         if (strcasecmp(entry->key, "Load") == 0) {
 
             /* Get plugin 'shortname' */
@@ -461,7 +462,7 @@ void mk_plugin_load_all()
     /* Look for plugins thread key data */
     mk_plugin_preworker_calls();
     mk_mem_free(path);
-    mk_config_free(cnf);
+    mk_rconf_free(cnf);
 }
 
 /* Invoke all plugins 'exit' hook and free resources by the plugin interface */
