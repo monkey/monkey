@@ -65,7 +65,7 @@ unsigned int mk_server_capacity()
     return cur;
 }
 
-int mk_server_listen_handler(struct sched_list_node *sched,
+int mk_server_listen_handler(struct mk_sched_worker *sched,
                              int server_fd)
 {
     int ret;
@@ -225,8 +225,9 @@ void mk_server_loop_balancer()
     struct mk_server_listen *listener;
     struct mk_event *event;
     struct mk_event_loop *evl;
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
 
+    printf("OLD!\n");
     /* Init the listeners */
     listeners = mk_server_listen_init(mk_config);
     if (!listeners) {
@@ -262,7 +263,7 @@ void mk_server_loop_balancer()
                     mk_server_listen_handler(sched, event->fd);
 #ifdef TRACE
                     int i;
-                    struct sched_list_node *node;
+                    struct mk_sched_worker *node;
 
                     node = sched_list;
                     for (i = 0; i < mk_config->workers; i++) {
@@ -302,7 +303,7 @@ void mk_server_worker_loop()
     struct mk_event_loop *evl;
     struct mk_list *head;
     struct mk_sched_conn *conn;
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
     struct mk_server_listen *listener;
 
     /* Get thread conf */

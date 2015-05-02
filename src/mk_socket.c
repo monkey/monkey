@@ -35,7 +35,7 @@
 
 static void mk_socket_safe_event_write(int socket)
 {
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
 
     sched = mk_sched_get_thread_conf();
     MK_TRACE("[FD %i] Safe event write ON", socket);

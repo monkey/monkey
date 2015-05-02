@@ -598,7 +598,7 @@ int mk_plugin_event_del(int socket)
             mk_list_del(head);
             mk_mem_free(node);
 
-            struct sched_list_node *sched = mk_sched_get_thread_conf();
+            struct mk_sched_worker *sched = mk_sched_get_thread_conf();
             mk_event_del(sched->loop, socket);
             return 0;
         }
@@ -612,7 +612,7 @@ int mk_plugin_event_add(int socket, int mode,
                         struct mk_plugin *handler,
                         unsigned int behavior)
 {
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
     struct plugin_event *event;
     struct mk_list *list;
     (void) behavior;
@@ -681,7 +681,7 @@ int mk_plugin_http_request_end(int socket)
 
 int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior)
 {
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
     (void) mode;
     (void) socket;
     (void) behavior;
@@ -1060,7 +1060,7 @@ mk_ptr_t *mk_plugin_time_now_human()
 
 int mk_plugin_sched_remove_client(int socket)
 {
-    struct sched_list_node *node;
+    struct mk_sched_worker *node;
 
     MK_TRACE("[FD %i] remove client", socket);
 
@@ -1092,7 +1092,7 @@ int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
     return 0;
 }
 
-struct sched_list_node *mk_plugin_sched_get_thread_conf()
+struct mk_sched_worker *mk_plugin_sched_get_thread_conf()
 {
     return worker_sched_node;
 }

@@ -37,7 +37,7 @@
 
 #include <sys/syscall.h>
 
-struct sched_list_node *sched_list;
+struct mk_sched_worker *sched_list;
 
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
@@ -46,7 +46,7 @@ pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
 __thread struct rb_root *cs_list;
 __thread struct mk_list *cs_incomplete;
 __thread struct mk_sched_notif *worker_sched_notif;
-__thread struct sched_list_node *worker_sched_node;
+__thread struct mk_sched_worker *worker_sched_node;
 
 /*
  * Returns the worker id which should take a new incomming connection,
@@ -89,7 +89,7 @@ static inline int _next_target()
     return target;
 }
 
-struct sched_list_node *mk_sched_next_target()
+struct mk_sched_worker *mk_sched_next_target()
 {
     int t = _next_target();
 
@@ -109,7 +109,7 @@ void mk_sched_worker_free()
 {
     int i;
     pthread_t tid;
-    struct sched_list_node *sl = NULL;
+    struct mk_sched_worker *sl = NULL;
 
     pthread_mutex_lock(&mutex_worker_exit);
 
@@ -146,7 +146,7 @@ void mk_sched_worker_free()
  * inside the worker/thread context.
  */
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
-                                              struct sched_list_node *sched)
+                                              struct mk_sched_worker *sched)
 {
     int ret;
     struct mk_sched_conn *conn;
@@ -215,7 +215,7 @@ static void mk_sched_thread_lists_init()
 static int mk_sched_register_thread()
 {
     int capacity;
-    struct sched_list_node *sl;
+    struct mk_sched_worker *sl;
     static int wid = 0;
 
     /*
@@ -276,7 +276,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     int wid;
     unsigned long len;
     char *thread_name = 0;
-    struct sched_list_node *sched = NULL;
+    struct mk_sched_worker *sched = NULL;
 
     /* Avoid SIGPIPE signals on this thread */
     mk_signal_thread_sigpipe_safe();
@@ -379,7 +379,7 @@ int mk_sched_launch_thread(int max_events, pthread_t *tout)
 }
 
 /*
- * The scheduler nodes are an array of struct sched_list_node type,
+ * The scheduler nodes are an array of struct mk_sched_worker type,
  * each worker thread belongs to a scheduler node, on this function we
  * allocate a scheduler node per number of workers defined.
  */
@@ -387,7 +387,7 @@ void mk_sched_init()
 {
     int size;
 
-    size = sizeof(struct sched_list_node) * mk_config->workers;
+    size = sizeof(struct mk_sched_worker) * mk_config->workers;
     sched_list = mk_mem_malloc_z(size);
 }
 
@@ -396,7 +396,7 @@ void mk_sched_set_request_list(struct rb_root *list)
     cs_list = list;
 }
 
-int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
+int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
 {
     struct mk_sched_conn *sc;
 
@@ -453,7 +453,7 @@ int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd)
     return -1;
 }
 
-struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node *sched,
+struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker *sched,
                                                  int remote_fd)
 {
     struct rb_node *node;
@@ -497,7 +497,7 @@ struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node *sched,
 int mk_sched_drop_connection(int socket)
 {
     struct mk_sched_conn *conn;
-    struct sched_list_node *sched;
+    struct mk_sched_worker *sched;
 
     mk_http_session_remove(socket);
 
@@ -510,7 +510,7 @@ int mk_sched_drop_connection(int socket)
     return 0;
 }
 
-int mk_sched_check_timeouts(struct sched_list_node *sched)
+int mk_sched_check_timeouts(struct mk_sched_worker *sched)
 {
     int client_timeout;
     struct mk_http_session *cs_node;
@@ -559,7 +559,7 @@ int mk_sched_check_timeouts(struct sched_list_node *sched)
  */
 
 int mk_sched_event_read(struct mk_sched_conn *conn,
-                        struct sched_list_node *sched)
+                        struct mk_sched_worker *sched)
 {
      int ret;
     int status;
@@ -635,7 +635,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
 }
 
 int mk_sched_event_write(struct mk_sched_conn *conn,
-                         struct sched_list_node *sched)
+                         struct mk_sched_worker *sched)
 {
     int ret = -1;
     int socket = conn->event.fd;

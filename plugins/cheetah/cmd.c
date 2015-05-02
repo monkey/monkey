@@ -297,7 +297,7 @@ void mk_cheetah_cmd_workers()
 {
     int i;
     unsigned long long active_connections;
-    struct sched_list_node *node;
+    struct mk_sched_worker *node;
 
     node = mk_api->sched_list;
     for (i=0; i < mk_api->config->workers; i++) {

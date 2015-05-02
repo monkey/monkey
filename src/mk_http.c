@@ -1150,7 +1150,7 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
 }
 
 int mk_http_request_end(struct mk_sched_conn *conn,
-                        struct sched_list_node *sched)
+                        struct mk_sched_worker *sched)
 {
     int ka;
     int socket;
@@ -1358,7 +1358,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 }
 
 /*
- * From thread sched_list_node "list", remove the http_session
+ * From thread mk_sched_worker "list", remove the http_session
  * struct information
  */
 void mk_http_session_remove(int socket)
@@ -1405,7 +1405,7 @@ struct mk_http_session *mk_http_session_get(int socket)
  * main list
  */
 struct mk_http_session *mk_http_session_create(int socket,
-                                               struct sched_list_node *sched)
+                                               struct mk_sched_worker *sched)
 {
     struct mk_http_session *cs;
     struct mk_sched_conn *sc;

@@ -52,20 +52,22 @@
 extern __thread struct rb_root *cs_list;
 extern __thread struct mk_list *cs_incomplete;
 
+/* Every connection in the server is represented by this structure */
 struct mk_sched_conn
 {
     struct mk_event event;
-
     int status;                  /* connection status          */
     time_t arrive_time;          /* arrived time               */
-    struct mk_list _head;        /* list head: av/busy         */
+
     struct mk_list status_queue; /* link to the incoming queue */
-    struct rb_node _rb_head; /* red-black tree head */
+    struct rb_node _rb_head;     /* red-black tree head */
 };
 
-/* Global struct per worker: this is a structure that lives at
- * */
-struct sched_list_node
+/*
+ * Thread-scope structura/variable that holds the Scheduler context for the
+ * worker (or thread) in question.
+ */
+struct mk_sched_worker
 {
     /* The event loop on this scheduler thread */
     struct mk_event_loop *loop;
@@ -79,13 +81,6 @@ struct sched_list_node
      * the scheduler busy queue
      */
     struct rb_root rb_queue;
-
-    /*
-     * Available and busy queue: provides a fast lookup
-     * for available and used slot connections
-     */
-    //struct mk_list busy_queue;
-    //struct mk_list av_queue;
 
     /*
      * The incoming queue represents client connections that
@@ -117,10 +112,10 @@ struct mk_sched_notif {
 };
 
 extern __thread struct mk_sched_notif  *worker_sched_notif;
-extern __thread struct sched_list_node *worker_sched_node;
+extern __thread struct mk_sched_worker *worker_sched_node;
 
 /* global scheduler list */
-struct sched_list_node *sched_list;
+struct mk_sched_worker *sched_list;
 
 /* Struct under thread context */
 typedef struct
@@ -131,42 +126,42 @@ extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
 
-struct sched_list_node *mk_sched_next_target();
+struct mk_sched_worker *mk_sched_next_target();
 void mk_sched_init();
 int mk_sched_launch_thread(int max_events, pthread_t *tout);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
-struct sched_list_node *mk_sched_get_handler_owner(void);
+struct mk_sched_worker *mk_sched_get_handler_owner(void);
 
 static inline struct rb_root *mk_sched_get_request_list()
 {
     return cs_list;
 }
 
-static inline struct sched_list_node *mk_sched_get_thread_conf()
+static inline struct mk_sched_worker *mk_sched_get_thread_conf()
 {
     return worker_sched_node;
 }
 
-void mk_sched_update_thread_status(struct sched_list_node *sched,
+void mk_sched_update_thread_status(struct mk_sched_worker *sched,
                                    int active, int closed);
 
 int mk_sched_drop_connection(int socket);
-int mk_sched_check_timeouts(struct sched_list_node *sched);
+int mk_sched_check_timeouts(struct mk_sched_worker *sched);
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
-                                              struct sched_list_node *sched);
-int mk_sched_remove_client(struct sched_list_node *sched, int remote_fd);
-struct mk_sched_conn *mk_sched_get_connection(struct sched_list_node
+                                              struct mk_sched_worker *sched);
+int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd);
+struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker
                                                      *sched, int remote_fd);
-int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
+int mk_sched_update_conn_status(struct mk_sched_worker *sched, int remote_fd,
                                 int status);
 int mk_sched_sync_counters();
 void mk_sched_worker_free();
 
 /* Event handlers */
 int mk_sched_event_read(struct mk_sched_conn *conn,
-                        struct sched_list_node *sched);
+                        struct mk_sched_worker *sched);
 int mk_sched_event_write(struct mk_sched_conn *conn,
-                         struct sched_list_node *sched);
+                         struct mk_sched_worker *sched);
 int mk_sched_event_close(int socket, int event);
 
 #endif

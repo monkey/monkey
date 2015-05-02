@@ -42,7 +42,7 @@ struct mk_server_timeout {
 extern __thread struct mk_list *server_listen;
 extern __thread struct mk_server_timeout *server_timeout;
 
-struct sched_list_node;
+struct mk_sched_worker;
 
 static inline int mk_server_cork_flag(int fd, int state)
 {
@@ -55,7 +55,7 @@ static inline int mk_server_cork_flag(int fd, int state)
 
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
-int mk_server_listen_handler(struct sched_list_node *sched,
+int mk_server_listen_handler(struct mk_sched_worker *sched,
                              int server_fd);
 void mk_server_listen_free();
 struct mk_list *mk_server_listen_init(struct mk_server_config *config);

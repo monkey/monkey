@@ -103,7 +103,7 @@ struct plugin_api
 
     struct mk_server_config *config;
     struct mk_list *plugins;
-    struct sched_list_node *sched_list;
+    struct mk_sched_worker *sched_list;
 
     /* Error helper */
     void (*_error) (int, const char *, ...) PRINTF_WARNINGS(2,3);
@@ -200,9 +200,9 @@ struct plugin_api
 
     /* Scheduler */
     int (*sched_remove_client) (int);
-    struct mk_sched_conn *(*sched_get_connection)(struct sched_list_node *,
+    struct mk_sched_conn *(*sched_get_connection)(struct mk_sched_worker *,
                                                   int);
-    struct sched_list_node *(*sched_worker_info)();
+    struct mk_sched_worker *(*sched_worker_info)();
 
     /* worker's functions */
     pthread_t (*worker_spawn) (void (*func) (void *), void *);
@@ -370,6 +370,6 @@ int mk_plugin_header_get(struct mk_http_request *sr,
                          mk_ptr_t query,
                          mk_ptr_t *result);
 
-struct sched_list_node *mk_plugin_sched_get_thread_conf();
+struct mk_sched_worker *mk_plugin_sched_get_thread_conf();
 
 #endif
