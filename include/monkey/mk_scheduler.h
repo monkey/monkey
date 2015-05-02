@@ -52,17 +52,6 @@
 extern __thread struct rb_root *cs_list;
 extern __thread struct mk_list *cs_incomplete;
 
-/* Every connection in the server is represented by this structure */
-struct mk_sched_conn
-{
-    struct mk_event event;
-    int status;                  /* connection status          */
-    time_t arrive_time;          /* arrived time               */
-
-    struct mk_list status_queue; /* link to the incoming queue */
-    struct rb_node _rb_head;     /* red-black tree head */
-};
-
 /*
  * Thread-scope structura/variable that holds the Scheduler context for the
  * worker (or thread) in question.
@@ -105,6 +94,31 @@ struct mk_sched_worker
      */
     int signal_channel_r;
     int signal_channel_w;
+};
+
+
+/* Every connection in the server is represented by this structure */
+struct mk_sched_conn
+{
+    struct mk_event event;            /* event loop context         */
+    int status;                       /* connection status          */
+    time_t arrive_time;               /* arrive time                */
+    struct mk_sched_handler *handler; /* handler                    */
+    struct mk_list status_queue;      /* link to the incoming queue */
+    struct rb_node _rb_head;          /* red-black tree head        */
+};
+
+/*
+ * It defines a Handler for a connection in questions. This struct
+ * is used inside mk_sched_conn to define which protocol/handler
+ * needs to take care of every action.
+ */
+struct mk_sched_handler
+{
+    const char *name;
+    int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *);
+    int (*cb_write) (struct mk_sched_conn *, struct mk_sched_worker *);
+    int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int);
 };
 
 struct mk_sched_notif {
@@ -162,6 +176,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched);
 int mk_sched_event_write(struct mk_sched_conn *conn,
                          struct mk_sched_worker *sched);
-int mk_sched_event_close(int socket, int event);
-
+int mk_sched_event_close(struct mk_sched_conn *conn,
+                         struct mk_sched_worker *sched,
+                         int type);
 #endif

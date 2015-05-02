@@ -18,7 +18,6 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_http.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_server.h>
@@ -38,6 +37,7 @@
 #include <sys/syscall.h>
 
 struct mk_sched_worker *sched_list;
+struct mk_sched_handler mk_http_handler;
 
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
@@ -169,10 +169,16 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
 
     event = &conn->event;
     event->fd   = remote_fd;
-    event->type = MK_EVENT_CONNECTION;
-    event->mask = MK_EVENT_EMPTY;
-    conn->status = MK_SCHEDULER_CONN_PENDING;
+    event->type  = MK_EVENT_CONNECTION;
+    event->mask  = MK_EVENT_EMPTY;
+    conn->status      = MK_SCHEDULER_CONN_PENDING;
     conn->arrive_time = log_current_utime;
+
+    /*
+     * FIXME: setting a static handler, this needs to me populated from
+     * the event/listener type later (configuration Listener)
+     */
+    conn->handler = &mk_http_handler;
 
     /* Register the entry in the red-black tree queue for fast lookup */
     struct rb_node **new = &(sched->rb_queue.rb_node);
@@ -499,8 +505,6 @@ int mk_sched_drop_connection(int socket)
     struct mk_sched_conn *conn;
     struct mk_sched_worker *sched;
 
-    mk_http_session_remove(socket);
-
     sched = mk_sched_get_thread_conf();
     conn = mk_sched_get_connection(sched, socket);
     if (conn) {
@@ -561,77 +565,12 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched)
 int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched)
 {
-     int ret;
-    int status;
+#ifdef TRACE
     int socket = conn->event.fd;
-    struct mk_http_session *cs;
-    struct mk_http_request *sr;
-
     MK_TRACE("[FD %i] Connection Handler / read", socket);
+#endif
 
-    /* Plugin hook
-    ret = mk_plugin_event_read(socket);
-
-    switch (ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-    break;
-    }
-    */
-    cs = mk_http_session_get(socket);
-    if (!cs) {
-        /* Create session for the client */
-        MK_TRACE("[FD %i] Create HTTP session", socket);
-        cs = mk_http_session_create(socket, sched);
-        if (!cs) {
-            return -1;
-        }
-    }
-
-    /* Invoke the read handler, on this case we only support HTTP (for now :) */
-    ret = mk_http_handler_read(socket, cs);
-    if (ret > 0) {
-        if (mk_list_is_empty(&cs->request_list) == 0) {
-            /* Add the first entry */
-            sr = &cs->sr_fixed;
-            mk_list_add(&sr->_head, &cs->request_list);
-            mk_http_request_init(cs, sr);
-        }
-        else {
-            sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
-        }
-
-        status = mk_http_parser(sr, &cs->parser,
-                                cs->body, cs->body_length);
-        if (status == MK_HTTP_PARSER_OK) {
-            MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
-            mk_http_status_completed(cs);
-            mk_event_add(sched->loop, socket,
-                         MK_EVENT_CONNECTION, MK_EVENT_WRITE, conn);
-        }
-        else if (status == MK_HTTP_PARSER_ERROR) {
-            /* The HTTP parser may enqueued some response error */
-            if (mk_channel_is_empty(&cs->channel) != 0) {
-                mk_channel_write(&cs->channel);
-            }
-            mk_http_session_remove(socket);
-            MK_TRACE("[FD %i] HTTP_PARSER_ERROR", socket);
-            return -1;
-        }
-        else {
-            MK_TRACE("[FD %i] HTTP_PARSER_PENDING", socket);
-        }
-    }
-
-    if (ret == -EAGAIN) {
-        return 1;
-    }
-
-    return ret;
-
+    return conn->handler->cb_read(conn, sched);
 }
 
 int mk_sched_event_write(struct mk_sched_conn *conn,
@@ -639,41 +578,11 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
 {
     int ret = -1;
     int socket = conn->event.fd;
-    struct mk_http_session *cs;
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
-    /* Plugin hook
-    ret = mk_plugin_event_write(socket);
-    switch(ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break;
-    }
-    */
-    MK_TRACE("[FD %i] Normal connection write handling", socket);
+    ret = conn->handler->cb_write(conn, sched);
 
-    /* Get node from schedule list node which contains
-     * the information regarding to the current client/socket
-     */
-    cs = mk_http_session_get(socket);
-    if (!cs) {
-        /* This is a ghost connection that doesn't exist anymore.
-         * Closing it could accidentally close some other thread's
-         * socket, so pass it to remove_client that checks it's ours.
-         */
-        mk_sched_drop_connection(socket);
-        return 0;
-    }
-
-    if (mk_channel_is_empty(&cs->channel) == 0) {
-
-    }
-
-    ret = mk_http_handler_write(socket, cs);
     /*
      * if ret < 0, means that some error happened in the writer call,
      * in the other hand, 0 means a successful request processed, if
@@ -695,9 +604,15 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
     return -1;
 }
 
-int mk_sched_event_close(int socket, int event)
+int mk_sched_event_close(struct mk_sched_conn *conn,
+                         struct mk_sched_worker *worker,
+                         int type)
 {
+    int socket = conn->event.fd;
+
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
+
+    conn->handler->cb_close(conn, worker, type);
 
     /*
      * Remove the socket from the scheduler and make sure
@@ -710,13 +625,13 @@ int mk_sched_event_close(int socket, int event)
      * break plugins until the whole interface events and
      * return values are re-worked.
      */
-    if (event == MK_EP_SOCKET_CLOSED) {
+    if (type == MK_EP_SOCKET_CLOSED) {
         mk_plugin_event_close(socket);
     }
-    else if (event == MK_EP_SOCKET_ERROR) {
+    else if (type == MK_EP_SOCKET_ERROR) {
         mk_plugin_event_error(socket);
     }
-    else if (event == MK_EP_SOCKET_TIMEOUT) {
+    else if (type == MK_EP_SOCKET_TIMEOUT) {
         mk_plugin_event_timeout(socket);
     }
 

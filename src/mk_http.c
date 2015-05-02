@@ -1577,3 +1577,141 @@ struct mk_http_header *mk_http_header_get(int name, struct mk_http_request *req,
 
     return NULL;
 }
+
+/*
+ * Main callbacks for the Scheduler
+ */
+
+int mk_http_sched_read(struct mk_sched_conn *conn,
+                       struct mk_sched_worker *worker)
+{
+    int ret;
+    int status;
+    int socket = conn->event.fd;
+
+    struct mk_http_session *cs;
+    struct mk_http_request *sr;
+
+
+    /* Plugin hook
+    ret = mk_plugin_event_read(socket);
+
+    switch (ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
+    break;
+    }
+    */
+    cs = mk_http_session_get(socket);
+    if (!cs) {
+        /* Create session for the client */
+        MK_TRACE("[FD %i] Create HTTP session", socket);
+        cs = mk_http_session_create(socket, worker);
+        if (!cs) {
+            return -1;
+        }
+    }
+
+    /* Invoke the read handler, on this case we only support HTTP (for now :) */
+    ret = mk_http_handler_read(socket, cs);
+    if (ret > 0) {
+        if (mk_list_is_empty(&cs->request_list) == 0) {
+            /* Add the first entry */
+            sr = &cs->sr_fixed;
+            mk_list_add(&sr->_head, &cs->request_list);
+            mk_http_request_init(cs, sr);
+        }
+        else {
+            sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
+        }
+
+        status = mk_http_parser(sr, &cs->parser,
+                                cs->body, cs->body_length);
+        if (status == MK_HTTP_PARSER_OK) {
+            MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
+            mk_http_status_completed(cs);
+            mk_event_add(worker->loop, socket,
+                         MK_EVENT_CONNECTION, MK_EVENT_WRITE, conn);
+        }
+        else if (status == MK_HTTP_PARSER_ERROR) {
+            /* The HTTP parser may enqueued some response error */
+            if (mk_channel_is_empty(&cs->channel) != 0) {
+                mk_channel_write(&cs->channel);
+            }
+            mk_http_session_remove(socket);
+            MK_TRACE("[FD %i] HTTP_PARSER_ERROR", socket);
+            return -1;
+        }
+        else {
+            MK_TRACE("[FD %i] HTTP_PARSER_PENDING", socket);
+        }
+    }
+
+    if (ret == -EAGAIN) {
+        return 1;
+    }
+
+    return ret;
+}
+
+int mk_http_sched_write(struct mk_sched_conn *conn,
+                        struct mk_sched_worker *worker)
+{
+    int ret = -1;
+    int socket = conn->event.fd;
+    struct mk_http_session *cs;
+
+    MK_TRACE("[FD %i] Normal connection write handling", socket);
+
+    /* Plugin hook
+    ret = mk_plugin_event_write(socket);
+    switch(ret) {
+    case MK_PLUGIN_RET_EVENT_OWNED:
+        return MK_PLUGIN_RET_CONTINUE;
+    case MK_PLUGIN_RET_EVENT_CLOSE:
+        return -1;
+    case MK_PLUGIN_RET_EVENT_CONTINUE:
+        break;
+    }
+    */
+
+    /* Get node from schedule list node which contains
+     * the information regarding to the current client/socket
+     */
+    cs = mk_http_session_get(socket);
+    if (!cs) {
+        /* This is a ghost connection that doesn't exist anymore.
+         * Closing it could accidentally close some other thread's
+         * socket, so pass it to remove_client that checks it's ours.
+         */
+        mk_sched_drop_connection(socket);
+        return 0;
+    }
+
+    if (mk_channel_is_empty(&cs->channel) == 0) {
+
+    }
+
+    return mk_http_handler_write(socket, cs);
+}
+
+int mk_http_sched_close(struct mk_sched_conn *conn,
+                        struct mk_sched_worker *worker,
+                        int type)
+{
+    (void) type;
+    int socket = conn->event.fd;
+    mk_http_session_remove(socket);
+
+    return 0;
+}
+
+struct mk_sched_handler mk_http_handler = {
+    .name     = "http",
+    .cb_read  = mk_http_sched_read,
+    .cb_write = mk_http_sched_write,
+    .cb_close = mk_http_sched_close
+};

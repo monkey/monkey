@@ -370,7 +370,7 @@ void mk_server_worker_loop()
                 if (ret < 0) {
                     MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i",
                              event->fd, ret);
-                    mk_sched_event_close(event->fd, MK_EP_SOCKET_CLOSED);
+                    mk_sched_event_close(conn, sched, MK_EP_SOCKET_CLOSED);
                 }
             }
             else if (event->type == MK_EVENT_LISTENER) {
