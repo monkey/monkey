@@ -11,7 +11,6 @@ set(src
   mk_scheduler.c
   mk_string.c
   mk_memory.c
-  mk_connection.c
   mk_iov.c
   mk_http.c
   mk_http_parser.c

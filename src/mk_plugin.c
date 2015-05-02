@@ -18,7 +18,6 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_connection.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_file.h>
 #include <monkey/mk_http.h>
@@ -668,7 +667,7 @@ int mk_plugin_http_request_end(int socket)
     MK_TRACE(" ret = %i", ret);
 
     if (ret < 0) {
-        con = mk_conn_close(socket, MK_EP_SOCKET_CLOSED);
+        con = mk_sched_event_close(socket, MK_EP_SOCKET_CLOSED);
         if (con != 0) {
             return con;
         }

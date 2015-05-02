@@ -25,7 +25,7 @@
 #include <monkey/mk_macros.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_event.h>
-#include <monkey/mk_connection.h>
+#include <monkey/mk_scheduler.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -356,11 +356,11 @@ void mk_server_worker_loop()
                 conn = (struct mk_sched_conn *) event;
 
                 if (event->mask & MK_EVENT_READ) {
-                    ret = mk_conn_read(conn, sched);
+                    ret = mk_sched_event_read(conn, sched);
                 }
                 else if (event->mask & MK_EVENT_WRITE) {
                     MK_TRACE("[FD %i] EPoll Event WRITE", event->fd);
-                    ret = mk_conn_write(conn, sched);
+                    ret = mk_sched_event_write(conn, sched);
                 }
                 else if (event->mask & MK_EVENT_CLOSE) {
                     ret = -1;
@@ -369,7 +369,7 @@ void mk_server_worker_loop()
                 if (ret < 0) {
                     MK_TRACE("[FD %i] Epoll Event FORCE CLOSE | ret = %i",
                              event->fd, ret);
-                    mk_conn_close(event->fd, MK_EP_SOCKET_CLOSED);
+                    mk_sched_event_close(event->fd, MK_EP_SOCKET_CLOSED);
                 }
             }
             else if (event->type == MK_EVENT_LISTENER) {

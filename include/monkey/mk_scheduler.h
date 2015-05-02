@@ -162,4 +162,11 @@ int mk_sched_update_conn_status(struct sched_list_node *sched, int remote_fd,
 int mk_sched_sync_counters();
 void mk_sched_worker_free();
 
+/* Event handlers */
+int mk_sched_event_read(struct mk_sched_conn *conn,
+                        struct sched_list_node *sched);
+int mk_sched_event_write(struct mk_sched_conn *conn,
+                         struct sched_list_node *sched);
+int mk_sched_event_close(int socket, int event);
+
 #endif
