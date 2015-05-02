@@ -174,8 +174,8 @@ int mk_dirhtml_read_config(char *path)
 {
     unsigned long len;
     char *default_file = NULL;
-    struct mk_config *conf;
-    struct mk_config_section *section;
+    struct mk_rconf *conf;
+    struct mk_rconf_section *section;
     struct file_info finfo;
 
     mk_api->str_build(&default_file, &len, "%sdirhtml.conf", path);
@@ -193,7 +193,7 @@ int mk_dirhtml_read_config(char *path)
     /* alloc dirhtml config struct */
     dirhtml_conf = mk_api->mem_alloc(sizeof(struct dirhtml_config));
     dirhtml_conf->theme = mk_api->config_section_get_key(section, "Theme",
-                                                         MK_CONFIG_VAL_STR);
+                                                         MK_RCONF_STR);
     dirhtml_conf->theme_path = NULL;
 
     mk_api->str_build(&dirhtml_conf->theme_path, &len,
