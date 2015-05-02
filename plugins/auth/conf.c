@@ -149,7 +149,7 @@ int mk_auth_conf_init_users_list()
     struct mk_list *hosts = &mk_api->config->hosts;
     struct mk_list *head_sections;
     struct host *entry_host;
-    struct mk_config_section *section;
+    struct mk_rconf_section *section;
 
     /* vhost [AUTH] locations */
     struct location *loc;
@@ -175,7 +175,7 @@ int mk_auth_conf_init_users_list()
          * sections.
          */
         mk_list_foreach(head_sections, &entry_host->config->sections) {
-            section = mk_list_entry(head_sections, struct mk_config_section, _head);
+            section = mk_list_entry(head_sections, struct mk_rconf_section, _head);
 
             if (strcasecmp(section->name, "AUTH") == 0) {
                 location = NULL;
@@ -185,14 +185,14 @@ int mk_auth_conf_init_users_list()
                 /* Get section keys */
                 location = mk_api->config_section_get_key(section,
                                                           "Location",
-                                                          MK_CONFIG_VAL_STR);
+                                                          MK_RCONF_STR);
                 title = mk_api->config_section_get_key(section,
                                                        "Title",
-                                                       MK_CONFIG_VAL_STR);
+                                                       MK_RCONF_STR);
 
                 users_path = mk_api->config_section_get_key(section,
                                                             "Users",
-                                                            MK_CONFIG_VAL_STR);
+                                                            MK_RCONF_STR);
 
                 /* get or create users file entry */
                 uf = mk_auth_conf_add_users(users_path);
