@@ -30,7 +30,7 @@
 
 #include "mandril.h"
 
-static struct mk_config *conf;
+static struct mk_rconf *conf;
 
 /* Read database configuration parameters */
 static int mk_security_conf(char *confdir)
@@ -45,8 +45,8 @@ static int mk_security_conf(char *confdir)
     struct mk_secure_url_t *new_url;
     struct mk_secure_deny_hotlink_t *new_deny_hotlink;
 
-    struct mk_config_section *section;
-    struct mk_config_entry *entry;
+    struct mk_rconf_section *section;
+    struct mk_rconf_entry *entry;
     struct mk_list *head;
 
     /* Read configuration */
@@ -62,7 +62,7 @@ static int mk_security_conf(char *confdir)
     }
 
     mk_list_foreach(head, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        entry = mk_list_entry(head, struct mk_rconf_entry, _head);
 
         /* Passing to internal struct */
         if (strcasecmp(entry->key, "IP") == 0) {
