@@ -246,8 +246,8 @@ void mk_cheetah_cmd_vhosts()
 {
     struct host *entry_host;
     struct host_alias *entry_alias;
-    struct mk_config_section *section;
-    struct mk_config_entry *entry;
+    struct mk_rconf_section *section;
+    struct mk_rconf_entry *entry;
     struct mk_list *hosts = &mk_api->config->hosts;
     struct mk_list *aliases;
     struct mk_list *head_host;
@@ -279,12 +279,12 @@ void mk_cheetah_cmd_vhosts()
         }
 
         mk_list_foreach(head_sections, &entry_host->config->sections) {
-            section = mk_list_entry(head_sections, struct mk_config_section, _head);
+            section = mk_list_entry(head_sections, struct mk_rconf_section, _head);
             CHEETAH_WRITE("      %s+%s [%s]\n", ANSI_GREEN, ANSI_RESET,
                           section->name);
 
             mk_list_foreach(head_entries, &section->entries) {
-                entry = mk_list_entry(head_entries, struct mk_config_entry, _head);
+                entry = mk_list_entry(head_entries, struct mk_rconf_entry, _head);
                     CHEETAH_WRITE("        - %11.10s : %s\n", entry->key, entry->val);
             }
         }

@@ -42,8 +42,8 @@ static int mk_cheetah_config(char *path)
     unsigned long len;
     char *listen = NULL;
     char *default_file = NULL;
-    struct mk_config *conf;
-    struct mk_config_section *section;
+    struct mk_rconf *conf;
+    struct mk_rconf_section *section;
 
     /* this variable is defined in cheetah.h and points to
      * the FILE *descriptor where to write out the data
@@ -68,8 +68,7 @@ static int mk_cheetah_config(char *path)
     mk_api->mem_free(default_file);
 
     /* Listen directive */
-    listen = mk_api->config_section_get_key(section, "Listen",
-                                            MK_CONFIG_VAL_STR);
+    listen = mk_api->config_section_get_key(section, "Listen", MK_RCONF_STR);
 
     if (strcasecmp(listen, LISTEN_STDIN_STR) == 0) {
         listen_mode = LISTEN_STDIN;
