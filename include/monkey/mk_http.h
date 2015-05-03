@@ -107,7 +107,17 @@ extern const mk_ptr_t mk_http_protocol_null_p;
 
 struct mk_http_session
 {
-    int socket;
+    /*
+     * The first field of the struct appended to the sched_conn memory
+     * space needs to be an integer, the scheduler will set this flag
+     * to MK_FALSE to indicate it was just created. This work as a helper
+     * to the protocol handler.
+     *
+     * C rule: a pointer to a structure always points to it's first member.
+     */
+    int _sched_init;           /* initialized ?     */
+
+    int socket;                 /* socket associated */
     int pipelined;              /* Pipelined request */
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
@@ -180,10 +190,9 @@ int mk_http_request_end(struct mk_sched_conn *conn,
 
 
 /* http session */
-void mk_http_session_remove(int socket);
-struct mk_http_session *mk_http_session_get(int socket);
-struct mk_http_session *mk_http_session_create(int socket,
-                                              struct mk_sched_worker *sched);
+int mk_http_session_init(struct mk_http_session *cs,
+                         struct mk_sched_conn *conn);
+void mk_http_session_remove(struct mk_http_session *cs);
 
 /* event handlers */
 int mk_http_handler_read(int socket, struct mk_http_session *cs);
@@ -197,5 +206,9 @@ void mk_http_request_init(struct mk_http_session *session,
                           struct mk_http_request *request);
 struct mk_http_header *mk_http_header_get(int name, struct mk_http_request *req,
                                           const char *key, unsigned int len);
+
+#define mk_http_session_get(conn)               \
+    (struct mk_http_session *)                  \
+    (((void *) conn) + sizeof(struct mk_sched_conn))
 
 #endif

@@ -293,7 +293,7 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
 
     /* STAGE_50, connection closed and remove the http_session */
     mk_plugin_stage_run_50(cs->socket);
-    mk_http_session_remove(cs->socket);
+    mk_http_session_remove(cs);
 }
 
 int mk_http_handler_read(int socket, struct mk_http_session *cs)
@@ -357,12 +357,11 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
             return -EAGAIN;
         }
         else {
-            mk_http_session_remove(socket);
+            mk_http_session_remove(cs);
             return -1;
         }
     }
     if (bytes == 0) {
-        mk_http_session_remove(socket);
         return -1;
     }
 
@@ -1158,7 +1157,8 @@ int mk_http_request_end(struct mk_sched_conn *conn,
     struct mk_http_request *sr;
 
     socket = conn->event.fd;
-    cs = mk_http_session_get(socket);
+
+    cs = mk_http_session_get(conn);
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
         return -1;
@@ -1194,13 +1194,12 @@ int mk_http_request_end(struct mk_sched_conn *conn,
      * close it.
      */
     ka = mk_http_keepalive_check(cs);
-    mk_http_request_free_list(cs);
-
     if (ka < 0) {
         MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
-        mk_http_session_remove(socket);
+        mk_http_session_remove(cs);
     }
     else {
+        mk_http_request_free_list(cs);
         mk_http_request_ka_next(cs);
         mk_event_add(sched->loop, socket,
                      MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
@@ -1361,26 +1360,27 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
  * From thread mk_sched_worker "list", remove the http_session
  * struct information
  */
-void mk_http_session_remove(int socket)
+void mk_http_session_remove(struct mk_http_session *cs)
 {
-    struct mk_http_session *cs_node;
+    MK_TRACE("[FD %i] HTTP Session remove", cs->socket);
 
-    cs_node = mk_http_session_get(socket);
-    if (cs_node) {
-        rb_erase(&cs_node->_rb_head, cs_list);
-        if (cs_node->body != cs_node->body_fixed) {
-            mk_mem_free(cs_node->body);
-        }
-        if (cs_node->status == MK_REQUEST_STATUS_INCOMPLETE) {
-            mk_list_del(&cs_node->request_incomplete);
-        }
-        mk_http_request_free_list(cs_node);
-        mk_list_del(&cs_node->request_list);
-        mk_mem_free(cs_node);
+    if (cs->_sched_init == MK_FALSE) {
+        return;
     }
+
+    if (cs->body != cs->body_fixed) {
+        mk_mem_free(cs->body);
+    }
+    if (cs->status == MK_REQUEST_STATUS_INCOMPLETE) {
+        mk_list_del(&cs->request_incomplete);
+    }
+    mk_http_request_free_list(cs);
+    mk_list_del(&cs->request_list);
+
+    cs->_sched_init = MK_FALSE;
 }
 
-struct mk_http_session *mk_http_session_get(int socket)
+struct mk_http_session *mk_http_session_lookup(int socket)
 {
     struct mk_http_session *cs;
     struct rb_node *node;
@@ -1400,38 +1400,24 @@ struct mk_http_session *mk_http_session_get(int socket)
 }
 
 
-/*
- * Create a client request struct and put it on the
- * main list
- */
-struct mk_http_session *mk_http_session_create(int socket,
-                                               struct mk_sched_worker *sched)
+/* Initialize a HTTP session (just created) */
+int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
 {
-    struct mk_http_session *cs;
-    struct mk_sched_conn *sc;
-
-    sc = mk_sched_get_connection(sched, socket);
-
-    if (!sc) {
-        MK_TRACE("[FD %i] No sched node, could not create session", socket);
-        return NULL;
-    }
-
     /* Alloc memory for node */
-    cs = mk_mem_malloc(sizeof(struct mk_http_session));
+    cs->_sched_init = MK_TRUE;
     cs->pipelined = MK_FALSE;
     cs->counter_connections = 0;
-    cs->socket = socket;
+    cs->socket = conn->event.fd;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     mk_list_add(&cs->request_incomplete, cs_incomplete);
 
     /* Stream channel */
     cs->channel.type = MK_CHANNEL_SOCKET;
-    cs->channel.fd   = socket;
+    cs->channel.fd   = conn->event.fd;
     mk_list_init(&cs->channel.streams);
 
     /* creation time in unix time */
-    cs->init_time = sc->arrive_time;
+    cs->init_time = conn->arrive_time;
 
     /* alloc space for body content */
     if (mk_config->transport_buffer_size > MK_REQUEST_CHUNK) {
@@ -1453,44 +1439,7 @@ struct mk_http_session *mk_http_session_create(int socket,
     /* Initialize the parser */
     mk_http_parser_init(&cs->parser);
 
-    /* Add this SESSION to the thread list */
-
-    /* Add node to list */
-    /* Red-Black tree insert routine */
-    struct rb_node **new = &(cs_list->rb_node);
-    struct rb_node *parent = NULL;
-
-    /* Figure out where to put new node */
-    while (*new) {
-        struct mk_http_session *this = container_of(*new, struct mk_http_session, _rb_head);
-
-        parent = *new;
-        if (cs->socket < this->socket)
-            new = &((*new)->rb_left);
-        else if (cs->socket > this->socket)
-            new = &((*new)->rb_right);
-        else {
-            /*
-             * If we reach here, means there is a corruption. We should not create
-             * a session of the value exists on the rbtree.
-             *
-             * Just warn about the situation, release resources and continue.
-             */
-            mk_exception();
-
-            /* prepare exit */
-            if (cs->body != cs->body_fixed) {
-                mk_mem_free(cs->body);
-            }
-            mk_mem_free(cs);
-            return NULL;
-        }
-    }
-    /* Add new node and rebalance tree. */
-    rb_link_node(&cs->_rb_head, parent, new);
-    rb_insert_color(&cs->_rb_head, cs_list);
-
-    return cs;
+    return 0;
 }
 
 
@@ -1605,12 +1554,12 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
     break;
     }
     */
-    cs = mk_http_session_get(socket);
-    if (!cs) {
+    cs = mk_http_session_get(conn);
+    if (cs->_sched_init == MK_FALSE) {
         /* Create session for the client */
         MK_TRACE("[FD %i] Create HTTP session", socket);
-        cs = mk_http_session_create(socket, worker);
-        if (!cs) {
+        ret  = mk_http_session_init(cs, conn);
+        if (ret == -1) {
             return -1;
         }
     }
@@ -1641,7 +1590,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
             if (mk_channel_is_empty(&cs->channel) != 0) {
                 mk_channel_write(&cs->channel);
             }
-            mk_http_session_remove(socket);
+            mk_http_session_remove(cs);
             MK_TRACE("[FD %i] HTTP_PARSER_ERROR", socket);
             return -1;
         }
@@ -1660,9 +1609,9 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
 int mk_http_sched_write(struct mk_sched_conn *conn,
                         struct mk_sched_worker *worker)
 {
-    int ret = -1;
     int socket = conn->event.fd;
     struct mk_http_session *cs;
+    (void) worker;
 
     MK_TRACE("[FD %i] Normal connection write handling", socket);
 
@@ -1681,7 +1630,7 @@ int mk_http_sched_write(struct mk_sched_conn *conn,
     /* Get node from schedule list node which contains
      * the information regarding to the current client/socket
      */
-    cs = mk_http_session_get(socket);
+    cs = mk_http_session_get(conn);
     if (!cs) {
         /* This is a ghost connection that doesn't exist anymore.
          * Closing it could accidentally close some other thread's
@@ -1702,16 +1651,24 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
                         struct mk_sched_worker *worker,
                         int type)
 {
-    (void) type;
-    int socket = conn->event.fd;
-    mk_http_session_remove(socket);
+    struct mk_http_session *cs;
+    (void) worker;
 
+#ifdef TRACE
+    MK_TRACE("[FD %i] HTTP sched close (type=%i)", conn->event.fd, type);
+#else
+    (void) type;
+#endif
+
+    cs = mk_http_session_get(conn);
+    mk_http_session_remove(cs);
     return 0;
 }
 
 struct mk_sched_handler mk_http_handler = {
-    .name     = "http",
-    .cb_read  = mk_http_sched_read,
-    .cb_write = mk_http_sched_write,
-    .cb_close = mk_http_sched_close
+    .name             = "http",
+    .cb_read          = mk_http_sched_read,
+    .cb_write         = mk_http_sched_write,
+    .cb_close         = mk_http_sched_close,
+    .sched_extra_size = sizeof(struct mk_http_session)
 };

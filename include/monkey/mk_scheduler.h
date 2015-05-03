@@ -119,6 +119,32 @@ struct mk_sched_handler
     int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *);
     int (*cb_write) (struct mk_sched_conn *, struct mk_sched_worker *);
     int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int);
+
+    /*
+     * This extra field is a small hack. The scheduler connection context
+     * contains information about the connection, and setting this field
+     * will let the scheduler allocate some extra memory bytes on the
+     * context memory reference:
+     *
+     * e.g:
+     *
+     * t_size = (sizeof(struct mk_sched_conn) + sched_extra_size);
+     * struct sched_conn *conn = malloc(t_size);
+     *
+     * This is useful for protocol or handlers where a socket connection
+     * represents one unique instance, the use case is HTTP, e.g:
+     *
+     * HTTP : 1 connection = 1 client (one request at a time)
+     * HTTP2: 1 connection = 1 client with multiple-framed requests
+     *
+     * The purpose is to avoid protocol handlers to perform more memory
+     * allocations and connection lookupsm the sched context is good enough
+     * to help on this, e.g:
+     *
+     *  t_size = (sizeof(struct mk_sched_conn) + (sizeof(struct mk_http_session);
+     *  conn = malloc(t_size);
+     */
+    int sched_extra_size;
 };
 
 struct mk_sched_notif {

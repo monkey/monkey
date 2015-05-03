@@ -149,6 +149,8 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
                                               struct mk_sched_worker *sched)
 {
     int ret;
+    int size;
+    struct mk_sched_handler *handler;
     struct mk_sched_conn *conn;
     struct mk_event *event;
 
@@ -162,7 +164,17 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
         return NULL;
     }
 
-    conn = mk_mem_malloc(sizeof(struct mk_sched_conn));
+    handler = &mk_http_handler;
+    if (handler->sched_extra_size > 0) {
+        void *data;
+        size = (sizeof(struct mk_sched_conn) + handler->sched_extra_size);
+        data = mk_mem_malloc_z(size);
+        conn = (struct mk_sched_conn *) data;
+    }
+    else{
+        conn = mk_mem_malloc_z(sizeof(struct mk_sched_conn));
+    }
+
     if (!conn) {
         return NULL;
     }
@@ -417,20 +429,6 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
     sc = mk_sched_get_connection(sched, remote_fd);
     if (sc) {
         MK_TRACE("[FD %i] Scheduler remove", remote_fd);
-
-#ifdef TRACE
-        /*
-         * This is a double check just enable on Trace mode to try to find
-         * conditions of bad API usage. When a Session is exiting, no
-         * client_session context associated to the remote_fd must exists.
-         */
-        struct mk_http_session *cs = mk_http_session_get(remote_fd);
-        if (cs) {
-            mk_err("[FD %i] A client_session exists, bad API usage",
-                   remote_fd);
-            mk_http_session_remove(remote_fd);
-        }
-#endif
 
         /* Invoke plugins in stage 50 */
         mk_plugin_stage_run_50(remote_fd);
