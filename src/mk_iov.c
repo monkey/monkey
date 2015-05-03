@@ -169,6 +169,12 @@ int mk_iov_consume(struct mk_iov *mk_io, size_t bytes)
     int idx;
     size_t len;
 
+    if (mk_io->total_len == bytes) {
+        mk_io->total_len = 0;
+        mk_io->iov_idx   = 0;
+        return 0;
+    }
+
     for (idx = 0; idx < mk_io->iov_idx; idx++) {
         len = mk_io->io[idx].iov_len;
 
