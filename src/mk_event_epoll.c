@@ -72,7 +72,7 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
     int op;
     int ret;
     struct mk_event *event;
-    struct epoll_event ep_event = {0, {0}};
+    struct epoll_event ep_event;
 
     /* Verify the FD status and desired operation */
     event = (struct mk_event *) data;
