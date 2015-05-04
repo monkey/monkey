@@ -23,8 +23,6 @@
 __thread struct mk_iov *mk_tls_cache_iov_header;
 __thread mk_ptr_t *mk_tls_cache_header_cl;
 __thread mk_ptr_t *mk_tls_cache_header_lm;
-__thread mk_ptr_t *mk_tls_cache_header_ka;
-__thread mk_ptr_t *mk_tls_cache_header_ka_max;
 __thread struct tm *mk_tls_cache_gmtime;
 __thread struct mk_gmt_cache *mk_tls_cache_gmtext;
 

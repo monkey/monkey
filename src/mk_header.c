@@ -224,16 +224,6 @@ int mk_header_prepare(struct mk_http_session *cs,
         if (mk_http_keepalive_check(cs) == 0) {
             if (sr->connection.len > 0) {
                 if (sr->protocol != MK_HTTP_PROTOCOL_11) {
-                    /* Get cached mk_ptr_ts */
-                    mk_ptr_t *ka_format = MK_TLS_GET(mk_tls_cache_header_ka);
-                    mk_ptr_t *ka_header = MK_TLS_GET(mk_tls_cache_header_ka_max);
-
-                    /* Compose header and add entries to iov */
-                    mk_string_itop(mk_config->max_keep_alive_request - cs->counter_connections, ka_header);
-                    mk_iov_add(iov, ka_format->data, ka_format->len,
-                               MK_FALSE);
-                    mk_iov_add(iov, ka_header->data, ka_header->len,
-                               MK_FALSE);
                     mk_iov_add(iov,
                                mk_header_conn_ka.data,
                                mk_header_conn_ka.len,

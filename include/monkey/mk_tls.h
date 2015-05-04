@@ -25,8 +25,6 @@
 extern __thread struct mk_iov *mk_tls_cache_iov_header;
 extern __thread mk_ptr_t *mk_tls_cache_header_cl;
 extern __thread mk_ptr_t *mk_tls_cache_header_lm;
-extern __thread mk_ptr_t *mk_tls_cache_header_ka;
-extern __thread mk_ptr_t *mk_tls_cache_header_ka_max;
 extern __thread struct tm *mk_tls_cache_gmtime;
 extern __thread struct mk_gmt_cache *mk_tls_cache_gmtext;
 
@@ -39,8 +37,6 @@ extern __thread struct mk_gmt_cache *mk_tls_cache_gmtext;
 pthread_key_t mk_tls_cache_iov_header;
 pthread_key_t mk_tls_cache_header_cl;
 pthread_key_t mk_tls_cache_header_lm;
-pthread_key_t mk_tls_cache_header_ka;
-pthread_key_t mk_tls_cache_header_ka_max;
 pthread_key_t mk_tls_cache_gmtime;
 pthread_key_t mk_tls_cache_gmtext;
 
@@ -50,8 +46,6 @@ pthread_key_t mk_tls_cache_gmtext;
     pthread_key_create(&mk_tls_cache_iov_header, NULL);         \
     pthread_key_create(&mk_tls_cache_header_cl, NULL);          \
     pthread_key_create(&mk_tls_cache_header_lm, NULL);          \
-    pthread_key_create(&mk_tls_cache_header_ka, NULL);          \
-    pthread_key_create(&mk_tls_cache_header_ka_max, NULL);      \
     pthread_key_create(&mk_tls_cache_gmtime, NULL);             \
     pthread_key_create(&mk_tls_cache_gmtext, NULL);
 #endif

@@ -55,19 +55,6 @@ void mk_cache_worker_init()
     p_tmp->len = -1;
     MK_TLS_SET(mk_tls_cache_header_cl, p_tmp);
 
-    /* Cache header response -> keep-alive */
-    p_tmp = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    mk_string_build(&p_tmp->data, &p_tmp->len,
-                    "Keep-Alive: timeout=%i, max=",
-                    mk_config->keep_alive_timeout);
-    MK_TLS_SET(mk_tls_cache_header_ka, p_tmp);
-
-    /* Cache header response -> max=%i */
-    p_tmp = mk_mem_malloc_z(sizeof(mk_ptr_t));
-    p_tmp->data = mk_mem_malloc_z(64);
-    p_tmp->len  = 0;
-    MK_TLS_SET(mk_tls_cache_header_ka_max, p_tmp);
-
     /* Cache iov header struct */
     MK_TLS_SET(mk_tls_cache_iov_header, mk_iov_create(32, 0));
 
@@ -97,14 +84,6 @@ void mk_cache_worker_exit()
     /* Cache header request -> content length */
     mk_ptr_free(MK_TLS_GET(mk_tls_cache_header_cl));
     mk_mem_free(MK_TLS_GET(mk_tls_cache_header_cl));
-
-    /* Cache header response -> keep-alive */
-    mk_ptr_free(MK_TLS_GET(mk_tls_cache_header_ka));
-    mk_mem_free(MK_TLS_GET(mk_tls_cache_header_ka));
-
-    /* Cache header response -> max=%i */
-    mk_ptr_free(MK_TLS_GET(mk_tls_cache_header_ka_max));
-    mk_mem_free(MK_TLS_GET(mk_tls_cache_header_ka_max));
 
     /* Cache iov header struct */
     mk_iov_free(MK_TLS_GET(mk_tls_cache_iov_header));
