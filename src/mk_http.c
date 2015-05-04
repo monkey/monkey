@@ -85,8 +85,6 @@ void mk_http_request_init(struct mk_http_session *session,
     request->host_conf = mk_list_entry_first(host_list, struct host, _head);
     request->uri_processed.data = NULL;
     request->real_path.data = NULL;
-    request->keep_alive = MK_TRUE;
-    request->close_now = MK_TRUE;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
@@ -166,32 +164,8 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
         return MK_EXIT_OK;
     }
 
-    /* Default Keepalive is off */
-    if (sr->protocol == MK_HTTP_PROTOCOL_10) {
-        sr->keep_alive = MK_FALSE;
-        sr->close_now = MK_TRUE;
-    }
-    else if (sr->protocol == MK_HTTP_PROTOCOL_11) {
-        sr->keep_alive = MK_TRUE;
-        sr->close_now = MK_FALSE;
-    }
-
-    if (sr->connection.data) {
-        if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_KA) {
-            sr->keep_alive = MK_TRUE;
-            sr->close_now  = MK_FALSE;
-        }
-        else if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_CLOSE) {
-            sr->keep_alive = MK_FALSE;
-            sr->close_now  = MK_TRUE;
-        }
-        else {
-            if (sr->protocol == MK_HTTP_PROTOCOL_11) {
-                sr->keep_alive = MK_TRUE;
-                sr->close_now = MK_FALSE;
-            }
-        }
-    }
+    /* Should we close the session after this request ? */
+    mk_http_keepalive_check(cs, sr);
 
     /* Content Length */
     header = &cs->parser.headers[MK_HEADER_CONTENT_LENGTH];
@@ -431,7 +405,7 @@ int mk_http_handler_write(int socket, struct mk_http_session *cs)
                 switch (ret) {
                 case MK_EXIT_OK:
                 case MK_EXIT_ERROR:
-                    if (sr_node->close_now == MK_TRUE) {
+                    if (cs->close_now == MK_TRUE) {
                         return -1;
                     }
                     break;
@@ -1108,40 +1082,33 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
  * Check if a connection can stay open using
  * the keepalive headers vars and Monkey configuration as criteria
  */
-int mk_http_keepalive_check(struct mk_http_session *cs)
+int mk_http_keepalive_check(struct mk_http_session *cs,
+                            struct mk_http_request *sr)
 {
-    struct mk_http_request *sr_node;
-    struct mk_list *sr_head;
-
-    if (mk_list_is_empty(&cs->request_list) == 0) {
+    if (mk_config->keep_alive == MK_FALSE) {
         return -1;
     }
 
-    sr_head = &cs->request_list;
-    sr_node = mk_list_entry_last(sr_head, struct mk_http_request, _head);
-    if (mk_config->keep_alive == MK_FALSE || sr_node->keep_alive == MK_FALSE) {
-        return -1;
+    /* Default Keepalive is off */
+    if (sr->protocol == MK_HTTP_PROTOCOL_10) {
+        cs->close_now = MK_TRUE;
+    }
+    else if (sr->protocol == MK_HTTP_PROTOCOL_11) {
+        cs->close_now = MK_FALSE;
     }
 
-    /* Old client without Connection header */
-    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 &&
-        sr_node->connection.len <= 0) {
-        return -1;
-    }
-
-    /* Old client and content length to send is unknown */
-    if (sr_node->protocol < MK_HTTP_PROTOCOL_11 &&
-        sr_node->headers.content_length < 0) {
-        return -1;
-    }
-
-    /* Connection was forced to close */
-    if (sr_node->close_now == MK_TRUE) {
-        return -1;
+    if (sr->connection.data) {
+        if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_KA) {
+            cs->close_now  = MK_FALSE;
+        }
+        else if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_CLOSE) {
+            cs->close_now  = MK_TRUE;
+        }
     }
 
     /* Client has reached keep-alive connections limit */
     if (cs->counter_connections >= mk_config->max_keep_alive_request) {
+        cs->close_now = MK_TRUE;
         return -1;
     }
 
@@ -1151,7 +1118,6 @@ int mk_http_keepalive_check(struct mk_http_session *cs)
 int mk_http_request_end(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched)
 {
-    int ka;
     int socket;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
@@ -1193,8 +1159,7 @@ int mk_http_request_end(struct mk_sched_conn *conn,
      * connection can continue working or we must
      * close it.
      */
-    ka = mk_http_keepalive_check(cs);
-    if (ka < 0) {
+    if (cs->close_now == MK_TRUE) {
         MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
         mk_http_session_remove(cs);
     }
@@ -1407,6 +1372,7 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     cs->_sched_init = MK_TRUE;
     cs->pipelined = MK_FALSE;
     cs->counter_connections = 0;
+    cs->close_now = MK_FALSE;
     cs->socket = conn->event.fd;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     mk_list_add(&cs->request_incomplete, cs_incomplete);
@@ -1582,6 +1548,8 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);
+
+            /* Request WRITE events */
             mk_event_add(worker->loop, socket,
                          MK_EVENT_CONNECTION, MK_EVENT_WRITE, conn);
         }

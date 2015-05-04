@@ -221,7 +221,7 @@ int mk_header_prepare(struct mk_http_session *cs,
 
     /* Connection */
     if (sh->connection == 0) {
-        if (mk_http_keepalive_check(cs) == 0) {
+        if (cs->close_now == MK_FALSE) {
             if (sr->connection.len > 0) {
                 if (sr->protocol != MK_HTTP_PROTOCOL_11) {
                     mk_iov_add(iov,

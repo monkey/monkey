@@ -71,9 +71,6 @@ struct mk_http_request
     int status;
     int protocol;
 
-    /* is keep-alive request ? */
-    int keep_alive;
-
     /* is it serving a user's home directory ? */
     int user_home;
 
@@ -98,12 +95,6 @@ struct mk_http_request
     mk_ptr_t protocol_p;
 
     mk_ptr_t body;
-
-    /* If request specify Connection: close, Monkey will
-     * close the connection after send the response, by
-     * default this var is set to VAR_OFF;
-     */
-    int close_now;
 
     /*---Request headers--*/
     int content_length;

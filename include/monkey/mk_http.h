@@ -121,6 +121,8 @@ struct mk_http_session
     int pipelined;              /* Pipelined request */
     int counter_connections;    /* Count persistent connections */
     int status;                 /* Request status */
+    int close_now;              /* Close the session ASAP */
+
     struct mk_channel channel;
 
     unsigned int body_size;
@@ -181,7 +183,8 @@ int mk_http_protocol_check(char *protocol, int len);
 mk_ptr_t mk_http_protocol_check_str(int protocol);
 
 int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr);
-int mk_http_keepalive_check(struct mk_http_session *cs);
+int mk_http_keepalive_check(struct mk_http_session *cs,
+                            struct mk_http_request *sr);
 
 int mk_http_pending_request(struct mk_http_session *cs);
 int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr);

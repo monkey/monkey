@@ -9,7 +9,7 @@
 #	March 16 2010
 #
 # COMMENTS
-#	Expect header response with keep-alive header	
+#	Do not expect header response with keep-alive header
 ###############################################################################
 
 
@@ -22,7 +22,7 @@ __GET / $HTTPVER10
 __Connection: Keep-Alive
 __
 _EXPECT . "HTTP/1.1 200 OK"
-_EXPECT . "Keep-Alive: timeout=5, max=1000"
+_EXPECT . "!Keep-Alive: timeout=5, max=1000"
 _EXPECT . "Connection: Keep-Alive"
 _WAIT
 END
