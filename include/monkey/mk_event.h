@@ -77,8 +77,6 @@ struct mk_event_loop {
 };
 
 
-struct mk_event_fdt *mk_events_fdt;
-
 int mk_event_initialize();
 struct mk_event_loop *mk_event_loop_create(int size);
 void mk_event_loop_destroy(struct mk_event_loop *loop);

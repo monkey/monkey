@@ -294,7 +294,6 @@ void mk_plugin_api_init()
 
     /* events mechanism */
     api->ev_loop_create = mk_event_loop_create;
-    api->ev_get_fdt = mk_event_get_fdt;
     api->ev_add = mk_event_add;
     api->ev_del = mk_event_del;
     api->ev_timeout_create = mk_event_timeout_create;

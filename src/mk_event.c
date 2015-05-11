@@ -135,9 +135,3 @@ char *mk_event_backend()
 {
     return _mk_event_backend();
 }
-
-/* Get the file descriptor table */
-struct mk_event_fdt *mk_event_get_fdt()
-{
-    return mk_events_fdt;
-}
