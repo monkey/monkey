@@ -30,11 +30,11 @@ add_executable(monkey ${src})
 target_link_libraries(monkey dl ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
 
 if(NOT WITH_SYSTEM_MALLOC)
-  target_link_libraries(monkey libjemalloc ${CMAKE_THREAD_LIBS_INIT}  ${STATIC_PLUGINS_LIBS})
+  target_link_libraries(monkey libjemalloc)
 endif()
 
 if(WITH_LINUX_KQUEUE)
-  target_link_libraries(monkey kqueue ${CMAKE_THREAD_LIBS_INIT}  ${STATIC_PLUGINS_LIBS})
+  target_link_libraries(monkey kqueue)
 endif()
 
 if(BUILD_LOCAL)
