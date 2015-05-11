@@ -227,7 +227,6 @@ void mk_server_loop_balancer()
     struct mk_event_loop *evl;
     struct mk_sched_worker *sched;
 
-    printf("OLD!\n");
     /* Init the listeners */
     listeners = mk_server_listen_init(mk_config);
     if (!listeners) {
