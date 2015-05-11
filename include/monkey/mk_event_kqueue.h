@@ -36,11 +36,11 @@
    #endif
 #endif
 
-typedef struct {
+struct mk_event_ctx {
     int kfd;
     int queue_size;
     struct kevent *events;
-} mk_event_ctx_t;
+};
 
 static inline int filter_mask(int16_t f)
 {
@@ -56,28 +56,18 @@ static inline int filter_mask(int16_t f)
 }
 
 
-#define mk_event_foreach(evl, fd, mask)                                 \
-    int __i = 0;                                                        \
-    mk_event_ctx_t *ctx = evl->data;                                    \
+#define mk_event_foreach(event, evl)                                    \
+    int __i;                                                            \
+    struct mk_event_ctx *ctx = evl->data;                               \
     struct mk_event_fd_state *st = NULL;                                \
                                                                         \
     if (evl->n_events > 0) {                                            \
-        fd   = ctx->events[__i].ident;                                  \
-        st = &mk_events_fdt->states[fd];                                \
-        mask = filter_mask(ctx->events[__i].filter);                    \
-                                                                        \
-        evl->events[__i].fd   = fd;                                     \
-        evl->events[__i].mask = mask;                                   \
-        evl->events[__i].data = st->data;                               \
+        event = ctx->events[0].udata;                                   \
     }                                                                   \
                                                                         \
     for (__i = 0;                                                       \
          __i < evl->n_events;                                           \
          __i++,                                                         \
-             fd = ctx->events[__i].ident,                               \
-             mask = filter_mask(ctx->events[__i].filter),               \
-             evl->events[__i].fd   = fd,                                \
-             evl->events[__i].mask = mask,                              \
-             evl->events[__i].data = st->data)
-
+             event = ctx->events[__i].udata                             \
+         )
 #endif

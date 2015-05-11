@@ -28,10 +28,10 @@
 
 static inline void *_mk_event_loop_create(int size)
 {
-    mk_event_ctx_t *ctx;
+    struct mk_event_ctx *ctx;
 
     /* Main event context */
-    ctx = mk_mem_malloc_z(sizeof(mk_event_ctx_t));
+    ctx = mk_mem_malloc_z(sizeof(struct mk_event_ctx));
     if (!ctx) {
         return NULL;
     }
@@ -56,30 +56,35 @@ static inline void *_mk_event_loop_create(int size)
 }
 
 /* Close handlers and memory */
-static inline void _mk_event_loop_destroy(mk_event_ctx_t *ctx)
+static inline void _mk_event_loop_destroy(struct mk_event_ctx *ctx)
 {
     close(ctx->kfd);
     mk_mem_free(ctx->events);
     mk_mem_free(ctx);
 }
 
-static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
+static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
+                                int type, uint32_t events, void *data)
 {
     int ret;
     int set = MK_FALSE;
+    struct mk_event *event;
     struct kevent ke = {0, 0, 0, 0, 0, 0};
-    struct mk_event_fd_state *fds;
 
-    fds = mk_event_get_state(fd);
+    event = (struct mk_event *) data;
+    if (event->mask == MK_EVENT_EMPTY) {
+        event->fd   = fd;
+        event->type = type;
+    }
 
     /* Read flag */
-    if ((fds->mask ^ MK_EVENT_READ) && (events & MK_EVENT_READ)) {
-        EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+    if ((event->mask ^ MK_EVENT_READ) && (events & MK_EVENT_READ)) {
+        EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, event);
         set = MK_TRUE;
         //printf("[ADD] fd=%i READ\n", fd);
     }
-    else if ((fds->mask & MK_EVENT_READ) && (events ^ MK_EVENT_READ)) {
-        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    else if ((event->mask & MK_EVENT_READ) && (events ^ MK_EVENT_READ)) {
+        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, event);
         set = MK_TRUE;
         //printf("[DEL] fd=%i READ\n", fd);
     }
@@ -94,13 +99,13 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
 
     /* Write flag */
     set = MK_FALSE;
-    if ((fds->mask ^ MK_EVENT_WRITE) && (events & MK_EVENT_WRITE)) {
-        EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+    if ((event->mask ^ MK_EVENT_WRITE) && (events & MK_EVENT_WRITE)) {
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, event);
         set = MK_TRUE;
         //printf("[ADD] fd=%i WRITE\n", fd);
     }
-    else if ((fds->mask & MK_EVENT_WRITE) && (events ^ MK_EVENT_WRITE)) {
-        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    else if ((event->mask & MK_EVENT_WRITE) && (events ^ MK_EVENT_WRITE)) {
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, event);
         set = MK_TRUE;
         //printf("[DEL] fd=%i WRITE\n", fd);
     }
@@ -116,40 +121,34 @@ static inline int _mk_event_add(mk_event_ctx_t *ctx, int fd, int events)
     return 0;
 }
 
-static inline int _mk_event_del(mk_event_ctx_t *ctx, int fd)
+static inline int _mk_event_del(struct mk_event_ctx *ctx, int fd)
 {
     int ret;
     struct kevent ke = {0, 0, 0, 0, 0, 0};
-    struct mk_event_fd_state *fds;
 
-    fds = mk_event_get_state(fd);
-    if (fds->mask & MK_EVENT_READ) {
-        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
-        if (ret < 0) {
-            mk_libc_error("kevent");
-            return ret;
-        }
-        //printf("!DEL READ %i\n", fd);
+    EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+    if (ret < 0) {
+        mk_libc_error("kevent");
+        return ret;
     }
 
-    if (fds->mask & MK_EVENT_WRITE) {
-        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-        ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
-        if (ret < 0) {
-            mk_libc_error("kevent");
-            return ret;
-        }
-        //printf("!DEL WRITE %i\n", fd);
+    EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
+    if (ret < 0) {
+        mk_libc_error("kevent");
+        return ret;
     }
 
     return 0;
 }
 
-static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
+static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
+                                           int expire, void *data)
 {
     int fd;
     int ret;
+    struct mk_event *event;
     struct kevent ke;
 
     /*
@@ -162,7 +161,12 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
         return -1;
     }
 
-    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, expire, NULL);
+    event = data;
+    event->fd = fd;
+    event->type = MK_EVENT_NOTIFICATION;
+    event->mask = MK_EVENT_EMPTY;
+
+    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, expire, event);
     ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
     if (ret < 0) {
         close(fd);
@@ -178,10 +182,12 @@ static inline int _mk_event_timeout_create(mk_event_ctx_t *ctx, int expire)
     return fd;
 }
 
-static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *w_fd)
+static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
+                                           int *r_fd, int *w_fd, void *data)
 {
     int ret;
     int fd[2];
+    struct mk_event *event;
 
     ret = pipe(fd);
     if (ret < 0) {
@@ -189,7 +195,13 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *
         return ret;
     }
 
-    ret = _mk_event_add(ctx, fd[0], MK_EVENT_READ);
+    event = data;
+    event->fd = fd[0];
+    event->type = MK_EVENT_NOTIFICATION;
+    event->mask = MK_EVENT_EMPTY;
+
+    ret = _mk_event_add(ctx, fd[0],
+                        MK_EVENT_NOTIFICATION, MK_EVENT_READ, event);
     if (ret != 0) {
         close(fd[0]);
         close(fd[1]);
@@ -202,39 +214,11 @@ static inline int _mk_event_channel_create(mk_event_ctx_t *ctx, int *r_fd, int *
     return 0;
 }
 
-static inline int _mk_event_wait(mk_event_loop_t *loop)
+static inline int _mk_event_wait(struct mk_event_loop *loop)
 {
-    mk_event_ctx_t *ctx = loop->data;
+    struct mk_event_ctx *ctx = loop->data;
 
     loop->n_events = kevent(ctx->kfd, NULL, 0, ctx->events, ctx->queue_size, NULL);
-    return loop->n_events;
-}
-
-static inline int _mk_event_translate(mk_event_loop_t *loop)
-{
-    int i;
-    int fd;
-    int mask = 0;
-    struct mk_event_fd_state *st;
-    mk_event_ctx_t *ctx = loop->data;
-
-    for (i = 0; i < loop->n_events; i++) {
-        fd = ctx->events[i].ident;
-        st = &mk_events_fdt->states[fd];
-
-        if (ctx->events[i].filter == EVFILT_READ) {
-            mask |= MK_EVENT_READ;
-        }
-
-        if (ctx->events[i].filter == EVFILT_WRITE) {
-            mask |= MK_EVENT_WRITE;
-        }
-
-        loop->events[i].fd   = fd;
-        loop->events[i].mask = mask;
-        loop->events[i].data = st->data;
-    }
-
     return loop->n_events;
 }
 

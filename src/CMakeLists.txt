@@ -33,6 +33,10 @@ if(NOT WITH_SYSTEM_MALLOC)
   target_link_libraries(monkey libjemalloc ${CMAKE_THREAD_LIBS_INIT}  ${STATIC_PLUGINS_LIBS})
 endif()
 
+if(WITH_LINUX_KQUEUE)
+  target_link_libraries(monkey kqueue ${CMAKE_THREAD_LIBS_INIT}  ${STATIC_PLUGINS_LIBS})
+endif()
+
 if(BUILD_LOCAL)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
 else()
