@@ -38,11 +38,16 @@
 #define MK_DEFAULT_LISTEN_PORT              "2001"
 #define MK_WORKERS_DEFAULT                  1
 
+/* Listener properties */
+#define MK_LISTEN_HTTP     1
+#define MK_LISTEN_HTTP2    2
+#define MK_LISTEN_SSL      4
+
 struct mk_config_listener
 {
     char *address;
     char *port;
-
+    int flags;
     struct mk_list _head;
 };
 
@@ -155,7 +160,8 @@ void mk_config_set_init_values(void);
 /* config helpers */
 void mk_config_error(const char *path, int line, const char *msg);
 
-struct mk_config_listener *mk_config_listener_add(char *address, char *port);
+struct mk_config_listener *mk_config_listener_add(char *address, char *port,
+                                                  int flags);
 
 int mk_config_listen_check_busy();
 void mk_config_listeners_free();

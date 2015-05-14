@@ -42,6 +42,19 @@ struct mk_server_config *mk_config;
 gid_t EGID;
 gid_t EUID;
 
+static int mk_config_key_have(struct mk_list *list, const char *value)
+{
+    struct mk_list *head;
+    struct mk_string_line *entry;
+
+    mk_list_foreach(head, list) {
+        entry = mk_list_entry(head, struct mk_string_line, _head);
+        if (strcasecmp(entry->val, value) == 0) {
+            return MK_TRUE;
+        }
+    }
+    return MK_FALSE;
+}
 
 struct mk_server_config *mk_config_init()
 {
@@ -182,15 +195,14 @@ int mk_config_listen_check_busy()
 
 static int mk_config_listen_read(struct mk_rconf_section *section)
 {
-    int i = 0;
+    int flags = 0;
     long port_num;
     char *address = NULL;
     char *port = NULL;
     char *divider;
-    struct mk_list *head;
     struct mk_list *list;
     struct mk_list *cur;
-    struct mk_string_line *field;
+    struct mk_string_line *listener;
     struct mk_rconf_entry *entry;
 
     mk_list_foreach(cur, &section->entries) {
@@ -204,62 +216,75 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
             goto error;
         }
 
-        mk_list_foreach(head, list) {
-            field = mk_list_entry(head, struct mk_string_line, _head);
-
-            if (i == 0) {
-                if (entry->val[0] == '[') {
-                    /* IPv6 address */
-                    divider = strchr(entry->val, ']');
-                    if (divider == NULL) {
-                        mk_err("[config] Expected closing ']' in IPv6 address.");
-                        goto error;
-                    }
-                    if (divider[1] != ':' || divider[2] == '\0') {
-                        mk_err("[config] Expected ':port' after IPv6 address.");
-                        goto error;
-                    }
-
-                    address = mk_string_copy_substr(entry->val + 1, 0, divider - entry->val - 1);
-                    port = mk_string_dup(divider + 2);
-                }
-                else if (strchr(entry->val, ':') != NULL) {
-                    /* IPv4 address */
-                    divider = strrchr(entry->val, ':');
-                    if (divider == NULL || divider[1] == '\0') {
-                        mk_err("[config] Expected ':port' after IPv4 address.");
-                        goto error;
-                    }
-
-                    address = mk_string_copy_substr(entry->val, 0, divider - entry->val);
-                    port = mk_string_dup(divider + 1);
-                }
-                else {
-                    /* Port only */
-                    address = NULL;
-                    port = mk_string_dup(entry->val);
-                }
-
-                port_num = strtol(port, NULL, 10);
-                if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
-                    mk_warn("Using defaults, could not understand \"Listen %s\"",
-                            entry->val);
-                    port = NULL;
-                }
-
-                /* register the new listener */
-                mk_config_listener_add(address, port);
+        /* Parse the listener interface */
+        listener = mk_list_entry_first(list, struct mk_string_line, _head);
+        if (listener->val[0] == '[') {
+            /* IPv6 address */
+            divider = strchr(entry->val, ']');
+            if (divider == NULL) {
+                mk_err("[config] Expected closing ']' in IPv6 address.");
+                goto error;
             }
+            if (divider[1] != ':' || divider[2] == '\0') {
+                mk_err("[config] Expected ':port' after IPv6 address.");
+                goto error;
+            }
+
+            address = mk_string_copy_substr(entry->val + 1, 0,
+                                            divider - listener->val - 1);
+            port = mk_string_dup(divider + 2);
+        }
+        else if (strchr(listener->val, ':') != NULL) {
+            /* IPv4 address */
+            divider = strrchr(listener->val, ':');
+            if (divider == NULL || divider[1] == '\0') {
+                mk_err("[config] Expected ':port' after IPv4 address.");
+                goto error;
+            }
+
+            address = mk_string_copy_substr(listener->val, 0,
+                                            divider - listener->val);
+            port = mk_string_dup(divider + 1);
+        }
+        else {
+            /* Port only */
+            address = NULL;
+            port = mk_string_dup(listener->val);
         }
 
-error:
-        if (address) mk_mem_free(address);
-        if (port) mk_mem_free(port);
+        port_num = strtol(port, NULL, 10);
+        if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
+            mk_warn("Using defaults, could not understand \"Listen %s\"",
+                    entry->val);
+            port = NULL;
+        }
+
+        /* Check extra properties of the listener */
+        flags = MK_LISTEN_HTTP;
+        if (mk_config_key_have(list, "!http")) {
+            flags |= ~MK_LISTEN_HTTP;
+        }
+
+        if (mk_config_key_have(list, "http2")) {
+            flags |= MK_LISTEN_HTTP2;
+        }
+
+        if (mk_config_key_have(list, "ssl")) {
+            flags |= MK_LISTEN_SSL;
+        }
+
+        /* register the new listener */
+        mk_config_listener_add(address, port, flags);
     }
+
+error:
+    if (address) mk_mem_free(address);
+    if (port) mk_mem_free(port);
+
 
     if (mk_list_is_empty(&mk_config->listeners) == 0) {
         mk_warn("[config] No valid Listen entries found, set default");
-        mk_config_listener_add(NULL, NULL);
+        mk_config_listener_add(NULL, NULL, MK_LISTEN_HTTP);
     }
 
     return 0;
@@ -304,7 +329,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         }
     }
     else {
-        mk_config_listener_add(NULL, mk_config->port_override);
+        mk_config_listener_add(NULL, mk_config->port_override, MK_LISTEN_HTTP);
     }
 
     /* Number of thread workers */
@@ -487,7 +512,8 @@ void mk_config_start_configure(void)
 }
 
 /* Register a new listener into the main configuration */
-struct mk_config_listener *mk_config_listener_add(char *address, char *port)
+struct mk_config_listener *mk_config_listener_add(char *address,
+                                                  char *port, int flags)
 {
     struct mk_list *head;
     struct mk_config_listener *check;
@@ -513,6 +539,8 @@ struct mk_config_listener *mk_config_listener_add(char *address, char *port)
     else {
         listen->port = mk_string_dup(port);
     }
+
+    listen->flags = flags;
 
     /* Before to add a new listener, lets make sure it's not a duplicated */
     mk_list_foreach(head, &mk_config->listeners) {
