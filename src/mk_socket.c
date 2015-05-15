@@ -73,12 +73,11 @@ int mk_socket_set_nonblocking(int sockfd)
 }
 
 /*
- * Enable the TCP_FASTOPEN feature for server side implemented in Linux Kernel >= 3.7,
- * for more details read here:
+ * Enable the TCP_FASTOPEN feature for server side implemented in
+ * Linux Kernel >= 3.7, for more details read here:
  *
  *  TCP Fast Open: expediting web services: http://lwn.net/Articles/508865/
  */
-
 int mk_socket_set_tcp_fastopen(int sockfd)
 {
 #if defined (__linux__)
@@ -117,30 +116,69 @@ int mk_socket_set_tcp_reuseport(int sockfd)
     return setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on));
 }
 
-int mk_socket_close(int socket)
+int mk_socket_create(int domain, int type, int protocol)
 {
-    return mk_config->network->close(socket);
-}
+    int fd;
 
-int mk_socket_create()
-{
-    int sockfd;
+#ifdef SOCK_CLOEXEC
+    fd = socket(domain, type | SOCK_CLOEXEC, protocol);
+#else
+    fd = socket(domain, type, protocol);
+    fcntl(socket_fd, F_SETFD, FD_CLOEXEC);
+#endif
 
-    if ((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
+    if (fd == -1) {
         mk_libc_error("socket");
         return -1;
     }
 
-    return sockfd;
+    return fd;
 }
 
 int mk_socket_connect(char *host, int port)
 {
-    int sockfd;
+    int ret;
+    int socket_fd = -1;
+    char *port_str = 0;
+    unsigned long len;
+    struct addrinfo hints;
+    struct addrinfo *res, *rp;
 
-    sockfd = mk_config->network->connect(host, port);
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-    return sockfd;
+    mk_string_build(&port_str, &len, "%d", port);
+
+    ret = getaddrinfo(host, port_str, &hints, &res);
+    mk_mem_free(port_str);
+    if(ret != 0) {
+        mk_err("Can't get addr info: %s", gai_strerror(ret));
+        return -1;
+    }
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
+        socket_fd = mk_socket_create(rp->ai_family,
+                                     rp->ai_socktype, rp->ai_protocol);
+
+        if( socket_fd == -1) {
+            mk_warn("Error creating client socket, retrying");
+            continue;
+        }
+
+        if (connect(socket_fd,
+                    (struct sockaddr *) rp->ai_addr, rp->ai_addrlen) == -1) {
+            close(socket_fd);
+            continue;
+        }
+
+        break;
+    }
+    freeaddrinfo(res);
+
+    if (rp == NULL)
+        return -1;
+
+    return socket_fd;
 }
 
 int mk_socket_reset(int socket)
@@ -155,64 +193,99 @@ int mk_socket_reset(int socket)
     return 0;
 }
 
-/* Just IPv4 for now... */
-int mk_socket_server(char *port, char *listen_addr, int reuse_port)
+int mk_socket_bind(int socket_fd, const struct sockaddr *addr,
+                   socklen_t addrlen, int backlog)
 {
-    int socket_fd;
+    int ret;
 
-    if (!mk_config->network) {
-        mk_err("No network layer plugin was found. Aborting.");
-        exit(EXIT_FAILURE);
+    ret = bind(socket_fd, addr, addrlen);
+    if( ret == -1 ) {
+        mk_warn("Error binding socket");
+        return ret;
     }
 
-    socket_fd = mk_config->network->server(port, listen_addr, reuse_port);
-    if (socket_fd < 0) {
-        exit(EXIT_FAILURE);
+    /*
+     * Enable TCP_FASTOPEN by default: if for some reason this call fail,
+     * it will not affect the behavior of the server, in order to succeed,
+     * Monkey must be running in a Linux system with Kernel >= 3.7 and the
+     * tcp_fastopen flag enabled here:
+     *
+     *     # cat /proc/sys/net/ipv4/tcp_fastopen
+     *
+     * To enable this feature just do:
+     *
+     *     # echo 1 > /proc/sys/net/ipv4/tcp_fastopen
+     */
+    if (mk_config->kernel_features & MK_KERNEL_TCP_FASTOPEN) {
+        ret = mk_socket_set_tcp_fastopen(socket_fd);
+        if (ret == -1) {
+            mk_warn("Could not set TCP_FASTOPEN");
+        }
     }
+
+    ret = listen(socket_fd, backlog);
+    if(ret == -1 ) {
+        mk_warn("Error setting up the listener");
+        return -1;
+    }
+
+    return ret;
+}
+
+/* Just IPv4 for now... */
+int mk_socket_server(char *port, char *listen_addr,
+                     int reuse_port, struct mk_server_config *config)
+{
+    int ret;
+    int socket_fd = -1;
+    struct addrinfo hints;
+    struct addrinfo *res, *rp;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    ret = getaddrinfo(listen_addr, port, &hints, &res);
+    if(ret != 0) {
+        mk_err("Can't get addr info: %s", gai_strerror(ret));
+        return -1;
+    }
+
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
+        socket_fd = mk_socket_create(rp->ai_family,
+                                     rp->ai_socktype, rp->ai_protocol);
+        if( socket_fd == -1) {
+            mk_warn("Error creating server socket, retrying");
+            continue;
+        }
+
+        mk_socket_set_tcp_nodelay(socket_fd);
+        mk_socket_reset(socket_fd);
+
+        /* Check if reuse port can be enabled on this socket */
+        if (reuse_port == MK_TRUE &&
+            (config->kernel_features & MK_KERNEL_SO_REUSEPORT)) {
+            ret = mk_socket_set_tcp_reuseport(socket_fd);
+            if (ret == -1) {
+                mk_warn("Could not use SO_REUSEPORT, using fair balancing mode");
+                config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+            }
+        }
+
+        ret = mk_socket_bind(socket_fd, rp->ai_addr, rp->ai_addrlen, MK_SOMAXCONN);
+        if(ret == -1) {
+            mk_err("Cannot listen on %s:%s\n", listen_addr, port);
+            continue;
+        }
+        break;
+    }
+    freeaddrinfo(res);
+
+    if (rp == NULL)
+        return -1;
 
     return socket_fd;
-}
-
-/* NETWORK_IO plugin functions */
-int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io)
-{
-    int bytes;
-    bytes = mk_config->network->writev(socket_fd, mk_io);
-
-    if (mk_config->safe_event_write == MK_TRUE) {
-        mk_socket_safe_event_write(socket_fd);
-    }
-    return bytes;
-}
-
-int mk_socket_send(int socket_fd, const void *buf, size_t count)
-{
-    int bytes;
-    bytes = mk_config->network->write(socket_fd, buf, count);
-
-    if (mk_config->safe_event_write == MK_TRUE) {
-        mk_socket_safe_event_write(socket_fd);
-    }
-    return bytes;
-}
-
-int mk_socket_read(int socket_fd, void *buf, int count)
-{
-    return mk_config->network->read(socket_fd, (void *)buf, count);
-}
-
-int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
-                        size_t file_count)
-{
-    int bytes;
-
-    bytes = mk_config->network->send_file(socket_fd, file_fd,
-                                       file_offset, file_count);
-
-    if (mk_config->safe_event_write == MK_TRUE) {
-        mk_socket_safe_event_write(socket_fd);
-    }
-    return bytes;
 }
 
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len)

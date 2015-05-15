@@ -270,7 +270,7 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
     mk_http_session_remove(cs);
 }
 
-int mk_http_handler_read(int socket, struct mk_http_session *cs)
+int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
 {
     int bytes;
     int max_read;
@@ -322,7 +322,7 @@ int mk_http_handler_read(int socket, struct mk_http_session *cs)
 
     /* Read content */
     max_read = (cs->body_size - cs->body_length);
-    bytes = mk_socket_read(socket, cs->body + cs->body_length, max_read);
+    bytes = mk_sched_conn_read(conn, cs->body + cs->body_length, max_read);
 
     MK_TRACE("[FD %i] read %i", socket, bytes);
 
@@ -680,13 +680,14 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
         }
     }
 
+    char *fixme = "http";
     if (port_redirect > 0) {
         mk_string_build(&real_location, &len, "%s://%s:%i%s\r\n",
-                        mk_config->transport, host, port_redirect, location);
+                        fixme, host, port_redirect, location);
     }
     else {
         mk_string_build(&real_location, &len, "%s://%s%s\r\n",
-                        mk_config->transport, host, location);
+                        fixme, host, location);
     }
 
     MK_TRACE("Redirecting to '%s'", real_location);
@@ -1378,8 +1379,9 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     mk_list_add(&cs->request_incomplete, cs_incomplete);
 
     /* Stream channel */
-    cs->channel.type = MK_CHANNEL_SOCKET;
-    cs->channel.fd   = conn->event.fd;
+    cs->channel.type = MK_CHANNEL_SOCKET;    /* channel type  */
+    cs->channel.fd   = conn->event.fd;       /* socket conn   */
+    cs->channel.io   = conn->net;            /* network layer */
     mk_list_init(&cs->channel.streams);
 
     /* creation time in unix time */
@@ -1531,7 +1533,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
     }
 
     /* Invoke the read handler, on this case we only support HTTP (for now :) */
-    ret = mk_http_handler_read(socket, cs);
+    ret = mk_http_handler_read(conn, cs);
     if (ret > 0) {
         if (mk_list_is_empty(&cs->request_list) == 0) {
             /* Add the first entry */
@@ -1638,5 +1640,6 @@ struct mk_sched_handler mk_http_handler = {
     .cb_read          = mk_http_sched_read,
     .cb_write         = mk_http_sched_write,
     .cb_close         = mk_http_sched_close,
-    .sched_extra_size = sizeof(struct mk_http_session)
+    .sched_extra_size = sizeof(struct mk_http_session),
+    .capabilities     = MK_CAP_HTTP
 };

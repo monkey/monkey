@@ -31,6 +31,8 @@ struct mk_server_listen
     struct mk_event event;
 
     int server_fd;
+    struct mk_plugin *network;
+    struct mk_sched_handler *protocol;
     struct mk_config_listener *listen;
     struct mk_list _head;
 };
@@ -44,6 +46,8 @@ extern __thread struct mk_server_timeout *server_timeout;
 
 struct mk_sched_worker;
 
+int mk_socket_set_cork_flag(int fd, int state);
+
 static inline int mk_server_cork_flag(int fd, int state)
 {
     if (mk_config->manual_tcp_cork == MK_FALSE) {
@@ -55,8 +59,7 @@ static inline int mk_server_cork_flag(int fd, int state)
 
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
-int mk_server_listen_handler(struct mk_sched_worker *sched,
-                             int server_fd);
+int mk_server_listen_handler(struct mk_sched_worker *sched, void *data);
 void mk_server_listen_free();
 struct mk_list *mk_server_listen_init(struct mk_server_config *config);
 unsigned int mk_server_capacity();

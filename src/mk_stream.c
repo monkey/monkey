@@ -18,10 +18,10 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_socket.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_memory.h>
 #include <monkey/mk_stream.h>
+#include <monkey/mk_scheduler.h>
 
 /* Create a new stream instance */
 struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
@@ -67,11 +67,11 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
              channel->fd, stream->fd, stream->bytes_total);
 
     /* Direct write */
-    bytes = mk_socket_send_file(channel->fd,
-                                stream->fd,
-                                &stream->bytes_offset,
-                                stream->bytes_total
-                                );
+    bytes = mk_sched_conn_sendfile(channel,
+                                    stream->fd,
+                                    &stream->bytes_offset,
+                                    stream->bytes_total
+                                    );
     MK_TRACE("[CH=%d] [FD=%i] WRITE STREAM FILE: %lu bytes",
              channel->fd, stream->fd, bytes);
 
@@ -106,8 +106,7 @@ int mk_channel_write(struct mk_channel *channel)
                      channel->fd, stream->bytes_total);
 
             iov   = stream->buffer;
-            bytes = mk_socket_sendv(channel->fd, iov);
-
+            bytes = mk_sched_conn_writev(channel, iov);
             if (bytes > 0) {
                 /* Perform the adjustment on mk_iov */
                 mk_iov_consume(iov, bytes);
@@ -118,7 +117,7 @@ int mk_channel_write(struct mk_channel *channel)
                      channel->fd, stream->bytes_total);
 
             ptr = stream->buffer;
-            bytes = mk_socket_send(channel->fd, ptr->data, ptr->len);
+            bytes = mk_sched_conn_write(channel, ptr->data, ptr->len);
             if (bytes > 0) {
                 /* FIXME OFFSET */
             }

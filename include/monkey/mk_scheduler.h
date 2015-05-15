@@ -25,6 +25,7 @@
 #include <monkey/mk_list.h>
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_event.h>
+#include <monkey/mk_server.h>
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
@@ -100,12 +101,13 @@ struct mk_sched_worker
 /* Every connection in the server is represented by this structure */
 struct mk_sched_conn
 {
-    struct mk_event event;            /* event loop context         */
-    int status;                       /* connection status          */
-    time_t arrive_time;               /* arrive time                */
-    struct mk_sched_handler *handler; /* handler                    */
-    struct mk_list status_queue;      /* link to the incoming queue */
-    struct rb_node _rb_head;          /* red-black tree head        */
+    struct mk_event event;             /* event loop context         */
+    int status;                        /* connection status          */
+    time_t arrive_time;                /* arrive time                */
+    struct mk_sched_handler *protocol; /* protocol handler           */
+    struct mk_plugin_network *net;     /* I/O network layer          */
+    struct mk_list status_queue;       /* link to the incoming queue */
+    struct rb_node _rb_head;           /* red-black tree head        */
 };
 
 /*
@@ -145,6 +147,7 @@ struct mk_sched_handler
      *  conn = malloc(t_size);
      */
     int sched_extra_size;
+    char capabilities;
 };
 
 struct mk_sched_notif {
@@ -188,6 +191,7 @@ void mk_sched_update_thread_status(struct mk_sched_worker *sched,
 int mk_sched_drop_connection(int socket);
 int mk_sched_check_timeouts(struct mk_sched_worker *sched);
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
+                                              struct mk_server_listen *listener,
                                               struct mk_sched_worker *sched);
 int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd);
 struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker
@@ -197,6 +201,8 @@ int mk_sched_update_conn_status(struct mk_sched_worker *sched, int remote_fd,
 int mk_sched_sync_counters();
 void mk_sched_worker_free();
 
+struct mk_sched_handler *mk_sched_handler_cap(char cap);
+
 /* Event handlers */
 int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched);
@@ -205,4 +211,14 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
 int mk_sched_event_close(struct mk_sched_conn *conn,
                          struct mk_sched_worker *sched,
                          int type);
+
+#define mk_sched_conn_read(conn, buf, s)        \
+    conn->net->read(conn->event.fd, buf, s)
+#define mk_sched_conn_write(ch, buf, s)         \
+    ch->io->write(ch->fd, buf, s)
+#define mk_sched_conn_writev(ch, iov)           \
+    ch->io->writev(ch->fd, iov)
+#define mk_sched_conn_sendfile(ch, f_fd, f_offs, f_count)   \
+    ch->io->send_file(ch->fd, f_fd, f_offs, f_count)
+
 #endif

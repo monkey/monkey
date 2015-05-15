@@ -22,6 +22,7 @@
 
 #include <monkey/mk_iov.h>
 #include <monkey/mk_list.h>
+#include <monkey/mk_plugin_net.h>
 
 /*
  * Stream types: each stream can have a different
@@ -60,6 +61,7 @@ struct mk_channel {
     int type;
     int fd;
     int status;
+    struct mk_plugin_network *io;
     struct mk_list streams;
 };
 

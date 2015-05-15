@@ -20,6 +20,9 @@
 #ifndef MK_SOCKET_H
 #define MK_SOCKET_H
 
+#define _GNU_SOURCE
+
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -28,6 +31,7 @@
 #include <netinet/in.h>
 
 #include <monkey/mk_iov.h>
+#include <monkey/mk_config.h>
 
 #ifndef SOCK_NONBLOCK
 #define SOCK_NONBLOCK 04000
@@ -60,18 +64,13 @@ int mk_socket_set_tcp_defer_accept(int sockfd);
 int mk_socket_set_tcp_reuseport(int sockfd);
 int mk_socket_set_nonblocking(int sockfd);
 
-int mk_socket_close(int socket);
-
-int mk_socket_create(void);
+int mk_socket_create(int domain, int type, int protocol);
 int mk_socket_connect(char *host, int port);
 int mk_socket_reset(int socket);
-int mk_socket_server(char *port, char *listen_addr, int reuse_port);
-
-int mk_socket_sendv(int socket_fd, struct mk_iov *mk_io);
-int mk_socket_send(int socket_fd, const void *buf, size_t count);
-int mk_socket_read(int socket_fd, void *buf, int count);
-int mk_socket_send_file(int socket_fd, int file_fd, off_t *file_offset,
-                        size_t file_count);
+int mk_socket_bind(int socket_fd, const struct sockaddr *addr,
+                   socklen_t addrlen, int backlog);
+int mk_socket_server(char *port, char *listen_addr,
+                     int reuse_port, struct mk_server_config *config);
 int mk_socket_ip_str(int socket_fd, char **buf, int size, unsigned long *len);
 
 

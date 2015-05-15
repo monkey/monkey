@@ -76,7 +76,7 @@ MK_BUILD_PLUGIN("fastcgi")
 MK_BUILD_PLUGIN("liana")
 MK_BUILD_PLUGIN("logger")
 MK_BUILD_PLUGIN("mandril")
-MK_BUILD_PLUGIN("mbedtls")
+MK_BUILD_PLUGIN("polarssl")
 
 # Generate include/monkey/mk_static_plugins.h
 configure_file(

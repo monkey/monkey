@@ -14,7 +14,7 @@
     # optional IPv4 or IPv6 address separated by a colon (:).
     # IPv6 addresses must be enclosed in brackets ([]), e.g:
     #
-    # Listen 127.0.0.01:2001
+    # Listen 127.0.0.1:2001
     # Listen [::1]:2001
 
     Listen @MK_CONF_LISTEN@
@@ -118,17 +118,6 @@
     # Allow request to symbolic link files.
 
     SymLink @MK_CONF_SYMLINK@
-
-    # TransportLayer:
-    # ---------------
-    # Define which network I/O plugin provides the transport layer. The
-    # value of the key belongs to the shortname of the plugin. Make sure
-    # the plugin is loaded by 'plugins.load' file.
-    #
-    #    HTTP  is provided by liana
-    #    HTTPS is provided by polarssl
-
-    TransportLayer @MK_CONF_TRANSPORT@
 
     # DefaultMimeType:
     # ----------------

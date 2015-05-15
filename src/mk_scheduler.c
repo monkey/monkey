@@ -141,11 +141,21 @@ void mk_sched_worker_free()
     pthread_mutex_unlock(&mutex_worker_exit);
 }
 
+struct mk_sched_handler *mk_sched_handler_cap(char cap)
+{
+    if (cap == MK_CAP_HTTP) {
+        return &mk_http_handler;
+    }
+
+    return NULL;
+}
+
 /*
  * Register a new client connection into the scheduler, this call takes place
  * inside the worker/thread context.
  */
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
+                                              struct mk_server_listen *listener,
                                               struct mk_sched_worker *sched)
 {
     int ret;
@@ -159,19 +169,19 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-        mk_socket_close(remote_fd);
+        listener->network->network->close(remote_fd);
         MK_LT_SCHED(remote_fd, "PLUGIN_CLOSE");
         return NULL;
     }
 
-    handler = &mk_http_handler;
+    handler = listener->protocol;
     if (handler->sched_extra_size > 0) {
         void *data;
         size = (sizeof(struct mk_sched_conn) + handler->sched_extra_size);
         data = mk_mem_malloc_z(size);
         conn = (struct mk_sched_conn *) data;
     }
-    else{
+    else {
         conn = mk_mem_malloc_z(sizeof(struct mk_sched_conn));
     }
 
@@ -180,17 +190,13 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     }
 
     event = &conn->event;
-    event->fd   = remote_fd;
-    event->type  = MK_EVENT_CONNECTION;
-    event->mask  = MK_EVENT_EMPTY;
+    event->fd         = remote_fd;
+    event->type       = MK_EVENT_CONNECTION;
+    event->mask       = MK_EVENT_EMPTY;
     conn->status      = MK_SCHEDULER_CONN_PENDING;
     conn->arrive_time = log_current_utime;
-
-    /*
-     * FIXME: setting a static handler, this needs to me populated from
-     * the event/listener type later (configuration Listener)
-     */
-    conn->handler = &mk_http_handler;
+    conn->protocol    = handler;
+    conn->net         = listener->network->network;
 
     /* Register the entry in the red-black tree queue for fast lookup */
     struct rb_node **new = &(sched->rb_queue.rb_node);
@@ -416,7 +422,7 @@ void mk_sched_set_request_list(struct rb_root *list)
 
 int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
 {
-    struct mk_sched_conn *sc;
+    struct mk_sched_conn *conn;
 
     /*
      * Close socket and change status: we must invoke mk_epoll_del()
@@ -426,8 +432,8 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
      */
     mk_event_del(sched->loop, remote_fd);
 
-    sc = mk_sched_get_connection(sched, remote_fd);
-    if (sc) {
+    conn = mk_sched_get_connection(sched, remote_fd);
+    if (conn) {
         MK_TRACE("[FD %i] Scheduler remove", remote_fd);
 
         /* Invoke plugins in stage 50 */
@@ -436,8 +442,8 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
         sched->closed_connections++;
 
         /* Unlink from the red-black tree */
-        rb_erase(&sc->_rb_head, &sched->rb_queue);
-        mk_mem_free(sc);
+        rb_erase(&conn->_rb_head, &sched->rb_queue);
+        mk_mem_free(conn);
 
         /* Only close if this was our connection.
          *
@@ -446,7 +452,7 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
          * the same FD before we do the removal from the busy list,
          * causing ghosts.
          */
-        mk_socket_close(remote_fd);
+        conn->net->close(remote_fd);
         MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
         return 0;
     }
@@ -471,7 +477,7 @@ struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker *sched,
      */
     if (!sched) {
         MK_TRACE("[FD %i] No scheduler information", remote_fd);
-        mk_socket_close(remote_fd);
+        close(remote_fd);
         return NULL;
     }
 
@@ -559,7 +565,6 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched)
  * Scheduler events handler: lookup for event handler and invoke
  * proper callbacks.
  */
-
 int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched)
 {
@@ -568,7 +573,16 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
     MK_TRACE("[FD %i] Connection Handler / read", socket);
 #endif
 
-    return conn->handler->cb_read(conn, sched);
+    /*
+     * When the event loop notify that there is some readable information
+     * from the socket, we need to invoke the protocol handler associated
+     * to this connection and also pass as a reference the 'read()' function
+     * that handle 'read I/O' operations, e.g:
+     *
+     *  - plain sockets through liana will use just read(2)
+     *  - ssl though mbedtls should use mk_mbedtls_read(..)
+     */
+    return conn->protocol->cb_read(conn, sched);
 }
 
 int mk_sched_event_write(struct mk_sched_conn *conn,
@@ -579,7 +593,7 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
-    ret = conn->handler->cb_write(conn, sched);
+    ret = conn->protocol->cb_write(conn, sched);
 
     /*
      * if ret < 0, means that some error happened in the writer call,
@@ -610,7 +624,7 @@ int mk_sched_event_close(struct mk_sched_conn *conn,
 
     MK_TRACE("[FD %i] Connection Handler, closed", socket);
 
-    conn->handler->cb_close(conn, worker, type);
+    conn->protocol->cb_close(conn, worker, type);
 
     /*
      * Remove the socket from the scheduler and make sure

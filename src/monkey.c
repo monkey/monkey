@@ -361,7 +361,7 @@ int main(int argc, char **argv)
     mk_config_sanity_check();
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT &&
-        mk_config_listen_check_busy() == MK_TRUE &&
+        mk_config_listen_check_busy(mk_config) == MK_TRUE &&
         allow_shared_sockets == MK_FALSE) {
         mk_warn("Some Listen interface is busy, re-try using -T. Aborting.");
         exit(EXIT_FAILURE);

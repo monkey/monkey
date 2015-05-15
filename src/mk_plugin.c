@@ -157,20 +157,8 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
 
     if (plugin->hooks & MK_PLUGIN_NETWORK_LAYER) {
         mk_bug(!plugin->network);
-
-        /* Set Transport Layer */
-        if (mk_config->transport_layer &&
-            strcmp(mk_config->transport_layer, plugin->shortname) == 0) {
-            mk_config->transport_layer_plugin = plugin;
-            mk_config->network = plugin->network;
-
-            /* Ask the transport layer if it's using any buffer size */
-            mk_config->transport_buffer_size = plugin->network->buffer_size();
-            if (mk_config->transport_buffer_size <= 0) {
-                mk_config->transport_buffer_size = MK_REQUEST_CHUNK;
-            }
-        }
     }
+
     if (plugin->hooks & MK_PLUGIN_STAGE) {
         struct mk_plugin_stage *st;
 
@@ -318,11 +306,11 @@ void mk_plugin_api_init()
     api->socket_set_tcp_nodelay = mk_socket_set_tcp_nodelay;
     api->socket_set_nonblocking = mk_socket_set_nonblocking;
     api->socket_create = mk_socket_create;
-    api->socket_close = mk_socket_close;
-    api->socket_sendv = mk_socket_sendv;
-    api->socket_send = mk_socket_send;
-    api->socket_read = mk_socket_read;
-    api->socket_send_file = mk_socket_send_file;
+    //api->socket_close = mk_socket_close;
+    //api->socket_sendv = mk_socket_sendv;
+    //api->socket_send = mk_socket_send;
+    //api->socket_read = mk_socket_read;
+    //api->socket_send_file = mk_socket_send_file;
     api->socket_ip_str = mk_socket_ip_str;
 
     /* Config Callbacks */
@@ -450,12 +438,6 @@ void mk_plugin_load_all()
                 continue;
             }
         }
-    }
-
-    if (!mk_config->transport_layer) {
-        mk_mem_free(path);
-        mk_err("TransportLayer not defined in configuration");
-        exit(EXIT_FAILURE);
     }
 
     /* Look for plugins thread key data */
@@ -1095,4 +1077,19 @@ int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
 struct mk_sched_worker *mk_plugin_sched_get_thread_conf()
 {
     return worker_sched_node;
+}
+
+struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config)
+{
+    struct mk_list *head;
+    struct mk_plugin *plugin;
+
+    mk_list_foreach(head, config->plugins) {
+        plugin = mk_list_entry(head, struct mk_plugin, _head);
+        if (plugin->capabilities & cap) {
+            return plugin;
+        }
+    }
+
+    return NULL;
 }

@@ -146,9 +146,6 @@ void mk_details(void)
     printf(MK_BANNER_ENTRY
            "%i threads, may handle up to %i client connections\n",
            mk_config->workers, mk_config->server_capacity);
-    printf(MK_BANNER_ENTRY "Transport layer by %s in %s mode\n",
-           mk_config->transport_layer_plugin->shortname,
-           mk_config->transport);
 
 #ifdef __linux__
     char tmp[64];
@@ -174,11 +171,18 @@ static void mk_config_print_error_msg(char *variable, char *path)
  * Check if at least one of the Listen interfaces are being used by another
  * process.
  */
-int mk_config_listen_check_busy()
+int mk_config_listen_check_busy(struct mk_server_config *config)
 {
     int fd;
     struct mk_list *head;
+    struct mk_plugin *p;
     struct mk_config_listener *listen;
+
+    p = mk_plugin_cap(MK_CAP_SOCK_PLAIN, config);
+    if (!p) {
+        mk_warn("Listen checkt: consider build monkey with basic socket handling!");
+        return MK_FALSE;
+    }
 
     mk_list_foreach(head, &mk_config->listeners) {
         listen = mk_list_entry(head, struct mk_config_listener, _head);
@@ -260,17 +264,17 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
         }
 
         /* Check extra properties of the listener */
-        flags = MK_LISTEN_HTTP;
+        flags = MK_CAP_HTTP;
         if (mk_config_key_have(list, "!http")) {
-            flags |= ~MK_LISTEN_HTTP;
+            flags |= ~MK_CAP_HTTP;
         }
 
         if (mk_config_key_have(list, "http2")) {
-            flags |= MK_LISTEN_HTTP2;
+            flags |= MK_CAP_HTTP2;
         }
 
         if (mk_config_key_have(list, "ssl")) {
-            flags |= MK_LISTEN_SSL;
+            flags |= MK_CAP_SOCK_SSL;
         }
 
         /* register the new listener */
@@ -284,7 +288,7 @@ error:
 
     if (mk_list_is_empty(&mk_config->listeners) == 0) {
         mk_warn("[config] No valid Listen entries found, set default");
-        mk_config_listener_add(NULL, NULL, MK_LISTEN_HTTP);
+        mk_config_listener_add(NULL, NULL, MK_CAP_HTTP);
     }
 
     return 0;
@@ -329,7 +333,7 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
         }
     }
     else {
-        mk_config_listener_add(NULL, mk_config->port_override, MK_LISTEN_HTTP);
+        mk_config_listener_add(NULL, mk_config->port_override, MK_CAP_HTTP);
     }
 
     /* Number of thread workers */
@@ -433,8 +437,8 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     /* Transport Layer plugin */
     if (!mk_config->transport_layer) {
         mk_config->transport_layer = mk_rconf_section_get_key(section,
-                                                           "TransportLayer",
-                                                           MK_RCONF_STR);
+                                                              "TransportLayer",
+                                                              MK_RCONF_STR);
     }
 
     /* Default Mimetype */
@@ -607,16 +611,6 @@ void mk_config_set_init_values(void)
 
     /* Internals */
     mk_config->safe_event_write = MK_FALSE;
-
-    /*
-     * Transport type: useful to build redirection headers, values:
-     *
-     *   MK_TRANSPORT_HTTP
-     *   MK_TRANSPORT_HTTPS
-     *
-     * we set default to 'http'
-     */
-    mk_config->transport = MK_TRANSPORT_HTTP;
 
     /* Init plugin list */
     mk_list_init(mk_config->plugins);

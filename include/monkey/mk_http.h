@@ -198,7 +198,7 @@ int mk_http_session_init(struct mk_http_session *cs,
 void mk_http_session_remove(struct mk_http_session *cs);
 
 /* event handlers */
-int mk_http_handler_read(int socket, struct mk_http_session *cs);
+int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs);
 int mk_http_handler_write(int socket, struct mk_http_session *cs);
 
 void mk_http_request_free(struct mk_http_request *sr);

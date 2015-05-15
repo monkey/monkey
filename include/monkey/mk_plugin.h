@@ -32,6 +32,7 @@
 #include <monkey/mk_string.h>
 #include <monkey/mk_list.h>
 #include <monkey/mk_info.h>
+#include <monkey/mk_plugin_net.h>
 
 extern __thread struct mk_list *worker_plugin_event_list;
 
@@ -252,23 +253,6 @@ struct mk_plugin_stage_handler {
     struct mk_list _head;
 };
 
-/*
- * Network plugin: a plugin that provides a network layer, eg: plain
- * sockets or SSL.
- */
-struct mk_plugin_network {
-    int (*read) (int, void *, int);
-    int (*write) (int, const void *, size_t);
-    int (*writev) (int, struct mk_iov *);
-    int (*close) (int);
-    int (*connect) (char *, int);
-    int (*send_file) (int, int, off_t *, size_t);
-    int (*create_socket) (int, int, int);
-    int (*bind) (int, const struct sockaddr *addr, socklen_t, int);
-    int (*server) (char *port, char *addr, int);
-    int (*buffer_size) ();
-};
-
 struct mk_plugin_stage {
     int (*stage10) (int);
     int (*stage20) (struct mk_http_session *, struct mk_http_request *);
@@ -290,7 +274,10 @@ struct mk_plugin {
     const char *shortname;
     const char *name;
     const char *version;
+
+    /* Hooks and capabilities */
     unsigned int hooks;
+    char capabilities;
 
     /* Init / Exit */
     int (*init_plugin) (struct plugin_api **, char *);
@@ -371,5 +358,6 @@ int mk_plugin_header_get(struct mk_http_request *sr,
                          mk_ptr_t *result);
 
 struct mk_sched_worker *mk_plugin_sched_get_thread_conf();
+struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config);
 
 #endif

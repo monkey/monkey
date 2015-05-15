@@ -65,20 +65,20 @@ unsigned int mk_server_capacity()
     return cur;
 }
 
-int mk_server_listen_handler(struct mk_sched_worker *sched,
-                             int server_fd)
+int mk_server_listen_handler(struct mk_sched_worker *sched, void *data)
 {
     int ret;
     int client_fd = -1;
     struct mk_sched_conn *conn;
+    struct mk_server_listen *listener = data;
 
-    client_fd = mk_socket_accept(server_fd);
+    client_fd = mk_socket_accept(listener->server_fd);
     if (mk_unlikely(client_fd == -1)) {
         MK_TRACE("[server] Accept connection failed: %s", strerror(errno));
         goto error;
     }
 
-    conn = mk_sched_add_connection(client_fd, sched);
+    conn = mk_sched_add_connection(client_fd, listener, sched);
     if (mk_unlikely(!conn)) {
         mk_err("[server] Failed to register client.");
         goto error;
@@ -98,7 +98,7 @@ int mk_server_listen_handler(struct mk_sched_worker *sched,
 
 error:
     if (client_fd != -1) {
-        mk_socket_close(client_fd);
+        listener->network->network->close(client_fd);
     }
 
     return -1;
@@ -126,6 +126,8 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
     struct mk_list *listeners;
     struct mk_event *event;
     struct mk_server_listen *listener;
+    struct mk_sched_handler *protocol;
+    struct mk_plugin *plugin;
     struct mk_config_listener *listen;
 
     if (config == NULL) {
@@ -144,7 +146,8 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
 
         server_fd = mk_socket_server(listen->port,
                                      listen->address,
-                                     reuse_port);
+                                     reuse_port,
+                                     config);
         if (server_fd >= 0) {
             if (mk_socket_set_tcp_defer_accept(server_fd) != 0) {
 #if defined (__linux__)
@@ -163,6 +166,32 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
             /* continue with listener setup and linking */
             listener->server_fd = server_fd;
             listener->listen    = listen;
+
+            if (listen->flags & MK_CAP_HTTP) {
+                protocol = mk_sched_handler_cap(MK_CAP_HTTP);
+                if (!protocol) {
+                    mk_err("HTTP protocol not supported");
+                    exit(EXIT_FAILURE);
+                }
+                listener->protocol = protocol;
+            }
+
+            if (listen->flags & MK_CAP_HTTP2) {
+                mk_err("HTTP/2 not supported");
+                exit(EXIT_FAILURE);
+            }
+
+            listener->network = mk_plugin_cap(MK_CAP_SOCK_PLAIN, config);
+
+            if (listen->flags & MK_CAP_SOCK_SSL) {
+                plugin = mk_plugin_cap(MK_CAP_SOCK_SSL, config);
+                if (!plugin) {
+                    mk_err("SSL/TLS not supported");
+                    exit(EXIT_FAILURE);
+                }
+                listener->network = plugin;
+            }
+
             mk_list_add(&listener->_head, listeners);
         }
         else {
@@ -259,7 +288,7 @@ void mk_server_loop_balancer()
                  */
                 sched = mk_sched_next_target();
                 if (sched != NULL) {
-                    mk_server_listen_handler(sched, event->fd);
+                    mk_server_listen_handler(sched, event);
 #ifdef TRACE
                     int i;
                     struct mk_sched_worker *node;
@@ -378,7 +407,7 @@ void mk_server_worker_loop()
                  * the result, we let the loop continue processing the other
                  * events triggered.
                  */
-                mk_server_listen_handler(sched, event->fd);
+                mk_server_listen_handler(sched, event);
                 continue;
             }
             else if (event->type == MK_EVENT_NOTIFICATION) {

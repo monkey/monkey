@@ -38,16 +38,17 @@
 #define MK_DEFAULT_LISTEN_PORT              "2001"
 #define MK_WORKERS_DEFAULT                  1
 
-/* Listener properties */
-#define MK_LISTEN_HTTP     1
-#define MK_LISTEN_HTTP2    2
-#define MK_LISTEN_SSL      4
+/* Core capabilities, used as identifiers to match plugins */
+#define MK_CAP_HTTP        1
+#define MK_CAP_HTTP2       2
+#define MK_CAP_SOCK_PLAIN  4
+#define MK_CAP_SOCK_SSL    8
 
 struct mk_config_listener
 {
-    char *address;
-    char *port;
-    int flags;
+    char *address;                /* address to bind */
+    char *port;                   /* TCP port        */
+    int flags;                    /* properties: http | http2 | ssl */
     struct mk_list _head;
 };
 
@@ -119,12 +120,11 @@ struct mk_server_config
     /* Buffer size used by the transport layer plugin */
     int transport_buffer_size;
 
-    /* Transport type: HTTP or HTTPS, useful for redirections */
-    char *transport;
-
-    /* Define the plugin who provides the transport layer */
+    /*
+     * Optional reference to force a specific transport, this one
+     * is used when overriding the configuration from some caller
+     */
     char *transport_layer;
-    struct mk_plugin *transport_layer_plugin;
 
     /* Define the default mime type when is not possible to find the proper one */
     char *default_mimetype;
