@@ -51,7 +51,7 @@ option(WITH_PLUGIN_FASTCGI       "FastCGI"                  No)
 option(WITH_PLUGIN_LIANA         "Basic network layer"     Yes)
 option(WITH_PLUGIN_LOGGER        "Log Writer"              Yes)
 option(WITH_PLUGIN_MANDRIL       "Security"                Yes)
-option(WITH_PLUGIN_MBEDTLS       "TLS/SSL support"          No)
+option(WITH_PLUGIN_TLS           "TLS/SSL support"          No)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(WITH_ACCEPT        1)
