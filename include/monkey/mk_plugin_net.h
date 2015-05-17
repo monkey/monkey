@@ -30,7 +30,7 @@ struct mk_plugin_network {
     int (*writev) (int, struct mk_iov *);
     int (*close) (int);
     int (*send_file) (int, int, off_t *, size_t);
-    int (*buffer_size) ();
+    int buffer_size;
 };
 
 #endif

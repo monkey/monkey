@@ -583,11 +583,6 @@ static int context_unset(int fd, ssl_context *ssl)
     return 0;
 }
 
-int mk_tls_buffer_size()
-{
-    return SSL_MAX_CONTENT_LEN;
-}
-
 int mk_tls_read(int fd, void *buf, int count)
 {
     size_t avail;
@@ -763,7 +758,7 @@ struct mk_plugin_network mk_plugin_network_tls = {
     .writev        = mk_tls_writev,
     .close         = mk_tls_close,
     .send_file     = mk_tls_send_file,
-    .buffer_size   = mk_tls_buffer_size
+    .buffer_size   = SSL_MAX_CONTENT_LEN
 };
 
 struct mk_plugin mk_plugin_tls = {

@@ -117,9 +117,6 @@ struct mk_server_config
     /* Safe EPOLLOUT event */
     int safe_event_write;
 
-    /* Buffer size used by the transport layer plugin */
-    int transport_buffer_size;
-
     /*
      * Optional reference to force a specific transport, this one
      * is used when overriding the configuration from some caller

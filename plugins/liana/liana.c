@@ -46,11 +46,6 @@ int mk_liana_plugin_exit()
     return 0;
 }
 
-int mk_liana_buffer_size()
-{
-    return -1;
-}
-
 int mk_liana_read(int socket_fd, void *buf, int count)
 {
     return read(socket_fd, (void *) buf, count);
@@ -117,7 +112,7 @@ struct mk_plugin_network mk_plugin_network_liana = {
     .writev        = mk_liana_writev,
     .close         = mk_liana_close,
     .send_file     = mk_liana_send_file,
-    .buffer_size   = mk_liana_buffer_size
+    .buffer_size   = MK_REQUEST_CHUNK
 };
 
 struct mk_plugin mk_plugin_liana = {

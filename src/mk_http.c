@@ -285,7 +285,7 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     available = cs->body_size - cs->body_length;
     if (available <= 0) {
         /* Reallocate buffer size if pending data does not have space */
-        new_size = cs->body_size + mk_config->transport_buffer_size;
+        new_size = cs->body_size + conn->net->buffer_size;
         if (new_size > mk_config->max_request_size) {
             MK_TRACE("Requested size is > mk_config->max_request_size");
             mk_request_premature_close(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs);
@@ -1387,9 +1387,9 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     cs->init_time = conn->arrive_time;
 
     /* alloc space for body content */
-    if (mk_config->transport_buffer_size > MK_REQUEST_CHUNK) {
-        cs->body = mk_mem_malloc(mk_config->transport_buffer_size);
-        cs->body_size = mk_config->transport_buffer_size;
+    if (conn->net->buffer_size > MK_REQUEST_CHUNK) {
+        cs->body = mk_mem_malloc(conn->net->buffer_size);
+        cs->body_size = conn->net->buffer_size;
     }
     else {
         /* Buffer size based in Chunk bytes */

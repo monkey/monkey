@@ -49,7 +49,7 @@ extern __thread struct rb_root *cs_list;
 extern __thread struct mk_list *cs_incomplete;
 
 /*
- * Thread-scope structura/variable that holds the Scheduler context for the
+ * Thread-scope structure/variable that holds the Scheduler context for the
  * worker (or thread) in question.
  */
 struct mk_sched_worker
