@@ -67,6 +67,16 @@ macro(MK_BUILD_PLUGIN name)
   endif()
 endmacro()
 
+
+macro(MONKEY_PLUGIN_LINK_LIB target lib)
+  CHECK_STATIC_PLUGIN(${target})
+  if(IS_STATIC)
+    target_link_libraries(monkey-${target}-static ${lib})
+  else()
+    target_link_libraries(monkey-${target}-shared ${lib})
+  endif()
+endmacro()
+
 # Try to configure/build all plugins
 MK_BUILD_PLUGIN("auth")
 MK_BUILD_PLUGIN("cgi")
@@ -76,7 +86,7 @@ MK_BUILD_PLUGIN("fastcgi")
 MK_BUILD_PLUGIN("liana")
 MK_BUILD_PLUGIN("logger")
 MK_BUILD_PLUGIN("mandril")
-MK_BUILD_PLUGIN("polarssl")
+MK_BUILD_PLUGIN("tls")
 
 # Generate include/monkey/mk_static_plugins.h
 configure_file(

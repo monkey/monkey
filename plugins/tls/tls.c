@@ -39,14 +39,8 @@
 #include <polarssl/ctr_drbg.h>
 #include <polarssl/certs.h>
 #include <polarssl/x509.h>
-
-#if (POLARSSL_VERSION_NUMBER >= 0x01020000)
 #include <polarssl/ssl_cache.h>
-#endif // POLARSSL_VERSION_NUMBER
-
-#if (POLARSSL_VERSION_NUMBER >= 0x01030000)
 #include <polarssl/pk.h>
-#endif
 
 #include <monkey/mk_api.h>
 
@@ -58,8 +52,8 @@
 #define POLAR_DEBUG_LEVEL 0
 #endif
 
-#if (POLARSSL_VERSION_NUMBER < 0x01010000)
-#error "Require polarssl 1.1 or higher."
+#if (POLARSSL_VERSION_NUMBER < 0x01030000)
+#error "Require tls 1.3.10 or higher."
 #endif
 
 #if (!defined(POLARSSL_BIGNUM_C) || !defined(POLARSSL_ENTROPY_C) || \
@@ -99,11 +93,7 @@ struct polar_thread_context {
     struct polar_context_head *contexts;
 
     ctr_drbg_context ctr_drbg;
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    rsa_context rsa;
-#else
     pk_context pkey;
-#endif
 
     struct mk_list _head;
 };
@@ -111,26 +101,16 @@ struct polar_thread_context {
 struct polar_server_context {
 
     struct polar_config config;
-
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    x509_cert cert;
-    x509_cert ca_cert;
-#else
     x509_crt cert;
     x509_crt ca_cert;
-#endif
-
-    pthread_mutex_t _mutex;
+    pthread_mutex_t mutex;
     dhm_context dhm;
     entropy_context entropy;
 
     struct polar_thread_context threads;
 };
 
-static struct polar_server_context server_context = {
-    ._mutex = PTHREAD_MUTEX_INITIALIZER,
-};
-
+struct polar_server_context *server_context;
 static const char *my_dhm_P = POLARSSL_DHM_RFC5114_MODP_1024_P;
 static const char *my_dhm_G = POLARSSL_DHM_RFC5114_MODP_1024_G;
 
@@ -157,9 +137,9 @@ static int entropy_func_safe(void *data, unsigned char *output, size_t len)
 {
     int ret;
 
-    pthread_mutex_lock(&server_context._mutex);
+    pthread_mutex_lock(&server_context->mutex);
     ret = entropy_func(data, output, len);
-    pthread_mutex_unlock(&server_context._mutex);
+    pthread_mutex_unlock(&server_context->mutex);
 
     return ret;
 }
@@ -181,7 +161,7 @@ static int handle_return(int ret)
     char err_buf[72];
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        PLUGIN_TRACE("[polarssl] SSL error: %s", err_buf);
+        PLUGIN_TRACE("[tls] SSL error: %s", err_buf);
     }
 #endif
     if (ret < 0) {
@@ -209,11 +189,11 @@ static int config_parse(const char *confdir, struct polar_config *conf)
 {
     long unsigned int len;
     char *conf_path = NULL;
-    struct mk_config_section *section;
-    struct mk_config *conf_head;
+    struct mk_rconf_section *section;
+    struct mk_rconf *conf_head;
     struct mk_list *head;
 
-    mk_api->str_build(&conf_path, &len, "%spolarssl.conf", confdir);
+    mk_api->str_build(&conf_path, &len, "%stls.conf", confdir);
     conf_head = mk_api->config_create(conf_path);
     mk_api->mem_free(conf_path);
 
@@ -222,91 +202,80 @@ static int config_parse(const char *confdir, struct polar_config *conf)
     }
 
     mk_list_foreach(head, &conf_head->sections) {
-        section = mk_list_entry(head, struct mk_config_section, _head);
+        section = mk_list_entry(head, struct mk_rconf_section, _head);
 
-        if (strcasecmp(section->name, "SSL")) {
+        if (strcasecmp(section->name, "TLS")) {
             continue;
         }
-        conf->cert_file = mk_api->config_section_getval(section,
+        conf->cert_file = mk_api->config_section_get_key(section,
                 "CertificateFile",
-                MK_CONFIG_VAL_STR);
-        conf->cert_chain_file = mk_api->config_section_getval(section,
+                MK_RCONF_STR);
+        conf->cert_chain_file = mk_api->config_section_get_key(section,
                 "CertificateChainFile",
-                MK_CONFIG_VAL_STR);
-        conf->key_file = mk_api->config_section_getval(section,
+                MK_RCONF_STR);
+        conf->key_file = mk_api->config_section_get_key(section,
                 "RSAKeyFile",
-                MK_CONFIG_VAL_STR);
-        conf->dh_param_file = mk_api->config_section_getval(section,
+                MK_RCONF_STR);
+        conf->dh_param_file = mk_api->config_section_get_key(section,
                 "DHParameterFile",
-                MK_CONFIG_VAL_STR);
+                MK_RCONF_STR);
     }
     mk_api->config_free(conf_head);
 
 fallback:
     if (conf->cert_file == NULL) {
         mk_api->str_build(&conf->cert_file, &len,
-                "%ssrv_cert.pem", confdir);
+                          "%ssrv_cert.pem", confdir);
     }
     if (conf->key_file == NULL) {
         mk_api->str_build(&conf->key_file, &len,
-                "%srsa.pem", confdir);
+                          "%srsa.pem", confdir);
     }
     if (conf->dh_param_file == NULL) {
         mk_api->str_build(&conf->dh_param_file, &len,
-                "%sdhparam.pem", confdir);
+                          "%sdhparam.pem", confdir);
     }
+
     return 0;
 }
 
 static int polar_load_certs(const struct polar_config *conf)
 {
     char err_buf[72];
-    int ret;
+    int ret = -1;
 
-    assert(conf->cert_file != NULL);
-
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_crtfile(&server_context.cert, conf->cert_file);
-#else
-    ret = x509_crt_parse_file(&server_context.cert, conf->cert_file);
-#endif
+    ret = x509_crt_parse_file(&server_context->cert, conf->cert_file);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        mk_err("[polarssl] Load cert '%s' failed: %s",
-                conf->cert_file,
-                err_buf);
+        mk_warn("[tls] Load cert '%s' failed: %s",
+               conf->cert_file,
+               err_buf);
 
 #if defined(POLARSSL_CERTS_C)
-        mk_warn("[polarssl] Using test certificates, "
-                "please set 'CertificateFile' in polarssl.conf");
+        mk_warn("[tls] Using test certificates, "
+                "please set 'CertificateFile' in tls.conf");
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_crt(&server_context.cert,
-                (unsigned char *)test_srv_crt, strlen(test_srv_crt));
-#else
-        ret = x509_crt_parse(&server_context.cert,
-                (unsigned char *)test_srv_crt, strlen(test_srv_crt));
-#endif
+        ret = x509_crt_parse(&server_context->cert,
+                             (unsigned char *)test_srv_crt, strlen(test_srv_crt));
+
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load built-in cert failed: %s", err_buf);
+            mk_err("[tls] Load built-in cert failed: %s", err_buf);
             return -1;
         }
+
+        return 0;
 #else
         return -1;
 #endif // defined(POLARSSL_CERTS_C)
     }
     else if (conf->cert_chain_file != NULL) {
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_crtfile(server_context.ca_cert.next,
-		conf->cert_chain_file);
-#else
-	ret = x509_crt_parse_file(server_context.ca_cert.next,
-		conf->cert_chain_file);
-#endif
+        ret = x509_crt_parse_file(server_context->ca_cert.next,
+                                  conf->cert_chain_file);
+
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_warn("[polarssl] Load cert chain '%s' failed: %s",
+            mk_warn("[tls] Load cert chain '%s' failed: %s",
                     conf->cert_chain_file,
                     err_buf);
         }
@@ -316,36 +285,28 @@ static int polar_load_certs(const struct polar_config *conf)
 }
 
 static int polar_load_key(struct polar_thread_context *thread_context,
-		const struct polar_config *conf)
+                          const struct polar_config *conf)
 {
     char err_buf[72];
     int ret;
 
     assert(conf->key_file);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_keyfile(&thread_context->rsa, conf->key_file, NULL);
-#else
     ret = pk_parse_keyfile(&thread_context->pkey, conf->key_file, NULL);
-#endif
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
-        MK_TRACE("[polarssl] Load key '%s' failed: %s",
+        MK_TRACE("[tls] Load key '%s' failed: %s",
                 conf->key_file,
                 err_buf);
 
 #if defined(POLARSSL_CERTS_C)
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ret = x509parse_key(&thread_context->rsa,
-                (unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
-#else
-	ret = pk_parse_key(&thread_context->pkey,
-		(unsigned char *)test_srv_key, strlen(test_srv_key), NULL, 0);
-#endif
+        ret = pk_parse_key(&thread_context->pkey,
+                           (unsigned char *)test_srv_key,
+                           strlen(test_srv_key), NULL, 0);
         if (ret) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Failed to load built-in RSA key: %s", err_buf);
+            mk_err("[tls] Failed to load built-in RSA key: %s", err_buf);
             return -1;
         }
 #else
@@ -362,24 +323,20 @@ static int polar_load_dh_param(const struct polar_config *conf)
 
     assert(conf->dh_param_file);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    ret = x509parse_dhmfile(&server_context.dhm, conf->dh_param_file);
-#else
-    ret = dhm_parse_dhmfile(&server_context.dhm, conf->dh_param_file);
-#endif
+    ret = dhm_parse_dhmfile(&server_context->dhm, conf->dh_param_file);
     if (ret < 0) {
         error_strerror(ret, err_buf, sizeof(err_buf));
 
-        ret = mpi_read_string(&server_context.dhm.P, 16, my_dhm_P);
+        ret = mpi_read_string(&server_context->dhm.P, 16, my_dhm_P);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load DH parameter failed: %s", err_buf);
+            mk_err("[tls] Load DH parameter failed: %s", err_buf);
             return -1;
         }
-        ret = mpi_read_string(&server_context.dhm.G, 16, my_dhm_G);
+        ret = mpi_read_string(&server_context->dhm.G, 16, my_dhm_G);
         if (ret < 0) {
             error_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[polarssl] Load DH parameter failed: %s", err_buf);
+            mk_err("[tls] Load DH parameter failed: %s", err_buf);
             return -1;
         }
     }
@@ -395,22 +352,17 @@ static int polar_init(void)
     ssl_cache_init(&global_sessions.cache);
 #endif
 
-    pthread_mutex_lock(&server_context._mutex);
-    mk_list_init(&server_context.threads._head);
+    pthread_mutex_lock(&server_context->mutex);
+    mk_list_init(&server_context->threads._head);
+    entropy_init(&server_context->entropy);
+    pthread_mutex_unlock(&server_context->mutex);
 
-    memset(&server_context.cert, 0, sizeof(server_context.cert));
-    memset(&server_context.ca_cert, 0, sizeof(server_context.ca_cert));
-    memset(&server_context.dhm, 0, sizeof(server_context.dhm));
-    entropy_init(&server_context.entropy);
-
-    pthread_mutex_unlock(&server_context._mutex);
-
-    PLUGIN_TRACE("[polarssl] Load certificates.");
-    if (polar_load_certs(&server_context.config)) {
+    PLUGIN_TRACE("[tls] Load certificates.");
+    if (polar_load_certs(&server_context->config)) {
         return -1;
     }
-    PLUGIN_TRACE("[polarssl] Load DH parameters.");
-    if (polar_load_dh_param(&server_context.config)) {
+    PLUGIN_TRACE("[tls] Load DH parameters.");
+    if (polar_load_dh_param(&server_context->config)) {
         return -1;
     }
 
@@ -422,7 +374,7 @@ static int polar_thread_init(const struct polar_config *conf)
     struct polar_thread_context *thctx;
     int ret;
 
-    PLUGIN_TRACE("[polarssl] Init thread context.");
+    PLUGIN_TRACE("[tls] Init thread context.");
 
     thctx = mk_api->mem_alloc(sizeof(*thctx));
     if (thctx == NULL) {
@@ -431,12 +383,12 @@ static int polar_thread_init(const struct polar_config *conf)
     thctx->contexts = NULL;
     mk_list_init(&thctx->_head);
 
-    pthread_mutex_lock(&server_context._mutex);
-    mk_list_add(&thctx->_head, &server_context.threads._head);
-    pthread_mutex_unlock(&server_context._mutex);
+    pthread_mutex_lock(&server_context->mutex);
+    mk_list_add(&thctx->_head, &server_context->threads._head);
+    pthread_mutex_unlock(&server_context->mutex);
 
     ret = ctr_drbg_init(&thctx->ctr_drbg,
-            entropy_func_safe, &server_context.entropy,
+            entropy_func_safe, &server_context->entropy,
             NULL, 0);
     if (ret) {
         mk_err("crt_drbg_init failed: %d", ret);
@@ -444,18 +396,14 @@ static int polar_thread_init(const struct polar_config *conf)
         return -1;
     }
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    rsa_init(&thctx->rsa, RSA_PKCS_V15, 0);
-#else
     pk_init(&thctx->pkey);
-#endif
 
-    PLUGIN_TRACE("[polarssl] Load RSA key.");
+    PLUGIN_TRACE("[tls] Load RSA key.");
     if (polar_load_key(thctx, conf)) {
         return -1;
     }
 
-    PLUGIN_TRACE("[polarssl] Set local thread context.");
+    PLUGIN_TRACE("[tls] Set local thread context.");
     pthread_setspecific(local_context, thctx);
 
     return 0;
@@ -494,33 +442,25 @@ static int polar_exit(void)
     struct mk_list *cur, *tmp;
     struct polar_thread_context *thctx;
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-    x509_free(&server_context.cert);
-    x509_free(&server_context.ca_cert);
-#else
-    x509_crt_free(&server_context.cert);
-    x509_crt_free(&server_context.ca_cert);
-#endif
-    dhm_free(&server_context.dhm);
+    x509_crt_free(&server_context->cert);
+    x509_crt_free(&server_context->ca_cert);
+    dhm_free(&server_context->dhm);
 
-    mk_list_foreach_safe(cur, tmp, &server_context.threads._head) {
+    mk_list_foreach_safe(cur, tmp, &server_context->threads._head) {
         thctx = mk_list_entry(cur, struct polar_thread_context, _head);
         contexts_free(thctx->contexts);
         mk_api->mem_free(thctx);
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-	rsa_free(&thctx->rsa);
-#else
-	pk_free(&thctx->pkey);
-#endif
+        pk_free(&thctx->pkey);
     }
-    pthread_mutex_destroy(&server_context._mutex);
+    pthread_mutex_destroy(&server_context->mutex);
 
 #if defined(POLARSSL_SSL_CACHE_C)
     ssl_cache_free(&global_sessions.cache);
 #endif
 
-    config_free(&server_context.config);
+    config_free(&server_context->config);
+    mk_api->mem_free(server_context);
 
     return 0;
 }
@@ -607,17 +547,13 @@ static ssl_context *context_new(int fd)
         ssl_set_dbg(ssl, polar_debug, 0);
 #endif
 
-#if (POLARSSL_VERSION_NUMBER < 0x01030000)
-        ssl_set_own_cert(ssl, &server_context.cert, &thctx->rsa);
-#else
-        ssl_set_own_cert(ssl, &server_context.cert, &thctx->pkey);
+        ssl_set_own_cert(ssl, &server_context->cert, &thctx->pkey);
         ssl_set_session_tickets(ssl, SSL_SESSION_TICKETS_ENABLED);
-#endif
-        ssl_set_ca_chain(ssl, &server_context.ca_cert, NULL, NULL);
-        ssl_set_dh_param_ctx(ssl, &server_context.dhm);
+        ssl_set_ca_chain(ssl, &server_context->ca_cert, NULL, NULL);
+        ssl_set_dh_param_ctx(ssl, &server_context->dhm);
 
-	ssl_set_session_cache(ssl, polar_cache_get, &global_sessions,
-			polar_cache_set, &global_sessions);
+        ssl_set_session_cache(ssl, polar_cache_get, &global_sessions,
+                              polar_cache_set, &global_sessions);
 
         ssl_set_bio(ssl, net_recv, &(*cur)->fd, net_send, &(*cur)->fd);
     }
@@ -647,12 +583,12 @@ static int context_unset(int fd, ssl_context *ssl)
     return 0;
 }
 
-int mk_polarssl_buffer_size()
+int mk_tls_buffer_size()
 {
     return SSL_MAX_CONTENT_LEN;
 }
 
-int mk_polarssl_read(int fd, void *buf, int count)
+int mk_tls_read(int fd, void *buf, int count)
 {
     size_t avail;
     ssl_context *ssl = context_get(fd);
@@ -681,7 +617,7 @@ int mk_polarssl_read(int fd, void *buf, int count)
     return ret;
 }
 
-int mk_polarssl_write(int fd, const void *buf, size_t count)
+int mk_tls_write(int fd, const void *buf, size_t count)
 {
     ssl_context *ssl = context_get(fd);
     if (!ssl) {
@@ -691,7 +627,7 @@ int mk_polarssl_write(int fd, const void *buf, size_t count)
     return handle_return(ssl_write(ssl, buf, count));
 }
 
-int mk_polarssl_writev(int fd, struct mk_iov *mk_io)
+int mk_tls_writev(int fd, struct mk_iov *mk_io)
 {
     ssl_context *ssl = context_get(fd);
     const int iov_len = mk_io->iov_idx;
@@ -723,7 +659,7 @@ int mk_polarssl_writev(int fd, struct mk_iov *mk_io)
     return handle_return(ret);
 }
 
-int mk_polarssl_send_file(int fd, int file_fd, off_t *file_offset,
+int mk_tls_send_file(int fd, int file_fd, off_t *file_offset,
         size_t file_count)
 {
     ssl_context *ssl = context_get(fd);
@@ -746,7 +682,7 @@ int mk_polarssl_send_file(int fd, int file_fd, off_t *file_offset,
             ret = 0;
         }
         else if (used < 0) {
-            mk_err("[polarssl] Read from file failed: %s", strerror(errno));
+            mk_err("[tls] Read from file failed: %s", strerror(errno));
             ret = -1;
         }
         else if (remain > 0) {
@@ -775,7 +711,7 @@ int mk_polarssl_send_file(int fd, int file_fd, off_t *file_offset,
     }
 }
 
-int mk_polarssl_close(int fd)
+int mk_tls_close(int fd)
 {
     ssl_context *ssl = context_get(fd);
 
@@ -791,86 +727,61 @@ int mk_polarssl_close(int fd)
     return 0;
 }
 
-int mk_polarssl_accept(int server_fd)
-{
-    int remote_fd;
-
-#ifdef ACCEPT_GENERIC
-    remote_fd = accept(server_fd, NULL, NULL);
-    if (remote_fd != -1) {
-        mk_api->socket_set_nonblocking(remote_fd);
-    }
-#else
-    remote_fd = accept4(server_fd, NULL, NULL, SOCK_NONBLOCK);
-#endif
-
-    return remote_fd;
-}
-
-int mk_polarssl_plugin_init(struct plugin_api **api, char *confdir)
+int mk_tls_plugin_init(struct plugin_api **api, char *confdir)
 {
     int ret = 0;
-    struct polar_config conf;
 
     /* Evil global config stuff */
     mk_api = *api;
-    if (mk_api->config->transport_layer &&
-        strcmp(mk_api->config->transport_layer, "polarssl") == 0) {
-        PLUGIN_TRACE("[polarssl] Not used as transport layer, unload.");
-        mk_api->config->transport = MK_TRANSPORT_HTTPS;
-    }
 
-    memset(&conf, 0, sizeof(conf));
-    if (config_parse(confdir, &conf)) {
+    server_context = mk_api->mem_alloc_z(sizeof(struct polar_server_context));
+    if (config_parse(confdir, &server_context->config)) {
         ret = -1;
     }
-
-    server_context.config = conf;
     polar_init();
 
     return ret;
 }
 
-void mk_polarssl_worker_init(void)
+void mk_tls_worker_init(void)
 {
-    if (polar_thread_init(&server_context.config)) {
+    if (polar_thread_init(&server_context->config)) {
         abort();
     }
 }
 
-int mk_polarssl_plugin_exit()
+int mk_tls_plugin_exit()
 {
     return polar_exit();
 }
 
 
 /* Network Layer plugin Callbacks */
-struct mk_plugin_network mk_plugin_network_polarssl = {
-    .accept        = mk_polarssl_accept,
-    .read          = mk_polarssl_read,
-    .write         = mk_polarssl_write,
-    .writev        = mk_polarssl_writev,
-    .close         = mk_polarssl_close,
-    .connect       = mk_polarssl_connect,
-    .send_file     = mk_polarssl_send_file,
-    .buffer_size   = mk_polarssl_buffer_size
+struct mk_plugin_network mk_plugin_network_tls = {
+    .read          = mk_tls_read,
+    .write         = mk_tls_write,
+    .writev        = mk_tls_writev,
+    .close         = mk_tls_close,
+    .send_file     = mk_tls_send_file,
+    .buffer_size   = mk_tls_buffer_size
 };
 
-struct mk_plugin mk_plugin_polarssl = {
+struct mk_plugin mk_plugin_tls = {
     /* Identification */
-    .shortname     = "polarssl",
-    .name          = "PolarSSL",
-    .version       = VERSION,
+    .shortname     = "tls",
+    .name          = "mbedTLS",
+    .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_NETWORK_LAYER,
 
     /* Init / Exit */
-    .init_plugin   = mk_polarssl_plugin_init,
-    .exit_plugin   = mk_polarssl_plugin_exit,
+    .init_plugin   = mk_tls_plugin_init,
+    .exit_plugin   = mk_tls_plugin_exit,
 
     /* Init Levels */
     .master_init   = NULL,
-    .worker_init   = mk_polarssl_worker_init,
+    .worker_init   = mk_tls_worker_init,
 
     /* Type */
-    .network       = &mk_plugin_network_polarssl,
+    .network       = &mk_plugin_network_tls,
+    .capabilities  = MK_CAP_SOCK_SSL
 };
