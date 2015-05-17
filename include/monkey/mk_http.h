@@ -20,13 +20,10 @@
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
-#include "mk_utils.h"
-#include "mk_memory.h"
-#include "mk_list.h"
-#include "mk_file.h"
-#include "mk_rbtree.h"
-#include "mk_scheduler.h"
-#include "mk_http_parser.h"
+#include <monkey/mk_file.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_rbtree.h>
+#include <monkey/mk_http_parser.h>
 
 #define MK_CRLF "\r\n"
 

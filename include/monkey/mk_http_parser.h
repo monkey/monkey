@@ -20,6 +20,7 @@
 #ifndef MK_HTTP_PARSER_H
 #define MK_HTTP_PARSER_H
 
+#define _GNU_SOURCE
 #include <ctype.h>
 
 #include <monkey/mk_memory.h>

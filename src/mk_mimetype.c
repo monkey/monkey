@@ -17,6 +17,8 @@
  *  limitations under the License.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

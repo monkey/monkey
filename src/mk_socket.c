@@ -33,16 +33,6 @@
 #include <time.h>
 #include <netinet/tcp.h>
 
-static void mk_socket_safe_event_write(int socket)
-{
-    struct mk_sched_worker *sched;
-
-    sched = mk_sched_get_thread_conf();
-    MK_TRACE("[FD %i] Safe event write ON", socket);
-    mk_event_add(sched->loop, socket,
-                 MK_EVENT_CONNECTION, MK_EVENT_WRITE, NULL);
-}
-
 /*
  * Example from:
  * http://www.baus.net/on-tcp_cork

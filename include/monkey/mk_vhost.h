@@ -17,12 +17,12 @@
  *  limitations under the License.
  */
 
-#include "mk_list.h"
-#include "mk_config.h"
-#include "mk_http.h"
-
 #ifndef MK_VHOST_H
 #define MK_VHOST_H
+
+#include <monkey/mk_list.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_http.h>
 
 /* Custom error page */
 struct error_page {

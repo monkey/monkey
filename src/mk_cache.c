@@ -17,9 +17,7 @@
  *  limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
+#define _GNU_SOURCE
 
 #include <monkey/mk_iov.h>
 #include <monkey/mk_cache.h>

@@ -17,8 +17,6 @@
  *  limitations under the License.
  */
 
-#include <sys/types.h>
-
 #ifndef MK_FILE_H
 #define MK_FILE_H
 

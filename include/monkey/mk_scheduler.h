@@ -17,11 +17,6 @@
  *  limitations under the License.
  */
 
-#include <pthread.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 #include <monkey/mk_list.h>
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_event.h>
