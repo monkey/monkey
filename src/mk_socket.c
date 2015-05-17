@@ -124,7 +124,7 @@ int mk_socket_create(int domain, int type, int protocol)
     fd = socket(domain, type | SOCK_CLOEXEC, protocol);
 #else
     fd = socket(domain, type, protocol);
-    fcntl(socket_fd, F_SETFD, FD_CLOEXEC);
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
 #endif
 
     if (fd == -1) {
