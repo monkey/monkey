@@ -238,7 +238,6 @@ static void mk_sched_thread_lists_init()
 /* Register thread information. The caller thread is the thread information's owner */
 static int mk_sched_register_thread()
 {
-    int capacity;
     struct mk_sched_worker *sl;
     static int wid = 0;
 
@@ -278,16 +277,6 @@ static int mk_sched_register_thread()
     /* Initialize lists */
     sl->rb_queue = RB_ROOT;
     mk_list_init(&sl->incoming_queue);
-
-    /* Set worker capacity based on Scheduler Balancing mode */
-    if (mk_config->scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
-        capacity = (mk_config->server_capacity / mk_config->workers);
-    }
-    else {
-        /* FIXME: this needs progressive adaption */
-        capacity = mk_config->server_capacity;
-    }
-
     sl->request_handler = NULL;
 
     return sl->idx;
