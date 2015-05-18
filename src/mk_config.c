@@ -122,7 +122,6 @@ void mk_config_free_all()
     mk_config_listeners_free();
 
     mk_ptr_free(&mk_config->server_software);
-    mk_mem_free(mk_config->plugins);
     mk_mem_free(mk_config);
 }
 
@@ -606,14 +605,11 @@ void mk_config_set_init_values(void)
      * so we are setting a maximum request size to 32 KB */
     mk_config->max_request_size = MK_REQUEST_CHUNK * 8;
 
-    /* Plugins */
-    mk_config->plugins = mk_mem_malloc(sizeof(struct mk_list));
-
     /* Internals */
     mk_config->safe_event_write = MK_FALSE;
 
     /* Init plugin list */
-    mk_list_init(mk_config->plugins);
+    mk_list_init(&mk_config->plugins);
 
     /* Init listeners */
     mk_list_init(&mk_config->listeners);

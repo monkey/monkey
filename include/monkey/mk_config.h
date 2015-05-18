@@ -112,7 +112,7 @@ struct mk_server_config
     struct mk_list hosts;
 
     mode_t open_flags;
-    struct mk_list *plugins;
+    struct mk_list plugins;
 
     /* Safe EPOLLOUT event */
     int safe_event_write;

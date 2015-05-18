@@ -37,7 +37,7 @@
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_tls.h>
-
+#include <monkey/mk_static_plugins.h>
 #include <getopt.h>
 
 #if defined(__DATE__) && defined(__TIME__)
@@ -65,6 +65,9 @@ static void mk_version(void)
 
 static void mk_build_info(void)
 {
+    struct mk_list *head;
+    struct mk_plugin *p;
+
     mk_version();
 
     printf("\n");
@@ -76,7 +79,19 @@ static void mk_build_info(void)
 
     printf("\n\n%s[setup]%s\n", ANSI_BOLD, ANSI_RESET);
     printf("configuration dir: %s\n", MK_PATH_CONF);
-    printf("\n\n");
+
+    /* Initialize list */
+    mk_config = mk_mem_malloc(sizeof(struct mk_server_config));
+    mk_list_init(&mk_config->plugins);
+    mk_static_plugins();
+
+    printf("\n\n%s[built-in plugins]%s\n", ANSI_BOLD, ANSI_RESET);
+    mk_list_foreach(head, &mk_config->plugins) {
+        p = mk_list_entry(head, struct mk_plugin, _head);
+        printf("%-20s%s\n", p->shortname, p->name);
+    }
+    mk_mem_free(mk_config);
+    printf("\n");
 }
 
 static void mk_help(int rc)

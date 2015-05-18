@@ -197,7 +197,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
 
     if (type == MK_PLUGIN_DYNAMIC) {
         /* Add Plugin to the end of the list */
-        mk_list_add(&plugin->_head, mk_config->plugins);
+        mk_list_add(&plugin->_head, &mk_config->plugins);
     }
 
     return plugin;
@@ -350,7 +350,7 @@ void mk_plugin_api_init()
     api->stacktrace = (void *) mk_utils_stacktrace;
     api->kernel_version = mk_kernel_version;
     api->kernel_features_print = mk_kernel_features_print;
-    api->plugins = mk_config->plugins;
+    api->plugins = &mk_config->plugins;
 }
 
 void mk_plugin_load_all()
@@ -369,7 +369,7 @@ void mk_plugin_load_all()
 
     /* Load static plugins */
     mk_static_plugins();
-    mk_list_foreach_safe(head, htmp, mk_config->plugins) {
+    mk_list_foreach_safe(head, htmp, &mk_config->plugins) {
         p = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Load the static plugin */
@@ -453,13 +453,13 @@ void mk_plugin_exit_all()
     struct mk_list *head, *tmp;
 
     /* Plugins */
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         node->exit_plugin();
     }
 
     /* Plugin interface it self */
-    mk_list_foreach_safe(head, tmp, mk_config->plugins) {
+    mk_list_foreach_safe(head, tmp, &mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
         mk_list_del(&node->_head);
         if (node->load_type == MK_PLUGIN_DYNAMIC) {
@@ -506,7 +506,7 @@ void mk_plugin_core_process()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init plugin */
@@ -526,7 +526,7 @@ void mk_plugin_core_thread()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init plugin thread context */
@@ -546,7 +546,7 @@ void mk_plugin_preworker_calls()
     struct mk_plugin *node;
     struct mk_list *head;
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         node = mk_list_entry(head, struct mk_plugin, _head);
 
         /* Init pthread keys */
@@ -802,7 +802,7 @@ int mk_plugin_event_read(int socket)
         */
     }
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         /* FIXME: events handler disabled
 
         node = mk_list_entry(head, struct mk_plugin, _head);
@@ -862,7 +862,7 @@ int mk_plugin_event_write(int socket)
         */
     }
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         /* FIXME: events handler disabled
 
         node = mk_list_entry(head, struct mk_plugin, _head);
@@ -911,7 +911,7 @@ int mk_plugin_event_error(int socket)
         */
     }
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         /* FIXME: events handler disabled
 
         node = mk_list_entry(head, struct mk_plugin, _head);
@@ -960,7 +960,7 @@ int mk_plugin_event_close(int socket)
         */
     }
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         /* FIXME: events handler disabled
 
         node = mk_list_entry(head, struct mk_plugin, _head);
@@ -1007,7 +1007,7 @@ int mk_plugin_event_timeout(int socket)
         */
     }
 
-    mk_list_foreach(head, mk_config->plugins) {
+    mk_list_foreach(head, &mk_config->plugins) {
         /* FIXME: events handler disabled
 
         node = mk_list_entry(head, struct mk_plugin, _head);
@@ -1084,7 +1084,7 @@ struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config)
     struct mk_list *head;
     struct mk_plugin *plugin;
 
-    mk_list_foreach(head, config->plugins) {
+    mk_list_foreach(head, &config->plugins) {
         plugin = mk_list_entry(head, struct mk_plugin, _head);
         if (plugin->capabilities & cap) {
             return plugin;
