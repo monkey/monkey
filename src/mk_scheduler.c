@@ -620,21 +620,5 @@ int mk_sched_event_close(struct mk_sched_conn *conn,
      * to disable all notifications.
      */
     mk_sched_drop_connection(socket);
-
-    /*
-     * Plugin hook: this is a wrap-workaround to do not
-     * break plugins until the whole interface events and
-     * return values are re-worked.
-     */
-    if (type == MK_EP_SOCKET_CLOSED) {
-        mk_plugin_event_close(socket);
-    }
-    else if (type == MK_EP_SOCKET_ERROR) {
-        mk_plugin_event_error(socket);
-    }
-    else if (type == MK_EP_SOCKET_TIMEOUT) {
-        mk_plugin_event_timeout(socket);
-    }
-
     return 0;
 }
