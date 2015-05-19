@@ -301,9 +301,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     /* Register working thread */
     wid = mk_sched_register_thread();
 
-    /* Plugin thread context calls */
-    mk_plugin_event_init_list();
-
     sched = &sched_list[wid];
     sched->loop = mk_event_loop_create(MK_EVENT_QUEUE_SIZE);
     if (!sched->loop) {

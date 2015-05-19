@@ -43,16 +43,6 @@ struct plugin_api *api;
 
 __thread struct mk_list *worker_plugin_event_list;
 
-static void mk_plugin_event_set_list(struct mk_list *list)
-{
-    worker_plugin_event_list = list;
-}
-
-static struct mk_list *mk_plugin_event_get_list()
-{
-    return worker_plugin_event_list;
-}
-
 void *mk_plugin_load_dynamic(const char *path)
 {
     void *handle;
@@ -324,10 +314,10 @@ void mk_plugin_api_init()
     api->sched_remove_client  = mk_plugin_sched_remove_client;
     api->sched_worker_info    = mk_plugin_sched_get_thread_conf;
 
-    api->event_add = mk_plugin_event_add;
-    api->event_del = mk_plugin_event_del;
-    api->event_get = mk_plugin_event_get;
-    api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
+    //api->event_add = mk_plugin_event_add;
+    //api->event_del = mk_plugin_event_del;
+    //api->event_get = mk_plugin_event_get;
+    //api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
 
     /* Worker functions */
     api->worker_spawn = mk_utils_worker_spawn;
@@ -477,24 +467,6 @@ void mk_plugin_exit_all()
  */
 void mk_plugin_exit_worker()
 {
-    struct mk_list *list;
-    struct mk_list *head;
-    struct mk_list *tmp;
-    struct plugin_event *pe;
-
-    /* For each plugin on this context, exit worker zone */
-
-
-    /* Remove plugins events */
-    list = mk_plugin_event_get_list();
-    if (list) {
-        mk_list_foreach_safe(head, tmp, list) {
-            pe = mk_list_entry(head, struct plugin_event, _head);
-            mk_list_del(&pe->_head);
-            mk_mem_free(pe);
-        }
-        mk_mem_free(list);
-    }
 }
 
 /* This function is called by every created worker
@@ -562,67 +534,6 @@ void mk_plugin_preworker_calls()
     }
 }
 
-int mk_plugin_event_del(int socket)
-{
-    struct mk_list *head, *list, *temp;
-    struct plugin_event *node;
-
-    MK_TRACE("[FD %i] Plugin delete event", socket);
-
-    if (socket <= 0) {
-        return -1;
-    }
-
-    list = mk_plugin_event_get_list();
-    mk_list_foreach_safe(head, temp, list) {
-        node = mk_list_entry(head, struct plugin_event, _head);
-        if (node->socket == socket) {
-            mk_list_del(head);
-            mk_mem_free(node);
-
-            struct mk_sched_worker *sched = mk_sched_get_thread_conf();
-            mk_event_del(sched->loop, socket);
-            return 0;
-        }
-    }
-
-    MK_TRACE("[FD %i] not found, could not delete event node :/");
-    return -1;
-}
-
-int mk_plugin_event_add(int socket, int mode,
-                        struct mk_plugin *handler,
-                        unsigned int behavior)
-{
-    struct mk_sched_worker *sched;
-    struct plugin_event *event;
-    struct mk_list *list;
-    (void) behavior;
-
-    sched = mk_sched_get_thread_conf();
-    if (!sched) {
-        return -1;
-    }
-
-    if (sched && handler) {
-        /* Event node (this list exist at thread level */
-        event = mk_mem_malloc(sizeof(struct plugin_event));
-        event->socket = socket;
-        event->handler = handler;
-
-        /* Get thread event list */
-        list = mk_plugin_event_get_list();
-        mk_list_add(&event->_head, list);
-    }
-
-    /*
-     * The thread event info has been registered, now we need
-     * to register the socket involved to the thread epoll array
-     */
-    //return mk_event_add(sched->loop, socket, mode, NULL);
-    return 0;
-}
-
 int mk_plugin_http_request_end(int socket)
 {
     int ret;
@@ -632,7 +543,7 @@ int mk_plugin_http_request_end(int socket)
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", socket);
 
-    cs = mk_http_session_get(socket);
+    cs = mk_http_session_get(NULL);
     if (!cs) {
         return -1;
     }
@@ -645,7 +556,7 @@ int mk_plugin_http_request_end(int socket)
     sr = mk_list_entry_last(&cs->request_list, struct mk_http_request, _head);
     mk_plugin_stage_run_40(cs, sr);
 
-    ret = mk_http_request_end(socket, NULL);
+    ret = mk_http_request_end(NULL, NULL);
     MK_TRACE(" ret = %i", ret);
 
     if (ret < 0) {
@@ -676,41 +587,6 @@ int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavi
 
     //return mk_event_add(sched->loop, socket, mode, NULL);
     return 0;
-}
-
-struct plugin_event *mk_plugin_event_get(int socket)
-{
-    struct mk_list *head, *list;
-    struct plugin_event *node;
-
-    list = mk_plugin_event_get_list();
-
-    /*
-     * In some cases this function is invoked from scheduler.c when a connection is
-     * closed, on that moment there's no thread context so the returned list is NULL.
-     */
-    if (!list) {
-        return NULL;
-    }
-
-    mk_list_foreach(head, list) {
-        node = mk_list_entry(head, struct plugin_event, _head);
-        if (node->socket == socket) {
-            return node;
-        }
-    }
-
-    return NULL;
-}
-
-void mk_plugin_event_init_list()
-{
-    struct mk_list *list;
-
-    list = mk_mem_malloc(sizeof(struct mk_list));
-    mk_list_init(list);
-
-    mk_plugin_event_set_list(list);
 }
 
 /* Plugin epoll event handlers

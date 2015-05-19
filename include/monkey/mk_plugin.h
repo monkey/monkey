@@ -328,13 +328,6 @@ struct plugin_event *mk_plugin_event_get(int socket);
 
 int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavior);
 
-/* Plugins event handlers */
-int mk_plugin_event_read(int socket);
-int mk_plugin_event_write(int socket);
-int mk_plugin_event_error(int socket);
-int mk_plugin_event_close(int socket);
-int mk_plugin_event_timeout(int socket);
-
 struct mk_plugin *mk_plugin_load(int type, const char *shortname,
                                  void *data);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
