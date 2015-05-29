@@ -27,6 +27,7 @@
 #include <monkey/mk_event.h>
 #include <monkey/mk_scheduler.h>
 
+#include <signal.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/time.h>
@@ -463,7 +464,9 @@ void mk_server_loop(void)
      */
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         /* Hang here, basically do nothing as threads are doing the job  */
-        while (1) sleep(86400);
+        sigset_t mask;
+        sigprocmask(0, NULL, &mask);
+        sigsuspend(&mask);
         return;
     }
     else {
