@@ -141,7 +141,6 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
         stream->bytes_total = ptr->len;
     }
     else if (type == MK_STREAM_COPYBUF) {
-        mk_bug(buffer || size < 0);
         stream->buffer = mk_mem_malloc(size);
         stream->bytes_total = size;
         memcpy(stream->buffer, data, size);
