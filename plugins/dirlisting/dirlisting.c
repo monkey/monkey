@@ -772,19 +772,13 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     mk_api->stream_set(&request->header,     /* stream            */
                        MK_STREAM_IOV,        /* type              */
-                       &cs->channel,         /* channel           */
+                       cs->channel,         /* channel           */
                        request->iov_header,  /* buffer            */
                        -1,                   /* buffer size       */
                        request,              /* custom data       */
                        cb_header_finish,     /* on_finish         */
                        NULL,                 /* on_bytes_consumed */
                        mk_dirhtml_cb_error); /* on_error          */
-
-    /*
-     * Dispatch, once we get a callback on mk_dirhtml_cb_finish, we
-     * continue appending data to the channel
-     */
-    mk_api->channel_write(&cs->channel);
 
     return 0;
 }
