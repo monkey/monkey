@@ -210,7 +210,6 @@ int mk_auth_stage30(struct mk_plugin *plugin,
                        loc_entry->auth_http_header.data,
                        loc_entry->auth_http_header.len);
     mk_api->header_prepare(cs, sr);
-    mk_api->channel_write(&cs->channel);
 
     return MK_PLUGIN_RET_END;
 }

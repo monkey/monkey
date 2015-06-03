@@ -5,8 +5,7 @@
 #endif
 
 #include <monkey/monkey.h>
-#include <monkey/mk_list.h>
-#include <monkey/mk_macros.h>
+#include <monkey/mk_core.h>
 
 #include <getopt.h>
 
