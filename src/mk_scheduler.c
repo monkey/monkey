@@ -18,18 +18,16 @@
  */
 
 #include <monkey/monkey.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_server.h>
-#include <monkey/mk_memory.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_signals.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
-#include <monkey/mk_macros.h>
-#include <monkey/mk_rbtree.h>
 #include <monkey/mk_linuxtrace.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>

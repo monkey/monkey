@@ -18,14 +18,10 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_list.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_utils.h>
-#include <monkey/mk_macros.h>
-#include <monkey/mk_rconf.h>
-#include <monkey/mk_string.h>
 #include <monkey/mk_http_status.h>
-#include <monkey/mk_memory.h>
 #include <monkey/mk_info.h>
 #include <monkey/mk_file.h>
 

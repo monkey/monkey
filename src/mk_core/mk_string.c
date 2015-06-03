@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include <monkey/mk_macros.h>
-#include <monkey/mk_utils.h>
-#include <monkey/mk_memory.h>
-#include <monkey/mk_string.h>
+#include "mk_macros.h"
+#include "mk_utils.h"
+#include "mk_memory.h"
+#include "mk_string.h"
 
 #include <stdio.h>
 

@@ -23,8 +23,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <monkey/mk_core.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_memory.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_utils.h>
 

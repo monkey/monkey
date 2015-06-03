@@ -21,8 +21,7 @@
 #define MK_INFO_H
 
 #include <monkey/mk_plugin.h>
-#include <monkey/mk_memory.h>
-#include <monkey/mk_list.h>
+#include <monkey/mk_core.h>
 
 /* Monkey Version */
 #define MK_VERSION_MAJOR   @MK_VERSION_MAJOR@

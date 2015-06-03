@@ -20,9 +20,9 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <monkey/mk_rconf.h>
-#include <monkey/mk_utils.h>
-#include <monkey/mk_string.h>
+#include "mk_rconf.h"
+#include "mk_utils.h"
+#include "mk_string.h"
 
 /* Raise a configuration schema error */
 static void mk_config_error(const char *path, int line, const char *msg)

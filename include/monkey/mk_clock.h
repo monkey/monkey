@@ -23,7 +23,7 @@
 #define MK_CLOCK_H
 
 #include <time.h>
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 
 extern time_t log_current_utime;
 extern time_t monkey_init_time;

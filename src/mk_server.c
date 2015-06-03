@@ -22,10 +22,9 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_server.h>
-#include <monkey/mk_event.h>
 #include <monkey/mk_scheduler.h>
+#include <monkey/mk_core.h>
 
 #include <signal.h>
 #include <sys/socket.h>

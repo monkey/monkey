@@ -31,13 +31,14 @@
 #include <monkey/mk_clock.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_plugin.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_env.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_tls.h>
 #include <monkey/mk_static_plugins.h>
+#include <monkey/mk_core.h>
+
 #include <getopt.h>
 
 #if defined(__DATE__) && defined(__TIME__)

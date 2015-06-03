@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include <monkey/mk_macros.h>
+#include "mk_macros.h"
 
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
@@ -57,9 +57,9 @@
 /* ---- end ---- */
 
 #if defined(__linux__) && !defined(LINUX_KQUEUE)
-    #include <monkey/mk_event_epoll.h>
+    #include "mk_event_epoll.h"
 #else
-    #include <monkey/mk_event_kqueue.h>
+    #include "mk_event_kqueue.h"
 #endif
 
 /* Event reported by the event loop */

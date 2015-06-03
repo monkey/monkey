@@ -21,9 +21,9 @@
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
 
-#include <monkey/mk_event.h>
-#include <monkey/mk_memory.h>
-#include <monkey/mk_utils.h>
+#include "mk_event.h"
+#include "mk_memory.h"
+#include "mk_utils.h"
 
 static inline void *_mk_event_loop_create(int size)
 {

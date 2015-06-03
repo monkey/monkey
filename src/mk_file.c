@@ -30,9 +30,8 @@
 #include <monkey/monkey.h>
 #include <monkey/mk_file.h>
 #include <monkey/mk_user.h>
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_utils.h>
-#include <monkey/mk_macros.h>
 
 int mk_file_get_info(const char *path, struct file_info *f_info, int mode)
 {

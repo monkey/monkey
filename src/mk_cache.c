@@ -19,11 +19,9 @@
 
 #define _GNU_SOURCE
 
-#include <monkey/mk_iov.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_cache.h>
-#include <monkey/mk_string.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_tls.h>

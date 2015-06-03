@@ -20,9 +20,10 @@
 #ifndef MK_SERVER_H
 #define MK_SERVER_H
 
+
 #include <monkey/mk_socket.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_event.h>
+#include <monkey/mk_core.h>
 
 #define MK_SERVER_SIGNAL_START     0xEEEEEEEE
 

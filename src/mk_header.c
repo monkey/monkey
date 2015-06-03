@@ -20,8 +20,7 @@
 #include <monkey/monkey.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_header.h>
-#include <monkey/mk_memory.h>
-#include <monkey/mk_iov.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_socket.h>
@@ -29,8 +28,6 @@
 #include <monkey/mk_clock.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_http.h>
-#include <monkey/mk_string.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_tls.h>
 

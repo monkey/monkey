@@ -17,9 +17,7 @@
  *  limitations under the License.
  */
 
-#include <monkey/mk_list.h>
-#include <monkey/mk_rbtree.h>
-#include <monkey/mk_event.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_stream.h>
 

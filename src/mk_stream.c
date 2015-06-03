@@ -18,8 +18,7 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_list.h>
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_stream.h>
 #include <monkey/mk_scheduler.h>
 

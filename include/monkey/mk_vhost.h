@@ -20,7 +20,7 @@
 #ifndef MK_VHOST_H
 #define MK_VHOST_H
 
-#include <monkey/mk_list.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_http.h>
 

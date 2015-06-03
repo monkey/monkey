@@ -20,8 +20,8 @@
 #ifndef MK_RCONF_H
 #define MK_RCONF_H
 
-#include <monkey/mk_memory.h>
-#include <monkey/mk_list.h>
+#include "mk_list.h"
+#include "mk_memory.h"
 
 #define MK_RCONF_ON         "on"
 #define MK_RCONF_OFF        "off"

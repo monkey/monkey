@@ -26,21 +26,19 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <monkey/mk_user.h>
 #include <monkey/monkey.h>
-#include <monkey/mk_memory.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_file.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
-#include <monkey/mk_string.h>
 #include <monkey/mk_socket.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_header.h>
 #include <monkey/mk_plugin.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>

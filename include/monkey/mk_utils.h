@@ -25,10 +25,9 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include "mk_macros.h"
 
-#define MK_UTILS_GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
+//#include <monkey/mk_core.h>
+
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_ptr_t */
 /*
@@ -36,10 +35,6 @@
  * 32bit integer, for both 32 and 64bit systems - max value: 2147483648.
  */
 #define MK_MAX_PID_LEN 10
-
-#include "mk_memory.h"
-#include "mk_list.h"
-
 #define MK_GMT_CACHES 10
 
 struct mk_gmt_cache {

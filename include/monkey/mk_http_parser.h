@@ -23,7 +23,7 @@
 #define _GNU_SOURCE
 #include <ctype.h>
 
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_internal.h>
 

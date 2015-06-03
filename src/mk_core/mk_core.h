@@ -17,22 +17,13 @@
  *  limitations under the License.
  */
 
-#ifndef MK_PLUGIN_NET_H
-#define MK_PLUGIN_NET_H
+#ifndef MK_CORE_H
+#define MK_CORE_H
 
-#include <monkey/mk_core.h>
-
-/*
- * Network plugin: a plugin that provides a network layer, eg: plain
- * sockets or SSL.
- */
-struct mk_plugin_network {
-    int (*read) (int, void *, int);
-    int (*write) (int, const void *, size_t);
-    int (*writev) (int, struct mk_iov *);
-    int (*close) (int);
-    int (*send_file) (int, int, off_t *, size_t);
-    int buffer_size;
-};
+#include "include/mk_iov.h"
+#include "include/mk_event.h"
+#include "include/mk_rbtree.h"
+#include "include/mk_rconf.h"
+#include "include/mk_string.h"
 
 #endif

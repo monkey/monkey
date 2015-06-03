@@ -22,8 +22,7 @@
 
 #include <unistd.h>
 
-#include <monkey/mk_memory.h>
-#include <monkey/mk_list.h>
+#include <monkey/mk_core.h>
 
 #ifndef O_NOATIME
 #define O_NOATIME       01000000

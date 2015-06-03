@@ -20,8 +20,7 @@
 #ifndef MK_STREAM_H
 #define MK_STREAM_H
 
-#include <monkey/mk_iov.h>
-#include <monkey/mk_list.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_plugin_net.h>
 
 /*

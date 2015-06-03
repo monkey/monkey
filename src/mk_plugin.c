@@ -23,12 +23,11 @@
 #include <monkey/mk_http.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_plugin.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_mimetype.h>
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_static_plugins.h>
 #include <monkey/mk_plugin_stage.h>
-#include <monkey/mk_rconf.h>
+#include <monkey/mk_core.h>
 
 #include <dlfcn.h>
 #include <err.h>

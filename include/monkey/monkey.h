@@ -33,7 +33,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 
 /* Max Path lenth */
 #define MK_MAX_PATH 1024

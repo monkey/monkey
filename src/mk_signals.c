@@ -21,7 +21,7 @@
 #include <monkey/mk_signals.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_plugin.h>
-#include <monkey/mk_macros.h>
+#include <monkey/mk_core.h>
 #include <monkey/monkey.h>
 
 #include <signal.h>

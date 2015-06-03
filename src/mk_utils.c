@@ -20,16 +20,14 @@
 
 /* local headers */
 #include <monkey/monkey.h>
-#include <monkey/mk_memory.h>
+#include <monkey/mk_core.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_file.h>
-#include <monkey/mk_string.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_socket.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_user.h>
 #include <monkey/mk_cache.h>
-#include <monkey/mk_macros.h>
 #include <monkey/mk_tls.h>
 
 #include <assert.h>
@@ -49,6 +47,8 @@
 #ifndef NO_BACKTRACE
 #include <execinfo.h>
 #endif
+
+#define MK_UTILS_GMT_DATEFORMAT "%a, %d %b %Y %H:%M:%S GMT"
 
 /* Date helpers */
 static const char mk_date_wd[][6]  = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
