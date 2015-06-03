@@ -17,9 +17,7 @@
  *  limitations under the License.
  */
 
-#include "mk_memory.h"
-#include "mk_list.h"
-#include "mk_rbtree.h"
+#include <monkey/mk_core.h>
 
 #ifndef MK_MIMETYPE_H
 #define MK_MIMETYPE_H
