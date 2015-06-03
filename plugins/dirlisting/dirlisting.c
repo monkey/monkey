@@ -699,6 +699,7 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     DIR *dir;
     unsigned int i = 0;
+    size_t count;
     char *title = 0;
     struct mk_f_list *file_list, *entry;
     struct dirhtml_value *values_global = 0;
@@ -784,7 +785,7 @@ int mk_dirhtml_init(struct mk_http_session *cs, struct mk_http_request *sr)
      * Dispatch, once we get a callback on mk_dirhtml_cb_finish, we
      * continue appending data to the channel
      */
-    mk_api->channel_write(&cs->channel);
+    mk_api->channel_write(&cs->channel, &count);
 
     return 0;
 }

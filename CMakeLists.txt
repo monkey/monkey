@@ -286,6 +286,7 @@ configure_file(
 # General Headers
 include_directories(include/)
 include_directories(src/)
+include_directories(src/mk_core/include)
 
 add_subdirectory(plugins/)
 

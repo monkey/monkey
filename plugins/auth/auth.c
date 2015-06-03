@@ -139,6 +139,7 @@ int mk_auth_stage30(struct mk_plugin *plugin,
                     struct mk_http_request *sr)
 {
     int val;
+    size_t count;
     short int is_restricted = MK_FALSE;
     struct mk_list *vh_head;
     struct mk_list *loc_head;
@@ -210,7 +211,7 @@ int mk_auth_stage30(struct mk_plugin *plugin,
                        loc_entry->auth_http_header.data,
                        loc_entry->auth_http_header.len);
     mk_api->header_prepare(cs, sr);
-    mk_api->channel_write(&cs->channel);
+    mk_api->channel_write(&cs->channel,&count);
 
     return MK_PLUGIN_RET_END;
 }
