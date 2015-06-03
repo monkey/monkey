@@ -20,7 +20,7 @@
 #ifndef MK_HTTP_STATUS_H
 #define MK_HTTP_STATUS_H
 
-#include "mk_memory.h"
+#include <monkey/mk_core.h>
 
 /*
  * - New macro names and structure by Monkey Dev Team
