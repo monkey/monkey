@@ -4,6 +4,7 @@ set(src
   mk_string.c
   mk_memory.c
   mk_event.c
+  mk_utils.c
   mk_rbtree.c
   )
 

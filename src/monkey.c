@@ -321,7 +321,7 @@ int main(int argc, char **argv)
     mk_config->transport_layer = transport_layer;
 
 #ifdef TRACE
-    monkey_init_time = time(NULL);
+    mk_core_init();
     MK_TRACE("Monkey TRACE is enabled");
     env_trace_filter = getenv("MK_TRACE_FILTER");
     pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);

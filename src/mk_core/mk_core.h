@@ -25,5 +25,7 @@
 #include "include/mk_rbtree.h"
 #include "include/mk_rconf.h"
 #include "include/mk_string.h"
+#include "include/mk_macros.h"
+#include "include/mk_utils.h"
 
 #endif
