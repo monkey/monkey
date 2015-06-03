@@ -50,16 +50,14 @@ int mk_socket_set_cork_flag(int fd, int state);
 
 static inline int mk_server_cork_flag(int fd, int state)
 {
-    if (mk_config->manual_tcp_cork == MK_FALSE) {
-        return 0;
-    }
-
     return mk_socket_set_cork_flag(fd, state);
 }
 
 
 int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
-int mk_server_listen_handler(struct mk_sched_worker *sched, void *data);
+static inline struct mk_sched_conn *mk_server_listen_handler(struct mk_sched_worker *sched,
+                                               void *data);
+
 void mk_server_listen_free();
 struct mk_list *mk_server_listen_init(struct mk_server_config *config);
 unsigned int mk_server_capacity();

@@ -153,7 +153,7 @@ struct plugin_api
                                 void (*) (struct mk_stream *, long),
                                 void (*) (struct mk_stream *, int));
     struct mk_channel *(*channel_new) (int, int);
-    int (*channel_write) (struct mk_channel *);
+    int (*channel_write) (struct mk_channel *, size_t *);
     void (*channel_append_stream) (struct mk_channel *, struct mk_stream *stream);
     void (*stream_set) (struct mk_stream *, int, struct mk_channel *, void *, size_t,
                         void *,
@@ -200,6 +200,7 @@ struct plugin_api
     void *(*config_section_get_key) (struct mk_rconf_section *, char *, int);
 
     /* Scheduler */
+    struct mk_event_loop *(*sched_loop)();
     int (*sched_remove_client) (int);
     struct mk_sched_conn *(*sched_get_connection)(struct mk_sched_worker *,
                                                   int);
@@ -238,19 +239,10 @@ struct plugin_api
 
 extern struct plugin_api *api;
 
-/* Plugin events thread key */
-extern pthread_key_t mk_plugin_event_k;
-
-struct plugin_event
+struct mk_plugin_event
 {
-    int socket;
-    struct mk_plugin *handler;
-    struct mk_list _head;
-};
-
-struct mk_plugin_stage_handler {
-
-    struct mk_list _head;
+    struct mk_event event;        /* event loop context   */
+    struct mk_plugin *handler;    /* plugin owner/handler */
 };
 
 struct mk_plugin_stage {

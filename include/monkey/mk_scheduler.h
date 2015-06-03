@@ -21,6 +21,7 @@
 #include <monkey/mk_rbtree.h>
 #include <monkey/mk_event.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_stream.h>
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H
@@ -81,6 +82,9 @@ struct mk_sched_worker
     pthread_t tid;
     pid_t pid;
 
+    /* store the memory page size (_SC_PAGESIZE) */
+    unsigned int mem_pagesize;
+
     struct mk_http_session *request_handler;
 
     /*
@@ -101,6 +105,7 @@ struct mk_sched_conn
     time_t arrive_time;                /* arrive time                */
     struct mk_sched_handler *protocol; /* protocol handler           */
     struct mk_plugin_network *net;     /* I/O network layer          */
+    struct mk_channel channel;         /* stream channel             */
     struct mk_list status_queue;       /* link to the incoming queue */
     struct rb_node _rb_head;           /* red-black tree head        */
 };
@@ -112,10 +117,22 @@ struct mk_sched_conn
  */
 struct mk_sched_handler
 {
+    /*
+     * Protocol definition and callbacks:
+     *
+     * - name    : the protocol handler name.
+     * - cb_read : callback triggered when there is data on the socket to read.
+     * - cb_close: callback triggered when the socket channel have been closed.
+     * - cb_done : callback triggered when the whole channel data have been
+     *             written. This callback is optional. The return value of this
+     *             callback indicate to the scheduler of the channel should be
+     *             closed or not: -1 = close, 0 = leave it open and wait for more
+     *             data.
+     */
     const char *name;
     int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *);
-    int (*cb_write) (struct mk_sched_conn *, struct mk_sched_worker *);
     int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int);
+    int (*cb_done)  (struct mk_sched_conn *, struct mk_sched_worker *);
 
     /*
      * This extra field is a small hack. The scheduler connection context
@@ -135,7 +152,7 @@ struct mk_sched_handler
      * HTTP2: 1 connection = 1 client with multiple-framed requests
      *
      * The purpose is to avoid protocol handlers to perform more memory
-     * allocations and connection lookupsm the sched context is good enough
+     * allocations and connection lookups the sched context is good enough
      * to help on this, e.g:
      *
      *  t_size = (sizeof(struct mk_sched_conn) + (sizeof(struct mk_http_session);
@@ -178,6 +195,11 @@ static inline struct rb_root *mk_sched_get_request_list()
 static inline struct mk_sched_worker *mk_sched_get_thread_conf()
 {
     return worker_sched_node;
+}
+
+static inline struct mk_event_loop *mk_sched_loop()
+{
+    return worker_sched_node->loop;
 }
 
 void mk_sched_update_thread_status(struct mk_sched_worker *sched,

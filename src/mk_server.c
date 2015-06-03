@@ -66,7 +66,8 @@ unsigned int mk_server_capacity()
     return cur;
 }
 
-int mk_server_listen_handler(struct mk_sched_worker *sched, void *data)
+static inline struct mk_sched_conn *mk_server_listen_handler(struct mk_sched_worker *sched,
+                                               void *data)
 {
     int ret;
     int client_fd = -1;
@@ -95,14 +96,14 @@ int mk_server_listen_handler(struct mk_sched_worker *sched, void *data)
 
     sched->accepted_connections++;
     MK_TRACE("[server] New connection arrived: FD %i", client_fd);
-    return client_fd;
+    return conn;
 
 error:
     if (client_fd != -1) {
         listener->network->network->close(client_fd);
     }
 
-    return -1;
+    return NULL;
 }
 
 void mk_server_listen_free()
@@ -385,14 +386,19 @@ void mk_server_worker_loop()
             if (event->type == MK_EVENT_CONNECTION) {
                 conn = (struct mk_sched_conn *) event;
 
+                if (event->mask & MK_EVENT_WRITE) {
+                    MK_TRACE("[FD %i] EPoll Event WRITE", event->fd);
+                    ret = mk_sched_event_write(conn, sched);
+                    //printf("event write ret=%i\n", ret);
+
+                }
+
                 if (event->mask & MK_EVENT_READ) {
                     ret = mk_sched_event_read(conn, sched);
                 }
-                else if (event->mask & MK_EVENT_WRITE) {
-                    MK_TRACE("[FD %i] EPoll Event WRITE", event->fd);
-                    ret = mk_sched_event_write(conn, sched);
-                }
-                else if (event->mask & MK_EVENT_CLOSE) {
+
+
+                if (event->mask & MK_EVENT_CLOSE) {
                     ret = -1;
                 }
 
@@ -408,8 +414,21 @@ void mk_server_worker_loop()
                  * the result, we let the loop continue processing the other
                  * events triggered.
                  */
-                mk_server_listen_handler(sched, event);
+                conn = mk_server_listen_handler(sched, event);
+                if (conn) {
+                    //conn->event.mask = MK_EVENT_READ
+                    //goto speed;
+                }
                 continue;
+            }
+            else if (event->type == MK_EVENT_CUSTOM) {
+                /*
+                 * We got an event associated to a custom interface, that
+                 * means a plugin registered some file descriptor on this
+                 * event loop and an event was triggered. We pass the control
+                 * to the defined event handler.
+                 */
+                event->handler(event);
             }
             else if (event->type == MK_EVENT_NOTIFICATION) {
                 ret = read(event->fd, &val, sizeof(val));

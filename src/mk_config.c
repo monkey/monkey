@@ -603,14 +603,6 @@ void mk_config_set_init_values(void)
         mk_config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
     }
 
-    /* TCP Auto Corking: only available on Linux >= 3.14 */
-    if (mk_config->kernel_features & MK_KERNEL_TCP_AUTOCORKING) {
-        mk_config->manual_tcp_cork = MK_FALSE;
-    }
-    else {
-        mk_config->manual_tcp_cork = MK_TRUE;
-    }
-
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
      * so we are setting a maximum request size to 32 KB */

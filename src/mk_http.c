@@ -326,14 +326,10 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     MK_TRACE("[FD %i] read %i", socket, bytes);
 
     if (bytes < 0) {
-        if (errno == EAGAIN) {
-            return -EAGAIN;
-        }
-        else {
-            mk_http_session_remove(cs);
-            return -1;
-        }
+        mk_http_session_remove(cs);
+        return -1;
     }
+
     if (bytes == 0) {
         return -1;
     }
@@ -362,63 +358,6 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     }
 
     return bytes;
-}
-
-int mk_http_handler_write(int socket, struct mk_http_session *cs)
-{
-    int ret;
-    struct mk_http_request *sr_node;
-    struct mk_list *sr_list;
-    struct mk_list *sr_head;
-    (void) socket;
-
-    if (mk_channel_is_empty(&cs->channel) == 0) {
-        sr_node = mk_list_entry_first(&cs->request_list,
-                                      struct mk_http_request, _head);
-         mk_http_request_prepare(cs, sr_node);
-    }
-
-    /* Check if our embedded channel have some data to stream out */
-    ret = mk_channel_write(&cs->channel);
-    return ret;
-    if (ret & (MK_CHANNEL_ERROR | MK_CHANNEL_FLUSH | MK_CHANNEL_DONE)) {
-        return ret;
-    }
-
-    if (ret & MK_CHANNEL_EMPTY) {
-        sr_list = &cs->request_list;
-        mk_list_foreach(sr_head, sr_list) {
-            sr_node = mk_list_entry_first(sr_list,
-                                          struct mk_http_request, _head);
-            ret = mk_http_request_prepare(cs, sr_node);
-
-            /* There is no more information to send, a request was served, or
-             * it maybe failed.
-             */
-            if (ret & MK_CHANNEL_DONE) {
-                /* STAGE_40, request has ended */
-                mk_plugin_stage_run_40(cs, sr_node);
-            }
-
-
-                switch (ret) {
-                case MK_EXIT_OK:
-                case MK_EXIT_ERROR:
-                    if (cs->close_now == MK_TRUE) {
-                        return -1;
-                    }
-                    break;
-                case MK_EXIT_ABORT:
-                    return -1;
-                }
-        }
-    }
-        /*
-         * If we are here, is because all pipelined request were
-         * processed successfully, let's return 0
-         */
-
-    return 0;
 }
 
 /* Build error page */
@@ -741,15 +680,8 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
     return f;
 }
 
-void mk_http_cb_file_finished(struct mk_stream *stream)
-{
-    (void) stream;
-
-    MK_TRACE("File finished");
-}
-
 #if defined (__linux__)
-void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
+static inline void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
 {
     (void) bytes;
 
@@ -998,7 +930,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     /* Object size for log and response headers */
     sr->headers.content_length = sr->file_info.size;
     sr->headers.real_length = sr->file_info.size;
-    sr->file_stream.channel = &cs->channel;
+    sr->file_stream.channel = cs->channel;
 
     /* Open file */
     if (mk_likely(sr->file_info.size > 0)) {
@@ -1050,7 +982,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_POST) {
         /* Note: bytes and offsets are set after the Range check */
         sr->file_stream.type = MK_STREAM_FILE;
-        mk_channel_append_stream(&cs->channel, &sr->file_stream);
+        mk_channel_append_stream(cs->channel, &sr->file_stream);
     }
 
     /*
@@ -1061,7 +993,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 #if defined(__linux__)
     sr->file_stream.cb_bytes_consumed = mk_http_cb_file_on_consume;
 #endif
-    sr->file_stream.cb_finished       = mk_http_cb_file_finished;
 
     /*
      * Enable CORK/NO_PUSH
@@ -1115,23 +1046,19 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
     return 0;
 }
 
-int mk_http_request_end(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *sched)
+static inline int mk_http_request_end(struct mk_sched_conn *conn,
+                                      struct mk_sched_worker *sched)
 {
     int socket;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
+    (void) sched;
 
     socket = conn->event.fd;
 
     cs = mk_http_session_get(conn);
     if (!cs) {
         MK_TRACE("[FD %i] Not found", socket);
-        return -1;
-    }
-
-    if (mk_unlikely(!sched)) {
-        MK_TRACE("Could not find sched list node :/");
         return -1;
     }
 
@@ -1162,12 +1089,11 @@ int mk_http_request_end(struct mk_sched_conn *conn,
     if (cs->close_now == MK_TRUE) {
         MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
         mk_http_session_remove(cs);
+        return -1;
     }
     else {
         mk_http_request_free_list(cs);
         mk_http_request_ka_next(cs);
-        mk_event_add(sched->loop, socket,
-                     MK_EVENT_CONNECTION, MK_EVENT_READ, conn);
         return 0;
     }
 
@@ -1234,7 +1160,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
             mk_stream_set(&sr->file_stream,
                           MK_STREAM_FILE,
-                          &cs->channel,
+                          cs->channel,
                           NULL,
                           finfo.size,
                           NULL,
@@ -1311,7 +1237,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         if (sr->method != MK_METHOD_HEAD) {
             mk_stream_set(&sr->page_stream,
                           MK_STREAM_PTR,
-                          &cs->channel,
+                          cs->channel,
                           page,
                           -1,
                           NULL,
@@ -1377,11 +1303,8 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     mk_list_add(&cs->request_incomplete, cs_incomplete);
 
-    /* Stream channel */
-    cs->channel.type = MK_CHANNEL_SOCKET;    /* channel type  */
-    cs->channel.fd   = conn->event.fd;       /* socket conn   */
-    cs->channel.io   = conn->net;            /* network layer */
-    mk_list_init(&cs->channel.streams);
+    /* Map the channel, just for protocol-handler internal stuff */
+    cs->channel = &conn->channel;
 
     /* creation time in unix time */
     cs->init_time = conn->arrive_time;
@@ -1503,24 +1426,11 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
 {
     int ret;
     int status;
-    int socket = conn->event.fd;
-
+    size_t count;
+    (void) worker;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
 
-
-    /* Plugin hook
-    ret = mk_plugin_event_read(socket);
-
-    switch (ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-    break;
-    }
-    */
     cs = mk_http_session_get(conn);
     if (cs->_sched_init == MK_FALSE) {
         /* Create session for the client */
@@ -1549,15 +1459,12 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             mk_http_status_completed(cs);
-
-            /* Request WRITE events */
-            mk_event_add(worker->loop, socket,
-                         MK_EVENT_CONNECTION, MK_EVENT_WRITE, conn);
+            mk_http_request_prepare(cs, sr);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
             /* The HTTP parser may enqueued some response error */
-            if (mk_channel_is_empty(&cs->channel) != 0) {
-                mk_channel_write(&cs->channel);
+            if (mk_channel_is_empty(cs->channel) != 0) {
+                mk_channel_write(cs->channel, &count);
             }
             mk_http_session_remove(cs);
             MK_TRACE("[FD %i] HTTP_PARSER_ERROR", socket);
@@ -1568,52 +1475,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
         }
     }
 
-    if (ret == -EAGAIN) {
-        return 1;
-    }
-
     return ret;
-}
-
-int mk_http_sched_write(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *worker)
-{
-    int socket = conn->event.fd;
-    struct mk_http_session *cs;
-    (void) worker;
-
-    MK_TRACE("[FD %i] Normal connection write handling", socket);
-
-    /* Plugin hook
-    ret = mk_plugin_event_write(socket);
-    switch(ret) {
-    case MK_PLUGIN_RET_EVENT_OWNED:
-        return MK_PLUGIN_RET_CONTINUE;
-    case MK_PLUGIN_RET_EVENT_CLOSE:
-        return -1;
-    case MK_PLUGIN_RET_EVENT_CONTINUE:
-        break;
-    }
-    */
-
-    /* Get node from schedule list node which contains
-     * the information regarding to the current client/socket
-     */
-    cs = mk_http_session_get(conn);
-    if (!cs) {
-        /* This is a ghost connection that doesn't exist anymore.
-         * Closing it could accidentally close some other thread's
-         * socket, so pass it to remove_client that checks it's ours.
-         */
-        mk_sched_drop_connection(socket);
-        return 0;
-    }
-
-    if (mk_channel_is_empty(&cs->channel) == 0) {
-
-    }
-
-    return mk_http_handler_write(socket, cs);
 }
 
 int mk_http_sched_close(struct mk_sched_conn *conn,
@@ -1634,11 +1496,17 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
     return 0;
 }
 
+int mk_http_sched_done(struct mk_sched_conn *conn,
+                       struct mk_sched_worker *worker)
+{
+    return mk_http_request_end(conn, worker);
+}
+
 struct mk_sched_handler mk_http_handler = {
     .name             = "http",
     .cb_read          = mk_http_sched_read,
-    .cb_write         = mk_http_sched_write,
     .cb_close         = mk_http_sched_close,
+    .cb_done          = mk_http_sched_done,
     .sched_extra_size = sizeof(struct mk_http_session),
     .capabilities     = MK_CAP_HTTP
 };

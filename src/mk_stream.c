@@ -78,7 +78,7 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
     return bytes;
 }
 
-int mk_channel_write(struct mk_channel *channel)
+int mk_channel_write(struct mk_channel *channel, size_t *count)
 {
     ssize_t bytes = -1;
     struct mk_iov *iov;
@@ -124,6 +124,7 @@ int mk_channel_write(struct mk_channel *channel)
         }
 
         if (bytes > 0) {
+            *count = bytes;
             mk_stream_bytes_consumed(stream, bytes);
 
             /* notification callback, optional */
@@ -151,7 +152,13 @@ int mk_channel_write(struct mk_channel *channel)
             MK_TRACE("[CH %i] CHANNEL_FLUSH", channel->fd);
             return MK_CHANNEL_FLUSH;
         }
-        else if (bytes <= 0) {
+        else if (bytes < 0) {
+            if (errno == EAGAIN) {
+                return MK_CHANNEL_BUSY;
+            }
+            return MK_CHANNEL_ERROR;
+        }
+        else if (bytes == 0) {
             if (stream->cb_exception) {
                 stream->cb_exception(stream, errno);
             }

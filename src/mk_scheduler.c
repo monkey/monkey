@@ -133,8 +133,6 @@ void mk_sched_worker_free()
 
     mk_bug(!sl);
 
-    //sl->request_handler;
-
     /* Free master array (av queue & busy queue) */
     mk_mem_free(cs_list);
     mk_mem_free(cs_incomplete);
@@ -197,6 +195,12 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     conn->arrive_time = log_current_utime;
     conn->protocol    = handler;
     conn->net         = listener->network->network;
+
+    /* Stream channel */
+    conn->channel.type = MK_CHANNEL_SOCKET;    /* channel type  */
+    conn->channel.fd   = remote_fd;            /* socket conn   */
+    conn->channel.io   = conn->net;            /* network layer */
+    mk_list_init(&conn->channel.streams);
 
     /* Register the entry in the red-black tree queue for fast lookup */
     struct rb_node **new = &(sched->rb_queue.rb_node);
@@ -307,6 +311,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
         mk_err("Error creating Scheduler loop");
         exit(EXIT_FAILURE);
     }
+    sched->mem_pagesize = sysconf(_SC_PAGESIZE);
 
     /*
      * Create the notification instance and link it to the worker
@@ -429,7 +434,7 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
 
         /* Unlink from the red-black tree */
         rb_erase(&conn->_rb_head, &sched->rb_queue);
-        mk_mem_free(conn);
+
 
         /* Only close if this was our connection.
          *
@@ -439,6 +444,8 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
          * causing ghosts.
          */
         conn->net->close(remote_fd);
+
+        mk_mem_free(conn);
         MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
         return 0;
     }
@@ -554,6 +561,11 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched)
 int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched)
 {
+    int ret;
+    size_t count;
+    size_t total = 0;
+    struct mk_event *event;
+
 #ifdef TRACE
     int socket = conn->event.fd;
     MK_TRACE("[FD %i] Connection Handler / read", socket);
@@ -568,34 +580,85 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
      *  - plain sockets through liana will use just read(2)
      *  - ssl though mbedtls should use mk_mbedtls_read(..)
      */
-    return conn->protocol->cb_read(conn, sched);
+    ret = conn->protocol->cb_read(conn, sched);
+    if (ret == -1) {
+        return -1;
+    }
+
+    /*
+     * There is a high probability that the protocol-handler have enqueued
+     * some data to write. We will check the Channel, if some Stream is attached,
+     * we will try to dispath the data over the socket, we will do this using the
+     * following logic:
+     *
+     *  1. Try to flush a minimum of bytes contained in multiple Streams. The
+     *     value is given by _SC_PAGESIZE stored on:
+     *
+     *      struct mk_sched_worker {
+     *          ...
+     *          int mem_pagesize;
+     *      };
+     *
+     *  2. If in #1 we receive some -EAGAIN, ask for MK_EVENT_WRITE events on
+     *     the socket. On that way we make sure we flush data when the Kernel
+     *     tell us this is possible.
+     *
+     *  3. If after #1 there is still some enqueued data, handle the remaining
+     *     ones through a MK_EVENT_WRITE and it proper callback handler.
+     */
+    do {
+        ret = mk_channel_write(&conn->channel, &count);
+        total += count;
+    } while (total <= sched->mem_pagesize &&
+             (ret & ~(MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY)));
+
+    if (ret == MK_CHANNEL_DONE) {
+        if (conn->protocol->cb_done) {
+            return conn->protocol->cb_done(conn, sched);
+        }
+    }
+    else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
+        event = &conn->event;
+        if (event->mask & ~MK_EVENT_WRITE) {
+            mk_event_add(sched->loop, event->fd,
+                         MK_EVENT_CONNECTION,
+                         MK_EVENT_WRITE,
+                         conn);
+        }
+    }
+
+    return ret;
 }
 
 int mk_sched_event_write(struct mk_sched_conn *conn,
                          struct mk_sched_worker *sched)
 {
     int ret = -1;
-    int socket = conn->event.fd;
+    size_t count;
+    struct mk_event *event;
 
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
-    ret = conn->protocol->cb_write(conn, sched);
-
-    /*
-     * if ret < 0, means that some error happened in the writer call,
-     * in the other hand, 0 means a successful request processed, if
-     * ret > 0 means that some data still need to be send.
-     */
-    if (ret == MK_CHANNEL_ERROR) {
-        mk_sched_drop_connection(socket);
-        return -1;
-    }
-    else if (ret == MK_CHANNEL_DONE) {
-        MK_TRACE("[FD %i] Request End", socket);
-        return mk_http_request_end(conn, sched);
-    }
-    else if (ret == MK_CHANNEL_FLUSH) {
+    ret = mk_channel_write(&conn->channel, &count);
+    if (ret == MK_CHANNEL_FLUSH) {
         return 0;
+    }
+    else if (ret == MK_CHANNEL_DONE || ret == MK_CHANNEL_EMPTY) {
+        if (conn->protocol->cb_done) {
+            ret = conn->protocol->cb_done(conn, sched);
+        }
+        if (ret == -1) {
+            return -1;
+        }
+        event = &conn->event;
+        mk_event_add(sched->loop, event->fd,
+                     MK_EVENT_CONNECTION,
+                     MK_EVENT_READ,
+                     conn);
+        return 0;
+    }
+    else if (ret == MK_CHANNEL_ERROR) {
+        return -1;
     }
 
     /* avoid to make gcc cry :_( */

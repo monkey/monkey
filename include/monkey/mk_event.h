@@ -64,10 +64,13 @@
 
 /* Event reported by the event loop */
 struct mk_event {
-    int      fd;
-    int      type;
-    uint32_t mask;
-    void    *data;
+    int      fd;       /* monitored file descriptor */
+    int      type;     /* event type  */
+    uint32_t mask;     /* events mask */
+    void    *data;     /* custom data reference */
+
+    /* function handler for custom type */
+    int     (*handler)(void *data);
 };
 
 struct mk_event_loop {

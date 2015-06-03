@@ -310,6 +310,7 @@ void mk_plugin_api_init()
     api->config_section_get_key = mk_rconf_section_get_key;
 
     /* Scheduler and Event callbacks */
+    api->sched_loop           = mk_sched_loop;
     api->sched_get_connection = mk_sched_get_connection;
     api->sched_remove_client  = mk_plugin_sched_remove_client;
     api->sched_worker_info    = mk_plugin_sched_get_thread_conf;
@@ -556,7 +557,8 @@ int mk_plugin_http_request_end(int socket)
     sr = mk_list_entry_last(&cs->request_list, struct mk_http_request, _head);
     mk_plugin_stage_run_40(cs, sr);
 
-    ret = mk_http_request_end(NULL, NULL);
+    ret = 0; /* FIXME */
+    //ret = mk_http_request_end(NULL, NULL);
     MK_TRACE(" ret = %i", ret);
 
     if (ret < 0) {

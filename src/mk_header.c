@@ -369,7 +369,7 @@ int mk_header_prepare(struct mk_http_session *cs,
 
     /* Reset callbacks for headers stream */
     mk_stream_set(&sr->headers_stream,
-                  MK_STREAM_IOV, &cs->channel,
+                  MK_STREAM_IOV, cs->channel,
                   iov,
                   -1,
                   NULL,
@@ -377,13 +377,14 @@ int mk_header_prepare(struct mk_http_session *cs,
 
     if (sr->headers._extra_rows) {
         mk_stream_set(&sr->headers_extra_stream,
-                      MK_STREAM_IOV, &cs->channel,
+                      MK_STREAM_IOV, cs->channel,
                       sr->headers._extra_rows, -1,
                       NULL,
                       cb_stream_iov_extended_free, NULL, NULL);
     }
 
     sh->sent = MK_TRUE;
+
     return 0;
 }
 

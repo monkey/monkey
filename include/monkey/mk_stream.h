@@ -29,19 +29,20 @@
  * source of information and for hence it handler
  * may need to be different for each cases.
  */
-#define MK_STREAM_RAW     0  /* raw data from buffer */
-#define MK_STREAM_IOV     1  /* mk_iov struct        */
-#define MK_STREAM_PTR     2  /* mk_ptr               */
-#define MK_STREAM_FILE    3  /* opened file          */
-#define MK_STREAM_SOCKET  4  /* socket, scared..     */
-
+#define MK_STREAM_RAW       0  /* raw data from buffer */
+#define MK_STREAM_IOV       1  /* mk_iov struct        */
+#define MK_STREAM_PTR       2  /* mk_ptr               */
+#define MK_STREAM_FILE      3  /* opened file          */
+#define MK_STREAM_SOCKET    4  /* socket, scared..     */
+#define MK_STREAM_COPYBUF   5  /* raw data, copy data into a dynamic buffer */
 
 /* Channel return values for write event */
 #define MK_CHANNEL_DONE     1  /* channel consumed all streams */
 #define MK_CHANNEL_ERROR    2  /* exception when flusing data  */
 #define MK_CHANNEL_FLUSH    4  /* channel flushed some data    */
 #define MK_CHANNEL_EMPTY    8  /* no streams available         */
-#define MK_CHANNEL_UNKNOWN 16  /* unhandled                    */
+#define MK_CHANNEL_BUSY    16  /* cannot write, busy (EAGAIN)  */
+#define MK_CHANNEL_UNKNOWN 32  /* unhandled                    */
 
 /* Channel status */
 #define MK_CHANNEL_DISABLED 0 /* channel is sleeping */
@@ -140,6 +141,12 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
         ptr = buffer;
         stream->bytes_total = ptr->len;
     }
+    else if (type == MK_STREAM_COPYBUF) {
+        mk_bug(buffer || size < 0);
+        stream->buffer = mk_mem_malloc(size);
+        stream->bytes_total = size;
+        memcpy(stream->buffer, data, size);
+    }
     else {
         stream->bytes_total = size;
     }
@@ -226,6 +233,6 @@ struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
                            void (*cb_bytes_consumed) (struct mk_stream *, long),
                            void (*cb_exception) (struct mk_stream *, int));
 struct mk_channel *mk_channel_new(int type, int fd);
-int mk_channel_write(struct mk_channel *channel);
+int mk_channel_write(struct mk_channel *channel, size_t *count);
 
 #endif

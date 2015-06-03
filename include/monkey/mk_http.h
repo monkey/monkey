@@ -120,7 +120,7 @@ struct mk_http_session
     int status;                 /* Request status */
     int close_now;              /* Close the session ASAP */
 
-    struct mk_channel channel;
+    struct mk_channel *channel;
 
     unsigned int body_size;
     unsigned int body_length;
@@ -185,9 +185,6 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
 
 int mk_http_pending_request(struct mk_http_session *cs);
 int mk_http_send_file(struct mk_http_session *cs, struct mk_http_request *sr);
-int mk_http_request_end(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *sched);
-
 
 /* http session */
 int mk_http_session_init(struct mk_http_session *cs,
