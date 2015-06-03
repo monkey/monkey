@@ -22,6 +22,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "include/mk_macros.h"
 #include "include/mk_utils.h"

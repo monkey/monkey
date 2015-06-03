@@ -1,3 +1,5 @@
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 set(src
   mk_iov.c
   mk_rconf.c
