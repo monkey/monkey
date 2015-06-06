@@ -17,7 +17,7 @@
  *  limitations under the License.
  */
 
-#if defined(__APPLE__)
+#ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
 
