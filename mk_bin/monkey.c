@@ -143,7 +143,7 @@ void mk_exit_all()
         pthread_join(sched_list[i].tid, NULL);
     }
 
-    mk_utils_remove_pid();
+    //FIXME: mk_utils_remove_pid();
     mk_plugin_exit_all();
     mk_config_free_all();
     mk_mem_free(sched_list);
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
     }
 
     /* Register PID of Monkey */
-    mk_utils_register_pid();
+    //FIXME: mk_utils_register_pid();
 
     /* Workers: logger and clock */
     mk_clock_tid = mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);

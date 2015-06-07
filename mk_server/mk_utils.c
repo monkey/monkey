@@ -36,11 +36,6 @@
 #include <time.h>
 #include <inttypes.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
-
-#if defined (__linux__)
-#include <sys/prctl.h>
-#endif
 
 /* stacktrace */
 #include <dlfcn.h>
@@ -299,125 +294,6 @@ char *mk_utils_url_decode(mk_ptr_t uri)
     buf[buf_idx] = '\0';
 
     return buf;
-}
-
-/* Run current process in background mode (daemon, evil Monkey >:) */
-int mk_utils_set_daemon()
-{
-    pid_t pid;
-
-    if ((pid = fork()) < 0){
-		mk_err("Error: Failed creating to switch to daemon mode(fork failed)");
-        exit(EXIT_FAILURE);
-	}
-
-    if (pid > 0) /* parent */
-        exit(EXIT_SUCCESS);
-
-    /* set files mask */
-    umask(0);
-
-    /* Create new session */
-    setsid();
-
-    if (chdir("/") < 0) { /* make sure we can unmount the inherited filesystem */
-        mk_err("Error: Unable to unmount the inherited filesystem in the daemon process");
-        exit(EXIT_FAILURE);
-	}
-
-    /* Our last STDOUT messages */
-    mk_details();
-    mk_info("Background mode ON");
-
-    fclose(stderr);
-    fclose(stdout);
-
-    return 0;
-}
-
-/* Write Monkey's PID */
-int mk_utils_register_pid()
-{
-    int fd;
-    char pidstr[MK_MAX_PID_LEN];
-    struct flock lock;
-    struct stat sb;
-
-    if (mk_config->pid_status == MK_TRUE)
-        return -1;
-
-    if (!stat(mk_config->pid_file_path, &sb)) {
-        /* file exists, perhaps previously kepts by SIGKILL */
-        unlink(mk_config->pid_file_path);
-    }
-
-    if ((fd = open(mk_config->pid_file_path,
-                   O_WRONLY | O_CREAT | O_CLOEXEC, 0444)) < 0) {
-        mk_err("Error: I can't log pid of monkey");
-        exit(EXIT_FAILURE);
-    }
-
-    /* create a write exclusive lock for the entire file */
-    lock.l_type = F_WRLCK;
-    lock.l_start = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len = 0;
-
-    if (fcntl(fd, F_SETLK, &lock) < 0) {
-        close(fd);
-        mk_err("Error: I cannot set the lock for the pid of monkey");
-        exit(EXIT_FAILURE);
-    }
-
-    sprintf(pidstr, "%i", getpid());
-    ssize_t write_len = strlen(pidstr);
-    if (write(fd, pidstr, write_len) != write_len) {
-        close(fd);
-        mk_err("Error: I cannot write the lock for the pid of monkey");
-        exit(EXIT_FAILURE);
-    }
-
-    mk_config->pid_status = MK_TRUE;
-
-    return 0;
-}
-
-/* Remove PID file */
-int mk_utils_remove_pid()
-{
-    mk_user_undo_uidgid();
-    if (unlink(mk_config->pid_file_path)) {
-        mk_warn("cannot delete pidfile\n");
-    }
-    mk_config->pid_status = MK_FALSE;
-    return 0;
-}
-
-pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg)
-{
-    pthread_t tid;
-    pthread_attr_t thread_attr;
-
-    pthread_attr_init(&thread_attr);
-    pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_JOINABLE);
-    if (pthread_create(&tid, &thread_attr, (void *) func, arg) < 0) {
-        mk_libc_error("pthread_create");
-        exit(EXIT_FAILURE);
-    }
-
-    return tid;
-}
-
-int mk_utils_worker_rename(const char *title)
-{
-#if defined (__linux__)
-    return prctl(PR_SET_NAME, title, 0, 0, 0);
-#elif defined (__APPLE__)
-    return pthread_setname_np(title);
-#else
-    (void) title;
-    return -1;
-#endif
 }
 
 #ifdef NO_BACKTRACE

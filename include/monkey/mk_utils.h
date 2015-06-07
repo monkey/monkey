@@ -29,11 +29,6 @@
 
 #define MK_UTILS_INT2MKP_BUFFER_LEN 16    /* Maximum buffer length when
                                            * converting an int to mk_ptr_t */
-/*
- * Max amount of pid digits. Glibc's pid_t is implemented as a signed
- * 32bit integer, for both 32 and 64bit systems - max value: 2147483648.
- */
-#define MK_MAX_PID_LEN 10
 #define MK_GMT_CACHES 10
 
 struct mk_gmt_cache {
@@ -48,14 +43,7 @@ time_t mk_utils_gmt2utime(char *date);
 
 int mk_buffer_cat(mk_ptr_t * p, char *buf1, int len1, char *buf2, int len2);
 
-int mk_utils_set_daemon(void);
 char *mk_utils_url_decode(mk_ptr_t req_uri);
-
-int mk_utils_register_pid(void);
-int mk_utils_remove_pid(void);
-
-pthread_t mk_utils_worker_spawn(void (*func) (void *), void *arg);
-int mk_utils_worker_rename(const char *title);
 void mk_utils_stacktrace(void);
 
 unsigned int mk_utils_gen_hash(const void *key, int len);
