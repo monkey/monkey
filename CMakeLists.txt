@@ -290,16 +290,28 @@ configure_file(
 
 
 # General Headers
-include_directories(include/)
-include_directories(src/)
+include_directories(./)
+include_directories(include)
+include_directories(monkey)
 
-add_subdirectory(plugins/)
+# Instruct CMake to build the the code base
+# =========================================
+# plugins  : plugins for mk_server
+# mk_core  : generic utilities
+# mk_server: server code base: plugins, protocols, scheduler.. (no executable)
+# mk_bin   : server executable
+#
+add_subdirectory(plugins)
+add_subdirectory(mk_core)
+add_subdirectory(mk_server)
+if(NOT WITHOUT_BIN)
+  add_subdirectory(mk_bin)
+endif()
 
-# Instruct CMake to build the Monkey Core
-add_subdirectory(src/)
-add_subdirectory(conf/)
-add_subdirectory(htdocs/)
-add_subdirectory(include/)
+# Configuration, headers generation and others
+add_subdirectory(conf)
+add_subdirectory(htdocs)
+add_subdirectory(include)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_LOG})

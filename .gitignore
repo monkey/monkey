@@ -23,3 +23,5 @@ lib/python/bin/*
 lib/python/conf/*
 lib/python/jemalloc.config
 src/include/
+build/
+include/monkey/mk_static_plugins.h

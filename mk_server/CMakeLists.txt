@@ -20,10 +20,6 @@ set(src
   )
 
 
-add_subdirectory(mk_core)
-
-include_directories(./)
-
 # Always build a static library, thats our core :)
 add_library(monkey-core-static STATIC ${src})
 set_target_properties(monkey-core-static PROPERTIES OUTPUT_NAME monkey)
@@ -36,18 +32,4 @@ endif()
 # Linux Kqueue emulation
 if(WITH_LINUX_KQUEUE)
   target_link_libraries(monkey-core-static kqueue)
-endif()
-
-# Build the binary
-if(NOT WITHOUT_BIN)
-  add_executable(monkey-bin monkey.c)
-  target_link_libraries(monkey-bin monkey-core-static)
-  set_target_properties(monkey-bin PROPERTIES OUTPUT_NAME monkey)
-endif()
-
-
-if(BUILD_LOCAL)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
-else()
-  install(TARGETS monkey-bin RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_SBINDIR})
 endif()
