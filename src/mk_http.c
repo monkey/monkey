@@ -1047,23 +1047,21 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
 static inline int mk_http_request_end(struct mk_sched_conn *conn,
                                       struct mk_sched_worker *sched)
 {
-    int socket;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
     (void) sched;
 
-    socket = conn->event.fd;
-
     cs = mk_http_session_get(conn);
     if (!cs) {
-        MK_TRACE("[FD %i] Not found", socket);
+        MK_TRACE("[FD %i] Not found", conn->event.fd);
         return -1;
     }
 
     /* Check if we have some enqueued pipeline requests */
     if (cs->pipelined == MK_TRUE) {
         sr =  mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
-        MK_TRACE("[FD %i] Pipeline finishing %p", socket, sr);
+        MK_TRACE("[FD %i] Pipeline finishing %p",
+                 conn->event.fd, sr);
 
         /* Remove node and release resources */
         mk_list_del(&sr->_head);
@@ -1072,7 +1070,7 @@ static inline int mk_http_request_end(struct mk_sched_conn *conn,
         if (mk_list_is_empty(&cs->request_list) != 0) {
 #ifdef TRACE
             sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
-            MK_TRACE("[FD %i] Pipeline next is %p", socket, sr);
+            MK_TRACE("[FD %i] Pipeline next is %p", conn->event.fd, sr);
 #endif
             return 0;
         }
@@ -1085,7 +1083,7 @@ static inline int mk_http_request_end(struct mk_sched_conn *conn,
      * close it.
      */
     if (cs->close_now == MK_TRUE) {
-        MK_TRACE("[FD %i] No KeepAlive mode, remove", socket);
+        MK_TRACE("[FD %i] No KeepAlive mode, remove", conn->event.fd);
         mk_http_session_remove(cs);
         return -1;
     }
