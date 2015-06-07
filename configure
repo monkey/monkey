@@ -124,6 +124,12 @@ for arg in $*; do
 		systemddir=/lib/systemd/system
 	    fi
 	    ;;
+        --no-binary*)
+            cmake_opts+="-DWITHOUT_BIN=1 "
+            ;;
+        --static-lib-mode*)
+            cmake_opts+="-DWITH_STATIC_LIB_MODE=1 "
+            ;;
 	--version*)
 	    echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
 	    echo "Copyright 2001-2015, Eduardo Silva <eduardo@monkey.io>"
@@ -148,6 +154,8 @@ for arg in $*; do
 	    echo "  --uclib-mode            Enable uClib compatibility mode"
             echo "  --malloc-libc           Use system default memory allocator (default is jemalloc)"
 	    echo "  --pthread-tls           Use Posix thread keys instead of compiler TLS"
+            echo "  --no-binary             Do not build binary"
+            echo "  --static-lib-mode       Build static library mode"
 	    echo
 	    echo -e $bldwht"Installation Directories:" $txtrst
 	    echo "  --prefix=PREFIX         Root prefix directory"

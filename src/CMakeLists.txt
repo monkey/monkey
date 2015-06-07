@@ -1,5 +1,4 @@
 set(src
-  monkey.c
   mk_mimetype.c
   mk_vhost.c
   mk_header.c
@@ -25,19 +24,29 @@ add_subdirectory(mk_core)
 
 include_directories(./)
 
-add_executable(monkey ${src})
-target_link_libraries(monkey dl mk_core ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
+# Always build a static library, thats our core :)
+add_library(monkey-core-static STATIC ${src})
+target_link_libraries(monkey-core-static dl mk_core ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
 
 if(NOT WITH_SYSTEM_MALLOC)
-  target_link_libraries(monkey libjemalloc ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(monkey-core-static libjemalloc ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
+# Linux Kqueue emulation
 if(WITH_LINUX_KQUEUE)
-  target_link_libraries(monkey kqueue)
+  target_link_libraries(monkey-core-static kqueue)
 endif()
+
+# Build the binary
+if(NOT WITHOUT_BIN)
+  add_executable(monkey-bin monkey.c)
+  target_link_libraries(monkey-bin monkey-core-static)
+  set_target_properties(monkey-bin PROPERTIES OUTPUT_NAME monkey)
+endif()
+
 
 if(BUILD_LOCAL)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
 else()
-  install(TARGETS monkey RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_SBINDIR})
+  install(TARGETS monkey-bin RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_SBINDIR})
 endif()

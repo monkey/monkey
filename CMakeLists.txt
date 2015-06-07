@@ -53,6 +53,12 @@ option(WITH_PLUGIN_LOGGER        "Log Writer"              Yes)
 option(WITH_PLUGIN_MANDRIL       "Security"                Yes)
 option(WITH_PLUGIN_TLS           "TLS/SSL support"          No)
 
+# Options to build Monkey with/without binary and
+# static/dynamic library modes (default is always just
+# one target binary).
+option(WITHOUT_BIN               "Do not build binary"     No)
+option(WITH_STATIC_LIB_MODE      "Static library mode"     No)
+
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(WITH_ACCEPT        1)
   set(WITH_ACCEPT4       0)
