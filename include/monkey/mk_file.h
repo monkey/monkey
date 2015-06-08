@@ -24,6 +24,8 @@
 #define MK_FILE_READ   2
 #define MK_FILE_EXEC   4
 
+#include <time.h>
+
 struct file_info
 {
     off_t size;

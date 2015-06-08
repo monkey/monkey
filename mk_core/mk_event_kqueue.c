@@ -79,12 +79,12 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
 
     /* Read flag */
     if ((event->mask ^ MK_EVENT_READ) && (events & MK_EVENT_READ)) {
-        EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, event);
+        EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, data);
         set = MK_TRUE;
         //printf("[ADD] fd=%i READ\n", fd);
     }
     else if ((event->mask & MK_EVENT_READ) && (events ^ MK_EVENT_READ)) {
-        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, event);
+        EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, data);
         set = MK_TRUE;
         //printf("[DEL] fd=%i READ\n", fd);
     }
@@ -100,12 +100,12 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
     /* Write flag */
     set = MK_FALSE;
     if ((event->mask ^ MK_EVENT_WRITE) && (events & MK_EVENT_WRITE)) {
-        EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, event);
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, data);
         set = MK_TRUE;
         //printf("[ADD] fd=%i WRITE\n", fd);
     }
     else if ((event->mask & MK_EVENT_WRITE) && (events ^ MK_EVENT_WRITE)) {
-        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, event);
+        EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, data);
         set = MK_TRUE;
         //printf("[DEL] fd=%i WRITE\n", fd);
     }
@@ -117,6 +117,7 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
             return ret;
         }
     }
+    event->mask = events;
 
     return 0;
 }
