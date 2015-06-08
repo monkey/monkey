@@ -1,4 +1,5 @@
 set(src
+  monkey.c
   mk_mimetype.c
   mk_vhost.c
   mk_header.c

@@ -17,28 +17,7 @@
  *  limitations under the License.
  */
 
-#ifdef LINUX_TRACE
-#define TRACEPOINT_CREATE_PROBES
-#define TRACEPOINT_DEFINE
-#include <monkey/mk_linuxtrace.h>
-#endif
-
 #include <monkey/monkey.h>
-#include <monkey/mk_server.h>
-#include <monkey/mk_kernel.h>
-#include <monkey/mk_user.h>
-#include <monkey/mk_signals.h>
-#include <monkey/mk_clock.h>
-#include <monkey/mk_cache.h>
-#include <monkey/mk_plugin.h>
-#include <monkey/mk_env.h>
-#include <monkey/mk_utils.h>
-#include <monkey/mk_config.h>
-#include <monkey/mk_scheduler.h>
-#include <monkey/mk_tls.h>
-#include <monkey/mk_static_plugins.h>
-#include <monkey/mk_core.h>
-
 #include <getopt.h>
 
 #if defined(__DATE__) && defined(__TIME__)
@@ -47,11 +26,6 @@ static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
 static const char MONKEY_BUILT[] = "Unknown";
 #endif
 
-void mk_thread_keys_init(void)
-{
-    /* Create thread keys */
-    pthread_key_create(&mk_utils_error_key, NULL);
-}
 
 static void mk_version(void)
 {
@@ -82,7 +56,7 @@ static void mk_build_info(void)
     /* Initialize list */
     mk_config = mk_mem_malloc(sizeof(struct mk_server_config));
     mk_list_init(&mk_config->plugins);
-    mk_static_plugins();
+    mk_plugin_load_static();
 
     printf("\n\n%s[built-in plugins]%s\n", ANSI_BOLD, ANSI_RESET);
     mk_list_foreach(head, &mk_config->plugins) {
@@ -121,33 +95,6 @@ static void mk_help(int rc)
     printf("  http://monkey-project.com/documentation\n\n");
 
     exit(rc);
-}
-
-void mk_exit_all()
-{
-    int i;
-    int n;
-    uint64_t val;
-
-    /* Distribute worker signals to stop working */
-    val = MK_SCHEDULER_SIGNAL_FREE_ALL;
-    for (i = 0; i < mk_config->workers; i++) {
-        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
-        if (n < 0) {
-            perror("write");
-        }
-    }
-
-    /* Wait for workers to finish */
-    for (i = 0; i < mk_config->workers; i++) {
-        pthread_join(sched_list[i].tid, NULL);
-    }
-
-    //FIXME: mk_utils_remove_pid();
-    mk_plugin_exit_all();
-    mk_config_free_all();
-    mk_mem_free(sched_list);
-    mk_clock_exit();
 }
 
 /* MAIN */
@@ -248,12 +195,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* setup basic configurations */
-    mk_config = mk_config_init();
-
-    /* Init Kernel version data */
-    mk_kernel_init();
-    mk_kernel_features();
+    mk_config = mk_init();
 
     /* set configuration path */
     if (!path_config) {
@@ -318,20 +260,9 @@ int main(int argc, char **argv)
     mk_config->port_override = port_override;
     mk_config->transport_layer = transport_layer;
 
-#ifdef TRACE
-    mk_core_init();
-    MK_TRACE("Monkey TRACE is enabled");
-    env_trace_filter = getenv("MK_TRACE_FILTER");
-    pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
-#endif
-    pthread_mutex_init(&mutex_port_init, (pthread_mutexattr_t *) NULL);
-
     mk_version();
     mk_signal_init();
 
-#ifdef LINUX_TRACE
-    mk_info("Linux Trace enabled");
-#endif
 
     /* Override number of thread workers */
     if (workers_override >= 0) {

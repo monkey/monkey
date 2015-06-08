@@ -187,7 +187,7 @@ int mk_config_listen_check_busy(struct mk_server_config *config)
 
     p = mk_plugin_cap(MK_CAP_SOCK_PLAIN, config);
     if (!p) {
-        mk_warn("Listen checkt: consider build monkey with basic socket handling!");
+        mk_warn("Listen check: consider build monkey with basic socket handling!");
         return MK_FALSE;
     }
 

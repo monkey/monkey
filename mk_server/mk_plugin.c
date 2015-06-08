@@ -343,6 +343,12 @@ void mk_plugin_api_init()
     api->plugins = &mk_config->plugins;
 }
 
+void mk_plugin_load_static()
+{
+    /* Load static plugins */
+    mk_static_plugins();
+}
+
 void mk_plugin_load_all()
 {
     int ret;
@@ -357,8 +363,7 @@ void mk_plugin_load_all()
     struct mk_list *htmp;
     struct file_info f_info;
 
-    /* Load static plugins */
-    mk_static_plugins();
+    mk_plugin_load_static();
     mk_list_foreach_safe(head, htmp, &mk_config->plugins) {
         p = mk_list_entry(head, struct mk_plugin, _head);
 

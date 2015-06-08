@@ -342,4 +342,6 @@ int mk_plugin_header_get(struct mk_http_request *sr,
 struct mk_sched_worker *mk_plugin_sched_get_thread_conf();
 struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config);
 
+void mk_plugin_load_static();
+
 #endif

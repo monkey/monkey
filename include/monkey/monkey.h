@@ -33,7 +33,25 @@
 #include <errno.h>
 #include <pthread.h>
 
+#ifdef LINUX_TRACE
+#define TRACEPOINT_CREATE_PROBES
+#define TRACEPOINT_DEFINE
+#include <monkey/mk_linuxtrace.h>
+#endif
+
 #include <monkey/mk_core.h>
+#include <monkey/mk_server.h>
+#include <monkey/mk_kernel.h>
+#include <monkey/mk_user.h>
+#include <monkey/mk_signals.h>
+#include <monkey/mk_clock.h>
+#include <monkey/mk_cache.h>
+#include <monkey/mk_plugin.h>
+#include <monkey/mk_env.h>
+#include <monkey/mk_utils.h>
+#include <monkey/mk_config.h>
+#include <monkey/mk_scheduler.h>
+#include <monkey/mk_tls.h>
 
 /* Max Path lenth */
 #define MK_MAX_PATH 1024
@@ -49,6 +67,7 @@ extern const mk_ptr_t mk_monkey_protocol;
 extern gid_t EGID;
 extern gid_t EUID;
 
+struct mk_server_config *mk_init();
 void mk_details(void);
 void mk_thread_keys_init();
 void mk_exit_all();

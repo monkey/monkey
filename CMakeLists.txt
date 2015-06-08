@@ -296,13 +296,13 @@ include_directories(monkey)
 
 # Instruct CMake to build the the code base
 # =========================================
-# plugins  : plugins for mk_server
 # mk_core  : generic utilities
+# plugins  : plugins for mk_server
 # mk_server: server code base: plugins, protocols, scheduler.. (no executable)
 # mk_bin   : server executable
 #
-add_subdirectory(plugins)
 add_subdirectory(mk_core)
+add_subdirectory(plugins)
 add_subdirectory(mk_server)
 if(NOT WITHOUT_BIN)
   add_subdirectory(mk_bin)
