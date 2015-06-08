@@ -17,8 +17,11 @@
  *  limitations under the License.
  */
 
+#define _GNU_SOURCE
+
 #include <pthread.h>
 #include <monkey/mk_scheduler.h>
+#include <monkey/mk_plugin.h>
 #include <monkey/mk_clock.h>
 
 /* Initialize Monkey Server */
