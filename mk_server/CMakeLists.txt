@@ -20,15 +20,10 @@ set(src
   mk_plugin.c
   )
 
-
 # Always build a static library, thats our core :)
 add_library(monkey-core-static STATIC ${src})
 set_target_properties(monkey-core-static PROPERTIES OUTPUT_NAME monkey)
 target_link_libraries(monkey-core-static dl mk_core ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
-
-if(NOT WITH_SYSTEM_MALLOC)
-  target_link_libraries(monkey-core-static libjemalloc)
-endif()
 
 # Linux Kqueue emulation
 if(WITH_LINUX_KQUEUE)

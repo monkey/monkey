@@ -192,7 +192,7 @@ else()
     INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/
     INSTALL_COMMAND $(MAKE) install_lib_static install_include)
 
-  add_library(libjemalloc STATIC IMPORTED)
+  add_library(libjemalloc STATIC IMPORTED GLOBAL)
   set_target_properties(libjemalloc PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/lib/libjemalloc_pic.a")
   add_dependencies(libjemalloc jemalloc)
   include_directories("${CMAKE_CURRENT_BINARY_DIR}/include/")

@@ -12,3 +12,8 @@ set(src
 
 include_directories(include)
 add_library(mk_core STATIC ${src})
+target_link_libraries(mk_core ${CMAKE_THREAD_LIBS_INIT})
+
+if(NOT WITH_SYSTEM_MALLOC)
+  target_link_libraries(mk_core libjemalloc)
+endif()
