@@ -208,7 +208,9 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched);
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
                                               struct mk_server_listen *listener,
                                               struct mk_sched_worker *sched);
-int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd);
+int mk_sched_remove_client(struct mk_sched_worker *sched,
+                           struct mk_sched_conn *conn);
+
 struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker
                                                      *sched, int remote_fd);
 int mk_sched_update_conn_status(struct mk_sched_worker *sched, int remote_fd,

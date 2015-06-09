@@ -658,12 +658,18 @@ mk_ptr_t *mk_plugin_time_now_human()
 
 int mk_plugin_sched_remove_client(int socket)
 {
-    struct mk_sched_worker *node;
+    struct mk_sched_conn *conn;
+    struct mk_sched_worker *sched;
 
     MK_TRACE("[FD %i] remove client", socket);
 
-    node = mk_sched_get_thread_conf();
-    return mk_sched_remove_client(node, socket);
+    sched = mk_sched_get_thread_conf();
+    conn  = mk_sched_get_connection(sched, socket);
+    if (!conn) {
+        return -1;
+    }
+
+    return mk_sched_remove_client(sched, conn);
 }
 
 int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)

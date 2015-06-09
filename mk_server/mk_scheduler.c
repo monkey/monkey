@@ -409,9 +409,10 @@ void mk_sched_set_request_list(struct rb_root *list)
     cs_list = list;
 }
 
-int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
+int mk_sched_remove_client(struct mk_sched_worker *sched,
+                           struct mk_sched_conn *conn)
 {
-    struct mk_sched_conn *conn;
+    struct mk_event *event;
 
     /*
      * Close socket and change status: we must invoke mk_epoll_del()
@@ -419,39 +420,33 @@ int mk_sched_remove_client(struct mk_sched_worker *sched, int remote_fd)
      * the Kernel at its leisure, and we may get false events if we rely
      * on that.
      */
-    mk_event_del(sched->loop, remote_fd);
+    event = &conn->event;
+    mk_event_del(sched->loop, event);
 
-    conn = mk_sched_get_connection(sched, remote_fd);
-    if (conn) {
-        MK_TRACE("[FD %i] Scheduler remove", remote_fd);
+    MK_TRACE("[FD %i] Scheduler remove", remote_fd);
 
-        /* Invoke plugins in stage 50 */
-        mk_plugin_stage_run_50(remote_fd);
+    /* Invoke plugins in stage 50 */
+    mk_plugin_stage_run_50(event->fd);
 
-        sched->closed_connections++;
+    sched->closed_connections++;
 
-        /* Unlink from the red-black tree */
-        rb_erase(&conn->_rb_head, &sched->rb_queue);
+    /* Unlink from the red-black tree */
+    rb_erase(&conn->_rb_head, &sched->rb_queue);
 
 
-        /* Only close if this was our connection.
-         *
-         * This has to happen _after_ the busy list removal,
-         * otherwise we could get a new client accept()ed with
-         * the same FD before we do the removal from the busy list,
-         * causing ghosts.
-         */
-        conn->net->close(remote_fd);
+    /* Only close if this was our connection.
+     *
+     * This has to happen _after_ the busy list removal,
+     * otherwise we could get a new client accept()ed with
+     * the same FD before we do the removal from the busy list,
+     * causing ghosts.
+     */
+    conn->net->close(event->fd);
 
-        mk_mem_free(conn);
-        MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
-        return 0;
-    }
-    else {
-        MK_TRACE("[FD %i] Not found", remote_fd);
-        MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
-    }
-    return -1;
+    mk_mem_free(conn);
+    MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
+
+    return 0;
 }
 
 struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker *sched,
@@ -503,7 +498,11 @@ int mk_sched_drop_connection(int socket)
     sched = mk_sched_get_thread_conf();
     conn = mk_sched_get_connection(sched, socket);
     if (conn) {
-        mk_sched_remove_client(sched, socket);
+        mk_sched_remove_client(sched, conn);
+    }
+    else {
+        MK_TRACE("[FD %i] Not found", remote_fd);
+        MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
     }
 
     return 0;
