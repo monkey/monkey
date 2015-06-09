@@ -20,6 +20,8 @@
 #ifndef MK_FILE_H
 #define MK_FILE_H
 
+#include <time.h>
+
 #define MK_FILE_EXISTS 1
 #define MK_FILE_READ   2
 #define MK_FILE_EXEC   4
