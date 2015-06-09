@@ -421,9 +421,9 @@ int mk_sched_remove_client(struct mk_sched_worker *sched,
      * on that.
      */
     event = &conn->event;
+    MK_TRACE("[FD %i] Scheduler remove", event->fd);
     mk_event_del(sched->loop, event);
 
-    MK_TRACE("[FD %i] Scheduler remove", remote_fd);
 
     /* Invoke plugins in stage 50 */
     mk_plugin_stage_run_50(event->fd);
@@ -501,8 +501,8 @@ int mk_sched_drop_connection(int socket)
         mk_sched_remove_client(sched, conn);
     }
     else {
-        MK_TRACE("[FD %i] Not found", remote_fd);
-        MK_LT_SCHED(remote_fd, "DELETE_NOT_FOUND");
+        MK_TRACE("[FD %i] Not found", socket);
+        MK_LT_SCHED(socket, "DELETE_NOT_FOUND");
     }
 
     return 0;
