@@ -63,10 +63,6 @@
 /* Monkey Protocol */
 extern const mk_ptr_t mk_monkey_protocol;
 
-/* Process UID/GID */
-extern gid_t EGID;
-extern gid_t EUID;
-
 struct mk_server_config *mk_init();
 void mk_details(void);
 void mk_thread_keys_init();

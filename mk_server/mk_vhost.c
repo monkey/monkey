@@ -23,7 +23,6 @@
 #include <monkey/mk_utils.h>
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_info.h>
-#include <monkey/mk_file.h>
 
 #include <sys/stat.h>
 #include <dirent.h>

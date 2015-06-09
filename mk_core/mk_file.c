@@ -27,11 +27,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <monkey/monkey.h>
-#include <monkey/mk_file.h>
-#include <monkey/mk_user.h>
-#include <monkey/mk_core.h>
-#include <monkey/mk_utils.h>
+#include "mk_core.h"
 
 int mk_file_get_info(const char *path, struct file_info *f_info, int mode)
 {

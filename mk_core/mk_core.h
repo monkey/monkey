@@ -20,7 +20,14 @@
 #ifndef MK_CORE_H
 #define MK_CORE_H
 
+#include <sys/types.h>
+
+/* Process UID/GID */
+extern gid_t EGID;
+extern gid_t EUID;
+
 #include "include/mk_iov.h"
+#include "include/mk_file.h"
 #include "include/mk_event.h"
 #include "include/mk_rbtree.h"
 #include "include/mk_rconf.h"

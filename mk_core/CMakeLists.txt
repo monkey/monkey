@@ -2,6 +2,7 @@ SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
 set(src
   mk_iov.c
+  mk_file.c
   mk_rconf.c
   mk_string.c
   mk_memory.c

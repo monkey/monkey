@@ -20,7 +20,6 @@
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
-#include <monkey/mk_file.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_core.h>
 #include <monkey/mk_http_parser.h>
