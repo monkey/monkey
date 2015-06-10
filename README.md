@@ -1,4 +1,4 @@
-# Monkey HTTP Server
+# Monkey Server
 
 [Monkey](http://monkey-project.com) is a fast and lightweight Web Server for Linux. It has been designed to be very scalable with low memory and CPU consumption, the perfect solution for Embedded Linux and high end production environments.
 

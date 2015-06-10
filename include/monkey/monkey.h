@@ -43,7 +43,6 @@
 #include <monkey/mk_server.h>
 #include <monkey/mk_kernel.h>
 #include <monkey/mk_user.h>
-#include <monkey/mk_signals.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_plugin.h>
@@ -63,8 +62,8 @@
 /* Monkey Protocol */
 extern const mk_ptr_t mk_monkey_protocol;
 
-struct mk_server_config *mk_init();
-void mk_details(void);
+struct mk_server_config *mk_server_init();
+int mk_server_setup();
 void mk_thread_keys_init();
 void mk_exit_all();
 

@@ -17,10 +17,10 @@
  *  limitations under the License.
  */
 
-#ifndef MK_SIG_H
-#define MK_SIG_H
+#ifndef MK_SIGNAL_H
+#define MK_SIGNAL_H
 
-void mk_signal_init(void);
+void mk_signal_init();
 void mk_signal_thread_sigpipe_safe(void);
 
 #endif

@@ -18,6 +18,8 @@
  */
 
 #include <monkey/monkey.h>
+#include "mk_signals.h"
+
 #include <getopt.h>
 
 #if defined(__DATE__) && defined(__TIME__)
@@ -195,7 +197,16 @@ int main(int argc, char **argv)
         }
     }
 
-    mk_config = mk_init();
+    /*
+     * Initialize global configuration context. The variable mk_config
+     * is provided by mk_server and it's unique. You don't need multiple
+     * Monkey instances when Monkey already support multi ports and flexible
+     * configuration.
+     *
+     * Once is created, we need to start populating some relevant configuration
+     * fields that will affect the server behavior.
+     */
+    mk_config = mk_server_init();
 
     /* set configuration path */
     if (!path_config) {
@@ -263,7 +274,6 @@ int main(int argc, char **argv)
     mk_version();
     mk_signal_init();
 
-
     /* Override number of thread workers */
     if (workers_override >= 0) {
         mk_config->workers = workers_override;
@@ -272,38 +282,15 @@ int main(int argc, char **argv)
         mk_config->workers = -1;
     }
 
-    /* Core and Scheduler setup */
-    mk_config_start_configure();
-    mk_sched_init();
-
-
     if (balancing_mode == MK_TRUE) {
         mk_config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
     }
 
-    /* Clock init that must happen before starting threads */
-    mk_clock_sequential_init();
-
-    /* Load plugins */
-    mk_plugin_api_init();
-    mk_plugin_load_all();
 
     /* Running Monkey as daemon */
     if (mk_config->is_daemon == MK_TRUE) {
         mk_utils_set_daemon();
     }
-
-    /* Register PID of Monkey */
-    //FIXME: mk_utils_register_pid();
-
-    /* Workers: logger and clock */
-    mk_clock_tid = mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
-
-    /* Init thread keys */
-    mk_thread_keys_init();
-
-    /* Configuration sanity check */
-    mk_config_sanity_check();
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT &&
         mk_config_listen_check_busy(mk_config) == MK_TRUE &&
@@ -312,12 +299,14 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* Invoke Plugin PRCTX hooks */
-    mk_plugin_core_process();
+    /*
+     * Once the all configuration is set, let mk_server configure the
+     * internals. Not accepting connections yet.
+     */
+    mk_server_setup();
 
-    /* Launch monkey http workers */
-    MK_TLS_INIT();
-    mk_server_launch_workers();
+    /* Register PID of Monkey */
+    mk_utils_register_pid(mk_config->pid_file_path);
 
     /* Print server details */
     mk_details();
@@ -329,5 +318,6 @@ int main(int argc, char **argv)
     mk_server_loop();
 
     mk_mem_free(mk_config);
+
     return 0;
 }

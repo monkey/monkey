@@ -18,24 +18,12 @@
  */
 
 #include <monkey/monkey.h>
-#include <monkey/mk_signals.h>
-#include <monkey/mk_clock.h>
-#include <monkey/mk_plugin.h>
 #include <monkey/mk_core.h>
-#include <monkey/monkey.h>
 
+#include <string.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
-
-/*
- * Some old uclib versions do not implment the sys_siglist, this is mostly
- * related to embedded environments with old toolchains
- */
-#ifdef UCLIB_MODE
-#include "contrib/uclib/sys_siglist.h"
-#endif
 
 /* when we catch a signal and want to exit we call this function
    to do it gracefully */
@@ -46,22 +34,12 @@ static void mk_signal_exit()
     signal(SIGINT,  SIG_IGN);
     signal(SIGHUP,  SIG_IGN);
 
+    mk_utils_remove_pid(mk_config->pid_file_path);
     mk_exit_all();
 
     mk_info("Exiting... >:(");
     _exit(EXIT_SUCCESS);
 }
-
-void mk_signal_thread_sigpipe_safe()
-{
-    sigset_t old;
-    sigset_t set;
-
-    sigemptyset(&set);
-    sigaddset(&set, SIGPIPE);
-    pthread_sigmask(SIG_BLOCK, &set, &old);
-}
-
 
 static void mk_signal_handler(int signo, siginfo_t *si, void *context UNUSED_PARAM)
 {

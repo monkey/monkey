@@ -25,13 +25,13 @@
 #include <monkey/mk_cache.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_clock.h>
-#include <monkey/mk_signals.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_linuxtrace.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>
 
+#include <signal.h>
 #include <sys/syscall.h>
 
 struct mk_sched_worker *sched_list;
@@ -282,6 +282,16 @@ static int mk_sched_register_thread()
     sl->request_handler = NULL;
 
     return sl->idx;
+}
+
+static void mk_signal_thread_sigpipe_safe()
+{
+    sigset_t old;
+    sigset_t set;
+
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    pthread_sigmask(SIG_BLOCK, &set, &old);
 }
 
 /* created thread, all these calls are in the thread context */

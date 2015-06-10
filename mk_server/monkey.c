@@ -25,7 +25,7 @@
 #include <monkey/mk_clock.h>
 
 /* Initialize Monkey Server */
-struct mk_server_config *mk_init()
+struct mk_server_config *mk_server_init()
 {
     /* setup basic configurations */
     mk_config = mk_config_init();
@@ -47,6 +47,38 @@ struct mk_server_config *mk_init()
 #endif
 
     return mk_config;
+}
+
+int mk_server_setup()
+{
+    /* Core and Scheduler setup */
+    mk_config_start_configure();
+    mk_sched_init();
+
+    /* Clock init that must happen before starting threads */
+    mk_clock_sequential_init();
+
+    /* Load plugins */
+    mk_plugin_api_init();
+    mk_plugin_load_all();
+
+    /* Workers: logger and clock */
+    mk_utils_worker_spawn((void *) mk_clock_worker_init, NULL);
+
+    /* Init thread keys */
+    mk_thread_keys_init();
+
+    /* Configuration sanity check */
+    mk_config_sanity_check();
+
+    /* Invoke Plugin PRCTX hooks */
+    mk_plugin_core_process();
+
+    /* Launch monkey http workers */
+    MK_TLS_INIT();
+    mk_server_launch_workers();
+
+    return 0;
 }
 
 
@@ -77,7 +109,6 @@ void mk_exit_all()
         pthread_join(sched_list[i].tid, NULL);
     }
 
-    //FIXME: mk_utils_remove_pid();
     mk_plugin_exit_all();
     mk_config_free_all();
     mk_mem_free(sched_list);

@@ -4,7 +4,6 @@ set(src
   mk_vhost.c
   mk_header.c
   mk_config.c
-  mk_signals.c
   mk_user.c
   mk_utils.c
   mk_stream.c
