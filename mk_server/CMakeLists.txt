@@ -21,7 +21,14 @@ set(src
 # Always build a static library, thats our core :)
 add_library(monkey-core-static STATIC ${src})
 set_target_properties(monkey-core-static PROPERTIES OUTPUT_NAME monkey)
-target_link_libraries(monkey-core-static dl mk_core ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
+target_link_libraries(monkey-core-static mk_core ${CMAKE_THREAD_LIBS_INIT} ${STATIC_PLUGINS_LIBS})
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_link_libraries(monkey-core-static dl)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  target_link_libraries(monkey-core-static execinfo)
+endif()
 
 # Linux Kqueue emulation
 if(WITH_LINUX_KQUEUE)
