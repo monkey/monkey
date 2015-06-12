@@ -137,6 +137,9 @@ for arg in $*; do
         --static-lib-mode*)
             cmake_opts+="-DWITH_STATIC_LIB_MODE=1 "
             ;;
+        --skip-config*)
+            cmake_opts+="-DWITHOUT_CONF=1 "
+            ;;
 	--version*)
 	    echo -e $bldgrn"Monkey HTTP Server v$VERSION" $txtrst
 	    echo "Copyright 2001-2015, Eduardo Silva <eduardo@monkey.io>"
@@ -163,6 +166,7 @@ for arg in $*; do
 	    echo "  --pthread-tls           Use Posix thread keys instead of compiler TLS"
             echo "  --no-binary             Do not build binary"
             echo "  --static-lib-mode       Build static library mode"
+            echo "  --skip-config           Do not include configuration files"
 	    echo
 	    echo -e $bldwht"Installation Directories:" $txtrst
 	    echo "  --prefix=PREFIX         Root prefix directory"
