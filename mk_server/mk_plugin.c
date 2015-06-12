@@ -393,9 +393,9 @@ void mk_plugin_load_all()
 
     cnf = mk_rconf_create(path);
     if (!cnf) {
-        mk_err("Configuration error, aborting.");
+        mk_warn("No dynamic plugins loaded.");
         mk_mem_free(path);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     /* Read section 'PLUGINS' */
