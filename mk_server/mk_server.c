@@ -123,7 +123,7 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
 {
     int i = 0;
     int server_fd;
-    int reuse_port;
+    int reuse_port = MK_FALSE;
     struct mk_list *head;
     struct mk_list *listeners;
     struct mk_event *event;
