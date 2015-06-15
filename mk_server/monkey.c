@@ -131,7 +131,7 @@ void mk_exit_all()
     uint64_t val;
 
     /* Distribute worker signals to stop working */
-    val = MK_SCHEDULER_SIGNAL_FREE_ALL;
+    val = MK_SCHED_SIGNAL_FREE_ALL;
     for (i = 0; i < mk_config->workers; i++) {
         n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
         if (n < 0) {

@@ -1043,6 +1043,19 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
     return 0;
 }
 
+static inline void mk_http_request_ka_next(struct mk_http_session *cs)
+{
+    cs->body_length = 0;
+    cs->counter_connections++;
+
+    /* Update data for scheduler */
+    cs->init_time = log_current_utime;
+    cs->status = MK_REQUEST_STATUS_INCOMPLETE;
+
+    /* Initialize parser */
+    mk_http_parser_init(&cs->parser);
+}
+
 static inline int mk_http_request_end(struct mk_sched_conn *conn,
                                       struct mk_sched_worker *sched)
 {
@@ -1089,6 +1102,7 @@ static inline int mk_http_request_end(struct mk_sched_conn *conn,
     else {
         mk_http_request_free_list(cs);
         mk_http_request_ka_next(cs);
+        mk_sched_conn_timeout_add(conn, sched);
         return 0;
     }
 
@@ -1257,9 +1271,6 @@ void mk_http_session_remove(struct mk_http_session *cs)
     if (cs->body != cs->body_fixed) {
         mk_mem_free(cs->body);
     }
-    if (cs->status == MK_REQUEST_STATUS_INCOMPLETE) {
-        mk_list_del(&cs->request_incomplete);
-    }
     mk_http_request_free_list(cs);
     mk_list_del(&cs->request_list);
 
@@ -1296,7 +1307,6 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     cs->close_now = MK_FALSE;
     cs->socket = conn->event.fd;
     cs->status = MK_REQUEST_STATUS_INCOMPLETE;
-    mk_list_add(&cs->request_incomplete, cs_incomplete);
 
     /* Map the channel, just for protocol-handler internal stuff */
     cs->channel = &conn->channel;
@@ -1365,18 +1375,6 @@ void mk_http_request_free_list(struct mk_http_session *cs)
     }
 }
 
-void mk_http_request_ka_next(struct mk_http_session *cs)
-{
-    cs->body_length = 0;
-    cs->counter_connections++;
-
-    /* Update data for scheduler */
-    cs->init_time = log_current_utime;
-    cs->status = MK_REQUEST_STATUS_INCOMPLETE;
-    mk_list_add(&cs->request_incomplete, cs_incomplete);
-    mk_http_parser_init(&cs->parser);
-}
-
 /*
  * Lookup a known header or a non-known header. For unknown headers
  * set the 'key' value wth a lowercase string
@@ -1415,7 +1413,6 @@ struct mk_http_header *mk_http_header_get(int name, struct mk_http_request *req,
 /*
  * Main callbacks for the Scheduler
  */
-
 int mk_http_sched_read(struct mk_sched_conn *conn,
                        struct mk_sched_worker *worker)
 {
@@ -1453,7 +1450,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                                 cs->body, cs->body_length);
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
-            mk_http_status_completed(cs);
+            mk_http_status_completed(cs, conn);
             mk_http_request_prepare(cs, sr);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
@@ -1474,20 +1471,20 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
 }
 
 int mk_http_sched_close(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *worker,
+                        struct mk_sched_worker *sched,
                         int type)
 {
     struct mk_http_session *cs;
-    (void) worker;
+    (void) sched;
 
 #ifdef TRACE
     MK_TRACE("[FD %i] HTTP sched close (type=%i)", conn->event.fd, type);
 #else
     (void) type;
 #endif
-
     cs = mk_http_session_get(conn);
     mk_http_session_remove(cs);
+
     return 0;
 }
 

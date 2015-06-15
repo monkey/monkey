@@ -673,7 +673,7 @@ int mk_plugin_sched_remove_client(int socket)
         return -1;
     }
 
-    return mk_sched_remove_client(sched, conn);
+    return mk_sched_remove_client(conn, sched);
 }
 
 int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
