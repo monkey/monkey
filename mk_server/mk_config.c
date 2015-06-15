@@ -168,7 +168,7 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
     char *address = NULL;
     char *port = NULL;
     char *divider;
-    struct mk_list *list;
+    struct mk_list *list = NULL;
     struct mk_list *cur;
     struct mk_string_line *listener;
     struct mk_rconf_entry *entry;
@@ -246,8 +246,15 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
     }
 
 error:
-    if (address) mk_mem_free(address);
-    if (port) mk_mem_free(port);
+    if (address) {
+        mk_mem_free(address);
+    }
+    if (port) {
+        mk_mem_free(port);
+    }
+    if (list) {
+        mk_string_split_free(list);
+    }
 
 
     if (mk_list_is_empty(&mk_config->listeners) == 0) {
