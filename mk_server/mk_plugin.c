@@ -136,6 +136,10 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         plugin->load_type = MK_PLUGIN_STATIC;
     }
 
+    if (!plugin) {
+        return NULL;
+    }
+
     /* Validate all callbacks are set */
     if (!plugin->shortname || !plugin->name || !plugin->version ||
         !plugin->init_plugin || !plugin->exit_plugin) {
