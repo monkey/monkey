@@ -680,6 +680,7 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
 #if defined (__linux__)
 static inline void mk_http_cb_file_on_consume(struct mk_stream *stream, long bytes)
 {
+    int ret;
     (void) bytes;
 
     /*
@@ -687,7 +688,10 @@ static inline void mk_http_cb_file_on_consume(struct mk_stream *stream, long byt
      * the TCP Cork. We do this just overriding the callback for
      * the file stream.
      */
-    mk_server_cork_flag(stream->channel->fd, TCP_CORK_OFF);
+    ret = mk_server_cork_flag(stream->channel->fd, TCP_CORK_OFF);
+    if (ret == -1) {
+        mk_warn("Could not set TCP_CORK/TCP_NOPUSH off");
+    }
     stream->cb_bytes_consumed = NULL;
 }
 #endif
