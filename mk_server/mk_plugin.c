@@ -171,7 +171,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         }
         if (stage->stage40) {
             st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
-            st->stage40 = stage->stage20;
+            st->stage40 = stage->stage40;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage40_handler);
         }
