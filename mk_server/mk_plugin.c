@@ -124,6 +124,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         plugin  = mk_plugin_load_symbol(handler, symbol);
         if (!plugin) {
             mk_warn("Plugin '%s' is not registering properly", path);
+            dlclose(handler);
             return NULL;
         }
         plugin->load_type = MK_PLUGIN_DYNAMIC;
