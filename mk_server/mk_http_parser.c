@@ -385,7 +385,6 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     }
                     request_set(&req->uri, p, buffer);
                     parse_next();
-                    continue;
                 }
                 else if (buffer[i] == '?') {
                     mark_end();
