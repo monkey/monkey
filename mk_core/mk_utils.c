@@ -347,6 +347,7 @@ int mk_utils_register_pid(char *path)
         exit(EXIT_FAILURE);
     }
 
+    close(fd);
     return 0;
 }
 
