@@ -318,11 +318,6 @@ void mk_plugin_api_init()
     api->sched_remove_client  = mk_plugin_sched_remove_client;
     api->sched_worker_info    = mk_plugin_sched_get_thread_conf;
 
-    //api->event_add = mk_plugin_event_add;
-    //api->event_del = mk_plugin_event_del;
-    //api->event_get = mk_plugin_event_get;
-    //api->event_socket_change_mode = mk_plugin_event_socket_change_mode;
-
     /* Worker functions */
     api->worker_spawn = mk_utils_worker_spawn;
     api->worker_rename = mk_utils_worker_rename;
