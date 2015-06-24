@@ -286,19 +286,19 @@ static void str_to_regex(char *str, regex_t *reg)
     }
 }
 
-static int cgi_link_matches(struct mk_config_section *section, struct mk_list *list)
+static int cgi_link_matches(struct mk_rconf_section *section, struct mk_list *list)
 {
     int i;
     int n = 0;
     struct mk_list *head;
     struct mk_list *line;
     struct mk_list *head_match;
-    struct mk_config_entry *entry;
+    struct mk_rconf_entry *entry;
     struct mk_string_line *entry_match;
     struct cgi_match_t *match_line = NULL;
 
     mk_list_foreach(head, &section->entries) {
-        entry = mk_list_entry(head, struct mk_config_entry, _head);
+        entry = mk_list_entry(head, struct mk_rconf_entry, _head);
         if (strncasecmp(entry->key, "Match", strlen(entry->key)) == 0) {
             line = mk_api->str_split_line(entry->val);
             if (!line) {
@@ -352,8 +352,8 @@ static void cgi_read_config(const char * const path)
 {
     char *file = NULL;
     unsigned long len;
-    struct mk_config *conf;
-    struct mk_config_section *section;
+    struct mk_rconf *conf;
+    struct mk_rconf_section *section;
 
     mk_api->str_build(&file, &len, "%scgi.conf", path);
     conf = mk_api->config_create(file);
