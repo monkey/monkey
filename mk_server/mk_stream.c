@@ -77,6 +77,27 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
     return bytes;
 }
 
+static inline void mk_copybuf_consume(struct mk_stream *stream, size_t bytes)
+{
+    /*
+     * Copybuf is a dynamic buffer allocated when the stream was configured,
+     * if the number of bytes consumed is equal to the total size, the buffer
+     * can be freed, otherwise we need to adjust the buffer for the next
+     * round of 'write'.
+     *
+     * Note: we don't touch the stream->bytes_total field as this is adjusted
+     * on the caller mk_channel_write().
+     */
+    if (bytes == stream->bytes_total) {
+        mk_mem_free(stream->buffer);
+    }
+    else {
+        memmove(stream->buffer,
+                stream->buffer + bytes,
+                stream->bytes_total - bytes);
+    }
+}
+
 int mk_channel_write(struct mk_channel *channel, size_t *count)
 {
     ssize_t bytes = -1;
@@ -119,6 +140,16 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             bytes = mk_sched_conn_write(channel, ptr->data, ptr->len);
             if (bytes > 0) {
                 /* FIXME OFFSET */
+            }
+        }
+        else if (stream->type == MK_STREAM_COPYBUF) {
+            MK_TRACE("[CH %i] STREAM_COPYBUF, bytes=%lu",
+                     channel->fd, stream->bytes_total);
+            bytes = mk_sched_conn_write(channel,
+                                        stream->buffer, stream->bytes_total);
+            printf("WROTE %i bytes\n", bytes);
+            if (bytes > 0) {
+                mk_copybuf_consume(stream, bytes);
             }
         }
 
