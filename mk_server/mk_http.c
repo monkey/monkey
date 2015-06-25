@@ -275,6 +275,10 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     int total_bytes = 0;
     char *tmp = 0;
 
+#ifdef TRACE
+    int socket = conn->event.fd;
+#endif
+
     MK_TRACE("MAX REQUEST SIZE: %i", mk_config->max_request_size);
 
  try_pending:
@@ -299,11 +303,11 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
             MK_TRACE("[FD %i] New size: %i, length: %i",
-                     cs->socket, new_size, cs->body_length);
+                     socket, new_size, cs->body_length);
         }
         else {
             MK_TRACE("[FD %i] Realloc from %i to %i",
-                     cs->socket, cs->body_size, new_size);
+                     socket, cs->body_size, new_size);
             tmp = mk_mem_realloc(cs->body, new_size + 1);
             if (tmp) {
                 cs->body = tmp;
@@ -334,7 +338,7 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     if (bytes > 0) {
         if (bytes > max_read) {
             MK_TRACE("[FD %i] Buffer still have data: %i",
-                     cs->socket, bytes - max_read);
+                     socket, bytes - max_read);
 
             cs->body_length += max_read;
             cs->body[cs->body_length] = '\0';
@@ -350,7 +354,7 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
         }
 
         MK_TRACE("[FD %i] Retry total bytes: %i",
-                 cs->socket, total_bytes);
+                 socket, total_bytes);
         return total_bytes;
     }
 
@@ -1426,6 +1430,10 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
     (void) worker;
     struct mk_http_session *cs;
     struct mk_http_request *sr;
+
+#ifdef TRACE
+    int socket = conn->event.fd;
+#endif
 
     cs = mk_http_session_get(conn);
     if (cs->_sched_init == MK_FALSE) {
