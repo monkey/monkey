@@ -125,6 +125,17 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
     mk_ptr_t *ptr;
     struct mk_iov *iov;
 
+    /*
+     * The copybuf stream type it's a lazy stream mechanism on which the
+     * stream it self and the buffer are allocated dynamically. It just
+     * exists as an optional interface that do not care too much about
+     * performance and aim to make things easier. The COPYBUF type is not
+     * used by Monkey core, at the moment the only caller is the CGI plugin.
+     */
+    if (!stream && type == MK_STREAM_COPYBUF) {
+        stream = mk_mem_malloc(sizeof(struct mk_stream));
+    }
+
     stream->type         = type;
     stream->channel      = channel;
     stream->bytes_offset = 0;
@@ -143,7 +154,7 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
     else if (type == MK_STREAM_COPYBUF) {
         stream->buffer = mk_mem_malloc(size);
         stream->bytes_total = size;
-        memcpy(stream->buffer, data, size);
+        memcpy(stream->buffer, buffer, size);
     }
     else {
         stream->bytes_total = size;
@@ -180,10 +191,12 @@ static inline void mk_stream_bytes_consumed(struct mk_stream *stream, long bytes
     else if (stream->type == MK_STREAM_SOCKET) {
         fmt = "[STREAM_SOCK %p] bytes consumed %lu/%lu";
     }
+    else if (stream->type == MK_STREAM_COPYBUF) {
+        fmt = "[STREAM_CBUF %p] bytes consumed %lu/%lu";
+    }
     else {
         fmt = "[STREAM_UNKW %p] bytes consumed %lu/%lu";
     }
-
     MK_TRACE(fmt, stream, stream->bytes_total, bytes);
 #endif
 
@@ -201,19 +214,22 @@ static inline void mk_channel_debug(struct mk_channel *channel)
         stream = mk_list_entry(head, struct mk_stream, _head);
         switch (stream->type) {
         case MK_STREAM_RAW:
-            printf("%i) [%p] STREAM RAW   : ", i, stream);
+            printf("%i) [%p] STREAM RAW    : ", i, stream);
             break;
         case MK_STREAM_IOV:
-            printf("%i) [%p] STREAM IOV   : ", i, stream);
+            printf("%i) [%p] STREAM IOV    : ", i, stream);
             break;
         case MK_STREAM_PTR:
-            printf("%i) [%p] STREAM PTR   : ", i, stream);
+            printf("%i) [%p] STREAM PTR    : ", i, stream);
             break;
         case MK_STREAM_FILE:
-            printf("%i) [%p] STREAM FILE  : ", i, stream);
+            printf("%i) [%p] STREAM FILE   : ", i, stream);
             break;
         case MK_STREAM_SOCKET:
-            printf("%i) [%p] STREAM SOCKET: ", i, stream);
+            printf("%i) [%p] STREAM SOCKET : ", i, stream);
+            break;
+        case MK_STREAM_COPYBUF:
+            printf("%i) [%p] STREAM COPYBUF: ", i, stream);
             break;
         }
 #if defined(__APPLE__)
