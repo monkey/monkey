@@ -61,6 +61,7 @@ struct mk_channel {
     int type;
     int fd;
     int status;
+    struct mk_event event;
     struct mk_plugin_network *io;
     struct mk_list streams;
 };
@@ -247,6 +248,8 @@ struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
                            void (*cb_bytes_consumed) (struct mk_stream *, long),
                            void (*cb_exception) (struct mk_stream *, int));
 struct mk_channel *mk_channel_new(int type, int fd);
+
+int mk_channel_flush(struct mk_channel *channel);
 int mk_channel_write(struct mk_channel *channel, size_t *count);
 
 #endif

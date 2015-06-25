@@ -98,6 +98,39 @@ static inline void mk_copybuf_consume(struct mk_stream *stream, size_t bytes)
     }
 }
 
+/*
+ * It 'intent' to write a few streams over the channel and alter the
+ * channel notification side if required: READ -> WRITE.
+ */
+int mk_channel_flush(struct mk_channel *channel)
+{
+    int ret = 0;
+    size_t count;
+    size_t total = 0;
+
+    do {
+        ret = mk_channel_write(channel, &count);
+        total += count;
+    } while (total <= 4096 && //sched->mem_pagesize &&
+             (ret & ~(MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY)));
+
+    if (ret == MK_CHANNEL_DONE) {
+        return ret;
+    }
+    else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
+        if (channel->event.mask & ~MK_EVENT_WRITE) {
+            mk_event_add(mk_sched_loop(),
+                         channel->event.fd,
+                         MK_EVENT_CONNECTION,
+                         MK_EVENT_WRITE,
+                         (void *) &channel->event);
+        }
+    }
+
+    return ret;
+}
+
+/* It perform a direct stream I/O write through the network layer */
 int mk_channel_write(struct mk_channel *channel, size_t *count)
 {
     ssize_t bytes = -1;
@@ -147,7 +180,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                      channel->fd, stream->bytes_total);
             bytes = mk_sched_conn_write(channel,
                                         stream->buffer, stream->bytes_total);
-            printf("WROTE %i bytes\n", bytes);
             if (bytes > 0) {
                 mk_copybuf_consume(stream, bytes);
             }
