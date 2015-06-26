@@ -2,7 +2,8 @@
 
 /*  Monkey HTTP Server
  *  ==================
- *  Copyright (C) 2012, Lauri Kasanen
+ *  Copyright 2001-2015 Monkey Software LLC <eduardo@monkey.io>
+ *  Copyright (C) 2012-2013, Lauri Kasanen
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,18 +20,19 @@
 
 #include "cgi.h"
 
-/* Get the earliest break between headers and content.
+/*
+ * The reason for this function is that some CGI apps
+ *
+ *	use LFLF and some use CRLFCRLF.
+ *
+ * 	If that app then sends content that has the other break
+ *	in the beginning, monkey can accidentally send part of the
+ *	content as headers.
+ */
 
-   The reason for this function is that some CGI apps
-   use LFLF and some use CRLFCRLF.
-
-   If that app then sends content that has the other break
-   in the beginning, monkey can accidentally send part of the
-   content as headers.
-*/
 static char *getearliestbreak(const char buf[], const unsigned bufsize,
-				unsigned char * const advance) {
-
+                              unsigned char * const advance)
+															{
     char * const crend = memmem(buf, bufsize, MK_IOV_CRLFCRLF,
 				sizeof(MK_IOV_CRLFCRLF) - 1);
     char * const lfend = memmem(buf, bufsize, MK_IOV_LFLF,
@@ -55,6 +57,17 @@ static char *getearliestbreak(const char buf[], const unsigned bufsize,
     return crend;
 }
 
+static void cgi_kill(struct cgi_request *r)
+{
+    kill(r->child, SIGKILL);
+    mk_api->ev_del(mk_api->sched_loop(), (struct mk_event *) r);
+    requests_by_socket[r->socket] = NULL;
+    mk_api->http_session_end(r->cs);
+    //mk_api->socket_close(r->fd);
+    cgi_req_del(r);
+
+}
+
 static void cgi_done(struct cgi_request *r)
 {
     mk_api->ev_del(mk_api->sched_loop(), (struct mk_event *) r);
@@ -62,11 +75,12 @@ static void cgi_done(struct cgi_request *r)
         channel_write(r->sr->session, "0\r\n\r\n", 5);
     }
 
-    /* XXX Fixme: this needs to be atomic */
+    /* FIXME: this needs to be atomic */
     requests_by_socket[r->socket] = NULL;
 
     /* Note: Must make sure we ignore the close event caused by this line */
     mk_api->http_session_end(r->cs);
+
     //mk_api->socket_close(r->fd);
     cgi_req_del(r);
 }
@@ -121,8 +135,7 @@ int process_cgi_data(struct cgi_request *r)
         /* Write the rest of the headers without chunking */
         end = getearliestbreak(outptr, r->in_len, &advance);
         if (!end) {
-            channel_write(r->cs, outptr, r->in_len);
-            r->in_len = 0;
+            /* Let's return until we have the headers break */
             return MK_PLUGIN_RET_EVENT_OWNED;
         }
         end += advance;
@@ -149,7 +162,6 @@ int process_cgi_data(struct cgi_request *r)
     if (ret < 0) {
         return MK_PLUGIN_RET_EVENT_CLOSE;
     }
-
     r->in_len = 0;
     if (r->chunked) {
         channel_write(r->sr->session, MK_CRLF, 2);
@@ -162,14 +174,19 @@ int cb_cgi_read(void *data)
     int n;
     struct cgi_request *r = data;
 
+    if ((BUFLEN - r->in_len) < 1) {
+        cgi_kill(r);
+        return -1;
+    }
+
     /* Read data from the CGI process */
-    n = read(r->fd, r->in_buf, BUFLEN);
+    n = read(r->fd, r->in_buf + r->in_len, BUFLEN - r->in_len);
     PLUGIN_TRACE("CGI returned %lu bytes", n);
     if (n <= 0) {
         cgi_done(r);
         return MK_PLUGIN_RET_EVENT_CLOSE;
     }
-    r->in_len = n;
+    r->in_len += n;
 
     process_cgi_data(r);
     return 0;

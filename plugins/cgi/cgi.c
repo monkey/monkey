@@ -262,6 +262,7 @@ static int do_cgi(const char *const __restrict__ file,
     if (!r) {
         return 403;
     }
+    r->child = pid;
 
     if (r->sr->protocol >= MK_HTTP_PROTOCOL_11 &&
         (r->sr->headers.status < MK_REDIR_MULTIPLE ||
