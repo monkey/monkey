@@ -74,9 +74,9 @@ struct cgi_request {
 
     unsigned int in_len;
 
-    int   fd;			/* From the CGI app */
-    int   socket;
-    pid_t child;        /* child process */
+    int   fd;			/* Pipe the CGI proc */
+    int   socket;       /* Client connection */
+    pid_t child;        /* child process ID  */
     unsigned char status_done;
     unsigned char all_headers_done;
     unsigned char chunked;
