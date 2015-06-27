@@ -22,6 +22,8 @@
 
 #include <monkey/mk_stream.h>
 
+#define MK_HEADER_ETAG_SIZE   32
+
 struct response_headers
 {
     int status;
@@ -54,6 +56,9 @@ struct response_headers
     mk_ptr_t content_type;
     mk_ptr_t content_encoding;
     char *location;
+
+    int  etag_len;
+    char etag_buf[MK_HEADER_ETAG_SIZE];
 
     /*
      * This field allow plugins to add their own response

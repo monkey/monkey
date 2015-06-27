@@ -915,7 +915,13 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         return mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
+    /* Configure some headers */
     sr->headers.last_modified = sr->file_info.last_modification;
+    sr->headers.etag_len = snprintf(sr->headers.etag_buf,
+                                    MK_HEADER_ETAG_SIZE,
+                                    "ETag: \"%x-%zx\"\r\n",
+                                    (unsigned int) sr->file_info.last_modification,
+                                    sr->file_info.size);
 
     if (sr->if_modified_since.data && sr->method == MK_METHOD_GET) {
         time_t date_client;       /* Date sent by client */
