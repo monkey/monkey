@@ -1070,24 +1070,15 @@ static inline void mk_http_request_ka_next(struct mk_http_session *cs)
     mk_http_parser_init(&cs->parser);
 }
 
-static inline int mk_http_request_end(struct mk_sched_conn *conn,
-                                      struct mk_sched_worker *sched)
+int mk_http_request_end(struct mk_http_session *cs)
 {
-    struct mk_http_session *cs;
     struct mk_http_request *sr;
-    (void) sched;
-
-    cs = mk_http_session_get(conn);
-    if (!cs) {
-        MK_TRACE("[FD %i] Not found", conn->event.fd);
-        return -1;
-    }
 
     /* Check if we have some enqueued pipeline requests */
     if (cs->pipelined == MK_TRUE) {
         sr =  mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
         MK_TRACE("[FD %i] Pipeline finishing %p",
-                 conn->event.fd, sr);
+                 cs->conn->event.fd, sr);
 
         /* Remove node and release resources */
         mk_list_del(&sr->_head);
@@ -1096,7 +1087,7 @@ static inline int mk_http_request_end(struct mk_sched_conn *conn,
         if (mk_list_is_empty(&cs->request_list) != 0) {
 #ifdef TRACE
             sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
-            MK_TRACE("[FD %i] Pipeline next is %p", conn->event.fd, sr);
+            MK_TRACE("[FD %i] Pipeline next is %p", cs->conn->event.fd, sr);
 #endif
             return 0;
         }
@@ -1109,14 +1100,14 @@ static inline int mk_http_request_end(struct mk_sched_conn *conn,
      * close it.
      */
     if (cs->close_now == MK_TRUE) {
-        MK_TRACE("[FD %i] No KeepAlive mode, remove", conn->event.fd);
+        MK_TRACE("[FD %i] No KeepAlive mode, remove", cs->conn->event.fd);
         mk_http_session_remove(cs);
         return -1;
     }
     else {
         mk_http_request_free_list(cs);
         mk_http_request_ka_next(cs);
-        mk_sched_conn_timeout_add(conn, sched);
+        mk_sched_conn_timeout_add(cs->conn, mk_sched_get_thread_conf());
         return 0;
     }
 
@@ -1325,6 +1316,9 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
     /* Map the channel, just for protocol-handler internal stuff */
     cs->channel = &conn->channel;
 
+    /* Map the connection instance, required to handle exceptions */
+    cs->conn = conn;
+
     /* creation time in unix time */
     cs->init_time = conn->arrive_time;
 
@@ -1377,7 +1371,6 @@ void mk_http_request_free_list(struct mk_http_session *cs)
 
     /* sr = last node */
     MK_TRACE("[FD %i] Free struct client_session", cs->socket);
-
     mk_list_foreach_safe(sr_head, temp, &cs->request_list) {
         sr_node = mk_list_entry(sr_head, struct mk_http_request, _head);
         mk_list_del(sr_head);
@@ -1509,7 +1502,11 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
 int mk_http_sched_done(struct mk_sched_conn *conn,
                        struct mk_sched_worker *worker)
 {
-    return mk_http_request_end(conn, worker);
+    (void) worker;
+    struct mk_http_session *cs;
+
+    cs = mk_http_session_get(conn);
+    return mk_http_request_end(cs);
 }
 
 struct mk_sched_handler mk_http_handler = {

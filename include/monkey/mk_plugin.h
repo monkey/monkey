@@ -107,7 +107,7 @@ struct plugin_api
     void (*_error) (int, const char *, ...) PRINTF_WARNINGS(2,3);
 
     /* HTTP request function */
-    int   (*http_session_end) (struct mk_http_session *session);
+    int   (*http_request_end) (struct mk_http_session *cs, int close);
     int   (*http_request_error) (int, struct mk_http_session *, struct mk_http_request *);
 
     /* memory functions */
@@ -321,7 +321,7 @@ int mk_plugin_event_socket_change_mode(int socket, int mode, unsigned int behavi
 struct mk_plugin *mk_plugin_load(int type, const char *shortname,
                                  void *data);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
-int mk_plugin_http_session_end(struct mk_http_session *cs);
+int mk_plugin_http_request_end(struct mk_http_session *cs, int close);
 
 /* Register functions */
 struct plugin *mk_plugin_register(struct plugin *p);
