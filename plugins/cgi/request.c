@@ -31,7 +31,7 @@ struct cgi_request *cgi_req_create(int fd, int socket,
     newcgi->socket = socket;
     newcgi->sr = sr;
     newcgi->cs = cs;
-
+    newcgi->hangup = MK_TRUE;
     return newcgi;
 }
 

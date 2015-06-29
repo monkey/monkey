@@ -270,6 +270,7 @@ static int do_cgi(const char *const __restrict__ file,
     {
         r->sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
         r->chunked = 1;
+        r->hangup  = MK_FALSE;
     }
 
     /* Register the 'request' context */

@@ -76,6 +76,7 @@ struct cgi_request {
 
     int   fd;			/* Pipe the CGI proc */
     int   socket;       /* Client connection */
+    int   hangup;       /* Should close connection when done ? */
     pid_t child;        /* child process ID  */
     unsigned char status_done;
     unsigned char all_headers_done;

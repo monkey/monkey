@@ -62,7 +62,7 @@ static void cgi_kill(struct cgi_request *r)
     kill(r->child, SIGKILL);
     mk_api->ev_del(mk_api->sched_loop(), (struct mk_event *) r);
     requests_by_socket[r->socket] = NULL;
-    mk_api->http_session_end(r->cs);
+    mk_api->http_request_end(r->cs, r->hangup);
     close(r->fd);
     cgi_req_del(r);
 }
@@ -78,7 +78,7 @@ static void cgi_done(struct cgi_request *r)
     requests_by_socket[r->socket] = NULL;
 
     /* Note: Must make sure we ignore the close event caused by this line */
-    mk_api->http_session_end(r->cs);
+    mk_api->http_request_end(r->cs, r->hangup);
 
     close(r->fd);
     cgi_req_del(r);
