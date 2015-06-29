@@ -264,13 +264,23 @@ static int do_cgi(const char *const __restrict__ file,
     }
     r->child = pid;
 
+    /*
+     * Hang up?: by default Monkey assumes the CGI scripts generate
+     * content dynamically (no Content-Length header), so for such HTTP/1.0
+     * clients we should close the connection as KeepAlive is not supported
+     * by specification, only on HTTP/1.1 where the Chunked Transfer encoding
+     * exists.
+     */
+    if (r->sr->protocol >= MK_HTTP_PROTOCOL_11) {
+        r->hangup = MK_FALSE;
+    }
+
+    /* Set transfer encoding */
     if (r->sr->protocol >= MK_HTTP_PROTOCOL_11 &&
         (r->sr->headers.status < MK_REDIR_MULTIPLE ||
-         r->sr->headers.status > MK_REDIR_USE_PROXY))
-    {
+         r->sr->headers.status > MK_REDIR_USE_PROXY)) {
         r->sr->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
         r->chunked = 1;
-        r->hangup  = MK_FALSE;
     }
 
     /* Register the 'request' context */
