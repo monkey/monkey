@@ -325,40 +325,28 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     bytes = mk_sched_conn_read(conn, cs->body + cs->body_length, max_read);
 
     MK_TRACE("[FD %i] read %i", socket, bytes);
-
-    if (bytes < 0) {
-        mk_http_session_remove(cs);
+    if (bytes <= 0) {
         return -1;
     }
 
-    if (bytes == 0) {
-        return -1;
+    if (bytes > max_read) {
+        MK_TRACE("[FD %i] Buffer still have data: %i",
+                 socket, bytes - max_read);
+        cs->body_length += max_read;
+        cs->body[cs->body_length] = '\0';
+        total_bytes += max_read;
+
+        goto try_pending;
+    }
+    else {
+        cs->body_length += bytes;
+        cs->body[cs->body_length] = '\0';
+
+        total_bytes += bytes;
     }
 
-    if (bytes > 0) {
-        if (bytes > max_read) {
-            MK_TRACE("[FD %i] Buffer still have data: %i",
-                     socket, bytes - max_read);
-
-            cs->body_length += max_read;
-            cs->body[cs->body_length] = '\0';
-            total_bytes += max_read;
-
-            goto try_pending;
-        }
-        else {
-            cs->body_length += bytes;
-            cs->body[cs->body_length] = '\0';
-
-            total_bytes += bytes;
-        }
-
-        MK_TRACE("[FD %i] Retry total bytes: %i",
-                 socket, total_bytes);
-        return total_bytes;
-    }
-
-    return bytes;
+    MK_TRACE("[FD %i] Retry total bytes: %i", socket, total_bytes);
+    return total_bytes;
 }
 
 /* Build error page */
@@ -704,6 +692,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
     struct mimetype *mime;
+    struct mk_plugin *handler = NULL;
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
@@ -764,7 +753,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
          * check if some plugin would like to handle it
          */
         MK_TRACE("No file, look for handler plugin");
-        ret = mk_plugin_stage_run_30(cs, sr);
+        ret = mk_plugin_stage_run_30(cs, sr, &handler);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
             if (sr->headers.status > 0) {
                 return mk_http_error(sr->headers.status, cs, sr);
@@ -842,10 +831,11 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
-        ret = mk_plugin_stage_run_30(cs, sr);
+        ret = mk_plugin_stage_run_30(cs, sr, &handler);
         MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
         switch (ret) {
         case MK_PLUGIN_RET_CONTINUE:
+            sr->stage30_handler = handler;
             return MK_PLUGIN_RET_CONTINUE;
         case MK_PLUGIN_RET_CLOSE_CONX:
             if (sr->headers.status > 0) {
@@ -1086,7 +1076,8 @@ int mk_http_request_end(struct mk_http_session *cs)
 
         if (mk_list_is_empty(&cs->request_list) != 0) {
 #ifdef TRACE
-            sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
+            sr = mk_list_entry_first(&cs->request_list,
+                                     struct mk_http_request, _head);
             MK_TRACE("[FD %i] Pipeline next is %p", cs->conn->event.fd, sr);
 #endif
             return 0;
@@ -1267,10 +1258,24 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
  */
 void mk_http_session_remove(struct mk_http_session *cs)
 {
-    MK_TRACE("[FD %i] HTTP Session remove", cs->socket);
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_plugin *handler;
+    struct mk_http_request *sr;
 
+    MK_TRACE("[FD %i] HTTP Session remove", cs->socket);
     if (cs->_sched_init == MK_FALSE) {
         return;
+    }
+
+    /* On session remove, make sure to cleanup any handler */
+    mk_list_foreach_safe(head, tmp, &cs->request_list) {
+        sr = mk_list_entry(head, struct mk_http_request, _head);
+        if (sr->stage30_handler) {
+            MK_TRACE("Hangup stage30 handler");
+            handler = sr->stage30_handler;
+            handler->stage->stage30_hangup(handler, cs, sr);
+        }
     }
 
     if (cs->body != cs->body_fixed) {
@@ -1481,6 +1486,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
     return ret;
 }
 
+/* The scheduler got a connection close event from the remote client */
 int mk_http_sched_close(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched,
                         int type)
@@ -1493,9 +1499,10 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
 #else
     (void) type;
 #endif
+
+    /* Release resources of the requests and session */
     cs = mk_http_session_get(conn);
     mk_http_session_remove(cs);
-
     return 0;
 }
 

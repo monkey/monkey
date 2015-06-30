@@ -243,20 +243,7 @@ struct mk_plugin_event
     struct mk_plugin *handler;    /* plugin owner/handler */
 };
 
-struct mk_plugin_stage {
-    int (*stage10) (int);
-    int (*stage20) (struct mk_http_session *, struct mk_http_request *);
-    int (*stage30) (struct mk_plugin *, struct mk_http_session *,
-                    struct mk_http_request *);
-    int (*stage40) (struct mk_http_session *, struct mk_http_request *);
-    int (*stage50) (int);
-
-    /* Just a reference to the parent plugin */
-    struct mk_plugin *plugin;
-
-    /* Only used when doing direct mapping from config->stageN_handler; */
-    struct mk_list _head;
-};
+struct mk_plugin_stage;
 
 /* Info: used to register a plugin */
 struct mk_plugin {
@@ -289,6 +276,23 @@ struct mk_plugin {
 
     /* Load type: MK_PLUGIN_STATIC / MK_PLUGIN_DYNAMIC */
     int load_type;
+};
+
+struct mk_plugin_stage {
+    int (*stage10) (int);
+    int (*stage20) (struct mk_http_session *, struct mk_http_request *);
+    int (*stage30) (struct mk_plugin *, struct mk_http_session *,
+                    struct mk_http_request *);
+    int (*stage30_hangup) (struct mk_plugin *, struct mk_http_session *,
+                           struct mk_http_request *);
+    int (*stage40) (struct mk_http_session *, struct mk_http_request *);
+    int (*stage50) (int);
+
+    /* Just a reference to the parent plugin */
+    struct mk_plugin *plugin;
+
+    /* Only used when doing direct mapping from config->stageN_handler; */
+    struct mk_list _head;
 };
 
 

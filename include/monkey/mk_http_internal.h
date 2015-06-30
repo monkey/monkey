@@ -145,6 +145,13 @@ struct mk_http_request
      */
     int stage30_blocked;
 
+    /*
+     * If the connection is being managed by a plugin (e.g: CGI), associate the
+     * plugin reference to the stage30_handler field. This is useful to handle
+     * protocol exception and notify the handlers about it.
+     */
+    void *stage30_handler;
+
     /* Static file information */
     struct file_info file_info;
 
