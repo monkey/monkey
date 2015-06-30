@@ -57,33 +57,6 @@ static char *getearliestbreak(const char buf[], const unsigned bufsize,
     return crend;
 }
 
-static void cgi_kill(struct cgi_request *r)
-{
-    kill(r->child, SIGKILL);
-    mk_api->ev_del(mk_api->sched_loop(), (struct mk_event *) r);
-    requests_by_socket[r->socket] = NULL;
-    mk_api->http_request_end(r->cs, r->hangup);
-    close(r->fd);
-    cgi_req_del(r);
-}
-
-static void cgi_done(struct cgi_request *r)
-{
-    mk_api->ev_del(mk_api->sched_loop(), (struct mk_event *) r);
-    if (r->chunked) {
-        channel_write(r->sr->session, "0\r\n\r\n", 5);
-    }
-
-    /* FIXME: this needs to be atomic */
-    requests_by_socket[r->socket] = NULL;
-
-    /* Note: Must make sure we ignore the close event caused by this line */
-    mk_api->http_request_end(r->cs, r->hangup);
-
-    close(r->fd);
-    cgi_req_del(r);
-}
-
 int process_cgi_data(struct cgi_request *r)
 {
     int ret;
@@ -174,15 +147,23 @@ int cb_cgi_read(void *data)
     struct cgi_request *r = data;
 
     if ((BUFLEN - r->in_len) < 1) {
-        cgi_kill(r);
+        PLUGIN_TRACE("CLOSE BY SIZE");
+        cgi_finish(r);
         return -1;
     }
 
     /* Read data from the CGI process */
+    if (r->active == MK_FALSE) {
+        cgi_finish(r);
+        return -1;
+    }
+
     n = read(r->fd, r->in_buf + r->in_len, BUFLEN - r->in_len);
-    PLUGIN_TRACE("CGI returned %lu bytes", n);
+    PLUGIN_TRACE("CGI returned %d bytes (parent CS_FD=%i)", n,
+                 r->cs->socket);
     if (n <= 0) {
-        cgi_done(r);
+        /* It most of cases this means the child process finished */
+        cgi_finish(r);
         return MK_PLUGIN_RET_EVENT_CLOSE;
     }
     r->in_len += n;
