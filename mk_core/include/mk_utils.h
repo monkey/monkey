@@ -77,7 +77,7 @@ static inline void mk_utils_libc_error(char *caller, char *file, int line)
     mk_err("%s: %s, errno=%i at %s:%i", caller, buf, _err, file, line);
 }
 
-static inline void mk_utils_libc_warning(char *caller, char *file, int line)
+static inline void mk_utils_libc_warn(char *caller, char *file, int line)
 {
     MK_UTILS_LIBC_ERRNO_BUFFER();
     mk_warn("%s: %s, errno=%i at %s:%i", caller, buf, _err, file, line);
