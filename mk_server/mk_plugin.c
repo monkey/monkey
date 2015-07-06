@@ -570,7 +570,7 @@ int mk_plugin_http_request_end(struct mk_http_session *cs, int close)
     MK_TRACE("[FD %i] HTTP session end = %i", cs->socket, ret);
     if (ret < 0) {
         con = mk_sched_event_close(cs->conn, mk_sched_get_thread_conf(),
-                                   MK_EP_SOCKET_CLOSED);
+                                   MK_EP_SOCKET_DONE);
         if (con != 0) {
             return con;
         }
