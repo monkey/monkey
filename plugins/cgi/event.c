@@ -148,7 +148,6 @@ int cb_cgi_read(void *data)
     struct cgi_request *r = data;
 
     if (r->active == MK_FALSE) {
-        cgi_finish(r);
         return -1;
     }
 

@@ -56,6 +56,12 @@ int cgi_req_del(struct cgi_request *r)
                  r->fd, r->child);
 
     mk_list_del(&r->_head);
-    mk_mem_free(r);
+    if (r->active == MK_FALSE) {
+        mk_api->sched_event_free(&r->event);
+    }
+    else {
+        mk_mem_free(r);
+    }
+
     return 0;
 }

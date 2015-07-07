@@ -26,14 +26,6 @@
 
 void cgi_finish(struct cgi_request *r)
 {
-#ifdef TRACE
-    if (mk_list_is_empty(&r->cs->request_list) == 0) {
-        PLUGIN_TRACE("CGI Finish / request_list is empty");
-    }
-    PLUGIN_TRACE("CGI Finish / session_fd=%i child_fd=%i child_pid=%l",
-                 r->cs->socket, r->fd, r->child);
-#endif
-
     /*
      * Unregister & close the CGI child process pipe reader fd from the
      * thread event loop, otherwise we may get unexpected notifications.
