@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include "mk_macros.h"
+#include "mk_list.h"
 
 #ifndef MK_EVENT_H
 #define MK_EVENT_H
@@ -71,6 +72,7 @@ struct mk_event {
 
     /* function handler for custom type */
     int     (*handler)(void *data);
+    struct mk_list _head;
 };
 
 struct mk_event_loop {
