@@ -202,6 +202,7 @@ struct plugin_api
     int (*sched_remove_client) (int);
     struct mk_sched_conn *(*sched_get_connection)(struct mk_sched_worker *,
                                                   int);
+    void (*sched_event_free) (struct mk_event *);
     struct mk_sched_worker *(*sched_worker_info)();
 
     /* worker's functions */
