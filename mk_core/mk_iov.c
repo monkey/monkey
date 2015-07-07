@@ -39,28 +39,27 @@ const mk_ptr_t mk_iov_equal = mk_ptr_init(MK_IOV_EQUAL);
 
 struct mk_iov *mk_iov_create(int n, int offset)
 {
-    int i;
+    int s_all;
+    int s_iovec;
+    int s_free_buf;
+    void *p;
     struct mk_iov *iov;
 
-    iov = mk_mem_malloc_z(sizeof(struct mk_iov));
-    iov->iov_idx = offset;
-    iov->io = mk_mem_malloc(n * sizeof(struct iovec));
-    iov->buf_to_free = mk_mem_malloc(n * sizeof(void *));
-    iov->buf_idx = 0;
-    iov->total_len = 0;
-    iov->size = n;
+    s_all      = sizeof(struct mk_iov);       /* main mk_iov structure */
+    s_iovec    = (n * sizeof(struct iovec));  /* iovec array size      */
+    s_free_buf = (n * sizeof(void *));        /* free buf array        */
 
-    /*
-     * Make sure to set to zero initial entries when an offset
-     * is specified
-     */
-    if (offset > 0) {
-        for (i=0; i < offset; i++) {
-            iov->io[i].iov_base = NULL;
-            iov->io[i].iov_len = 0;
-        }
+    p = mk_mem_malloc_z(s_all + s_iovec + s_free_buf);
+    if (!p) {
+        return NULL;
     }
 
+    /* Set pointer address */
+    iov = p;
+    iov->io = p + s_all - (s_iovec - s_free_buf);
+    iov->buf_to_free = (void *) (iov->io + s_iovec);
+
+    mk_iov_init(iov, n, offset);
     return iov;
 }
 
@@ -116,8 +115,6 @@ ssize_t mk_iov_send(int fd, struct mk_iov *mk_io)
 void mk_iov_free(struct mk_iov *mk_io)
 {
     mk_iov_free_marked(mk_io);
-    mk_mem_free(mk_io->buf_to_free);
-    mk_mem_free(mk_io->io);
     mk_mem_free(mk_io);
 }
 
