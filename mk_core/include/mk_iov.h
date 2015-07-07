@@ -55,7 +55,7 @@ struct mk_iov {
 };
 
 struct mk_iov *mk_iov_create(int n, int offset);
-int mk_iov_realloc(struct mk_iov *mk_io, int new_size);
+struct mk_iov *mk_iov_realloc(struct mk_iov *mk_io, int new_size);
 
 int mk_iov_add_separator(struct mk_iov *mk_io, mk_ptr_t sep);
 

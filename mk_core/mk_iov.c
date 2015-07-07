@@ -63,28 +63,37 @@ struct mk_iov *mk_iov_create(int n, int offset)
     return iov;
 }
 
-int mk_iov_realloc(struct mk_iov *mk_io, int new_size)
+struct mk_iov *mk_iov_realloc(struct mk_iov *mk_io, int new_size)
 {
-    void **new_buf;
-    struct iovec *new_io;
+    int i;
+    struct mk_iov *iov;
 
-    new_io  = mk_mem_realloc(mk_io->io, sizeof(struct iovec) * new_size) ;
-    new_buf = mk_mem_realloc(mk_io->buf_to_free, sizeof(void *) * new_size);
-
-    if (!new_io || !new_buf) {
-        MK_TRACE("could not reallocate IOV");
-        mk_mem_free(new_io);
-        mk_mem_free(new_buf);
-        return -1;
+    /*
+     * We do not perform a memory realloc because our struct iov have
+     * self references on it 'io' and 'buf_to_free' pointers. So we create a
+     * new mk_iov and perform a data migration.
+     */
+    iov = mk_iov_create(new_size, 0);
+    if (!iov) {
+        return NULL;
     }
 
-    /* update data */
-    mk_io->io = new_io;
-    mk_io->buf_to_free = new_buf;
+    /* Migrate data */
+    iov->iov_idx   = mk_io->iov_idx;
+    iov->buf_idx   = mk_io->buf_idx;
+    iov->size      = new_size;
+    iov->total_len = mk_io->total_len;
 
-    mk_io->size = new_size;
+    for (i = 0; i < mk_io->iov_idx; i++) {
+        iov->io[i].iov_base = mk_io->io[i].iov_base;
+        iov->io[i].iov_len  = mk_io->io[i].iov_len;
+    }
 
-    return 0;
+    for (i = 0; i < mk_io->buf_idx; i++) {
+        iov->buf_to_free[i] = mk_io->buf_to_free[i];
+    }
+
+    return iov;
 }
 
 int mk_iov_set_entry(struct mk_iov *mk_io, void *buf, int len,
