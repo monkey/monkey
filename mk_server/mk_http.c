@@ -1274,7 +1274,9 @@ void mk_http_session_remove(struct mk_http_session *cs)
         if (sr->stage30_handler) {
             MK_TRACE("Hangup stage30 handler");
             handler = sr->stage30_handler;
-            handler->stage->stage30_hangup(handler, cs, sr);
+            if (handler->stage->stage30_hangup) {
+                handler->stage->stage30_hangup(handler, cs, sr);
+            }
         }
     }
 
