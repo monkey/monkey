@@ -145,9 +145,7 @@ static size_t write_length(uint8_t *p, size_t len)
 	}
 }
 
-size_t fcgi_param_write(uint8_t *p,
-	mk_ptr_t key,
-	mk_ptr_t value)
+size_t fcgi_param_write(uint8_t *p, mk_ptr_t key, mk_ptr_t value)
 {
 	size_t ret, cnt;
 

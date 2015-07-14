@@ -1,6 +1,27 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
+/*  Monkey HTTP Server
+ *  ==================
+ *  Copyright 2001-2015 Monkey Software LLC <eduardo@monkey.io>
+ *  Copyright 2012, Sonny Karlsson
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 #ifndef _FCGI_FD_H_
 #define _FCGI_FD_H_
 
+#include <mk_core/mk_core.h>
 #include "chunk.h"
 #include "fcgi_config.h"
 
@@ -49,16 +70,18 @@ enum fcgi_fd_state {
  * context.
  */
 struct fcgi_fd {
-	enum fcgi_fd_type type;
-	enum fcgi_fd_state state;
-	int fd;
-	int server_id;
-	int location_id;
+    struct mk_event event;
 
-	size_t begin_req_remain;
-	struct chunk_iov *begin_req;
+    enum fcgi_fd_type type;
+    enum fcgi_fd_state state;
+    int fd;
+    int server_id;
+    int location_id;
 
-	struct chunk *chunk;
+    size_t begin_req_remain;
+    struct chunk_iov *begin_req;
+
+    struct chunk *chunk;
 };
 
 struct fcgi_fd_list {
