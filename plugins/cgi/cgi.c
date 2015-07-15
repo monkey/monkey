@@ -100,7 +100,6 @@ static int do_cgi(const char *const __restrict__ file,
     const int socket = cs->socket;
     struct file_info finfo;
     struct cgi_request *r = NULL;
-    struct mk_event *event;
     char *env[30];
     int writepipe[2], readpipe[2];
     (void) plugin;
@@ -316,12 +315,7 @@ static int do_cgi(const char *const __restrict__ file,
     cgi_req_add(r);
 
     /* Prepare the built-in event structure */
-    event = &r->event;
-    event->fd      = readpipe[0];
-    event->type    = MK_EVENT_CUSTOM;
-    event->mask    = MK_EVENT_EMPTY;
-    event->data    = r;
-    event->handler = cb_cgi_read;
+    MK_EVENT_INIT(&r->event, readpipe[0], (void *) r, cb_cgi_read);
 
     /* Register the event into the worker event-loop */
     ret = mk_api->ev_add(mk_sched_loop(),

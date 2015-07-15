@@ -82,6 +82,16 @@ struct mk_event_loop {
     void *data;                /* mk_event_ctx_t from backend */
 };
 
+static inline void MK_EVENT_INIT(struct mk_event *ev, int fd, void *data,
+                                 int (*callback)(void *))
+{
+    ev->fd      = fd;
+    ev->type    = MK_EVENT_CUSTOM;
+    ev->mask    = MK_EVENT_EMPTY;
+    ev->data    = data;
+    ev->handler = callback;
+}
+
 int mk_event_initialize();
 struct mk_event_loop *mk_event_loop_create(int size);
 void mk_event_loop_destroy(struct mk_event_loop *loop);
