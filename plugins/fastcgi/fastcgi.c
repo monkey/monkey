@@ -29,6 +29,7 @@ static int mk_fastcgi_start_processing(struct mk_http_session *cs,
         return -1;
     }
 
+    return 0;
 }
 
 

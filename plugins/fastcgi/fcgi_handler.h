@@ -43,14 +43,9 @@ struct fcgi_begin_request_body {
     uint8_t reserved[5];
 };
 
-struct fcgi_begin_request_record {
-    struct fcgi_record_header header;
-    struct fcgi_begin_request_body body;
-};
-
-#define FCGI_VERSION_1           1
-#define FCGI_RECORD_HEADER_SIZE  sizeof(struct fcgi_record_header)
-
+#define FCGI_VERSION_1               1
+#define FCGI_RECORD_HEADER_SIZE      sizeof(struct fcgi_record_header)
+#define FCGI_BEGIN_REQUEST_BODY_SIZE sizeof(struct fcgi_begin_request_body)
 #define FCGI_RESPONDER  1
 #define FCGI_AUTHORIZER 2
 #define FCGI_FILTER     3
@@ -80,7 +75,8 @@ struct fcgi_handler {
     struct mk_http_request *sr;  /* HTTP request context     */
 
     /* FastCGI */
-    struct fcgi_begin_request_record begin_req_record;
+    char fcgi_begin_record[FCGI_RECORD_HEADER_SIZE +
+                           FCGI_BEGIN_REQUEST_BODY_SIZE];
 
     int buf_len;
     char buf_data[4096];
@@ -89,12 +85,12 @@ struct fcgi_handler {
     struct mk_list _head;
 };
 
-static inline void fcgi_encode16(void *a, unsigned char b)
+static inline void fcgi_encode16(void *a, unsigned b)
 {
     unsigned char *c = a;
 
-    c[0] = (b >> 8);
-    c[1] = b;
+    c[0] = (unsigned char) (b >> 8);
+    c[1] = (unsigned char) b;
 }
 
 struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,

@@ -23,7 +23,7 @@
 
 /* FIXME, static server info for now */
 #define FASTCGI_HOST    "127.0.0.1"
-#define FASTCGI_PORT    9000
+#define FASTCGI_PORT    8000
 
 #define FCGI_PARAM_DYN(str)   str, strlen(str)
 #define FCGI_PARAM_CONST(str) str, sizeof(str) -1
@@ -33,7 +33,7 @@
 #define FCGI_PARAM_NUM(n)     "", 0
 #define FCGI_PARAM_BUF(h)     h->buf_data + h->buf_len
 
-static inline size_t fcgi_write_length(uint8_t *p, size_t len)
+static inline size_t fcgi_write_length(char *p, size_t len)
 {
 	if (len > 127) {
 		p[0]  = 1 << 7;
@@ -53,7 +53,6 @@ static inline size_t fcgi_write_length(uint8_t *p, size_t len)
 static inline int fcgi_add_param(struct fcgi_handler *handler,
                                  char *key, int key_len, char *val, int val_len)
 {
-    int len;
     char *init;
 
     init = handler->buf_data + handler->buf_len;
@@ -61,7 +60,7 @@ static inline int fcgi_add_param(struct fcgi_handler *handler,
     handler->buf_len += fcgi_write_length(FCGI_PARAM_BUF(handler), val_len);
 
     mk_api->iov_add(handler->iov, init,
-                    (handler->buf_data + len) - init, MK_FALSE);
+                    FCGI_PARAM_BUF(handler) - init, MK_FALSE);
     mk_api->iov_add(handler->iov, key, key_len, MK_FALSE);
     mk_api->iov_add(handler->iov, val, val_len, MK_FALSE);
 
@@ -126,18 +125,62 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler, int sock)
     return 0;
 }
 
+static int fcgi_encode_header(struct fcgi_record_header *rec,
+                              uint8_t type, uint16_t request_id,
+                              uint16_t content_length)
+{
+    rec->version        = FCGI_VERSION_1;
+    rec->type           = type;
+    fcgi_encode16(&rec->request_id, request_id);
+    fcgi_encode16(&rec->content_length, content_length);
+    rec->padding_length = 0;
+    rec->reserved       = 0;
+
+    return 0;
+}
+
 static int fcgi_encode_request(struct fcgi_handler *handler)
 {
     int entries;
+    struct fcgi_record_header *header;
+    struct fcgi_begin_request_body *body;
 
     /* Allocate enough space for our data */
     entries =  40 + (handler->cs->parser.header_count * 3);
     handler->iov = mk_api->iov_create(entries, 0);
 
+    header = (struct fcgi_record_header *) &handler->fcgi_begin_record;
+    fcgi_encode_header(header, FCGI_BEGIN_REQUEST, 1,
+                       FCGI_RECORD_HEADER_SIZE +
+                       FCGI_BEGIN_REQUEST_BODY_SIZE);
+
+    body   = (struct fcgi_begin_request_body *) (&header + FCGI_RECORD_HEADER_SIZE);
+    fcgi_encode16(&body->role, FCGI_RESPONDER);
+    body->flags = 1;
+
+    //memset(&body->reserved, '\0', sizeof(body->reserved));
+
+    /* BEGIN_REQUEST */
+    mk_api->iov_add(handler->iov,
+                    &handler->fcgi_begin_record,
+                    FCGI_RECORD_HEADER_SIZE +
+                    FCGI_BEGIN_REQUEST_BODY_SIZE,
+                    MK_FALSE);
+
+    return 0;
+
+    /* Push record for Params
+    mk_api->iov_add(handler->iov,
+                    &handler->fcgi_rec_header,
+                    sizeof(struct fcgi_record_header), MK_FALSE);
+    */
+
+    //FCGI_RECORD_HEADER_SIZE, MK_FALSE);
+
     /* Server Software */
-    fcgi_add_param(handler,
-                   FCGI_PARAM_CONST("SERVER_SOFTWARE"),
-                   FCGI_PARAM_DYN(mk_api->config->server_signature));
+    //fcgi_add_param(handler,
+    //               FCGI_PARAM_CONST("SERVER_SOFTWARE"),
+    //               FCGI_PARAM_DYN(mk_api->config->server_signature));
 
     /* Server Name */
     fcgi_add_param(handler,
@@ -151,7 +194,7 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
                    FCGI_PARAM_PTR(handler->sr->host_conf->documentroot));
 
     /* Network params: SERVER_ADDR, SERVER_PORT, REMOTE_ADDR & REMOTE_PORT */
-    fcgi_add_param_net(handler, handler->cs->socket);
+    //fcgi_add_param_net(handler, handler->cs->socket);
 
     /* Script Filename */
     fcgi_add_param(handler,
@@ -170,9 +213,9 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
 
 
     /* Request URI */
-    fcgi_add_param(handler,
-                   FCGI_PARAM_CONST("REQUEST_URI"),
-                   FCGI_PARAM_PTR(handler->sr->uri));
+    //    fcgi_add_param(handler,
+    //               FCGI_PARAM_CONST("REQUEST_URI"),
+    //               FCGI_PARAM_PTR(handler->sr->uri));
 
     /* Query String */
     fcgi_add_param(handler,
@@ -181,6 +224,12 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
 
     /* FIXME: IF SSL, SET HTTPS=on */
 
+    /* Complete our header, we already know the data length */
+    /*
+    header = &handler->fcgi_rec_header;
+    fcgi_encode_header(header, FCGI_PARAMS, 1,
+                       handler->iov->total_len);
+*/
     return 0;
 }
 
@@ -191,10 +240,8 @@ int cb_fastcgi_on_connect(void *data)
     int s_err;
     socklen_t s_len = sizeof(s_err);
     struct fcgi_handler *handler = data;
-    struct fcgi_record_header *rec_header;
-    struct fcgi_begin_request_body *req_body;
 
-    /* We connect in async mode, we need to check the connection was OK */
+    /* We connect in async mode, we need to check if the connection was OK */
     ret = getsockopt(handler->server_fd, SOL_SOCKET, SO_ERROR, &s_err, &s_len);
     if (ret == -1) {
         goto error;
@@ -205,25 +252,40 @@ int cb_fastcgi_on_connect(void *data)
         goto error;
     }
 
-    /* Prepare our first outgoing packets */
-    rec_header = &handler->begin_req_record.header;
-    rec_header->version        = FCGI_VERSION_1;
-    rec_header->type           = FCGI_BEGIN_REQUEST;
-    fcgi_encode16(&rec_header->request_id, 1);
-    fcgi_encode16(&rec_header->content_length, FCGI_RECORD_HEADER_SIZE);
-    rec_header->padding_length = 0;
-    rec_header->reserved       = 0;
-
-    req_body = &handler->begin_req_record.body;
-    fcgi_encode16(&req_body->role, FCGI_RESPONDER);
-    req_body->flags = 0;
-
+    /*ret = write(handler->server_fd,
+                "\x01\x01\x00\x01" "\x00\x08\x00\x00" "\x00\x01\x00\x00" "\x00\x00\x00\x00",
+                16);
+    printf("wrote: %i bytes\n", ret);
+*/
     /* Take the incoming HTTP request data and encode it on FastCGI */
     ret = fcgi_encode_request(handler);
     if (ret == -1) {
         goto error;
     }
 
+    //printf("IOV TOTA: %lu bytes\n", handler->iov->total_len);
+    ret = mk_api->iov_send(handler->server_fd, handler->iov);
+    printf("IOV SENT: %i bytes\n", ret);
+    sleep(3);
+    int n;
+    char bu[2056];
+    int times = 0;
+    while (1) {
+        usleep((unsigned int) 0.5000);
+        n = read(handler->server_fd, bu, sizeof(bu) -1);
+        if (n == -1) {
+            perror("read");
+        }
+
+        printf("got :%i\n", n);
+        usleep((unsigned int) 0.5000);
+        if (times > 100) {
+            exit(1);
+        }
+        times++;
+    }
+
+    //exit(0);
  error:
     return -1;
 }
@@ -241,7 +303,9 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     }
     h->cs = cs;
     h->sr = sr;
-    h->buf_len = 0;
+
+    /* Params buffer set an offset to include the header */
+    h->buf_len = FCGI_RECORD_HEADER_SIZE;
 
     /* Request and async connection to the server */
     h->server_fd = mk_api->socket_connect(FASTCGI_HOST, FASTCGI_PORT, MK_TRUE);
