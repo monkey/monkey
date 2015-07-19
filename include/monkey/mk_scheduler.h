@@ -112,6 +112,8 @@ struct mk_sched_conn
     struct rb_node _rb_head;           /* red-black tree head          */
 };
 
+#define MK_SCHED_CONN_CAP(conn)  conn->protocol->capabilities
+
 /*
  * It defines a Handler for a connection in questions. This struct
  * is used inside mk_sched_conn to define which protocol/handler
