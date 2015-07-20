@@ -666,6 +666,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 p->body_received += (len - i);
 
                 if (p->body_received == p->header_content_length) {
+                    req->data.len  = p->body_received;
+                    req->data.data = (buffer + len) - p->body_received;
                     return mk_http_parser_ok(req, p);
                 }
                 else {
@@ -704,6 +706,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
         if (p->header_content_length > 0) {
             p->body_received += (len - i);
             if (p->header_content_length == p->body_received) {
+                req->data.len  = p->body_received;
+                req->data.data = (buffer + len) - p->body_received;
                 return mk_http_parser_ok(req, p);
             }
             else {
