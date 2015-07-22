@@ -479,6 +479,7 @@ int fcgi_error(struct fcgi_handler *handler)
 
     mk_api->http_request_error(500, handler->cs, handler->sr);
     fcgi_exit(handler);
+    return 0;
 }
 
 int cb_fastcgi_on_read(void *data)
