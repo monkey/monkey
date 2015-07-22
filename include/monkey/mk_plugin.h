@@ -89,7 +89,7 @@ struct plugin_api
     int (*socket_set_tcp_fastopen) (int);
     int (*socket_set_tcp_nodelay) (int);
     int (*socket_set_tcp_reuseport) (int);
-    int (*socket_connect) (char *, int);
+    int (*socket_connect) (char *, int, int);
     int (*socket_set_nonblocking) (int);
     int (*socket_create) ();
     int (*socket_close) (int);

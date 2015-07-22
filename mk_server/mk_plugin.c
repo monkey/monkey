@@ -223,7 +223,7 @@ void mk_plugin_api_init()
 
     /* HTTP callbacks */
     api->http_request_end = mk_plugin_http_request_end;
-    //    api->http_request_error = mk_http_error;
+    api->http_request_error = mk_http_error;
 
     /* Memory callbacks */
     api->pointer_set = mk_ptr_set;
