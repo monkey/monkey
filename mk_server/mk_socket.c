@@ -123,7 +123,7 @@ int mk_socket_create(int domain, int type, int protocol)
     return fd;
 }
 
-int mk_socket_connect(char *host, int port)
+int mk_socket_connect(char *host, int port, int async)
 {
     int ret;
     int socket_fd = -1;
@@ -148,17 +148,29 @@ int mk_socket_connect(char *host, int port)
         socket_fd = mk_socket_create(rp->ai_family,
                                      rp->ai_socktype, rp->ai_protocol);
 
-        if( socket_fd == -1) {
+        if (socket_fd == -1) {
             mk_warn("Error creating client socket, retrying");
             continue;
         }
 
-        if (connect(socket_fd,
-                    (struct sockaddr *) rp->ai_addr, rp->ai_addrlen) == -1) {
-            close(socket_fd);
-            continue;
+        if (async == MK_TRUE) {
+            mk_socket_set_nonblocking(socket_fd);
         }
 
+        ret = connect(socket_fd,
+                      (struct sockaddr *) rp->ai_addr, rp->ai_addrlen);
+        if (ret == -1) {
+            if (errno == EINPROGRESS) {
+                break;
+            }
+            else {
+                printf("%s", strerror(errno));
+                perror("connect");
+                exit(1);
+                close(socket_fd);
+                continue;
+            }
+        }
         break;
     }
     freeaddrinfo(res);
