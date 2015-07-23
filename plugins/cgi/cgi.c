@@ -97,6 +97,7 @@ static int do_cgi(const char *const __restrict__ file,
                   struct mk_plugin *const plugin)
 {
     int ret;
+    int devnull;
     const int socket = cs->socket;
     struct file_info finfo;
     struct cgi_request *r = NULL;
@@ -236,7 +237,12 @@ static int do_cgi(const char *const __restrict__ file,
         close(readpipe[1]);
 
         /* Our stderr goes to /dev/null */
-        const int devnull = open("/dev/null", O_WRONLY);
+        devnull = open("/dev/null", O_WRONLY);
+        if (devnull == -1) {
+            perror("open");
+            _exit(1);
+        }
+
         if (dup2(devnull, 2) < 0) {
             mk_err("dup2 failed");
             _exit(1);
