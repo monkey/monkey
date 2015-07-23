@@ -133,7 +133,7 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
      * performance and aim to make things easier. The COPYBUF type is not
      * used by Monkey core, at the moment the only caller is the CGI plugin.
      */
-    if (!stream && type == MK_STREAM_COPYBUF) {
+    if (type == MK_STREAM_COPYBUF) {
         stream = mk_mem_malloc(sizeof(struct mk_stream));
     }
 
