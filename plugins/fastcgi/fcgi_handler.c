@@ -428,7 +428,7 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
         handler->headers_set = MK_TRUE;
     }
 
-    if (p && len <= 0) {
+    if (len <= 0) {
         return 0;
     }
 
