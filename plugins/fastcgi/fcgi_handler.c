@@ -485,7 +485,7 @@ int fcgi_error(struct fcgi_handler *handler)
 int cb_fastcgi_on_read(void *data)
 {
     int n;
-    int ret;
+    int ret = 0;
     int avail;
     char *body;
     size_t offset;
