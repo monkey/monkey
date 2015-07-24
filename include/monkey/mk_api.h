@@ -48,7 +48,7 @@ pthread_key_t MK_EXPORT _mkp_data;
     mk_api->trace("plug",                     \
                   MK_TRACE_PLUGIN,            \
                   __FUNCTION__,               \
-                  __FILE__,                   \
+                  __FILENAME__,               \
                   __LINE__,                   \
                   __VA_ARGS__)
 #else
