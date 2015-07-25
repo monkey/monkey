@@ -553,9 +553,9 @@ int mk_plugin_http_request_end(struct mk_http_session *cs, int close)
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", cs->socket);
 
+    cs->status = MK_REQUEST_STATUS_INCOMPLETE;
     if (mk_list_is_empty(&cs->request_list) == 0) {
         MK_TRACE("[FD %i] Tried to end non-existing request.", cs->socket);
-        cs->status = MK_REQUEST_STATUS_INCOMPLETE;
         return -1;
     }
 
