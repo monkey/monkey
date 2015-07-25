@@ -294,9 +294,11 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
                    FCGI_PARAM_PTR(handler->sr->uri));
 
     /* Query String */
-    fcgi_add_param(handler,
-                   FCGI_PARAM_CONST("QUERY_STRING"),
-                   FCGI_PARAM_PTR(handler->sr->uri));
+    if (handler->sr->query_string.len > 0) {
+        fcgi_add_param(handler,
+                       FCGI_PARAM_CONST("QUERY_STRING"),
+                       FCGI_PARAM_PTR(handler->sr->query_string));
+    }
 
     /* HTTPS */
     if (MK_SCHED_CONN_CAP(handler->cs->conn) & MK_CAP_SOCK_SSL) {
