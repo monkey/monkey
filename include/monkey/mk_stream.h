@@ -94,7 +94,6 @@ struct mk_stream {
 
     /* callbacks */
     void (*cb_finished) (struct mk_stream *);
-    void (*cb_ok) (struct mk_stream *);
     void (*cb_bytes_consumed) (struct mk_stream *, long);
     void (*cb_exception) (struct mk_stream *, int);
 
@@ -243,13 +242,14 @@ static inline void mk_channel_debug(struct mk_channel *channel)
 }
 
 struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
-                           void *buffer, size_t size, void *data,
-                           void (*cb_finished) (struct mk_stream *),
-                           void (*cb_bytes_consumed) (struct mk_stream *, long),
-                           void (*cb_exception) (struct mk_stream *, int));
+                                void *buffer, size_t size, void *data,
+                                void (*cb_finished) (struct mk_stream *),
+                                void (*cb_bytes_consumed) (struct mk_stream *, long),
+                                void (*cb_exception) (struct mk_stream *, int));
 struct mk_channel *mk_channel_new(int type, int fd);
 
 int mk_channel_flush(struct mk_channel *channel);
 int mk_channel_write(struct mk_channel *channel, size_t *count);
+int mk_channel_clean(struct mk_channel *channel);
 
 #endif
