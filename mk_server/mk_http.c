@@ -693,6 +693,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     int ret;
     struct mimetype *mime;
     struct mk_plugin *handler = NULL;
+    struct mk_list *head;
+    struct mk_list *handlers;
+    struct mk_host_handler *h_handler;
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
@@ -831,21 +834,33 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
-        ret = mk_plugin_stage_run_30(cs, sr, &handler);
-        MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
-        switch (ret) {
-        case MK_PLUGIN_RET_CONTINUE:
-            sr->stage30_handler = handler;
-            return MK_PLUGIN_RET_CONTINUE;
-        case MK_PLUGIN_RET_CLOSE_CONX:
-            if (sr->headers.status > 0) {
-                return mk_http_error(sr->headers.status, cs, sr);
+        sr->uri_processed.data[sr->uri_processed.len] = '\0';
+
+        handlers = &sr->host_conf->handlers;
+        mk_list_foreach(head, handlers) {
+            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
+            if (regexec(&h_handler->match,
+                        sr->uri_processed.data, 0, NULL, 0) != 0) {
+                continue;
             }
-            else {
-                return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+
+            handler = h_handler->handler;
+            ret = mk_plugin_stage_run_30(cs, sr, &handler);
+            MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
+            switch (ret) {
+            case MK_PLUGIN_RET_CONTINUE:
+                sr->stage30_handler = handler;
+                return MK_PLUGIN_RET_CONTINUE;
+            case MK_PLUGIN_RET_CLOSE_CONX:
+                if (sr->headers.status > 0) {
+                    return mk_http_error(sr->headers.status, cs, sr);
+                }
+                else {
+                    return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+                }
+            case MK_PLUGIN_RET_END:
+                return MK_EXIT_OK;
             }
-        case MK_PLUGIN_RET_END:
-            return MK_EXIT_OK;
         }
     }
 
