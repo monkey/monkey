@@ -1117,6 +1117,7 @@ void cb_stream_page_finished(struct mk_stream *stream)
 int mk_http_error(int http_status, struct mk_http_session *cs,
                   struct mk_http_request *sr) {
     int ret, fd;
+    size_t count;
     mk_ptr_t message;
     mk_ptr_t *page = NULL;
     struct error_page *entry;
@@ -1249,6 +1250,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           cb_stream_page_finished, NULL, NULL);
         }
     }
+    mk_channel_write(cs->channel, &count);
     return MK_EXIT_OK;
 }
 
