@@ -164,6 +164,7 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
             event->fd   = server_fd;
             event->type = MK_EVENT_LISTENER;
             event->mask = MK_EVENT_EMPTY;
+            event->status = MK_EVENT_NONE;
 
             /* continue with listener setup and linking */
             listener->server_fd = server_fd;
@@ -381,6 +382,10 @@ void mk_server_worker_loop()
         mk_event_wait(evl);
         mk_event_foreach(event, evl) {
             ret = 0;
+            if (event->type & MK_EVENT_IDLE) {
+                continue;
+            }
+
             if (event->type == MK_EVENT_CONNECTION) {
                 conn = (struct mk_sched_conn *) event;
 
