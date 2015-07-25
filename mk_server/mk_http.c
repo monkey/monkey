@@ -81,6 +81,7 @@ void mk_http_request_init(struct mk_http_session *session,
     request->host_conf = mk_list_entry_first(host_list, struct host, _head);
     request->uri_processed.data = NULL;
     request->real_path.data = NULL;
+    request->handler_data = NULL;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
@@ -629,7 +630,6 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     sr->headers.cgi = SH_NOCGI;
     sr->headers.pconnections_left =
         (mk_config->max_keep_alive_request - cs->counter_connections);
-
 
     mk_header_prepare(cs, sr);
 
@@ -1275,6 +1275,7 @@ void mk_http_session_remove(struct mk_http_session *cs)
             MK_TRACE("Hangup stage30 handler");
             handler = sr->stage30_handler;
             handler->stage->stage30_hangup(handler, cs, sr);
+            mk_channel_clean(cs->channel);
         }
     }
 
@@ -1466,7 +1467,10 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                                 cs->body, cs->body_length);
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
-            mk_http_status_completed(cs, conn);
+            if (mk_http_status_completed(cs, conn) == -1) {
+                mk_http_session_remove(cs);
+                return -1;
+            }
             mk_http_request_prepare(cs, sr);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
