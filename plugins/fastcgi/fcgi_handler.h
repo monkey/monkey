@@ -80,6 +80,7 @@ struct fcgi_handler {
 
     int server_fd;               /* backend FastCGI server         */
     int chunked;                 /* chunked response ?             */
+    int active;                  /* is this handler active ?       */
     int hangup;                  /* hangup connection once ready ? */
     int headers_set;             /* headers set ?                  */
     struct mk_http_session *cs;  /* HTTP session context           */
@@ -110,5 +111,7 @@ static inline void fcgi_encode16(void *a, unsigned b)
 
 struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
                                       struct mk_http_request *sr);
+
+int fcgi_exit(struct fcgi_handler *handler);
 
 #endif

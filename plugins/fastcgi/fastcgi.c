@@ -135,7 +135,15 @@ int mk_fastcgi_stage30_hangup(struct mk_plugin *plugin,
 {
     (void) plugin;
     (void) cs;
-    (void) sr;
+    struct fcgi_handler *handler;
+
+    handler = sr->handler_data;
+    if (!handler) {
+        return -1;
+    }
+
+    handler->active = MK_FALSE;
+    fcgi_exit(sr->handler_data);
 
     return 0;
 }

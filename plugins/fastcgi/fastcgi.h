@@ -32,4 +32,5 @@ struct mk_fcgi_conf {
 };
 
 struct mk_fcgi_conf fcgi_conf;
+
 #endif

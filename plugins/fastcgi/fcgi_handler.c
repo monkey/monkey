@@ -23,12 +23,10 @@
 #include "fcgi_handler.h"
 
 #define FCGI_BUF(h)           (char *) h->buf_data + h->buf_len
-#define FCGI_PARAM_DYN(str)   str, strlen(str)
-#define FCGI_PARAM_CONST(str) str, sizeof(str) -1
-#define FCGI_PARAM_PTR(ptr)   ptr.data, ptr.len
-#define FCGI_PARAM_DUP(str)   strdup(str), strlen(str)
-#define FCGI_PARAM_INET_ADDR(sock)  "", 0
-#define FCGI_PARAM_NUM(n)     "", 0
+#define FCGI_PARAM_DYN(str)   str, strlen(str), MK_FALSE
+#define FCGI_PARAM_CONST(str) str, sizeof(str) -1, MK_FALSE
+#define FCGI_PARAM_PTR(ptr)   ptr.data, ptr.len, MK_FALSE
+#define FCGI_PARAM_DUP(str)   strdup(str), strlen(str), MK_TRUE
 
 static inline void fcgi_build_header(struct fcgi_record_header *rec,
                                      uint8_t type, uint16_t request_id,
@@ -77,7 +75,8 @@ static inline int fcgi_add_param_empty(struct fcgi_handler *handler)
 }
 
 static inline int fcgi_add_param(struct fcgi_handler *handler,
-                                 char *key, int key_len, char *val, int val_len)
+                                 char *key, int key_len, int key_free,
+                                 char *val, int val_len, int val_free)
 {
     int len;
     int diff;
@@ -99,8 +98,8 @@ static inline int fcgi_add_param(struct fcgi_handler *handler,
     diff = (p - buf);
     handler->buf_len += diff;
     mk_api->iov_add(handler->iov, buf, diff, MK_FALSE);
-    mk_api->iov_add(handler->iov, key, key_len, MK_FALSE);
-    mk_api->iov_add(handler->iov, val, val_len, MK_FALSE);
+    mk_api->iov_add(handler->iov, key, key_len, key_free);
+    mk_api->iov_add(handler->iov, val, val_len, val_free);
 
     return 0;
 }
@@ -141,7 +140,9 @@ static inline int fcgi_add_param_http_header(struct fcgi_handler *handler,
 
     diff = (p - buf);
     handler->buf_len += diff;
-    fcgi_add_param(handler, buf, diff, header->val.data, header->val.len);
+    fcgi_add_param(handler,
+                   buf, diff, MK_FALSE,
+                   header->val.data, header->val.len, MK_FALSE);
 
     return 0;
 }
@@ -156,7 +157,13 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
 
     ret = getsockname(handler->cs->socket, (struct sockaddr *)&addr, &addr_len);
     if (ret == -1) {
+#ifdef TRACE
         perror("getsockname");
+#endif
+        if (errno == EBADF) {
+            MK_TRACE("[fastcgi=%i] network connection broken",
+                     handler->cs->socket);
+        }
         return -1;
     }
 
@@ -227,12 +234,8 @@ static inline int fcgi_add_stdin(struct fcgi_handler *handler)
 
 static int fcgi_encode_request(struct fcgi_handler *handler)
 {
-    int entries;
+    int ret;
     struct fcgi_begin_request_record *request;
-
-    /* Allocate enough space for our data */
-    entries =  40 + (handler->cs->parser.header_count * 3);
-    handler->iov = mk_api->iov_create(entries, 0);
 
     request = &handler->header_request;
     fcgi_build_header(&request->header, FCGI_BEGIN_REQUEST, 1,
@@ -255,7 +258,8 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
     fcgi_add_param(handler,
                    FCGI_PARAM_CONST("SERVER_NAME"),
                    handler->sr->host_alias->name,
-                   handler->sr->host_alias->len);
+                   handler->sr->host_alias->len,
+                   MK_FALSE);
 
     /* Document Root */
     fcgi_add_param(handler,
@@ -263,7 +267,10 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
                    FCGI_PARAM_PTR(handler->sr->host_conf->documentroot));
 
     /* Network params: SERVER_ADDR, SERVER_PORT, REMOTE_ADDR & REMOTE_PORT */
-    fcgi_add_param_net(handler);
+    ret = fcgi_add_param_net(handler);
+    if (ret == -1) {
+        return -1;
+    }
 
     /* Script Filename */
     fcgi_add_param(handler,
@@ -383,15 +390,71 @@ static int fcgi_write(struct fcgi_handler *handler, char *buf, size_t len)
     return 0;
 }
 
+int fcgi_exit(struct fcgi_handler *handler)
+{
+    if (handler->iov) {
+        if (handler->server_fd > 0) {
+            mk_api->ev_del(mk_api->sched_loop(), &handler->event);
+            close(handler->server_fd);
+            handler->server_fd = -1;
+        }
+
+        mk_api->iov_free(handler->iov);
+        mk_api->sched_event_free((struct mk_event *) handler);
+        handler->iov = NULL;
+    }
+
+    if (handler->active == MK_TRUE) {
+        mk_api->http_request_end(handler->cs, handler->hangup);
+    }
+
+    return 0;
+}
+
+int fcgi_error(struct fcgi_handler *handler)
+{
+    mk_api->http_request_error(500, handler->cs, handler->sr);
+    fcgi_exit(handler);
+    return 0;
+}
+
+static void cb_fcgi_eof(struct mk_stream *stream)
+{
+    struct fcgi_handler *handler;
+
+    handler = stream->data;
+    fcgi_exit(handler);
+}
+
 static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
 {
     int status;
     int diff;
+    int xlen;
+    char tmp[16];
     char *p;
     char *end;
+    size_t p_len;
     unsigned char advance;
 
+    MK_TRACE("[fastcgi=%i] process response len=%lu",
+             handler->server_fd, len);
+
     p = buf;
+    p_len = len;
+
+    if (len == 0 && handler->chunked && handler->headers_set == MK_TRUE) {
+        MK_TRACE("[fastcgi=%i] sending EOF", handler->server_fd);
+        mk_stream_set(NULL,
+                      MK_STREAM_COPYBUF,
+                      handler->cs->channel,
+                      "0\r\n\r\n", 5,
+                      handler,
+                      NULL /*cb_fcgi_eof*/, NULL, NULL);
+        mk_api->channel_flush(handler->cs->channel);
+        return 0;
+    }
+
     if (handler->headers_set == MK_FALSE) {
         advance = 4;
         end = getearliestbreak(buf, len, &advance);
@@ -423,62 +486,21 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
         fcgi_write(handler, buf, diff);
 
         p = buf + diff;
-        len -= diff;
+        p_len -= diff;
         handler->write_rounds++;
         handler->headers_set = MK_TRUE;
     }
 
-    if (len <= 0) {
-        return 0;
-    }
-
-    if (handler->chunked && handler->headers_set == MK_TRUE) {
-        int xlen;
-        char tmp[16];
-
-        if (len == 0) {
-            tmp[0] = '0';
-            tmp[1] = '\r';
-            tmp[2] = '\n';
-            tmp[3] = '\r';
-            tmp[4] = '\n';
-            xlen = 5;
-        }
-        else {
-            xlen = snprintf(tmp, 16, "%x\r\n", (unsigned int) len);
-        }
-
+    if (p_len > 0) {
+        xlen = snprintf(tmp, 16, "%x\r\n", (unsigned int) p_len);
         mk_stream_set(NULL,
                       MK_STREAM_COPYBUF,
                       handler->cs->channel,
                       tmp, xlen,
                       NULL, NULL, NULL, NULL);
+        fcgi_write(handler, p, p_len);
     }
 
-    if (len > 0) {
-        fcgi_write(handler, p, len);
-    }
-    handler->write_rounds++;
-
-    return 0;
-}
-
-int fcgi_exit(struct fcgi_handler *handler)
-{
-    mk_api->ev_del(mk_api->sched_loop(), &handler->event);
-    close(handler->server_fd);
-
-    mk_api->http_request_end(handler->cs, handler->hangup);
-    mk_api->mem_free(handler);
-
-    return 0;
-}
-
-int fcgi_error(struct fcgi_handler *handler)
-{
-
-    mk_api->http_request_error(500, handler->cs, handler->sr);
-    fcgi_exit(handler);
     return 0;
 }
 
@@ -492,13 +514,21 @@ int cb_fastcgi_on_read(void *data)
     struct fcgi_handler *handler = data;
     struct fcgi_record_header header;
 
+    if (handler->active == MK_FALSE) {
+        fcgi_exit(handler);
+        return -1;
+    }
+
     avail = FCGI_BUF_SIZE - handler->buf_len;
     n = read(handler->server_fd, handler->buf_data + handler->buf_len, avail);
+    MK_TRACE("[fastcgi=%i] read=%i", handler->server_fd, n);
     if (n <= 0) {
         fcgi_exit(handler);
         return -1;
     }
-    handler->buf_len += n;
+    else {
+        handler->buf_len += n;
+    }
 
     if ((unsigned) handler->buf_len < FCGI_RECORD_HEADER_SIZE) {
         /* wait for more data */
@@ -524,17 +554,21 @@ int cb_fastcgi_on_read(void *data)
         body = handler->buf_data + FCGI_RECORD_HEADER_SIZE;
         switch (header.type) {
         case FCGI_STDOUT:
+            MK_TRACE("[fastcgi=%i] FCGI_STDOUT content_length=%i",
+                     handler->server_fd, header.content_length);
             ret = fcgi_response(handler, body, header.content_length);
             break;
         case FCGI_STDERR:
-            /* FIXME */
+            MK_TRACE("[fastcgi=%i] FCGI_STDERR content_length=%i",
+                     handler->server_fd, header.content_length);
             break;
         case FCGI_END_REQUEST:
-            fcgi_response(handler, NULL, 0);
-            fcgi_exit(handler);
-            break;
+            MK_TRACE("[fastcgi=%i] FCGI_END_REQUEST content_length=%i",
+                     handler->server_fd, header.content_length);
+            ret = fcgi_response(handler, NULL, 0);
         default:
-            fcgi_exit(handler);
+            //fcgi_exit(handler);
+            return -1;
         }
 
         if (ret == -1) {
@@ -560,7 +594,8 @@ void cb_fastcgi_request_flush(void *data)
     struct fcgi_handler *handler = data;
 
     ret = mk_channel_write(&handler->fcgi_channel, &count);
-    PLUGIN_TRACE("[fastcgi=%i] %lu bytes, ret=%i\n",
+
+    MK_TRACE("[fastcgi=%i] %lu bytes, ret=%i",
                  handler->server_fd, count, ret);
 
     if (ret == MK_CHANNEL_DONE || ret == MK_CHANNEL_EMPTY) {
@@ -590,6 +625,11 @@ int cb_fastcgi_on_connect(void *data)
     socklen_t s_len = sizeof(s_err);
     struct fcgi_handler *handler = data;
     struct mk_channel *channel;
+
+    if (handler->active == MK_FALSE) {
+        printf("disabled???\n");
+        return -1;
+    }
 
     /* We connect in async mode, we need to check if the connection was OK */
     ret = getsockopt(handler->server_fd, SOL_SOCKET, SO_ERROR, &s_err, &s_len);
@@ -637,6 +677,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
                                       struct mk_http_request *sr)
 {
     int ret;
+    int entries;
     struct fcgi_handler *h;
 
     /* Allocate handler instance and set fields */
@@ -647,6 +688,15 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     h->cs = cs;
     h->sr = sr;
     h->write_rounds = 0;
+    h->active = MK_TRUE;
+    h->server_fd = -1;
+
+    /* Allocate enough space for our data */
+    entries =  40 + (cs->parser.header_count * 3);
+    h->iov = mk_api->iov_create(entries, 0);
+
+    /* Associate the handler with the Session Request */
+    sr->handler_data = h;
 
     if (sr->protocol >= MK_HTTP_PROTOCOL_11) {
         h->hangup = MK_FALSE;
@@ -654,7 +704,6 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     else {
         h->hangup = MK_TRUE;
     }
-
 
     /* Params buffer set an offset to include the header */
     h->buf_len = FCGI_RECORD_HEADER_SIZE;
@@ -670,6 +719,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     }
 
     if (h->server_fd == -1) {
+        mk_api->iov_free(h->iov);
         mk_api->mem_free(h);
         return NULL;
     }
@@ -686,6 +736,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
                          MK_EVENT_CUSTOM, MK_EVENT_WRITE, h);
     if (ret == -1) {
         close(h->server_fd);
+        mk_api->iov_free(h->iov);
         mk_api->mem_free(h);
         return NULL;
     }
