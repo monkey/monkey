@@ -43,11 +43,11 @@ pthread_key_t MK_EXPORT _mkp_data;
 #define MONKEY_PLUGIN(a, b, c, d)                   \
     struct mk_plugin_info MK_EXPORT _plugin_info = {a, b, c, d}
 
-#ifdef TRACE
-
 #ifdef MK_TRACE
 #undef MK_TRACE
 #endif
+
+#ifdef TRACE
 
 #define MK_TRACE(...)                         \
     mk_api->trace("pl",                       \
