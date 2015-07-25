@@ -86,15 +86,15 @@ static int mk_fastcgi_config(char *path)
         ret = mk_api->file_get_info(cnf_srv_path, &finfo, MK_FILE_READ);
         if (ret == -1) {
             mk_warn("[fastcgi] Cannot open unix socket: %s", cnf_srv_path);
+            return -1;
         }
-        return -1;
     }
 
     /* Set the global configuration */
     fcgi_conf.server_name = cnf_srv_name;
     fcgi_conf.server_addr = cnf_srv_addr;
     fcgi_conf.server_port = cnf_srv_port;
-    fcgi_conf.server_name = cnf_srv_name;
+    fcgi_conf.server_path = cnf_srv_path;
 
     return 0;
 }

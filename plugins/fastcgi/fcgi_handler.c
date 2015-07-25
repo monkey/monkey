@@ -413,17 +413,9 @@ int fcgi_exit(struct fcgi_handler *handler)
 
 int fcgi_error(struct fcgi_handler *handler)
 {
+    fcgi_exit(handler);
     mk_api->http_request_error(500, handler->cs, handler->sr);
-    fcgi_exit(handler);
     return 0;
-}
-
-static void cb_fcgi_eof(struct mk_stream *stream)
-{
-    struct fcgi_handler *handler;
-
-    handler = stream->data;
-    fcgi_exit(handler);
 }
 
 static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
@@ -622,6 +614,7 @@ int cb_fastcgi_on_connect(void *data)
 {
     int ret;
     int s_err;
+    size_t count;
     socklen_t s_len = sizeof(s_err);
     struct fcgi_handler *handler = data;
     struct mk_channel *channel;
@@ -670,6 +663,7 @@ int cb_fastcgi_on_connect(void *data)
 
  error:
     fcgi_error(handler);
+    mk_channel_write(handler->cs->channel, &count);
     return 0;
 }
 
@@ -714,14 +708,12 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
                                               atoi(fcgi_conf.server_port),
                                               MK_TRUE);
     }
-    else {
-        //h->server_fd = mk_api->socket_open(fcgi_conf.server_path);
+    else if (fcgi_conf.server_path) {
+        h->server_fd = mk_api->socket_open(fcgi_conf.server_path, MK_TRUE);
     }
 
     if (h->server_fd == -1) {
-        mk_api->iov_free(h->iov);
-        mk_api->mem_free(h);
-        return NULL;
+        goto error;
     }
 
     /* Prepare the built-in event structure */
@@ -736,10 +728,14 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
                          MK_EVENT_CUSTOM, MK_EVENT_WRITE, h);
     if (ret == -1) {
         close(h->server_fd);
-        mk_api->iov_free(h->iov);
-        mk_api->mem_free(h);
-        return NULL;
+        goto error;
     }
 
     return h;
+
+ error:
+    mk_api->iov_free(h->iov);
+    mk_api->mem_free(h);
+    mk_api->http_request_error(500, cs, sr);
+    return NULL;
 }
