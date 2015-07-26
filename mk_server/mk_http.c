@@ -865,8 +865,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 }
             case MK_PLUGIN_RET_END:
                 return MK_EXIT_OK;
-            default:
-                printf("not me?\n");
             }
         }
     }
