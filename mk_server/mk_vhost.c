@@ -539,7 +539,7 @@ int mk_vhost_map_handlers()
             /* Lookup plugin by name */
             p = mk_plugin_lookup(h_handler->name);
             if (!p) {
-                mk_err("Plugin '%s' is not available", h_handler->name);
+                mk_err("Plugin '%s' was not loaded", h_handler->name);
                 exit(EXIT_FAILURE);
             }
 
