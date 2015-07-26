@@ -116,10 +116,14 @@ static int mk_fastcgi_start_processing(struct mk_http_session *cs,
 /* Callback handler */
 int mk_fastcgi_stage30(struct mk_plugin *plugin,
                        struct mk_http_session *cs,
-                       struct mk_http_request *sr)
+                       struct mk_http_request *sr,
+                       int n_params,
+                       struct mk_list *params)
 {
     int ret;
     (void) plugin;
+    (void) n_params;
+    (void) params;
 
     ret = mk_fastcgi_start_processing(cs, sr);
     if (ret == 0) {
