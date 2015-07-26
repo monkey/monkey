@@ -694,6 +694,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     struct mimetype *mime;
     struct mk_list *head;
     struct mk_list *handlers;
+    struct mk_plugin *plugin;
     struct mk_host_handler *h_handler;
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
@@ -850,7 +851,11 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 continue;
             }
 
-            ret = mk_plugin_stage_run_30(cs, sr, h_handler);
+            plugin = h_handler->handler;
+            ret = plugin->stage->stage30(plugin, cs, sr,
+                                         h_handler->n_params,
+                                         &h_handler->params);
+
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
             switch (ret) {
             case MK_PLUGIN_RET_CONTINUE:
