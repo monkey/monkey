@@ -353,6 +353,9 @@ void mk_plugin_api_init()
     api->kernel_version = mk_kernel_version;
     api->kernel_features_print = mk_kernel_features_print;
     api->plugins = &mk_config->plugins;
+
+    /* handler */
+    api->handler_param_get = mk_handler_param_get;
 }
 
 void mk_plugin_load_static()
@@ -711,6 +714,21 @@ struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config)
         if (plugin->capabilities & cap) {
             return plugin;
         }
+    }
+
+    return NULL;
+}
+
+struct mk_handler_param *mk_handler_param_get(int id, struct mk_list *params)
+{
+    int i = 0;
+    struct mk_list *head;
+
+    mk_list_foreach(head, params) {
+        if (i == id) {
+            return mk_list_entry(head, struct mk_handler_param, _head);
+        }
+        i++;
     }
 
     return NULL;

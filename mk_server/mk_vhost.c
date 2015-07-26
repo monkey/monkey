@@ -327,6 +327,7 @@ struct host *mk_vhost_read(char *path)
     struct mk_string_line *entry;
     struct mk_list *head, *list, *line;
     struct mk_host_handler *h_handler;
+    struct mk_handler_param *h_param;
 
     /* Read configuration file */
     cnf = mk_rconf_create(path);
@@ -463,7 +464,9 @@ struct host *mk_vhost_read(char *path)
 
     /* Handlers */
     int i;
+    int params;
     struct mk_list *head_line;
+
     section_handlers = mk_rconf_section_get(cnf, "HANDLERS");
     if (!section_handlers) {
         return host;
@@ -479,8 +482,10 @@ struct host *mk_vhost_read(char *path)
             if (!h_handler) {
                 exit(EXIT_FAILURE);
             }
+            mk_list_init(&h_handler->params);
 
             i = 0;
+            params = 0;
             mk_list_foreach(head_line, line) {
                 entry = mk_list_entry(head_line, struct mk_string_line, _head);
                 switch (i) {
@@ -493,18 +498,26 @@ struct host *mk_vhost_read(char *path)
                 case 1:
                     h_handler->name = mk_string_dup(entry->val);
                     break;
+                default:
+                    /* link parameters */
+                    h_param = mk_mem_malloc(sizeof(struct mk_handler_param));
+                    h_param->p.data = mk_string_dup(entry->val);
+                    h_param->p.len  = entry->len;
+                    mk_list_add(&h_param->_head, &h_handler->params);
+                    params++;
                 };
                 i++;
             }
+            h_handler->n_params = params;
 
-            if (i != 2) {
+            if (i < 2) {
                 mk_err("[Host Handlers] invalid Match value\n");
                 exit(EXIT_FAILURE);
             }
-
             mk_list_add(&h_handler->_head, &host->handlers);
         }
     }
+
 
     return host;
 }

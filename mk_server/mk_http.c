@@ -692,7 +692,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
     struct mimetype *mime;
-    struct mk_plugin *handler = NULL;
     struct mk_list *head;
     struct mk_list *handlers;
     struct mk_host_handler *h_handler;
@@ -851,12 +850,11 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 continue;
             }
 
-            handler = h_handler->handler;
-            ret = mk_plugin_stage_run_30(cs, sr, &handler);
+            ret = mk_plugin_stage_run_30(cs, sr, h_handler);
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
             switch (ret) {
             case MK_PLUGIN_RET_CONTINUE:
-                sr->stage30_handler = handler;
+                sr->stage30_handler = h_handler->handler;
                 return MK_PLUGIN_RET_CONTINUE;
             case MK_PLUGIN_RET_CLOSE_CONX:
                 if (sr->headers.status > 0) {
@@ -867,6 +865,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 }
             case MK_PLUGIN_RET_END:
                 return MK_EXIT_OK;
+            default:
+                printf("not me?\n");
             }
         }
     }

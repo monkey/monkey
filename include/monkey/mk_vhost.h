@@ -34,12 +34,20 @@ struct error_page {
     struct mk_list _head;
 };
 
+struct mk_handler_param {
+    mk_ptr_t p;
+    struct mk_list _head;
+};
+
 struct mk_host_handler {
     /* we only support a regex match for now */
     regex_t match;
 
     /* plugin handler */
     char *name;
+
+    int n_params;
+    struct mk_list params;
     struct mk_plugin *handler;
     struct mk_list _head;
 };

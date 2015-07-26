@@ -232,6 +232,9 @@ struct plugin_api
     int (*kernel_version) ();
     int (*kernel_features_print) (char *, size_t);
 
+    /* Handler */
+    struct mk_handler_param *(*handler_param_get)(int, struct mk_list *);
+
 #ifdef JEMALLOC_STATS
     int (*je_mallctl) (const char *, void *, size_t *, void *, size_t);
 #endif
@@ -284,7 +287,7 @@ struct mk_plugin_stage {
     int (*stage10) (int);
     int (*stage20) (struct mk_http_session *, struct mk_http_request *);
     int (*stage30) (struct mk_plugin *, struct mk_http_session *,
-                    struct mk_http_request *);
+                    struct mk_http_request *, int, struct mk_list *);
     int (*stage30_hangup) (struct mk_plugin *, struct mk_http_session *,
                            struct mk_http_request *);
     int (*stage40) (struct mk_http_session *, struct mk_http_request *);
@@ -351,5 +354,6 @@ struct mk_plugin *mk_plugin_cap(char cap, struct mk_server_config *config);
 struct mk_plugin *mk_plugin_lookup(char *shortname);
 
 void mk_plugin_load_static();
+struct mk_handler_param *mk_handler_param_get(int id, struct mk_list *params);
 
 #endif

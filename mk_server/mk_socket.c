@@ -137,7 +137,7 @@ int mk_socket_open(char *path, int async)
 
     memset(&address, '\0', sizeof(struct sockaddr_un));
     address.sun_family = AF_UNIX;
-    snprintf(address.sun_path, sizeof(address.sun_path), path);
+    snprintf(address.sun_path, sizeof(address.sun_path), "%s", path);
 
     if (async == MK_TRUE) {
         mk_socket_set_nonblocking(socket_fd);
