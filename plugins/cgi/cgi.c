@@ -386,9 +386,8 @@ int mk_cgi_stage30(struct mk_plugin *plugin,
                    int n_params,
                    struct mk_list *params)
 {
-    char url[PATHLEN];
-    char *interpreter;
-    char *mimetype;
+    char *interpreter = NULL;
+    char *mimetype = NULL;
     struct mk_handler_param *param;
     (void) plugin;
 
@@ -418,7 +417,8 @@ int mk_cgi_stage30(struct mk_plugin *plugin,
         }
     }
 
-    int status = do_cgi(file, url, sr, cs, plugin, interpreter, mimetype);
+    int status = do_cgi(file, sr->uri_processed.data,
+                        sr, cs, plugin, interpreter, mimetype);
 
     /* These are just for the other plugins, such as logger; bogus data */
     mk_api->header_set_http_status(sr, status);
