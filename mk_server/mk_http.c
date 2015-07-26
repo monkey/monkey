@@ -752,9 +752,14 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     if (mk_file_get_info(sr->real_path.data,
                          &sr->file_info,
                          MK_FILE_READ) != 0) {
-        /* if the requested resource doesn't exist,
-         * check if some plugin would like to handle it
-         */
+
+        /*
+         * FIXME: commenting out this routine where we used to let
+         * plugins to handle missing resources on the file system.
+         *
+         * As the only caller on this context is Duda plugin, this will
+         * be disabled until Duda DST-2 becomes available.
+
         MK_TRACE("No file, look for handler plugin");
         ret = mk_plugin_stage_run_30(cs, sr, &handler);
         if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
@@ -778,6 +783,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         else if (sr->stage30_blocked == MK_FALSE) {
             return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
         }
+        */
+        return mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
     /* is it a valid directory ? */
