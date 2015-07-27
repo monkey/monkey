@@ -29,8 +29,6 @@
 #include "logger.h"
 #include "pointers.h"
 
-pthread_key_t _mkp_data;
-
 struct status_response {
     int   i_status;
     char *s_status;
@@ -70,7 +68,7 @@ static struct log_target *mk_logger_match_by_host(struct host *host, int is_ok)
 
 static struct iov *mk_logger_get_cache()
 {
-    return pthread_getspecific(_mkp_data);
+    return pthread_getspecific(cache_iov);
 }
 
 static ssize_t _mk_logger_append(int pipe_fd_in,
@@ -222,7 +220,7 @@ static void mk_logger_start_worker(void *args)
                 mk_warn("Could not write to log file: splice() = %ld", slen);
             }
 
-            PLUGIN_TRACE("written %i bytes", bytes);
+            MK_TRACE("written %i bytes", bytes);
             close(flog);
         }
     }
@@ -255,7 +253,7 @@ static int mk_logger_read_config(char *path)
             exit(EXIT_FAILURE);
         }
         mk_logger_timeout = timeout;
-        PLUGIN_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
+        MK_TRACE("FlushTimeout %i seconds", mk_logger_timeout);
 
         /* MasterLog */
         logfilename = mk_api->config_section_get_key(section,
@@ -267,7 +265,7 @@ static int mk_logger_read_config(char *path)
         }
 
         mk_logger_master_path = logfilename;
-        PLUGIN_TRACE("MasterLog '%s'", mk_logger_master_path);
+        MK_TRACE("MasterLog '%s'", mk_logger_master_path);
     }
 
     mk_api->mem_free(default_file);
@@ -315,6 +313,7 @@ int mk_logger_plugin_init(struct plugin_api **api, char *confdir)
     mk_api = *api;
 
     /* Specific thread key */
+    pthread_key_create(&cache_iov, NULL);
     pthread_key_create(&cache_content_length, NULL);
     pthread_key_create(&cache_status, NULL);
     pthread_key_create(&cache_ip_str, NULL);
@@ -378,7 +377,7 @@ int mk_logger_master_init(struct mk_server_config *config)
         mk_logger_print_details();
     }
 
-    PLUGIN_TRACE("Reading virtual hosts");
+    MK_TRACE("Reading virtual hosts");
 
     mk_list_init(&targets_list);
 
@@ -462,11 +461,12 @@ void mk_logger_worker_init()
     mk_ptr_t *status;
     mk_ptr_t *ip_str;
 
-    PLUGIN_TRACE("Creating thread cache");
+
+    MK_TRACE("Creating thread cache");
 
     /* Cache iov log struct */
     iov_log = mk_api->iov_create(15, 0);
-    pthread_setspecific(_mkp_data, (void *) iov_log);
+    pthread_setspecific(cache_iov, (void *) iov_log);
 
     /* Cache content length */
     content_length = mk_api->mem_alloc_z(sizeof(mk_ptr_t));
@@ -512,7 +512,7 @@ int mk_logger_stage40(struct mk_http_session *cs, struct mk_http_request *sr)
     /* Look for target log file */
     target = mk_logger_match_by_host(sr->host_conf, access);
     if (!target) {
-        PLUGIN_TRACE("No target found");
+        MK_TRACE("No target found");
         return 0;
     }
 
