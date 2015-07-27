@@ -431,6 +431,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->chars += 7;
 
                         request_set(&req->protocol_p, p, buffer);
+                        req->protocol_p.len = 8;
                         mk_http_set_minor_version(buffer[tmp + 7]);
                         continue;
                     }
