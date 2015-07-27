@@ -144,13 +144,31 @@ int mk_channel_flush(struct mk_channel *channel)
     return ret;
 }
 
+int mk_stream_release(struct mk_stream *stream)
+{
+    if (stream->type == MK_STREAM_COPYBUF) {
+        if (stream->buffer) {
+            mk_mem_free(stream->buffer);
+        }
+    }
+
+    if (stream->preserve == MK_FALSE) {
+        mk_stream_unlink(stream);
+        if (stream->dynamic == MK_TRUE) {
+            mk_mem_free(stream);
+        }
+    }
+
+    return 0;
+}
+
 /* It perform a direct stream I/O write through the network layer */
 int mk_channel_write(struct mk_channel *channel, size_t *count)
 {
     ssize_t bytes = -1;
     struct mk_iov *iov;
     mk_ptr_t *ptr;
-    struct mk_stream *stream;
+    struct mk_stream *stream = NULL;
 
     if (mk_list_is_empty(&channel->streams) == 0) {
         MK_TRACE("[CH %i] CHANNEL_EMPTY", channel->fd);
@@ -214,13 +232,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
                 }
-
-                if (stream->preserve == MK_FALSE) {
-                    mk_stream_unlink(stream);
-                    if (stream->type == MK_STREAM_COPYBUF) {
-                        mk_mem_free(stream);
-                    }
-                }
             }
 
             if (mk_list_is_empty(&channel->streams) == 0) {
@@ -228,6 +239,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 return MK_CHANNEL_DONE;
             }
 
+            mk_stream_release(stream);
             MK_TRACE("[CH %i] CHANNEL_FLUSH", channel->fd);
             return MK_CHANNEL_FLUSH;
         }
@@ -235,12 +247,12 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             if (errno == EAGAIN) {
                 return MK_CHANNEL_BUSY;
             }
+
+            mk_stream_release(stream);
             return MK_CHANNEL_ERROR;
         }
         else if (bytes == 0) {
-            if (stream->cb_exception) {
-                stream->cb_exception(stream, errno);
-            }
+            mk_stream_release(stream);
             return MK_CHANNEL_ERROR;
         }
     }
@@ -257,18 +269,7 @@ int mk_channel_clean(struct mk_channel *channel)
 
     mk_list_foreach_safe(head, tmp, &channel->streams) {
         stream = mk_list_entry(head, struct mk_stream, _head);
-        mk_stream_unlink(stream);
-
-        if (stream->cb_exception) {
-            stream->cb_exception(stream, 0);
-        }
-
-        if (stream->type == MK_STREAM_COPYBUF) {
-            if (stream->buffer) {
-                mk_mem_free(stream->buffer);
-            }
-            mk_mem_free(stream);
-        }
+        mk_stream_release(stream);
     }
 
     return 0;

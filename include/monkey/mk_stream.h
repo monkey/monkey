@@ -75,6 +75,7 @@ struct mk_stream {
     int fd;                /* file descriptor                  */
     int preserve;          /* preserve stream? (do not unlink) */
     int encoding;          /* some output encoding ?           */
+    int dynamic;           /* dynamic allocated ?              */
 
     /* bytes info */
     size_t bytes_total;
@@ -132,8 +133,12 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
      * performance and aim to make things easier. The COPYBUF type is not
      * used by Monkey core, at the moment the only caller is the CGI plugin.
      */
-    if (type == MK_STREAM_COPYBUF) {
+    if (!stream) {
         stream = mk_mem_malloc(sizeof(struct mk_stream));
+        stream->dynamic = MK_TRUE;
+    }
+    else {
+        stream->dynamic = MK_FALSE;
     }
 
     stream->type         = type;
@@ -146,15 +151,18 @@ static inline void mk_stream_set(struct mk_stream *stream, int type,
     if (type == MK_STREAM_IOV) {
         iov = buffer;
         stream->bytes_total = iov->total_len;
+        MK_TRACE("IOV ENQUEUE %i bytes", iov->total_len);
     }
     else if (type == MK_STREAM_PTR) {
         ptr = buffer;
         stream->bytes_total = ptr->len;
+        MK_TRACE("PTR ENQUEUE %i bytes", stream->bytes_total);
     }
     else if (type == MK_STREAM_COPYBUF) {
         stream->buffer = mk_mem_malloc(size);
         stream->bytes_total = size;
         memcpy(stream->buffer, buffer, size);
+        MK_TRACE("COP ENQUEUE %i bytes", stream->bytes_total);
     }
     else {
         stream->bytes_total = size;

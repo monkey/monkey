@@ -393,7 +393,6 @@ void mk_server_worker_loop()
                     MK_TRACE("[FD %i] Event WRITE", event->fd);
                     ret = mk_sched_event_write(conn, sched);
                     //printf("event write ret=%i\n", ret);
-
                 }
 
                 if (event->mask & MK_EVENT_READ) {

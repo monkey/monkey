@@ -463,6 +463,7 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
     conn->net->close(event->fd);
 
     /* Release and return */
+    mk_channel_clean(&conn->channel);
     mk_sched_event_free(&conn->event);
 
     MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
@@ -648,7 +649,7 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
                      conn);
         return 0;
     }
-    else if (ret == MK_CHANNEL_ERROR) {
+    else if (ret & MK_CHANNEL_ERROR) {
         return -1;
     }
 

@@ -852,6 +852,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             }
 
             plugin = h_handler->handler;
+            sr->stage30_handler = h_handler->handler;
             ret = plugin->stage->stage30(plugin, cs, sr,
                                          h_handler->n_params,
                                          &h_handler->params);
@@ -859,7 +860,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
             switch (ret) {
             case MK_PLUGIN_RET_CONTINUE:
-                sr->stage30_handler = h_handler->handler;
                 return MK_PLUGIN_RET_CONTINUE;
             case MK_PLUGIN_RET_CLOSE_CONX:
                 if (sr->headers.status > 0) {
@@ -1302,7 +1302,6 @@ void mk_http_session_remove(struct mk_http_session *cs)
             MK_TRACE("Hangup stage30 handler");
             handler = sr->stage30_handler;
             handler->stage->stage30_hangup(handler, cs, sr);
-            mk_channel_clean(cs->channel);
         }
     }
 
@@ -1313,6 +1312,7 @@ void mk_http_session_remove(struct mk_http_session *cs)
     mk_list_del(&cs->request_list);
 
     cs->_sched_init = MK_FALSE;
+
 }
 
 struct mk_http_session *mk_http_session_lookup(int socket)
