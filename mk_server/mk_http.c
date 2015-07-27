@@ -1109,7 +1109,6 @@ int mk_http_request_end(struct mk_http_session *cs)
         }
     }
 
-
     /*
      * We need to ask to http_keepalive if this
      * connection can continue working or we must
@@ -1542,8 +1541,13 @@ int mk_http_sched_done(struct mk_sched_conn *conn,
 {
     (void) worker;
     struct mk_http_session *cs;
+    struct mk_http_request *sr;
 
     cs = mk_http_session_get(conn);
+    sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
+
+    mk_plugin_stage_run_40(cs, sr);
+
     return mk_http_request_end(cs);
 }
 
