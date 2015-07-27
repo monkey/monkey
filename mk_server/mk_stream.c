@@ -232,6 +232,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
                 }
+                mk_stream_release(stream);
             }
 
             if (mk_list_is_empty(&channel->streams) == 0) {
@@ -239,7 +240,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 return MK_CHANNEL_DONE;
             }
 
-            mk_stream_release(stream);
             MK_TRACE("[CH %i] CHANNEL_FLUSH", channel->fd);
             return MK_CHANNEL_FLUSH;
         }
