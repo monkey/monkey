@@ -243,6 +243,8 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
 
         /* register the new listener */
         mk_config_listener_add(address, port, flags);
+        mk_string_split_free(list);
+        list = NULL;
     }
 
 error:
@@ -255,7 +257,6 @@ error:
     if (list) {
         mk_string_split_free(list);
     }
-
 
     if (mk_list_is_empty(&mk_config->listeners) == 0) {
         mk_warn("[config] No valid Listen entries found, set default");
