@@ -119,6 +119,22 @@ void mk_server_listen_free()
     }
 }
 
+void mk_server_listen_exit(struct mk_list *list)
+{
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_server_listen *listen;
+
+    mk_list_foreach_safe(head, tmp, list) {
+        listen = mk_list_entry(head, struct mk_server_listen, _head);
+        close(listen->server_fd);
+        mk_list_del(&listen->_head);
+        mk_mem_free(listen);
+    }
+
+    mk_mem_free(list);
+}
+
 struct mk_list *mk_server_listen_init(struct mk_server_config *config)
 {
     int i = 0;
@@ -447,6 +463,9 @@ void mk_server_worker_loop()
                         continue;
                     }
                     else if (val == MK_SCHED_SIGNAL_FREE_ALL) {
+                        close(timeout_fd);
+                        mk_mem_free(server_timeout);
+                        mk_server_listen_exit(sched->listeners);
                         mk_event_loop_destroy(evl);
                         mk_sched_worker_free();
                         return;

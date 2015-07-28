@@ -95,6 +95,9 @@ struct mk_sched_worker
      */
     int signal_channel_r;
     int signal_channel_w;
+
+    /* If using REUSEPORT, this points to the list of listeners */
+    struct mk_list *listeners;
 };
 
 

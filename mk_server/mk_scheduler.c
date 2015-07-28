@@ -46,6 +46,7 @@ __thread struct mk_list *cs_incomplete;
 __thread struct mk_sched_notif *worker_sched_notif;
 __thread struct mk_sched_worker *worker_sched_node;
 
+
 /*
  * Returns the worker id which should take a new incomming connection,
  * it returns the worker id with less active connections. Just used
@@ -134,6 +135,7 @@ void mk_sched_worker_free()
     /* Free master array (av queue & busy queue) */
     mk_mem_free(cs_list);
     mk_mem_free(cs_incomplete);
+    mk_mem_free(worker_sched_notif);
     pthread_mutex_unlock(&mutex_worker_exit);
 }
 
@@ -374,7 +376,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     mk_plugin_core_thread();
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        if (mk_server_listen_init(mk_config) == NULL) {
+        sched->listeners = mk_server_listen_init(mk_config);
+        if (!sched->listeners) {
             mk_err("[sched] Failed to initialize listen sockets.");
             return 0;
         }
