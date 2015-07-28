@@ -185,7 +185,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
                                     struct mk_http_request *sr)
 {
     int i;
-    int fd;
+    int fd = -1;
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
@@ -241,7 +241,7 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
         }
     }
 
-    return -1;
+    return fd;
 }
 
 static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
