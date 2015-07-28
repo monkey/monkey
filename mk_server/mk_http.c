@@ -1243,7 +1243,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
         break;
     }
 
-    if (page) {
+    if (page && sr->method != MK_METHOD_HEAD) {
         sr->headers.content_length = page->len;
     }
     else {
@@ -1274,6 +1274,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           cb_stream_page_finished, NULL, NULL);
         }
     }
+
     mk_channel_write(cs->channel, &count);
     return MK_EXIT_OK;
 }
