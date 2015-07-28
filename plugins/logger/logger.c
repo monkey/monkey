@@ -417,9 +417,6 @@ int mk_logger_master_init(struct mk_server_config *config)
                 new->host = entry_host;
                 mk_list_add(&new->_head, &targets_list);
             }
-            else {
-                new->pipe[0] = -1;
-            }
 
             /* Set error pipe */
             if (error_file_name) {
@@ -443,9 +440,6 @@ int mk_logger_master_init(struct mk_server_config *config)
                 new->host = entry_host;
                 mk_list_add(&new->_head, &targets_list);
 
-            }
-            else {
-                new->pipe[0] = -1;
             }
         }
     }
