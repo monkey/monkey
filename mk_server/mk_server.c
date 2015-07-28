@@ -462,7 +462,9 @@ void mk_server_worker_loop()
                         continue;
                     }
                     else if (val == MK_SCHED_SIGNAL_FREE_ALL) {
-                        close(timeout_fd);
+                        if (timeout_fd > 0) {
+                            close(timeout_fd);
+                        }
                         mk_mem_free(server_timeout);
                         mk_server_listen_exit(sched->listeners);
                         mk_event_loop_destroy(evl);
