@@ -184,6 +184,7 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     }
 
     if (!conn) {
+        mk_err("[server] Could not register client");
         return NULL;
     }
 

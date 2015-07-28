@@ -82,7 +82,6 @@ struct mk_sched_conn *mk_server_listen_handler(struct mk_sched_worker *sched,
 
     conn = mk_sched_add_connection(client_fd, listener, sched);
     if (mk_unlikely(!conn)) {
-        mk_err("[server] Failed to register client.");
         goto error;
     }
 
