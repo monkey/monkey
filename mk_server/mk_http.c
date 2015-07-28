@@ -820,7 +820,11 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 sr->real_path.data = mk_string_dup(index_file.data);
             }
 
-            mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
+            ret = mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
+            if (ret != 0) {
+                return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+            }
+
         }
     }
 
