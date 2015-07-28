@@ -1277,6 +1277,10 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
                           NULL,
                           cb_stream_page_finished, NULL, NULL);
         }
+        else {
+            mk_ptr_free(page);
+            mk_mem_free(page);
+        }
     }
 
     mk_channel_write(cs->channel, &count);
