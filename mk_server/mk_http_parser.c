@@ -281,14 +281,14 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
      */
     if (p->headers_extra_count < MK_HEADER_EXTRA_SIZE) {
         header_extra = &p->headers_extra[p->headers_extra_count];
-        header_extra->key.data = tmp = buffer + p->header_key;
+        header_extra->key.data = tmp = (buffer + p->header_key);
+        header_extra->key.len  = len;
 
         /* Transform the header key string to lowercase */
         for (i = 0; i < len; i++) {
             tmp[i] = tolower(tmp[i]);
         }
 
-        header_extra->key.len  = len;
         header_extra->val.data = buffer + p->header_val;
         header_extra->val.len  = p->end - p->header_val;
         mk_list_add(&header_extra->_head, &p->header_list);
@@ -462,7 +462,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                     }
 
                     /* Try to catch next LF */
-                    if (i < len) {
+                    if (i + 1 < len) {
                         if (buffer[i+1] == '\n') {
                             i++;
                             p->i = i;
