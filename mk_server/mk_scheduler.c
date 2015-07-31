@@ -471,6 +471,7 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
     mk_sched_event_free(&conn->event);
 
     MK_LT_SCHED(remote_fd, "DELETE_CLIENT");
+    exit(0);
     return 0;
 }
 

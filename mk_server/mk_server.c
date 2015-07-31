@@ -393,6 +393,17 @@ void mk_server_worker_loop()
     server_timeout = mk_mem_malloc(sizeof(struct mk_server_timeout));
     timeout_fd = mk_event_timeout_create(evl, mk_config->timeout, server_timeout);
 
+    int r;
+    struct mk_event ev;
+    struct mk_sched_conn *c;
+
+    MK_EVENT_INIT(&ev, STDIN_FILENO, NULL, NULL);
+    listener = mk_list_entry_first(server_listen, struct mk_server_listen, _head);
+    c = mk_sched_add_connection(STDIN_FILENO, listener, sched);
+    r = mk_event_add(sched->loop, STDIN_FILENO, MK_EVENT_CONNECTION,
+                     MK_EVENT_READ, c);
+    printf("STDIN ADD=%i\n", r);
+
     while (1) {
         mk_event_wait(evl);
         mk_event_foreach(event, evl) {

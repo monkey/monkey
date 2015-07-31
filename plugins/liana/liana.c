@@ -48,7 +48,10 @@ int mk_liana_plugin_exit()
 
 int mk_liana_read(int socket_fd, void *buf, int count)
 {
-    return read(socket_fd, (void *) buf, count);
+    int b;
+    b = read(socket_fd, (void *) buf, count);
+    printf("bytes=%i\n", b);
+    return b;
 }
 
 int mk_liana_write(int socket_fd, const void *buf, size_t count )
