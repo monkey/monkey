@@ -587,7 +587,7 @@ void cb_fastcgi_request_flush(void *data)
     size_t count = 0;
     struct fcgi_handler *handler = data;
 
-    ret = mk_channel_write(&handler->fcgi_channel, &count);
+    ret = mk_api->channel_write(&handler->fcgi_channel, &count);
 
     MK_TRACE("[fastcgi=%i] %lu bytes, ret=%i",
                  handler->server_fd, count, ret);
@@ -596,7 +596,7 @@ void cb_fastcgi_request_flush(void *data)
         /* Request done, switch the event side to receive the FCGI response */
         handler->buf_len = 0;
         handler->event.handler = cb_fastcgi_on_read;
-        ret = mk_api->ev_add(mk_sched_loop(),
+        ret = mk_api->ev_add(mk_api->sched_loop(),
                              handler->server_fd,
                              MK_EVENT_CUSTOM, MK_EVENT_READ, handler);
         if (ret == -1) {
@@ -665,7 +665,7 @@ int cb_fastcgi_on_connect(void *data)
 
  error:
     fcgi_error(handler);
-    mk_channel_write(handler->cs->channel, &count);
+    mk_api->channel_write(handler->cs->channel, &count);
     return 0;
 }
 
@@ -725,7 +725,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
      * Let the event loop notify us when we can flush data to
      * the FastCGI server.
      */
-    ret = mk_api->ev_add(mk_sched_loop(),
+    ret = mk_api->ev_add(mk_api->sched_loop(),
                          h->server_fd,
                          MK_EVENT_CUSTOM, MK_EVENT_WRITE, h);
     if (ret == -1) {
