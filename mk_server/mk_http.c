@@ -930,7 +930,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
     /* get file size */
-    if (sr->file_info.size < 0) {
+    if (sr->file_info.size == 0) {
         return mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 

@@ -28,7 +28,7 @@
 
 struct file_info
 {
-    off_t size;
+    size_t size;
     time_t last_modification;
 
     /* Suggest flags to open this file */
