@@ -243,7 +243,7 @@ static inline void mk_channel_debug(struct mk_channel *channel)
 #if defined(__APPLE__)
         printf("bytes=%lld/%lu\n", stream->bytes_offset, stream->bytes_total);
 #else
-        printf("bytes=%ld/%lu\n", stream->bytes_offset, stream->bytes_total);
+        printf("bytes=%ld/%zu\n", stream->bytes_offset, stream->bytes_total);
 #endif
         i++;
     }
