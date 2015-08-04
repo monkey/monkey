@@ -213,9 +213,10 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
             mk_list_add(&listener->_head, listeners);
         }
         else {
-            mk_warn("[server] Failed to bind server socket to %s:%s.",
-                    listen->address,
-                    listen->port);
+            mk_err("[server] Failed to bind server socket to %s:%s.",
+                   listen->address,
+                   listen->port);
+            return NULL;
         }
         i += 1;
     }
