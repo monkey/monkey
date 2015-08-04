@@ -379,8 +379,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         sched->listeners = mk_server_listen_init(mk_config);
         if (!sched->listeners) {
-            mk_err("[sched] Failed to initialize listen sockets.");
-            return 0;
+            exit(EXIT_FAILURE);
         }
     }
 
