@@ -199,8 +199,7 @@ echo $ECHO_OPTS $RED"*"$GREEN$BOLD"           Monkey HTTP Server             "$R
 echo $ECHO_OPTS $RED"*"$YELLOW"           monkey-project.com             "$RED"*"$ECHO_LF
 echo $ECHO_OPTS "*"$BLUE" ---------------------------------------- "$RED"*"$ECHO_LF
 echo $ECHO_OPTS "*"$YELLOW"      Monkey is the next generation       "$RED"*"$ECHO_LF
-echo $ECHO_OPTS "*"$YELLOW"   Web Server for Unix and Embedded Unix  "$RED"*"$ECHO_LF
-echo $ECHO_OPTS "*"$YELLOW"     Supports Linux, FreeBSD, and MacOS   "$RED"*"$ECHO_LF
+echo $ECHO_OPTS "*"$YELLOW"  Web Server for Linux and Unix variants  "$RED"*"$ECHO_LF
 echo $ECHO_OPTS "*"$YELLOW"                                          "$RED"*"$ECHO_LF
 echo $ECHO_OPTS "*"$YELLOW"        Feel free to reach us at:         "$RED"*"$ECHO_LF
 echo $ECHO_OPTS "*"$YELLOW"                                          "$RED"*"$ECHO_LF
