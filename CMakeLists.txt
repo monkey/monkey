@@ -232,6 +232,10 @@ set(MK_VH_LOG_ERROR      MK_LOGDIR)
 
 
 # Paths
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH ${CMAKE_MACOSX_RPATH};${CMAKE_INSTALL_FULL_LIBDIR}/monkey)
+endif()
+
 if(BUILD_LOCAL)
   # This mode aims to be backward compatible with older versions of Monkey where
   # a './configure && make' were enough to have the server running without installing
@@ -302,7 +306,7 @@ include_directories(monkey)
 # plugins  : plugins for mk_server
 # mk_server: server code base: plugins, protocols, scheduler.. (no executable)
 # mk_bin   : server executable
-#
+
 add_subdirectory(mk_core)
 add_subdirectory(plugins)
 add_subdirectory(mk_server)
