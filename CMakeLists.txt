@@ -41,6 +41,7 @@ option(WITH_BACKTRACE      "Enable Backtrace feature"    Yes)
 option(WITH_LINUX_TRACE    "Enable Lttng support"         No)
 option(WITH_PTHREAD_TLS    "Use old Pthread TLS mode"     No)
 option(WITH_SYSTEM_MALLOC  "Use system memory allocator"  No)
+option(WITH_MBEDTLS_SHARED "User mbedtls shared lib"      No)
 
 # Plugins: what should be build ?, these options
 # will be processed later on the plugins/CMakeLists.txt file
