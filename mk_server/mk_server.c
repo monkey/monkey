@@ -124,6 +124,10 @@ void mk_server_listen_exit(struct mk_list *list)
     struct mk_list *head;
     struct mk_server_listen *listen;
 
+    if (!list) {
+        return;
+    }
+
     mk_list_foreach_safe(head, tmp, list) {
         listen = mk_list_entry(head, struct mk_server_listen, _head);
         close(listen->server_fd);
