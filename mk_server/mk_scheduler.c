@@ -639,7 +639,7 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
     MK_TRACE("[FD %i] Connection Handler / write", socket);
 
     ret = mk_channel_write(&conn->channel, &count);
-    if (ret == MK_CHANNEL_FLUSH) {
+    if (ret == MK_CHANNEL_FLUSH || ret == MK_CHANNEL_BUSY) {
         return 0;
     }
     else if (ret == MK_CHANNEL_DONE || ret == MK_CHANNEL_EMPTY) {
