@@ -205,7 +205,7 @@ static inline void mk_stream_bytes_consumed(struct mk_stream *stream, long bytes
     else {
         fmt = "[STREAM_UNKW %p] bytes consumed %lu/%lu";
     }
-    MK_TRACE(fmt, stream, stream->bytes_total, bytes);
+    MK_TRACE(fmt, stream, bytes, stream->bytes_total);
 #endif
 
     stream->bytes_total -= bytes;
