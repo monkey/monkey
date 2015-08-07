@@ -613,7 +613,17 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
 
     if (ret == MK_CHANNEL_DONE) {
         if (conn->protocol->cb_done) {
-            return conn->protocol->cb_done(conn, sched);
+            ret = conn->protocol->cb_done(conn, sched);
+            if (ret == 1) {
+                /* Protocol handler want to send more data */
+                event = &conn->event;
+                mk_event_add(sched->loop, event->fd,
+                             MK_EVENT_CONNECTION,
+                             MK_EVENT_WRITE,
+                             conn);
+                return 0;
+            }
+            return ret;
         }
     }
     else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
@@ -649,11 +659,13 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
         if (ret == -1) {
             return -1;
         }
-        event = &conn->event;
-        mk_event_add(sched->loop, event->fd,
-                     MK_EVENT_CONNECTION,
-                     MK_EVENT_READ,
-                     conn);
+        else if (ret == 0) {
+            event = &conn->event;
+            mk_event_add(sched->loop, event->fd,
+                         MK_EVENT_CONNECTION,
+                         MK_EVENT_READ,
+                         conn);
+        }
         return 0;
     }
     else if (ret & MK_CHANNEL_ERROR) {
