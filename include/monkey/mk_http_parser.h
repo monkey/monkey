@@ -29,8 +29,8 @@
 
 /* General status */
 #define MK_HTTP_PARSER_PENDING -10  /* cannot complete until more data arrives */
-#define MK_HTTP_PARSER_ERROR    -1  /* found an error when parsing the string */
-#define MK_HTTP_PARSER_OK        0
+#define MK_HTTP_PARSER_ERROR    -1  /* found an error when parsing the string  */
+#define MK_HTTP_PARSER_OK        0  /* parser OK, ready to go                  */
 
 /* Connection header values */
 #define MK_HTTP_PARSER_CONN_EMPTY    0
