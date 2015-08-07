@@ -343,15 +343,6 @@ static inline int mk_http_parser_ok(struct mk_http_request *req,
     return MK_HTTP_PARSER_OK;
 }
 
-int mk_http_parser_more(struct mk_http_parser *p, int len)
-{
-    if (len >= p->i + 1) {
-        return MK_TRUE;
-    }
-
-    return MK_FALSE;
-}
-
 /*
  * Parse the protocol and point relevant fields, don't take logic decisions
  * based on this, just parse to locate things.

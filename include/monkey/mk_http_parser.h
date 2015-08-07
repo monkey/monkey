@@ -315,6 +315,16 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     mk_list_init(&p->header_list);
 }
 
+static inline int mk_http_parser_more(struct mk_http_parser *p, int len)
+{
+    if (abs(len - p->i) - 1 > 0) {
+        return MK_TRUE;
+    }
+
+    return MK_FALSE;
+}
+
+
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                    char *buffer, int len);
 
