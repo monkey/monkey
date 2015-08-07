@@ -325,9 +325,14 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
     /* Read content */
     max_read = (cs->body_size - cs->body_length);
     bytes = mk_sched_conn_read(conn, cs->body + cs->body_length, max_read);
-
     MK_TRACE("[FD %i] read %i", socket, bytes);
-    if (bytes <= 0) {
+
+    if (bytes == 0) {
+        MK_TRACE("[FD %i] broken pipe?", socket);
+        errno = 0;
+        return -1;
+    }
+    else if (bytes == -1) {
         return -1;
     }
 
@@ -994,25 +999,37 @@ static inline void mk_http_request_ka_next(struct mk_http_session *cs)
 
 int mk_http_request_end(struct mk_http_session *cs)
 {
+    int ret;
+    int status;
     struct mk_http_request *sr;
 
     /* Check if we have some enqueued pipeline requests */
-    if (cs->pipelined == MK_TRUE) {
-        sr =  mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
-        MK_TRACE("[FD %i] Pipeline finishing %p",
-                 cs->conn->event.fd, sr);
+    ret = mk_http_parser_more(&cs->parser, cs->body_length);
+    if (ret == MK_TRUE) {
+        memmove(cs->body,
+                cs->body + cs->parser.i + 1,
+                abs(cs->body_length - cs->parser.i) -1);
+        cs->body_length = abs(cs->body_length - cs->parser.i) -1;
 
-        /* Remove node and release resources */
-        mk_list_del(&sr->_head);
+        /* Prepare for next one */
+        sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
         mk_http_request_free(sr);
-
-        if (mk_list_is_empty(&cs->request_list) != 0) {
-#ifdef TRACE
-            sr = mk_list_entry_first(&cs->request_list,
-                                     struct mk_http_request, _head);
-            MK_TRACE("[FD %i] Pipeline next is %p", cs->conn->event.fd, sr);
-#endif
+        mk_http_request_init(cs, sr);
+        mk_http_parser_init(&cs->parser);
+        status = mk_http_parser(sr, &cs->parser, cs->body, cs->body_length);
+        if (status == MK_HTTP_PARSER_OK) {
+            mk_http_request_prepare(cs, sr);
+            /*
+             * Return 1 means, we still have more data to send in a different
+             * scheduler round.
+             */
+            return 1;
+        }
+        else if (status == MK_HTTP_PARSER_PENDING) {
             return 0;
+        }
+        else if (status == MK_HTTP_PARSER_ERROR) {
+            cs->close_now = MK_TRUE;
         }
     }
 
