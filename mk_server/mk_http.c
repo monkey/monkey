@@ -1003,9 +1003,18 @@ int mk_http_request_end(struct mk_http_session *cs)
     int status;
     struct mk_http_request *sr;
 
+    if (mk_config->max_keep_alive_request <= cs->counter_connections) {
+        cs->close_now = MK_TRUE;
+        goto shutdown;
+    }
+
     /* Check if we have some enqueued pipeline requests */
     ret = mk_http_parser_more(&cs->parser, cs->body_length);
     if (ret == MK_TRUE) {
+
+        /* Our pipeline request limit is the same that our keepalive limit */
+        cs->counter_connections++;
+
         memmove(cs->body,
                 cs->body + cs->parser.i + 1,
                 abs(cs->body_length - cs->parser.i) -1);
@@ -1033,6 +1042,7 @@ int mk_http_request_end(struct mk_http_session *cs)
         }
     }
 
+ shutdown:
     /*
      * We need to ask to http_keepalive if this
      * connection can continue working or we must
@@ -1049,6 +1059,7 @@ int mk_http_request_end(struct mk_http_session *cs)
         mk_sched_conn_timeout_add(cs->conn, mk_sched_get_thread_conf());
         return 0;
     }
+
 
     return -1;
 }
