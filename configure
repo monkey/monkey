@@ -176,7 +176,7 @@ for arg in $*; do
 	    echo "  --prefix=PREFIX         Root prefix directory"
 	    echo "  --sbindir=BINDIR        Binary files (executables)"
 	    echo "  --libdir=LIBDIR         Libraries"
-	    echo "  --incdir=INCDIR         Header install path"
+	    echo "  --includedir=INCDIR     Header install path"
 	    echo "  --sysconfdir=SYSCONFDIR Configuration files"
 	    echo "  --webroot=WEB_ROOT      Path to default web site files"
 	    echo "  --mandir=MANDIR         Manpages - documentation"
