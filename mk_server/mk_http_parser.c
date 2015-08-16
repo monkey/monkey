@@ -68,6 +68,7 @@ struct row_entry mk_headers_table[] = {
     { 13, "content-range"       },
     { 12, "content-type"        },
     {  4, "host"                },
+    { 14, "http2-settings"      },
     { 17, "if-modified-since"   },
     { 13, "last-modified"       },
     { 19, "last-modified-since" },
@@ -552,7 +553,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                         p->header_max = MK_HEADER_CONTENT_TYPE;
                         break;
                     case 'h':
-                        header_scope_eq(p, MK_HEADER_HOST);
+                        p->header_min = MK_HEADER_HOST;
+                        p->header_max = MK_HEADER_HTTP2_SETTINGS;
                         break;
                     case 'i':
                         header_scope_eq(p, MK_HEADER_IF_MODIFIED_SINCE);

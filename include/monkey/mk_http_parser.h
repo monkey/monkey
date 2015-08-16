@@ -106,6 +106,7 @@ enum mk_request_headers {
     MK_HEADER_CONTENT_RANGE         ,
     MK_HEADER_CONTENT_TYPE          ,
     MK_HEADER_HOST                  ,
+    MK_HEADER_HTTP2_SETTINGS        ,
     MK_HEADER_IF_MODIFIED_SINCE     ,
     MK_HEADER_LAST_MODIFIED         ,
     MK_HEADER_LAST_MODIFIED_SINCE   ,
