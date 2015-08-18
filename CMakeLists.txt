@@ -279,7 +279,7 @@ else()
 
   # Custom PIDFILE
   if(NOT PID_FILE)
-    set(MK_PIDFILE ${MK_CONF_PID_FILE} CACHE STRING "Server pid file name")
+    set(MK_PIDFILE ${MK_CONF_PIDFILE} CACHE STRING "Server pid file name")
   else()
     set(MK_PIDFILE ${PID_FILE} CACHE STRING "Server pid file name")
 endif()
