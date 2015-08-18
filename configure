@@ -125,11 +125,7 @@ for arg in $*; do
 	    default_user=$optarg
 	    ;;
 	--systemddir*)
-	    if [ $optarg ] ; then
-		systemddir=$optarg
-	    else
-		systemddir=/lib/systemd/system
-	    fi
+            cmake_opts+="-DSYSTEMD_DIR='$optarg' "
 	    ;;
         --no-binary*)
             cmake_opts+="-DWITHOUT_BIN=1 "
