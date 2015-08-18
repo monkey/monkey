@@ -220,7 +220,6 @@ set(MK_CONF_KA_TIMEOUT   "5")
 set(MK_CONF_KA_MAXREQ    "1000")
 set(MK_CONF_REQ_SIZE     "32")
 set(MK_CONF_SYMLINK      "Off")
-set(MK_CONF_TRANSPORT    "liana")
 set(MK_CONF_DEFAULT_MIME "text/plain")
 set(MK_CONF_FDT          "On")
 set(MK_CONF_OVERCAPACITY "Resist")
@@ -235,6 +234,14 @@ set(MK_VH_LOG_ERROR      MK_LOGDIR)
 # Paths
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ${CMAKE_MACOSX_RPATH};${CMAKE_INSTALL_FULL_LIBDIR}/monkey)
+endif()
+
+if(DEFAULT_PORT)
+  set(MK_CONF_LISTEN  ${DEFAULT_PORT})
+endif()
+
+if(DEFAULT_USER)
+  set(MK_CONF_USER ${DEFAULT_USER})
 endif()
 
 if(BUILD_LOCAL)
