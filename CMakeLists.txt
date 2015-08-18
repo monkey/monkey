@@ -270,12 +270,19 @@ else()
     set(MK_PATH_LOG ${INSTALL_LOGDIR} CACHE STRING "Server logs")
   endif()
 
+  # Custom PIDPATH
+  if(NOT PID_PATH)
+    set(MK_PATH_PIDPATH ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/run/ CACHE STRING "Server PID path")
+  else()
+    set(MK_PATH_PIDPATH ${PID_PATH} CACHE STRING "Server PID path")
+  endif()
+
   # Custom PIDFILE
   if(NOT PID_FILE)
-    set(MK_PATH_PIDFILE ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/run//@MK_CONF_PIDFILE@ CACHE STRING "Server PID")
+    set(MK_PIDFILE ${MK_CONF_PID_FILE} CACHE STRING "Server pid file name")
   else()
-    set(MK_PATH_PIDFILE ${PID_FILE} CACHE STRING "Server PID")
-  endif()
+    set(MK_PIDFILE ${PID_FILE} CACHE STRING "Server pid file name")
+endif()
 
   # Custom WEBROOT
   if(NOT INSTALL_WEBROOTDIR)
@@ -332,5 +339,5 @@ add_subdirectory(include)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_LOG})
-install(DIRECTORY DESTINATION ${MK_PATH_PIDFILE})
+install(DIRECTORY DESTINATION ${MK_PATH_PIDPATH})
 install(DIRECTORY DESTINATION ${MK_PATH_WWW})
