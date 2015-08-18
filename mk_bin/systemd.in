@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=fork
-ExecStart=$bindir/monkey --daemon
-PIDFile=$pidfile.$default_port
+ExecStart=@CMAKE_INSTALL_FULL_SBINDIR@/monkey --daemon
+PIDFile=@MK_PATH_PIDFILE@
 Restart=always
 
 [Install]
