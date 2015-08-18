@@ -119,10 +119,10 @@ for arg in $*; do
             cmake_opts+="-DWITH_LINUX_KQUEUE=1 "
 	    ;;
 	--default-port*)
-	    default_port=$optarg
+            cmake_opts+="-DDEFAULT_PORT='$optarg' "
 	    ;;
 	--default-user*)
-	    default_user=$optarg
+            cmake_opts+="-DDEFAULT_USER='$optarg' "
 	    ;;
 	--systemddir*)
             cmake_opts+="-DSYSTEMD_DIR='$optarg' "
