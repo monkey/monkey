@@ -1,3 +1,129 @@
+commit 772c77c1d8789d3004eed0fded04fd61579c594b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Aug 16 11:06:53 2015 -0600
+
+    server: streams: get rid of PTR stream type
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5d41aca6550ead387039f22d42101d7d2739de90
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 19:04:07 2015 -0600
+
+    Build: fix local mode for PIDFILE (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 7b3a93b9d4aeb6c793cc4d9637f4c9ecb82eb132
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 14:18:05 2015 -0600
+
+    Build: fix PIDPATH (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2ca72942a4f4395721e242334703f09414930155
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 13:09:09 2015 -0600
+
+    Build: new --pidpath option and fixes for --systemddir (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit dac2b7a2080420e69bbe7a4343f90b093f8e5abf
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 11:42:58 2015 -0600
+
+    Build: fix --default-user and --default-port options (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 619111f9badd0a1b987a46a0c80fe4c87db6af80
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 11:31:18 2015 -0600
+
+    Build: fix --systemddir option, file now is created and installed properly (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b02c2720f0176c6db9c670d3e86715bd8bac9a63
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 11:11:02 2015 -0600
+
+    Build: fix paths when specifying a new pidfile route (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c0a60f50396a297b003319843e8964f37752db1f
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 11:02:49 2015 -0600
+
+    Build: fix missing installation of man pages (ref #215)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 60a25bdb959de17511ff9784fbd297663f1b5a9a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Aug 18 10:49:16 2015 -0600
+
+    Plugins: validate plugins loaded twice (fix #218)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a3d55d4d8451c0c5a36df952fde8eacf44f0b0be
+Author: Anthony G. Basile <blueness@gentoo.org>
+Date:   Thu Aug 13 21:26:00 2015 -0400
+
+    Build: core: add some _GNU_SOURCE definitions required by ulibc
+    
+    While O_CLOEXEC is specified in POSIX.1-2008, uClibc still guards it
+    with _GNU_SOURCE.  So, we define _GNU_SOURCE in files where open(2)
+    includes O_CLOEXEC in its flags.  This fixes the build on uClibc without
+    affecting glibc or musl.
+    
+    Signed-off-by: Anthony G. Basile <blueness@gentoo.org>
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 008b312d4081a40e86ff2e1d54b680d51a41ef49
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Aug 16 13:12:29 2015 -0600
+
+    Build: bump version to v1.6.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ecf3dd701c2f826c1ff74e6949ccebb1165982ae
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Aug 16 11:03:38 2015 -0600
+
+    server: HTTP: handle error page content in header iov
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c267a734e9c5ff63e8d1bd8095ad2fd1a212614a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 13 14:03:55 2015 -0600
+
+    server: HTTP Parser: make sure to increase header count on not-known headers lookup
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 744da34383f48daa9f459668bd071f65023754e7
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Aug 12 11:42:25 2015 -0600
+
+    Build: fix configure script help
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f66179c9dc7a0a3a82b7408eb4380bbf9565d467
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Aug 9 12:43:50 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.0
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 2ec7636630df1ed405179e66fe7c5dad4b533496
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Fri Aug 7 16:48:18 2015 -0600
