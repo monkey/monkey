@@ -39,6 +39,11 @@
 #define MK_HTTP_PARSER_CONN_CLOSE    2
 #define MK_HTTP_PARSER_CONN_UPGRADE  3
 
+/* Upgrades supported */
+#define MK_HTTP_PARSER_UPGRADE_NONE  0
+#define MK_HTTP_PARSER_UPGRADE_H2    1
+#define MK_HTTP_PARSER_UPGRADE_H2C   2
+
 #define MK_HEADER_EXTRA_SIZE         8
 
 /* Request levels
@@ -128,6 +133,10 @@ enum mk_request_headers {
 #define MK_CONN_CLOSE          "close"
 #define MK_CONN_UPGRADE        "upgrade"
 
+/* HTTP Upgrade options available */
+#define MK_UPGRADE_H2          "h2"
+#define MK_UPGRADE_H2C         "h2c"
+
 struct mk_http_header {
     /* The header type/name, e.g: MK_HEADER_CONTENT_LENGTH */
     int type;
@@ -175,6 +184,13 @@ struct mk_http_parser {
      * MK_HTTP_PARSER_CONN_CLOSE  : close
      */
     int                        header_connection;
+
+    /* upgrade request: we suppport the following values:
+     *
+     * MK_HTTP_PARSER_UPGRADE_H2  : HTTP/2.0 (plain TCP)
+     * MK_HTTP_PARSER_UPGRADE_H2C : HTTP/2.0 over TLS
+     */
+    int                        header_upgrade;
 
     /* probable current header, fly parsing */
     int                        header_key;

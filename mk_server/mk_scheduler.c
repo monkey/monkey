@@ -36,6 +36,7 @@
 
 struct mk_sched_worker *sched_list;
 struct mk_sched_handler mk_http_handler;
+struct mk_sched_handler mk_http2_handler;
 
 static pthread_mutex_t mutex_sched_init = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_worker_init = PTHREAD_MUTEX_INITIALIZER;
@@ -142,6 +143,9 @@ void mk_sched_worker_free()
 struct mk_sched_handler *mk_sched_handler_cap(char cap)
 {
     if (cap == MK_CAP_HTTP) {
+        return &mk_http_handler;
+    }
+    else if (cap == MK_CAP_HTTP2) {
         return &mk_http_handler;
     }
 

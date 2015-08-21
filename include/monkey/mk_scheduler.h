@@ -17,6 +17,8 @@
  *  limitations under the License.
  */
 
+#define _GNU_SOURCE
+
 #include <monkey/mk_core.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_stream.h>

@@ -285,6 +285,13 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                     p->header_connection = MK_HTTP_PARSER_CONN_UNKNOWN;
                 }
             }
+            else if (i == MK_HEADER_UPGRADE) {
+                    if (header_cmp(MK_UPGRADE_H2C,
+                                   header->val.data, header->val.len) == 0) {
+                        p->header_upgrade = MK_HTTP_PARSER_UPGRADE_H2C;
+                    }
+            }
+
             return 0;
         }
     }
