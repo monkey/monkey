@@ -183,6 +183,7 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
+    int pos;
     long val;
     char *endptr;
     char *tmp;
@@ -274,15 +275,28 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                         p->header_connection = MK_HTTP_PARSER_CONN_CLOSE;
                     }
                 }
-                /* Check Connection: Upgrade */
-                else if (header->val.len == sizeof(MK_CONN_UPGRADE) -1) {
-                    if (header_cmp(MK_CONN_UPGRADE,
-                                   header->val.data, header->val.len) == 0) {
-                        p->header_connection = MK_HTTP_PARSER_CONN_UPGRADE;
-                    }
-                }
                 else {
                     p->header_connection = MK_HTTP_PARSER_CONN_UNKNOWN;
+
+                    /* Try to find some known values */
+
+                    /* Connection: upgrade */
+                    pos = mk_string_search_n(header->val.data,
+                                             "Upgrade",
+                                             MK_STR_INSENSITIVE,
+                                             header->val.len);
+                    if (pos >= 0) {
+                        p->header_connection = MK_HTTP_PARSER_CONN_UPGRADE;
+                    }
+
+                    /* Connection: HTTP2-Settings */
+                    pos = mk_string_search_n(header->val.data,
+                                             "HTTP2-Settings",
+                                             MK_STR_INSENSITIVE,
+                                             header->val.len);
+                    if (pos >= 0) {
+                        p->header_connection |= MK_HTTP_PARSER_CONN_HTTP2_SE;
+                    }
                 }
             }
             else if (i == MK_HEADER_UPGRADE) {
