@@ -1,6 +1,5 @@
 #!/bin/sh
 # Description: Starts and stops the Monkey service
-#              used to provide reverse proxy status.
 # chkconfig: - 80 30
 
 prefix=/usr
