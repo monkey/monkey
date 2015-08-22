@@ -638,6 +638,30 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         }
     }
 
+    /* Check if this is related to a protocol upgrade */
+    if (cs->parser.header_connection & MK_HTTP_PARSER_CONN_UPGRADE) {
+        /* HTTP/2.0 upgrade ? */
+        if (cs->parser.header_connection & MK_HTTP_PARSER_CONN_HTTP2_SE) {
+            MK_TRACE("Connection Upgrade request: HTTP/2.0");
+            /*
+             * This is a HTTP/2.0 upgrade, we need to validate that we
+             * have at least the 'Upgrade' and 'HTTP2-Settings' headers.
+             */
+            struct mk_http_header *p;
+            p = &cs->parser.headers[MK_HEADER_HTTP2_SETTINGS];
+            if (cs->parser.header_upgrade == MK_HTTP_PARSER_UPGRADE_H2C &&
+                p->key.data) {
+
+                mk_header_set_http_status(sr, MK_INFO_SWITCH_PROTOCOL);
+                /* cont... */
+
+            }
+            else {
+                /* FIXME: should we fail this request ? */
+            }
+        }
+    }
+
     /* Check backward directory request */
     if (memmem(sr->uri_processed.data, sr->uri_processed.len,
                MK_HTTP_DIRECTORY_BACKWARD,

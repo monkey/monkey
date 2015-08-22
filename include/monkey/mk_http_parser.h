@@ -188,8 +188,8 @@ struct mk_http_parser {
 
     /* upgrade request: we suppport the following values:
      *
-     * MK_HTTP_PARSER_UPGRADE_H2  : HTTP/2.0 (plain TCP)
-     * MK_HTTP_PARSER_UPGRADE_H2C : HTTP/2.0 over TLS
+     * MK_HTTP_PARSER_UPGRADE_H2  : HTTP/2.0 over TLS
+     * MK_HTTP_PARSER_UPGRADE_H2C : HTTP/2.0 (plain TCP)
      */
     int                        header_upgrade;
 
