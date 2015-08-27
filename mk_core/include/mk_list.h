@@ -43,18 +43,18 @@ static inline void mk_list_init(struct mk_list *list)
     list->prev = list;
 }
 
-static inline void __mk_list_add(struct mk_list *new, struct mk_list *prev,
+static inline void __mk_list_add(struct mk_list *_new, struct mk_list *prev,
                                  struct mk_list *next)
 {
-    next->prev = new;
-    new->next = next;
-    new->prev = prev;
-    prev->next = new;
+    next->prev = _new;
+    _new->next = next;
+    _new->prev = prev;
+    prev->next = _new;
 }
 
-static inline void mk_list_add(struct mk_list *new, struct mk_list *head)
+static inline void mk_list_add(struct mk_list *_new, struct mk_list *head)
 {
-    __mk_list_add(new, head->prev, head);
+    __mk_list_add(_new, head->prev, head);
 }
 
 static inline void __mk_list_del(struct mk_list *prev, struct mk_list *next)
