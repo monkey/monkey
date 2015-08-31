@@ -29,7 +29,7 @@ set(htdocs
 
 if(NOT BUILD_LOCAL)
   foreach (file ${htdocs})
-    get_filename_component(dir ${file} DIRECTORY)
+    get_filename_component(dir ${file} PATH)
     install(FILES ${file} DESTINATION ${MK_PATH_WWW}/${dir})
   endforeach()
 endif()
