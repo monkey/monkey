@@ -1,15 +1,19 @@
 #!/usr/bin/make -f
 
-DEB_CMAKE_EXTRA_FLAGS += -DCMAKE_INSTALL_PREFIX='/usr' \
-		-DCMAKE_INSTALL_SBINDIR='/usr/sbin' \
-		-DCMAKE_INSTALL_MANDIR='/usr/share/man' \
-		-DINSTALL_SYSCONFDIR='/etc/monkey' \
-		-DINSTALL_WEBROOTDIR='/usr/share/monkey' \
-		-DINSTALL_LOGDIR='/var/log/monkey'\
-		-DINSTALL_INCLUDEDIR='/usr/include/monkey'\
-		-DDEFAULT_USER='www-data' \
-		-DCMAKE_INSTALL_LIBDIR='/usr/lib/monkey'\
-		-DPID_FILE='/var/run/monkey.pid'
-
 %:
 	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+
+	dh_auto_configure -- -DCMAKE_INSTALL_PREFIX='/usr' \
+		-DCMAKE_INSTALL_SBINDIR='/usr/sbin'        \
+		-DCMAKE_INSTALL_MANDIR='/usr/share/man'    \
+		-DINSTALL_SYSCONFDIR='/etc/monkey'         \
+		-DINSTALL_WEBROOTDIR='/usr/share/monkey'   \
+		-DINSTALL_LOGDIR='/var/log/monkey'         \
+		-DINSTALL_INCLUDEDIR='/usr/include/monkey' \
+		-DDEFAULT_USER='www-data'                  \
+		-DCMAKE_INSTALL_LIBDIR='/usr/lib/monkey'   \
+		-DPID_PATH='/var/run/'                     \
+		-DWITH_PLUGIN_TLS=ON                       \
+		-DSYSTEMD_DIR='/lib/systemd/system/'
