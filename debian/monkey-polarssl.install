@@ -1,6 +1,0 @@
-# Plugins setup
-debian/tmp/etc/monkey/plugins/polarssl/*
-
-# Plugins / Libraries
-debian/tmp/usr/lib/monkey/monkey-polarssl.so
-
