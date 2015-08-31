@@ -17,8 +17,7 @@
 CONFDIR="/etc/monkey"
 BINMONKEY="/usr/sbin/monkey"
 
-PORT=$(sed -n '/^[ \t]*Port/s/^.* //p' "$CONFDIR/monkey.conf")
-PIDFILE=$(sed -n '/^[ \t]*PidFile/s/^.* //p' "$CONFDIR/monkey.conf")."$PORT"
+PIDFILE=$(sed -n '/^[ \t]*PidFile/s/^.* //p' "$CONFDIR/monkey.conf")
 
 for arg in $*; do
 	case "$arg" in
