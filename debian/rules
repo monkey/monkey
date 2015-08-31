@@ -13,6 +13,7 @@ override_dh_auto_configure:
 		-DINSTALL_LOGDIR='/var/log/monkey'         \
 		-DINSTALL_INCLUDEDIR='/usr/include/monkey' \
 		-DDEFAULT_USER='www-data'                  \
+	        -DDEFAULT_PORT='80'                        \
 		-DCMAKE_INSTALL_LIBDIR='/usr/lib/monkey'   \
 		-DPID_PATH='/var/run/'                     \
 		-DWITH_PLUGIN_TLS=ON                       \
