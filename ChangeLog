@@ -1,3 +1,19 @@
+commit b18aeec2bba577c4bc554ade88afaa95aa3126e7
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 2 09:43:32 2015 -0600
+
+    server: stream: remove trace msgs that breaks OSX build
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit bfbd8421860de831258e14863c7cbf3952855672
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 2 08:51:54 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 4e445c0243fb62a075f273abed62bd5c8a9de54c
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Aug 31 15:37:41 2015 -0600
