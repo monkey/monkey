@@ -1,3 +1,115 @@
+commit 4e445c0243fb62a075f273abed62bd5c8a9de54c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:37:41 2015 -0600
+
+    Core: remove deprecated files
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 056d5f414ab7e153abfcb0168916a2570a17a3d1
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:26:42 2015 -0600
+
+    Build: bump to v1.6.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8e876ca570c81ecac2a485157e9b1ac661a4cd9d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:26:14 2015 -0600
+
+    HTML: bump version to 1.6.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 36600b9f451e005f3737676bb7fa1939bcd138ad
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:25:52 2015 -0600
+
+    Debian: bump version to 1.6.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0040068c7134c552e9b1b7f1c75789425221f4e8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:24:07 2015 -0600
+
+    server: HTTP Parser: reset errno value
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ea224ff54dc121c10b46345ebc7cea92442f0073
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 15:20:28 2015 -0600
+
+    server: config: reset errno value and force to ask for a TCP port
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a5757649b704172a73e26a09209d9eb94557cfb9
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 10:42:25 2015 -0600
+
+    Debian: fix init script, remove old TCP port reference
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 58a2c74cd9b534d8581ca84c98e198849545bbda
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 10:41:56 2015 -0600
+
+    Debian: default to TCP port 80
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d4dc5e8fbf0f90a2f05bb1f95388b724331ef4bc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 10:19:57 2015 -0600
+
+    Build: fix CMake option for older cmake versions
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a9a4c8a91c6a9eaccead36372b1f26522a0c2571
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 09:46:39 2015 -0600
+
+    Debian: packaging working again
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1cfd41aef6c410211d6d445feeeebfc74f6413fb
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 08:31:16 2015 -0600
+
+    mk_server: htdocs: update version to v1.6.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit fe3182a4551ee0d2c468fd67afa983ab2e9188fc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Aug 31 08:29:59 2015 -0600
+
+    Build: create a list of files to install from htdocs
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4fa54e74dcca197bdd63d0df1ebd9a84e026e5ec
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Aug 30 21:52:59 2015 -0600
+
+    Debian: update rules/control for v1.6.1 (work in process)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8f82dd214d284a78ad19c138be2046128b56f0f0
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Aug 20 23:48:59 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 772c77c1d8789d3004eed0fded04fd61579c594b
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Sun Aug 16 11:06:53 2015 -0600
