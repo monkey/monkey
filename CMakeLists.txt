@@ -340,6 +340,4 @@ add_subdirectory(htdocs)
 add_subdirectory(include)
 
 # Install (missings ?) paths
-install(DIRECTORY DESTINATION ${MK_PATH_LOG})
-install(DIRECTORY DESTINATION ${MK_PATH_PIDPATH})
 install(DIRECTORY DESTINATION ${MK_PATH_WWW})
