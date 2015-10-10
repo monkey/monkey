@@ -270,7 +270,7 @@ static int polar_load_certs(const struct polar_config *conf)
 
         if (ret) {
             mbedtls_strerror(ret, err_buf, sizeof(err_buf));
-            mk_err("[tls] Load built-in cert failed: %s", err_buf);
+            mk_warn("[tls] Load built-in cert failed: %s", err_buf);
             return -1;
         }
 
@@ -665,9 +665,8 @@ int mk_tls_plugin_init(struct plugin_api **api, char *confdir)
     if (config_parse(confdir, &server_context->config)) {
         ret = -1;
     }
-    mk_tls_init();
 
-    return ret;
+    return mk_tls_init();
 }
 
 void mk_tls_worker_init(void)
