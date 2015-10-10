@@ -656,17 +656,33 @@ int mk_tls_close(int fd)
 
 int mk_tls_plugin_init(struct plugin_api **api, char *confdir)
 {
-    int ret = 0;
+    int used;
+    struct mk_list *head;
+    struct mk_config_listener *listen;
 
     /* Evil global config stuff */
     mk_api = *api;
 
-    server_context = mk_api->mem_alloc_z(sizeof(struct polar_server_context));
-    if (config_parse(confdir, &server_context->config)) {
-        ret = -1;
+    /* Check if the plugin will be used by some listener */
+    used = MK_FALSE;
+    mk_list_foreach(head, &mk_api->config->listeners) {
+        listen = mk_list_entry(head, struct mk_config_listener, _head);
+        if (listen->flags & MK_CAP_SOCK_SSL) {
+            used = MK_TRUE;
+            break;
+        }
     }
 
-    return mk_tls_init();
+    if (used) {
+        /* If it's used, load certificates.. mandatory */
+        server_context = mk_api->mem_alloc_z(sizeof(struct polar_server_context));
+        config_parse(confdir, &server_context->config);
+        return mk_tls_init();
+    }
+    else {
+        /* Plugin is not used, just unregister in silence */
+        return -2;
+    }
 }
 
 void mk_tls_worker_init(void)
@@ -762,7 +778,7 @@ struct mk_plugin_network mk_plugin_network_tls = {
 struct mk_plugin mk_plugin_tls = {
     /* Identification */
     .shortname     = "tls",
-    .name          = "mbedTLS",
+    .name          = "SSL/TLS Network Layer",
     .version       = MK_VERSION_STR,
     .hooks         = MK_PLUGIN_NETWORK_LAYER,
 
