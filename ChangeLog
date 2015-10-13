@@ -1,3 +1,150 @@
+commit c4dc139e294e11836af856c6e66e446a2228cc7c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 12 21:18:45 2015 -0600
+
+    tls: add mbedtls reference to 2.1.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0d053862fd273195ac413de7ace214b29df7edd8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 12 21:18:03 2015 -0600
+
+    mbedtls: add new mbedtls-2.1.2 w/apache license
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 752dce3d8065a61cd0f8d532964a88ae1ef7344a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Oct 11 22:02:10 2015 -0600
+
+    Arduino YUN: add instructions
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 58f8afcbd6a08dfb435f062e5be38ea7003d1243
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Oct 11 21:56:01 2015 -0600
+
+    Arduino YUN: add toolchain file
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 63f85a13a0b90668d7ed7ebe04edbe0414e25af0
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 20:49:17 2015 -0600
+
+    tls: check if the plugin will be used or not by the listeners
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a79f82a99f5162c5b12d5d53f3b71a7dcddc5aaa
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 20:48:45 2015 -0600
+
+    mk_server: plugin: allow plugin to unregister in silence
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit a3571b8fd52aa15cfc70eae4936699a74b2632b8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 20:27:59 2015 -0600
+
+    HTML: update references to v1.6.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1c8541d0b0837c8447d641d74506425980f00f97
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 20:27:11 2015 -0600
+
+    Debian: force TLS plugin to be build in static mode
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 89a464494bf8c65a697caed197224a6dd2e3a9f5
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 20:11:11 2015 -0600
+
+    tls: use tls_init() return value to validate plugin initialization
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 55c16a1b57344296d6618df5f23dec94ba732980
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 15:17:28 2015 -0600
+
+    mk_core: fix installation path for core headers
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 19bce6c31526059d5e4a2886303f0b78c2b40830
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 15:17:16 2015 -0600
+
+    Debian: update to v1.6.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit cb95f2311182db746dff63b1fabadfc657adb7f3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 14:52:20 2015 -0600
+
+    Build: add missing CMakeLists.txt file to mk_core include headers path
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 124ac5c928bd45616c31416f31caf0cd9def61f6
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 14:51:59 2015 -0600
+
+    tls: setup mbedtls, disable some features
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8b1aa0633ff15f93a4b10e7ec9ed332853dc95dc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 19:17:49 2015 -0600
+
+    mbedtls: remove old 2.0.0 GPL version
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 7280c2c71726e544e6a2f70830af18777cdcc07d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 19:12:57 2015 -0600
+
+    Build: fixes for making packaging easier
+    
+    This patch add small modifications to make Monkey packaging more easily,
+    it also adds the monkey.init script.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 21d98b0a2c85a3614baf0aebbdf7b6c0cd86244a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 9 19:14:13 2015 -0600
+
+    Build: upgrade minor version to 1.6.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ed782a49493f402992ab55edd6dd6bb573c04e11
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 9 11:33:09 2015 -0600
+
+    mk_core: move headers and fix installation
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 415bf2c0f78c7a85fa02664cd5dbbebb749f4123
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Sep 2 09:47:56 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.2
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit b18aeec2bba577c4bc554ade88afaa95aa3126e7
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Wed Sep 2 09:43:32 2015 -0600
