@@ -1,3 +1,136 @@
+commit ed196f056434bc44392f1a9901e4a7ed1098ae8a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 26 15:39:53 2015 -0600
+
+    Build: fix typo
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0ed7c2aa956650eeaad0cc193e9b6df6be215726
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 26 10:09:38 2015 -0600
+
+    QA: add test for PUT method, validate 405 status error
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 03eed87556bba85439dbcc623c2df3bf946dad92
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 26 10:01:59 2015 -0600
+
+    mk_server: HTTP: use HTTP status 405 instead of 501 (details below)
+    
+    When a request arrives with HTTP methods that Monkey recognize but does not
+    know how to handle, it check if a handler plugin can take care of it.
+    
+    This patch makes the following change when validating methods and handlers:
+    
+    == before ==
+    
+    For requests with methods PUT/DELETE or UNKNOWN, reply with a
+    
+      501 Not Implemented
+    
+    == now ==
+    
+    For request with methods PUT/DELETE, reply with:
+    
+      405 Not allowed
+    
+    For unknown methods reply with:
+    
+      501 Not Implemented
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit cb9ecb6117df3d4787e247799b7fe2f136c619f2
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Oct 25 22:58:41 2015 -0600
+
+    Build: new option 'SKIP_EMPTY_DIRS'
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 24f6c551ccf2f31b7fd91475428955edd6085587
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Oct 25 22:21:08 2015 -0600
+
+    Build: install empty directories
+    
+    This patch forces CMake to install the following empty directories:
+    
+     - ${MK_PATH_PIDPATH})
+     - ${MK_PATH_LOG})
+    
+    Both are required to store the PID file and the possible logs in case the
+    logger plugin is enabled.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 66676cb17601ee2221cfece4fe983fd4bc85cc03
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 24 20:25:45 2015 -0600
+
+    mk_core: utils: improve error messages when writing the PID file
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5cb8bd814b362866617811479e63df46445700ad
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Oct 24 20:06:22 2015 -0600
+
+    Build: move auto-generated systemd file to new path
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 35332819806030eb423a61e0017dff1e46ee6e60
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 22 09:54:51 2015 -0600
+
+    Build: always generate systemd service file
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 49276bf7177c38ba5784fc12ec9885b504ce5f96
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 22 08:28:26 2015 -0600
+
+    HTML: upgrade version to 1.6.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6e060826ba447e4224e0c150e8a64d8f33120ddd
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 22 08:27:46 2015 -0600
+
+    Debian: bump version to 1.6.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3ee131b58f4514c2cbf884e1808af897375b8248
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 22 08:25:16 2015 -0600
+
+    mk_server: fix initialization on single virtual host (fix #220)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d776b1606e00d82090ed608d72a22bb8945e85b5
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 22 08:16:47 2015 -0600
+
+    Build: upgrade minor version to 1.6.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6377dab0adeeabbcbf4a5fcd4b2961871bc3e731
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Oct 13 11:23:34 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.3
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit c4dc139e294e11836af856c6e66e446a2228cc7c
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Oct 12 21:18:45 2015 -0600
