@@ -341,3 +341,5 @@ add_subdirectory(include)
 
 # Install (missings ?) paths
 install(DIRECTORY DESTINATION ${MK_PATH_WWW})
+install(DIRECTORY DESTINATION ${MK_PATH_PIDPATH})
+install(DIRECTORY DESTINATION ${MK_PATH_LOG})
