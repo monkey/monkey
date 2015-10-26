@@ -786,8 +786,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
      * HEAD, but it does not care about them, so if any plugin did not worked
      * on it, Monkey will return error 501 (501 Not Implemented).
      */
-    if (sr->method == MK_METHOD_PUT || sr->method == MK_METHOD_DELETE ||
-        sr->method == MK_METHOD_UNKNOWN) {
+    if (sr->method == MK_METHOD_PUT || sr->method == MK_METHOD_DELETE) {
+        return mk_http_error(MK_CLIENT_METHOD_NOT_ALLOWED, cs, sr);
+    }
+    else if (sr->method == MK_METHOD_UNKNOWN) {
         return mk_http_error(MK_SERVER_NOT_IMPLEMENTED, cs, sr);
     }
 
