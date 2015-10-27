@@ -667,7 +667,7 @@ int mk_tls_plugin_init(struct plugin_api **api, char *confdir)
     used = MK_FALSE;
     mk_list_foreach(head, &mk_api->config->listeners) {
         listen = mk_list_entry(head, struct mk_config_listener, _head);
-        if (listen->flags & MK_CAP_SOCK_SSL) {
+        if (listen->flags & MK_CAP_SOCK_TLS) {
             used = MK_TRUE;
             break;
         }
@@ -792,5 +792,5 @@ struct mk_plugin mk_plugin_tls = {
 
     /* Type */
     .network       = &mk_plugin_network_tls,
-    .capabilities  = MK_CAP_SOCK_SSL
+    .capabilities  = MK_CAP_SOCK_TLS
 };
