@@ -1271,6 +1271,10 @@ void mk_http_session_remove(struct mk_http_session *cs)
         if (sr->stage30_handler) {
             MK_TRACE("Hangup stage30 handler");
             handler = sr->stage30_handler;
+            if (mk_unlikely(!handler->stage->stage30_hangup)) {
+                mk_warn("Plugin %s, do not implement stage30_hangup", handler->name);
+                continue;
+            }
             handler->stage->stage30_hangup(handler, cs, sr);
         }
     }
