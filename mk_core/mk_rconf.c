@@ -82,7 +82,7 @@ static void mk_rconf_section_entry_add(struct mk_rconf *conf,
     mk_list_add(&new->_head, &section->entries);
 }
 
-struct mk_rconf *mk_rconf_create(const char *path)
+struct mk_rconf *mk_rconf_open(const char *path)
 {
     int i;
     int len;
