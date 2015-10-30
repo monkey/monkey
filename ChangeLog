@@ -1,3 +1,59 @@
+commit 3df4a79b9dd5b42b11708529cae919e9c847d2c9
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 30 09:42:19 2015 -0600
+
+    HTML: bump version to 1.6.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit bea67de8185d3832a584750d53be1fffd2174663
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 29 15:33:02 2015 -0600
+
+    Plugins: Auth: implement missing stage30_hangup callback
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 56edc874b2a7b2cc9d3250bfa9aecc15f0f5b4b7
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Oct 29 15:32:21 2015 -0600
+
+    mk_server: HTTP: validate that plugin stage30_hangup is valid
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 61a5e4f3b0c2c3829064a074cbfb237d3770d202
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Oct 27 14:08:14 2015 -0600
+
+    Debian: update changelog for 1.6.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ed87fd839d043ebec611821ba9cf9c7ed877fe0a
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Oct 27 14:07:19 2015 -0600
+
+    Build: bump version to 1.6.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit dbabc754395d81002cb8e4b0a099e6d6eede4903
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Oct 27 14:05:42 2015 -0600
+
+    Plugins: fastcgi: invalidate handler if the connection failed
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 36f847d29d622f2aa2eefff23952cd0a55e4bbec
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Oct 26 15:41:38 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.4
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit ed196f056434bc44392f1a9901e4a7ed1098ae8a
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Oct 26 15:39:53 2015 -0600
