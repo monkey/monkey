@@ -334,7 +334,8 @@ void mk_plugin_api_init()
     api->socket_ip_str = mk_socket_ip_str;
 
     /* Config Callbacks */
-    api->config_create = mk_rconf_open;
+    api->config_create = mk_rconf_create;
+    api->config_open = mk_rconf_open;
     api->config_free = mk_rconf_free;
     api->config_section_get = mk_rconf_section_get;
     api->config_section_get_key = mk_rconf_section_get_key;

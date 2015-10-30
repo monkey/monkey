@@ -192,6 +192,7 @@ struct plugin_api
     void (*rb_link_node) (struct rb_node *, struct rb_node *, struct rb_node **);
 
     /* configuration reader functions */
+    struct mk_rconf *(*config_open) (const char *);
     struct mk_rconf *(*config_create) (const char *);
     void (*config_free) (struct mk_rconf *);
     struct mk_rconf_section *(*config_section_get) (struct mk_rconf *,
