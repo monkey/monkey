@@ -334,7 +334,7 @@ void mk_plugin_api_init()
     api->socket_ip_str = mk_socket_ip_str;
 
     /* Config Callbacks */
-    api->config_create = mk_rconf_create;
+    api->config_create = mk_rconf_open;
     api->config_free = mk_rconf_free;
     api->config_section_get = mk_rconf_section_get;
     api->config_section_get_key = mk_rconf_section_get_key;
@@ -432,7 +432,7 @@ void mk_plugin_load_all()
         snprintf(path, 1024, "%s", mk_config->plugin_load_conf_file);
     }
 
-    cnf = mk_rconf_create(path);
+    cnf = mk_rconf_open(path);
     if (!cnf) {
         mk_warn("No dynamic plugins loaded.");
         mk_mem_free(path);
