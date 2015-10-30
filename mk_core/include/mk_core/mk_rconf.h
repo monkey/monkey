@@ -60,6 +60,7 @@ void mk_rconf_free(struct mk_rconf *conf);
 void mk_rconf_free_entries(struct mk_rconf_section *section);
 
 struct mk_rconf *mk_rconf_open(const char *path);
+struct mk_rconf *mk_rconf_create(const char *path);
 struct mk_rconf_section *mk_rconf_section_add(struct mk_rconf *conf,
                                               char *name);
 struct mk_rconf_section *mk_rconf_section_get(struct mk_rconf *conf,
