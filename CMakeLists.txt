@@ -19,8 +19,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR
 # Monkey Version
 set(MK_VERSION_MAJOR  1)
 set(MK_VERSION_MINOR  6)
-set(MK_VERSION_PATCH  5)
-set(MK_VERSION_STR "${MK_VERSION_MAJOR}.${MK_VERSION_MINOR}.${MK_VERSION_PATCH}")
+set(MK_VERSION_PATCH  6)
+set(MK_VERSION_STR "${MK_VERSION_MAJOR}.${MK_VERSION_MINOR}.${MK_VERSION_PATCH}-smartbee")
 
 # ============================================
 # ============= BUILD OPTIONS ================
