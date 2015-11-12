@@ -26,6 +26,13 @@
 
 #include <regex.h>
 
+struct mk_custom_header {
+    int       enabled;
+    regex_t   match;
+    int length;
+    char headers[1024];
+};
+
 /* Custom error page */
 struct error_page {
     short int status;
@@ -62,6 +69,9 @@ struct host
 
     /* source configuration */
     struct mk_rconf *config;
+
+    /* custom headers */
+    struct mk_custom_header custom_headers;
 
     /* custom error pages */
     struct mk_list error_pages;

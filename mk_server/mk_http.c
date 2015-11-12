@@ -121,7 +121,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
      * it returns NULL
      */
     temp = mk_utils_url_decode(sr->uri);
-
     if (temp) {
         sr->uri_processed.data = temp;
         sr->uri_processed.len  = strlen(temp);
@@ -544,7 +543,8 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
 
 /* Look for some  index.xxx in pathfile */
 mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
-                            const unsigned int flen)
+                            const unsigned int flen,
+                            char **val)
 {
     unsigned long len;
     mk_ptr_t f;
@@ -565,6 +565,7 @@ mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
         if (access(file_aux, F_OK) == 0) {
             f.data = file_aux;
             f.len = len;
+            *val = entry->val;
             return f;
         }
     }
@@ -702,8 +703,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
         /* looking for an index file */
         mk_ptr_t index_file;
+        char *val;
         char tmppath[MK_MAX_PATH];
-        index_file = mk_http_index_file(sr->real_path.data, tmppath, MK_MAX_PATH);
+        index_file = mk_http_index_file(sr->real_path.data, tmppath,
+                                        MK_MAX_PATH, &val);
 
         if (index_file.data) {
             if (sr->real_path.data != sr->real_path_static) {
@@ -728,6 +731,32 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
 
+            /* Re-compose uri-processed */
+            int ret;
+            int size;
+            int bytes = 0;
+            char *tmp;
+
+            size = sr->uri_processed.len + index_file.len + 2;
+            tmp = mk_mem_malloc(size);
+            if (!tmp) {
+                return mk_http_error(MK_SERVER_INTERNAL_ERROR, cs, sr);
+            }
+
+            strncpy(tmp, sr->uri_processed.data, sr->uri_processed.len);
+            bytes += sr->uri_processed.len;
+
+            ret = strlen(val);
+            strncpy(tmp + bytes, val, ret);
+            bytes += ret;
+            tmp[bytes] = '\0';
+
+            if (sr->uri_processed.data != sr->uri.data) {
+                mk_ptr_free(&sr->uri_processed);
+            }
+
+            sr->uri_processed.data = tmp;
+            sr->uri_processed.len  = bytes;
         }
     }
 

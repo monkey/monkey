@@ -323,6 +323,7 @@ struct host *mk_vhost_read(char *path)
     struct mk_rconf_section *section_host;
     struct mk_rconf_section *section_ep;
     struct mk_rconf_section *section_handlers;
+    struct mk_rconf_section *section_headers;
     struct mk_rconf_entry *entry_ep;
     struct mk_string_line *entry;
     struct mk_list *head, *list, *line;
@@ -425,6 +426,32 @@ struct host *mk_vhost_read(char *path)
         host->header_redirect.data = mk_string_dup(tmp);
         host->header_redirect.len  = strlen(tmp);
         mk_mem_free(tmp);
+    }
+
+    /* Custom Headers */
+    section_headers = mk_rconf_section_get(cnf, "CUSTOM_HEADERS");
+    if (section_headers) {
+        host->custom_headers.enabled = MK_TRUE;
+        mk_list_foreach(head, &section_headers->entries) {
+            entry_ep = mk_list_entry(head, struct mk_rconf_entry, _head);
+            if (strcasecmp(entry_ep->key, "Match") == 0) {
+                ret = str_to_regex(entry_ep->val, &host->custom_headers.match);
+                if (ret == -1) {
+                    mk_err("Could not process custom header regular expression");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (strcasecmp(entry_ep->key, "Header") == 0) {
+                ret = snprintf(host->custom_headers.headers +
+                               host->custom_headers.length,
+                               sizeof(host->custom_headers.headers) -
+                               host->custom_headers.length - 1,
+                               "%s\r\n", entry_ep->val);
+                if (ret > 0) {
+                    host->custom_headers.length += ret;
+                }
+            }
+        }
     }
 
     /* Error Pages */

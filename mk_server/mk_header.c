@@ -298,6 +298,20 @@ int mk_header_prepare(struct mk_http_session *cs,
                    MK_FALSE);
     }
 
+    /* Custom Headers */
+    struct host *h;
+    struct mk_custom_header *ch;
+
+    h = sr->host_conf;
+    ch = &h->custom_headers;
+    if (ch->enabled == MK_TRUE) {
+        if (regexec(&ch->match,
+                    sr->uri_processed.data, 0, NULL, 0) == 0) {
+            mk_iov_add(iov,
+                       ch->headers, ch->length, MK_FALSE);
+        }
+    }
+
     /* Content-Length */
     if (sh->content_length >= 0 && sh->transfer_encoding != 0) {
         /* Map content length to MK_POINTER */
