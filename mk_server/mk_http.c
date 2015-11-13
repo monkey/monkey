@@ -594,6 +594,7 @@ static inline void mk_http_cb_file_on_consume(struct mk_stream *stream, long byt
 int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 {
     int ret;
+    int ret_file;
     struct mimetype *mime;
     struct mk_list *head;
     struct mk_list *handlers;
@@ -675,41 +676,45 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     }
 
 
-    if (mk_file_get_info(sr->real_path.data,
-                         &sr->file_info,
-                         MK_FILE_READ) != 0) {
+    ret_file = mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
 
-        /*
-         * FIXME: commenting out this routine where we used to let
-         * plugins to handle missing resources on the file system.
-         *
-         * As the only caller on this context is Duda plugin, this will
-         * be disabled until Duda DST-2 becomes available.
+    /* Plugin Stage 30: look for handlers for this request */
+    if (sr->stage30_blocked == MK_FALSE) {
+        sr->uri_processed.data[sr->uri_processed.len] = '\0';
 
-        MK_TRACE("No file, look for handler plugin");
-        ret = mk_plugin_stage_run_30(cs, sr, &handler);
-        if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
-            if (sr->headers.status > 0) {
-                return mk_http_error(sr->headers.status, cs, sr);
+        handlers = &sr->host_conf->handlers;
+        mk_list_foreach(head, handlers) {
+            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
+            if (regexec(&h_handler->match,
+                        sr->uri_processed.data, 0, NULL, 0) != 0) {
+                continue;
             }
-            else {
-                return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+
+            plugin = h_handler->handler;
+            sr->stage30_handler = h_handler->handler;
+            ret = plugin->stage->stage30(plugin, cs, sr,
+                                         h_handler->n_params,
+                                         &h_handler->params);
+
+            MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
+            switch (ret) {
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            case MK_PLUGIN_RET_CLOSE_CONX:
+                if (sr->headers.status > 0) {
+                    return mk_http_error(sr->headers.status, cs, sr);
+                }
+                else {
+                    return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+                }
+            case MK_PLUGIN_RET_END:
+                return MK_EXIT_OK;
             }
         }
-        else if (ret == MK_PLUGIN_RET_CONTINUE) {
-            return MK_PLUGIN_RET_CONTINUE;
-        }
-        else if (ret == MK_PLUGIN_RET_END) {
-            return MK_EXIT_OK;
-        }
+    }
 
-        if (sr->file_info.exists == MK_FALSE) {
-            return mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
-        }
-        else if (sr->stage30_blocked == MK_FALSE) {
-            return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
-        }
-        */
+    /* If there is no handler and the resource don't exists, raise a 404 */
+    if (ret_file == -1) {
         return mk_http_error(MK_CLIENT_NOT_FOUND, cs, sr);
     }
 
@@ -765,41 +770,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             n = readlink(sr->real_path.data, linked_file, MK_MAX_PATH);
             if (n < 0) {
                 return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
-            }
-        }
-    }
-
-    /* Plugin Stage 30: look for handlers for this request */
-    if (sr->stage30_blocked == MK_FALSE) {
-        sr->uri_processed.data[sr->uri_processed.len] = '\0';
-
-        handlers = &sr->host_conf->handlers;
-        mk_list_foreach(head, handlers) {
-            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
-            if (regexec(&h_handler->match,
-                        sr->uri_processed.data, 0, NULL, 0) != 0) {
-                continue;
-            }
-
-            plugin = h_handler->handler;
-            sr->stage30_handler = h_handler->handler;
-            ret = plugin->stage->stage30(plugin, cs, sr,
-                                         h_handler->n_params,
-                                         &h_handler->params);
-
-            MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
-            switch (ret) {
-            case MK_PLUGIN_RET_CONTINUE:
-                return MK_PLUGIN_RET_CONTINUE;
-            case MK_PLUGIN_RET_CLOSE_CONX:
-                if (sr->headers.status > 0) {
-                    return mk_http_error(sr->headers.status, cs, sr);
-                }
-                else {
-                    return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
-                }
-            case MK_PLUGIN_RET_END:
-                return MK_EXIT_OK;
             }
         }
     }
