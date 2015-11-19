@@ -1449,6 +1449,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                 return -1;
             }
             mk_http_request_prepare(cs, sr);
+            mk_sched_conn_timeout_del(conn);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
             /* The HTTP parser may enqueued some response error */
