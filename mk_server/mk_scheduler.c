@@ -562,8 +562,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
     struct mk_event *event;
 
 #ifdef TRACE
-    int socket = conn->event.fd;
-    MK_TRACE("[FD %i] Connection Handler / read", socket);
+    MK_TRACE("[FD %i] Connection Handler / read", conn->event.fd);
 #endif
 
     /*
@@ -646,7 +645,7 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
     size_t count;
     struct mk_event *event;
 
-    MK_TRACE("[FD %i] Connection Handler / write", socket);
+    MK_TRACE("[FD %i] Connection Handler / write", conn->event.fd);
 
     ret = mk_channel_write(&conn->channel, &count);
     if (ret == MK_CHANNEL_FLUSH || ret == MK_CHANNEL_BUSY) {
