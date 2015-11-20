@@ -1477,6 +1477,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                 mk_http_session_remove(cs);
                 return -1;
             }
+            mk_sched_conn_timeout_del(conn);
             mk_http_request_prepare(cs, sr);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
