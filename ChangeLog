@@ -1,3 +1,59 @@
+commit 076ec7a1072f4e4beed3cc7f93eeb38a5dee69f6
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Nov 23 08:24:38 2015 -0600
+
+    Debian: add monkey.init script
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 58641318e8dd99f9641c268460e993040bc44ebc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Nov 20 10:10:43 2015 -0600
+
+    mk_server: http: remove conn from timeout queue before processing
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9c6eefacf34a74a7e265ee7149e4234352cc44b6
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Nov 20 10:08:13 2015 -0600
+
+    mk_server: scheduler: fix MK_TRACE msg socket number
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ec61360bdd2d99b412a269d0ab6f80a6817d97d9
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Nov 20 10:55:53 2015 -0600
+
+    HTML: bump to v1.6.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f214080af7c85d2377be045627001eae9de476cc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Nov 20 10:12:16 2015 -0600
+
+    Debian: bump version to v1.6.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 661adfb4041a559442907db7118807958f50feee
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Nov 20 10:11:38 2015 -0600
+
+    Build: bump version to v1.6.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e779c7fc66146934e578bca1945b8e71069e5d2c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri Oct 30 09:44:14 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.5
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 3df4a79b9dd5b42b11708529cae919e9c847d2c9
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Fri Oct 30 09:42:19 2015 -0600
