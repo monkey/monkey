@@ -142,6 +142,7 @@ struct mk_sched_handler
     int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *);
     int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int);
     int (*cb_done)  (struct mk_sched_conn *, struct mk_sched_worker *);
+    int (*cb_upgrade) (void *, void *);
 
     /*
      * This extra field is a small hack. The scheduler connection context
@@ -284,7 +285,7 @@ static inline void mk_sched_conn_timeout_del(struct mk_sched_conn *conn)
 #define mk_sched_conn_sendfile(ch, f_fd, f_offs, f_count)   \
     ch->io->send_file(ch->fd, f_fd, f_offs, f_count)
 
-#define mk_sched_switch_protocol(conn, cap)         \
+#define mk_sched_switch_protocol(conn, cap)     \
     conn->protocol = mk_sched_handler_cap(cap)
 
 #endif
