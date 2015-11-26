@@ -36,13 +36,15 @@ int mk_http2_frame_header(char *buf, uint32_t length, uint8_t type,
 }
 
 /* Handle an upgraded session */
-int mk_http2_upgrade(struct mk_http_session *cs, struct mk_http_request *sr)
+int mk_http2_upgrade(void *cs, void *sr)
 {
-    mk_header_set_http_status(sr, MK_INFO_SWITCH_PROTOCOL);
-    sr->headers.connection = MK_HEADER_CONN_UPGRADED;
-    sr->headers.upgrade = MK_HEADER_UPGRADED_H2C;
-    mk_header_prepare(cs, sr);
+    struct mk_http_session *s = cs;
+    struct mk_http_request *r = sr;
 
+    mk_header_set_http_status(r, MK_INFO_SWITCH_PROTOCOL);
+    r->headers.connection = MK_HEADER_CONN_UPGRADED;
+    r->headers.upgrade = MK_HEADER_UPGRADED_H2C;
+    mk_header_prepare(s, r);
 
     return MK_HTTP_OK;
 }
@@ -52,6 +54,7 @@ struct mk_sched_handler mk_http2_handler = {
   .cb_read          = NULL, //mk_http_sched_read,
   .cb_close         = NULL,
   .cb_done          = NULL,
+  .cb_upgrade       = mk_http2_upgrade,
   .sched_extra_size = 0,
   .capabilities     = MK_CAP_HTTP2
 };
