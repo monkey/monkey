@@ -654,10 +654,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 p->key.data) {
 
                 mk_sched_switch_protocol(cs->conn, MK_CAP_HTTP2);
-                return mk_http2_upgrade(cs, sr);
+                return cs->conn->protocol->cb_upgrade(cs, sr);
             }
             else {
-                /* FIXME: should we fail this request ? */
+                MK_TRACE("Invalid client upgrade request, skip it");
             }
         }
     }
