@@ -146,7 +146,7 @@ struct mk_sched_handler *mk_sched_handler_cap(char cap)
         return &mk_http_handler;
     }
     else if (cap == MK_CAP_HTTP2) {
-        return &mk_http_handler;
+        return &mk_http2_handler;
     }
 
     return NULL;

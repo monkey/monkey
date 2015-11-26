@@ -284,4 +284,7 @@ static inline void mk_sched_conn_timeout_del(struct mk_sched_conn *conn)
 #define mk_sched_conn_sendfile(ch, f_fd, f_offs, f_count)   \
     ch->io->send_file(ch->fd, f_fd, f_offs, f_count)
 
+#define mk_sched_switch_protocol(conn, cap)         \
+    conn->protocol = mk_sched_handler_cap(cap)
+
 #endif

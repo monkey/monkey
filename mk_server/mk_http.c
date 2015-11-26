@@ -652,9 +652,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             if (cs->parser.header_upgrade == MK_HTTP_PARSER_UPGRADE_H2C &&
                 p->key.data) {
 
-                mk_header_set_http_status(sr, MK_INFO_SWITCH_PROTOCOL);
-                /* cont... */
-
+                mk_sched_switch_protocol(cs->conn, MK_CAP_HTTP2);
+                return mk_http2_upgrade(cs, sr);
             }
             else {
                 /* FIXME: should we fail this request ? */

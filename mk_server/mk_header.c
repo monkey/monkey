@@ -38,10 +38,12 @@
 #define MK_HEADER_ALLOWED_METHODS  "Allow: "
 #define MK_HEADER_CONN_KA          "Connection: Keep-Alive" MK_CRLF
 #define MK_HEADER_CONN_CLOSE       "Connection: Close" MK_CRLF
+#define MK_HEADER_CONN_UPGRADE     "Connection: Upgrade" MK_CRLF
 #define MK_HEADER_CONTENT_LENGTH   "Content-Length: "
 #define MK_HEADER_CONTENT_ENCODING "Content-Encoding: "
 #define MK_HEADER_TE_CHUNKED       "Transfer-Encoding: Chunked" MK_CRLF
 #define MK_HEADER_LAST_MODIFIED    "Last-Modified: "
+#define MK_HEADER_UPGRADE_H2C      "Upgrade: h2c" MK_CRLF
 
 const mk_ptr_t mk_header_short_date = mk_ptr_init(MK_HEADER_SHORT_DATE);
 const mk_ptr_t mk_header_short_location = mk_ptr_init(MK_HEADER_SHORT_LOCATION);
@@ -50,11 +52,13 @@ const mk_ptr_t mk_header_allow = mk_ptr_init(MK_HEADER_ALLOWED_METHODS);
 
 const mk_ptr_t mk_header_conn_ka = mk_ptr_init(MK_HEADER_CONN_KA);
 const mk_ptr_t mk_header_conn_close = mk_ptr_init(MK_HEADER_CONN_CLOSE);
+const mk_ptr_t mk_header_conn_upgrade = mk_ptr_init(MK_HEADER_CONN_UPGRADE);
 const mk_ptr_t mk_header_content_length = mk_ptr_init(MK_HEADER_CONTENT_LENGTH);
 const mk_ptr_t mk_header_content_encoding = mk_ptr_init(MK_HEADER_CONTENT_ENCODING);
 const mk_ptr_t mk_header_accept_ranges = mk_ptr_init(MK_HEADER_ACCEPT_RANGES);
 const mk_ptr_t mk_header_te_chunked = mk_ptr_init(MK_HEADER_TE_CHUNKED);
 const mk_ptr_t mk_header_last_modified = mk_ptr_init(MK_HEADER_LAST_MODIFIED);
+const mk_ptr_t mk_header_upgrade_h2c = mk_ptr_init(MK_HEADER_UPGRADE_H2C);
 
 #define status_entry(num, str) {num, sizeof(str) - 1, str}
 
@@ -234,6 +238,12 @@ int mk_header_prepare(struct mk_http_session *cs,
                        MK_FALSE);
         }
     }
+    else if (sh->connection == MK_HEADER_CONN_UPGRADED) {
+             mk_iov_add(iov,
+                        mk_header_conn_upgrade.data,
+                        mk_header_conn_upgrade.len,
+                        MK_FALSE);
+    }
 
     /* Location */
     if (sh->location != NULL) {
@@ -353,6 +363,12 @@ int mk_header_prepare(struct mk_http_session *cs,
         }
     }
 
+    if (sh->upgrade == MK_HEADER_UPGRADED_H2C) {
+        mk_iov_add(iov, mk_header_upgrade_h2c.data, mk_header_upgrade_h2c.len,
+                   MK_FALSE);
+    }
+
+
     if (sh->cgi == SH_NOCGI || sh->breakline == MK_HEADER_BREAKLINE) {
         if (!sr->headers._extra_rows) {
             mk_iov_add(iov, mk_iov_crlf.data, mk_iov_crlf.len,
@@ -409,6 +425,7 @@ void mk_header_response_reset(struct response_headers *header)
     header->connection = 0;
     header->transfer_encoding = -1;
     header->last_modified = -1;
+    header->upgrade = -1;
     header->cgi = SH_NOCGI;
     mk_ptr_reset(&header->content_type);
     mk_ptr_reset(&header->content_encoding);
