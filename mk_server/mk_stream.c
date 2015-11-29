@@ -77,7 +77,19 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
     return bytes;
 }
 
-static inline void mk_copybuf_consume(struct mk_stream *stream, size_t bytes)
+static inline void consume_raw(struct mk_stream *stream, size_t bytes)
+{
+    if (bytes == stream->bytes_total) {
+        stream->buffer = NULL;
+    }
+    else {
+        memmove(stream->buffer,
+                stream->buffer + bytes,
+                stream->bytes_total - bytes);
+    }
+}
+
+static inline void consume_copybuf(struct mk_stream *stream, size_t bytes)
 {
     /*
      * Copybuf is a dynamic buffer allocated when the stream was configured,
@@ -202,7 +214,16 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             MK_TRACE("[CH %i] STREAM_COPYBUF, bytes=%lu/%lu",
                      channel->fd, bytes, stream->bytes_total);
             if (bytes > 0) {
-                mk_copybuf_consume(stream, bytes);
+                consume_copybuf(stream, bytes);
+            }
+        }
+        else if (stream->type == MK_STREAM_RAW) {
+            bytes = mk_sched_conn_write(channel,
+                                        stream->buffer, stream->bytes_total);
+            MK_TRACE("[CH %i] STREAM_RAW, bytes=%lu/%lu",
+                     channel->fd, bytes, stream->bytes_total);
+            if (bytes > 0) {
+                consume_raw(stream, bytes);
             }
         }
 
