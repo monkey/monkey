@@ -21,6 +21,23 @@
 #define MK_HTTP2_H
 
 #include <stdint.h>
+#include <monkey/mk_stream.h>
+
+/* Connection was just upgraded */
+#define MK_HTTP2_UPGRADED               1
+
+/*
+ * The Client 'sent' the SETTINGS frame according to Section 6.5:
+ *
+ * https://httpwg.github.io/specs/rfc7540.html#ConnectionHeader
+ * https://httpwg.github.io/specs/rfc7540.html#SETTINGS
+ */
+#define MK_HTTP2_CLIENT_SETTINGS        2
+
+
+
+/* A buffer chunk size */
+#define MK_HTTP2_CHUNK               4096
 
 /*
  * HTTP2 Error codes
@@ -71,12 +88,24 @@
  *
  */
 
-/* Structure to represent a readed frame (not to write) */
+/* Structure to represent an incoming frame (not to write) */
 struct mk_http2_frame {
-  uint32_t  len_type;  /* (24 length + 8 type) */
-  uint8_t   flags;
-  uint32_t  stream_id;
-  void      *payload;
+    uint32_t  len_type;  /* (24 length + 8 type) */
+    uint8_t   flags;
+    uint32_t  stream_id;
+    void      *payload;
+};
+
+struct mk_http2_session {
+    int status;
+
+    /* Buffer used to read data */
+    unsigned int buffer_size;
+    unsigned int buffer_length;
+    char *buffer;
+    char buffer_fixed[MK_HTTP2_CHUNK];
+
+    struct mk_stream stream_settings;
 };
 
 #endif
