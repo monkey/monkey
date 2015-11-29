@@ -638,6 +638,11 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
                          conn);
         }
     }
+#ifdef TRACE
+    else if (ret & MK_CHANNEL_ERROR) {
+        MK_TRACE("[FD %i] CHANNEL_ERROR", conn->event.fd);
+    }
+#endif
 
     return ret;
 }
