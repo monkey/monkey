@@ -115,6 +115,7 @@ struct mk_sched_conn
     struct mk_channel channel;         /* stream channel               */
     struct mk_list timeout_head;       /* link to the timeout queue    */
     struct rb_node _rb_head;           /* red-black tree head          */
+    void *data;                        /* optional ref for protocols   */
 };
 
 #define MK_SCHED_CONN_CAP(conn)  conn->protocol->capabilities
