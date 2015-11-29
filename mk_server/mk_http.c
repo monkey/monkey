@@ -652,7 +652,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             p = &cs->parser.headers[MK_HEADER_HTTP2_SETTINGS];
             if (cs->parser.header_upgrade == MK_HTTP_PARSER_UPGRADE_H2C &&
                 p->key.data) {
-
+                /*
+                 * Switch protocols and invoke the callback upgrade to prepare
+                 * the new protocol internals.
+                 */
                 mk_sched_switch_protocol(cs->conn, MK_CAP_HTTP2);
                 return cs->conn->protocol->cb_upgrade(cs, sr);
             }
