@@ -377,7 +377,7 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
     int s;
     int tmp;
     int ret;
-    int len = p->i + buf_len;
+    int len;
 
     /* lazy test
 
