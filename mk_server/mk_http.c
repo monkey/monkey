@@ -1136,46 +1136,46 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
     switch (http_status) {
     case MK_CLIENT_FORBIDDEN:
-        ret = mk_http_error_page("Forbidden",
-                                 &sr->uri,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Forbidden",
+                           &sr->uri,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         break;
     case MK_CLIENT_NOT_FOUND:
         mk_string_build(&message.data, &message.len,
                         "The requested URL was not found on this server.");
-        ret = mk_http_error_page("Not Found",
-                                 &message,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Not Found",
+                           &message,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         mk_ptr_free(&message);
         break;
     case MK_CLIENT_REQUEST_ENTITY_TOO_LARGE:
         mk_string_build(&message.data, &message.len,
                         "The request entity is too large.");
-        ret = mk_http_error_page("Entity too large",
-                                 &message,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Entity too large",
+                           &message,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         mk_ptr_free(&message);
         break;
     case MK_CLIENT_METHOD_NOT_ALLOWED:
-        ret = mk_http_error_page("Method Not Allowed",
-                                 &sr->uri,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Method Not Allowed",
+                           &sr->uri,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         break;
     case MK_SERVER_NOT_IMPLEMENTED:
-        ret = mk_http_error_page("Method Not Implemented",
-                                 &sr->uri,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Method Not Implemented",
+                           &sr->uri,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         break;
     case MK_SERVER_INTERNAL_ERROR:
-        ret = mk_http_error_page("Internal Server Error",
-                                 &sr->uri,
-                                 mk_config->server_signature,
-                                 &page.data, &page.len);
+        mk_http_error_page("Internal Server Error",
+                           &sr->uri,
+                           mk_config->server_signature,
+                           &page.data, &page.len);
         break;
     }
 
