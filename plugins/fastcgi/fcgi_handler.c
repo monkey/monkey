@@ -451,6 +451,11 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
 
     if (handler->headers_set == MK_FALSE) {
         advance = 4;
+
+        if (!buf) {
+            return -1;
+        }
+
         end = getearliestbreak(buf, len, &advance);
         if (!end) {
             /* we need more data */
@@ -560,6 +565,7 @@ int cb_fastcgi_on_read(void *data)
             MK_TRACE("[fastcgi=%i] FCGI_END_REQUEST content_length=%i",
                      handler->server_fd, header.content_length);
             ret = fcgi_response(handler, NULL, 0);
+            break;
         default:
             //fcgi_exit(handler);
             return -1;
