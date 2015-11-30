@@ -159,7 +159,7 @@ static int mk_security_check_ip(int socket)
     struct mk_secure_ip_t *entry;
     struct mk_list *head;
     struct in_addr *addr;
-    struct sockaddr_in addr_t;
+    struct sockaddr_in addr_t = {0};
     socklen_t len = sizeof(addr_t);
 
     if (getpeername(socket, (struct sockaddr *) &addr_t, &len) != 0) {
