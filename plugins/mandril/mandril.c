@@ -51,7 +51,7 @@ static int mk_security_conf(char *confdir)
 
     /* Read configuration */
     mk_api->str_build(&conf_path, &len, "%s/mandril.conf", confdir);
-    conf = mk_api->config_create(conf_path);
+    conf = mk_api->config_open(conf_path);
     if (!conf) {
         return -1;
     }
