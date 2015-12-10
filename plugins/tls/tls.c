@@ -204,7 +204,7 @@ static int config_parse(const char *confdir, struct polar_config *conf)
     struct mk_list *head;
 
     mk_api->str_build(&conf_path, &len, "%stls.conf", confdir);
-    conf_head = mk_api->config_create(conf_path);
+    conf_head = mk_api->config_open(conf_path);
     mk_api->mem_free(conf_path);
 
     if (conf_head == NULL) {
