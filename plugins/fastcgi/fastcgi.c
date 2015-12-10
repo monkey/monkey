@@ -37,7 +37,7 @@ static int mk_fastcgi_config(char *path)
     struct mk_rconf_section *section;
 
     mk_api->str_build(&file, &len, "%sfastcgi.conf", path);
-    conf = mk_api->config_create(file);
+    conf = mk_api->config_open(file);
     if (!conf) {
         return -1;
     }
