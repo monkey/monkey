@@ -214,7 +214,7 @@ static int config_parse(const char *confdir, struct polar_config *conf)
         goto fallback;
     }
 
-    section = mk_rconf_section_get(conf_head, "TLS");
+    section = mk_api->config_section_get(conf_head, "TLS");
     if (!section) {
         goto fallback;
     }
