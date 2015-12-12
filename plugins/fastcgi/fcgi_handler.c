@@ -26,7 +26,7 @@
 #define FCGI_PARAM_DYN(str)   str, strlen(str), MK_FALSE
 #define FCGI_PARAM_CONST(str) str, sizeof(str) -1, MK_FALSE
 #define FCGI_PARAM_PTR(ptr)   ptr.data, ptr.len, MK_FALSE
-#define FCGI_PARAM_DUP(str)   mk_string_dup(str), strlen(str), MK_TRUE
+#define FCGI_PARAM_DUP(str)   mk_api->str_dup(str), strlen(str), MK_TRUE
 
 static inline void fcgi_build_header(struct fcgi_record_header *rec,
                                      uint8_t type, uint16_t request_id,
