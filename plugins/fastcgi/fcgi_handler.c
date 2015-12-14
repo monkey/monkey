@@ -624,6 +624,8 @@ int cb_fastcgi_on_connect(void *data)
     int s_err;
     size_t count;
     socklen_t s_len = sizeof(s_err);
+    struct mk_list *head;
+    struct mk_plugin *pio;
     struct fcgi_handler *handler = data;
     struct mk_channel *channel;
 
@@ -654,10 +656,17 @@ int cb_fastcgi_on_connect(void *data)
     channel->type = MK_CHANNEL_SOCKET;
     channel->fd   = handler->server_fd;
 
-    /* FIXME: Need to specify the channel type, raw ? */
-    channel->io   = handler->cs->conn->net;
-    mk_list_init(&channel->streams);
+    /* FIXME: Discovery process needs to be fast */
+    mk_list_foreach(head, &mk_api->config->plugins) {
+        pio = mk_list_entry(head, struct mk_plugin, _head);
+        if (strncmp(pio->shortname, "liana", 5) == 0) {
+            break;
+        }
+        pio = NULL;
+    }
+    channel->io   = pio->network;
 
+    mk_list_init(&channel->streams);
     mk_api->stream_set(&handler->fcgi_stream,
                        MK_STREAM_IOV,
                        &handler->fcgi_channel,
@@ -694,7 +703,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     h->server_fd = -1;
 
     /* Allocate enough space for our data */
-    entries =  40 + (cs->parser.header_count * 3);
+    entries =  64 + (cs->parser.header_count * 3);
     h->iov = mk_api->iov_create(entries, 0);
 
     /* Associate the handler with the Session Request */
