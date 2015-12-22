@@ -22,9 +22,11 @@
 
 #include <stdint.h>
 #include <monkey/mk_stream.h>
+#include <monkey/mk_http2_settings.h>
 
 /* Connection was just upgraded */
 #define MK_HTTP2_UPGRADED               1
+#define MK_HTTP2_OK                     2
 
 /*
  * The Client 'sent' the SETTINGS frame according to Section 6.5:
@@ -39,9 +41,81 @@
 /* A buffer chunk size */
 #define MK_HTTP2_CHUNK               4096
 
+#define MK_HTTP2_HEADER_SIZE            9 /* Frame header size */
+
 /*
- * HTTP2 Error codes
- * -----------------
+ * 4.1 HTTP2 Frame format
+ *
+ * +-----------------------------------------------+
+ * |                 Length (24)                   |
+ * +---------------+---------------+---------------+
+ * |   Type (8)    |   Flags (8)   |
+ * +-+-------------+---------------+-------------------------------+
+ * |R|                 Stream Identifier (31)                      |
+ * +=+=============================================================+
+ * |                   Frame Payload (0...)                      ...
+ * +---------------------------------------------------------------+
+ *
+ */
+
+/* Structure to represent an incoming frame (not to write) */
+struct mk_http2_frame {
+    uint32_t  len_type;  /* (24 length + 8 type) */
+    uint8_t   flags;
+    uint32_t  stream_id;
+    void      *payload;
+};
+
+/* a=target variable, b=bit number to act upon 0-n */
+#define BIT_CLEAR(a,b) ((a) &= ~(1<<(b)))
+
+static inline uint32_t mk_http2_bitdec_32u(uint8_t *b)
+{
+    return (uint32_t) ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
+}
+
+static inline uint32_t mk_http2_bitdec_stream_id(uint8_t *b)
+{
+    uint32_t sid = mk_http2_bitdec_32u(b);
+    return BIT_CLEAR(sid, 31);
+}
+
+static inline uint8_t mk_http2_frame_type(struct mk_http2_frame *f)
+{
+    return (uint8_t) (0xFFFFFF & f->len_type);
+}
+
+static inline uint32_t mk_http2_frame_len(struct mk_http2_frame *f)
+{
+    return (uint32_t) (f->len_type >> 8);
+}
+
+/* HTTP/2 General flags */
+
+#define MK_HTTP2_SETTINGS_ACK        0x1
+
+/*
+ * HTTP/2 Frame types
+ */
+#define MK_HTTP2_DATA                0x0   /* Section 6.1  */
+#define MK_HTTP2_HEADERS             0x1   /* Section 6.2  */
+#define MK_HTTP2_PRIORITY            0x2   /* Section 6.3  */
+#define MK_HTTP2_RST_STREAM          0x3   /* Section 6.4  */
+#define MK_HTTP2_SETTINGS            0x4   /* Section 6.5  */
+#define MK_HTTP2_PUSH_PROMISE        0x5   /* Section 6.6  */
+#define MK_HTTP2_PING                0x6   /* Section 6.7  */
+#define MK_HTTP2_GOAWAY              0x7   /* Section 6.8  */
+#define MK_HTTP2_WINDOW_UPDATE       0x8   /* Section 6.9  */
+#define MK_HTTP2_CONTINUATION        0x9   /* Section 6.10 */
+
+/*
+ * HTTP/2 Settings Parameters (Section 6.5.2)
+ * ------------------------------------------
+ */
+
+/*
+ * HTTP/2 Error codes
+ * ------------------
  */
 
 /* The associated condition is not a result of an error */
@@ -73,28 +147,6 @@
 /* The endpoint requires that HTTP/1.1 be used instead of HTTP/2 */
 #define MK_HTTP2_HTTP_1_1_REQUIRED   0xd
 
-/*
- * 4.1 HTTP2 Frame format
- *
- * +-----------------------------------------------+
- * |                 Length (24)                   |
- * +---------------+---------------+---------------+
- * |   Type (8)    |   Flags (8)   |
- * +-+-------------+---------------+-------------------------------+
- * |R|                 Stream Identifier (31)                      |
- * +=+=============================================================+
- * |                   Frame Payload (0...)                      ...
- * +---------------------------------------------------------------+
- *
- */
-
-/* Structure to represent an incoming frame (not to write) */
-struct mk_http2_frame {
-    uint32_t  len_type;  /* (24 length + 8 type) */
-    uint8_t   flags;
-    uint32_t  stream_id;
-    void      *payload;
-};
 
 struct mk_http2_session {
     int status;
@@ -104,6 +156,9 @@ struct mk_http2_session {
     unsigned int buffer_length;
     char *buffer;
     char buffer_fixed[MK_HTTP2_CHUNK];
+
+    /* Session Settings */
+    struct mk_http2_settings settings;
 
     struct mk_stream stream_settings;
 };

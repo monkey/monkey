@@ -29,11 +29,22 @@ struct mk_http2_settings {
     uint32_t max_header_list_size;
 };
 
+
+const struct mk_http2_settings MK_HTTP2_SETTINGS_DEFAULT =
+    {
+        .header_table_size      = 4096,
+        .enable_push            = 1,
+        .max_concurrent_streams = 64,
+        .initial_window_size    = 65535,
+        .max_frame_size         = 16384, /* 6.5.2 -> 2^14 */
+        .max_header_list_size   = UINT32_MAX
+    };
+
 /*
  * Default settings of Monkey, we send this upon a new connection arrives
  * to the HTTP/2 handler.
  */
-#define MK_HTTP2_SETTINGS_DEFAULT                       \
+#define MK_HTTP2_SETTINGS_DEFAULT_FRAME                 \
     "\x00\x00\x0c"       /* frame length     */         \
     "\x04"               /* type=SETTINGS    */         \
     "\x00"               /* flags            */         \
@@ -46,6 +57,9 @@ struct mk_http2_settings {
     /* SETTINGS_INITIAL_WINDOW_SIZE     */              \
     "\x00\x04"                                          \
     "\x00\x00\xff\xff"   /* value=65535 */
+
+#define MK_HTTP2_SETTINGS_ACK_FRAME             \
+    "\x00\x00\x00\x04\x01\x00\x00\x00\x00"
 
 #define MK_HTTP2_SETTINGS_HEADER_TABLE_SIZE       0x1
 #define MK_HTTP2_SETTINGS_ENABLE_PUSH             0x2

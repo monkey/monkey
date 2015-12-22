@@ -19,6 +19,8 @@
 
 #define _GNU_SOURCE
 
+#include <inttypes.h>
+
 #include <monkey/mk_http2.h>
 #include <monkey/mk_http2_settings.h>
 #include <monkey/mk_header.h>
@@ -30,6 +32,17 @@ static mk_ptr_t http2_preface = {
     .data = MK_HTTP2_PREFACE,
     .len  = sizeof(MK_HTTP2_PREFACE) - 1
 };
+
+static inline void buffer_consume(struct mk_http2_session *h2s, int bytes)
+{
+    memmove(h2s->buffer,
+            h2s->buffer + bytes,
+            h2s->buffer_length - bytes);
+
+    MK_TRACE("[h2] consume buffer length from %i to %i\n",
+             h2s->buffer_length, h2s->buffer_length - bytes);
+    h2s->buffer_length -= bytes;
+}
 
 static struct mk_http2_session *mk_http2_session_create()
 {
@@ -43,6 +56,7 @@ static struct mk_http2_session *mk_http2_session_create()
     h2s->buffer_length = 0;
     h2s->buffer_size = sizeof(h2s->buffer_fixed);
     h2s->buffer = h2s->buffer_fixed;
+    h2s->settings = MK_HTTP2_SETTINGS_DEFAULT;
 
     return h2s;
 }
@@ -89,6 +103,162 @@ static int mk_http2_upgrade(void *cs, void *sr)
     s->conn->data = h2s;
 
     return MK_HTTP_OK;
+}
+
+/* Decode a frame header, no more... no less */
+static inline void mk_http2_frame_decode_header(uint8_t *buf,
+                                                struct mk_http2_frame *frame)
+{
+    struct mk_http2_session *h2s;
+    (void) h2s;
+
+    frame->len_type  = mk_http2_bitdec_32u(buf);
+    frame->flags     = buf[4];
+    frame->stream_id = mk_http2_bitdec_stream_id(buf + 5);
+    frame->payload   = buf + 9;
+
+#ifdef TRACE
+    MK_TRACE("Frame Header");
+    printf(" length=%i, type=%i, stream_id=%i\n",
+           mk_http2_frame_len(frame),
+           mk_http2_frame_type(frame),
+           frame->stream_id);
+#endif
+}
+
+static inline int mk_http2_handle_settings(struct mk_sched_conn *conn,
+                                           struct mk_http2_frame *frame)
+{
+    int i;
+    int frame_len;
+    int settings;
+    int setting_size = 6; /* 16 bits identifier + 32 bits value = 6 bytes */
+    uint16_t setting_id;
+    uint32_t setting_value;
+    uint8_t *p;
+    struct mk_http2_session *h2s;
+
+    h2s = conn->data;
+    frame_len = mk_http2_frame_len(frame);
+    if (frame->flags == MK_HTTP2_SETTINGS_ACK) {
+        /*
+         * Nothing to do, the peer just received our SETTINGS and it's
+         * sending an acknowledge.
+         *
+         * note: validate that frame length is zero.
+         */
+        if (frame_len > 0) {
+            /*
+             * This must he handled as a connection error, we must reply
+             * with a FRAME_SIZE_ERROR. ref:
+             *
+             *  https://httpwg.github.io/specs/rfc7540.html#SETTINGS
+             */
+
+            /* FIXME: send a GOAWAY error frame */
+            MK_TRACE("FRAME SIZE ERR: %i\n", frame_len);
+            return -1;
+
+        }
+        return 0;
+    }
+
+    /*
+     * Iterate our SETTINGS payload, it may contain many entries in the
+     * following format:
+     *
+     * +-------------------------------+
+     * |       Identifier (16)         |
+     * +-------------------------------+-------------------------------+
+     * |                        Value (32)                             |
+     * +---------------------------------------------------------------+
+     *
+     * 48 bits = 6 bytes
+     */
+    settings = (frame_len / setting_size);
+    for (i = 0; i < settings; i++ ) {
+        /* Seek payload per SETTINGS entry */
+        p = frame->payload + (setting_size * i);
+
+        setting_id = p[0] << 8 | p[1];
+        setting_value = p[2] << 24 | p[3] << 16 | p[4] << 8  | p[5];
+        MK_TRACE("[H2 Setting] ID=%" PRIu16 " VAL=%" PRIu32,
+                 setting_id, setting_value);
+
+        switch (setting_id) {
+        case MK_HTTP2_SETTINGS_HEADER_TABLE_SIZE:
+            /* unhandled */
+            break;
+        case MK_HTTP2_SETTINGS_ENABLE_PUSH:
+            if (setting_value != 0 && setting_value != 1) {
+                /* FIXME: PROTOCOL_ERROR */
+                return -1;
+            }
+            h2s->settings.enable_push = setting_value;
+            break;
+        case MK_HTTP2_SETTINGS_MAX_CONCURRENT_STREAMS:
+            if (setting_value > 64) {
+                /* FIXME: send error */
+                return -1;
+            }
+            h2s->settings.max_concurrent_streams = setting_value;
+            break;
+        case MK_HTTP2_SETTINGS_INITIAL_WINDOW_SIZE:
+            if (setting_value < 65535 || setting_value > 2147483647) {
+                /* FIXME: send FLOW_CONTROL_ERROR */
+                return -1;
+            }
+            h2s->settings.initial_window_size = setting_value;
+            break;
+        case MK_HTTP2_SETTINGS_MAX_FRAME_SIZE:
+            if (setting_value < 16384 || setting_value > 2147483647) {
+                /* FIXME: send PROTOCOL_ERROR */
+                return -1;
+            }
+            h2s->settings.max_frame_size = setting_value;
+            break;
+        case MK_HTTP2_SETTINGS_MAX_HEADER_LIST_SIZE:
+            /* Unhandled */
+            break;
+        default:
+            /*
+             * 5.5 Extending HTTP/2: ...Implementations MUST ignore unknown
+             * or unsupported values in all extensible protocol elements...
+             */
+            break;
+        }
+    }
+    return 0;
+}
+
+
+static inline int mk_http2_frame_run(struct mk_sched_conn *conn,
+                                     struct mk_sched_worker *worker)
+{
+    int ret;
+    struct mk_http2_frame frame;
+    struct mk_http2_session *h2s;
+    (void) worker;
+
+    h2s = conn->data;
+
+    /* Decode the frame header */
+    mk_http2_frame_decode_header(h2s->buffer, &frame);
+
+    /* Do some validations */
+    if (h2s->buffer_length < (MK_HTTP2_HEADER_SIZE + (frame.len_type >> 8))) {
+        /* FIXME: need more data */
+        return 0;
+    }
+
+    /* Do some work based on the frame type */
+    if (mk_http2_frame_type(&frame) == MK_HTTP2_SETTINGS) {
+        ret = mk_http2_handle_settings(conn, &frame);
+        /* FIXME: send our MK_HTTP2_SETTINGS_ACK_FRAME */
+        return ret;
+    }
+
+    return 0;
 }
 
 static int mk_http2_sched_read(struct mk_sched_conn *conn,
@@ -154,24 +324,37 @@ static int mk_http2_sched_read(struct mk_sched_conn *conn,
                          conn->event.fd);
                 return 0;
             }
+
             MK_TRACE("[FD %i] HTTP/2 preface OK",
                      conn->event.fd);
+
+            buffer_consume(h2s, http2_preface.len);
+            h2s->status = MK_HTTP2_OK;
 
             /* Send out our default settings */
             mk_stream_set(&h2s->stream_settings,
                           MK_STREAM_RAW,
                           &conn->channel,
-                          MK_HTTP2_SETTINGS_DEFAULT,
-                          sizeof(MK_HTTP2_SETTINGS_DEFAULT) - 1,
+                          MK_HTTP2_SETTINGS_DEFAULT_FRAME,
+                          sizeof(MK_HTTP2_SETTINGS_DEFAULT_FRAME) - 1,
                           NULL,
                           NULL, NULL, NULL);
         }
         else {
+            /* We need more data */
             return 0;
         }
     }
 
-    return 0;
+    /* Check that we have a minimum header size */
+    if (h2s->buffer_length < MK_HTTP2_HEADER_SIZE) {
+        MK_TRACE("HEADER FRAME incomplete %i/%i bytes",
+                 h2s->buffer_length, MK_HTTP2_HEADER_SIZE);
+        return 0;
+    }
+
+    /* We have at least one frame */
+    return mk_http2_frame_run(conn, worker);
 }
 
 
