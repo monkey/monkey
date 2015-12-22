@@ -39,7 +39,7 @@ static inline void buffer_consume(struct mk_http2_session *h2s, int bytes)
             h2s->buffer + bytes,
             h2s->buffer_length - bytes);
 
-    MK_TRACE("[h2] consume buffer length from %i to %i\n",
+    MK_TRACE("[h2] consume buffer length from %i to %i",
              h2s->buffer_length, h2s->buffer_length - bytes);
     h2s->buffer_length -= bytes;
 }
@@ -182,8 +182,8 @@ static inline int mk_http2_handle_settings(struct mk_sched_conn *conn,
 
         setting_id = p[0] << 8 | p[1];
         setting_value = p[2] << 24 | p[3] << 16 | p[4] << 8  | p[5];
-        MK_TRACE("[H2 Setting] ID=%" PRIu16 " VAL=%" PRIu32,
-                 setting_id, setting_value);
+        MK_H2_TRACE(conn, "[Setting] ID=%" PRIu16 " VAL=%" PRIu32,
+                    setting_id, setting_value);
 
         switch (setting_id) {
         case MK_HTTP2_SETTINGS_HEADER_TABLE_SIZE:
@@ -192,20 +192,25 @@ static inline int mk_http2_handle_settings(struct mk_sched_conn *conn,
         case MK_HTTP2_SETTINGS_ENABLE_PUSH:
             if (setting_value != 0 && setting_value != 1) {
                 /* FIXME: PROTOCOL_ERROR */
+                MK_H2_TRACE(conn, "Invalid SETTINGS_ENABLE_PUSH");
                 return -1;
             }
             h2s->settings.enable_push = setting_value;
             break;
         case MK_HTTP2_SETTINGS_MAX_CONCURRENT_STREAMS:
-            if (setting_value > 64) {
-                /* FIXME: send error */
-                return -1;
+            if (setting_value < 64) {
+                h2s->settings.max_concurrent_streams = setting_value;
             }
-            h2s->settings.max_concurrent_streams = setting_value;
+            else {
+                h2s->settings.max_concurrent_streams = 64;
+            }
+            MK_H2_TRACE(conn, "SETTINGS MAX_CONCURRENT_STREAMS=%i",
+                        setting_value);
             break;
         case MK_HTTP2_SETTINGS_INITIAL_WINDOW_SIZE:
             if (setting_value < 65535 || setting_value > 2147483647) {
                 /* FIXME: send FLOW_CONTROL_ERROR */
+                MK_H2_TRACE(conn, "Invalid INITIAL_WINDOW_SIZE");
                 return -1;
             }
             h2s->settings.initial_window_size = setting_value;
@@ -320,13 +325,11 @@ static int mk_http2_sched_read(struct mk_sched_conn *conn,
         if (h2s->buffer_length >= http2_preface.len) {
             if (memcmp(h2s->buffer,
                        http2_preface.data, http2_preface.len) != 0) {
-                MK_TRACE("[FD %i] Invalid HTTP/2 preface",
-                         conn->event.fd);
+                MK_H2_TRACE(conn, "Invalid HTTP/2 preface");
                 return 0;
             }
 
-            MK_TRACE("[FD %i] HTTP/2 preface OK",
-                     conn->event.fd);
+            MK_H2_TRACE(conn, "HTTP/2 preface OK");
 
             buffer_consume(h2s, http2_preface.len);
             h2s->status = MK_HTTP2_OK;

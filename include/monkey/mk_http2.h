@@ -148,6 +148,18 @@ static inline uint32_t mk_http2_frame_len(struct mk_http2_frame *f)
 #define MK_HTTP2_HTTP_1_1_REQUIRED   0xd
 
 
+#ifdef TRACE
+#define MK_H2_TRACE(conn, fmt, ...)                                     \
+    mk_utils_trace("mk",                                                \
+                   MK_TRACE_CORE,                                       \
+                   __FUNCTION__, __FILENAME__, __LINE__,                \
+                   "[%sH2%s] (fd=%i) " fmt,                             \
+                   ANSI_RESET ANSI_WHITE, ANSI_RED,                     \
+                   conn->event.fd, ##__VA_ARGS__)
+#else
+#define MK_H2_TRACE(...) do {} while (0)
+#endif
+
 struct mk_http2_session {
     int status;
 
