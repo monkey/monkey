@@ -233,6 +233,10 @@ static inline int mk_http2_handle_settings(struct mk_sched_conn *conn,
             break;
         }
     }
+
+    /* No errors, send the ACK */
+    mk_http2_send_raw(conn, MK_HTTP2_SETTINGS_ACK_FRAME,
+                      sizeof(MK_HTTP2_SETTINGS_ACK_FRAME) - 1);
     return 0;
 }
 

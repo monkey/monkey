@@ -160,6 +160,10 @@ static inline uint32_t mk_http2_frame_len(struct mk_http2_frame *f)
 #define MK_H2_TRACE(...) do {} while (0)
 #endif
 
+#define mk_http2_send_raw(conn, buf, length)            \
+    mk_stream_set(NULL, MK_STREAM_RAW, &conn->channel,  \
+                  buf, length, NULL, NULL, NULL, NULL)
+
 struct mk_http2_session {
     int status;
 
