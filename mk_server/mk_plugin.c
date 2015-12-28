@@ -615,7 +615,7 @@ int mk_plugin_http_request_end(struct mk_http_session *cs, int close)
         }
     }
 
-    return 0;
+    return ret;
 }
 
 /* Plugin epoll event handlers
