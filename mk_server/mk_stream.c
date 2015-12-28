@@ -17,6 +17,7 @@
  *  limitations under the License.
  */
 
+#include <assert.h>
 #include <monkey/monkey.h>
 #include <monkey/mk_core.h>
 #include <monkey/mk_stream.h>
@@ -67,10 +68,10 @@ static inline size_t channel_write_stream_file(struct mk_channel *channel,
 
     /* Direct write */
     bytes = mk_sched_conn_sendfile(channel,
-                                    stream->fd,
-                                    &stream->bytes_offset,
-                                    stream->bytes_total
-                                    );
+                                   stream->fd,
+                                   &stream->bytes_offset,
+                                   stream->bytes_total
+                                   );
     MK_TRACE("[CH=%d] [FD=%i] WRITE STREAM FILE: %lu bytes",
              channel->fd, stream->fd, bytes);
 
@@ -108,6 +109,7 @@ int mk_channel_flush(struct mk_channel *channel)
     int ret = 0;
     size_t count = 0;
     size_t total = 0;
+    uint32_t stop = (MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY);
 
     do {
         ret = mk_channel_write(channel, &count);
@@ -125,19 +127,18 @@ int mk_channel_flush(struct mk_channel *channel)
             MK_TRACE("Channel empty");
         }
 #endif
-    } while (total <= 4096 && //sched->mem_pagesize &&
-             (ret & ~(MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY)));
+    } while (total <= 4096 && ((ret & stop) == 0));
 
     if (ret == MK_CHANNEL_DONE) {
         return ret;
     }
     else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
-        if (channel->event.mask & ~MK_EVENT_WRITE) {
+        if ((channel->event->mask & MK_EVENT_WRITE) == 0) {
             mk_event_add(mk_sched_loop(),
-                         channel->event.fd,
+                         channel->fd,
                          MK_EVENT_CONNECTION,
                          MK_EVENT_WRITE,
-                         (void *) &channel->event);
+                         channel->event);
         }
     }
 
@@ -205,6 +206,13 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 mk_copybuf_consume(stream, bytes);
             }
         }
+        else if (stream->type == MK_STREAM_EOF) {
+            if (stream->cb_finished) {
+                stream->cb_finished(stream);
+            }
+            mk_stream_release(stream);
+            return MK_CHANNEL_DONE;
+        }
 
         if (bytes > 0) {
             *count = bytes;
@@ -216,7 +224,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             }
 
             if (stream->bytes_total == 0) {
-                MK_TRACE("Stream done, unlinking");
+                MK_TRACE("Stream done, unlinking (channel=%p)", channel);
 
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
