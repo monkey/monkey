@@ -392,25 +392,60 @@ static int fcgi_write(struct fcgi_handler *handler, char *buf, size_t len)
     return 0;
 }
 
+void fcgi_stream_eof(struct mk_stream *stream)
+{
+    struct fcgi_handler *handler;
+
+    handler = stream->data;
+    if (handler->hangup == MK_FALSE) {
+        fcgi_exit(handler);
+    }
+}
+
 int fcgi_exit(struct fcgi_handler *handler)
 {
-    if (handler->iov) {
-        if (handler->server_fd > 0) {
-            mk_api->ev_del(mk_api->sched_loop(), &handler->event);
-            close(handler->server_fd);
-            handler->server_fd = -1;
-        }
+    /*
+     * Before to exit our handler, we need to verify that our parent
+     * channel have sent the whole information, otherwise we may face
+     * some corruption. If there is still some data enqueued, just
+     * defer the exit process.
+     */
+    if (mk_channel_is_empty(handler->cs->channel) != 0 &&
+        handler->eof == MK_FALSE) {
 
+        MK_TRACE("[fastcgi=%i] deferring exit, EOF stream",
+                 handler->server_fd);
+
+        /* Now set an EOF stream/callback to resume the exiting process */
+        mk_stream_set(NULL,
+                      MK_STREAM_EOF,
+                      handler->cs->channel,
+                      NULL, 0, handler,
+                      fcgi_stream_eof, NULL, NULL);
+        handler->eof = MK_TRUE;
+        return 1;
+    }
+
+    MK_TRACE("[fastcgi] exiting");
+    if (handler->server_fd > 0) {
+        mk_api->ev_del(mk_api->sched_loop(), &handler->event);
+        close(handler->server_fd);
+        handler->server_fd = -1;
+    }
+
+    if (handler->iov) {
         mk_api->iov_free(handler->iov);
         mk_api->sched_event_free((struct mk_event *) handler);
         handler->iov = NULL;
     }
 
     if (handler->active == MK_TRUE) {
+        handler->active = MK_FALSE;
         mk_api->http_request_end(handler->cs, handler->hangup);
     }
+    handler->hangup = MK_TRUE;
 
-    return 0;
+    return 1;
 }
 
 int fcgi_error(struct fcgi_handler *handler)
@@ -520,10 +555,10 @@ int cb_fastcgi_on_read(void *data)
 
     avail = FCGI_BUF_SIZE - handler->buf_len;
     n = read(handler->server_fd, handler->buf_data + handler->buf_len, avail);
-    MK_TRACE("[fastcgi=%i] read=%i", handler->server_fd, n);
+    MK_TRACE("[fastcgi=%i] read()=%i", handler->server_fd, n);
     if (n <= 0) {
         fcgi_exit(handler);
-        return -1;
+        return 1;
     }
     else {
         handler->buf_len += n;
@@ -575,8 +610,6 @@ int cb_fastcgi_on_read(void *data)
             /* Missing header breaklines ? */
             return n;
         }
-
-        mk_api->channel_flush(handler->cs->channel);
 
         /* adjust buffer content */
         offset = FCGI_RECORD_HEADER_SIZE +
@@ -696,11 +729,13 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     if (!h) {
         return NULL;
     }
+
     h->cs = cs;
     h->sr = sr;
     h->write_rounds = 0;
     h->active = MK_TRUE;
     h->server_fd = -1;
+    h->eof = MK_FALSE;
 
     /* Allocate enough space for our data */
     entries =  64 + (cs->parser.header_count * 3);
