@@ -85,7 +85,8 @@ int mk_event_add(struct mk_event_loop *loop, int fd,
 #endif
 
     event = (struct mk_event *) data;
-    if (event->status & ~MK_EVENT_NONE) {
+
+    if ((event->status & MK_EVENT_NONE) == 0) {
         return -1;
     }
 
@@ -107,7 +108,7 @@ int mk_event_del(struct mk_event_loop *loop, struct mk_event *event)
     ctx = loop->data;
 
     /* just remove a registered event */
-    if (event->status & ~MK_EVENT_REGISTERED) {
+    if ((event->status & MK_EVENT_REGISTERED) == 0) {
         return -1;
     }
 
