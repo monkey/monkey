@@ -430,7 +430,7 @@ void mk_server_worker_loop()
                     ret = -1;
                 }
 
-                if (ret < 0) {
+                if (ret < 0 && conn->status != MK_SCHED_CONN_CLOSED) {
                     MK_TRACE("[FD %i] Event FORCE CLOSE | ret = %i",
                              event->fd, ret);
                     mk_sched_event_close(conn, sched, MK_EP_SOCKET_CLOSED);
