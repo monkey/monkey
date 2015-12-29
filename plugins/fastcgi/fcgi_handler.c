@@ -404,6 +404,13 @@ void fcgi_stream_eof(struct mk_stream *stream)
 
 int fcgi_exit(struct fcgi_handler *handler)
 {
+    /* Always disable any backend notification first */
+    if (handler->server_fd > 0) {
+        mk_api->ev_del(mk_api->sched_loop(), &handler->event);
+        close(handler->server_fd);
+        handler->server_fd = -1;
+    }
+
     /*
      * Before to exit our handler, we need to verify that our parent
      * channel have sent the whole information, otherwise we may face
@@ -427,11 +434,6 @@ int fcgi_exit(struct fcgi_handler *handler)
     }
 
     MK_TRACE("[fastcgi] exiting");
-    if (handler->server_fd > 0) {
-        mk_api->ev_del(mk_api->sched_loop(), &handler->event);
-        close(handler->server_fd);
-        handler->server_fd = -1;
-    }
 
     if (handler->iov) {
         mk_api->iov_free(handler->iov);
@@ -558,7 +560,7 @@ int cb_fastcgi_on_read(void *data)
     MK_TRACE("[fastcgi=%i] read()=%i", handler->server_fd, n);
     if (n <= 0) {
         fcgi_exit(handler);
-        return 1;
+        return -1;
     }
     else {
         handler->buf_len += n;
