@@ -201,6 +201,7 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     conn->protocol      = handler;
     conn->net           = listener->network->network;
     conn->is_timeout_on = MK_FALSE;
+    conn->server_listen = listener;
 
     /* Stream channel */
     conn->channel.type  = MK_CHANNEL_SOCKET;    /* channel type     */
