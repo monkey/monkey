@@ -272,15 +272,13 @@ int mk_header_prepare(struct mk_http_session *cs,
      * Transfer Encoding: the transfer encoding header is just sent when
      * the response has some content defined by the HTTP status response
      */
-    if ((sh->status < MK_REDIR_MULTIPLE) || (sh->status > MK_REDIR_USE_PROXY)) {
-        switch (sh->transfer_encoding) {
-        case MK_HEADER_TE_TYPE_CHUNKED:
-            mk_iov_add(iov,
-                       mk_header_te_chunked.data,
-                       mk_header_te_chunked.len,
-                       MK_FALSE);
-            break;
-        }
+    switch (sh->transfer_encoding) {
+    case MK_HEADER_TE_TYPE_CHUNKED:
+        mk_iov_add(iov,
+                   mk_header_te_chunked.data,
+                   mk_header_te_chunked.len,
+                   MK_FALSE);
+        break;
     }
 
     /* E-Tag */
