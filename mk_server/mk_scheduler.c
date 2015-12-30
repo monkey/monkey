@@ -702,6 +702,10 @@ void mk_sched_event_free(struct mk_event *event)
 {
     struct mk_sched_worker *sched = mk_sched_get_thread_conf();
 
+    if ((event->type & MK_EVENT_IDLE) != 0) {
+        return;
+    }
+
     event->type |= MK_EVENT_IDLE;
     mk_list_add(&event->_head, &sched->event_free_queue);
 }
