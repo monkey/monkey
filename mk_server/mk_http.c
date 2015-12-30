@@ -522,7 +522,6 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     }
 
     MK_TRACE("Redirecting to '%s'", real_location);
-
     mk_mem_free(host);
 
     mk_header_set_http_status(sr, MK_REDIR_MOVED);
@@ -543,33 +542,42 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
 }
 
 /* Look for some  index.xxx in pathfile */
-mk_ptr_t mk_http_index_file(char *pathfile, char *file_aux,
-                            const unsigned int flen)
+static inline char *mk_http_index_lookup(mk_ptr_t *path_base,
+                                         char *buf, size_t buf_size,
+                                         size_t *out, size_t *bytes)
 {
-    unsigned long len;
-    mk_ptr_t f;
+    off_t off = 0;
+    size_t len;
     struct mk_string_line *entry;
     struct mk_list *head;
 
-    mk_ptr_reset(&f);
-    if (!mk_config->index_files) return f;
+    if (!mk_config->index_files) {
+        return NULL;
+    }
+
+    off = path_base->len;
+    memcpy(buf, path_base->data, off);
 
     mk_list_foreach(head, mk_config->index_files) {
         entry = mk_list_entry(head, struct mk_string_line, _head);
-        len = snprintf(file_aux, flen, "%s%s", pathfile, entry->val);
-        if (mk_unlikely(len > flen)) {
-            len = flen - 1;
-            mk_warn("Path too long, truncated! '%s'", file_aux);
+
+        len = off + entry->len + 1;
+        if (len >= buf_size) {
+            continue;
         }
 
-        if (access(file_aux, F_OK) == 0) {
-            f.data = file_aux;
-            f.len = len;
-            return f;
+        memcpy(buf + off, entry->val, entry->len);
+        buf[off + entry->len] = '\0';
+
+        if (access(buf, F_OK) == 0) {
+            MK_TRACE("Index lookup OK '%s'", buf);
+            *out = off + entry->len;
+            *bytes = path_base->len - 1;
+            return buf;
         }
     }
 
-    return f;
+    return NULL;
 }
 
 #if defined (__linux__)
@@ -600,6 +608,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     struct mk_list *handlers;
     struct mk_plugin *plugin;
     struct mk_host_handler *h_handler;
+    size_t index_length;
+    size_t index_bytes;
+    char *index_path = NULL;
+
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
@@ -732,29 +744,28 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
         }
 
         /* looking for an index file */
-        mk_ptr_t index_file;
         char tmppath[MK_MAX_PATH];
-        index_file = mk_http_index_file(sr->real_path.data, tmppath, MK_MAX_PATH);
-
-        if (index_file.data) {
+        index_path = mk_http_index_lookup(&sr->real_path,
+                                          tmppath, MK_MAX_PATH,
+                                          &index_length, &index_bytes);
+        if (index_path) {
             if (sr->real_path.data != sr->real_path_static) {
                 mk_ptr_free(&sr->real_path);
-                sr->real_path = index_file;
-                sr->real_path.data = mk_string_dup(index_file.data);
+                sr->real_path.data = mk_string_dup(index_path);
             }
             /* If it's static and it still fits */
-            else if (index_file.len < MK_PATH_BASE) {
-                memcpy(sr->real_path_static, index_file.data, index_file.len);
-                sr->real_path_static[index_file.len] = '\0';
-                sr->real_path.len = index_file.len;
+            else if (index_length < MK_PATH_BASE) {
+                memcpy(sr->real_path_static, index_path, index_length);
+                sr->real_path_static[index_length] = '\0';
             }
             /* It was static, but didn't fit */
             else {
-                sr->real_path = index_file;
-                sr->real_path.data = mk_string_dup(index_file.data);
+                sr->real_path.data = mk_string_dup(index_path);
             }
+            sr->real_path.len  = index_length;
 
-            ret = mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
+            ret = mk_file_get_info(sr->real_path.data,
+                                   &sr->file_info, MK_FILE_READ);
             if (ret != 0) {
                 return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
             }
@@ -773,6 +784,49 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
             n = readlink(sr->real_path.data, linked_file, MK_MAX_PATH);
             if (n < 0) {
                 return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+            }
+        }
+    }
+
+    /* Plugin Stage 30: look for handlers for this request */
+    if (sr->stage30_blocked == MK_FALSE) {
+        char *uri;
+
+        if (!index_path) {
+            sr->uri_processed.data[sr->uri_processed.len] = '\0';
+            uri = sr->uri_processed.data;
+        }
+        else {
+            uri = sr->real_path.data + index_bytes;
+        }
+
+        handlers = &sr->host_conf->handlers;
+        mk_list_foreach(head, handlers) {
+            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
+            if (regexec(&h_handler->match,
+                        uri, 0, NULL, 0) != 0) {
+                continue;
+            }
+
+            plugin = h_handler->handler;
+            sr->stage30_handler = h_handler->handler;
+            ret = plugin->stage->stage30(plugin, cs, sr,
+                                         h_handler->n_params,
+                                         &h_handler->params);
+
+            MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
+            switch (ret) {
+            case MK_PLUGIN_RET_CONTINUE:
+                return MK_PLUGIN_RET_CONTINUE;
+            case MK_PLUGIN_RET_CLOSE_CONX:
+                if (sr->headers.status > 0) {
+                    return mk_http_error(sr->headers.status, cs, sr);
+                }
+                else {
+                    return mk_http_error(MK_CLIENT_FORBIDDEN, cs, sr);
+                }
+            case MK_PLUGIN_RET_END:
+                return MK_EXIT_OK;
             }
         }
     }
