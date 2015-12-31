@@ -484,6 +484,7 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     char *host;
     char *location = 0;
     char *real_location = 0;
+    char *protocol = "http";
     unsigned long len;
 
     /*
@@ -511,14 +512,17 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
         }
     }
 
-    char *fixme = "http";
+    if (MK_SCHED_CONN_PROP(cs->conn) & MK_CAP_SOCK_SSL) {
+        protocol = "https";
+    }
+
     if (port_redirect > 0) {
         mk_string_build(&real_location, &len, "%s://%s:%i%s\r\n",
-                        fixme, host, port_redirect, location);
+                        protocol, host, port_redirect, location);
     }
     else {
         mk_string_build(&real_location, &len, "%s://%s%s\r\n",
-                        fixme, host, location);
+                        protocol, host, location);
     }
 
     MK_TRACE("Redirecting to '%s'", real_location);
