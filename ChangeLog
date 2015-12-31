@@ -1,3 +1,241 @@
+commit 53c41b179c0bad175af323ca54c23f95952bdfb3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Dec 30 22:26:44 2015 -0600
+
+    mk_server: HTTP: fix protocol prefix when doing redirection
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9a0108a393065dc35899cff5f314352764b36c30
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Dec 30 21:52:42 2015 -0600
+
+    HTML: update version to v1.6.7
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f5cd6035f949c7be35eddb3913355e5231931257
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Dec 30 21:52:10 2015 -0600
+
+    Debian: bump version to v1.6.7
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3b6a3db1bf624c78609fbea2e4efece0fc1aae0d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Dec 30 17:52:26 2015 -0600
+
+    mk_server: scheduler: check if event reference is already idle before to add it to the free queue
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 62d4169a914d5099fe514c3f346d591cc5e20fbd
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Dec 30 15:18:18 2015 -0600
+
+    mk_server: HTTP: improve performance on index lookup
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit ab9dfbf3d3e336e0aec3bf235a85718ce933b8b0
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 29 15:40:33 2015 -0600
+
+    mk_server: header: do not restrict chunked transfer encoding
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3aa9536c840917a0bf8874974354ade97d1afd0b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 29 15:39:54 2015 -0600
+
+    mk_server: scheduler: sched node handle properties and link to listener
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 3235cbc0850eeab89bd433f21cb9f82db1a9e58d
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 29 15:38:32 2015 -0600
+
+    mk_server: config: change data type for listener properties
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 60fe092e00f8cf4f4f8eb0d8fceaf98953d96985
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 29 15:37:44 2015 -0600
+
+    Plugins: FastCGI: add padding and implement missing CGI environment vars
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 8de76f6a845a63a4ea46e54a5d4befb448546db8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 29 09:13:39 2015 -0600
+
+    Plugins: FastCGI: on fcgi_exit, always disable backend events first
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2d9f95236ba17ff12d2727ac1525c1aa32e9fe91
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:30:54 2015 -0600
+
+    Plugins: FastCGI: use a EOF stream to handle exceptions and slow connections
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 17f143f041faa995c3abfbe6fdc74181e37bfd3b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:30:06 2015 -0600
+
+    mk_server: check connection is not closed before to run a FORCE_CLOSE
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4618bffa9ecca1ebddd043a36cd4dfd12321d0d3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:29:03 2015 -0600
+
+    mk_server: scheduler: map missing event in channel and fix bitmasks
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1a75a13ffa70315b625f37c2ba420fb7b8afbc94
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:27:53 2015 -0600
+
+    mk_server: plugin: on request end, return it return value
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b4676846470bd19a2ab161ec09f822789e522660
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:27:23 2015 -0600
+
+    mk_server: stream: implement handler for EOF stream plus other fixes
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 12c8080a770e87dcd21492d96efb4622851b8cbe
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Dec 28 17:21:44 2015 -0600
+
+    mk_core: event: fix bitmask checks on epoll backend
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit bcd9568cd8bf9cf0441cf236e088d7c1bff03caf
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Dec 24 08:31:40 2015 -0600
+
+    Plugins: Cheetah: remove duplicate ANSI colors
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b1f1e8a83c1ea9885a40df74f4741348a45c8218
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 22 14:41:39 2015 -0600
+
+    mk_core: utils: change time color and deprecate background color switch
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit bed7234e486be8ca91c137d26472ae41c3c20667
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Dec 22 14:40:41 2015 -0600
+
+    mk_core: macros: set ANSI_COLORS to bright mode
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1b95a00ca43504b68dfe816394eedd1dc73e5dc2
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Dec 13 21:27:53 2015 -0600
+
+    Plugins: FastCGI: use raw network handler when talking to the fastcgi server (Fix #226)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0dd1f5b5d3367f6796b517135abde84af3ba2907
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sun Dec 13 21:25:25 2015 -0600
+
+    mk_core: iov: if run out of capacity, just return -1, do not abort
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 7471f5d8332b34fe4eb9225d05f7c14ad05186eb
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Dec 12 12:03:10 2015 -0600
+
+    Plugins: TLS: use mk_api ref for config reader, fix OSX linker
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 80bd9b577136315de371e413b958cf40e3a905fc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Dec 12 12:01:07 2015 -0600
+
+    Plugins: FastCGI: use mk_api ref for string handling, fix OSX linker
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 9d996eb92c489eb215067295bc8930223e658d7f
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Dec 12 11:50:29 2015 -0600
+
+    Plugins: TLS: fix configuration loader for relative paths (Fix #225)
+    
+    The TLS plugin configuration allows to load the certificates and keys
+    from absolute or relative paths, the relative discovery process was broken.
+    
+    This patch fixes the usage of relative paths for certificates.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 28a81f2acbcd46e959d162a1cb3dbce33f7f5a13
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Dec 10 15:06:18 2015 -0600
+
+    Plugins: fastcgi: fix crash when Jemalloc is enabled (Fix #221)
+    
+    When Monkey is built with Jemalloc, when the plugin release the resources
+    associated to a FastCGI request, it crash. Jemalloc reports the following
+    error:
+    
+      Failed assertion: "pageind >= map_bias"
+    
+    This problem happens because when the plugin compose the FastCGI request
+    internally, it needs to duplicate some string buffers and it was using
+    a direct strdup(3) call, which is wrong as Monkey provides wrappers for
+    memory and string manipulation which use the system allocator (malloc)
+    or the jemalloc functions. The problem was:
+    
+     - Duplicate string buffer with strdup(3)
+     - Release buffer with Jemalloc
+    
+    This patch fix the single line that generated the problem.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4edc144fb849cc7b31078ae38784f65ca4fdd917
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Dec 10 14:57:37 2015 -0600
+
+    Build: bump version to v1.6.7
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e1aac763b2dc146460c4076826d8f2085ff8b27e
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Nov 23 08:25:30 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.6
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 076ec7a1072f4e4beed3cc7f93eeb38a5dee69f6
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Nov 23 08:24:38 2015 -0600
