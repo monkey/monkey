@@ -1,3 +1,59 @@
+commit 9c4bfdaab5f6c16841982d3ed6ae13e58b6517e1
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jan 18 11:48:23 2016 -0800
+
+    mbedtls: upgrade to mbedtls-2.2.1
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b23fbcb3e2934a517d9e5cfedb3ffbd49e44f681
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jan 18 11:28:40 2016 -0800
+
+    mk_core: remove unused getenv routine
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d15c7cb79488fc0c0a8ab638b67b17fc03396843
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jan 9 22:59:24 2016 -0600
+
+    HTML: bump version to v1.6.8
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 662936435bd4bb2e0d87784f3000ba811c4f536b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jan 9 22:58:57 2016 -0600
+
+    Debian: bump version to v1.6.8
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 48b1d86a038348948f4dc42af27b0dd6e78f8322
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jan 9 22:57:25 2016 -0600
+
+    Build: bump version to v1.6.8
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 6807c412068553b791fd528648e1622aafd3396c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jan 9 22:56:49 2016 -0600
+
+    Plugins: CGI: fix missing initialization of 'event' reference
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5f578527e891a443b441f6cd4845f67b402c3d66
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Dec 31 11:38:18 2015 -0600
+
+    Release: Monkey HTTP Server v1.6.7
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 53c41b179c0bad175af323ca54c23f95952bdfb3
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Wed Dec 30 22:26:44 2015 -0600
