@@ -45,16 +45,6 @@
 #ifdef TRACE
 #include <sys/time.h>
 
-/*robust get environment variable that also checks __secure_getenv() */
-static char *mk_utils_getenv(const char *arg)
-{
-#ifdef HAVE___SECURE_GETENV
-    return __secure_getenv(arg);
-#else
-    return getenv(arg);
-#endif
-}
-
 void mk_utils_trace(const char *component, int color, const char *function,
                     char *file, int line, const char* format, ...)
 {
