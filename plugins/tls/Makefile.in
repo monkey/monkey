@@ -1,0 +1,16 @@
+all: monkey-tls.so
+include ../Make.common
+
+CC	= @echo "  CC   $(_PATH)/$@"; $CC
+CC_QUIET= @echo -n; $CC
+CFLAGS	= $CFLAGS
+MBEDTLS = /opt/mbedtls-2.2.1/
+LDFLAGS = $LDFLAGS -lc
+DEFS    = $DEFS
+OBJECTS = tls.o
+INC_EXTRA = $(MBEDTLS)/include/
+
+-include $(OBJECTS:.o=.d)
+
+monkey-tls.so: $(OBJECTS)
+	$(CC) $(CFLAGS) $(DEFS) -shared -o $@ $^ $(LDFLAGS) -L$(MBEDTLS)/lib/ -Wl,-rpath=$(MBEDTLS)/lib -lmbedtls
