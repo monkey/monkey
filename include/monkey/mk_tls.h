@@ -33,14 +33,14 @@ extern __thread struct mk_gmt_cache *mk_tls_cache_gmtext;
 extern __thread struct mk_list *mk_tls_vhost_fdt;
 
 /* mk_scheduler.c */
-__thread struct rb_root *mk_tls_sched_cs;
-__thread struct mk_list *mk_tls_sched_cs_incomplete;
-__thread struct mk_sched_notif *mk_tls_sched_worker_notif;
-__thread struct mk_sched_worker *mk_tls_sched_worker_node;
+extern __thread struct rb_root *mk_tls_sched_cs;
+extern __thread struct mk_list *mk_tls_sched_cs_incomplete;
+extern __thread struct mk_sched_notif *mk_tls_sched_worker_notif;
+extern __thread struct mk_sched_worker *mk_tls_sched_worker_node;
 
 /* mk_server.c */
-__thread struct mk_list *mk_tls_server_listen;
-__thread struct mk_server_timeout *mk_tls_server_timeout;
+extern __thread struct mk_list *mk_tls_server_listen;
+extern __thread struct mk_server_timeout *mk_tls_server_timeout;
 
 /* TLS helper macros */
 #define MK_TLS_SET(key, val)        key=val
