@@ -23,6 +23,7 @@
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_server_tls.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_core.h>
 
