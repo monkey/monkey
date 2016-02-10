@@ -32,9 +32,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-__thread struct mk_list *server_listen;
-__thread struct mk_server_timeout *server_timeout;
-
 /* Return the number of clients that can be attended  */
 unsigned int mk_server_capacity()
 {
@@ -107,11 +104,13 @@ error:
 
 void mk_server_listen_free()
 {
+    struct mk_list *list;
     struct mk_list *tmp;
     struct mk_list *head;
     struct mk_server_listen *listener;
 
-    mk_list_foreach_safe(head, tmp, server_listen) {
+    list = MK_TLS_GET(mk_tls_server_listen);
+    mk_list_foreach_safe(head, tmp, list) {
         listener = mk_list_entry(head, struct mk_server_listen, _head);
         mk_list_del(&listener->_head);
         mk_mem_free(listener);
@@ -230,7 +229,7 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
     }
 
     if (reuse_port == MK_TRUE) {
-        server_listen = listeners;
+        MK_TLS_SET(mk_tls_server_listen, listeners);
     }
 
     return listeners;
@@ -356,10 +355,12 @@ void mk_server_worker_loop()
     uint64_t val;
     struct mk_event *event;
     struct mk_event_loop *evl;
+    struct mk_list *list;
     struct mk_list *head;
     struct mk_sched_conn *conn;
     struct mk_sched_worker *sched;
     struct mk_server_listen *listener;
+    struct mk_server_timeout *server_timeout;
 
     /* Get thread conf */
     sched = mk_sched_get_thread_conf();
@@ -390,7 +391,8 @@ void mk_server_worker_loop()
 
     if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
         /* Register listeners */
-        mk_list_foreach(head, server_listen) {
+        list = MK_TLS_GET(mk_tls_server_listen);
+        mk_list_foreach(head, list) {
             listener = mk_list_entry(head, struct mk_server_listen, _head);
             mk_event_add(sched->loop, listener->server_fd,
                          MK_EVENT_LISTENER, MK_EVENT_READ,
@@ -400,6 +402,7 @@ void mk_server_worker_loop()
 
     /* create a new timeout file descriptor */
     server_timeout = mk_mem_malloc(sizeof(struct mk_server_timeout));
+    MK_TLS_SET(mk_tls_server_timeout, server_timeout);
     timeout_fd = mk_event_timeout_create(evl, mk_config->timeout, server_timeout);
 
     while (1) {
@@ -474,7 +477,7 @@ void mk_server_worker_loop()
                         if (timeout_fd > 0) {
                             close(timeout_fd);
                         }
-                        mk_mem_free(server_timeout);
+                        mk_mem_free(MK_TLS_GET(mk_tls_server_timeout));
                         mk_server_listen_exit(sched->listeners);
                         mk_event_loop_destroy(evl);
                         mk_sched_worker_free();
