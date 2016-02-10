@@ -1,4 +1,5 @@
 SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+include (CheckCSourceCompiles)
 
 set(src
   mk_iov.c
@@ -12,6 +13,17 @@ set(src
   mk_thread.c
   mk_thread_channel.c
   )
+
+# Validate timerfd_create()
+check_c_source_compiles("
+  #include <sys/timerfd.h>
+  int main() {
+     return timerfd_create(CLOCK_REALTIME, 0);
+  }" HAVE_TIMERFD_CREATE)
+
+if (HAVE_TIMERFD_CREATE)
+  add_definitions(-DHAVE_TIMERFD_CREATE)
+endif()
 
 include_directories(include)
 add_library(mk_core STATIC ${src})
