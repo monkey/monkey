@@ -200,7 +200,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
         else if (stream->type == MK_STREAM_COPYBUF) {
             bytes = mk_sched_conn_write(channel,
                                         stream->buffer, stream->bytes_total);
-            MK_TRACE("[CH %i] STREAM_COPYBUF, bytes=%lu/%lu",
+            MK_TRACE("[CH %i] STREAM_COPYBUF, bytes=%zd/%lu",
                      channel->fd, bytes, stream->bytes_total);
             if (bytes > 0) {
                 mk_copybuf_consume(stream, bytes);
