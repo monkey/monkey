@@ -686,7 +686,21 @@ int cb_fastcgi_on_read(void *data)
         case FCGI_STDOUT:
             MK_TRACE("[fastcgi=%i] FCGI_STDOUT content_length=%i",
                      handler->server_fd, header.content_length);
-            ret = fcgi_response(handler, body, header.content_length);
+            /*
+             * Issue seen with Chrome & Firefox browsers:
+             * Sometimes content length is coming as ZERO and we are encoding a
+             * HTTP response packet with ZERO size data. This makes Chrome & Firefox
+             * browsers fail to proceed furhter and subsequent content loading fails.
+             * However, IE/Safari discards the packets with ZERO size data.
+             */
+            if (0 != header.content_length) {
+                ret = fcgi_response(handler, body, header.content_length);
+            }
+            else {
+                MK_TRACE("[fastcgi=%i] ZERO byte content length in FCGI_STDOUT, discard!!",
+                         handler->server_fd);
+                ret = 0;
+            }
             break;
         case FCGI_STDERR:
             MK_TRACE("[fastcgi=%i] FCGI_STDERR content_length=%i",
