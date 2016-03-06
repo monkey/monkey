@@ -173,7 +173,8 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
 
 #ifdef NOTE_SECONDS
     /* FreeBSD or LINUX_KQUEUE defined */
-    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, expire, event);
+    /* TODO : high resolution interval support. */
+    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, sec, event);
 #else
     /* Other BSD have no NOTE_SECONDS & specify milliseconds */
     EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, 0, (sec * 1000) + (nsec / 1000000) , event);
