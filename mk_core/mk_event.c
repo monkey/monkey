@@ -117,17 +117,8 @@ int mk_event_del(struct mk_event_loop *loop, struct mk_event *event)
 }
 
 /* Create a new timer in the loop */
-int mk_event_timeout_create(struct mk_event_loop *loop, int expire, void *data)
-{
-    struct mk_event_ctx *ctx;
-
-    ctx = loop->data;
-    return _mk_event_timeout_create(ctx, expire, 0, data);
-}
-
-/* Create a new timer in the loop */
-int mk_event_high_resolution_timeout_create(struct mk_event_loop *loop,
-                            int sec, int nsec,  void *data)
+int mk_event_timeout_create(struct mk_event_loop *loop,
+                            int sec, int nsec, void *data)
 {
     struct mk_event_ctx *ctx;
 
