@@ -22,9 +22,9 @@
 #include <time.h>
 
 struct fd_timer {
-    int fd;
-    int sec;
-    int nsec;
+    int    fd;
+    time_t sec;
+    long   nsec;
 };
 
 static inline void *_mk_event_loop_create(int size)
@@ -175,7 +175,7 @@ void _timeout_worker(void *arg)
  * and a thread, this thread writes a byte upon the expiration time is reached.
  */
 static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
-                                           int sec, int nsec, void *data)
+                                           time_t sec, long nsec, void *data)
 {
     int ret;
     int fd[2];

@@ -149,7 +149,7 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
 }
 
 static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
-                                           int sec, int nsec, void *data)
+                                           time_t sec, long nsec, void *data)
 {
     int fd;
     int ret;

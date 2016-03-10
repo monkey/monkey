@@ -113,7 +113,7 @@ int mk_event_add(struct mk_event_loop *loop, int fd,
                  int type, uint32_t mask, void *data);
 int mk_event_del(struct mk_event_loop *loop, struct mk_event *event);
 int mk_event_timeout_create(struct mk_event_loop *loop,
-                            int sec, int nsec,void *data);
+                            time_t sec, long nsec,void *data);
 int mk_event_channel_create(struct mk_event_loop *loop,
                             int *r_fd, int *w_fd, void *data);
 int mk_event_wait(struct mk_event_loop *loop);

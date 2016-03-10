@@ -146,7 +146,7 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
 #ifdef HAVE_TIMERFD_CREATE
 /* Register a timeout file descriptor */
 static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
-                                           int sec, int nsec, void *data)
+                                           time_t sec, long nsec, void *data)
 {
     int ret;
     int timer_fd;
@@ -194,8 +194,8 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
 
 struct fd_timer {
     int fd;
-    int sec;
-    int nsec;
+    time_t sec;
+    long   nsec;
 };
 
 /*
@@ -235,7 +235,7 @@ void _timeout_worker(void *arg)
  * function through a thread and a pipe(2).
  */
 static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
-                                           int sec, int nsec, void *data)
+                                           time_t sec, long nsec, void *data)
 {
     int ret;
     int fd[2];
