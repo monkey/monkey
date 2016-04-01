@@ -55,6 +55,7 @@ struct mk_config_listener
 struct mk_server_config
 {
     int server_fd;                /* server socket file descriptor */
+    int kernel_version;           /* Running Linux Kernel version */
     int kernel_features;          /* Hold different server setup status */
     int fd_limit;                 /* Limit of file descriptors */
     unsigned int server_capacity; /* total server capacity */
