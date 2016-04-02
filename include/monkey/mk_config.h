@@ -67,7 +67,18 @@ struct mk_server_config
     int8_t is_seteuid;
     int8_t scheduler_mode;        /* Scheduler balancing mode */
 
-    char *serverconf;             /* path to configuration files */
+    /* Configuration paths (absolute paths) */
+    char *path_conf_root;         /* absolute path to configuration files */
+    char *path_conf_pidfile;      /* absolute path to PID file */
+
+    /* Specific names for configuration files or directories */
+    char *conf_mimetype;          /* mimetype file name */
+    char *conf_main;              /* name of main configuration file */
+    char *conf_sites;             /* directory name for virtual host files */
+    char *conf_plugin_load;       /* file name which load dynamic plugins */
+    char *conf_plugins;           /* directory name for plugins conf files */
+    char *conf_user_pub;          /* directory name for users public content */
+
     mk_ptr_t server_software;
 
     struct mk_list listeners;
@@ -75,14 +86,6 @@ struct mk_server_config
     char *one_shot;
     char *port_override;
     char *user;
-    char *user_dir;
-    char *pid_file_path;        /* pid of server */
-    char *path_config;
-    char *server_conf_file;
-    char *mimes_conf_file;
-    char *plugin_load_conf_file;
-    char *sites_conf_dir;
-    char *plugins_conf_dir;
     char **request_headers_allowed;
 
     int timeout;                /* max time to wait for a new connection */
