@@ -190,7 +190,7 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
         listener = mk_list_entry_first(list, struct mk_string_line, _head);
         if (listener->val[0] == '[') {
             /* IPv6 address */
-            divider = strchr(entry->val, ']');
+            divider = strchr(listener->val, ']');
             if (divider == NULL) {
                 mk_err("[config] Expected closing ']' in IPv6 address.");
                 goto error;
@@ -200,7 +200,7 @@ static int mk_config_listen_read(struct mk_rconf_section *section)
                 goto error;
             }
 
-            address = mk_string_copy_substr(entry->val + 1, 0,
+            address = mk_string_copy_substr(listener->val + 1, 0,
                                             divider - listener->val - 1);
             port = mk_string_dup(divider + 2);
         }
