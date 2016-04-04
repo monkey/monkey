@@ -170,7 +170,10 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
     int ret;
     const char *p;
     char buffer[256];
-	struct sockaddr_in addr;
+
+    /* This is to identify whether its IPV4 or IPV6 */
+    struct sockaddr_storage addr;
+    int port = 0;
 	socklen_t addr_len = sizeof(struct sockaddr_in);
 
     ret = getsockname(handler->cs->socket, (struct sockaddr *)&addr, &addr_len);
@@ -185,10 +188,22 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
         return -1;
     }
 
-    p = inet_ntop(AF_INET, &addr.sin_addr, buffer, sizeof(buffer));
-    if (!p) {
-        perror("inet_ntop");
-        return -1;
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        port = ntohs(s->sin_port);
+        p = inet_ntop(AF_INET, &s->sin_addr, buffer, sizeof(buffer));
+        if (!p) {
+            perror("inet_ntop");
+            return -1;
+        }
+    } else { /* AF_INET6 */
+        struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+        port = ntohs(s->sin6_port);
+        p = inet_ntop(AF_INET6, &s->sin6_addr, buffer, sizeof(buffer));
+        if (!p) {
+            perror("inet_ntop");
+            return -1;
+        }
     }
 
     /* Server Address */
@@ -197,7 +212,7 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
                    FCGI_PARAM_DUP(buffer));
 
     /* Server Port */
-    snprintf(buffer, 256, "%d", ntohs(addr.sin_port));
+    snprintf(buffer, 256, "%d", port);
     fcgi_add_param(handler,
                    FCGI_PARAM_CONST("SERVER_PORT"),
                    FCGI_PARAM_DUP(buffer));
@@ -209,10 +224,43 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
         return -1;
     }
 
-    p = inet_ntop(AF_INET, &addr.sin_addr, buffer, sizeof(buffer));
-    if (!p) {
-        perror("inet_ntop");
-        return -1;
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        port = ntohs(s->sin_port);
+        p = inet_ntop(AF_INET, &s->sin_addr, buffer, sizeof(buffer));
+        if (!p) {
+            perror("inet_ntop");
+            return -1;
+        }
+    } else { /* AF_INET6 */
+        struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+        port = ntohs(s->sin6_port);
+   
+        if (IN6_IS_ADDR_V4MAPPED(&s->sin6_addr)) {
+            /* This is V4-Mapped-V6 - Lets convert it to plain IPV4 address.
+             * E.g. we would have received like this ::ffff:10.106.146.73.
+             * This would be converted to 10.106.146.73.
+             */
+            struct sockaddr_in addr4;
+            struct sockaddr_in *s4 = (struct sockaddr_in *)&addr4;   
+            memset(&addr4, 0, sizeof(addr4));
+            addr4.sin_family = AF_INET;
+            addr4.sin_port = &s->sin6_port;
+            memcpy(&addr4.sin_addr.s_addr, 
+                   s->sin6_addr.s6_addr + 12, 
+                   sizeof(addr4.sin_addr.s_addr));
+            p = inet_ntop(AF_INET, &s4->sin_addr, buffer, sizeof(buffer));
+            if (!p) {
+                perror("inet_ntop");
+                return -1;
+            }
+        } else {
+            p = inet_ntop(AF_INET6, &s->sin6_addr, buffer, sizeof(buffer));
+            if (!p) {
+                perror("inet_ntop");
+                return -1;
+            }
+        }
     }
 
     /* Remote Addr */
@@ -221,7 +269,7 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
                    FCGI_PARAM_DUP(buffer));
 
     /* Remote Port */
-    snprintf(buffer, 256, "%d", ntohs(addr.sin_port));
+    snprintf(buffer, 256, "%d", port);
     fcgi_add_param(handler,
                    FCGI_PARAM_CONST("REMOTE_PORT"),
                    FCGI_PARAM_DUP(buffer));
