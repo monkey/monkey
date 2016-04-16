@@ -109,6 +109,7 @@ static inline int mk_http_point_header(mk_ptr_t *h,
 static int mk_http_request_prepare(struct mk_http_session *cs,
                                    struct mk_http_request *sr)
 {
+    int ret;
     int status = 0;
     char *temp;
     struct mk_list *hosts = &mk_config->hosts;
@@ -211,7 +212,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Plugins Stage 20 */
-    int ret;
     ret = mk_plugin_stage_run_20(cs, sr);
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");

@@ -155,7 +155,8 @@ struct mk_server_config *mk_config;
 struct mk_server_config *mk_config_init();
 void mk_config_start_configure(void);
 void mk_config_add_index(char *indexname);
-void mk_config_set_init_values(void);
+void mk_config_set_init_values(struct mk_server_config *config);
+int mk_config_listen_parse(char *value);
 
 /* config helpers */
 void mk_config_error(const char *path, int line, const char *msg);

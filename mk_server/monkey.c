@@ -90,6 +90,8 @@ struct mk_server_config *mk_server_init()
     mk_info("Linux Trace enabled");
 #endif
 
+    mk_config_set_init_values(mk_config);
+
     return mk_config;
 }
 

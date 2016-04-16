@@ -163,96 +163,93 @@ int mk_config_listen_check_busy(struct mk_server_config *config)
     return MK_FALSE;
 }
 
-static int mk_config_listen_read(struct mk_rconf_section *section)
+int mk_config_listen_parse(char *value)
 {
+    int ret = -1;
     int flags = 0;
     long port_num;
     char *address = NULL;
     char *port = NULL;
     char *divider;
     struct mk_list *list = NULL;
-    struct mk_list *cur;
     struct mk_string_line *listener;
-    struct mk_rconf_entry *entry;
 
-    mk_list_foreach(cur, &section->entries) {
-        entry = mk_list_entry(cur, struct mk_rconf_entry, _head);
-        if (strcasecmp(entry->key, "Listen")) {
-            continue;
+    list = mk_string_split_line(value);
+    if (!list) {
+        goto error;
+    }
+
+    if (mk_list_is_empty(list) == 0) {
+        goto error;
+    }
+
+    /* Parse the listener interface */
+    listener = mk_list_entry_first(list, struct mk_string_line, _head);
+    if (listener->val[0] == '[') {
+        /* IPv6 address */
+        divider = strchr(value, ']');
+        if (divider == NULL) {
+            mk_err("[config] Expected closing ']' in IPv6 address.");
+            goto error;
         }
-
-        list = mk_string_split_line(entry->val);
-        if (!list) {
+        if (divider[1] != ':' || divider[2] == '\0') {
+            mk_err("[config] Expected ':port' after IPv6 address.");
             goto error;
         }
 
-        /* Parse the listener interface */
-        listener = mk_list_entry_first(list, struct mk_string_line, _head);
-        if (listener->val[0] == '[') {
-            /* IPv6 address */
-            divider = strchr(entry->val, ']');
-            if (divider == NULL) {
-                mk_err("[config] Expected closing ']' in IPv6 address.");
-                goto error;
-            }
-            if (divider[1] != ':' || divider[2] == '\0') {
-                mk_err("[config] Expected ':port' after IPv6 address.");
-                goto error;
-            }
-
-            address = mk_string_copy_substr(entry->val + 1, 0,
-                                            divider - listener->val - 1);
-            port = mk_string_dup(divider + 2);
-        }
-        else if (strchr(listener->val, ':') != NULL) {
-            /* IPv4 address */
-            divider = strrchr(listener->val, ':');
-            if (divider == NULL || divider[1] == '\0') {
-                mk_err("[config] Expected ':port' after IPv4 address.");
-                goto error;
-            }
-
-            address = mk_string_copy_substr(listener->val, 0,
-                                            divider - listener->val);
-            port = mk_string_dup(divider + 1);
-        }
-        else {
-            /* Port only */
-            address = NULL;
-            port = mk_string_dup(listener->val);
-        }
-
-        errno = 0;
-        port_num = strtol(port, NULL, 10);
-        if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
-            mk_warn("Using defaults, could not understand \"Listen %s\"",
-                    listener->val);
-            port = NULL;
-        }
-
-        /* Check extra properties of the listener */
-        flags = MK_CAP_HTTP;
-        if (mk_config_key_have(list, "!http")) {
-            flags |= ~MK_CAP_HTTP;
-        }
-
-        if (mk_config_key_have(list, "h2")) {
-            flags |= (MK_CAP_HTTP2 | MK_CAP_SOCK_TLS);
-        }
-
-        if (mk_config_key_have(list, "h2c")) {
-            flags |= MK_CAP_HTTP2;
-        }
-
-        if (mk_config_key_have(list, "tls")) {
-            flags |= MK_CAP_SOCK_TLS;
-        }
-
-        /* register the new listener */
-        mk_config_listener_add(address, port, flags);
-        mk_string_split_free(list);
-        list = NULL;
+        address = mk_string_copy_substr(value + 1, 0,
+                                        divider - listener->val - 1);
+        port = mk_string_dup(divider + 2);
     }
+    else if (strchr(listener->val, ':') != NULL) {
+        /* IPv4 address */
+        divider = strrchr(listener->val, ':');
+        if (divider == NULL || divider[1] == '\0') {
+            mk_err("[config] Expected ':port' after IPv4 address.");
+            goto error;
+        }
+
+        address = mk_string_copy_substr(listener->val, 0,
+                                        divider - listener->val);
+        port = mk_string_dup(divider + 1);
+    }
+    else {
+        /* Port only */
+        address = NULL;
+        port = mk_string_dup(listener->val);
+    }
+
+    errno = 0;
+    port_num = strtol(port, NULL, 10);
+    if (errno != 0 || port_num == LONG_MAX || port_num == LONG_MIN) {
+        mk_warn("Using defaults, could not understand \"Listen %s\"",
+                listener->val);
+        port = NULL;
+    }
+
+    /* Check extra properties of the listener */
+    flags = MK_CAP_HTTP;
+    if (mk_config_key_have(list, "!http")) {
+        flags |= ~MK_CAP_HTTP;
+    }
+
+    if (mk_config_key_have(list, "h2")) {
+        flags |= (MK_CAP_HTTP2 | MK_CAP_SOCK_TLS);
+    }
+
+    if (mk_config_key_have(list, "h2c")) {
+        flags |= MK_CAP_HTTP2;
+    }
+
+    if (mk_config_key_have(list, "tls")) {
+        flags |= MK_CAP_SOCK_TLS;
+    }
+
+    /* register the new listener */
+    mk_config_listener_add(address, port, flags);
+    mk_string_split_free(list);
+    list = NULL;
+    ret = 0;
 
 error:
     if (address) {
@@ -265,9 +262,25 @@ error:
         mk_string_split_free(list);
     }
 
-    if (mk_list_is_empty(&mk_config->listeners) == 0) {
-        mk_warn("[config] No valid Listen entries found, set default");
-        mk_config_listener_add(NULL, NULL, MK_CAP_HTTP);
+    return ret;
+}
+
+static int mk_config_listen_read(struct mk_rconf_section *section)
+{
+    int ret;
+    struct mk_list *cur;
+    struct mk_rconf_entry *entry;
+
+    mk_list_foreach(cur, &section->entries) {
+        entry = mk_list_entry(cur, struct mk_rconf_entry, _head);
+        if (strcasecmp(entry->key, "Listen")) {
+            continue;
+        }
+
+        ret = mk_config_listen_parse(entry->val);
+        if (ret != 0) {
+            return -1;
+        }
     }
 
     return 0;
@@ -316,8 +329,13 @@ static int mk_config_read_files(char *path_conf, char *file_conf)
 
     /* Listen */
     if (!mk_config->port_override) {
+        /* Process each Listen entry */
         if (mk_config_listen_read(section)) {
             mk_err("[config] Failed to read listen sections.");
+        }
+        if (mk_list_is_empty(&mk_config->listeners) == 0) {
+            mk_warn("[config] No valid Listen entries found, set default");
+            mk_config_listener_add(NULL, NULL, MK_CAP_HTTP);
         }
     }
     else {
@@ -477,6 +495,7 @@ static int mk_config_read_files(char *path_conf, char *file_conf)
     mk_config->server_signature_header_len = len;
 
     mk_mem_free(tmp);
+    return 0;
 }
 
 /* read main configuration from monkey.conf */
@@ -485,7 +504,6 @@ void mk_config_start_configure(void)
     int ret;
     unsigned long len;
 
-    mk_config_set_init_values();
     ret = mk_config_read_files(mk_config->path_conf_root,
                                mk_config->conf_main);
 
@@ -556,51 +574,50 @@ struct mk_config_listener *mk_config_listener_add(char *address,
     return listen;
 }
 
-void mk_config_set_init_values(void)
+void mk_config_set_init_values(struct mk_server_config *config)
 {
     /* Init values */
-    mk_config->is_seteuid = MK_FALSE;
-    mk_config->timeout = 15;
-    mk_config->hideversion = MK_FALSE;
-    mk_config->keep_alive = MK_TRUE;
-    mk_config->keep_alive_timeout = 15;
-    mk_config->max_keep_alive_request = 50;
-    mk_config->resume = MK_TRUE;
-    mk_config->standard_port = 80;
-    mk_config->symlink = MK_FALSE;
-    mk_config->nhosts = 0;
-    mk_list_init(&mk_config->hosts);
-    mk_config->user = NULL;
-    mk_config->open_flags = O_RDONLY | O_NONBLOCK;
-    mk_config->index_files = NULL;
-    mk_config->conf_user_pub = NULL;
-    mk_config->workers = -1;
+    config->is_seteuid = MK_FALSE;
+    config->timeout = 15;
+    config->hideversion = MK_FALSE;
+    config->keep_alive = MK_TRUE;
+    config->keep_alive_timeout = 15;
+    config->max_keep_alive_request = 50;
+    config->resume = MK_TRUE;
+    config->standard_port = 80;
+    config->symlink = MK_FALSE;
+    config->nhosts = 0;
+    mk_list_init(&config->hosts);
+    config->user = NULL;
+    config->open_flags = O_RDONLY | O_NONBLOCK;
+    config->index_files = NULL;
+    config->conf_user_pub = NULL;
+    config->workers = 1;
 
     /* TCP REUSEPORT: available on Linux >= 3.9 */
-    if (mk_config->scheduler_mode == -1) {
-        if (mk_config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
-            mk_config->scheduler_mode = MK_SCHEDULER_REUSEPORT;
+    if (config->scheduler_mode == -1) {
+        if (config->kernel_features & MK_KERNEL_SO_REUSEPORT) {
+            config->scheduler_mode = MK_SCHEDULER_REUSEPORT;
         }
         else {
-            mk_config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
+            config->scheduler_mode = MK_SCHEDULER_FAIR_BALANCING;
         }
     }
 
     /* Max request buffer size allowed
      * right now, every chunk size is 4KB (4096 bytes),
      * so we are setting a maximum request size to 32 KB */
-    mk_config->max_request_size = MK_REQUEST_CHUNK * 8;
+    config->max_request_size = MK_REQUEST_CHUNK * 8;
 
     /* Internals */
-    mk_config->safe_event_write = MK_FALSE;
+    config->safe_event_write = MK_FALSE;
 
     /* Init plugin list */
-    mk_list_init(&mk_config->plugins);
+    mk_list_init(&config->plugins);
 
     /* Init listeners */
-    mk_list_init(&mk_config->listeners);
+    mk_list_init(&config->listeners);
 }
-
 
 void mk_config_sanity_check()
 {
