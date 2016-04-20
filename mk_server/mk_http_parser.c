@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <limits.h>
+#include <assert.h>
 
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_parser.h>
@@ -40,6 +41,15 @@
 
 #define field_len()   (p->end - p->start)
 #define header_scope_eq(p, x) p->header_min = p->header_max = x
+
+#define MK_HEADER_SHORT_CT         "Content-Type: "
+#define MK_HEADER_CL               "Content-Length: "
+#define MK_HEADER_CT_MP_FORM       "multipart/form-data"
+#define MK_HEADER_CT_MP_BOUNDARY   "boundary="
+
+#define search_token(str, token) strstr(str, token);
+
+#define read_till_crlf(str) strstr(str, "\r\n");
 
 struct row_entry {
     int len;
@@ -722,3 +732,145 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
 
     return MK_HTTP_PARSER_PENDING;
 }
+
+int mk_http_header_extract_datafield(char *data, const char *token, char **val)
+{
+    char * p = NULL;
+    char * lf1 = NULL;
+
+    assert(NULL != data);
+    assert(NULL != token);
+    assert(NULL != val);
+
+    /* Findout data range for the data */
+    p = search_token(data, token);
+    if (NULL == p)
+    {
+        return -1;
+    }
+
+    p += strlen(token);
+    lf1 = read_till_crlf((const char *)p);
+    if (NULL == lf1)
+    {
+        return -1;
+    }
+
+    /* Check data length */
+    *val = mk_mem_malloc((lf1 - p + 1) * sizeof(char ));//mind the '\0' char
+
+    if (NULL == *val)
+    {
+        return -1;
+    }
+
+    memset(*val, 0, (lf1 - p + 1));
+    strncpy(*val, p, (lf1 - p));
+
+    return 0;
+}
+
+char *mk_http_header_getearliestbreak(const char buf[], const unsigned bufsize,
+                                      int * const advance)
+{
+    char *crend;
+    char *lfend;
+
+    crend = memmem(buf, bufsize, "\r\n\r\n", 4);
+    lfend = memmem(buf, bufsize, "\n\n", 2);
+
+    if (!crend && !lfend)
+        return NULL;
+
+    /* If only one found, return that one */
+    if (!crend) {
+        *advance = 2;
+        return lfend;
+    }
+    if (!lfend)
+        return crend;
+
+    /* Both found, return the earlier one - the latter one is part of content */
+    if (lfend < crend) {
+        *advance = 2;
+        return lfend;
+    }
+    return crend;
+}
+
+int mk_http_header_pre_parse_rfc1867(struct mk_http_session *cs, struct mk_http_request *sr)
+{
+    int headerlen = 0;
+    int advance = 4;
+    char *headerend = mk_http_header_getearliestbreak(cs->body, cs->body_length, &advance);
+    if (!headerend) {
+        /* We need more data */
+        return 0;
+    }
+
+    MK_TRACE("Parsed header content length: %d", cs->parser.header_content_length);
+
+    if (-1 == cs->parser.header_content_length) {
+        /* We need more data */
+        return 0;
+    }
+
+    headerlen = (headerend - cs->body) + advance;
+
+    int datalen = 0;
+    char *ctval = NULL;
+    char *boundary = 0;
+    int ret = 0;
+
+    /* We got the header */
+    if (0 != mk_http_header_extract_datafield(cs->body, MK_HEADER_SHORT_CT, &ctval)) {
+        mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+        return MK_HTTP_PARSER_ERROR;
+    }
+
+    if (!strstr(ctval, MK_HEADER_CT_MP_FORM)) {
+        return 0;
+    }
+
+    MK_TRACE("Content type multipart/form-data found");
+
+    MK_TRACE("Content-Length is: %d", cs->parser.header_content_length);
+    datalen = cs->parser.header_content_length;
+
+    if ((datalen + headerlen) > mk_config->max_request_size) {
+        MK_TRACE("Content-Length bigger than MAX_REQUST_SIZE");
+        mk_http_error(MK_CLIENT_REQUEST_ENTITY_TOO_LARGE, cs, sr);
+        ret = MK_HTTP_PARSER_ERROR;
+        goto EXIT;
+    }
+
+    char *b = strstr(ctval, MK_HEADER_CT_MP_BOUNDARY);
+    if (NULL == b) {
+        MK_TRACE("Multipart content boundary NOT found");
+        mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr);
+        ret = MK_HTTP_PARSER_ERROR;
+        goto EXIT;
+    }
+
+    boundary = b + strlen(MK_HEADER_CT_MP_BOUNDARY);
+
+    MK_TRACE("Content boundary value is: %s", boundary);
+
+    sr->form_upload_info = (struct form_upload_info *)mk_mem_malloc(sizeof(struct form_upload_info));
+    if (!sr->form_upload_info) {
+        MK_TRACE("Malloc failure!");
+        mk_http_error(MK_SERVER_INTERNAL_ERROR, cs, sr);
+        ret = MK_HTTP_PARSER_ERROR;
+        goto EXIT;
+    }
+    memset(sr->form_upload_info, 0, sizeof(struct form_upload_info));
+    sr->form_upload_info->startboundary = strdup(boundary);
+    sr->form_upload_info->headerlen = headerlen;
+    sr->form_upload_info->contentlen = datalen;
+
+    EXIT:
+    if (ctval) mk_mem_free(ctval);
+
+    return ret;
+}
+

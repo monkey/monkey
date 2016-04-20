@@ -49,6 +49,12 @@
 
     UserDir @MK_CONF_USERDIR@
 
+    # UploadDir:
+    # ----------
+    # Directory location for uploaded files.
+
+    UploadDir @MK_CONF_UPLOADDIR@
+
     # Indexfile:
     # ----------
     # Number of the initial file of aperture when calling a directory.

@@ -22,8 +22,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 
 #include <monkey/monkey.h>
@@ -41,6 +44,16 @@
 #include <monkey/mk_vhost.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>
+
+#if defined (__linux__)
+#define PAGE_SIZE sysconf(_SC_PAGE_SIZE)
+#else
+#define PAGE_SIZE 4096
+#endif
+#define MK_HTTP_RFC1867_CD "Content-Disposition: "
+#define MK_HTTP_RFC1867_CD_FORM "Content-Disposition: form-data;"
+#define MK_HTTP_RFC1867_FILENAME "; filename="
+#define MK_HTTP_RFC1867_ATTRNAME "; name="
 
 const mk_ptr_t mk_http_method_get_p = mk_ptr_init(MK_METHOD_GET_STR);
 const mk_ptr_t mk_http_method_post_p = mk_ptr_init(MK_METHOD_POST_STR);
@@ -82,6 +95,7 @@ void mk_http_request_init(struct mk_http_session *session,
     request->uri_processed.data = NULL;
     request->real_path.data = NULL;
     request->handler_data = NULL;
+    request->form_upload_info = NULL;
 
     /* Response Headers */
     mk_header_response_reset(&request->headers);
@@ -601,6 +615,560 @@ static inline void mk_http_cb_file_on_consume(struct mk_stream *stream, long byt
     }
     stream->cb_bytes_consumed = NULL;
 }
+
+int mk_http_create_temp_file(char **tempnamep)
+{
+    char buf[256] = {0};
+    snprintf(buf, sizeof(buf), "%s/mk_upload_file_",
+             mk_config->upload_dir ?  mk_config->upload_dir : "/tmp");
+    asprintf(tempnamep, "%sXXXXXX", buf);
+    int fd = mkstemp(*tempnamep);
+    if (fd < 0) {
+        printf("mkstemp failed!\n");
+        free(*tempnamep);
+        return -1;
+    }
+    return fd;
+}
+
+int mk_http_setup_multipart_form_data_buffer(struct mk_http_session *cs,
+                                             struct mk_http_request *sr)
+{
+    int fd = mk_http_create_temp_file(&sr->form_upload_info->buffer_file);
+    if (-1 == fd) {
+        MK_TRACE("mk_create_temp_file failed");
+        return -1;
+    }
+
+    int totallen = sr->form_upload_info->headerlen +
+                   sr->form_upload_info->contentlen;
+
+    if (-1 == ftruncate(fd, totallen)) {
+        MK_TRACE("ftruncate failed for file: %s, errno: %i",
+                 sr->form_upload_info->buffer_file, errno);
+        close(fd);
+        return -1;
+    }
+
+    int mapsize = totallen + ((((totallen / PAGE_SIZE) + 1) * PAGE_SIZE)
+                           - totallen);
+    MK_TRACE("Upload file name: %s, setup buffer of mapsize: %i, "
+             "headerlen: %i, datalen: %i, page size: %i",
+             sr->form_upload_info->buffer_file, mapsize,
+             sr->form_upload_info->headerlen,
+             sr->form_upload_info->contentlen, PAGE_SIZE);
+    void *buf = NULL;
+    if (-1 == (int) (buf = mmap((void *)0, mapsize,
+                                PROT_READ | PROT_WRITE,
+                                MAP_SHARED, fd, 0))) {
+        MK_TRACE("Setup buffer failed for file: %s, errno: %i",
+                 sr->form_upload_info->buffer_file, errno);
+        close(fd);
+        return -1;
+    }
+    MK_TRACE("Setup preallocated file buffer is successful");
+    memcpy((char *)buf, cs->body, cs->body_length);
+
+    /* Save the main header for future use */
+    sr->form_upload_info->main_hdr = cs->body;
+    sr->form_upload_info->main_hdr_body_size = cs->body_size;
+
+    /* In the old header, memset everything other than main header */
+    memset(sr->form_upload_info->main_hdr +
+           sr->form_upload_info->headerlen, 0,
+           cs->body_size - sr->form_upload_info->headerlen);
+
+    cs->body = (char *)buf;
+    cs->body_size = totallen;
+    close(fd);
+    sr->form_upload_info->isMemMapped = 1;
+    return 0;
+}
+
+int mk_http_check_setup_multipart_form_data_buffer(struct mk_http_session *cs,
+                                                   struct mk_http_request *sr)
+{
+    if (NULL == sr->form_upload_info) {
+        /* Check for multipart form data */
+        if (MK_HTTP_PARSER_ERROR == mk_http_header_pre_parse_rfc1867(cs, sr)) {
+            size_t count = 0;
+            /* The HTTP parser may have enqueued some response error */
+            if (mk_channel_is_empty(cs->channel) != 0) {
+                mk_channel_write(cs->channel, &count);
+            }
+            MK_TRACE("HTTP_PARSER_ERROR", socket);
+            return -1;
+        }
+        if (NULL != sr->form_upload_info) {
+            if (0 != mk_http_setup_multipart_form_data_buffer(cs, sr)) {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+int mk_http_is_valid_filename(char *filename)
+{
+#define MAX_FILENMANE_LENGTH 255
+    if ((NULL == filename) ||
+        (0 == strlen(filename)) ||
+        (MAX_FILENMANE_LENGTH < strlen(filename))) {
+        return 0;
+    }
+
+    size_t i, j;
+    for (i = 0; i < strlen(filename); i++) {
+        if (('<' == filename[i]) || ('>' == filename[i]) ||
+            (':' == filename[i]) || ('"' == filename[i]) ||
+            ('/' == filename[i]) || ('\\' == filename[i]) ||
+            ('|' == filename[i]) || ('?' == filename[i]) ||
+            ('*' == filename[i])) {
+            return 0;
+        } else if (isspace(filename[i])) { 
+            j++;
+        }
+    }
+
+    /* Add more checks here */
+
+    return (j == strlen(filename)) ? 0 : 1;
+}
+
+int mk_http_handle_multipart_form_data(struct mk_http_session *cs,
+                                       struct mk_http_request *sr)
+{
+    /* Check for form extended header contents */
+    int ret = 0;
+    char *boundary = NULL;
+    char *headerend = cs->body + sr->form_upload_info->headerlen;
+    char boundary_str[128] = {0};
+    char boundary_end_str[128] = {0};
+    char *contentdata = headerend - 2; /* step back \r\n */
+    char *contenthdr_start = NULL;
+    char *boundary_start = NULL;
+    char *boundary_end = NULL;
+    int filecount = 0;
+    char absfilename[512] = {0};
+    char filename[512] = {0};
+    char attrname[512] = {0};
+    int filesize = 0;
+
+    MK_TRACE("Multipart form transfer completed, body_length: %i, body_size: %i",
+             cs->body_length, cs->body_size);
+
+    boundary = sr->form_upload_info->startboundary;
+    snprintf(boundary_str, sizeof(boundary_str), "\r\n--%s\r\n", boundary);
+    snprintf(boundary_end_str, sizeof(boundary_end_str), "\r\n--%s--\r\n", boundary);
+
+    MK_TRACE("Boundary_str: %s", boundary_str);
+    MK_TRACE("Boundary_end_str: %s", boundary_end_str);
+
+    int count = 0;
+
+    do {
+        memset(filename, 0, sizeof(filename));
+        memset(attrname, 0, sizeof(attrname));
+
+        bool isEnd = false;
+        count++;
+        MK_TRACE("Iteration: %d\n", count);
+        boundary_start = memmem(contentdata, cs->body_size - (contentdata - cs->body),
+                               (char *)boundary_str, strlen(boundary_str));
+
+        if (!boundary_start) {
+            MK_TRACE("Malformed RFC1867 header boundary start");
+            ret = -1;
+            goto EXIT;
+        }
+
+        contenthdr_start = boundary_start + strlen(boundary_str);
+        boundary_end = memmem(contenthdr_start, cs->body_size - (contenthdr_start - cs->body),
+                             (char *)boundary_str, strlen(boundary_str));
+
+        if (!boundary_end) {
+            MK_TRACE("1st attempt - did not find RFC1867 header boundary, check for end");
+            boundary_end = memmem(contenthdr_start, cs->body_size - (contenthdr_start - cs->body),
+                                 (char *)boundary_end_str, strlen(boundary_end_str));
+            if (!boundary_end) {
+                MK_TRACE("Final attempt - Malformed RFC1867 header boundary end");
+                ret = -1;
+                goto EXIT;
+            }
+            isEnd = true;
+        }
+
+        char *contenthdr_end = strstr(contenthdr_start, "\r\n\r\n");
+        if (!contenthdr_end || contenthdr_end > boundary_end) {
+            MK_TRACE("Malformed RFC1867 content header");
+            ret = -1;
+            goto EXIT;
+        }
+
+        char *contenthdr = mk_mem_malloc(contenthdr_end - contenthdr_start + 1); //add '\0'
+        if (!contenthdr) {
+            MK_TRACE("Malloc failure");
+            ret = -1;
+            goto EXIT;
+        }
+
+        memset(contenthdr, 0, contenthdr_end - contenthdr_start + 1);
+        memcpy(contenthdr, contenthdr_start, contenthdr_end - contenthdr_start);
+
+        MK_TRACE("Content header: %s", contenthdr);
+
+        contenthdr_end += strlen("\r\n\r\n");
+
+        if (!strstr(contenthdr, MK_HTTP_RFC1867_CD_FORM)) {
+            MK_TRACE("Missing content disposition!");
+            mk_mem_free(contenthdr);
+            contenthdr = NULL;
+            ret = -1;
+            goto EXIT;
+        }
+
+        bool isAttr = false;
+        bool isFile = false;
+        char *attr_start = NULL;
+        char *attr_end = NULL;
+
+        if ((attr_start = strstr(contenthdr, MK_HTTP_RFC1867_ATTRNAME)) != NULL) {
+            isAttr = true;
+            MK_TRACE("Found attribute!");
+
+            /* Extract the attribute name */
+            attr_start += strlen(MK_HTTP_RFC1867_ATTRNAME);
+            bool file = false;
+            if (strstr(contenthdr, MK_HTTP_RFC1867_FILENAME)) {
+                file = true;
+                attr_end = strstr(attr_start, ";");
+            }
+            else {
+                attr_end = strstr(attr_start, "\r\n");
+                if (!attr_end) {
+                    /* Is it last ? */
+                    attr_end = contenthdr + strlen(contenthdr);
+                }
+            }
+
+            if (!attr_end || ((attr_end - attr_start) > (int)sizeof(attrname))) {
+                MK_TRACE("Malformed attribute name!");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+
+            memcpy(attrname, attr_start, attr_end - attr_start);
+            if (attrname[strlen(attrname) - 1] == '"') {
+                attrname[strlen(attrname) - 1] = '\0';
+            }
+
+            if (attrname[0] == '"') {
+                memmove(attrname, attrname + 1, strlen(attrname)); //move along with the '\0'
+            }
+            MK_TRACE("Attribute name: %s", attrname);
+
+            int size;
+            if (file) {
+                size = strlen(attrname) + 4  /* 4 for ": "  & \" \" */
+                                        + 3; /* for ; ' ' & '\0' */
+            }
+            else {
+                /* Handle Content-Type ? */
+                /* Form the attribute string - assume attribute body is string */
+                size = strlen(attrname) + 4 + /* 4 for ": " & \" \" */
+                             (boundary_end - contenthdr_end) + 3; /* for ; ' ' & '\0' */
+            }
+
+            char *attr_data = mk_mem_malloc(size);
+            if (!attr_data) {
+                MK_TRACE("Malloc failure");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+
+            memset(attr_data, 0, size);
+            if (file) {
+                snprintf(attr_data, size, "%s", attrname);
+            }
+            else {
+                snprintf(attr_data, size, "%s: ", attrname);
+            }
+
+            if (!file && (boundary_end - contenthdr_end)) {
+                memcpy(attr_data + strlen(attr_data), contenthdr_end,
+                      (boundary_end - contenthdr_end));
+            }
+
+            strcat(attr_data, "; ");
+
+            sr->form_upload_info->attr_count++;
+
+            if (!sr->form_upload_info->attr_data) {
+                memmove(attr_data + 1, attr_data, strlen(attr_data));
+                attr_data[0] = '"';
+                strcat(attr_data, "\"");
+                sr->form_upload_info->attr_data = attr_data;
+            }
+            else {
+                char *newbuf = mk_mem_realloc(sr->form_upload_info->attr_data,
+                                              strlen(sr->form_upload_info->attr_data) +
+                                              size);
+                if (newbuf) {
+                    char *ptr = strrchr(newbuf, ';'); /* it must have "; " at the end */
+                    if (ptr && (ptr[2] == '"')) {
+                        ptr[2] = '\0';
+                    }
+                    strcat(newbuf, attr_data);
+                    strcat(newbuf, "\"");
+                    sr->form_upload_info->attr_data = newbuf;
+                }
+                else {
+                    sr->form_upload_info->attr_count--;
+                    MK_TRACE("Realloc failure..continue with existing attributes");
+                }
+            }
+
+            MK_TRACE("New attribute list: %s", sr->form_upload_info->attr_data);
+        }
+
+        char *name_start = NULL;
+        char *name_end = NULL;
+        if ((name_start = strstr(contenthdr, MK_HTTP_RFC1867_FILENAME)) != NULL) {
+            isFile = true;
+            MK_TRACE("Found file!");
+
+            /* Extract the file name */
+            name_start += strlen(MK_HTTP_RFC1867_FILENAME);
+            name_end = strstr(name_start, "\r\n");
+            if (!name_end || ((name_end - name_start) > (int)(sizeof(filename) / 2))) {
+                MK_TRACE("Malformed file name!");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+
+            memcpy(filename, name_start, name_end - name_start - 1);
+            if (filename[strlen(filename) - 1] == '"') {
+                filename[strlen(filename) - 1] = '\0';
+            }
+
+            if (filename[0] == '"') {
+                memmove(filename, filename + 1, strlen(filename)); //move along with the '\0'
+            }
+
+            if (!mk_http_is_valid_filename(filename)) {
+                MK_TRACE("Non-standard file name!");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+
+            /* Handle Content-Type ? */
+
+            filecount++;
+
+            /* Search next content data with new pointers */
+            if (filecount > 1) {
+                MK_TRACE("Not supported more than 1 file upload with multipart/form-data");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+
+            /* move the file content to the beginning */
+            memmove(cs->body, cs->body + (contenthdr_end - cs->body),
+                    cs->body_size - (contenthdr_end - cs->body));
+
+            /* memset the trailing contents outside our data */
+            memset(cs->body + cs->body_size - (contenthdr_end - cs->body), 0, contenthdr_end - cs->body);
+
+            /* Calculate new boundary end */
+            boundary_end = memmem(cs->body, cs->body_size,
+                                 (char *)boundary_str, strlen(boundary_str));
+
+            if (!boundary_end) {
+                boundary_end = memmem(cs->body, cs->body_size,
+                                     (char *)boundary_end_str, strlen(boundary_end_str));
+                if (!boundary_end) {
+                    MK_TRACE("Malformed RFC1867 header boundary end");
+                    mk_mem_free(contenthdr);
+                    contenthdr = NULL;
+                    ret = -1;
+                    goto EXIT;
+                }
+                isEnd = true;
+            }
+
+            filesize = boundary_end - cs->body;
+            sr->form_upload_info->file_count = filecount;
+            sr->form_upload_info->fileinfo_list = mk_mem_malloc(sizeof(struct upload_file_info));
+            if (!sr->form_upload_info->fileinfo_list) {
+                MK_TRACE("Malloc failure");
+                mk_mem_free(contenthdr);
+                contenthdr = NULL;
+                ret = -1;
+                goto EXIT;
+            }
+            sr->form_upload_info->fileinfo_list->file_size = filesize;
+            strcpy(absfilename, mk_config->upload_dir ? mk_config->upload_dir : "/tmp");
+            strcat(absfilename, "/");
+            strcat(absfilename, filename);
+            sr->form_upload_info->fileinfo_list->filename = strdup(absfilename);
+
+            MK_TRACE("Uploaded file name: %s, actual size: %i",
+                     sr->form_upload_info->fileinfo_list->filename,
+                     sr->form_upload_info->fileinfo_list->file_size);
+        }
+
+        if(!isAttr && !isFile) {
+            MK_TRACE("Malformed content header!");
+            mk_mem_free(contenthdr);
+            contenthdr = NULL;
+            ret = -1;
+            goto EXIT;
+        }
+
+        mk_mem_free(contenthdr);
+        contenthdr = NULL;
+
+        if (isEnd) {
+            MK_TRACE("End of request reached!");
+            break;
+        }
+        else {
+            contentdata = boundary_end;
+        }
+
+    } while(1);
+
+    if (sr->form_upload_info->fileinfo_list && (1 != filecount)) {
+        MK_TRACE("No file uploaded with multipart/form-data");
+        ret = -1;
+        goto EXIT;
+    }
+
+    /* Sync the content to file system */
+    int mapsize = cs->body_size + ((((cs->body_size / PAGE_SIZE) + 1) * PAGE_SIZE)
+                                - cs->body_size);
+    if (-1 == msync(cs->body, mapsize, MS_SYNC)) {
+        MK_TRACE("msync failed for file: %s, errno: %i",
+                 sr->form_upload_info->buffer_file, errno);
+        ret = -1;
+        goto EXIT;
+    }
+
+    munmap(cs->body, mapsize);
+    sr->form_upload_info->isMemMapped = 0;
+
+    int fd = -1;
+    if (sr->form_upload_info->fileinfo_list) {
+        /* Finally truncate the content file to actual content length */
+        fd = open(sr->form_upload_info->buffer_file, O_RDWR, (mode_t)0700);
+        if ((-1 == fd) || (-1 == ftruncate(fd, sr->form_upload_info->fileinfo_list->file_size))) {
+            MK_TRACE("%s for file failed: %s, errno: %i",
+                    (-1 == fd) ? "open" : "ftruncate",
+                    sr->form_upload_info->buffer_file, errno);
+            ret = -1;
+            goto EXIT;
+        }
+
+        MK_TRACE("Resize file done");
+
+        rename(sr->form_upload_info->buffer_file,
+               sr->form_upload_info->fileinfo_list->filename);
+
+        MK_TRACE("Rename file done");
+    }
+    else {
+        unlink(sr->form_upload_info->buffer_file);
+        MK_TRACE("Buffer file unlink done");
+    }
+
+    free(sr->form_upload_info->buffer_file); /* NOT mk_mem_free */
+    sr->form_upload_info->buffer_file = NULL;
+
+    cs->body = sr->form_upload_info->main_hdr;
+    cs->body_size = sr->form_upload_info->main_hdr_body_size;
+    cs->body_length = sr->form_upload_info->headerlen;
+    cs->parser.i = cs->body_length;
+    cs->parser.header_content_length = 0;
+    sr->data.len = 0;
+    sr->data.data = NULL;
+
+    EXIT:
+
+    if (-1 != fd) {
+        close(fd);
+    }
+
+    return ret;
+}
+
+void mk_http_cleanup_rfc1867_data(struct mk_http_session *cs,
+                                 struct mk_http_request *sr)
+{
+    if (sr->form_upload_info) {
+        MK_TRACE("Inside RFC1867 cleanup");
+        if (sr->form_upload_info->isMemMapped) {
+            int mapsize = cs->body_size +
+                          ((((cs->body_size / PAGE_SIZE) + 1) * PAGE_SIZE) -
+                          cs->body_size);
+            msync(cs->body, mapsize, MS_SYNC);
+            munmap(cs->body, mapsize);
+            sr->form_upload_info->isMemMapped = 0;
+
+            cs->body = sr->form_upload_info->main_hdr;
+            cs->body_size = sr->form_upload_info->main_hdr_body_size;
+            cs->body_length = sr->form_upload_info->headerlen;
+        }
+
+        if (sr->form_upload_info->attr_data) {
+            mk_mem_free(sr->form_upload_info->attr_data);
+            sr->form_upload_info->attr_data = NULL;
+        }
+
+        if (sr->form_upload_info->fileinfo_list) {
+            int i;
+            for (i = 0; i < sr->form_upload_info->file_count; i++) {
+                if (sr->form_upload_info->fileinfo_list[i].filename) {
+                    unlink(sr->form_upload_info->fileinfo_list[i].filename);
+                    /* strdup-ed memory - don't use mk_mem_free here */
+                    free(sr->form_upload_info->fileinfo_list[i].filename);
+                    sr->form_upload_info->fileinfo_list[i].filename = NULL;
+                    sr->form_upload_info->fileinfo_list[i].file_size = 0;
+                }
+            }
+            mk_mem_free(sr->form_upload_info->fileinfo_list);
+            sr->form_upload_info->fileinfo_list = NULL;
+        }
+
+        if (sr->form_upload_info->startboundary) {
+            mk_mem_free(sr->form_upload_info->startboundary);
+            sr->form_upload_info->startboundary = NULL;
+        }
+
+        if (sr->form_upload_info->buffer_file) {
+            struct stat buf;
+            if (!stat(sr->form_upload_info->buffer_file, &buf)) {
+                unlink(sr->form_upload_info->buffer_file);
+            }
+            free(sr->form_upload_info->buffer_file); /* NOT mk_mem_free */
+            sr->form_upload_info->buffer_file = NULL;
+        }
+
+        mk_mem_free(sr->form_upload_info);
+        sr->form_upload_info = NULL;
+    }
+    return;
+}
+
 #endif
 
 int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
@@ -1299,6 +1867,11 @@ void mk_http_session_remove(struct mk_http_session *cs)
     /* On session remove, make sure to cleanup any handler */
     mk_list_foreach_safe(head, tmp, &cs->request_list) {
         sr = mk_list_entry(head, struct mk_http_request, _head);
+
+#if defined (__linux__)
+        mk_http_cleanup_rfc1867_data(cs, sr);
+#endif
+
         if (sr->stage30_handler) {
             MK_TRACE("Hangup stage30 handler");
             handler = sr->stage30_handler;
@@ -1390,6 +1963,11 @@ void mk_http_request_free(struct mk_http_request *sr)
 {
     /* Let the vhost interface to handle the session close */
     mk_vhost_close(sr);
+
+    /* Cleanup RFC1867 data */
+#if defined (__linux__)
+    mk_http_cleanup_rfc1867_data(sr->session, sr);
+#endif
 
     if (sr->headers.location) {
         mk_mem_free(sr->headers.location);
@@ -1505,6 +2083,20 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                 return -1;
             }
             mk_sched_conn_timeout_del(conn);
+
+#if defined (__linux__)
+            if (0 != mk_http_check_setup_multipart_form_data_buffer(cs, sr)) {
+                mk_http_session_remove(cs);
+                return -1;
+            }
+            if (NULL != sr->form_upload_info) {
+                /* Organize multipart form data */
+                if (0 != mk_http_handle_multipart_form_data(cs, sr)) {
+                    mk_http_session_remove(cs);
+                    return -1;
+                }
+            }
+#endif
             mk_http_request_prepare(cs, sr);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
@@ -1517,6 +2109,12 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
             return -1;
         }
         else {
+#if defined (__linux__)
+            if (0 != mk_http_check_setup_multipart_form_data_buffer(cs, sr)) {
+                mk_http_session_remove(cs);
+                return -1;
+            }
+#endif
             MK_TRACE("[FD %i] HTTP_PARSER_PENDING", socket);
         }
     }

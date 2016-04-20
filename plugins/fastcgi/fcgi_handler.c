@@ -353,6 +353,18 @@ static int fcgi_encode_request(struct fcgi_handler *handler)
                        FCGI_PARAM_CONST("on"));
     }
 
+    if (handler->sr->form_upload_info) {
+        if (handler->sr->form_upload_info->fileinfo_list) {
+            fcgi_add_param(handler,
+                           FCGI_PARAM_CONST("UPLOAD_FILENAME"),
+                           FCGI_PARAM_DUP(handler->sr->form_upload_info->fileinfo_list->filename));
+        }
+
+        fcgi_add_param(handler,
+                       FCGI_PARAM_CONST("UPLOAD_ARGUMENTS"),
+                       FCGI_PARAM_DUP(handler->sr->form_upload_info->attr_data));
+    }
+
     /* Content Length */
     if (handler->sr->_content_length.data) {
         fcgi_add_param(handler,
@@ -708,6 +720,21 @@ void cb_fastcgi_request_flush(void *data)
                  handler->server_fd, count, ret);
 
     if (ret == MK_CHANNEL_DONE || ret == MK_CHANNEL_EMPTY) {
+
+        /* Successfully sent RFC1867 data to FCGI - forget the file references */
+        if (handler->sr->form_upload_info && 
+            handler->sr->form_upload_info->fileinfo_list) {
+            int i;
+            for (i = 0; i < handler->sr->form_upload_info->file_count; i++) {
+                if (handler->sr->form_upload_info->fileinfo_list[i].filename) {
+                    /* strdup-ed memory - don't use mk_mem_free here */
+                    free(handler->sr->form_upload_info->fileinfo_list[i].filename);
+                    handler->sr->form_upload_info->fileinfo_list[i].filename = NULL;
+                    handler->sr->form_upload_info->fileinfo_list[i].file_size = 0;
+                }
+            }
+        }
+
         /* Request done, switch the event side to receive the FCGI response */
         handler->buf_len = 0;
         handler->event.handler = cb_fastcgi_on_read;

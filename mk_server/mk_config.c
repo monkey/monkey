@@ -105,6 +105,10 @@ void mk_config_free_all()
         mk_mem_free(mk_config->user_dir);
     }
 
+    if (mk_config->upload_dir) {
+        mk_mem_free(mk_config->upload_dir);
+    }
+
     /* free config->index_files */
     if (mk_config->index_files) {
         mk_string_split_free(mk_config->index_files);
@@ -373,6 +377,10 @@ static void mk_config_read_files(char *path_conf, char *file_conf)
     mk_config->user_dir = mk_rconf_section_get_key(section,
                                                    "UserDir", MK_RCONF_STR);
 
+    /* File upload directory */
+    mk_config->upload_dir = mk_rconf_section_get_key(section,
+                                                     "UploadDir", MK_RCONF_STR);
+
     /* Index files */
     mk_config->index_files = mk_rconf_section_get_key(section,
                                                       "Indexfile", MK_RCONF_LIST);
@@ -562,6 +570,7 @@ void mk_config_set_init_values(void)
     mk_config->open_flags = O_RDONLY | O_NONBLOCK;
     mk_config->index_files = NULL;
     mk_config->user_dir = NULL;
+    mk_config->upload_dir = NULL;
 
     /* TCP REUSEPORT: available on Linux >= 3.9 */
     if (mk_config->scheduler_mode == -1) {

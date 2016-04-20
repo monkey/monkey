@@ -346,4 +346,6 @@ static inline int mk_http_parser_more(struct mk_http_parser *p, int len)
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                    char *buffer, int len);
 
+int mk_http_header_pre_parse_rfc1867(struct mk_http_session *cs, struct mk_http_request *sr);
+
 #endif /* MK_HTTP_H */

@@ -25,6 +25,30 @@
 #define MK_HEADER_IOV         32
 #define MK_HEADER_ETAG_SIZE   32
 
+/*
+ * RFC 1867 bookkeeping data - form based file upload specific
+ */
+struct upload_file_info
+{
+    int file_size;
+    char *filename;
+};
+
+struct form_upload_info
+{
+    char *buffer_file;
+    char *startboundary;
+    int isMemMapped;
+    int headerlen;
+    int contentlen;
+    char *main_hdr;
+    int main_hdr_body_size;
+    int attr_count;
+    char *attr_data;
+    int file_count; /* Currently we support 1, no support for multipart/mixed */
+    struct upload_file_info *fileinfo_list;
+};
+
 struct response_headers
 {
     int status;
@@ -169,6 +193,11 @@ struct mk_http_request
 
     struct host       *host_conf;     /* root vhost config */
     struct host_alias *host_alias;    /* specific vhost matched */
+
+    /*
+     * RFC 1867 bookkeeping data - form based file upload specific
+     */
+    struct form_upload_info *form_upload_info;
 
     /*
      * Reference used outside of Monkey Core, e.g: Plugins. It can be used
