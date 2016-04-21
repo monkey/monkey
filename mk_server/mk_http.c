@@ -109,6 +109,7 @@ static inline int mk_http_point_header(mk_ptr_t *h,
 static int mk_http_request_prepare(struct mk_http_session *cs,
                                    struct mk_http_request *sr)
 {
+    int ret;
     int status = 0;
     char *temp;
     struct mk_list *hosts = &mk_config->hosts;
@@ -133,7 +134,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
 
     /* Always assign the default vhost' */
     sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
-
     sr->user_home = MK_FALSE;
 
     /* Valid request URI? */
@@ -201,7 +201,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Is requesting an user home directory ? */
-    if (mk_config->user_dir &&
+    if (mk_config->conf_user_pub &&
         sr->uri_processed.len > 2 &&
         sr->uri_processed.data[1] == MK_USER_HOME) {
 
@@ -212,7 +212,6 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Plugins Stage 20 */
-    int ret;
     ret = mk_plugin_stage_run_20(cs, sr);
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
         MK_TRACE("STAGE 20 requested close conexion");
@@ -934,7 +933,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     /* Process methods */
     if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_HEAD) {
-        sr->headers.content_type = mime->header_type;
+        if (mime) {
+            sr->headers.content_type = mime->header_type;
+        }
 
         /* HTTP Ranges */
         if (sr->range.data != NULL && mk_config->resume == MK_TRUE) {
