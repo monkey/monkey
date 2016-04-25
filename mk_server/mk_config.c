@@ -506,6 +506,9 @@ void mk_config_start_configure(void)
 
     ret = mk_config_read_files(mk_config->path_conf_root,
                                mk_config->conf_main);
+    if (ret != 0) {
+        return;
+    }
 
     /* Load mimes */
     mk_mimetype_read_config();

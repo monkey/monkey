@@ -699,7 +699,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
         sr->uri_processed.data[sr->uri_processed.len] = '\0';
-
         handlers = &sr->host_conf->handlers;
         mk_list_foreach(head, handlers) {
             h_handler = mk_list_entry(head, struct mk_host_handler, _head);
@@ -708,11 +707,19 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 continue;
             }
 
-            plugin = h_handler->handler;
-            sr->stage30_handler = h_handler->handler;
-            ret = plugin->stage->stage30(plugin, cs, sr,
-                                         h_handler->n_params,
-                                         &h_handler->params);
+            if (h_handler->cb) {
+                sr->headers.content_length = 0;
+                h_handler->cb(sr);
+                mk_header_prepare(cs, sr);
+                return 0;
+            }
+            else {
+                plugin = h_handler->handler;
+                sr->stage30_handler = h_handler->handler;
+                ret = plugin->stage->stage30(plugin, cs, sr,
+                                             h_handler->n_params,
+                                             &h_handler->params);
+            }
 
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
             switch (ret) {

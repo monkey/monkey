@@ -270,3 +270,30 @@ int mk_vhost_set(mk_vhost_t *vh, ...)
     va_end(va);
     return 0;
 }
+
+int mk_vhost_handler(mk_vhost_t *vh, char *regex, void (*cb)(mk_request_t *))
+{
+    struct mk_host_handler *handler;
+    (void) vh;
+    void (*_cb) (struct mk_http_request *) = (void (*) (struct mk_http_request *)) cb;
+
+    handler = mk_vhost_handler_match(regex, _cb);
+    if (!handler) {
+        return -1;
+    }
+    mk_list_add(&handler->_head, &vh->handlers);
+
+    return 0;
+}
+
+int mk_http_status(mk_request_t *req, int status)
+{
+    req->headers.status = status;
+    return 0;
+}
+
+/* Enqueue some data for the body response */
+int mk_http_send(mk_request_t *ret, char *buf, size_t len)
+{
+
+}
