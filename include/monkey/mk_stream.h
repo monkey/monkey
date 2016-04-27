@@ -235,6 +235,20 @@ static inline int mk_stream_in_raw(struct mk_stream *stream,
                            cb_consumed, cb_finished);
 }
 
+static inline int mk_stream_in_cbuf(struct mk_stream *stream,
+                                    struct mk_stream_input *in,
+                                    char *buf, size_t length,
+                                    void (*cb_consumed)(struct mk_stream_input *, long),
+                                    void (*cb_finished)(struct mk_stream_input *))
+{
+    return mk_stream_input(stream,
+                           in,
+                           MK_STREAM_COPYBUF,
+                           -1,
+                           buf, length,
+                           0,
+                           cb_consumed, cb_finished);
+}
 
 static inline void mk_stream_release(struct mk_stream *stream)
 {

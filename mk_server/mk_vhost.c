@@ -308,7 +308,8 @@ int mk_vhost_close(struct mk_http_request *sr)
 }
 
 struct mk_host_handler *mk_vhost_handler_match(char *match,
-                                               void (*cb) (struct mk_http_session *, struct mk_http_request *))
+                                               void (*cb) (struct mk_http_session *,
+                                                           struct mk_http_request *))
 {
     int ret;
     struct mk_host_handler *h;
