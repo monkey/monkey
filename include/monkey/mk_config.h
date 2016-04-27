@@ -20,6 +20,7 @@
 #ifndef MK_CONFIG_H
 #define MK_CONFIG_H
 
+#define _GNU_SOURCE
 #include <unistd.h>
 
 #include <monkey/mk_core.h>

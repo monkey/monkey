@@ -355,3 +355,5 @@ if(NOT SKIP_EMPTY_DIRS)
   install(DIRECTORY DESTINATION ${MK_PATH_PIDPATH})
   install(DIRECTORY DESTINATION ${MK_PATH_LOG})
 endif()
+
+add_subdirectory(api)
