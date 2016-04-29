@@ -119,9 +119,11 @@ int mk_channel_flush(struct mk_channel *channel)
     } while (total <= 4096 && ((ret & stop) == 0));
 
     if (ret == MK_CHANNEL_DONE) {
+        MK_TRACE("Channel done");
         return ret;
     }
     else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
+        MK_TRACE("Channel FLUSH | BUSY");
         if ((channel->event->mask & MK_EVENT_WRITE) == 0) {
             mk_event_add(mk_sched_loop(),
                          channel->fd,
@@ -290,7 +292,7 @@ int mk_channel_clean(struct mk_channel *channel)
             in = mk_list_entry(head_in, struct mk_stream_input, _head);
             mk_stream_in_release(in);
         }
-        /* FIXME -- mk_stream_release(stream); */
+        mk_stream_release(stream);
     }
 
     return 0;

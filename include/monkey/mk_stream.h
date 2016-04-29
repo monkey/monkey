@@ -255,6 +255,7 @@ static inline void mk_stream_release(struct mk_stream *stream)
         stream->cb_finished(stream);
     }
 
+    stream->channel = NULL;
     mk_list_del(&stream->_head);
     if (stream->dynamic == MK_TRUE) {
         mk_mem_free(stream);
