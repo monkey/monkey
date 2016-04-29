@@ -705,7 +705,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
     ret_file = mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
 
-    /* Manually set the input streams for the handler */
+    /* Manually set the headers input streams */
     sr->in_headers.type        = MK_STREAM_IOV;
     sr->in_headers.dynamic     = MK_FALSE;
     sr->in_headers.cb_consumed = NULL;
@@ -736,6 +736,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 ret = plugin->stage->stage30(plugin, cs, sr,
                                              h_handler->n_params,
                                              &h_handler->params);
+                mk_header_prepare(cs, sr);
             }
 
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);

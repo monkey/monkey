@@ -239,7 +239,11 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             }
 
             if (mk_list_is_empty(&stream->inputs) == 0) {
-                mk_stream_release(stream);
+                /* Everytime the stream is empty, we notify the trigger the cb */
+                if (stream->cb_finished) {
+                    stream->cb_finished(stream);
+                }
+
                 if (mk_channel_is_empty(channel) == 0) {
                     MK_TRACE("[CH %i] CHANNEL_DONE", channel->fd);
                     return MK_CHANNEL_DONE;
@@ -267,7 +271,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
         }
     }
 
-    return MK_CHANNEL_UNKNOWN;
+    return MK_CHANNEL_ERROR;
 }
 
 /* Remove any dynamic memory associated */

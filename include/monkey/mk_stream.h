@@ -128,7 +128,6 @@ static inline int mk_channel_is_empty(struct mk_channel *channel)
     return mk_list_is_empty(&channel->streams);
 }
 
-/* exported functions */
 static inline void mk_channel_append_stream(struct mk_channel *channel,
                                             struct mk_stream *stream)
 {
