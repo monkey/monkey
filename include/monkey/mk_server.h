@@ -42,8 +42,10 @@ struct mk_server_timeout {
     struct mk_event event;
 };
 
+#ifdef MK_HAVE_C_TLS
 extern __thread struct mk_list *server_listen;
 extern __thread struct mk_server_timeout *server_timeout;
+#endif
 
 struct mk_sched_worker;
 

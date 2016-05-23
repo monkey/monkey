@@ -20,7 +20,7 @@
 #ifndef MK_TLS_H
 #define MK_TLS_H
 
-#ifndef PTHREAD_TLS  /* Use Compiler Thread Local Storage (TLS) */
+#ifdef MK_HAVE_C_TLS  /* Use Compiler Thread Local Storage (TLS) */
 
 /* mk_cache.c */
 extern __thread struct mk_iov *mk_tls_cache_iov_header;
