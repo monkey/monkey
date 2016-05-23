@@ -17,12 +17,16 @@
  *  limitations under the License.
  */
 
+#include <monkey/mk_info.h>
+
 #ifdef MK_HAVE_C_TLS
 
 #ifndef MK_VHOST_TLS_H
 #define MK_VHOST_TLS_H
 
+#include <monkey/mk_core.h>
+
 __thread struct mk_list *mk_tls_vhost_fdt;
 
-#endif
-#endif
+#endif /* MK_VHOST_TLS_H */
+#endif /* MK_HAVE_C_TLS  */
