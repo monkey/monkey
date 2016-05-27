@@ -9,6 +9,7 @@ set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 include(CheckSymbolExists)
 include(CheckLibraryExists)
 include(CheckIncludeFile)
+include(CheckCSourceCompiles)
 include(ExternalProject)
 include(GNUInstallDirs)
 
@@ -175,8 +176,17 @@ if(WITH_LINUX_TRACE)
   endif()
 endif()
 
+check_c_source_compiles("
+   __thread int a;
+   int main() {
+       __tls_get_addr(0);
+       return 0;
+   }" HAVE_C_TLS)
+
 # Use old Pthread TLS
 if(WITH_PTHREAD_TLS)
+  add_definitions(-DPTHREAD_TLS)
+elseif(NOT HAVE_C_TLS)
   add_definitions(-DPTHREAD_TLS)
 endif()
 
