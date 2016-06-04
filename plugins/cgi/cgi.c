@@ -226,9 +226,11 @@ static int do_cgi(const char *const __restrict__ file,
 
     /* Child */
     if (pid == 0) {
+        setreuid(EUID, EUID);
+        setregid(EGID, EGID);
+
         close(writepipe[1]);
         close(readpipe[0]);
-
         /* Our stdin is the read end of monkey's writing */
         if (dup2(writepipe[0], 0) < 0) {
             mk_err("dup2 failed");

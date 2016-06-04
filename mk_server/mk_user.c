@@ -96,7 +96,6 @@ int mk_user_set_uidgid()
     /* Launched by root ? */
     if (geteuid() == 0 && mk_config->user) {
         struct rlimit rl;
-
         if (getrlimit(RLIMIT_NOFILE, &rl)) {
             mk_warn("cannot get resource limits");
         }
