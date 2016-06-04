@@ -1,3 +1,222 @@
+commit 1a25113c57609c02f1209b34ae85164ad45ab3da
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jun 4 17:15:30 2016 -0600
+
+    Debian: update changelog
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 7d2fb7030eb93cf4d77941cd72dd229ed71e6fb8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Sat Jun 4 09:18:46 2016 -0600
+
+    Plugins: cgi: fix effective user ID, drop privileges at fork(2)
+    
+    This patch fix a security issue when using the CGI interface. When
+    Monkey is launched as root and the configuration key 'User' is set, it
+    switch to the given system user, so the Effective UID is changed.
+    
+    The CGI plugin uses fork(2), when the child process is created it inherit
+    the UID as EUID, so we must drop privileges before invoking the target
+    script. This patch make sure to make the EUID/EGID becomes UID/GID.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 4b682d1e52eb20df6ae24954c08f8fdc97d0f93b
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri May 27 10:11:06 2016 -0600
+
+    Build: better detection/workarounds for old toolchains
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 87653baaa99402f1514eab9592794a86643c6f5c
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Fri May 13 08:19:14 2016 -0600
+
+    server: http: validate static file after handlers processing
+    
+    This patchs make the HTTP handler to validate if a static file exists
+    after the handlers have been validated.
+    
+    note: backported from Monkey v1.7
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b055083d83bfbc987d422878e82fee0e63f01a5f
+Author: SayantanBhattacharyya <sayan.acharyya@gmail.com>
+Date:   Tue Apr 5 03:41:28 2016 +0530
+
+    Added files via upload
+
+commit 442c2763183822febddb110336bef7509a165678
+Author: SayantanBhattacharyya <sayan.acharyya@gmail.com>
+Date:   Tue Apr 5 03:46:20 2016 +0530
+
+    server: config: fix IPv6 config reader
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit c028dbcb73611113022aac061d3a91f14971adfa
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Mar 28 14:10:37 2016 -0600
+
+    server: stream: do not remove EOF stream, let channel clean do it (fix #230)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5bf9164ca188f1fa9fdb1e8aeff425b9e3616192
+Author: SayantanBhattacharyya <sayan.acharyya@gmail.com>
+Date:   Tue Mar 1 02:16:38 2016 +0530
+
+    Plugins: FastCGI: handle FCGI_STDOUT length=0 properly
+    
+    Sometimes content length is coming as ZERO and we are encoding a
+    HTTP response packet with ZERO size data. This makes Chrome & Firefox
+    browsers fail to proceed furhter and subsequent content loading fails.
+    However, IE/Safari discards the packets with ZERO size data.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 28a155c55e37f9ac9ef06a191d2f0bce244a7237
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Tue Mar 1 09:56:23 2016 -0600
+
+    build: add rules to auto detect backtrace() support
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit d3628f541f66b5b1cf7be5d72b1134a9bb9ae5af
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Feb 29 21:53:18 2016 -0600
+
+    Plugins: FastCGI: improvements to handle upload of large files
+    
+    This patch re-work how the FastCGI STDIN frames are handled, now is
+    possible to send large files to a FastCGI backend.
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 905e981c968a5c7681366c9e0736244f41ef4957
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Feb 29 21:51:22 2016 -0600
+
+    server: stream: set errno=0 and add trace message
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 749e49fec0f8d2174e9e69e55d5f276066d36ceb
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 17 15:14:54 2016 -0600
+
+    logger: new HAVE_SPLICE check
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 30c07d26af1656c6f5b2999774675fc6d7fd3a55
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 17 15:07:11 2016 -0600
+
+    stream: fix trace message data type
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit cb9410a6a064e1a158653277b9f986d89d234734
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Feb 15 13:40:55 2016 -0600
+
+    Core: set static plugins declarations as extern (linker)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 1a68fc1da469f0ba01f99b6ae8b1278db03627bc
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Thu Feb 11 18:55:36 2016 -0600
+
+    mk_core: event_epoll: workaround for missing eventfd()
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit b9cbc7a6f8489175d1dd7c3b7209afc7ab4bb451
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 18:50:01 2016 -0600
+
+    HTML: bump version to 1.6.9
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2d1a56b55594bdd8cea0ea04ffc40282908662df
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 18:49:35 2016 -0600
+
+    Debian: bump version to 1.6.9
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit e58b7e2e170d6458e16445ac451e1107f410c305
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 18:49:00 2016 -0600
+
+    Build: bump version to 1.6.9
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 2bf9e21622284bd79583171fa4a92bcba46a10a0
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 17:07:06 2016 -0600
+
+    Core: split TLS references to new headers
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 33487f440a5f7130d6e421428872e1391aa9c183
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 16:42:17 2016 -0600
+
+    mk_core: event_epoll: define EPOLLRDHUP for old systems
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 0adc04ff238390acf266730283fdf60373a5de17
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 16:39:36 2016 -0600
+
+    Macros: define O_CLOEXEC for old systems
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 02ebf7b12b87d3d5d2ce21661750f770e89ae0e3
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 16:27:54 2016 -0600
+
+    mk_core: event_epoll: workaround when timerfd_create(2) is missing
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f6faf62856f0d2e57a768f3d8b8791f18076b787
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Wed Feb 10 15:58:52 2016 -0600
+
+    Core: __thread and pthread TLS fully functional (for old toolchains)
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit f8f8eee2d42e6f14fdf091749f2974bc489d1d50
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jan 18 14:37:51 2016 -0800
+
+    mk_core: fix event namespace for kqueue/OSX
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
+commit 5c33278ff387ca883306d3ea2e90bf7284626bf8
+Author: Eduardo Silva <eduardo@monkey.io>
+Date:   Mon Jan 18 11:52:48 2016 -0800
+
+    Release: Monkey HTTP Server v1.6.8
+    
+    Signed-off-by: Eduardo Silva <eduardo@monkey.io>
+
 commit 9c4bfdaab5f6c16841982d3ed6ae13e58b6517e1
 Author: Eduardo Silva <eduardo@monkey.io>
 Date:   Mon Jan 18 11:48:23 2016 -0800
