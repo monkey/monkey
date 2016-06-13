@@ -230,6 +230,9 @@ static inline void mk_channel_debug(struct mk_channel *channel)
         case MK_STREAM_COPYBUF:
             printf("%i) [%p] STREAM COPYBUF: ", i, stream);
             break;
+        case MK_STREAM_EOF:
+            printf("%i) [%p] STREAM EOF    : ", i, stream);
+            break;
         }
 #if defined(__APPLE__)
         printf("bytes=%lld/%lu\n", stream->bytes_offset, stream->bytes_total);
