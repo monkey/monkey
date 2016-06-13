@@ -234,6 +234,7 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             if (stream->cb_finished) {
                 stream->cb_finished(stream);
             }
+            mk_stream_release(stream);
             return MK_CHANNEL_DONE;
         }
 
