@@ -352,8 +352,6 @@ static inline void mk_channel_debug(struct mk_channel *channel)
     printf("\n*** Channel ***\n");
     mk_list_foreach(head, &channel->streams) {
         stream = mk_list_entry(head, struct mk_stream, _head);
-        printf("[stream.%i] %p\n", i, stream);
-        i++;
         i_input = 0;
 
         mk_list_foreach(h_inputs, &stream->inputs) {
@@ -373,6 +371,9 @@ static inline void mk_channel_debug(struct mk_channel *channel)
                 break;
             case MK_STREAM_COPYBUF:
                 printf("     in.%i] %p COPYBUF: ", i_input, in);
+                break;
+            case MK_STREAM_EOF:
+                printf("%i) [%p] STREAM EOF    : ", i, stream);
                 break;
             }
 #if defined(__APPLE__)
