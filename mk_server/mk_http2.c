@@ -252,7 +252,7 @@ static inline int mk_http2_frame_run(struct mk_sched_conn *conn,
     h2s = conn->data;
 
     /* Decode the frame header */
-    mk_http2_frame_decode_header(h2s->buffer, &frame);
+    mk_http2_frame_decode_header((uint8_t *)h2s->buffer, &frame);
 
     /* Do some validations */
     if (h2s->buffer_length < (MK_HTTP2_HEADER_SIZE + (frame.len_type >> 8))) {
