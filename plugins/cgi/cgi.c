@@ -396,7 +396,13 @@ int mk_cgi_stage30(struct mk_plugin *plugin,
     const char *const file = sr->real_path.data;
 
     if (!sr->file_info.is_file) {
-        return MK_PLUGIN_RET_NOT_ME;
+        if (sr->file_info.is_link &&
+            mk_api->config->symlink == MK_TRUE) {
+            PLUGIN_TRACE("CGI following symbolic link");
+        }
+        else {
+            return MK_PLUGIN_RET_NOT_ME;
+        }
     }
 
      /* start running the CGI */
