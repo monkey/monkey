@@ -627,8 +627,14 @@ void mk_config_sanity_check()
     /* Check O_NOATIME for current user, flag will just be used
      * if running user is allowed to.
      */
-    int fd, flags = mk_config->open_flags;
+    int fd;
+    int flags;
 
+    if (!mk_config->path_conf_root) {
+        return;
+    }
+
+    flags = mk_config->open_flags;
     flags |= O_NOATIME;
     fd = open(mk_config->path_conf_root, flags);
 
