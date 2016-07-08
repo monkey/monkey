@@ -730,6 +730,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
                 return 0;
             }
             else {
+                if (!h_handler->handler) {
+                    return mk_http_error(MK_SERVER_INTERNAL_ERROR, cs, sr);
+                }
                 plugin = h_handler->handler;
                 sr->stage30_handler = h_handler->handler;
                 ret = plugin->stage->stage30(plugin, cs, sr,
