@@ -583,6 +583,28 @@ int mk_vhost_map_handlers()
     return n;
 }
 
+struct mk_host_handler *mk_vhost_handler_match(char *match,
+                                               void (*cb) (struct mk_http_request *))
+{
+    int ret;
+    struct mk_host_handler *h_handler;
+
+    h_handler = mk_mem_malloc(sizeof(struct mk_host_handler));
+    if (!h_handler) {
+        return NULL;
+    }
+
+    ret = str_to_regex(match, &h_handler->match);
+    if (ret == -1) {
+        mk_mem_free(h_handler);
+        return NULL;
+    }
+    h_handler->cb = cb;
+
+    return h_handler;
+}
+
+
 void mk_vhost_set_single(char *path)
 {
     struct host *host;
