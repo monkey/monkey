@@ -296,7 +296,6 @@ static int mk_config_read_files(char *path_conf, char *file_conf)
     struct mk_rconf_section *section;
 
     if (!path_conf) {
-        mk_warn("[config] skip configuration file");
         return -1;
     }
 
