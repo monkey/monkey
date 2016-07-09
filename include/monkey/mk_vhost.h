@@ -116,7 +116,6 @@ int mk_vhost_close(struct mk_http_request *sr);
 void mk_vhost_free_all();
 int mk_vhost_map_handlers();
 struct mk_host_handler *mk_vhost_handler_match(char *match,
-                                               void (*cb) (struct mk_http_session *,
-                                                           struct mk_http_request *));
+                                               void (*cb) (struct mk_http_request *));
 
 #endif
