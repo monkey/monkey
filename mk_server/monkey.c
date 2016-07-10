@@ -95,7 +95,7 @@ struct mk_server_config *mk_server_init()
     return mk_config;
 }
 
-int mk_server_setup()
+int mk_server_setup(struct mk_server_config *config)
 {
     int ret;
     pthread_t tid;
@@ -128,7 +128,7 @@ int mk_server_setup()
 
     /* Launch monkey http workers */
     MK_TLS_INIT();
-    mk_server_launch_workers();
+    mk_server_launch_workers(config);
 
     return 0;
 }

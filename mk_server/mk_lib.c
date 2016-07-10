@@ -54,9 +54,7 @@ mk_ctx_t *mk_create()
 
 int mk_start(mk_ctx_t *ctx)
 {
-    (void) ctx;
-
-    mk_server_setup();
+    mk_server_setup(ctx->config);
     mk_server_loop();
 
     return 0;

@@ -62,7 +62,7 @@ int mk_server_listen_check(struct mk_server_listen *listen, int server_fd);
 void mk_server_listen_free();
 struct mk_list *mk_server_listen_init(struct mk_server_config *config);
 unsigned int mk_server_capacity();
-void mk_server_launch_workers(void);
+void mk_server_launch_workers(struct mk_server_config *config);
 void mk_server_loop();
 void mk_server_loop_balancer();
 void mk_server_worker_loop();

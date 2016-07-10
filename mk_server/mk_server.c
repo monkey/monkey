@@ -240,14 +240,14 @@ error:
 }
 
 /* Here we launch the worker threads to attend clients */
-void mk_server_launch_workers()
+void mk_server_launch_workers(struct mk_server_config *config)
 {
     int i;
     pthread_t skip;
 
     /* Launch workers */
-    for (i = 0; i < mk_config->workers; i++) {
-        mk_sched_launch_thread(mk_config->server_capacity, &skip);
+    for (i = 0; i < config->workers; i++) {
+        mk_sched_launch_thread(mk_config, &skip);
     }
 
     /* Wait until all workers report as ready */

@@ -303,7 +303,7 @@ int main(int argc, char **argv)
      * Once the all configuration is set, let mk_server configure the
      * internals. Not accepting connections yet.
      */
-    mk_server_setup();
+    mk_server_setup(mk_config);
 
     /* Register PID of Monkey */
     mk_utils_register_pid(mk_config->path_conf_pidfile);

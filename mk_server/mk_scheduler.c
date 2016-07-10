@@ -404,15 +404,15 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 }
 
 /* Create thread which will be listening for incomings requests */
-int mk_sched_launch_thread(int max_events, pthread_t *tout)
+int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout)
 {
     pthread_t tid;
     pthread_attr_t attr;
-    sched_thread_conf *thconf;
-    (void) max_events;
+    struct mk_sched_thread_conf *thconf;
 
     /* Thread data */
-    thconf = mk_mem_malloc_z(sizeof(sched_thread_conf));
+    thconf = mk_mem_malloc_z(sizeof(struct mk_sched_thread_conf));
+    thconf->config = config;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

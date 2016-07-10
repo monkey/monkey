@@ -187,9 +187,9 @@ struct mk_sched_notif {
 struct mk_sched_worker *sched_list;
 
 /* Struct under thread context */
-typedef struct
-{
-} sched_thread_conf;
+struct mk_sched_thread_conf {
+    struct mk_server_config *config;
+};
 
 extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
@@ -197,7 +197,7 @@ pthread_mutex_t mutex_port_init;
 
 struct mk_sched_worker *mk_sched_next_target();
 void mk_sched_init();
-int mk_sched_launch_thread(int max_events, pthread_t *tout);
+int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout);
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct mk_sched_worker *mk_sched_get_handler_owner(void);
 
