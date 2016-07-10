@@ -45,7 +45,7 @@ MK_EXPORT int mk_config_set(mk_ctx_t *ctx, ...);
 MK_EXPORT mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name);
 MK_EXPORT int mk_vhost_set(mk_vhost_t *vh, ...);
 MK_EXPORT int mk_vhost_handler(mk_vhost_t *vh, char *regex,
-                               void (*cb)(mk_session_t *, mk_request_t *));
+                               void (*cb)(mk_request_t *));
 
 MK_EXPORT int mk_http_status(mk_request_t *req, int status);
 MK_EXPORT int mk_http_header(mk_request_t *req,

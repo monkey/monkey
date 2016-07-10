@@ -45,7 +45,7 @@ struct mk_host_handler {
     int n_params;                          /* number of parameters           */
 
     /* optional callback for lib mode */
-    void (*cb) (struct mk_http_session *, struct mk_http_request *);
+    void (*cb) (struct mk_http_request *);
 
     struct mk_list params;                 /* parameters given by config     */
     struct mk_plugin *handler;             /* handler plugin                 */

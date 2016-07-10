@@ -725,7 +725,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr)
 
             if (h_handler->cb) {
                 sr->headers.content_length = 0;
-                h_handler->cb(cs, sr);
+                h_handler->cb(sr);
                 mk_header_prepare(cs, sr);
                 return 0;
             }

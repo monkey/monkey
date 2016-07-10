@@ -6,9 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void cb_main(mk_session_t *session, mk_request_t *request)
+void cb_main(mk_request_t *request)
 {
-    (void) session;
     char *buf = "this is a test\n";
     int len = 15;
 
