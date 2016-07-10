@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+void cb_worker(void *data)
+{
+    printf("test worker callback; data=%p\n", data);
+}
+
 void cb_main(mk_request_t *request)
 {
     char *buf = "this is a test\n";
@@ -22,13 +27,21 @@ int main()
     mk_vhost_t *vh;
 
     ctx = mk_create();
-    mk_config_set(ctx, "Listen", "8080");
+    mk_config_set(ctx,
+                  "Listen", "8080",
+                  NULL);
 
     vh = mk_vhost_create(ctx, NULL);
     mk_vhost_set(vh,
                  "Name", "monotop",
                  NULL);
     mk_vhost_handler(vh, "/test", cb_main);
+
+
+    mk_worker_callback(ctx,
+                       cb_worker,
+                       ctx);
+
     mk_start(ctx);
 
     return 0;

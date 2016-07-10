@@ -134,6 +134,13 @@ struct mk_server_config
     char server_signature_header[32];
     int  server_signature_header_len;
 
+    /*
+     * This list head, allow to link a set of callbacks that Monkey core
+     * must invoke inside each thread worker once created. This list is
+     * populated from mk_lib.c:mk_config_worker_callback(..).
+     */
+    struct mk_list sched_worker_callbacks;
+
     /* source configuration */
     struct mk_rconf *config;
 

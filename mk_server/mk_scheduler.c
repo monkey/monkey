@@ -320,14 +320,17 @@ static void mk_signal_thread_sigpipe_safe()
 }
 
 /* created thread, all these calls are in the thread context */
-void *mk_sched_launch_worker_loop(void *thread_conf)
+void *mk_sched_launch_worker_loop(void *data)
 {
     int ret;
     int wid;
     unsigned long len;
     char *thread_name = 0;
+    struct mk_list *head;
+    struct mk_sched_worker_cb *wcb;
     struct mk_sched_worker *sched = NULL;
     struct mk_sched_notif *notif = NULL;
+    struct mk_sched_thread_conf *thinfo = data;
 
     /* Avoid SIGPIPE signals on this thread */
     mk_signal_thread_sigpipe_safe();
@@ -375,8 +378,6 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
 
     //thinfo->ctx = thconf->ctx;
 
-    mk_mem_free(thread_conf);
-
     /* Rename worker */
     mk_string_build(&thread_name, &len, "monkey: wrk/%i", sched->idx);
     mk_utils_worker_rename(thread_name);
@@ -396,6 +397,15 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     pthread_mutex_lock(&mutex_worker_init);
     sched->initialized = 1;
     pthread_mutex_unlock(&mutex_worker_init);
+
+    /* Invoke custom worker-callbacks defined by the scheduler (lib) */
+    mk_list_foreach(head, &thinfo->config->sched_worker_callbacks) {
+        wcb = mk_list_entry(head, struct mk_sched_worker_cb, _head);
+        wcb->cb_func(wcb->data);
+    }
+
+    mk_mem_free(thinfo);
+
 
     /* init server thread loop */
     mk_server_worker_loop();
@@ -718,4 +728,35 @@ void mk_sched_event_free(struct mk_event *event)
 
     event->type |= MK_EVENT_IDLE;
     mk_list_add(&event->_head, &sched->event_free_queue);
+}
+
+/* Register a new callback function to invoke when a worker is created */
+int mk_sched_worker_cb_add(struct mk_server_config *config,
+                           void (*cb_func) (void *),
+                           void *data)
+{
+    struct mk_sched_worker_cb *wcb;
+
+    wcb = mk_mem_malloc(sizeof(struct mk_sched_worker_cb));
+    if (!wcb) {
+        return -1;
+    }
+
+    wcb->cb_func = cb_func;
+    wcb->data    = data;
+    mk_list_add(&wcb->_head, &config->sched_worker_callbacks);
+    return 0;
+}
+
+void mk_sched_worker_cb_free(struct mk_server_config *config)
+{
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_sched_worker_cb *wcb;
+
+    mk_list_foreach_safe(head, tmp, &config->sched_worker_callbacks) {
+        wcb = mk_list_entry(head, struct mk_sched_worker_cb, _head);
+        mk_list_del(&wcb->_head);
+        free(wcb);
+    }
 }

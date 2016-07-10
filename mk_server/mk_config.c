@@ -58,6 +58,7 @@ struct mk_server_config *mk_config_init()
     struct mk_server_config *config;
 
     config = mk_mem_malloc_z(sizeof(struct mk_server_config));
+    mk_list_init(&config->sched_worker_callbacks);
     mk_list_init(&config->stage10_handler);
     mk_list_init(&config->stage20_handler);
     mk_list_init(&config->stage30_handler);

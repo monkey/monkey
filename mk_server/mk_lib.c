@@ -60,6 +60,17 @@ int mk_start(mk_ctx_t *ctx)
     return 0;
 }
 
+/*
+ * Instruct Monkey core to invoke a callback function inside each worker
+ * started by the scheduler.
+ */
+int mk_worker_callback(mk_ctx_t *ctx,
+                       void (*cb_func) (void *),
+                       void *data)
+{
+    return mk_sched_worker_cb_add(ctx->config, cb_func, data);
+}
+
 int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
 {
     int b;

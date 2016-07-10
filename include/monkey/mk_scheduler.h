@@ -191,6 +191,12 @@ struct mk_sched_thread_conf {
     struct mk_server_config *config;
 };
 
+struct mk_sched_worker_cb {
+    void (*cb_func) (void *);
+    void *data;
+    struct mk_list _head;
+};
+
 extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
@@ -294,5 +300,10 @@ static inline void mk_sched_conn_timeout_del(struct mk_sched_conn *conn)
 
 #define mk_sched_switch_protocol(conn, cap)     \
     conn->protocol = mk_sched_handler_cap(cap)
+
+int mk_sched_worker_cb_add(struct mk_server_config *config,
+                           void (*cb_func) (void *),
+                           void *data);
+void mk_sched_worker_cb_free(struct mk_server_config *config);
 
 #endif
