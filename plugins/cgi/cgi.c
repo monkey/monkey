@@ -105,6 +105,7 @@ static int do_cgi(const char *const __restrict__ file,
     struct file_info finfo;
     struct cgi_request *r = NULL;
     struct mk_event *event;
+    struct mk_http_header *header;
     char *env[30];
     int writepipe[2], readpipe[2];
     (void) plugin;
@@ -134,6 +135,7 @@ static int do_cgi(const char *const __restrict__ file,
     char server_software[SHORTLEN];
     char server_protocol[SHORTLEN];
     char http_host[SHORTLEN];
+    char cookie[1024];
 
     /* Check the interpreter exists */
     if (interpreter) {
@@ -208,6 +210,20 @@ static int do_cgi(const char *const __restrict__ file,
         env[envpos++] = content_type;
     }
 
+    header = mk_api->header_get(MK_HEADER_COOKIE, sr, NULL, 0);
+    if (header->val.len > 0) {
+        int len;
+        memset(cookie, '\0', sizeof(cookie));
+        memcpy(cookie, "HTTP_COOKIE=", 12);
+        if (header->val.len > 1000) {
+            len = 1000;
+        }
+        else {
+            len = header->val.len;
+        }
+        memcpy(cookie + 12, header->val.data, len);
+        env[envpos++] = cookie;
+    }
 
     /* Must be NULL-terminated */
     env[envpos] = NULL;
