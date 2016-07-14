@@ -176,7 +176,7 @@ struct mk_list *mk_server_listen_init(struct mk_server_config *config)
 #endif
             }
 
-            listener = mk_mem_malloc(sizeof(struct mk_server_listen));
+            listener = mk_mem_alloc(sizeof(struct mk_server_listen));
 
             /* configure the internal event_state */
             event = &listener->event;
@@ -402,7 +402,7 @@ void mk_server_worker_loop()
     }
 
     /* create a new timeout file descriptor */
-    server_timeout = mk_mem_malloc(sizeof(struct mk_server_timeout));
+    server_timeout = mk_mem_alloc(sizeof(struct mk_server_timeout));
     MK_TLS_SET(mk_tls_server_timeout, server_timeout);
     timeout_fd = mk_event_timeout_create(evl, mk_config->timeout, 0, server_timeout);
 

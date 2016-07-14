@@ -153,7 +153,7 @@ static inline int mk_stream_input(struct mk_stream *stream,
     struct mk_iov *iov;
 
     if (!in) {
-        in = mk_mem_malloc(sizeof(struct mk_stream_input));
+        in = mk_mem_alloc(sizeof(struct mk_stream_input));
         if (!in) {
             return -1;
         }
@@ -176,7 +176,7 @@ static inline int mk_stream_input(struct mk_stream *stream,
         in->bytes_total = iov->total_len;
     }
     else if (type == MK_STREAM_COPYBUF) {
-        in->buffer = mk_mem_malloc(size);
+        in->buffer = mk_mem_alloc(size);
         in->bytes_total = size;
         memcpy(in->buffer, buffer, size);
     }
@@ -278,7 +278,7 @@ struct mk_stream *mk_stream_set(struct mk_stream *stream,
      * used by Monkey core, at the moment the only caller is the CGI plugin.
      */
     if (!stream) {
-        stream = mk_mem_malloc(sizeof(struct mk_stream));
+        stream = mk_mem_alloc(sizeof(struct mk_stream));
         if (!stream) {
             return NULL;
         }

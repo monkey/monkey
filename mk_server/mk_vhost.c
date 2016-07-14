@@ -91,13 +91,13 @@ int mk_vhost_fdt_worker_init()
      * Initialize the thread FDT/Hosts list and create an entry per
      * existent virtual host
      */
-    list = mk_mem_malloc_z(sizeof(struct mk_list));
+    list = mk_mem_alloc_z(sizeof(struct mk_list));
     mk_list_init(list);
 
     mk_list_foreach(head, &mk_config->hosts) {
         h = mk_list_entry(head, struct host, _head);
 
-        fdt = mk_mem_malloc(sizeof(struct vhost_fdt_host));
+        fdt = mk_mem_alloc(sizeof(struct vhost_fdt_host));
         fdt->host = h;
 
         /* Initialize hash table */
@@ -314,7 +314,7 @@ struct mk_host_handler *mk_vhost_handler_match(char *match,
     int ret;
     struct mk_host_handler *h;
 
-    h = mk_mem_malloc(sizeof(struct mk_host_handler));
+    h = mk_mem_alloc(sizeof(struct mk_host_handler));
     if (!h) {
         return NULL;
     }
@@ -369,7 +369,7 @@ struct host *mk_vhost_read(char *path)
     }
 
     /* Alloc configuration node */
-    host = mk_mem_malloc_z(sizeof(struct host));
+    host = mk_mem_alloc_z(sizeof(struct host));
     host->config = cnf;
     host->file = mk_string_dup(path);
 
@@ -399,8 +399,8 @@ struct host *mk_vhost_read(char *path)
         host_low = mk_string_tolower(entry->val);
 
         /* Alloc node */
-        new_alias = mk_mem_malloc_z(sizeof(struct host_alias));
-        new_alias->name = mk_mem_malloc_z(entry->len + 1);
+        new_alias = mk_mem_alloc_z(sizeof(struct host_alias));
+        new_alias->name = mk_mem_alloc_z(entry->len + 1);
         strncpy(new_alias->name, host_low, entry->len);
         mk_mem_free(host_low);
 
@@ -473,7 +473,7 @@ struct host *mk_vhost_read(char *path)
             }
 
             /* Alloc error page node */
-            err_page = mk_mem_malloc_z(sizeof(struct error_page));
+            err_page = mk_mem_alloc_z(sizeof(struct error_page));
             err_page->status = ep_status;
             err_page->file   = mk_string_dup(ep_file);
             err_page->real_path = NULL;
@@ -503,7 +503,7 @@ struct host *mk_vhost_read(char *path)
             if (!line) {
                 continue;
             }
-            h_handler = mk_mem_malloc(sizeof(struct mk_host_handler));
+            h_handler = mk_mem_alloc(sizeof(struct mk_host_handler));
             if (!h_handler) {
                 exit(EXIT_FAILURE);
             }
@@ -526,7 +526,7 @@ struct host *mk_vhost_read(char *path)
                     break;
                 default:
                     /* link parameters */
-                    h_param = mk_mem_malloc(sizeof(struct mk_handler_param));
+                    h_param = mk_mem_alloc(sizeof(struct mk_handler_param));
                     h_param->p.data = mk_string_dup(entry->val);
                     h_param->p.len  = entry->len;
                     mk_list_add(&h_param->_head, &h_handler->params);
@@ -589,12 +589,12 @@ void mk_vhost_set_single(char *path)
     struct stat checkdir;
 
     /* Set the default host */
-    host = mk_mem_malloc_z(sizeof(struct host));
+    host = mk_mem_alloc_z(sizeof(struct host));
     mk_list_init(&host->error_pages);
     mk_list_init(&host->server_names);
 
     /* Prepare the unique alias */
-    halias = mk_mem_malloc_z(sizeof(struct host_alias));
+    halias = mk_mem_alloc_z(sizeof(struct host_alias));
     halias->name = mk_string_dup("127.0.0.1");
     mk_list_add(&halias->_head, &host->server_names);
 

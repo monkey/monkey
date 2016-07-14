@@ -302,7 +302,7 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs)
          * body.
          */
         if (cs->body == cs->body_fixed) {
-            cs->body = mk_mem_malloc(new_size + 1);
+            cs->body = mk_mem_alloc(new_size + 1);
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
             MK_TRACE("[FD %i] New size: %i, length: %i",
@@ -503,7 +503,7 @@ static int mk_http_directory_redirect_check(struct mk_http_session *cs,
     /*
      * Add ending slash to the location string
      */
-    location = mk_mem_malloc(sr->uri_processed.len + 2);
+    location = mk_mem_alloc(sr->uri_processed.len + 2);
     memcpy(location, sr->uri_processed.data, sr->uri_processed.len);
     location[sr->uri_processed.len]     = '/';
     location[sr->uri_processed.len + 1] = '\0';
@@ -1380,7 +1380,7 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn)
 
     /* alloc space for body content */
     if (conn->net->buffer_size > MK_REQUEST_CHUNK) {
-        cs->body = mk_mem_malloc(conn->net->buffer_size);
+        cs->body = mk_mem_alloc(conn->net->buffer_size);
         cs->body_size = conn->net->buffer_size;
     }
     else {

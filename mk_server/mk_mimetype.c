@@ -69,11 +69,11 @@ int mk_mimetype_add(char *name, const char *type)
     p = name;
     for ( ; *p; ++p) *p = tolower(*p);
 
-    new_mime = mk_mem_malloc_z(sizeof(struct mimetype));
+    new_mime = mk_mem_alloc_z(sizeof(struct mimetype));
     new_mime->name = mk_string_dup(name);
-    new_mime->type.data = mk_mem_malloc(len);
+    new_mime->type.data = mk_mem_alloc(len);
     new_mime->type.len = len - 1;
-    new_mime->header_type.data = mk_mem_malloc(len + 32);
+    new_mime->header_type.data = mk_mem_alloc(len + 32);
     new_mime->header_type.len = snprintf(new_mime->header_type.data,
                                          len + 32,
                                          "Content-Type: %s\r\n",
@@ -167,7 +167,7 @@ int mk_mimetype_read_config()
     }
 
     /* Set default mime type */
-    mimetype_default = mk_mem_malloc_z(sizeof(struct mimetype));
+    mimetype_default = mk_mem_alloc_z(sizeof(struct mimetype));
     mimetype_default->name = MIMETYPE_DEFAULT_TYPE;
     mk_ptr_set(&mimetype_default->type, mk_config->default_mimetype);
 

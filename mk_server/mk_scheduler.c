@@ -175,11 +175,11 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     if (handler->sched_extra_size > 0) {
         void *data;
         size = (sizeof(struct mk_sched_conn) + handler->sched_extra_size);
-        data = mk_mem_malloc_z(size);
+        data = mk_mem_alloc_z(size);
         conn = (struct mk_sched_conn *) data;
     }
     else {
-        conn = mk_mem_malloc_z(sizeof(struct mk_sched_conn));
+        conn = mk_mem_alloc_z(sizeof(struct mk_sched_conn));
     }
 
     if (!conn) {
@@ -253,11 +253,11 @@ static void mk_sched_thread_lists_init()
     struct mk_list *sched_cs_incomplete;
 
     /* mk_tls_sched_cs */
-    sched_cs = mk_mem_malloc_z(sizeof(struct rb_root));
+    sched_cs = mk_mem_alloc_z(sizeof(struct rb_root));
     MK_TLS_SET(mk_tls_sched_cs, sched_cs);
 
     /* mk_tls_sched_cs_incomplete */
-    sched_cs_incomplete = mk_mem_malloc(sizeof(struct mk_list));
+    sched_cs_incomplete = mk_mem_alloc(sizeof(struct mk_list));
     mk_list_init(sched_cs_incomplete);
     MK_TLS_SET(mk_tls_sched_cs_incomplete, sched_cs_incomplete);
 }
@@ -354,7 +354,7 @@ void *mk_sched_launch_worker_loop(void *data)
      * Create the notification instance and link it to the worker
      * thread-scope list.
      */
-    notif = mk_mem_malloc(sizeof(struct mk_sched_notif));
+    notif = mk_mem_alloc(sizeof(struct mk_sched_notif));
     MK_TLS_SET(mk_tls_sched_worker_notif, notif);
 
     /* Register the scheduler channel to signal active workers */
@@ -421,7 +421,7 @@ int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout)
     struct mk_sched_thread_conf *thconf;
 
     /* Thread data */
-    thconf = mk_mem_malloc_z(sizeof(struct mk_sched_thread_conf));
+    thconf = mk_mem_alloc_z(sizeof(struct mk_sched_thread_conf));
     thconf->config = config;
 
     pthread_attr_init(&attr);
@@ -447,7 +447,7 @@ void mk_sched_init()
     int size;
 
     size = sizeof(struct mk_sched_worker) * mk_config->workers;
-    sched_list = mk_mem_malloc_z(size);
+    sched_list = mk_mem_alloc_z(size);
 }
 
 void mk_sched_set_request_list(struct rb_root *list)
@@ -737,7 +737,7 @@ int mk_sched_worker_cb_add(struct mk_server_config *config,
 {
     struct mk_sched_worker_cb *wcb;
 
-    wcb = mk_mem_malloc(sizeof(struct mk_sched_worker_cb));
+    wcb = mk_mem_alloc(sizeof(struct mk_sched_worker_cb));
     if (!wcb) {
         return -1;
     }

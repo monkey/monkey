@@ -57,7 +57,7 @@ struct mk_server_config *mk_config_init()
 {
     struct mk_server_config *config;
 
-    config = mk_mem_malloc_z(sizeof(struct mk_server_config));
+    config = mk_mem_alloc_z(sizeof(struct mk_server_config));
     mk_list_init(&config->sched_worker_callbacks);
     mk_list_init(&config->stage10_handler);
     mk_list_init(&config->stage20_handler);
@@ -535,7 +535,7 @@ struct mk_config_listener *mk_config_listener_add(char *address,
     struct mk_config_listener *check;
     struct mk_config_listener *listen = NULL;
 
-    listen = mk_mem_malloc(sizeof(struct mk_config_listener));
+    listen = mk_mem_alloc(sizeof(struct mk_config_listener));
     if (!listen) {
         mk_err("[listen_add] malloc() failed");
         return NULL;

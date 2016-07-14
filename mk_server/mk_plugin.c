@@ -186,31 +186,31 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
 
         stage = plugin->stage;
         if (stage->stage10) {
-            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage10 = stage->stage10;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage10_handler);
         }
         if (stage->stage20) {
-            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage20 = stage->stage20;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage20_handler);
         }
         if (stage->stage30) {
-            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage30 = stage->stage30;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage30_handler);
         }
         if (stage->stage40) {
-            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage40 = stage->stage40;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage40_handler);
         }
         if (stage->stage50) {
-            st = mk_mem_malloc(sizeof(struct mk_plugin_stage));
+            st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage50 = stage->stage50;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage50_handler);
@@ -238,7 +238,7 @@ void mk_plugin_unregister(struct mk_plugin *p)
 void mk_plugin_api_init()
 {
     /* Create an instance of the API */
-    api = mk_mem_malloc_z(sizeof(struct plugin_api));
+    api = mk_mem_alloc_z(sizeof(struct plugin_api));
     __builtin_prefetch(api);
 
     /* Setup and connections list */
@@ -259,8 +259,8 @@ void mk_plugin_api_init()
     api->pointer_print = mk_ptr_print;
     api->pointer_to_buf = mk_ptr_to_buf;
     api->plugin_load_symbol = mk_plugin_load_symbol;
-    api->mem_alloc = mk_mem_malloc;
-    api->mem_alloc_z = mk_mem_malloc_z;
+    api->mem_alloc = mk_mem_alloc;
+    api->mem_alloc_z = mk_mem_alloc_z;
     api->mem_realloc = mk_mem_realloc;
     api->mem_free = mk_mem_free;
 
@@ -422,7 +422,7 @@ void mk_plugin_load_all()
     }
 
     /* Read configuration file */
-    path = mk_mem_malloc_z(1024);
+    path = mk_mem_alloc_z(1024);
     snprintf(path, 1024, "%s/%s", mk_config->path_conf_root,
              mk_config->conf_plugin_load);
     ret = mk_file_get_info(path, &f_info, MK_FILE_READ);

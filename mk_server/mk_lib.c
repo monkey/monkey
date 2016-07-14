@@ -43,7 +43,7 @@ mk_ctx_t *mk_create()
 {
     mk_ctx_t *ctx;
 
-    ctx = mk_mem_malloc(sizeof(mk_ctx_t));
+    ctx = mk_mem_alloc(sizeof(mk_ctx_t));
     if (!ctx) {
         return NULL;
     }
@@ -206,7 +206,7 @@ mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name)
     struct host_alias *halias;
 
     /* Virtual host */
-    h = mk_mem_malloc_z(sizeof(struct host));
+    h = mk_mem_alloc_z(sizeof(struct host));
     if (!h) {
         return NULL;
     }
@@ -215,7 +215,7 @@ mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name)
     mk_list_init(&h->handlers);
 
     /* Host alias */
-    halias = mk_mem_malloc_z(sizeof(struct host_alias));
+    halias = mk_mem_alloc_z(sizeof(struct host_alias));
     if (!halias) {
         mk_mem_free(h);
         return NULL;
@@ -239,7 +239,7 @@ static int mk_vhost_set_property(mk_vhost_t *vh, char *k, char *v)
     struct host_alias *ha;
 
     if (config_eq(k, "Name") == 0) {
-        ha = mk_mem_malloc(sizeof(struct host_alias));
+        ha = mk_mem_alloc(sizeof(struct host_alias));
         if (!ha) {
             return -1;
         }
@@ -325,7 +325,7 @@ int mk_http_header(mk_request_t *req,
     }
 
     len = key_len + val_len + 4;
-    buf = mk_mem_malloc(len);
+    buf = mk_mem_alloc(len);
     if (!buf) {
         /* we don't free extra_rows as it's released later */
         return -1;

@@ -129,11 +129,11 @@ void mk_clock_sequential_init()
     /* Time when monkey was started */
     monkey_init_time = time(NULL);
 
-    header_time_buffers[0] = mk_mem_malloc_z(HEADER_PRESET_SIZE);
-    header_time_buffers[1] = mk_mem_malloc_z(HEADER_PRESET_SIZE);
+    header_time_buffers[0] = mk_mem_alloc_z(HEADER_PRESET_SIZE);
+    header_time_buffers[1] = mk_mem_alloc_z(HEADER_PRESET_SIZE);
 
-    log_time_buffers[0] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
-    log_time_buffers[1] = mk_mem_malloc_z(LOG_TIME_BUFFER_SIZE);
+    log_time_buffers[0] = mk_mem_alloc_z(LOG_TIME_BUFFER_SIZE);
+    log_time_buffers[1] = mk_mem_alloc_z(LOG_TIME_BUFFER_SIZE);
 
 
     /* Set the time once */

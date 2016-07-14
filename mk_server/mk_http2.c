@@ -48,7 +48,7 @@ static struct mk_http2_session *mk_http2_session_create()
 {
     struct mk_http2_session *h2s;
 
-    h2s = mk_mem_malloc(sizeof(struct mk_http2_session));
+    h2s = mk_mem_alloc(sizeof(struct mk_http2_session));
     if (!h2s) {
         return NULL;
     }
@@ -290,7 +290,7 @@ static int mk_http2_sched_read(struct mk_sched_conn *conn,
     if (available == 0) {
         new_size = h2s->buffer_size + MK_HTTP2_CHUNK;
         if (h2s->buffer == h2s->buffer_fixed) {
-            h2s->buffer = mk_mem_malloc(new_size);
+            h2s->buffer = mk_mem_alloc(new_size);
             if (!h2s->buffer) {
                 /* FIXME: send internal server error ? */
                 return -1;
