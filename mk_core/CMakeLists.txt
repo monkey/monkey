@@ -61,8 +61,8 @@ if (HAVE_EVENTFD)
 endif()
 
 configure_file(
-  "../include/monkey/mk_core/mk_core_info.h.in"
-  "../include/monkey/mk_core/mk_core_info.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../include/monkey/mk_core/mk_core_info.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../include/monkey/mk_core/mk_core_info.h"
   )
 
 add_library(mk_core STATIC ${src})
