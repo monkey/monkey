@@ -56,7 +56,7 @@ static void mk_build_info(void)
     printf("configuration dir: %s\n", MK_PATH_CONF);
 
     /* Initialize list */
-    mk_config = mk_mem_malloc(sizeof(struct mk_server_config));
+    mk_config = mk_mem_alloc(sizeof(struct mk_server_config));
     mk_list_init(&mk_config->plugins);
     mk_plugin_load_static();
 
