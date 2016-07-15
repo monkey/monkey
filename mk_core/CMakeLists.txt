@@ -60,12 +60,9 @@ if (HAVE_EVENTFD)
   MK_DEFINITION(MK_HAVE_EVENTFD)
 endif()
 
-include_directories(include)
 add_library(mk_core STATIC ${src})
 target_link_libraries(mk_core ${CMAKE_THREAD_LIBS_INIT})
 
 if(NOT MK_SYSTEM_MALLOC)
   target_link_libraries(mk_core libjemalloc)
 endif()
-
-add_subdirectory(include)
