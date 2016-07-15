@@ -60,6 +60,11 @@ if (HAVE_EVENTFD)
   MK_DEFINITION(MK_HAVE_EVENTFD)
 endif()
 
+configure_file(
+  "../include/monkey/mk_core/mk_core_info.h.in"
+  "../include/monkey/mk_core/mk_core_info.h"
+  )
+
 add_library(mk_core STATIC ${src})
 target_link_libraries(mk_core ${CMAKE_THREAD_LIBS_INIT})
 
