@@ -487,6 +487,7 @@ void mk_server_worker_loop()
                 continue;
             }
         }
+        mk_sched_http_done(sched);
         mk_sched_event_free_all(sched);
     }
 }

@@ -108,6 +108,7 @@ struct plugin_api
     /* HTTP request function */
     int   (*http_request_end) (struct mk_http_session *cs, int close);
     int   (*http_request_error) (int, struct mk_http_session *, struct mk_http_request *);
+    int   (*http_request_done) (struct mk_http_request *sr, int close);
 
     /* memory functions */
     void *(*mem_alloc) (const size_t size);
@@ -329,6 +330,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
                                  void *data);
 void *mk_plugin_load_symbol(void *handler, const char *symbol);
 int mk_plugin_http_request_end(struct mk_http_session *cs, int close);
+int mk_plugin_http_request_done(struct mk_http_request *sr, int close);
 
 /* Register functions */
 struct plugin *mk_plugin_register(struct plugin *p);

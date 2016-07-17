@@ -96,6 +96,12 @@ struct mk_sched_worker
 
     /* If using REUSEPORT, this points to the list of listeners */
     struct mk_list *listeners;
+
+    /*
+     * List head for finished requests that need to be cleared after each
+     * event loop round.
+     */
+    struct mk_list requests_done;
 };
 
 
@@ -245,6 +251,7 @@ int mk_sched_event_close(struct mk_sched_conn *conn,
                          int type);
 void mk_sched_event_free(struct mk_event *event);
 
+void mk_sched_http_done(struct mk_sched_worker *sched);
 
 static inline void mk_sched_event_free_all(struct mk_sched_worker *sched)
 {

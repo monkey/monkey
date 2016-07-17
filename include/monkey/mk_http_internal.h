@@ -182,6 +182,13 @@ struct mk_http_request
 
     /* Response headers */
     struct response_headers headers;
+
+    /*
+     * If this request was handled by a plugin, it should be marked as 'done'
+     * at some point through the mk_plugin_http_request_done() call. This will
+     * link this mk_list reference to the scheduler list
+     */
+    struct mk_list sched_request_done;
 };
 
 #endif

@@ -250,7 +250,8 @@ void mk_plugin_api_init()
     api->_error = mk_print;
 
     /* HTTP callbacks */
-    api->http_request_end = mk_plugin_http_request_end;
+    api->http_request_end  = mk_plugin_http_request_end;
+    api->http_request_done = mk_plugin_http_request_done;
     api->http_request_error = mk_http_error;
 
     /* Memory callbacks */
@@ -576,6 +577,20 @@ void mk_plugin_preworker_calls()
             }
         }
     }
+}
+
+int mk_plugin_http_request_done(struct mk_http_request *sr, int close)
+{
+    struct mk_sched_worker *sched;
+
+    sched = mk_sched_get_thread_conf();
+    mk_plugin_stage_run_40(sr->session, sr);
+    if (close == MK_TRUE) {
+        sr->session->close_now = MK_TRUE;
+    }
+
+    mk_list_add(&sr->sched_request_done, &sched->requests_done);
+    return 0;
 }
 
 int mk_plugin_http_request_end(struct mk_http_session *cs, int close)
