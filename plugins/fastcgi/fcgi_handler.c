@@ -235,19 +235,19 @@ static inline int fcgi_add_param_net(struct fcgi_handler *handler)
     } else { /* AF_INET6 */
         struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
         port = ntohs(s->sin6_port);
-   
+
         if (IN6_IS_ADDR_V4MAPPED(&s->sin6_addr)) {
             /* This is V4-Mapped-V6 - Lets convert it to plain IPV4 address.
              * E.g. we would have received like this ::ffff:10.106.146.73.
              * This would be converted to 10.106.146.73.
              */
             struct sockaddr_in addr4;
-            struct sockaddr_in *s4 = (struct sockaddr_in *)&addr4;   
+            struct sockaddr_in *s4 = (struct sockaddr_in *)&addr4;
             memset(&addr4, 0, sizeof(addr4));
             addr4.sin_family = AF_INET;
             addr4.sin_port = &s->sin6_port;
-            memcpy(&addr4.sin_addr.s_addr, 
-                   s->sin6_addr.s6_addr + 12, 
+            memcpy(&addr4.sin_addr.s_addr,
+                   s->sin6_addr.s6_addr + 12,
                    sizeof(addr4.sin_addr.s_addr));
             p = inet_ntop(AF_INET, &s4->sin_addr, buffer, sizeof(buffer));
             if (!p) {
@@ -565,8 +565,7 @@ int fcgi_exit(struct fcgi_handler *handler)
      * some corruption. If there is still some data enqueued, just
      * defer the exit process.
      */
-    if (mk_channel_is_empty(handler->cs->channel) != 0 &&
-        handler->eof == MK_FALSE) {
+    if (handler->eof == MK_FALSE) {
 
         MK_TRACE("[fastcgi=%i] deferring exit, EOF stream",
                  handler->server_fd);
@@ -591,7 +590,7 @@ int fcgi_exit(struct fcgi_handler *handler)
 
     if (handler->active == MK_TRUE) {
         handler->active = MK_FALSE;
-        mk_api->http_request_end(handler->cs, handler->hangup);
+        mk_api->http_request_done(handler->sr, handler->hangup);
     }
     handler->hangup = MK_TRUE;
 
@@ -701,6 +700,7 @@ int cb_fastcgi_on_read(void *data)
     n = read(handler->server_fd, handler->buf_data + handler->buf_len, avail);
     MK_TRACE("[fastcgi=%i] read()=%i", handler->server_fd, n);
     if (n <= 0) {
+        MK_TRACE("[fastcgi=%i] FastCGI server ended", handler->server_fd);
         fcgi_exit(handler);
         return -1;
     }
