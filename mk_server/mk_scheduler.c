@@ -714,7 +714,6 @@ void mk_sched_event_free(struct mk_event *event)
 
 void mk_sched_http_done(struct mk_sched_worker *sched)
 {
-    int ret;
     struct mk_http_request *sr;
     struct mk_list *head;
     struct mk_list *tmp;
@@ -722,12 +721,6 @@ void mk_sched_http_done(struct mk_sched_worker *sched)
     mk_list_foreach_safe(head, tmp, &sched->requests_done) {
         sr = mk_list_entry(head, struct mk_http_request, sched_request_done);
         mk_list_del(&sr->sched_request_done);
-
-        ret = mk_http_request_end(sr->session);
-        MK_TRACE("[FD %i] HTTP session end = %i", sr->session->socket, ret);
-        if (ret < 0) {
-            printf("closing cs=%p\n", sr->session);
-            //mk_sched_event_close(sr->session->conn, sched, MK_EP_SOCKET_DONE);
-        }
+        mk_http_request_end(sr->session);
     }
 }
