@@ -102,6 +102,8 @@ int mk_server_setup(struct mk_server_config *config)
 
     /* Core and Scheduler setup */
     mk_config_start_configure();
+    mk_config_signature(config);
+
     mk_sched_init();
 
     /* Clock init that must happen before starting threads */

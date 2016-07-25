@@ -162,6 +162,7 @@ struct mk_server_config *mk_config;
 /* Functions */
 struct mk_server_config *mk_config_init();
 void mk_config_start_configure(void);
+void mk_config_signature(struct mk_server_config *config);
 void mk_config_add_index(char *indexname);
 void mk_config_set_init_values(struct mk_server_config *config);
 int mk_config_listen_parse(char *value);

@@ -478,24 +478,30 @@ static int mk_config_read_files(char *path_conf, char *file_conf)
         mk_vhost_set_single(mk_config->one_shot);
     }
 
+    mk_mem_free(tmp);
+    return 0;
+}
+
+void mk_config_signature(struct mk_server_config *config)
+{
+    int ret;
+    unsigned long len;
+
     /* Server Signature */
-    if (mk_config->hideversion == MK_FALSE) {
-        snprintf(mk_config->server_signature,
-                 sizeof(mk_config->server_signature) - 1,
+    if (config->hideversion == MK_FALSE) {
+        snprintf(config->server_signature,
+                 sizeof(config->server_signature) - 1,
                  "Monkey/%s", MK_VERSION_STR);
     }
     else {
-        snprintf(mk_config->server_signature,
-                 sizeof(mk_config->server_signature) - 1,
+        snprintf(config->server_signature,
+                 sizeof(config->server_signature) - 1,
                  "Monkey");
     }
-    len = snprintf(mk_config->server_signature_header,
-                   sizeof(mk_config->server_signature_header) - 1,
-                   "Server: %s\r\n", mk_config->server_signature);
-    mk_config->server_signature_header_len = len;
-
-    mk_mem_free(tmp);
-    return 0;
+    len = snprintf(config->server_signature_header,
+                   sizeof(config->server_signature_header) - 1,
+                   "Server: %s\r\n", config->server_signature);
+    config->server_signature_header_len = len;
 }
 
 /* read main configuration from monkey.conf */
