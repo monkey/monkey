@@ -283,15 +283,15 @@ int mk_vhost_set(mk_vhost_t *vh, ...)
 }
 
 int mk_vhost_handler(mk_vhost_t *vh, char *regex,
-                     void (*cb)(mk_request_t *))
+                     void (*cb)(mk_request_t *, void *), void *data)
 {
     (void) vh;
     struct mk_host_handler *handler;
-    void (*_cb) (struct mk_http_request *);
+    void (*_cb) (struct mk_http_request *, void *);
 
 
     _cb = cb;
-    handler = mk_vhost_handler_match(regex, _cb);
+    handler = mk_vhost_handler_match(regex, _cb, data);
     if (!handler) {
         return -1;
     }

@@ -309,7 +309,9 @@ int mk_vhost_close(struct mk_http_request *sr)
 }
 
 struct mk_host_handler *mk_vhost_handler_match(char *match,
-                                               void (*cb) (struct mk_http_request *))
+                                               void (*cb)(struct mk_http_request *,
+                                                          void *),
+                                               void *data)
 {
     int ret;
     struct mk_host_handler *h;
@@ -320,6 +322,7 @@ struct mk_host_handler *mk_vhost_handler_match(char *match,
     }
     h->name = NULL;
     h->cb   = cb;
+    h->data = data;
     mk_list_init(&h->params);
 
     ret = str_to_regex(match, &h->match);
