@@ -314,6 +314,9 @@ int main(int argc, char **argv)
     /* Change process owner */
     mk_user_set_uidgid();
 
+    /* Get the grouplist */
+    mk_user_get_groups();
+
     /* Server loop, let's listen for incomming clients */
     mk_server_loop();
 
