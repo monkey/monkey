@@ -72,7 +72,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info, int mode)
     /* Check read access */
     if (mode & MK_FILE_READ) {
         if (((target.st_mode & S_IRUSR) && target.st_uid == EUID) ||
-            ((target.st_mode & S_IRGRP) && target.st_gid == EGID) ||
+            ((target.st_mode & S_IRGRP) && mk_user_in_group(target.st_gid)) ||
             (target.st_mode & S_IROTH)) {
             f_info->read_access = MK_TRUE;
         }
@@ -81,7 +81,7 @@ int mk_file_get_info(const char *path, struct file_info *f_info, int mode)
     /* Checking execution */
     if (mode & MK_FILE_EXEC) {
         if ((target.st_mode & S_IXUSR && target.st_uid == EUID) ||
-            (target.st_mode & S_IXGRP && target.st_gid == EGID) ||
+            (target.st_mode & S_IXGRP && mk_user_in_group(target.st_gid)) ||
             (target.st_mode & S_IXOTH)) {
             f_info->exec_access = MK_TRUE;
         }
