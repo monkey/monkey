@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <unistd.h>
+#include <grp.h>
 
 #include <monkey/mk_core.h>
 
@@ -50,6 +51,12 @@ struct mk_config_listener
     char *port;                   /* TCP port        */
     uint32_t flags;               /* properties: http | http2 | ssl */
     struct mk_list _head;
+};
+
+struct mk_group_array
+{
+    size_t length;
+    gid_t *array;
 };
 
 /* Base struct of server */

@@ -38,6 +38,7 @@
 struct mk_server_config *mk_config;
 gid_t EGID;
 gid_t EUID;
+struct mk_group_array mk_user_groups;
 
 static int mk_config_key_have(struct mk_list *list, const char *value)
 {

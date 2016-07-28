@@ -30,5 +30,8 @@
 int mk_user_init(struct mk_http_session *cs, struct mk_http_request *sr);
 int mk_user_set_uidgid(void);
 int mk_user_undo_uidgid(void);
+int mk_user_get_groups(void);
+int mk_group_in_grouplist(gid_t);
+int mk_user_in_group(gid_t);
 
 #endif

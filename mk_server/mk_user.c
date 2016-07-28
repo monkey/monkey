@@ -133,6 +133,54 @@ int mk_user_set_uidgid()
     return 0;
 }
 
+static int cmpgid_t(const void *p1, const void *p2){
+	return (int)*( (gid_t*) p1 ) - (int)*( (gid_t*) p2 );
+}
+
+/* Get the group list from the user */
+int mk_user_get_groups()
+{
+    mk_user_groups.length = getgroups(0,NULL);
+    mk_user_groups.array = calloc(mk_user_groups.length, sizeof(gid_t));
+    if(mk_user_groups.array == NULL) {
+        mk_err("Allocation failure");
+        return -1;
+    }
+    if(getgroups(mk_user_groups.length, mk_user_groups.array) < 0) {
+        mk_err("I couldn't get the usergroups");
+        return -1;
+    }
+    qsort(mk_user_groups.array, mk_user_groups.length, sizeof(gid_t), 
+        &cmpgid_t);
+    return 0;
+}
+
+/* Perform a binary search with O(log n). 
+ * Returns 1 when found, 0 otherwise 
+ */
+int mk_group_in_grouplist(gid_t group)
+{
+    ssize_t a = 0,b = mk_user_groups.length-1, i = 0;
+    while(a <= b){
+        i = (a+b) / 2;
+        if(group < mk_user_groups.array[i]) {
+            b = i-1;
+        }
+        else if(group > mk_user_groups.array[i]) {
+            a = i+1;
+        }
+        else{
+            return 1; //Group found;
+        }
+    }
+    return 0; //Group not found;
+}
+
+/* Checks wether the executing user is inside the given group */
+int mk_user_in_group(gid_t group){
+    return (group == EGID || mk_group_in_grouplist(group));
+}
+
 /* Return process to the original user */
 int mk_user_undo_uidgid()
 {
