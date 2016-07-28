@@ -29,6 +29,7 @@ extern "C" {
 /* Process UID/GID */
 extern gid_t EGID;
 extern gid_t EUID;
+extern struct mk_group_array mk_user_groups;
 
 #include "mk_core/mk_core_info.h"
 #include "mk_core/mk_memory.h"
