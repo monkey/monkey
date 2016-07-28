@@ -176,6 +176,11 @@ int mk_group_in_grouplist(gid_t group)
     return 0; //Group not found;
 }
 
+/* Checks wether the executing user is inside the given group */
+int mk_user_in_group(gid_t group){
+    return (group == EGID || mk_group_in_grouplist(group));
+}
+
 /* Return process to the original user */
 int mk_user_undo_uidgid()
 {
