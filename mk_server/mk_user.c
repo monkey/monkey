@@ -134,19 +134,19 @@ int mk_user_set_uidgid()
 }
 
 static int cmpgid_t(const void *p1, const void *p2){
-	return (int)*((gid_t*)p1) - (int)*((gid_t*)p2);
+	return (int)*( (gid_t*) p1 ) - (int)*( (gid_t*) p2 );
 }
 
 /* Get the group list from the user */
 int mk_user_get_groups()
 {
-    mk_user_groups.length=getgroups(0,NULL);
-    mk_user_groups.array=calloc(mk_user_groups.length, sizeof(gid_t));
+    mk_user_groups.length = getgroups(0,NULL);
+    mk_user_groups.array = calloc(mk_user_groups.length, sizeof(gid_t));
     if(mk_user_groups.array == NULL) {
         mk_err("Allocation failure");
         return -1;
     }
-    if(getgroups(mk_user_groups.length, mk_user_groups.array)<0) {
+    if(getgroups(mk_user_groups.length, mk_user_groups.array) < 0) {
         mk_err("I couldn't get the usergroups");
         return -1;
     }
@@ -160,14 +160,14 @@ int mk_user_get_groups()
  */
 int mk_group_in_grouplist(gid_t group)
 {
-    ssize_t a=0,b=mk_user_groups.length-1, i=0;
-    while(a<=b){
-        i=(a+b)/2;
-        if(group<mk_user_groups.array[i]){
-            b=i-1;
+    ssize_t a = 0,b = mk_user_groups.length-1, i = 0;
+    while(a <= b){
+        i = (a+b) / 2;
+        if(group < mk_user_groups.array[i]) {
+            b = i-1;
         }
-        else if(group>mk_user_groups.array[i]){
-            a=i+1;
+        else if(group > mk_user_groups.array[i]) {
+            a = i+1;
         }
         else{
             return 1; //Group found;

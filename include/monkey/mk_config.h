@@ -53,9 +53,10 @@ struct mk_config_listener
     struct mk_list _head;
 };
 
-struct mk_group_array{
-	size_t length;
-	gid_t *array;
+struct mk_group_array
+{
+    size_t length;
+    gid_t *array;
 };
 
 /* Base struct of server */
