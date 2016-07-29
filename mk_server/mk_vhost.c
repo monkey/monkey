@@ -538,6 +538,7 @@ struct host *mk_vhost_read(char *path)
                 i++;
             }
             h_handler->n_params = params;
+            mk_string_split_free(line);
 
             if (i < 2) {
                 mk_err("[Host Handlers] invalid Match value\n");
@@ -719,33 +720,56 @@ int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
     return -1;
 }
 
+static void mk_vhost_handler_free(struct mk_host_handler *h)
+{
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_handler_param *param;
+
+    /* Release Params */
+    mk_list_foreach_safe(head, tmp, &h->params) {
+        param = mk_list_entry(head, struct mk_handler_param, _head);
+        mk_list_del(&param->_head);
+        mk_mem_free(param->p.data);
+        mk_mem_free(param);
+    }
+
+    regfree(&h->match);
+    mk_mem_free(h->name);
+    mk_mem_free(h);
+}
+
 void mk_vhost_free_all()
 {
     struct host *host;
     struct host_alias *host_alias;
+    struct mk_host_handler *host_handler;
     struct error_page *ep;
-    struct mk_list *head_host;
-    struct mk_list *head_alias;
-    struct mk_list *head_error;
-    struct mk_list *tmp1, *tmp2;
+    struct mk_list *head;
+    struct mk_list *tmp;
+    struct mk_list *head2;
+    struct mk_list *tmp2;
 
-    mk_list_foreach_safe(head_host, tmp1, &mk_config->hosts) {
-        host = mk_list_entry(head_host, struct host, _head);
-        mk_list_del(&host->_head);
-
-        mk_mem_free(host->file);
+    mk_list_foreach_safe(head, tmp, &mk_config->hosts) {
+        host = mk_list_entry(head, struct host, _head);
 
         /* Free aliases or servernames */
-        mk_list_foreach_safe(head_alias, tmp2, &host->server_names) {
-            host_alias = mk_list_entry(head_alias, struct host_alias, _head);
+        mk_list_foreach_safe(head2, tmp2, &host->server_names) {
+            host_alias = mk_list_entry(head2, struct host_alias, _head);
             mk_list_del(&host_alias->_head);
             mk_mem_free(host_alias->name);
             mk_mem_free(host_alias);
         }
 
+        /* Handlers */
+        mk_list_foreach_safe(head2, tmp2, &host->handlers) {
+            host_handler = mk_list_entry(head2, struct mk_host_handler, _head);
+            mk_vhost_handler_free(host_handler);
+        }
+
         /* Free error pages */
-        mk_list_foreach_safe(head_error, tmp2, &host->error_pages) {
-            ep = mk_list_entry(head_error, struct error_page, _head);
+        mk_list_foreach_safe(head2, tmp2, &host->error_pages) {
+            ep = mk_list_entry(head2, struct error_page, _head);
             mk_list_del(&ep->_head);
             mk_mem_free(ep->file);
             mk_mem_free(ep->real_path);
@@ -755,7 +779,11 @@ void mk_vhost_free_all()
         mk_ptr_free(&host->documentroot);
 
         /* Free source configuration */
-        if (host->config) mk_rconf_free(host->config);
+        if (host->config) {
+            mk_rconf_free(host->config);
+        }
+        mk_list_del(&host->_head);
+        mk_mem_free(host->file);
         mk_mem_free(host);
     }
 }
