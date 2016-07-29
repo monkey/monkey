@@ -164,7 +164,7 @@ void mk_exit_all()
     }
 
     mk_plugin_exit_all();
+    mk_clock_exit();
     mk_config_free_all();
     mk_mem_free(sched_list);
-    mk_clock_exit();
 }
