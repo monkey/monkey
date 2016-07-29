@@ -181,6 +181,7 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         mk_bug(!plugin->network);
     }
 
+    mk_list_init(&plugin->stage_list);
     if (plugin->hooks & MK_PLUGIN_STAGE) {
         struct mk_plugin_stage *st;
 
@@ -190,30 +191,35 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
             st->stage10 = stage->stage10;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage10_handler);
+            mk_list_add(&st->_parent_head, &plugin->stage_list);
         }
         if (stage->stage20) {
             st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage20 = stage->stage20;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage20_handler);
+            mk_list_add(&st->_parent_head, &plugin->stage_list);
         }
         if (stage->stage30) {
             st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage30 = stage->stage30;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage30_handler);
+            mk_list_add(&st->_parent_head, &plugin->stage_list);
         }
         if (stage->stage40) {
             st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage40 = stage->stage40;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage40_handler);
+            mk_list_add(&st->_parent_head, &plugin->stage_list);
         }
         if (stage->stage50) {
             st = mk_mem_alloc(sizeof(struct mk_plugin_stage));
             st->stage50 = stage->stage50;
             st->plugin  = plugin;
             mk_list_add(&st->_head, &mk_config->stage50_handler);
+            mk_list_add(&st->_parent_head, &plugin->stage_list);
         }
     }
 
@@ -480,25 +486,45 @@ void mk_plugin_load_all()
     mk_rconf_free(cnf);
 }
 
+static void mk_plugin_exit_stages(struct mk_plugin *p)
+{
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_plugin_stage *st;
+
+    mk_list_foreach_safe(head, tmp, &p->stage_list) {
+        st = mk_list_entry(head, struct mk_plugin_stage, _parent_head);
+
+        /* remove from direct config->stageN head list */
+        mk_list_del(&st->_head);
+
+        /* remove from plugin->stage_lists */
+        mk_list_del(&st->_parent_head);
+        mk_mem_free(st);
+    }
+}
+
 /* Invoke all plugins 'exit' hook and free resources by the plugin interface */
 void mk_plugin_exit_all()
 {
-    struct mk_plugin *node;
+    struct mk_plugin *plugin;
     struct mk_list *head, *tmp;
 
     /* Plugins */
     mk_list_foreach(head, &mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
-        node->exit_plugin();
+        plugin = mk_list_entry(head, struct mk_plugin, _head);
+        plugin->exit_plugin();
     }
 
     /* Plugin interface it self */
     mk_list_foreach_safe(head, tmp, &mk_config->plugins) {
-        node = mk_list_entry(head, struct mk_plugin, _head);
-        mk_list_del(&node->_head);
-        if (node->load_type == MK_PLUGIN_DYNAMIC) {
-            mk_mem_free(node->path);
-            dlclose(node->handler);
+        plugin = mk_list_entry(head, struct mk_plugin, _head);
+        mk_list_del(&plugin->_head);
+        mk_plugin_exit_stages(plugin);
+
+        if (plugin->load_type == MK_PLUGIN_DYNAMIC) {
+            mk_mem_free(plugin->path);
+            dlclose(plugin->handler);
         }
     }
     mk_mem_free(api);

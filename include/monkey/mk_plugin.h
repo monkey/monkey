@@ -277,6 +277,7 @@ struct mk_plugin {
     char *path;                    /* Path for dynamic plugin      */
     pthread_key_t *thread_key;     /* Worker thread key            */
     struct mk_list _head;          /* Link to config->plugins list */
+    struct mk_list stage_list;     /* Stages head list             */
 
     /* Load type: MK_PLUGIN_STATIC / MK_PLUGIN_DYNAMIC */
     int load_type;
@@ -297,6 +298,8 @@ struct mk_plugin_stage {
 
     /* Only used when doing direct mapping from config->stageN_handler; */
     struct mk_list _head;
+
+    struct mk_list _parent_head;
 };
 
 
