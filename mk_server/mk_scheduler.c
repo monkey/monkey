@@ -472,6 +472,7 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
 
     /* Release and return */
     mk_channel_clean(&conn->channel);
+
     mk_sched_event_free(&conn->event);
     conn->status = MK_SCHED_CONN_CLOSED;
 
@@ -718,6 +719,7 @@ void mk_sched_http_done(struct mk_sched_worker *sched)
     struct mk_list *head;
     struct mk_list *tmp;
 
+    MK_TRACE("event loop ended: http_done check");
     mk_list_foreach_safe(head, tmp, &sched->requests_done) {
         sr = mk_list_entry(head, struct mk_http_request, sched_request_done);
         mk_list_del(&sr->sched_request_done);

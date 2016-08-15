@@ -83,6 +83,10 @@ void mk_http_request_init(struct mk_http_session *session,
     request->real_path.data = NULL;
     request->handler_data = NULL;
 
+    /* Sched request done */
+    request->sched_request_done.next = NULL;
+    request->sched_request_done.prev = NULL;
+
     /* Response Headers */
     mk_header_response_reset(&request->headers);
 }
@@ -239,8 +243,8 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
     struct mk_list *host_list = &mk_config->hosts;
 
     /*
-     * If the connection is too premature, we need to allocate a temporal session_request
-     * to do not break the plugins stages
+     * If the connection is too premature, we need to allocate a temporal
+     * session_request to do not break the plugins stages.
      */
     if (mk_list_is_empty(sr_list) == 0) {
         sr = &cs->sr_fixed;
@@ -1493,8 +1497,12 @@ int mk_http_sched_done(struct mk_sched_conn *conn,
     cs = mk_http_session_get(conn);
     sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
 
-    mk_plugin_stage_run_40(cs, sr);
+    /* Make sure do not issue a double free of the request */
+    if (sr->sched_request_done.next) {
+        mk_list_del(&sr->sched_request_done);
+    }
 
+    mk_plugin_stage_run_40(cs, sr);
     return mk_http_request_end(cs);
 }
 
