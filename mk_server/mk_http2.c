@@ -86,7 +86,7 @@ static int mk_http2_frame_header(char *buf, uint32_t length, uint8_t type,
 */
 
 /* Handle an upgraded session */
-static int mk_http2_upgrade(void *cs, void *sr)
+static int mk_http2_upgrade(void *cs, void *sr, struct mk_server *server)
 {
     struct mk_http_session *s = cs;
     struct mk_http_request *r = sr;
@@ -95,7 +95,7 @@ static int mk_http2_upgrade(void *cs, void *sr)
     mk_header_set_http_status(r, MK_INFO_SWITCH_PROTOCOL);
     r->headers.connection = MK_HEADER_CONN_UPGRADED;
     r->headers.upgrade = MK_HEADER_UPGRADED_H2C;
-    mk_header_prepare(s, r);
+    mk_header_prepare(s, r, server);
 
     h2s = mk_http2_session_create();
     if (!h2s) {

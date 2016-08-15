@@ -58,9 +58,6 @@ void mk_cache_worker_init()
     /* Cache buffer for strerror_r(2) */
     cache_error = mk_mem_alloc(MK_UTILS_ERROR_SIZE);
     pthread_setspecific(mk_utils_error_key, (void *) cache_error);
-
-    /* Virtual hosts: initialize per thread-vhost data */
-    mk_vhost_fdt_worker_init();
 }
 
 void mk_cache_worker_exit()

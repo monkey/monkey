@@ -48,7 +48,7 @@ pthread_mutex_t mutex_worker_exit = PTHREAD_MUTEX_INITIALIZER;
  * it returns the worker id with less active connections. Just used
  * if config->scheduler_mode is MK_SCHEDULER_FAIR_BALANCING.
  */
-static inline int _next_target()
+static inline int _next_target(struct mk_server *server)
 {
     int i;
     int target = 0;
@@ -59,7 +59,7 @@ static inline int _next_target()
         return 0;
 
     /* Finds the lowest load worker */
-    for (i = 1; i < mk_config->workers; i++) {
+    for (i = 1; i < server->workers; i++) {
         tmp = sched_list[i].accepted_connections - sched_list[i].closed_connections;
         if (tmp < cur) {
             target = i;
@@ -74,8 +74,8 @@ static inline int _next_target()
      * If sched_list[target] worker is full then the whole server too, because
      * it has the lowest load.
      */
-    if (mk_unlikely(cur >= mk_config->server_capacity)) {
-        MK_TRACE("Too many clients: %i", mk_config->server_capacity);
+    if (mk_unlikely(cur >= server->server_capacity)) {
+        MK_TRACE("Too many clients: %i", server->server_capacity);
 
         /* Instruct to close the connection anyways, we lie, it will die */
         return -1;
@@ -84,9 +84,9 @@ static inline int _next_target()
     return target;
 }
 
-struct mk_sched_worker *mk_sched_next_target()
+struct mk_sched_worker *mk_sched_next_target(struct mk_server *server)
 {
-    int t = _next_target();
+    int t = _next_target(server);
 
     if (mk_likely(t != -1))
         return &sched_list[t];
@@ -100,7 +100,7 @@ struct mk_sched_worker *mk_sched_next_target()
  * so this is the last call to release all memory resources in use. Of course
  * this takes place in a thread context.
  */
-void mk_sched_worker_free()
+void mk_sched_worker_free(struct mk_server *server)
 {
     int i;
     pthread_t tid;
@@ -115,12 +115,12 @@ void mk_sched_worker_free()
 
     /* External */
     mk_plugin_exit_worker();
-    mk_vhost_fdt_worker_exit();
+    mk_vhost_fdt_worker_exit(server);
     mk_cache_worker_exit();
 
     /* Scheduler stuff */
     tid = pthread_self();
-    for (i = 0; i < mk_config->workers; i++) {
+    for (i = 0; i < server->workers; i++) {
         if (sched_list[i].tid == tid) {
             sl = &sched_list[i];
         }
@@ -153,7 +153,8 @@ struct mk_sched_handler *mk_sched_handler_cap(char cap)
  */
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
                                               struct mk_server_listen *listener,
-                                              struct mk_sched_worker *sched)
+                                              struct mk_sched_worker *sched,
+                                              struct mk_server *server)
 {
     int ret;
     int size;
@@ -162,7 +163,7 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     struct mk_event *event;
 
     /* Before to continue, we need to run plugin stage 10 */
-    ret = mk_plugin_stage_run_10(remote_fd);
+    ret = mk_plugin_stage_run_10(remote_fd, server);
 
     /* Close connection, otherwise continue */
     if (ret == MK_PLUGIN_RET_CLOSE_CONX) {
@@ -331,6 +332,9 @@ void *mk_sched_launch_worker_loop(void *data)
     struct mk_sched_worker *sched = NULL;
     struct mk_sched_notif *notif = NULL;
     struct mk_sched_thread_conf *thinfo = data;
+    struct mk_server *server;
+
+    server = thinfo->server;
 
     /* Avoid SIGPIPE signals on this thread */
     mk_signal_thread_sigpipe_safe();
@@ -338,6 +342,9 @@ void *mk_sched_launch_worker_loop(void *data)
     /* Init specific thread cache */
     mk_sched_thread_lists_init();
     mk_cache_worker_init();
+
+    /* Virtual hosts: initialize per thread-vhost data */
+    mk_vhost_fdt_worker_init(server);
 
     /* Register working thread */
     wid = mk_sched_register_thread();
@@ -385,10 +392,10 @@ void *mk_sched_launch_worker_loop(void *data)
 
     /* Export known scheduler node to context thread */
     MK_TLS_SET(mk_tls_sched_worker_node, sched);
-    mk_plugin_core_thread();
+    mk_plugin_core_thread(server);
 
-    if (mk_config->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        sched->listeners = mk_server_listen_init(mk_config);
+    if (server->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
+        sched->listeners = mk_server_listen_init(server);
         if (!sched->listeners) {
             exit(EXIT_FAILURE);
         }
@@ -399,7 +406,7 @@ void *mk_sched_launch_worker_loop(void *data)
     pthread_mutex_unlock(&mutex_worker_init);
 
     /* Invoke custom worker-callbacks defined by the scheduler (lib) */
-    mk_list_foreach(head, &thinfo->config->sched_worker_callbacks) {
+    mk_list_foreach(head, &server->sched_worker_callbacks) {
         wcb = mk_list_entry(head, struct mk_sched_worker_cb, _head);
         wcb->cb_func(wcb->data);
     }
@@ -408,13 +415,13 @@ void *mk_sched_launch_worker_loop(void *data)
 
 
     /* init server thread loop */
-    mk_server_worker_loop();
+    mk_server_worker_loop(server);
 
     return 0;
 }
 
 /* Create thread which will be listening for incomings requests */
-int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout)
+int mk_sched_launch_thread(struct mk_server *server, pthread_t *tout)
 {
     pthread_t tid;
     pthread_attr_t attr;
@@ -422,7 +429,7 @@ int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout)
 
     /* Thread data */
     thconf = mk_mem_alloc_z(sizeof(struct mk_sched_thread_conf));
-    thconf->config = config;
+    thconf->server = server;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -442,11 +449,11 @@ int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout)
  * each worker thread belongs to a scheduler node, on this function we
  * allocate a scheduler node per number of workers defined.
  */
-void mk_sched_init()
+void mk_sched_init(struct mk_server *server)
 {
     int size;
 
-    size = sizeof(struct mk_sched_worker) * mk_config->workers;
+    size = sizeof(struct mk_sched_worker) * server->workers;
     sched_list = mk_mem_alloc_z(size);
 }
 
@@ -456,7 +463,8 @@ void mk_sched_set_request_list(struct rb_root *list)
 }
 
 int mk_sched_remove_client(struct mk_sched_conn *conn,
-                           struct mk_sched_worker *sched)
+                           struct mk_sched_worker *sched,
+                           struct mk_server *server)
 {
     struct mk_event *event;
 
@@ -472,7 +480,7 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
     mk_event_del(sched->loop, event);
 
     /* Invoke plugins in stage 50 */
-    mk_plugin_stage_run_50(event->fd);
+    mk_plugin_stage_run_50(event->fd, server);
 
     sched->closed_connections++;
 
@@ -534,12 +542,14 @@ struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker *sched,
  * exceptions, etc.
  */
 int mk_sched_drop_connection(struct mk_sched_conn *conn,
-                             struct mk_sched_worker *sched)
+                             struct mk_sched_worker *sched,
+                             struct mk_server *server)
 {
-    return mk_sched_remove_client(conn, sched);
+    return mk_sched_remove_client(conn, sched, server);
 }
 
-int mk_sched_check_timeouts(struct mk_sched_worker *sched)
+int mk_sched_check_timeouts(struct mk_sched_worker *sched,
+                            struct mk_server *server)
 {
     int client_timeout;
     struct mk_sched_conn *conn;
@@ -553,15 +563,16 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched)
             continue;
         }
 
-        client_timeout = conn->arrive_time + mk_config->timeout;
+        client_timeout = conn->arrive_time + server->timeout;
 
         /* Check timeout */
         if (client_timeout <= log_current_utime) {
             MK_TRACE("Scheduler, closing fd %i due TIMEOUT",
                      conn->event.fd);
             MK_LT_SCHED(conn->event.fd, "TIMEOUT_CONN_PENDING");
-            conn->protocol->cb_close(conn, sched, MK_SCHED_CONN_TIMEOUT);
-            mk_sched_drop_connection(conn, sched);
+            conn->protocol->cb_close(conn, sched, MK_SCHED_CONN_TIMEOUT,
+                                     server);
+            mk_sched_drop_connection(conn, sched, server);
         }
     }
 
@@ -573,7 +584,8 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched)
  * proper callbacks.
  */
 int mk_sched_event_read(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *sched)
+                        struct mk_sched_worker *sched,
+                        struct mk_server *server)
 {
     int ret = 0;
     size_t count = 0;
@@ -594,7 +606,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
      *  - plain sockets through liana will use just read(2)
      *  - ssl though mbedtls should use mk_mbedtls_read(..)
      */
-    ret = conn->protocol->cb_read(conn, sched);
+    ret = conn->protocol->cb_read(conn, sched, server);
     if (ret == -1) {
         if (errno == EAGAIN) {
             MK_TRACE("[FD %i] EAGAIN: need to read more data", conn->event.fd);
@@ -631,7 +643,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
 
     if (ret == MK_CHANNEL_DONE) {
         if (conn->protocol->cb_done) {
-            ret = conn->protocol->cb_done(conn, sched);
+            ret = conn->protocol->cb_done(conn, sched, server);
             if (ret == 1) {
                 /* Protocol handler want to send more data */
                 event = &conn->event;
@@ -663,7 +675,8 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
 }
 
 int mk_sched_event_write(struct mk_sched_conn *conn,
-                         struct mk_sched_worker *sched)
+                         struct mk_sched_worker *sched,
+                         struct mk_server *server)
 {
     int ret = -1;
     size_t count;
@@ -678,7 +691,7 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
     }
     else if (ret == MK_CHANNEL_DONE || ret == MK_CHANNEL_EMPTY) {
         if (conn->protocol->cb_done) {
-            ret = conn->protocol->cb_done(conn, sched);
+            ret = conn->protocol->cb_done(conn, sched, server);
         }
         if (ret == -1) {
             return -1;
@@ -702,19 +715,19 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
 
 int mk_sched_event_close(struct mk_sched_conn *conn,
                          struct mk_sched_worker *sched,
-                         int type)
+                         int type, struct mk_server *server)
 {
     MK_TRACE("[FD %i] Connection Handler, closed", conn->event.fd);
     mk_event_del(sched->loop, &conn->event);
 
     if (type != MK_EP_SOCKET_DONE) {
-        conn->protocol->cb_close(conn, sched, type);
+        conn->protocol->cb_close(conn, sched, type, server);
     }
     /*
      * Remove the socket from the scheduler and make sure
      * to disable all notifications.
      */
-    mk_sched_drop_connection(conn, sched);
+    mk_sched_drop_connection(conn, sched, server);
     return 0;
 }
 
@@ -731,7 +744,7 @@ void mk_sched_event_free(struct mk_event *event)
 }
 
 /* Register a new callback function to invoke when a worker is created */
-int mk_sched_worker_cb_add(struct mk_server_config *config,
+int mk_sched_worker_cb_add(struct mk_server *server,
                            void (*cb_func) (void *),
                            void *data)
 {
@@ -744,19 +757,19 @@ int mk_sched_worker_cb_add(struct mk_server_config *config,
 
     wcb->cb_func = cb_func;
     wcb->data    = data;
-    mk_list_add(&wcb->_head, &config->sched_worker_callbacks);
+    mk_list_add(&wcb->_head, &server->sched_worker_callbacks);
     return 0;
 }
 
-void mk_sched_worker_cb_free(struct mk_server_config *config)
+void mk_sched_worker_cb_free(struct mk_server *server)
 {
     struct mk_list *tmp;
     struct mk_list *head;
     struct mk_sched_worker_cb *wcb;
 
-    mk_list_foreach_safe(head, tmp, &config->sched_worker_callbacks) {
+    mk_list_foreach_safe(head, tmp, &server->sched_worker_callbacks) {
         wcb = mk_list_entry(head, struct mk_sched_worker_cb, _head);
         mk_list_del(&wcb->_head);
-        free(wcb);
+        mk_mem_free(wcb);
     }
 }

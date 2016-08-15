@@ -58,7 +58,7 @@ static int str_to_regex(char *str, regex_t *reg)
  * This function is triggered upon thread creation (inside the thread
  * context), here we configure per-thread data.
  */
-int mk_vhost_fdt_worker_init()
+int mk_vhost_fdt_worker_init(struct mk_server *server)
 {
     int i;
     int j;
@@ -69,7 +69,7 @@ int mk_vhost_fdt_worker_init()
     struct vhost_fdt_hash_table *ht;
     struct vhost_fdt_hash_chain *hc;
 
-    if (mk_config->fdt == MK_FALSE) {
+    if (server->fdt == MK_FALSE) {
         return -1;
     }
 
@@ -94,7 +94,7 @@ int mk_vhost_fdt_worker_init()
     list = mk_mem_alloc_z(sizeof(struct mk_list));
     mk_list_init(list);
 
-    mk_list_foreach(head, &mk_config->hosts) {
+    mk_list_foreach(head, &server->hosts) {
         h = mk_list_entry(head, struct host, _head);
 
         fdt = mk_mem_alloc(sizeof(struct vhost_fdt_host));
@@ -122,14 +122,14 @@ int mk_vhost_fdt_worker_init()
     return 0;
 }
 
-int mk_vhost_fdt_worker_exit()
+int mk_vhost_fdt_worker_exit(struct mk_server *server)
 {
     struct mk_list *list;
     struct mk_list *head;
     struct mk_list *tmp;
     struct vhost_fdt_host *fdt;
 
-    if (mk_config->fdt == MK_FALSE) {
+    if (server->fdt == MK_FALSE) {
         return -1;
     }
 
@@ -184,14 +184,15 @@ struct vhost_fdt_hash_chain
 
 
 static inline int mk_vhost_fdt_open(int id, unsigned int hash,
-                                    struct mk_http_request *sr)
+                                    struct mk_http_request *sr,
+                                    struct mk_server *server)
 {
     int i;
     int fd = -1;
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
-    if (mk_config->fdt == MK_FALSE) {
+    if (server->fdt == MK_FALSE) {
         return open(sr->real_path.data, sr->file_info.flags_read_only);
     }
 
@@ -246,14 +247,15 @@ static inline int mk_vhost_fdt_open(int id, unsigned int hash,
     return fd;
 }
 
-static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
+static inline int mk_vhost_fdt_close(struct mk_http_request *sr,
+                                     struct mk_server *server)
 {
     int id;
     unsigned int hash;
     struct vhost_fdt_hash_table *ht = NULL;
     struct vhost_fdt_hash_chain *hc;
 
-    if (mk_config->fdt == MK_FALSE || sr->vhost_fdt_enabled == MK_FALSE) {
+    if (server->fdt == MK_FALSE || sr->vhost_fdt_enabled == MK_FALSE) {
         if (sr->in_file.fd > 0) {
             return close(sr->in_file.fd);
         }
@@ -289,7 +291,7 @@ static inline int mk_vhost_fdt_close(struct mk_http_request *sr)
 }
 
 
-int mk_vhost_open(struct mk_http_request *sr)
+int mk_vhost_open(struct mk_http_request *sr, struct mk_server *server)
 {
     int id;
     int off;
@@ -300,12 +302,12 @@ int mk_vhost_open(struct mk_http_request *sr)
                              sr->real_path.len - off);
     id   = (hash % VHOST_FDT_HASHTABLE_SIZE);
 
-    return mk_vhost_fdt_open(id, hash, sr);
+    return mk_vhost_fdt_open(id, hash, sr, server);
 }
 
-int mk_vhost_close(struct mk_http_request *sr)
+int mk_vhost_close(struct mk_http_request *sr, struct mk_server *server)
 {
-    return mk_vhost_fdt_close(sr);
+    return mk_vhost_fdt_close(sr, server);
 }
 
 struct mk_host_handler *mk_vhost_handler_match(char *match,
@@ -552,7 +554,7 @@ struct host *mk_vhost_read(char *path)
     return host;
 }
 
-int mk_vhost_map_handlers()
+int mk_vhost_map_handlers(struct mk_server *server)
 {
     int n = 0;
     struct mk_list *head;
@@ -561,21 +563,21 @@ int mk_vhost_map_handlers()
     struct mk_host_handler *h_handler;
     struct mk_plugin *p;
 
-    mk_list_foreach(head, &mk_config->hosts) {
+    mk_list_foreach(head, &server->hosts) {
         host = mk_list_entry(head, struct host, _head);
         mk_list_foreach(head_handler, &host->handlers) {
             h_handler = mk_list_entry(head_handler, struct mk_host_handler, _head);
 
             /* Lookup plugin by name */
-            p = mk_plugin_lookup(h_handler->name);
+            p = mk_plugin_lookup(h_handler->name, server);
             if (!p) {
                 mk_err("Plugin '%s' was not loaded", h_handler->name);
-                exit(EXIT_FAILURE);
+                continue;
             }
 
             if (p->hooks != MK_PLUGIN_STAGE) {
                 mk_err("Plugin '%s' is not a handler", h_handler->name);
-                exit(EXIT_FAILURE);
+                continue;
             }
 
             h_handler->handler = p;
@@ -586,7 +588,7 @@ int mk_vhost_map_handlers()
     return n;
 }
 
-void mk_vhost_set_single(char *path)
+void mk_vhost_set_single(char *path, struct mk_server *server)
 {
     struct host *host;
     struct host_alias *halias;
@@ -615,12 +617,12 @@ void mk_vhost_set_single(char *path)
         mk_err("DocumentRoot variable in %s has an invalid directory path", path);
         exit(EXIT_FAILURE);
     }
-    mk_list_add(&host->_head, &mk_config->hosts);
+    mk_list_add(&host->_head, &server->hosts);
     mk_list_init(&host->handlers);
 }
 
 /* Given a configuration directory, start reading the virtual host entries */
-void mk_vhost_init(char *path)
+void mk_vhost_init(char *path, struct mk_server *server)
 {
     DIR *dir;
     unsigned long len;
@@ -632,18 +634,18 @@ void mk_vhost_init(char *path)
     struct file_info f_info;
     int ret;
 
-    if (!mk_config->conf_sites) {
+    if (!server->conf_sites) {
         mk_warn("[vhost] skipping default site");
         return;
     }
 
     /* Read default virtual host file */
     mk_string_build(&sites, &len, "%s/%s/",
-                    path, mk_config->conf_sites);
+                    path, server->conf_sites);
     ret = mk_file_get_info(sites, &f_info, MK_FILE_EXISTS);
     if (ret == -1 || f_info.is_directory == MK_FALSE) {
         mk_mem_free(sites);
-        sites = mk_config->conf_sites;
+        sites = server->conf_sites;
     }
 
     mk_string_build(&buf, &len, "%s/default", sites);
@@ -652,8 +654,8 @@ void mk_vhost_init(char *path)
     if (!p_host) {
         mk_err("Error parsing main configuration file 'default'");
     }
-    mk_list_add(&p_host->_head, &mk_config->hosts);
-    mk_config->nhosts++;
+    mk_list_add(&p_host->_head, &server->hosts);
+    server->nhosts++;
     mk_mem_free(buf);
     buf = NULL;
 
@@ -688,8 +690,8 @@ void mk_vhost_init(char *path)
             continue;
         }
         else {
-            mk_list_add(&p_host->_head, &mk_config->hosts);
-            mk_config->nhosts++;
+            mk_list_add(&p_host->_head, &server->hosts);
+            server->nhosts++;
         }
     }
     closedir(dir);
@@ -698,13 +700,14 @@ void mk_vhost_init(char *path)
 
 
 /* Lookup a registered virtual host based on the given 'host' input */
-int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias)
+int mk_vhost_get(mk_ptr_t host, struct host **vhost, struct host_alias **alias,
+                 struct mk_server *server)
 {
     struct host *entry_host;
     struct host_alias *entry_alias;
     struct mk_list *head_vhost, *head_alias;
 
-    mk_list_foreach(head_vhost, &mk_config->hosts) {
+    mk_list_foreach(head_vhost, &server->hosts) {
         entry_host = mk_list_entry(head_vhost, struct host, _head);
         mk_list_foreach(head_alias, &entry_host->server_names) {
             entry_alias = mk_list_entry(head_alias, struct host_alias, _head);
@@ -739,7 +742,7 @@ static void mk_vhost_handler_free(struct mk_host_handler *h)
     mk_mem_free(h);
 }
 
-void mk_vhost_free_all()
+void mk_vhost_free_all(struct mk_server *server)
 {
     struct host *host;
     struct host_alias *host_alias;
@@ -750,7 +753,7 @@ void mk_vhost_free_all()
     struct mk_list *head2;
     struct mk_list *tmp2;
 
-    mk_list_foreach_safe(head, tmp, &mk_config->hosts) {
+    mk_list_foreach_safe(head, tmp, &server->hosts) {
         host = mk_list_entry(head, struct host, _head);
 
         /* Free aliases or servernames */

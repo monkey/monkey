@@ -146,10 +146,13 @@ struct mk_sched_handler
      *             data.
      */
     const char *name;
-    int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *);
-    int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int);
-    int (*cb_done)  (struct mk_sched_conn *, struct mk_sched_worker *);
-    int (*cb_upgrade) (void *, void *);
+    int (*cb_read)  (struct mk_sched_conn *, struct mk_sched_worker *,
+                     struct mk_server *);
+    int (*cb_close) (struct mk_sched_conn *, struct mk_sched_worker *, int,
+                     struct mk_server *);
+    int (*cb_done)  (struct mk_sched_conn *, struct mk_sched_worker *,
+                     struct mk_server *);
+    int (*cb_upgrade) (void *, void *, struct mk_server *);
 
     /*
      * This extra field is a small hack. The scheduler connection context
@@ -188,7 +191,7 @@ struct mk_sched_worker *sched_list;
 
 /* Struct under thread context */
 struct mk_sched_thread_conf {
-    struct mk_server_config *config;
+    struct mk_server *server;
 };
 
 struct mk_sched_worker_cb {
@@ -203,7 +206,8 @@ pthread_mutex_t mutex_port_init;
 
 struct mk_sched_worker *mk_sched_next_target();
 void mk_sched_init();
-int mk_sched_launch_thread(struct mk_server_config *config, pthread_t *tout);
+int mk_sched_launch_thread(struct mk_server *server, pthread_t *tout);
+
 void *mk_sched_launch_epoll_loop(void *thread_conf);
 struct mk_sched_worker *mk_sched_get_handler_owner(void);
 
@@ -229,32 +233,45 @@ void mk_sched_update_thread_status(struct mk_sched_worker *sched,
                                    int active, int closed);
 
 int mk_sched_drop_connection(struct mk_sched_conn *conn,
-                             struct mk_sched_worker *sched);
+                             struct mk_sched_worker *sched,
+                             struct mk_server *server);
 
-int mk_sched_check_timeouts(struct mk_sched_worker *sched);
+int mk_sched_check_timeouts(struct mk_sched_worker *sched,
+                            struct mk_server *server);
+
+
 struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
                                               struct mk_server_listen *listener,
-                                              struct mk_sched_worker *sched);
+                                              struct mk_sched_worker *sched,
+                                              struct mk_server *server);
+
 int mk_sched_remove_client(struct mk_sched_conn *conn,
-                           struct mk_sched_worker *sched);
+                           struct mk_sched_worker *sched,
+                           struct mk_server *server);
 
 struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker
                                                      *sched, int remote_fd);
 int mk_sched_update_conn_status(struct mk_sched_worker *sched, int remote_fd,
                                 int status);
 int mk_sched_sync_counters();
-void mk_sched_worker_free();
+void mk_sched_worker_free(struct mk_server *server);
 
 struct mk_sched_handler *mk_sched_handler_cap(char cap);
 
 /* Event handlers */
 int mk_sched_event_read(struct mk_sched_conn *conn,
-                        struct mk_sched_worker *sched);
+                        struct mk_sched_worker *sched,
+                        struct mk_server *server);
+
 int mk_sched_event_write(struct mk_sched_conn *conn,
-                         struct mk_sched_worker *sched);
+                         struct mk_sched_worker *sched,
+                         struct mk_server *server);
+
+
 int mk_sched_event_close(struct mk_sched_conn *conn,
                          struct mk_sched_worker *sched,
-                         int type);
+                         int type, struct mk_server *server);
+
 void mk_sched_event_free(struct mk_event *event);
 
 
@@ -301,9 +318,10 @@ static inline void mk_sched_conn_timeout_del(struct mk_sched_conn *conn)
 #define mk_sched_switch_protocol(conn, cap)     \
     conn->protocol = mk_sched_handler_cap(cap)
 
-int mk_sched_worker_cb_add(struct mk_server_config *config,
+int mk_sched_worker_cb_add(struct mk_server *server,
                            void (*cb_func) (void *),
                            void *data);
-void mk_sched_worker_cb_free(struct mk_server_config *config);
+
+void mk_sched_worker_cb_free(struct mk_server *server);
 
 #endif

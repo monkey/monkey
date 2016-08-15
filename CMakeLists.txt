@@ -308,6 +308,7 @@ add_subdirectory(man)
 add_subdirectory(mk_core)
 add_subdirectory(plugins)
 add_subdirectory(mk_server)
+
 if(NOT MK_WITHOUT_BIN)
   add_subdirectory(mk_bin)
 endif()

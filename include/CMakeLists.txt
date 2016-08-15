@@ -1,4 +1,4 @@
-if(NOT BUILD_LOCAL)
+if(NOT MK_LOCAL)
   install(DIRECTORY
       ${CMAKE_CURRENT_SOURCE_DIR}/monkey/
     DESTINATION

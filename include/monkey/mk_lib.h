@@ -29,7 +29,7 @@
 #include <monkey/mk_http_internal.h>
 
 struct mk_lib_ctx {
-    struct mk_server_config *config;
+    struct mk_server *server;
 };
 
 typedef struct mk_lib_ctx mk_ctx_t;
@@ -40,6 +40,8 @@ typedef struct mk_http_session mk_session_t;
 MK_EXPORT int mk_start(mk_ctx_t *ctx);
 
 MK_EXPORT mk_ctx_t *mk_create();
+MK_EXPORT int mk_destroy(mk_ctx_t *ctx);
+
 MK_EXPORT int mk_config_set(mk_ctx_t *ctx, ...);
 
 MK_EXPORT mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name);

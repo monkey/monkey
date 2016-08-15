@@ -48,14 +48,22 @@ mk_ctx_t *mk_create()
         return NULL;
     }
 
-    ctx->config = mk_server_init();
+    ctx->server = mk_server_create();
     return ctx;
+}
+
+int mk_destroy(mk_ctx_t *ctx)
+{
+    mk_exit_all(ctx->server);
+    mk_mem_free(ctx);
+
+    return 0;
 }
 
 int mk_start(mk_ctx_t *ctx)
 {
-    mk_server_setup(ctx->config);
-    mk_server_loop();
+    mk_server_setup(ctx->server);
+    mk_server_loop(ctx->server);
 
     return 0;
 }
@@ -68,10 +76,10 @@ int mk_worker_callback(mk_ctx_t *ctx,
                        void (*cb_func) (void *),
                        void *data)
 {
-    return mk_sched_worker_cb_add(ctx->config, cb_func, data);
+    return mk_sched_worker_cb_add(ctx->server, cb_func, data);
 }
 
-int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
+int mk_config_set_property(struct mk_server *server, char *k, char *v)
 {
     int b;
     int ret;
@@ -79,7 +87,7 @@ int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
     unsigned long len;
 
     if (config_eq(k, "Listen") == 0) {
-        ret = mk_config_listen_parse(v);
+        ret = mk_config_listen_parse(v, server);
         if (ret != 0) {
             return -1;
         }
@@ -87,10 +95,10 @@ int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
     else if (config_eq(k, "Workers") == 0) {
         num = atoi(v);
         if (num <= 0) {
-            config->workers = sysconf(_SC_NPROCESSORS_ONLN);
+            server->workers = sysconf(_SC_NPROCESSORS_ONLN);
         }
         else {
-            config->workers = num;
+            server->workers = num;
         }
     }
     else if (config_eq(k, "Timeout") == 0) {
@@ -98,35 +106,35 @@ int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
         if (num <= 0) {
             return -1;
         }
-        config->timeout = num;
+        server->timeout = num;
     }
     else if (config_eq(k, "KeepAlive") == 0) {
         b = bool_val(v);
         if (b == -1) {
             return -1;
         }
-        config->keep_alive = b;
+        server->keep_alive = b;
     }
     else if (config_eq(k, "MaxKeepAliveRequest") == 0) {
         num = atoi(v);
         if (num <= 0) {
             return -1;
         }
-        config->max_keep_alive_request = num;
+        server->max_keep_alive_request = num;
     }
     else if (config_eq(k, "KeepAliveTimeout") == 0) {
         num = atoi(v);
         if (num <= 0) {
             return -1;
         }
-        config->keep_alive_timeout = num;
+        server->keep_alive_timeout = num;
     }
     else if (config_eq(k, "UserDir") == 0) {
-        config->conf_user_pub = mk_string_dup(v);
+        server->conf_user_pub = mk_string_dup(v);
     }
     else if (config_eq(k, "IndexFile") == 0) {
-        config->index_files = mk_string_split_line(v);
-        if (!config->index_files) {
+        server->index_files = mk_string_split_line(v);
+        if (!server->index_files) {
             return -1;
         }
     }
@@ -135,38 +143,38 @@ int mk_config_set_property(struct mk_server_config *config, char *k, char *v)
         if (b == -1) {
             return -1;
         }
-        config->hideversion = b;
+        server->hideversion = b;
     }
     else if (config_eq(k, "Resume") == 0) {
         b = bool_val(v);
         if (b == -1) {
             return -1;
         }
-        config->resume = b;
+        server->resume = b;
     }
     else if (config_eq(k, "MaxRequestSize") == 0) {
         num = atoi(v);
         if (num <= 0) {
             return -1;
         }
-        config->max_request_size = num;
+        server->max_request_size = num;
     }
     else if (config_eq(k, "SymLink") == 0) {
         b = bool_val(v);
         if (b == -1) {
             return -1;
         }
-        config->symlink = b;
+        server->symlink = b;
     }
     else if (config_eq(k, "DefaultMimeType") == 0) {
-        mk_string_build(&mk_config->default_mimetype, &len, "%s\r\n", v);
+        mk_string_build(&server->default_mimetype, &len, "%s\r\n", v);
     }
     else if (config_eq(k, "FDT") == 0) {
         b = bool_val(v);
         if (b == -1) {
             return -1;
         }
-        config->fdt = b;
+        server->fdt = b;
     }
 
     return 0;
@@ -188,7 +196,7 @@ int mk_config_set(mk_ctx_t *ctx, ...)
             return -1;
         }
 
-        ret = mk_config_set_property(ctx->config, key, value);
+        ret = mk_config_set_property(ctx->server, key, value);
         if (ret != 0) {
             va_end(va);
             return -1;
@@ -229,7 +237,7 @@ mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name)
         halias->name = mk_string_dup(name);
     }
     mk_list_add(&halias->_head, &h->server_names);
-    mk_list_add(&h->_head, &ctx->config->hosts);
+    mk_list_add(&h->_head, &ctx->server->hosts);
 
     return h;
 }
