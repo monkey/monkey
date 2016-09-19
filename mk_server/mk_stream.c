@@ -213,7 +213,9 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             if (stream->cb_finished) {
                 stream->cb_finished(stream);
             }
-            mk_stream_release(stream);
+            if (mk_list_is_empty(&channel->streams) != 0) {
+                mk_stream_release(stream);
+            }
             return MK_CHANNEL_DONE;
         }
 
@@ -232,7 +234,9 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 if (stream->cb_finished) {
                     stream->cb_finished(stream);
                 }
-                mk_stream_release(stream);
+                if (mk_list_is_empty(&channel->streams) != 0) {
+                    mk_stream_release(stream);
+                }
             }
 
             if (mk_list_is_empty(&channel->streams) == 0) {
@@ -247,12 +251,15 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             if (errno == EAGAIN) {
                 return MK_CHANNEL_BUSY;
             }
-
-            mk_stream_release(stream);
+            if (mk_list_is_empty(&channel->streams) != 0) {
+                mk_stream_release(stream);
+            }
             return MK_CHANNEL_ERROR;
         }
         else if (bytes == 0) {
-            mk_stream_release(stream);
+            if (mk_list_is_empty(&channel->streams) != 0) {
+                mk_stream_release(stream);
+            }
             return MK_CHANNEL_ERROR;
         }
     }
