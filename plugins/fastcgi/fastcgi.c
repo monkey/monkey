@@ -101,19 +101,23 @@ static int mk_fastcgi_config(char *path)
     return 0;
 }
 
-static int mk_fastcgi_start_processing(struct mk_http_session *cs,
-                                       struct mk_http_request *sr)
+/* Entry point for thread/co-routine */
+static void mk_fastcgi_stage30_thread(struct mk_plugin *plugin,
+                                      struct mk_http_session *cs,
+                                      struct mk_http_request *sr,
+                                      int n_params,
+                                      struct mk_list *params)
 {
     struct fcgi_handler *handler;
+    (void) plugin;
+    (void) n_params;
+    (void) params;
 
     handler = fcgi_handler_new(cs, sr);
     if (!handler) {
-        return -1;
+        fprintf(stderr, "Could not create handler");
     }
-
-    return 0;
 }
-
 
 /* Callback handler */
 int mk_fastcgi_stage30(struct mk_plugin *plugin,
@@ -126,6 +130,17 @@ int mk_fastcgi_stage30(struct mk_plugin *plugin,
     (void) plugin;
     (void) n_params;
     (void) params;
+
+    /*
+     * This plugin uses the Monkey Thread model (co-routines), for hence
+     * upon return MK_PLUGIN_RET_CONTINUE, Monkey core will create a
+     * new thread (co-routine) and defer the control to the stage30_thread
+     * callback function (mk_fastcgi_stage30_thread).
+     *
+     * We don't do any validation, so we are OK with MK_PLUGIN_RET_CONTINUE.
+     */
+
+    return MK_PLUGIN_RET_CONTINUE;
 
     ret = mk_fastcgi_start_processing(cs, sr);
     if (ret == 0) {
@@ -191,6 +206,7 @@ void mk_fastcgi_worker_init()
 
 struct mk_plugin_stage mk_plugin_stage_fastcgi = {
     .stage30        = &mk_fastcgi_stage30,
+    .stage30_thread = &mk_fastcgi_stage30_thread,
     .stage30_hangup = &mk_fastcgi_stage30_hangup
 };
 
@@ -210,5 +226,8 @@ struct mk_plugin mk_plugin_fastcgi = {
     .worker_init   = mk_fastcgi_worker_init,
 
     /* Type */
-    .stage         = &mk_plugin_stage_fastcgi
+    .stage         = &mk_plugin_stage_fastcgi,
+
+    /* Flags */
+    .flags         = MK_PLUGIN_THREAD
 };
