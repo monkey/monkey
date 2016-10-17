@@ -107,10 +107,8 @@ struct fcgi_handler {
     struct mk_iov *iov;
     struct mk_list _head;
 
-    /* Stream handler */
-    struct mk_stream *stream;
-
-    struct mk_plugin *plugin;
+    /* TCP connection context */
+    struct mk_net_connection *conn;
 };
 
 static inline void fcgi_encode16(void *a, unsigned b)

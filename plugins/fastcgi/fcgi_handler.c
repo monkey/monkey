@@ -18,6 +18,7 @@
  */
 
 #include <monkey/mk_api.h>
+#include <monkey/mk_net.h>
 
 #include "fastcgi.h"
 #include "fcgi_handler.h"
@@ -830,7 +831,7 @@ int cb_fastcgi_request_flush(void *data)
 }
 
 /* Callback: on connect to the backend server */
-int cb_fastcgi_on_connect(void *data)
+static int fastcgi_on_connect(struct fcgi_handler *handler)
 {
     int ret;
     int s_err;
@@ -838,23 +839,7 @@ int cb_fastcgi_on_connect(void *data)
     socklen_t s_len = sizeof(s_err);
     struct mk_list *head;
     struct mk_plugin *pio;
-    struct fcgi_handler *handler = data;
     struct mk_channel *channel;
-
-    if (handler->active == MK_FALSE) {
-        return -1;
-    }
-
-    /* We connect in async mode, we need to check if the connection was OK */
-    ret = getsockopt(handler->server_fd, SOL_SOCKET, SO_ERROR, &s_err, &s_len);
-    if (ret == -1) {
-        goto error;
-    }
-
-    if (s_err) {
-        /* FastCGI server unavailable */
-        goto error;
-    }
 
     /* Convert the original request to FCGI format */
     ret = fcgi_encode_request(handler);
@@ -903,8 +888,8 @@ struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
 {
     int ret;
     int entries;
-    struct fcgi_handler *h;
-    struct mk_stream *stream;
+    struct fcgi_handler *h = NULL;
+    struct mk_net_connection *conn = NULL;
 
     /* Allocate handler instance and set fields */
     h = mk_api->mem_alloc_z(sizeof(struct fcgi_handler));
@@ -930,6 +915,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
     h->stdin_length = 0;
     h->stdin_offset = 0;
     h->stdin_buffer = NULL;
+    h->conn         = NULL;
 
     /* Allocate enough space for our data */
     entries = 128 + (cs->parser.header_count * 3);
@@ -950,11 +936,16 @@ struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
 
     /* Request and async connection to the server */
     if (fcgi_conf.server_addr) {
-        h->server_fd = mk_api->socket_connect(fcgi_conf.server_addr,
-                                              atoi(fcgi_conf.server_port),
-                                              MK_TRUE);
+        conn = mk_api->net_conn_create(fcgi_conf.server_addr,
+                                       atoi(fcgi_conf.server_port));
+        if (!conn) {
+            goto error;
+        }
+        h->conn      = conn;
+        h->server_fd = conn->fd;
     }
     else if (fcgi_conf.server_path) {
+        /* FIXME: unix socket connection NOT FUNCTIONAL for now */
         h->server_fd = mk_api->socket_open(fcgi_conf.server_path, MK_TRUE);
     }
 
@@ -962,21 +953,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
         goto error;
     }
 
-    /* Prepare the built-in event structure */
-    MK_EVENT_INIT(&h->event, h->server_fd, h, cb_fastcgi_on_connect);
-
-    /*
-     * Let the event loop notify us when we can flush data to
-     * the FastCGI server.
-     */
-    ret = mk_api->ev_add(mk_api->sched_loop(),
-                         h->server_fd,
-                         MK_EVENT_CUSTOM, MK_EVENT_WRITE, h);
-    if (ret == -1) {
-        close(h->server_fd);
-        goto error;
-    }
-
+    fastcgi_on_connect(h);
     return h;
 
  error:
