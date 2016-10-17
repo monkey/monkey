@@ -31,6 +31,7 @@
 #include <monkey/mk_core.h>
 #include <monkey/mk_http.h>
 #include <monkey/mk_http_status.h>
+#include <monkey/mk_http_thread.h>
 #include <monkey/mk_clock.h>
 #include <monkey/mk_utils.h>
 #include <monkey/mk_config.h>
@@ -630,10 +631,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     struct mk_list *handlers;
     struct mk_plugin *plugin;
     struct mk_vhost_handler *h_handler;
+    struct mk_http_thread *mth = NULL;
     size_t index_length;
     size_t index_bytes;
     char *index_path = NULL;
-
 
     MK_TRACE("[FD %i] HTTP Protocol Init, session %p", cs->socket, sr);
 
@@ -756,6 +757,16 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
             MK_TRACE("[FD %i] STAGE_30 returned %i", cs->socket, ret);
             switch (ret) {
             case MK_PLUGIN_RET_CONTINUE:
+                if ((plugin->flags & MK_PLUGIN_THREAD) &&
+                    plugin->stage->stage30_thread) {
+                    mth = mk_http_thread_new(plugin, cs, sr,
+                                             h_handler->n_params,
+                                             &h_handler->params);
+                    printf("[http thread] %p\n", mth);
+                    mk_http_thread_resume(mth->parent);
+
+                }
+
                 return MK_PLUGIN_RET_CONTINUE;
             case MK_PLUGIN_RET_CLOSE_CONX:
                 if (sr->headers.status > 0) {

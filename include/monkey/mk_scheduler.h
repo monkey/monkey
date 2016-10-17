@@ -94,6 +94,15 @@ struct mk_sched_worker
 
     /* If using REUSEPORT, this points to the list of listeners */
     struct mk_list *listeners;
+
+    /*
+     * List head for finished requests that need to be cleared after each
+     * event loop round.
+     */
+    struct mk_list requests_done;
+
+    /* List of co-routine threads */
+    struct mk_list threads;
 };
 
 
