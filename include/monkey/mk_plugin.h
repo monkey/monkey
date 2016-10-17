@@ -56,6 +56,9 @@
 #define MK_PLUGIN_STATIC     0   /* built-in into core */
 #define MK_PLUGIN_DYNAMIC    1   /* shared library     */
 
+/* Plugin Flags */
+#define MK_PLUGIN_THREAD     1   /* It runs in a Monkey coroutine/thread */
+
 /*
  * Event return values
  * -------------------
@@ -97,6 +100,9 @@ struct plugin_api
     int (*socket_read) (int, void *, int);
     int (*socket_send_file) (int, int, off_t *, size_t);
     int (*socket_ip_str) (int, char **, int, unsigned long *);
+
+    /* Async Network */
+    struct mk_net_connection *(*net_conn_create) (char *, int);
 
     struct mk_server_config *config;
     struct mk_list *plugins;
@@ -251,6 +257,8 @@ struct mk_plugin_stage;
 
 /* Info: used to register a plugin */
 struct mk_plugin {
+    int flags;
+
     /* Identification */
     const char *shortname;
     const char *name;
@@ -287,6 +295,8 @@ struct mk_plugin_stage {
     int (*stage20) (struct mk_http_session *, struct mk_http_request *);
     int (*stage30) (struct mk_plugin *, struct mk_http_session *,
                     struct mk_http_request *, int, struct mk_list *);
+    void (*stage30_thread) (struct mk_plugin *, struct mk_http_session *,
+                            struct mk_http_request *, int, struct mk_list *);
     int (*stage30_hangup) (struct mk_plugin *, struct mk_http_session *,
                            struct mk_http_request *);
     int (*stage40) (struct mk_http_session *, struct mk_http_request *);

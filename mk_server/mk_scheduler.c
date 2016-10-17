@@ -23,6 +23,7 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_scheduler_tls.h>
 #include <monkey/mk_server.h>
+#include <monkey/mk_thread.h>
 #include <monkey/mk_cache.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_clock.h>
@@ -360,6 +361,7 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     }
 
     mk_list_init(&sched->event_free_queue);
+    mk_list_init(&sched->threads);
 
     /*
      * ULONG_MAX BUG test only
@@ -393,6 +395,8 @@ void *mk_sched_launch_worker_loop(void *thread_conf)
     pthread_mutex_lock(&mutex_worker_init);
     sched->initialized = 1;
     pthread_mutex_unlock(&mutex_worker_init);
+
+    mk_thread_prepare();
 
     /* init server thread loop */
     mk_server_worker_loop();

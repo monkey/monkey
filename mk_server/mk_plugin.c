@@ -27,6 +27,7 @@
 #include <monkey/mk_static_plugins.h>
 #include <monkey/mk_plugin_stage.h>
 #include <monkey/mk_core.h>
+#include <monkey/mk_net.h>
 
 #include <dlfcn.h>
 #include <err.h>
@@ -331,6 +332,9 @@ void mk_plugin_api_init()
     api->socket_set_nonblocking = mk_socket_set_nonblocking;
     api->socket_create = mk_socket_create;
     api->socket_ip_str = mk_socket_ip_str;
+
+    /* Async network */
+    api->net_conn_create = mk_net_conn_create;
 
     /* Config Callbacks */
     api->config_create = mk_rconf_create;

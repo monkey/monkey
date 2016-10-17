@@ -12,7 +12,9 @@ set(src
   mk_scheduler.c
   mk_http.c
   mk_http_parser.c
+  mk_http_thread.c
   mk_socket.c
+  mk_net.c
   mk_clock.c
   mk_cache.c
   mk_server.c

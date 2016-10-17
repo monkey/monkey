@@ -486,6 +486,9 @@ void mk_server_worker_loop()
                 }
                 continue;
             }
+            else if (event->type == MK_EVENT_THREAD) {
+                mk_http_event(event);
+            }
         }
         mk_sched_http_done(sched);
         mk_sched_event_free_all(sched);

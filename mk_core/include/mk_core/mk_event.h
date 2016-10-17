@@ -30,6 +30,7 @@
 #define MK_EVENT_LISTENER        1    /* listener socket                  */
 #define MK_EVENT_CONNECTION      2    /* data on active connection        */
 #define MK_EVENT_CUSTOM          3    /* custom fd registered             */
+#define MK_EVENT_THREAD          4    /* thread-coroutine                 */
 
 /* Event triggered for file descriptors  */
 #define MK_EVENT_EMPTY           0
@@ -97,6 +98,12 @@ static inline void MK_EVENT_INIT(struct mk_event *ev, int fd, void *data,
     ev->status  = MK_EVENT_NONE;
     ev->data    = data;
     ev->handler = callback;
+}
+
+static inline void MK_EVENT_NEW(struct mk_event *e)
+{
+    e->mask   = MK_EVENT_EMPTY;
+    e->status = MK_EVENT_NONE;
 }
 
 int mk_event_initialize();

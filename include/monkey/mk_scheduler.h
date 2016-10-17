@@ -102,6 +102,9 @@ struct mk_sched_worker
      * event loop round.
      */
     struct mk_list requests_done;
+
+    /* List of co-routine threads */
+    struct mk_list threads;
 };
 
 

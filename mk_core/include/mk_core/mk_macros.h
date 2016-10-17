@@ -145,6 +145,8 @@
  #define MK_EXPORT
 #endif
 
+#define MK_INLINE inline __attribute__((always_inline))
+
 /* Some old libc do not declare O_CLOEXEC */
 #ifndef O_CLOEXEC
 #define O_CLOEXEC      02000000 /* set close_on_exec */
