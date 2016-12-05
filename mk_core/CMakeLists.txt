@@ -14,6 +14,9 @@ set(src
   mk_thread_channel.c
   )
 
+# Headers
+include_directories(../include/monkey/)
+
 # It set's a definition and register into the mk_core_info.h file */
 macro(MK_DEFINITION var)
   add_definitions(-D${var})
