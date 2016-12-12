@@ -48,7 +48,7 @@ check_c_source_compiles("
      return kqueue();
   }" HAVE_KQUEUE)
 
-if (NOT HAVE_EPOLL AND NOT HAVE_KQUEUE)
+if ((NOT HAVE_EPOLL AND NOT HAVE_KQUEUE) OR MK_USE_EVENT_SELECT)
   message(STATUS "Event loop backend > select(2)")
   MK_DEFINITION(MK_HAVE_EVENT_SELECT)
 endif()

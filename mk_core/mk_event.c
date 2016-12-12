@@ -26,7 +26,7 @@
 #include <mk_core/mk_utils.h>
 #include <mk_core/mk_event.h>
 
-#if defined(EVENT_SELECT)
+#if defined(MK_HAVE_EVENT_SELECT)
     #include "mk_event_select.c"
 #elif defined(__linux__) && !defined(LINUX_KQUEUE)
     #include "mk_event_epoll.c"
