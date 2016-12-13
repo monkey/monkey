@@ -7,7 +7,6 @@ set(src
   mk_memory.c
   mk_event.c
   mk_utils.c
-  mk_rbtree.c
   mk_thread.c
   mk_thread_channel.c
   )
