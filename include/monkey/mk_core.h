@@ -39,7 +39,6 @@ extern gid_t EUID;
 #include "mk_core/mk_memory.h"
 #include "mk_core/mk_file.h"
 #include "mk_core/mk_event.h"
-#include "mk_core/mk_rbtree.h"
 #include "mk_core/mk_rconf.h"
 #include "mk_core/mk_string.h"
 #include "mk_core/mk_macros.h"
