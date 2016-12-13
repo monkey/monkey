@@ -13,7 +13,7 @@ set(src
   mk_thread_channel.c
   )
 
-# Lookup event-loop mechanism: do we need to fallback to select(2) ?
+# Check if sys/uio.h exists
 check_c_source_compiles("
   #include <sys/uio.h>
   int main() {
@@ -34,6 +34,16 @@ macro(MK_DEFINITION var)
   add_definitions(-D${var})
   set(MK_CORE_BUILD_FLAGS "${MK_CORE_BUILD_FLAGS}#ifndef ${var}\n#define ${var}\n#endif\n")
 endmacro()
+
+# Check for unistd.h
+check_c_source_compiles("
+  #include <unistd.h>
+  int main() {
+     return 0;
+  }" HAVE_UNISTD_H)
+if (HAVE_UNISTD_H)
+  MK_DEFINITION(MK_HAVE_UNISTD_H)
+endif()
 
 # Lookup event-loop mechanism: do we need to fallback to select(2) ?
 check_c_source_compiles("

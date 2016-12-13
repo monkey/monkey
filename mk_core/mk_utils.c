@@ -19,15 +19,17 @@
 
 #define _GNU_SOURCE
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include <mk_core/mk_unistd.h>
 
 #if defined (__linux__)
 #include <sys/prctl.h>

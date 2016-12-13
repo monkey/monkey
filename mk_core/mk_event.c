@@ -22,6 +22,8 @@
 
 #include <sys/time.h>
 
+#include <mk_core/mk_core_info.h>
+#include <mk_core/mk_unistd.h>
 #include <mk_core/mk_memory.h>
 #include <mk_core/mk_utils.h>
 #include <mk_core/mk_event.h>
