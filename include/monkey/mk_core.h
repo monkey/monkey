@@ -31,8 +31,12 @@ extern gid_t EGID;
 extern gid_t EUID;
 
 #include "mk_core/mk_core_info.h"
-#include "mk_core/mk_memory.h"
+
+#ifdef MK_HAVE_SYS_UIO_H
 #include "mk_core/mk_iov.h"
+#endif
+
+#include "mk_core/mk_memory.h"
 #include "mk_core/mk_file.h"
 #include "mk_core/mk_event.h"
 #include "mk_core/mk_rbtree.h"
