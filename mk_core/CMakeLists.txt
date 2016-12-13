@@ -12,6 +12,15 @@ set(src
   mk_thread_channel.c
   )
 
+# Headers
+include_directories(../include/monkey/)
+
+# It set's a definition and register into the mk_core_info.h file */
+macro(MK_DEFINITION var)
+  add_definitions(-D${var})
+  set(MK_CORE_BUILD_FLAGS "${MK_CORE_BUILD_FLAGS}#ifndef ${var}\n#define ${var}\n#endif\n")
+endmacro()
+
 # Check if sys/uio.h exists
 check_c_source_compiles("
   #include <sys/uio.h>
@@ -23,16 +32,8 @@ if (HAVE_SYS_UIO_H)
   set(src "${src}"
     mk_iov.c
     )
+  MK_DEFINITION(MK_HAVE_SYS_UIO_H)
 endif()
-
-# Headers
-include_directories(../include/monkey/)
-
-# It set's a definition and register into the mk_core_info.h file */
-macro(MK_DEFINITION var)
-  add_definitions(-D${var})
-  set(MK_CORE_BUILD_FLAGS "${MK_CORE_BUILD_FLAGS}#ifndef ${var}\n#define ${var}\n#endif\n")
-endmacro()
 
 # Check for unistd.h
 check_c_source_compiles("
