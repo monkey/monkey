@@ -1,7 +1,6 @@
 include (CheckCSourceCompiles)
 
 set(src
-  mk_file.c
   mk_rconf.c
   mk_string.c
   mk_memory.c
@@ -19,6 +18,23 @@ macro(MK_DEFINITION var)
   add_definitions(-D${var})
   set(MK_CORE_BUILD_FLAGS "${MK_CORE_BUILD_FLAGS}#ifndef ${var}\n#define ${var}\n#endif\n")
 endmacro()
+
+# Check for full stat(2) support
+check_c_source_compiles("
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #include <unistd.h>
+  int main() {
+    int x = S_IXUSR;
+    S_ISLNK(0);
+    return 0;
+  }" HAVE_STAT_H)
+if (HAVE_STAT_H)
+  set(src "${src}"
+    mk_file.c
+    )
+  MK_DEFINITION(MK_HAVE_STAT_H)
+endif()
 
 # Check if sys/uio.h exists
 check_c_source_compiles("
