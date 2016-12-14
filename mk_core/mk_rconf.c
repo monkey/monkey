@@ -19,6 +19,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 #include <mk_core/mk_rconf.h>
 #include <mk_core/mk_utils.h>
