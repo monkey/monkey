@@ -32,8 +32,8 @@
 #   include <intrin.h>
 #   include <process.h>
 #   include <time.h>
-#   define ETIMEDOUT                   110
-#   define ENOTSUP                     134
+#   //define ETIMEDOUT                   110
+#   //define ENOTSUP                     134
 #   define PTHREAD_CANCEL_DISABLE      0
 #   define PTHREAD_CANCEL_ENABLE       0x01
 #   define PTHREAD_CANCEL_DEFERRED     0
