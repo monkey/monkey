@@ -458,6 +458,7 @@ uint32_t digits10(uint64_t v) {
     return 12 + digits10(v / 1000000000000UL);
 }
 
+#ifdef __GNUC__
 int mk_string_itop(uint64_t value, mk_ptr_t *p)
 {
     static const char digits[201] =
@@ -497,6 +498,7 @@ int mk_string_itop(uint64_t value, mk_ptr_t *p)
     p->len = (dst - p->data - 1);
     return p->len;
 }
+#endif
 
 /* Return a buffer with a new string from string */
 char *mk_string_copy_substr(const char *string, int pos_init, int pos_end)
