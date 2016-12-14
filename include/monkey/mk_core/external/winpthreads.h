@@ -48,6 +48,7 @@
 
 
 #include <windows.h>
+#include <process.h>
 #include <time.h>
 #include <setjmp.h>
 #include <errno.h>
