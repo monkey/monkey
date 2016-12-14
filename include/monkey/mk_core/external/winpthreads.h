@@ -31,6 +31,7 @@
 #   include <sys/timeb.h>
 #   include <intrin.h>
 #   include <process.h>
+#   include <time.h>
 #   define ETIMEDOUT                   110
 #   define ENOTSUP                     134
 #   define PTHREAD_CANCEL_DISABLE      0
@@ -84,13 +85,7 @@
     Windows doesn't have this, so declare it ourselves.
  -----------------------------------------------------------------------------------------------------------------------
  */
-struct timespec
-{
 
-    /* long long in windows is the same as long in unix for 64bit */
-    long long   tv_sec;
-    long long   tv_nsec;
-};
 typedef struct _pthread_cleanup _pthread_cleanup;
 struct _pthread_cleanup
 {
