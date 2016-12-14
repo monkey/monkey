@@ -64,9 +64,14 @@ int mk_utils_print_errno(int n);
 pthread_key_t mk_utils_error_key;
 
 /* Windows don't have strerror_r, instead it have strerror_s */
-#if defined(_WIN32) && !defined(strerror_r)
-#define strerror_r(errno, buf, len) strerror_s(buf, len, errno)
+#ifdef _WIN32
+  /* Reset as this is defined by mk_pthread.h */
+  #ifdef strerror_r
+    #undef strerror_r
+  #endif
+  #define strerror_r(errno, buf, len) strerror_s(buf, len, errno)
 #endif
+
 /*
  * Helpers to format and print out common errno errors, we use thread
  * keys to hold a buffer per thread so strerror_r(2) can be used without
