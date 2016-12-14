@@ -48,6 +48,101 @@ void *memrchr(const void *s, int c, size_t n)
 }
 #endif
 
+/* Windows lack of strcasestr() */
+#ifdef _WIN32
+char *strcasestr(const char *phaystack, const char *pneedle)
+{
+	register const unsigned char *haystack, *needle;
+	register unsigned bl, bu, cl, cu;
+
+	haystack = (const unsigned char *) phaystack;
+	needle = (const unsigned char *) pneedle;
+
+	bl = tolower(*needle);
+	if (bl != '\0')
+	{
+		// Scan haystack until the first character of needle is found:
+		bu = toupper(bl);
+		haystack--;				/* possible ANSI violation */
+		do
+		{
+			cl = *++haystack;
+			if (cl == '\0')
+				goto ret0;
+		}
+		while ((cl != bl) && (cl != bu));
+
+		cl = tolower(*++needle);
+		if (cl == '\0') {
+			goto foundneedle;
+        }
+
+		cu = toupper(cl);
+		++needle;
+		goto jin;
+
+		for (;;)
+		{
+			register unsigned a;
+			register const unsigned char *rhaystack, *rneedle;
+			do
+			{
+				a = *++haystack;
+				if (a == '\0')
+					goto ret0;
+				if ((a == bl) || (a == bu))
+					break;
+				a = *++haystack;
+				if (a == '\0')
+					goto ret0;
+shloop:
+				;
+			}
+			while ((a != bl) && (a != bu));
+
+jin:
+			a = *++haystack;
+			if (a == '\0') {
+				goto ret0;
+            }
+
+			if ((a != cl) && (a != cu)) {
+				goto shloop;
+            }
+
+			rhaystack = haystack-- + 1;
+			rneedle = needle;
+			a = tolower(*rneedle);
+
+			if (tolower(*rhaystack) == (int) a)
+			do
+			{
+				if (a == '\0')
+					goto foundneedle;
+				++rhaystack;
+				a = tolower(*++needle);
+				if (tolower(*rhaystack) != (int) a)
+					break;
+				if (a == '\0')
+					goto foundneedle;
+				++rhaystack;
+				a = tolower(*++needle);
+			}
+			while (tolower(*rhaystack) == (int) a);
+
+			needle = rneedle;		/* took the register-poor approach */
+
+			if (a == '\0')
+				break;
+		} // for(;;)
+	} // if (bl != '\0')
+foundneedle:
+	return (char*) haystack;
+ret0:
+	return 0;
+}
+#endif
+
 /*
  * Base function for search routines, it accept modifiers to enable/disable
  * the case sensitive feature and also allow to specify a haystack len
