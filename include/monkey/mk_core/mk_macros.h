@@ -101,9 +101,15 @@
  *
  */
 
-#define mk_unlikely(x) __builtin_expect((x),0)
-#define mk_likely(x) __builtin_expect((x),1)
-#define mk_prefetch(x, ...) __builtin_prefetch(x, __VA_ARGS__)
+#ifdef __GNUC__
+  #define mk_unlikely(x) __builtin_expect((x),0)
+  #define mk_likely(x) __builtin_expect((x),1)
+  #define mk_prefetch(x, ...) __builtin_prefetch(x, __VA_ARGS__)
+#else
+  #define mk_unlikely(x)      (x)
+  #define mk_likely(x)        (x)
+  #define mk_prefetch(x, ...) (x, __VA_ARGS__)
+#endif
 
 #define mk_is_bool(x) ((x == MK_TRUE || x == MK_FALSE) ? 1 : 0)
 
