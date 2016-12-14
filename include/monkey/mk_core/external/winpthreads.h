@@ -52,9 +52,10 @@
 #include <errno.h>
 #include <sys/timeb.h>
 
+/* Already defined in Windows 10 w/ Visual Studio 2015
 #define ETIMEDOUT	110
 #define ENOTSUP		134
-
+*/
 
 #define PTHREAD_CANCEL_DISABLE 0
 #define PTHREAD_CANCEL_ENABLE 0x01
@@ -102,13 +103,14 @@
 #define PTHREAD_BARRIER_SERIAL_THREAD 1
 
 
-/* Windows doesn't have this, so declare it ourselves. */
+/* Already defined in Windows 10 w/ Visual Studio 2015
 struct timespec
 {
-	/* long long in windows is the same as long in unix for 64bit */
+        long long in windows is the same as long in unix for 64bit
 	long long tv_sec;
 	long long tv_nsec;
 };
+*/
 
 typedef struct _pthread_cleanup _pthread_cleanup;
 struct _pthread_cleanup
