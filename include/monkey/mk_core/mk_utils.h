@@ -63,6 +63,10 @@ int mk_utils_print_errno(int n);
 #define MK_UTILS_ERROR_SIZE          128
 pthread_key_t mk_utils_error_key;
 
+/* Windows don't have strerror_r, instead it have strerror_s */
+#if defined(_WIN32) && !defined(strerror_r)
+#define strerror_r(errno, buf, len) strerror_s(buf, len, errno)
+#endif
 /*
  * Helpers to format and print out common errno errors, we use thread
  * keys to hold a buffer per thread so strerror_r(2) can be used without
