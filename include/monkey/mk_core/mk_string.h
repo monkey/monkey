@@ -79,7 +79,7 @@ char *mk_string_tolower(const char *in);
 void *memrchr(const void *s, int c, size_t n);
 #endif
 
-#ifdef (_WIN32)
+#ifdef _WIN32
 char *strcasestr(const char *phaystack, const char *pneedle);
 #endif
 
