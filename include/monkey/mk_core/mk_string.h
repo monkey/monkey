@@ -26,7 +26,6 @@
 #include "mk_macros.h"
 
 #if defined(_WIN32) || defined(_WIN64)
-  #define _CRT_SECURE_NO_WARNINGS 1
   #define snprintf _snprintf
   #define vsnprintf _vsnprintf
   #define strcasecmp _stricmp
