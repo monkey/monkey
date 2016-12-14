@@ -31,8 +31,8 @@
 
 #include <stdio.h>
 
-/* OSX lacks of memrchr() */
-#if defined (__APPLE__)
+/* OSX and Windows lacks of memrchr() */
+#if defined (__APPLE__) || defined (_WIN32)
 void *memrchr(const void *s, int c, size_t n)
 {
     const unsigned char *cp;
