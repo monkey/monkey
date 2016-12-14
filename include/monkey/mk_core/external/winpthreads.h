@@ -190,6 +190,10 @@ void (**_pthread_key_dest)(void *);
 #define pthread_cleanup_pop(E)\
 	(pthread_self()->clean = _pthread_cup.next, (E?_pthread_cup.func(_pthread_cup.arg):0));}
 
+/* --- Required definitions --- */
+static int pthread_rwlock_unlock(pthread_rwlock_t *l);
+/* --- end of required definitions --- */
+
 static void _pthread_once_cleanup(pthread_once_t *o)
 {
 	*o = 0;
