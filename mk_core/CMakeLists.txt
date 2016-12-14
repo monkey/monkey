@@ -19,6 +19,13 @@ macro(MK_DEFINITION var)
   set(MK_CORE_BUILD_FLAGS "${MK_CORE_BUILD_FLAGS}#ifndef ${var}\n#define ${var}\n#endif\n")
 endmacro()
 
+# Set threading system
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+  MK_DEFINITION(MK_THREADS_WIN32)
+else()
+  MK_DEFINITION(MK_THREADS_POSIX)
+endif()
+
 # Check for full stat(2) support
 check_c_source_compiles("
   #include <sys/types.h>

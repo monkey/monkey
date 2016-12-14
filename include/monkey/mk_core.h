@@ -36,6 +36,7 @@ extern gid_t EUID;
 #include "mk_core/mk_iov.h"
 #endif
 
+#include "mk_core/mk_pthread.h"
 #include "mk_core/mk_memory.h"
 #include "mk_core/mk_file.h"
 #include "mk_core/mk_event.h"
