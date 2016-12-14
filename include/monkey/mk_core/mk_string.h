@@ -25,6 +25,13 @@
 #include "mk_list.h"
 #include "mk_macros.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+  #define snprintf _snprintf
+  #define vsnprintf _vsnprintf
+  #define strcasecmp _stricmp
+  #define strncasecmp _strnicmp
+#endif
+
 /* Case sensitive OFF */
 #define MK_STR_SENSITIVE 0
 
