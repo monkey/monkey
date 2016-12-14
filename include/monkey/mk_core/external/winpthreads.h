@@ -80,6 +80,7 @@
 #   define PTHREAD_PROCESS_PRIVATE         1
 #   define PTHREAD_BARRIER_SERIAL_THREAD   1
 
+
 /*
  -----------------------------------------------------------------------------------------------------------------------
     Windows doesn't have this, so declare it ourselves.
@@ -151,6 +152,10 @@ void (**_pthread_key_dest) (void *);
         _ReadWriteBarrier(); \
         pthread_self()->clean = (_pthread_cleanup *) &_pthread_cup; \
         _ReadWriteBarrier()
+
+
+/* re-declare */
+static int pthread_rwlock_unlock(pthread_rwlock_t *l);
 
 /*
  =======================================================================================================================
