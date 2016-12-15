@@ -22,6 +22,7 @@ endmacro()
 # Set threading system
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   MK_DEFINITION(MK_THREADS_WIN32)
+  set(src "${src} external/winpthreads.c")
 else()
   MK_DEFINITION(MK_THREADS_POSIX)
 endif()
