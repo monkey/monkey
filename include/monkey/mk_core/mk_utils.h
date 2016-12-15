@@ -103,10 +103,10 @@ int mk_utils_worker_rename(const char *title);
 
 #ifndef _WIN32
 int mk_utils_set_daemon();
-#endif
-
 int mk_utils_register_pid(char *path);
 int mk_utils_remove_pid(char *path);
+#endif
+
 int mk_core_init();
 
 #endif

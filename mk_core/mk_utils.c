@@ -282,7 +282,6 @@ int mk_utils_set_daemon()
 
     return 0;
 }
-#endif
 
 /* Write Monkey's PID */
 int mk_utils_register_pid(char *path)
@@ -340,6 +339,7 @@ int mk_utils_remove_pid(char *path)
     }
     return 0;
 }
+#endif
 
 int mk_core_init()
 {
