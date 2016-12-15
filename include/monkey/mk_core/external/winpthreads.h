@@ -36,6 +36,7 @@
 #ifndef WIN_PTHREADS
 #define WIN_PTHREADS
 
+#define _WINSOCKAPI_
 #include <windows.h>
 #include <errno.h>
 
