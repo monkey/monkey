@@ -249,6 +249,7 @@ int mk_utils_worker_spawn(void (*func) (void *), void *arg, pthread_t *tid)
     return 0;
 }
 
+#ifndef _WIN32
 /* Run current process in background mode (daemon, evil Monkey >:) */
 int mk_utils_set_daemon()
 {
@@ -281,6 +282,7 @@ int mk_utils_set_daemon()
 
     return 0;
 }
+#endif
 
 /* Write Monkey's PID */
 int mk_utils_register_pid(char *path)

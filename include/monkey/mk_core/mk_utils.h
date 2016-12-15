@@ -100,7 +100,11 @@ static inline void mk_utils_libc_warn(char *caller, char *file, int line)
 
 int mk_utils_worker_spawn(void (*func) (void *), void *arg, pthread_t *tid);
 int mk_utils_worker_rename(const char *title);
+
+#ifndef _WIN32
 int mk_utils_set_daemon();
+#endif
+
 int mk_utils_register_pid(char *path);
 int mk_utils_remove_pid(char *path);
 int mk_core_init();
