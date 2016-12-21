@@ -17,23 +17,23 @@
  *  limitations under the License.
  */
 
-#ifdef _WIN32
-#include <Winsock2.h>
-#else
-#include <sys/select.h>
-#endif
 
 #include <mk_core/mk_event.h>
-#include <time.h>
 
-struct fd_timer {
-    int    fd;
-    time_t sec;
-    long   nsec;
+/* Libevent */
+#include <event.h>
+
+struct ev_map {
+    /* for pipes */
+    int pipe[2];
+
+    struct event *event;
+    struct mk_event_ctx *ctx;
 };
 
 static inline int _mk_event_init()
 {
+    event_init();
     return 0;
 }
 
@@ -41,29 +41,18 @@ static inline void *_mk_event_loop_create(int size)
 {
     struct mk_event_ctx *ctx;
 
-    /* Override caller 'size', we always use FD_SETSIZE */
-    size = FD_SETSIZE;
-
     /* Main event context */
     ctx = mk_mem_alloc_z(sizeof(struct mk_event_ctx));
     if (!ctx) {
         return NULL;
     }
 
-    FD_ZERO(&ctx->rfds);
-    FD_ZERO(&ctx->wfds);
-
-    /* Allocate space for events queue, re-use the struct mk_event */
-    ctx->events = mk_mem_alloc_z(sizeof(struct mk_event *) * size);
-    if (!ctx->events) {
-        mk_mem_free(ctx);
-        return NULL;
-    }
+    /* Libevent context */
+    ctx->base = event_base_new();
 
     /* Fired events (upon select(2) return) */
     ctx->fired = mk_mem_alloc_z(sizeof(struct mk_event) * size);
     if (!ctx->fired) {
-        mk_mem_free(ctx->events);
         mk_mem_free(ctx);
         return NULL;
     }
@@ -75,38 +64,78 @@ static inline void *_mk_event_loop_create(int size)
 /* Close handlers and memory */
 static inline void _mk_event_loop_destroy(struct mk_event_ctx *ctx)
 {
-    mk_mem_free(ctx->events);
+    event_base_free(ctx->base);
     mk_mem_free(ctx->fired);
     mk_mem_free(ctx);
+}
+
+static void cb_event(evutil_socket_t fd, short flags, void *data)
+{
+    int i;
+    int mask = 0;
+    struct mk_event *event = data;
+    struct mk_event *fired;
+    struct mk_event_ctx *ctx;
+    struct ev_map *map = event->data;
+
+    ctx = map->ctx;
+
+    /* Compose mask */
+    if (flags & EV_READ) {
+        mask |= MK_EVENT_READ;
+    }
+    if (flags & EV_WRITE) {
+        mask |= MK_EVENT_WRITE;
+    }
+
+    /* Register the event in the fired array */
+    i = ctx->fired_count;
+    fired = &ctx->fired[i];
+    fired->fd   = event->fd;
+    fired->mask = mask;
+    fired->data = event;
+
+    ctx->fired_count++;
 }
 
 /* Add the file descriptor to the arrays */
 static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
                                 int type, uint32_t events, void *data)
 {
+    int flags = 0;
+    struct event *libev;
     struct mk_event *event;
+    struct ev_map *ev_map;
 
-    if (fd > FD_SETSIZE) {
+    ev_map = mk_mem_alloc_z(sizeof(struct ev_map));
+    if (!ev_map) {
+        perror("malloc");
         return -1;
     }
 
     if (events & MK_EVENT_READ) {
-        FD_SET(fd, &ctx->rfds);
+        flags |= EV_READ;
     }
     if (events & MK_EVENT_WRITE) {
-        FD_SET(fd, &ctx->wfds);
+        flags |= EV_WRITE;
     }
 
+    /* Compose context */
     event = (struct mk_event *) data;
     event->fd   = fd;
     event->type = type;
     event->mask = events;
     event->status = MK_EVENT_REGISTERED;
+    event->data   = ev_map;
 
-    ctx->events[fd] = event;
-    if (fd > ctx->max_fd) {
-        ctx->max_fd = fd;
-    }
+    /* Register into libevent */
+    flags |= EV_PERSIST;
+    libev = event_new(ctx->base, fd, flags, cb_event, event);
+
+    ev_map->event = libev;
+    ev_map->ctx   = ctx;
+
+    event_add(libev, NULL);
 
     return 0;
 }
@@ -114,68 +143,38 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
 /* Delete an event */
 static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event)
 {
-    int i;
-    int fd;
-    struct mk_event *s_event;
+    int ret;
+    struct ev_map *ev_map;
 
-    fd = event->fd;
-
-    if (event->mask & MK_EVENT_READ) {
-        FD_CLR(event->fd, &ctx->rfds);
+    ev_map = event->data;
+    if (ev_map->pipe[0] > 0) {
+        close(ev_map->pipe[0]);
+    }
+    if (ev_map->pipe[1] > 0) {
+        close(ev_map->pipe[1]);
     }
 
-    if (event->mask & MK_EVENT_WRITE) {
-        FD_CLR(event->fd, &ctx->wfds);
-    }
+    ret = event_del(ev_map->event);
+    event_free(ev_map->event);
+    mk_mem_free(ev_map);
 
-    /* Update max_fd, lookup */
-    if (event->fd == ctx->max_fd) {
-        for (i = (ctx->max_fd - 1); i > 0; i--) {
-            if (!ctx->events[i]) {
-                continue;
-            }
-
-            s_event = ctx->events[i];
-            if (s_event->mask != MK_EVENT_EMPTY) {
-                break;
-            }
-        }
-        ctx->max_fd = i;
-    }
-
-    ctx->events[fd] = NULL;
-    return 0;
+    return ret;
 }
 
 /*
  * Timeout worker, it writes a byte every certain amount of seconds, it finish
  * once the other end of the pipe closes the fd[0].
  */
-void _timeout_worker(void *arg)
+static void cb_timeout(evutil_socket_t fd, short flags, void *data)
 {
     int ret;
     uint64_t val = 1;
-    struct fd_timer *timer;
-    struct timespec t_spec;
+    struct ev_map *ev_map = data;
 
-    timer = (struct fd_timer *) arg;
-    t_spec.tv_sec  = timer->sec;
-    t_spec.tv_nsec = timer->nsec;
-
-    while (1) {
-        /* sleep for a while */
-        nanosleep(&t_spec, NULL);
-
-        /* send notification */
-        ret = write(timer->fd, &val, sizeof(uint64_t));
-        if (ret == -1) {
-            perror("write");
-            break;
-        }
+    ret = write(ev_map->pipe[1], &val, sizeof(uint64_t));
+    if (ret == -1) {
+        perror("write");
     }
-
-    close(timer->fd);
-    free(timer);
 }
 
 /*
@@ -189,43 +188,42 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
 {
     int ret;
     int fd[2];
+    struct event *libev;
     struct mk_event *event;
-    struct fd_timer *timer;
-    pthread_t tid;
-
-    timer = mk_mem_alloc(sizeof(struct fd_timer));
-    if (!timer) {
-        return -1;
-    }
+    struct timeval timev = {sec, nsec};
+    struct ev_map *ev_map;
 
     ret = pipe(fd);
     if (ret < 0) {
-        mk_mem_free(timer);
         mk_libc_error("pipe");
         return ret;
     }
 
     event = (struct mk_event *) data;
+
+    ev_map = mk_mem_alloc_z(sizeof(struct ev_map));
+    if (!ev_map) {
+        perror("malloc");
+        return -1;
+    }
+
+    ev_map->pipe[0] = fd[0];
+    ev_map->pipe[1] = fd[1];
+    ev_map->ctx = ctx;
+
+    libev = event_new(ctx->base, -1,
+                      EV_TIMEOUT | EV_PERSIST,
+                      cb_timeout, ev_map);
+    ev_map->event = libev;
+
+    event_add(libev, &timev);
+
     event->fd = fd[0];
     event->type = MK_EVENT_NOTIFICATION;
     event->mask = MK_EVENT_EMPTY;
 
     _mk_event_add(ctx, fd[0], MK_EVENT_NOTIFICATION, MK_EVENT_READ, data);
     event->mask = MK_EVENT_READ;
-
-    /* Compose the timer context, this is released inside the worker thread */
-    timer->fd   = fd[1];
-    timer->sec  = sec;
-    timer->nsec = nsec;
-
-    /* Now the dirty workaround, create a thread */
-    ret = mk_utils_worker_spawn(_timeout_worker, timer, &tid);
-    if (ret < 0) {
-        close(fd[0]);
-        close(fd[1]);
-        mk_mem_free(timer);
-        return -1;
-    }
 
     return fd[0];
 }
@@ -265,54 +263,21 @@ static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
 
 static inline int _mk_event_wait(struct mk_event_loop *loop)
 {
-    int i;
-    int f = 0;
-    uint32_t mask;
-    struct mk_event *fired;
     struct mk_event_ctx *ctx = loop->data;
 
-    memcpy(&ctx->_rfds, &ctx->rfds, sizeof(fd_set));
-    memcpy(&ctx->_wfds, &ctx->wfds, sizeof(fd_set));
-
-    loop->n_events = select(ctx->max_fd + 1, &ctx->_rfds, &ctx->_wfds, NULL, NULL);
-    if (loop->n_events <= 0) {
-        return loop->n_events;
-    }
-
     /*
-     * Populate our events array with the data reported. In other backends such
-     * as mk_event_epoll and mk_event_kqueue this is done when iterating the
-     * results as their native implementation already provided an array ready
-     * for processing.
+     * Libevent use callbacks, so on every callback the 'fired' array
+     * is populated, so we reset the counter every time this function
+     * is called.
      */
-    for (i = 0; i <= ctx->max_fd; i++) {
-        /* skip empty references */
-        if (!ctx->events[i]) {
-            continue;
-        }
+    ctx->fired_count = 0;
+    event_base_loop(ctx->base, EVLOOP_ONCE);
+    loop->n_events = ctx->fired_count;
 
-        mask = 0;
-        if (FD_ISSET(i, &ctx->_rfds)) {
-            mask |= MK_EVENT_READ;
-        }
-        if (FD_ISSET(i, &ctx->_wfds)) {
-            mask |= MK_EVENT_WRITE;
-        }
-
-        if (mask) {
-            fired = &ctx->fired[f];
-            fired->fd   = i;
-            fired->mask = mask;
-            fired->data = ctx->events[i];
-            f++;
-        }
-    }
-
-    loop->n_events = f;
     return loop->n_events;
 }
 
 static inline char *_mk_event_backend()
 {
-    return "select";
+    return "libevent";
 }
