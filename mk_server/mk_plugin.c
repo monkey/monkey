@@ -105,6 +105,7 @@ static int mk_plugin_init(struct plugin_api *api, struct mk_plugin *plugin,
                     path, plugin->shortname);
 
     /* Init plugin */
+    plugin->server_ctx = server;
     ret = plugin->init_plugin(&api, conf_dir);
     mk_mem_free(conf_dir);
 
@@ -287,7 +288,7 @@ void mk_plugin_api_init(struct mk_server *server)
     api->file_get_info = mk_file_get_info;
 
     /* HTTP Callbacks */
-    api->header_prepare = mk_header_prepare;
+    api->header_prepare = mk_plugin_header_prepare;
     api->header_add = mk_plugin_header_add;
     api->header_get = mk_http_header_get;
     api->header_set_http_status = mk_header_set_http_status;
@@ -608,12 +609,13 @@ void mk_plugin_preworker_calls(struct mk_server *server)
     }
 }
 
-int mk_plugin_http_request_end(struct mk_http_session *cs, int close,
-                               struct mk_server *server)
+int mk_plugin_http_request_end(struct mk_plugin *plugin,
+                               struct mk_http_session *cs, int close)
 {
     int ret;
     int con;
     struct mk_http_request *sr;
+    struct mk_server *server = plugin->server_ctx;
 
     MK_TRACE("[FD %i] PLUGIN HTTP REQUEST END", cs->socket);
 
@@ -687,6 +689,14 @@ int mk_plugin_sched_remove_client(int socket, struct mk_server *server)
 
     return mk_sched_remove_client(conn, sched, server);
 }
+
+int mk_plugin_header_prepare(struct mk_plugin *plugin,
+                             struct mk_http_session *cs,
+                             struct mk_http_request *sr)
+{
+    return mk_header_prepare(plugin->server_ctx, cs, sr);
+}
+
 
 int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len)
 {

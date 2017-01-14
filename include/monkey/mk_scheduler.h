@@ -63,12 +63,6 @@ struct mk_sched_worker
     unsigned long long over_capacity;
 
     /*
-     * Red-Black tree queue to perform fast lookup over
-     * the scheduler busy queue
-     */
-    struct rb_root rb_queue;
-
-    /*
      * The timeout queue represents client connections that
      * have not initiated it requests or the request status
      * is incomplete. This linear lists allows the scheduler
@@ -116,7 +110,6 @@ struct mk_sched_conn
     struct mk_plugin_network *net;     /* I/O network layer            */
     struct mk_channel channel;         /* stream channel               */
     struct mk_list timeout_head;       /* link to the timeout queue    */
-    struct rb_node _rb_head;           /* red-black tree head          */
     void *data;                        /* optional ref for protocols   */
 };
 

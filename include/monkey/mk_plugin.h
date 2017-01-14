@@ -106,8 +106,8 @@ struct plugin_api
     void (*_error) (int, const char *, ...) PRINTF_WARNINGS(2,3);
 
     /* HTTP request function */
-    int   (*http_request_end) (struct mk_http_session *cs, int close,
-                               struct mk_server *);
+    int   (*http_request_end) (struct mk_plugin *plugin,
+                               struct mk_http_session *cs, int close);
     int   (*http_request_error) (int, struct mk_http_session *,
                                  struct mk_http_request *, struct mk_server *);
 
@@ -137,9 +137,9 @@ struct plugin_api
     int  (*file_get_info) (const char *, struct file_info *, int);
 
     /* header */
-    int  (*header_prepare) (struct mk_http_session *,
-                            struct mk_http_request *,
-                            struct mk_server *);
+    int  (*header_prepare) (struct mk_plugin *,
+                            struct mk_http_session *,
+                            struct mk_http_request *);
     struct mk_http_header *(*header_get) (int, struct mk_http_request *,
                                           const char *, unsigned int);
     int  (*header_add) (struct mk_http_request *, char *row, int len);
@@ -187,11 +187,6 @@ struct plugin_api
     /* Mime type */
     struct mimetype *(*mimetype_lookup) (char *);
 
-    /* red-black tree */
-    void (*rb_insert_color) (struct rb_node *, struct rb_root *);
-    void (*rb_erase) (struct rb_node *, struct rb_root *);
-    void (*rb_link_node) (struct rb_node *, struct rb_node *, struct rb_node **);
-
     /* configuration reader functions */
     struct mk_rconf *(*config_open) (const char *);
     struct mk_rconf *(*config_create) (const char *);
@@ -236,6 +231,9 @@ struct plugin_api
 
     /* Handler */
     struct mk_handler_param *(*handler_param_get)(int, struct mk_list *);
+
+    /* Sever context */
+    struct mk_server *server_ctx;
 
 #ifdef JEMALLOC_STATS
     int (*je_mallctl) (const char *, void *, size_t *, void *, size_t);
@@ -351,6 +349,10 @@ mk_ptr_t *mk_plugin_time_now_human();
 
 int mk_plugin_sched_remove_client(int socket, struct mk_server *server);
 
+
+int mk_plugin_header_prepare(struct mk_plugin *plugin,
+                             struct mk_http_session *cs,
+                             struct mk_http_request *sr);
 
 int mk_plugin_header_add(struct mk_http_request *sr, char *row, int len);
 int mk_plugin_header_get(struct mk_http_request *sr,
