@@ -524,30 +524,29 @@ static char *getearliestbreak(const char buf[], const unsigned bufsize,
 
 static int fcgi_write(struct fcgi_handler *handler, char *buf, size_t len)
 {
-    mk_stream_set(NULL,
-                  MK_STREAM_COPYBUF,
-                  handler->cs->channel,
-                  buf, len,
-                  NULL, NULL, NULL, NULL);
+    mk_stream_in_cbuf(handler->stream,
+                      NULL,
+                      buf, len,
+                      NULL, NULL);
 
     if (handler->headers_set == MK_TRUE) {
-        mk_stream_set(NULL,
-                      MK_STREAM_COPYBUF,
-                      handler->cs->channel,
-                      "\r\n", 2,
-                      NULL, NULL, NULL, NULL);
+        mk_stream_in_cbuf(handler->stream,
+                          NULL,
+                          "\r\n", 2,
+                          NULL, NULL);
     }
     return 0;
 }
 
-void fcgi_stream_eof(struct mk_stream *stream)
+void fcgi_stream_eof(struct mk_stream_input *in)
 {
+    // FIXME
     struct fcgi_handler *handler;
 
-    handler = stream->data;
-    if (handler->hangup == MK_FALSE) {
-        fcgi_exit(handler);
-    }
+    //handler = stream->data;
+    //if (handler->hangup == MK_FALSE) {
+    //    fcgi_exit(handler);
+    //}
 }
 
 int fcgi_exit(struct fcgi_handler *handler)
@@ -570,11 +569,9 @@ int fcgi_exit(struct fcgi_handler *handler)
                  handler->server_fd);
 
         /* Now set an EOF stream/callback to resume the exiting process */
-        mk_stream_set(NULL,
-                      MK_STREAM_EOF,
-                      handler->cs->channel,
-                      NULL, 0, handler,
-                      fcgi_stream_eof, NULL, NULL);
+        mk_stream_in_eof(handler->stream,
+                         NULL,
+                         fcgi_stream_eof);
         handler->eof = MK_TRUE;
         return 1;
     }
@@ -589,7 +586,7 @@ int fcgi_exit(struct fcgi_handler *handler)
 
     if (handler->active == MK_TRUE) {
         handler->active = MK_FALSE;
-        mk_api->http_request_done(handler->sr, handler->hangup);
+        mk_api->http_request_end(handler->plugin, handler->cs, handler->hangup);
     }
 
     return 1;
@@ -598,7 +595,7 @@ int fcgi_exit(struct fcgi_handler *handler)
 int fcgi_error(struct fcgi_handler *handler)
 {
     fcgi_exit(handler);
-    mk_api->http_request_error(500, handler->cs, handler->sr);
+    mk_api->http_request_error(500, handler->cs, handler->sr, handler->plugin);
     return 0;
 }
 
@@ -621,12 +618,10 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
 
     if (len == 0 && handler->chunked && handler->headers_set == MK_TRUE) {
         MK_TRACE("[fastcgi=%i] sending EOF", handler->server_fd);
-        mk_stream_set(NULL,
-                      MK_STREAM_COPYBUF,
-                      handler->cs->channel,
-                      "0\r\n\r\n", 5,
-                      handler,
-                      NULL, NULL, NULL);
+        mk_stream_in_cbuf(handler->stream,
+                          NULL,
+                          "0\r\n\r\n", 5,
+                          NULL, NULL);
         mk_api->channel_flush(handler->cs->channel);
         return 0;
     }
@@ -660,7 +655,7 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
             handler->chunked = MK_TRUE;
         }
 
-        mk_api->header_prepare(handler->cs, handler->sr);
+        mk_api->header_prepare(handler->plugin, handler->cs, handler->sr);
 
         diff = (end - buf) + advance;
         fcgi_write(handler, buf, diff);
@@ -673,11 +668,10 @@ static int fcgi_response(struct fcgi_handler *handler, char *buf, size_t len)
 
     if (p_len > 0) {
         xlen = snprintf(tmp, 16, "%x\r\n", (unsigned int) p_len);
-        mk_stream_set(NULL,
-                      MK_STREAM_COPYBUF,
-                      handler->cs->channel,
-                      tmp, xlen,
-                      NULL, NULL, NULL, NULL);
+        mk_stream_in_cbuf(handler->stream,
+                          NULL,
+                          tmp, xlen,
+                          NULL, NULL);
         fcgi_write(handler, p, p_len);
     }
 
@@ -900,12 +894,14 @@ int cb_fastcgi_on_connect(void *data)
     return 0;
 }
 
-struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
+struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
+                                      struct mk_http_session *cs,
                                       struct mk_http_request *sr)
 {
     int ret;
     int entries;
     struct fcgi_handler *h;
+    struct mk_stream *stream;
 
     /* Allocate handler instance and set fields */
     h = mk_api->mem_alloc_z(sizeof(struct fcgi_handler));
@@ -913,6 +909,15 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
         return NULL;
     }
 
+    stream = mk_stream_set(NULL, cs->channel, h,
+                           NULL, NULL, NULL);
+    if (!stream) {
+        mk_api->mem_free(h);
+        return NULL;
+    }
+
+    h->stream = stream;
+    h->plugin = plugin;
     h->cs = cs;
     h->sr = sr;
     h->write_rounds = 0;
@@ -975,7 +980,7 @@ struct fcgi_handler *fcgi_handler_new(struct mk_http_session *cs,
     mk_api->iov_free(h->iov);
     mk_api->mem_free(h);
     sr->handler_data = NULL;
-    mk_api->http_request_error(500, cs, sr);
+    mk_api->http_request_error(500, cs, sr, plugin);
 
     return NULL;
 }

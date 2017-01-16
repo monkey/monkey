@@ -100,20 +100,6 @@ static int mk_fastcgi_config(char *path)
     return 0;
 }
 
-static int mk_fastcgi_start_processing(struct mk_http_session *cs,
-                                       struct mk_http_request *sr)
-{
-    struct fcgi_handler *handler;
-
-    handler = fcgi_handler_new(cs, sr);
-    if (!handler) {
-        return -1;
-    }
-
-    return 0;
-}
-
-
 /* Callback handler */
 int mk_fastcgi_stage30(struct mk_plugin *plugin,
                        struct mk_http_session *cs,
@@ -122,16 +108,16 @@ int mk_fastcgi_stage30(struct mk_plugin *plugin,
                        struct mk_list *params)
 {
     int ret;
-    (void) plugin;
     (void) n_params;
     (void) params;
+    struct fcgi_handler *handler;
 
-    ret = mk_fastcgi_start_processing(cs, sr);
-    if (ret == 0) {
-        return MK_PLUGIN_RET_CONTINUE;
+    handler = fcgi_handler_new(plugin, cs, sr);
+    if (!handler) {
+        return MK_PLUGIN_RET_NOT_ME;
     }
 
-    return MK_PLUGIN_RET_NOT_ME;
+    return MK_PLUGIN_RET_CONTINUE;
 }
 
 int mk_fastcgi_stage30_hangup(struct mk_plugin *plugin,
