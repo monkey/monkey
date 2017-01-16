@@ -18,6 +18,7 @@
  */
 
 #include <monkey/mk_core.h>
+#include <rbtree.h>
 
 #ifndef MK_MIMETYPE_H
 #define MK_MIMETYPE_H
@@ -31,12 +32,12 @@ struct mimetype
     mk_ptr_t type;
     mk_ptr_t header_type;
     struct mk_list _head;
-    struct rb_node _rb_head;
+    struct rb_tree_node _rb_head;
 };
 
 /* Head for RBT */
 struct mk_list mimetype_list;
-struct rb_root mimetype_rb_head;
+struct rb_tree mimetype_rb_head;
 
 extern struct mimetype *mimetype_default;
 

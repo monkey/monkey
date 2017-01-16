@@ -35,20 +35,25 @@
 
 struct mimetype *mimetype_default;
 
+static int rbtree_compare(const void *lhs, const void *rhs)
+{
+    return strcmp((const char *)lhs, (const char *)rhs);
+}
+
 /* Match mime type for requested resource */
 inline struct mimetype *mk_mimetype_lookup(char *name)
 {
     int cmp;
-  	struct rb_node *node = mimetype_rb_head.rb_node;
+  	struct rb_tree_node *node = mimetype_rb_head.root;
 
   	while (node) {
   		struct mimetype *entry = container_of(node, struct mimetype, _rb_head);
 
         cmp = strcmp(name, entry->name);
 		if (cmp < 0)
-  			node = node->rb_left;
+  			node = node->left;
 		else if (cmp > 0)
-  			node = node->rb_right;
+  			node = node->right;
 		else {
   			return entry;
         }
@@ -58,12 +63,9 @@ inline struct mimetype *mk_mimetype_lookup(char *name)
 
 int mk_mimetype_add(char *name, const char *type)
 {
-    int cmp;
     int len = strlen(type) + 3;
     char *p;
     struct mimetype *new_mime;
-    struct rb_node **new;
-    struct rb_node *parent = NULL;
 
     /* make sure we register the extension in lower case */
     p = name;
@@ -82,30 +84,8 @@ int mk_mimetype_add(char *name, const char *type)
     strcat(new_mime->type.data, MK_CRLF);
     new_mime->type.data[len-1] = '\0';
 
-    /* Red-Black tree insert routine */
-    new = &(mimetype_rb_head.rb_node);
-
-    /* Figure out where to put new node */
-    while (*new) {
-        struct mimetype *this = container_of(*new, struct mimetype, _rb_head);
-
-        parent = *new;
-        cmp = strcmp(new_mime->name, this->name);
-        if (cmp < 0) {
-            new = &((*new)->rb_left);
-        }
-        else if (cmp > 0) {
-            new = &((*new)->rb_right);
-        }
-        else {
-            mk_mem_free(new_mime);
-            return -1;
-        }
-    }
-
-    /* Add new node and rebalance tree. */
-    rb_link_node(&new_mime->_rb_head, parent, new);
-    rb_insert_color(&new_mime->_rb_head, &mimetype_rb_head);
+    /* Insert the node into the RBT */
+    rb_tree_insert(&mimetype_rb_head, new_mime->name, &new_mime->_rb_head);
 
     /* Add to linked list head */
     mk_list_add(&new_mime->_head, &mimetype_list);
@@ -130,7 +110,7 @@ int mk_mimetype_read_config(struct mk_server *server)
 
     /* Initialize the heads */
     mk_list_init(&mimetype_list);
-    mimetype_rb_head = RB_ROOT;
+    rb_tree_new(&mimetype_rb_head, rbtree_compare);
 
     /* Read mime types configuration file */
     snprintf(path, MK_MAX_PATH, "%s/%s",
