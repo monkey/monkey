@@ -293,6 +293,7 @@ configure_file(
 
 # General Headers
 include_directories(./)
+include_directories(deps/rbtree)
 include_directories(include)
 include_directories(include/monkey/)
 
@@ -305,6 +306,7 @@ include_directories(include/monkey/)
 # mk_bin   : server executable
 
 add_subdirectory(man)
+add_subdirectory(deps/rbtree)
 add_subdirectory(mk_core)
 add_subdirectory(plugins)
 add_subdirectory(mk_server)
