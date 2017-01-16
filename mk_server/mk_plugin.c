@@ -260,7 +260,7 @@ void mk_plugin_api_init(struct mk_server *server)
 
     /* HTTP callbacks */
     api->http_request_end = mk_plugin_http_request_end;
-    api->http_request_error = mk_http_error;
+    api->http_request_error = mk_plugin_http_error;
 
     /* Memory callbacks */
     api->pointer_set = mk_ptr_set;
@@ -608,6 +608,14 @@ void mk_plugin_preworker_calls(struct mk_server *server)
         }
     }
 }
+
+int mk_plugin_http_error(int http_status, struct mk_http_session *cs,
+                         struct mk_http_request *sr,
+                         struct mk_plugin *plugin)
+{
+    return mk_http_error(http_status, cs, sr, plugin->server_ctx);
+}
+
 
 int mk_plugin_http_request_end(struct mk_plugin *plugin,
                                struct mk_http_session *cs, int close)

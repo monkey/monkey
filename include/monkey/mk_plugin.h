@@ -109,7 +109,7 @@ struct plugin_api
     int   (*http_request_end) (struct mk_plugin *plugin,
                                struct mk_http_session *cs, int close);
     int   (*http_request_error) (int, struct mk_http_session *,
-                                 struct mk_http_request *, struct mk_server *);
+                                 struct mk_http_request *, struct mk_plugin *);
 
     /* memory functions */
     void *(*mem_alloc) (const size_t size);
