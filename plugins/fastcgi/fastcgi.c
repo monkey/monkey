@@ -107,7 +107,6 @@ int mk_fastcgi_stage30(struct mk_plugin *plugin,
                        int n_params,
                        struct mk_list *params)
 {
-    int ret;
     (void) n_params;
     (void) params;
     struct fcgi_handler *handler;

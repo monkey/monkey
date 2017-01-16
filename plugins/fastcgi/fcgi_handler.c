@@ -540,8 +540,9 @@ static int fcgi_write(struct fcgi_handler *handler, char *buf, size_t len)
 
 void fcgi_stream_eof(struct mk_stream_input *in)
 {
+    (void) in;
     // FIXME
-    struct fcgi_handler *handler;
+    //struct fcgi_handler *handler;
 
     //handler = stream->data;
     //if (handler->hangup == MK_FALSE) {
