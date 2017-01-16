@@ -318,11 +318,6 @@ void mk_plugin_api_init(struct mk_server *server)
     api->ev_wait = mk_event_wait;
     api->ev_backend = mk_event_backend;
 
-    /* Red-Black tree */
-    api->rb_insert_color = rb_insert_color;
-    api->rb_erase = rb_erase;
-    api->rb_link_node = rb_link_node;
-
     /* Mimetype */
     api->mimetype_lookup = mk_mimetype_lookup;
 
@@ -702,7 +697,7 @@ int mk_plugin_header_prepare(struct mk_plugin *plugin,
                              struct mk_http_session *cs,
                              struct mk_http_request *sr)
 {
-    return mk_header_prepare(plugin->server_ctx, cs, sr);
+    return mk_header_prepare(cs, sr, plugin->server_ctx);
 }
 
 

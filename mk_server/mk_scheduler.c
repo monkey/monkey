@@ -206,11 +206,11 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     conn->channel.event = event;                /* parent event ref */
     mk_list_init(&conn->channel.streams);
 
-    /* Register the entry in the red-black tree queue for fast lookup */
+    /* FIXME: do we need to have a Scheduler node in a RBT ?
+
     struct rb_node **new = &(sched->rb_queue.rb_node);
     struct rb_node *parent = NULL;
 
-    /* Figure out where to put new node */
     while (*new) {
         struct mk_sched_conn *this = container_of(*new, struct mk_sched_conn, _rb_head);
 
@@ -224,10 +224,9 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
             break;
         }
     }
-
-    /* Add new node and rebalance tree. */
     rb_link_node(&conn->_rb_head, parent, new);
     rb_insert_color(&conn->_rb_head, &sched->rb_queue);
+    */
 
     /*
      * Register the connections into the timeout_queue:
@@ -250,12 +249,12 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
 
 static void mk_sched_thread_lists_init()
 {
-    struct rb_root *sched_cs;
+    //struct rb_root *sched_cs;
     struct mk_list *sched_cs_incomplete;
 
     /* mk_tls_sched_cs */
-    sched_cs = mk_mem_alloc_z(sizeof(struct rb_root));
-    MK_TLS_SET(mk_tls_sched_cs, sched_cs);
+    //sched_cs = mk_mem_alloc_z(sizeof(struct rb_root));
+    //MK_TLS_SET(mk_tls_sched_cs, sched_cs);
 
     /* mk_tls_sched_cs_incomplete */
     sched_cs_incomplete = mk_mem_alloc(sizeof(struct mk_list));
@@ -303,7 +302,7 @@ static int mk_sched_register_thread()
     pthread_mutex_unlock(&mutex_sched_init);
 
     /* Initialize lists */
-    sl->rb_queue = RB_ROOT;
+    //FIXME sl->rb_queue = RB_ROOT;
     mk_list_init(&sl->timeout_queue);
     sl->request_handler = NULL;
 
@@ -485,7 +484,7 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
     sched->closed_connections++;
 
     /* Unlink from the red-black tree */
-    rb_erase(&conn->_rb_head, &sched->rb_queue);
+    //rb_erase(&conn->_rb_head, &sched->rb_queue);
     mk_sched_conn_timeout_del(conn);
 
     /* Close at network layer level */
@@ -500,39 +499,12 @@ int mk_sched_remove_client(struct mk_sched_conn *conn,
     return 0;
 }
 
+/* FIXME: nobody is using this function, check back later */
 struct mk_sched_conn *mk_sched_get_connection(struct mk_sched_worker *sched,
                                                  int remote_fd)
 {
-    struct rb_node *node;
-    struct mk_sched_conn *this;
-
-    /*
-     * In some cases the sched node can be NULL when is a premature close,
-     * an example of this situation is when the function mk_sched_add_client()
-     * close an incoming connection when invoking the MK_PLUGIN_STAGE_10 stage plugin,
-     * so no thread context exists.
-     */
-    if (!sched) {
-        MK_TRACE("[FD %i] No scheduler information", remote_fd);
-        close(remote_fd);
-        return NULL;
-    }
-
-  	node = sched->rb_queue.rb_node;
-  	while (node) {
-        this = container_of(node, struct mk_sched_conn, _rb_head);
-		if (remote_fd < this->event.fd)
-  			node = node->rb_left;
-		else if (remote_fd > this->event.fd)
-  			node = node->rb_right;
-		else {
-            MK_LT_SCHED(remote_fd, "GET_CONNECTION");
-  			return this;
-        }
-	}
-
-    MK_TRACE("[FD %i] not found in scheduler list", remote_fd);
-    MK_LT_SCHED(remote_fd, "GET_FAILED");
+    (void) sched;
+    (void) remote_fd;
     return NULL;
 }
 
