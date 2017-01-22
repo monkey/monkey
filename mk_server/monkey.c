@@ -116,7 +116,7 @@ int mk_server_setup(struct mk_server *server)
     mk_config_start_configure(server);
     mk_config_signature(server);
 
-    mk_sched_init();
+    mk_sched_init(server);
 
     /* Clock init that must happen before starting threads */
     mk_clock_sequential_init(server);
@@ -157,26 +157,17 @@ void mk_thread_keys_init(void)
 
 void mk_exit_all(struct mk_server *server)
 {
-    int i;
-    int n;
     uint64_t val;
 
     /* Distribute worker signals to stop working */
     val = MK_SCHED_SIGNAL_FREE_ALL;
-    for (i = 0; i < server->workers; i++) {
-        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
-        if (n < 0) {
-            perror("write");
-        }
-    }
+    mk_sched_send_signal(server, val);
 
-    /* Wait for workers to finish */
-    for (i = 0; i < server->workers; i++) {
-        pthread_join(sched_list[i].tid, NULL);
-    }
+    /* Wait for all workers to finish */
+    mk_sched_workers_join(server);
 
+    /* Continue exiting */
     mk_plugin_exit_all(server);
     mk_clock_exit();
     mk_config_free_all(server);
-    mk_mem_free(sched_list);
 }

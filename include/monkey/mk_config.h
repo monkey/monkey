@@ -134,6 +134,8 @@ struct mk_server
     char server_signature_header[32];
     int  server_signature_header_len;
 
+    void *sched_ctx;
+
     /*
      * This list head, allow to link a set of callbacks that Monkey core
      * must invoke inside each thread worker once created. This list is

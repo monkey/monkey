@@ -100,7 +100,6 @@ struct plugin_api
 
     struct mk_server *config;
     struct mk_list *plugins;
-    struct mk_sched_worker *sched_list;
 
     /* Error helper */
     void (*_error) (int, const char *, ...) PRINTF_WARNINGS(2,3);

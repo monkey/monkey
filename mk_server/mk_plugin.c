@@ -251,7 +251,6 @@ void mk_plugin_api_init(struct mk_server *server)
 
     /* Setup and connections list */
     api->config = server;
-    api->sched_list = sched_list;
 
     /* API plugins funcions */
 

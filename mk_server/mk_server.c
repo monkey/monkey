@@ -17,6 +17,7 @@
  *  limitations under the License.
  */
 
+#include <monkey/mk_info.h>
 #include <monkey/monkey.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_scheduler.h>
@@ -248,22 +249,8 @@ void mk_server_launch_workers(struct mk_server *server)
 
     /* Launch workers */
     for (i = 0; i < server->workers; i++) {
+        /* Spawn the thread */
         mk_sched_launch_thread(server, &skip);
-    }
-
-    /* Wait until all workers report as ready */
-    while (1) {
-        int ready = 0;
-
-        pthread_mutex_lock(&mutex_worker_init);
-        for (i = 0; i < server->workers; i++) {
-            if (sched_list[i].initialized)
-                ready++;
-        }
-        pthread_mutex_unlock(&mutex_worker_init);
-
-        if (ready == server->workers) break;
-        usleep(10000);
     }
 }
 
@@ -317,17 +304,16 @@ void mk_server_loop_balancer(struct mk_server *server)
                 sched = mk_sched_next_target();
                 if (sched != NULL) {
                     mk_server_listen_handler(sched, event, server);
-#ifdef TRACE
+#ifdef MK_TRACE
                     int i;
-                    struct mk_sched_worker *node;
+                    struct mk_sched_ctx *ctx = server->sched_ctx;
 
-                    node = sched_list;
-                    for (i = 0; i < mk_config->workers; i++) {
+                    for (i = 0; i < server->workers; i++) {
                         MK_TRACE("Worker Status");
                         MK_TRACE(" WID %i / conx = %llu",
-                                 node[i].idx,
-                                 node[i].accepted_connections -
-                                 node[i].closed_connections);
+                                 ctx->workers[i].idx,
+                                 ctx->workers[i].accepted_connections -
+                                 ctx->workers[i].closed_connections);
                     }
 #endif
                 }
@@ -499,8 +485,6 @@ void mk_server_worker_loop(struct mk_server *server)
 
 void mk_server_loop(struct mk_server *server)
 {
-    int n;
-    int i;
     uint64_t val;
 
     /* Rename worker */
@@ -510,12 +494,7 @@ void mk_server_loop(struct mk_server *server)
 
     /* Wake up workers */
     val = MK_SERVER_SIGNAL_START;
-    for (i = 0; i < server->workers; i++) {
-        n = write(sched_list[i].signal_channel_w, &val, sizeof(val));
-        if (n < 0) {
-            perror("write");
-        }
-    }
+    mk_sched_send_signal(server, val);
 
     /*
      * When using REUSEPORT mode on the Scheduler, we need to signal

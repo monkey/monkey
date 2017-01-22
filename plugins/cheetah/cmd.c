@@ -299,8 +299,10 @@ void mk_cheetah_cmd_workers(struct mk_server *server)
     int i;
     unsigned long long active_connections;
     struct mk_sched_worker *node;
+    struct mk_sched_ctx *ctx;
 
-    node = mk_api->sched_list;
+    ctx = server->sched_ctx;
+    node = ctx->workers;
     for (i=0; i < server->workers; i++) {
         active_connections = (node[i].accepted_connections - node[i].closed_connections);
 
