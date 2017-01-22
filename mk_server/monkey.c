@@ -119,7 +119,7 @@ int mk_server_setup(struct mk_server *server)
     mk_sched_init();
 
     /* Clock init that must happen before starting threads */
-    mk_clock_sequential_init();
+    mk_clock_sequential_init(server);
 
     /* Load plugins */
     mk_plugin_api_init();
