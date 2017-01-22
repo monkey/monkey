@@ -29,7 +29,7 @@ int main()
 
     ctx = mk_create();
     mk_config_set(ctx,
-                  "Listen", "8080",
+                  "Listen", "2020",
                   NULL);
 
     vh = mk_vhost_create(ctx, NULL);
@@ -38,12 +38,12 @@ int main()
                  NULL);
     mk_vhost_handler(vh, "/test", cb_main, NULL);
 
-
     mk_worker_callback(ctx,
                        cb_worker,
                        ctx);
 
     mk_start(ctx);
+    mk_stop(ctx);
 
     return 0;
 }

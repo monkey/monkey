@@ -29,6 +29,7 @@
 #include <monkey/mk_http_internal.h>
 
 struct mk_lib_ctx {
+    pthread_t worker_tid;
     struct mk_server *server;
 };
 
@@ -38,6 +39,7 @@ typedef struct mk_http_request mk_request_t;
 typedef struct mk_http_session mk_session_t;
 
 MK_EXPORT int mk_start(mk_ctx_t *ctx);
+MK_EXPORT int mk_stop(mk_ctx_t *ctx);
 
 MK_EXPORT mk_ctx_t *mk_create();
 MK_EXPORT int mk_destroy(mk_ctx_t *ctx);

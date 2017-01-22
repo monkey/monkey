@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
@@ -48,6 +49,7 @@ mk_ctx_t *mk_create()
         return NULL;
     }
 
+    /* Create Monkey server instance */
     ctx->server = mk_server_create();
     return ctx;
 }
@@ -60,11 +62,100 @@ int mk_destroy(mk_ctx_t *ctx)
     return 0;
 }
 
+static void mk_lib_worker(void *data)
+{
+    int fd;
+    int bytes;
+    uint64_t val;
+    struct mk_server *server;
+    struct mk_event *event;
+
+    mk_ctx_t *ctx = data;
+    server = ctx->server;
+
+    /* Start the service */
+    mk_server_setup(server);
+    mk_server_loop(server);
+
+    /*
+     * Give a second to the parent context to avoid consume an event
+     * we should not read at the moment (SIGNAL_START).
+     */
+    sleep(1);
+
+    /* Wait for events */
+    mk_event_wait(server->lib_evl);
+    mk_event_foreach(event, server->lib_evl) {
+        fd = event->fd;
+        bytes = read(fd, &val, sizeof(uint64_t));
+        if (bytes <= 0) {
+            return;
+        }
+
+        if (val == MK_SERVER_SIGNAL_STOP) {
+            mk_exit_all(server);
+            fflush(stdout);
+            pthread_kill(pthread_self(), NULL);
+        }
+    }
+
+    return;
+}
+
 int mk_start(mk_ctx_t *ctx)
 {
-    mk_server_setup(ctx->server);
-    mk_server_loop(ctx->server);
+    int fd;
+    int bytes;
+    int ret;
+    uint64_t val;
+    pthread_t tid;
+    struct mk_event *event;
+    struct mk_server *server;
 
+    ret = mk_utils_worker_spawn(mk_lib_worker, ctx, &tid);
+    if (ret == -1) {
+        return -1;
+    }
+    ctx->worker_tid = tid;
+
+    /* Wait for the started signal so we can return to the caller */
+    server = ctx->server;
+    mk_event_wait(server->lib_evl);
+    mk_event_foreach(event, server->lib_evl) {
+        fd = event->fd;
+        bytes = read(fd, &val, sizeof(uint64_t));
+        if (bytes <= 0) {
+            return -1;
+        }
+
+        if (val == MK_SERVER_SIGNAL_START) {
+            return 0;
+        }
+        else {
+            mk_stop(ctx);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int mk_stop(mk_ctx_t *ctx)
+{
+    int n;
+    uint64_t val;
+    pthread_t tid;
+    struct mk_server *server = ctx->server;
+
+    val = MK_SERVER_SIGNAL_STOP;
+    n = write(server->lib_ch_manager[1], &val, sizeof(val));
+    if (n <= 0) {
+        perror("write");
+        return -1;
+    }
+
+    /* Wait for the child thread to exit */
+    pthread_join(ctx->worker_tid, NULL);
     return 0;
 }
 

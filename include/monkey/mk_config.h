@@ -103,6 +103,7 @@ struct mk_server
 
     /* counter of threads working */
     int thread_counter;
+
     /* real user */
     uid_t egid;
     gid_t euid;
@@ -134,6 +135,11 @@ struct mk_server
     char server_signature_header[32];
     int  server_signature_header_len;
 
+    /* Lib mode: event loop and channel manager */
+    struct mk_event_loop *lib_evl;
+    int lib_ch_manager[2];
+
+    /* Scheduler context (struct mk_sched_ctx) */
     void *sched_ctx;
 
     /*
@@ -143,7 +149,7 @@ struct mk_server
      */
     struct mk_list sched_worker_callbacks;
 
-    /* source configuration */
+    /* source configuration from files */
     struct mk_rconf *config;
 
     /* FIXME: temporal map of Network Layer plugin */

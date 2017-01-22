@@ -62,6 +62,7 @@ void mk_server_info(struct mk_server *server)
 /* Initialize Monkey Server */
 struct mk_server *mk_server_create()
 {
+    int ret;
     int kern_version;
     int kern_features;
     struct mk_server *server;
@@ -71,6 +72,25 @@ struct mk_server *mk_server_create()
         return NULL;
     }
 
+    /* Library mode: event loop */
+    server->lib_evl = mk_event_loop_create(8);
+    if (!server->lib_evl) {
+        mk_mem_free(server);
+        return NULL;
+    }
+
+    /* Library mode: channel manager */
+    ret = mk_event_channel_create(server->lib_evl,
+                                  &server->lib_ch_manager[0],
+                                  &server->lib_ch_manager[1],
+                                  server);
+    if (ret != 0) {
+        mk_event_loop_destroy(server->lib_evl);
+        mk_mem_free(server);
+        return NULL;
+    }
+
+    /* Initialize linked list heads */
     mk_list_init(&server->plugins);
     mk_list_init(&server->sched_worker_callbacks);
     mk_list_init(&server->stage10_handler);

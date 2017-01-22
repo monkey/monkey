@@ -483,6 +483,20 @@ void mk_server_worker_loop(struct mk_server *server)
     }
 }
 
+static int mk_server_lib_notify_started(struct mk_server *server)
+{
+    uint64_t val;
+
+    /* Check the channel is valid (enabled by library mode) */
+    if (server->lib_ch_manager[1] <= 0) {
+        return -1;
+    }
+
+    val = MK_SERVER_SIGNAL_START;
+    return write(server->lib_ch_manager[1], &val, sizeof(uint64_t));
+}
+
+
 void mk_server_loop(struct mk_server *server)
 {
     uint64_t val;
@@ -496,16 +510,27 @@ void mk_server_loop(struct mk_server *server)
     val = MK_SERVER_SIGNAL_START;
     mk_sched_send_signal(server, val);
 
+    /* Signal lib caller (if any) */
+    mk_server_lib_notify_started(server);
+
     /*
      * When using REUSEPORT mode on the Scheduler, we need to signal
      * them so they can start processing connections.
      */
     if (server->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        /* Hang here, basically do nothing as threads are doing the job  */
-        sigset_t mask;
-        sigprocmask(0, NULL, &mask);
-        sigsuspend(&mask);
-        return;
+        /*
+         * Hang here, basically do nothing as threads are doing the job. If the
+         * library mode is in use (a channel manager exists), just wait for
+         * events, otherwise just suspend.
+         */
+        //if (server->lib_ch_manager[0] > 0) {
+        //    mk_server_lib_wait(server);
+        //}
+        //else {
+        //    sigset_t mask;
+        //    sigprocmask(0, NULL, &mask);
+        //    sigsuspend(&mask);
+        //}
     }
     else {
         mk_server_loop_balancer(server);
