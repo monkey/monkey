@@ -33,7 +33,7 @@
 #include <monkey/mk_core.h>
 #include <monkey/mk_http.h>
 
-struct mimetype *mimetype_default;
+struct mk_mimetype *mimetype_default;
 
 static int rbtree_compare(const void *lhs, const void *rhs)
 {
@@ -41,13 +41,13 @@ static int rbtree_compare(const void *lhs, const void *rhs)
 }
 
 /* Match mime type for requested resource */
-inline struct mimetype *mk_mimetype_lookup(struct mk_server *server, char *name)
+inline struct mk_mimetype *mk_mimetype_lookup(struct mk_server *server, char *name)
 {
     int cmp;
     struct rb_tree_node *node = server->mimetype_rb_head.root;
 
     while (node) {
-        struct mimetype *entry = container_of(node, struct mimetype, _rb_head);
+        struct mk_mimetype *entry = container_of(node, struct mk_mimetype, _rb_head);
         cmp = strcmp(name, entry->name);
         if (cmp < 0)
             node = node->left;
@@ -64,13 +64,13 @@ int mk_mimetype_add(struct mk_server *server, char *name, const char *type)
 {
     int len = strlen(type) + 3;
     char *p;
-    struct mimetype *new_mime;
+    struct mk_mimetype *new_mime;
 
     /* make sure we register the extension in lower case */
     p = name;
     for ( ; *p; ++p) *p = tolower(*p);
 
-    new_mime = mk_mem_alloc_z(sizeof(struct mimetype));
+    new_mime = mk_mem_alloc_z(sizeof(struct mk_mimetype));
     new_mime->name = mk_string_dup(name);
     new_mime->type.data = mk_mem_alloc(len);
     new_mime->type.len = len - 1;
@@ -109,7 +109,7 @@ int mk_mimetype_init(struct mk_server *server)
         mk_mimetype_add(server, name, MIMETYPE_DEFAULT_TYPE);
     }
     server->mimetype_default = mk_list_entry_first(&server->mimetype_list,
-                                                   struct mimetype,
+                                                   struct mk_mimetype,
                                                    _head);
     mk_mem_free(name);
     return 0;
@@ -169,7 +169,7 @@ int mk_mimetype_read_config(struct mk_server *server)
     return 0;
 }
 
-struct mimetype *mk_mimetype_find(struct mk_server *server, mk_ptr_t *filename)
+struct mk_mimetype *mk_mimetype_find(struct mk_server *server, mk_ptr_t *filename)
 {
     int j, len;
 
@@ -191,10 +191,10 @@ void mk_mimetype_free_all(struct mk_server *server)
 {
     struct mk_list *head;
     struct mk_list *tmp;
-    struct mimetype *mime;
+    struct mk_mimetype *mime;
 
     mk_list_foreach_safe(head, tmp, &server->mimetype_list) {
-        mime = mk_list_entry(head, struct mimetype, _head);
+        mime = mk_list_entry(head, struct mk_mimetype, _head);
         mk_ptr_free(&mime->type);
         mk_mem_free(mime->name);
         mk_mem_free(mime->header_type.data);

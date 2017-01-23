@@ -26,7 +26,7 @@
 #define MIMETYPE_DEFAULT_TYPE "text/plain\r\n"
 #define MIMETYPE_DEFAULT_NAME "default"
 
-struct mimetype
+struct mk_mimetype
 {
     char *name;
     mk_ptr_t type;
@@ -38,8 +38,8 @@ struct mimetype
 int mk_mimetype_init(struct mk_server *server);
 int mk_mimetype_add(struct mk_server *server, char *name, const char *type);
 int mk_mimetype_read_config();
-struct mimetype *mk_mimetype_find(struct mk_server *server, mk_ptr_t *filename);
-struct mimetype *mk_mimetype_lookup(struct mk_server *server, char *name);
+struct mk_mimetype *mk_mimetype_find(struct mk_server *server, mk_ptr_t *filename);
+struct mk_mimetype *mk_mimetype_lookup(struct mk_server *server, char *name);
 void mk_mimetype_free_all();
 
 #endif

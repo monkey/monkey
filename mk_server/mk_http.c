@@ -625,7 +625,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
 {
     int ret;
     int ret_file;
-    struct mimetype *mime;
+    struct mk_mimetype *mime;
     struct mk_list *head;
     struct mk_list *handlers;
     struct mk_plugin *plugin;
