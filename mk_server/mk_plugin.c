@@ -744,14 +744,15 @@ struct mk_plugin *mk_plugin_cap(char cap, struct mk_server *server)
     return NULL;
 }
 
-struct mk_handler_param *mk_handler_param_get(int id, struct mk_list *params)
+struct mk_vhost_handler_param *mk_handler_param_get(int id,
+                                                    struct mk_list *params)
 {
     int i = 0;
     struct mk_list *head;
 
     mk_list_foreach(head, params) {
         if (i == id) {
-            return mk_list_entry(head, struct mk_handler_param, _head);
+            return mk_list_entry(head, struct mk_vhost_handler_param, _head);
         }
         i++;
     }

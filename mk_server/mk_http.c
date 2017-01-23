@@ -76,7 +76,7 @@ void mk_http_request_init(struct mk_http_session *session,
     request->host.data = NULL;
     request->stage30_blocked = MK_FALSE;
     request->session = session;
-    request->host_conf = mk_list_entry_first(host_list, struct host, _head);
+    request->host_conf = mk_list_entry_first(host_list, struct mk_vhost, _head);
     request->uri_processed.data = NULL;
     request->real_path.data = NULL;
     request->handler_data = NULL;
@@ -138,7 +138,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     }
 
     /* Always assign the default vhost' */
-    sr->host_conf = mk_list_entry_first(hosts, struct host, _head);
+    sr->host_conf = mk_list_entry_first(hosts, struct mk_vhost, _head);
     sr->user_home = MK_FALSE;
 
     /* Valid request URI? */
@@ -183,7 +183,7 @@ static int mk_http_request_prepare(struct mk_http_session *cs,
     /* Assign the first node alias */
     alias = &sr->host_conf->server_names;
     sr->host_alias = mk_list_entry_first(alias,
-                                         struct host_alias, _head);
+                                         struct mk_vhost_alias, _head);
 
     if (sr->host.data) {
         /* Set the given port */
@@ -259,7 +259,8 @@ static void mk_request_premature_close(int http_status, struct mk_http_session *
     /* Raise error */
     if (http_status > 0) {
         if (!sr->host_conf) {
-            sr->host_conf = mk_list_entry_first(host_list, struct host, _head);
+            sr->host_conf = mk_list_entry_first(host_list,
+                                                struct mk_vhost, _head);
         }
         mk_http_error(http_status, cs, sr, server);
 
@@ -628,7 +629,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     struct mk_list *head;
     struct mk_list *handlers;
     struct mk_plugin *plugin;
-    struct mk_host_handler *h_handler;
+    struct mk_vhost_handler *h_handler;
     size_t index_length;
     size_t index_bytes;
     char *index_path = NULL;
@@ -727,7 +728,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         sr->uri_processed.data[sr->uri_processed.len] = '\0';
         handlers = &sr->host_conf->handlers;
         mk_list_foreach(head, handlers) {
-            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
+            h_handler = mk_list_entry(head, struct mk_vhost_handler, _head);
             if (regexec(&h_handler->match,
                         sr->uri_processed.data, 0, NULL, 0) != 0) {
                 continue;
@@ -844,7 +845,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
 
         handlers = &sr->host_conf->handlers;
         mk_list_foreach(head, handlers) {
-            h_handler = mk_list_entry(head, struct mk_host_handler, _head);
+            h_handler = mk_list_entry(head, struct mk_vhost_handler, _head);
             if (regexec(&h_handler->match,
                         uri, 0, NULL, 0) != 0) {
                 continue;
@@ -1176,7 +1177,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
     size_t count;
     mk_ptr_t message;
     mk_ptr_t page;
-    struct error_page *entry;
+    struct mk_vhost_error_page *entry;
     struct mk_list *head;
     struct file_info finfo;
     struct mk_iov *iov;
@@ -1194,7 +1195,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
 
         /* Lookup a customized error page */
         mk_list_foreach(head, &sr->host_conf->error_pages) {
-            entry = mk_list_entry(head, struct error_page, _head);
+            entry = mk_list_entry(head, struct mk_vhost_error_page, _head);
             if (entry->status != http_status) {
                 continue;
             }
