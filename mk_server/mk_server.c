@@ -28,7 +28,6 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_core.h>
 
-#include <signal.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/time.h>
@@ -518,21 +517,10 @@ void mk_server_loop(struct mk_server *server)
      * them so they can start processing connections.
      */
     if (server->scheduler_mode == MK_SCHEDULER_REUSEPORT) {
-        /*
-         * Hang here, basically do nothing as threads are doing the job. If the
-         * library mode is in use (a channel manager exists), just wait for
-         * events, otherwise just suspend.
-         */
-        //if (server->lib_ch_manager[0] > 0) {
-        //    mk_server_lib_wait(server);
-        //}
-        //else {
-        //    sigset_t mask;
-        //    sigprocmask(0, NULL, &mask);
-        //    sigsuspend(&mask);
-        //}
+        /* do thing :) */
     }
     else {
+        /* FIXME!: this old mode needs some checks on library mode */
         mk_server_loop_balancer(server);
     }
 }
