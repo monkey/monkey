@@ -298,26 +298,44 @@ int mk_config_set(mk_ctx_t *ctx, ...)
     return 0;
 }
 
-
-mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name)
+/* Given a vhost id, return the vhost context */
+static struct mk_vhost *mk_vhost_lookup(mk_ctx_t *ctx, int id)
 {
-    struct host *h;
-    struct host_alias *halias;
+    struct mk_vhost *host;
+    struct mk_list *head;
+
+    mk_list_foreach(head, &ctx->server->hosts) {
+        host = mk_list_entry(head, struct mk_vhost, _head);
+        if (host->id == id) {
+            return host;
+        }
+    }
+
+    return NULL;
+}
+
+int mk_vhost_create(mk_ctx_t *ctx, char *name)
+{
+    struct mk_vhost *h;
+    struct mk_vhost_alias *halias;
 
     /* Virtual host */
-    h = mk_mem_alloc_z(sizeof(struct host));
+    h = mk_mem_alloc_z(sizeof(struct mk_vhost));
     if (!h) {
-        return NULL;
+        return -1;
     }
+
+    /* Assign a virtual host id, we just set based on list size */
+    h->id = mk_list_size(&ctx->server->hosts);
     mk_list_init(&h->error_pages);
     mk_list_init(&h->server_names);
     mk_list_init(&h->handlers);
 
     /* Host alias */
-    halias = mk_mem_alloc_z(sizeof(struct host_alias));
+    halias = mk_mem_alloc_z(sizeof(struct mk_vhost_alias));
     if (!halias) {
         mk_mem_free(h);
-        return NULL;
+        return -1;
     }
 
     /* Host name */
@@ -330,15 +348,16 @@ mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name)
     mk_list_add(&halias->_head, &h->server_names);
     mk_list_add(&h->_head, &ctx->server->hosts);
 
-    return h;
+    /* Return the host id, that number is enough for further operations */
+    return h->id;
 }
 
-static int mk_vhost_set_property(mk_vhost_t *vh, char *k, char *v)
+static int mk_vhost_set_property(struct mk_vhost *vh, char *k, char *v)
 {
-    struct host_alias *ha;
+    struct mk_vhost_alias *ha;
 
     if (config_eq(k, "Name") == 0) {
-        ha = mk_mem_alloc(sizeof(struct host_alias));
+        ha = mk_mem_alloc(sizeof(struct mk_vhost_alias));
         if (!ha) {
             return -1;
         }
@@ -354,12 +373,19 @@ static int mk_vhost_set_property(mk_vhost_t *vh, char *k, char *v)
     return 0;
 }
 
-int mk_vhost_set(mk_vhost_t *vh, ...)
+int mk_vhost_set(mk_ctx_t *ctx, int vid, ...)
 {
     int ret;
     char *key;
     char *value;
     va_list va;
+    struct mk_vhost *vh;
+
+    /* Lookup the virtual host */
+    vh = mk_vhost_lookup(ctx, vid);
+    if (!vh) {
+        return -1;
+    }
 
     va_start(va, vh);
 
@@ -381,13 +407,18 @@ int mk_vhost_set(mk_vhost_t *vh, ...)
     return 0;
 }
 
-int mk_vhost_handler(mk_vhost_t *vh, char *regex,
+int mk_vhost_handler(mk_ctx_t *ctx, int vid, char *regex,
                      void (*cb)(mk_request_t *, void *), void *data)
 {
-    (void) vh;
-    struct mk_host_handler *handler;
+    struct mk_vhost *vh;
+    struct mk_vhost_handler *handler;
     void (*_cb) (struct mk_http_request *, void *);
 
+    /* Lookup the virtual host */
+    vh = mk_vhost_lookup(ctx, vid);
+    if (!vh) {
+        return -1;
+    }
 
     _cb = cb;
     handler = mk_vhost_handler_match(regex, _cb, data);

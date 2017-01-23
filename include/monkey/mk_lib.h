@@ -34,7 +34,6 @@ struct mk_lib_ctx {
 };
 
 typedef struct mk_lib_ctx mk_ctx_t;
-typedef struct host mk_vhost_t;
 typedef struct mk_http_request mk_request_t;
 typedef struct mk_http_session mk_session_t;
 
@@ -46,9 +45,9 @@ MK_EXPORT int mk_destroy(mk_ctx_t *ctx);
 
 MK_EXPORT int mk_config_set(mk_ctx_t *ctx, ...);
 
-MK_EXPORT mk_vhost_t *mk_vhost_create(mk_ctx_t *ctx, char *name);
-MK_EXPORT int mk_vhost_set(mk_vhost_t *vh, ...);
-MK_EXPORT int mk_vhost_handler(mk_vhost_t *vh, char *regex,
+MK_EXPORT int mk_vhost_create(mk_ctx_t *ctx, char *name);
+MK_EXPORT int mk_vhost_set(mk_ctx_t *ctx, int vid, ...);
+MK_EXPORT int mk_vhost_handler(mk_ctx_t *ctx, int vid, char *regex,
                                void (*cb)(mk_request_t *, void *), void *data);
 
 MK_EXPORT int mk_http_status(mk_request_t *req, int status);
