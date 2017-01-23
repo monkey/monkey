@@ -245,8 +245,8 @@ void mk_cheetah_cmd_plugins(struct mk_server *server)
 
 void mk_cheetah_cmd_vhosts(struct mk_server *server)
 {
-    struct host *entry_host;
-    struct host_alias *entry_alias;
+    struct mk_vhost *entry_host;
+    struct mk_vhost_alias *entry_alias;
     struct mk_rconf_section *section;
     struct mk_rconf_entry *entry;
     struct mk_list *hosts = &server->hosts;
@@ -257,17 +257,17 @@ void mk_cheetah_cmd_vhosts(struct mk_server *server)
     struct mk_list *head_entries;
 
     mk_list_foreach(head_host, hosts) {
-        entry_host = mk_list_entry(head_host, struct host, _head);
+        entry_host = mk_list_entry(head_host, struct mk_vhost, _head);
 
         aliases = &entry_host->server_names;
-        entry_alias = mk_list_entry_first(aliases, struct host_alias, _head);
+        entry_alias = mk_list_entry_first(aliases, struct mk_vhost_alias, _head);
         CHEETAH_WRITE("%s[%sVHost '%s'%s%s]%s\n",
                       ANSI_BOLD, ANSI_YELLOW,
                       entry_alias->name, ANSI_BOLD, ANSI_WHITE, ANSI_RESET);
 
         CHEETAH_WRITE("      - Names         : ");
         mk_list_foreach(head_alias, aliases) {
-            entry_alias = mk_list_entry(head_alias, struct host_alias, _head);
+            entry_alias = mk_list_entry(head_alias, struct mk_vhost_alias, _head);
             CHEETAH_WRITE("%s ", entry_alias->name);
         }
         CHEETAH_WRITE("\n");

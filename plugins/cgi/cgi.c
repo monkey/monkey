@@ -401,7 +401,7 @@ int mk_cgi_stage30(struct mk_plugin *plugin,
 {
     char *interpreter = NULL;
     char *mimetype = NULL;
-    struct mk_handler_param *param;
+    struct mk_vhost_handler_param *param;
     (void) plugin;
 
     const char *const file = sr->real_path.data;

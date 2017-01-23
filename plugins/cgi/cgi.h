@@ -53,7 +53,7 @@ struct cgi_match_t {
 };
 
 struct cgi_vhost_t {
-    struct host *host;
+    struct mk_vhost *host;
     struct mk_list matches;
 };
 

@@ -229,7 +229,7 @@ struct plugin_api
     int (*kernel_features_print) (char *, size_t, struct mk_server *);
 
     /* Handler */
-    struct mk_handler_param *(*handler_param_get)(int, struct mk_list *);
+    struct mk_vhost_handler_param *(*handler_param_get)(int, struct mk_list *);
 
 #ifdef JEMALLOC_STATS
     int (*je_mallctl) (const char *, void *, size_t *, void *, size_t);
@@ -366,6 +366,7 @@ struct mk_plugin *mk_plugin_cap(char cap, struct mk_server *server);
 struct mk_plugin *mk_plugin_lookup(char *shortname, struct mk_server *server);
 
 void mk_plugin_load_static(struct mk_server *server);
-struct mk_handler_param *mk_handler_param_get(int id, struct mk_list *params);
+struct mk_vhost_handler_param *mk_handler_param_get(int id,
+                                                    struct mk_list *params);
 
 #endif
