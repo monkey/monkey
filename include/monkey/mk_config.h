@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <monkey/mk_core.h>
+#include <rbtree.h>
 
 #ifndef O_NOATIME
 #define O_NOATIME       01000000
@@ -129,7 +130,10 @@ struct mk_server
     char *transport_layer;
 
     /* Define the default mime type when is not possible to find the proper one */
-    char *default_mimetype;
+    struct mk_list mimetype_list;
+    struct rb_tree mimetype_rb_head;
+    void *mimetype_default;
+    char *mimetype_default_str;
 
     char server_signature[16];
     char server_signature_header[32];

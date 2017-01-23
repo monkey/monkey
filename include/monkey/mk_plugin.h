@@ -184,7 +184,7 @@ struct plugin_api
     char *(*ev_backend) ();
 
     /* Mime type */
-    struct mimetype *(*mimetype_lookup) (char *);
+    struct mimetype *(*mimetype_lookup) (struct mk_server *, char *);
 
     /* configuration reader functions */
     struct mk_rconf *(*config_open) (const char *);

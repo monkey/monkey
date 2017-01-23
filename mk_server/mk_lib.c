@@ -22,6 +22,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
@@ -95,7 +96,7 @@ static void mk_lib_worker(void *data)
         if (val == MK_SERVER_SIGNAL_STOP) {
             mk_exit_all(server);
             fflush(stdout);
-            pthread_kill(pthread_self(), NULL);
+            pthread_kill(pthread_self(), 0);
         }
     }
 
@@ -144,7 +145,6 @@ int mk_stop(mk_ctx_t *ctx)
 {
     int n;
     uint64_t val;
-    pthread_t tid;
     struct mk_server *server = ctx->server;
 
     val = MK_SERVER_SIGNAL_STOP;
@@ -258,7 +258,7 @@ int mk_config_set_property(struct mk_server *server, char *k, char *v)
         server->symlink = b;
     }
     else if (config_eq(k, "DefaultMimeType") == 0) {
-        mk_string_build(&server->default_mimetype, &len, "%s\r\n", v);
+        mk_string_build(&server->mimetype_default_str, &len, "%s\r\n", v);
     }
     else if (config_eq(k, "FDT") == 0) {
         b = bool_val(v);
@@ -387,7 +387,7 @@ int mk_vhost_set(mk_ctx_t *ctx, int vid, ...)
         return -1;
     }
 
-    va_start(va, vh);
+    va_start(va, vid);
 
     while ((key = va_arg(va, char *))) {
         value = va_arg(va, char *);

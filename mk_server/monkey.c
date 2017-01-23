@@ -23,6 +23,7 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_clock.h>
+#include <monkey/mk_mimetype.h>
 
 void mk_server_info(struct mk_server *server)
 {
@@ -123,6 +124,8 @@ struct mk_server *mk_server_create()
 #endif
 
     mk_config_set_init_values(server);
+
+    mk_mimetype_init(server);
 
     return server;
 }

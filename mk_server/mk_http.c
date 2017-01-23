@@ -918,9 +918,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     }
 
     /* Matching MimeType  */
-    mime = mk_mimetype_find(&sr->real_path);
+    mime = mk_mimetype_find(server, &sr->real_path);
     if (!mime) {
-        mime = mimetype_default;
+        mime = server->mimetype_default;
     }
 
     if (sr->file_info.is_directory == MK_TRUE) {
