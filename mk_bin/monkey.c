@@ -121,6 +121,7 @@ int main(int argc, char **argv)
     char *sites_conf_dir = NULL;
     char *plugins_conf_dir = NULL;
     char *mimes_conf_file = NULL;
+    struct mk_server *server;
 
     static const struct option long_opts[] = {
         { "configdir",              required_argument,  NULL, 'c' },
