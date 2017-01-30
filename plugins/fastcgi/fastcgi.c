@@ -163,9 +163,9 @@ int mk_fastcgi_plugin_exit()
     return 0;
 }
 
-int mk_fastcgi_master_init(struct mk_server_config *config)
+int mk_fastcgi_master_init(struct mk_server *server)
 {
-    (void) config;
+    (void) server;
     return 0;
 }
 
