@@ -342,7 +342,7 @@ static int polar_load_certs(const struct polar_config *conf)
 #endif // defined(MBEDTLS_CERTS_C)
     }
     else if (conf->cert_chain_file != NULL) {
-        ret = mbedtls_x509_crt_parse_file(server_context->ca_cert.next,
+        ret = mbedtls_x509_crt_parse_file(&server_context->ca_cert,
                                   conf->cert_chain_file);
 
         if (ret) {
