@@ -896,6 +896,7 @@ int cb_fastcgi_on_connect(void *data)
 }
 
 struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
+                                      struct mk_fcgi_conf *fcgi_conf,
                                       struct mk_http_session *cs,
                                       struct mk_http_request *sr)
 {
@@ -947,13 +948,13 @@ struct fcgi_handler *fcgi_handler_new(struct mk_plugin *plugin,
     h->buf_len = FCGI_RECORD_HEADER_SIZE;
 
     /* Request and async connection to the server */
-    if (fcgi_conf.server_addr) {
-        h->server_fd = mk_api->socket_connect(fcgi_conf.server_addr,
-                                              atoi(fcgi_conf.server_port),
+    if (fcgi_conf->server_addr) {
+        h->server_fd = mk_api->socket_connect(fcgi_conf->server_addr,
+                                              atoi(fcgi_conf->server_port),
                                               MK_TRUE);
     }
-    else if (fcgi_conf.server_path) {
-        h->server_fd = mk_api->socket_open(fcgi_conf.server_path, MK_TRUE);
+    else if (fcgi_conf->server_path) {
+        h->server_fd = mk_api->socket_open(fcgi_conf->server_path, MK_TRUE);
     }
 
     if (h->server_fd == -1) {
