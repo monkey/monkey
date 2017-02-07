@@ -201,9 +201,14 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     conn->channel.event = event;                /* parent event ref */
     mk_list_init(&conn->channel.streams);
 
+    struct rb_node **new;
+    struct rb_node *parent;
+
+ sched_node_insert:
+
     /* Register the entry in the red-black tree queue for fast lookup */
-    struct rb_node **new = &(sched->rb_queue.rb_node);
-    struct rb_node *parent = NULL;
+    new = &(sched->rb_queue.rb_node);
+    parent = NULL;
 
     /* Figure out where to put new node */
     while (*new) {
@@ -215,8 +220,16 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
         else if (conn->event.fd > this->event.fd)
             new = &((*new)->rb_right);
         else {
-            mk_bug(1);
-            break;
+            /*
+             * FIXME: if we hit here means there is an unexpected condition where the
+             * entry already exists. For now while we troubleshoot this issue that
+             * only happen under very uncertain conditions, we place a temporal
+             * workaround.
+             *
+             * This is far to be elegant but at least let the server keep running.
+             */
+            mk_sched_remove_client(this, sched);
+            goto sched_node_insert;
         }
     }
 
