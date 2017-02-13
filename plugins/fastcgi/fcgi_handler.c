@@ -565,7 +565,9 @@ int fcgi_exit(struct fcgi_handler *handler)
      * some corruption. If there is still some data enqueued, just
      * defer the exit process.
      */
-    if (handler->eof == MK_FALSE && handler->active == MK_TRUE) {
+    if (mk_channel_is_empty(handler->cs->channel) != 0 &&
+        handler->eof == MK_FALSE &&
+        handler->active == MK_TRUE) {
         MK_TRACE("[fastcgi=%i] deferring exit, EOF stream",
                  handler->server_fd);
 
