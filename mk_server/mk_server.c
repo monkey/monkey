@@ -27,6 +27,7 @@
 #include <monkey/mk_server_tls.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_core.h>
+#include <monkey/mk_http_thread.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -478,7 +479,7 @@ void mk_server_worker_loop(struct mk_server *server)
                 continue;
             }
             else if (event->type == MK_EVENT_THREAD) {
-                mk_http_event(event);
+                mk_http_thread_event(event);
             }
         }
         mk_sched_event_free_all(sched);

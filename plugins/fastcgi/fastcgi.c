@@ -113,6 +113,7 @@ static void mk_fastcgi_stage30_thread(struct mk_plugin *plugin,
     (void) n_params;
     (void) params;
 
+    printf("entering thread\n");
     handler = fcgi_handler_new(cs, sr);
     if (!handler) {
         fprintf(stderr, "Could not create handler");

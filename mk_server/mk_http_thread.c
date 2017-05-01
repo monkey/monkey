@@ -69,7 +69,7 @@ struct mk_http_thread *mk_http_thread_new(struct mk_plugin *plugin,
     return mth;
 }
 
-int mk_http_event(struct mk_event *event)
+int mk_http_thread_event(struct mk_event *event)
 {
     struct mk_net_connection *conn;
 

@@ -83,6 +83,7 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
             mk_mem_free(conn);
             return NULL;
         }
+
         MK_EVENT_NEW(&conn->event);
 
         sched = mk_sched_get_thread_conf();
@@ -92,7 +93,6 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
         if (ret == -1) {
             close(fd);
             mk_mem_free(conn);
-            printf("event add fail\n");
             return NULL;
         }
 
@@ -133,4 +133,119 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
     }
 
     return NULL;
+}
+
+int mk_net_conn_write(struct mk_net_connection *conn,
+                      void *data, size_t len, size_t *out_len)
+{
+    int ret = 0;
+    int error;
+    ssize_t bytes;
+    size_t total = 0;
+    size_t send;
+    socklen_t slen = sizeof(error);
+    struct mk_thread *th = pthread_getspecific(mk_thread_key);
+    struct mk_sched_worker *sched;
+
+    sched = mk_sched_get_thread_conf();
+    if (!sched) {
+        return -1;
+    }
+
+ retry:
+    error = 0;
+
+    if (len - total > 524288) {
+        send = 524288;
+    }
+    else {
+        send = (len - total);
+    }
+    bytes = write(conn->fd, data + total, send);
+    if (bytes == -1) {
+        if (errno == EAGAIN) {
+            MK_EVENT_NEW(&conn->event);
+            conn->thread = th;
+
+            ret = mk_event_add(sched->loop,
+                               conn->fd,
+                               MK_EVENT_THREAD,
+                               MK_EVENT_WRITE, &conn->event);
+            if (ret == -1) {
+                /*
+                 * If we failed here there no much that we can do, just
+                 * let the caller we failed
+                 */
+                return -1;
+            }
+
+            /*
+             * Return the control to the parent caller, we need to wait for
+             * the event loop to get back to us.
+             */
+            mk_thread_yield(th, MK_FALSE);
+
+            /* We got a notification, remove the event registered */
+            ret = mk_event_del(sched->loop, &conn->event);
+            if (ret == -1) {
+                return -1;
+            }
+
+            /* Check the connection status */
+            if (conn->event.mask & MK_EVENT_WRITE) {
+                ret = getsockopt(conn->fd, SOL_SOCKET, SO_ERROR, &error, &slen);
+                if (ret == -1) {
+                    fprintf(stderr, "[io] could not validate socket status");
+                    return -1;
+                }
+
+                if (error != 0) {
+                    /* Connection is broken, not much to do here */
+                    fprintf(stderr, "[io] TCP connection failed: %s:%i",
+                            conn->host, conn->port);
+                    return -1;
+                }
+
+                MK_EVENT_NEW(&conn->event);
+                goto retry;
+            }
+            else {
+                return -1;
+            }
+
+        }
+        else {
+            return -1;
+        }
+    }
+
+    /* Update counters */
+    total += bytes;
+    if (total < len) {
+        if (conn->event.status == MK_EVENT_NONE) {
+            conn->event.mask = MK_EVENT_EMPTY;
+            conn->thread = th;
+            ret = mk_event_add(sched->loop,
+                               conn->fd,
+                               MK_EVENT_THREAD,
+                               MK_EVENT_WRITE, &conn->event);
+            if (ret == -1) {
+                /*
+                 * If we failed here there no much that we can do, just
+                 * let the caller we failed
+                 */
+                return -1;
+            }
+        }
+        mk_thread_yield(th, MK_FALSE);
+        goto retry;
+    }
+
+    if (conn->event.status & MK_EVENT_REGISTERED) {
+        /* We got a notification, remove the event registered */
+        ret = mk_event_del(sched->loop, &conn->event);
+    }
+
+    *out_len = total;
+    return bytes;
 }

@@ -95,7 +95,7 @@ static MK_INLINE void mk_thread_resume(struct mk_thread *th)
     swapcontext(&th->caller, &th->callee);
 }
 
-static struct mk_thread *mk_thread_new(size_t data_size,
+static inline struct mk_thread *mk_thread_new(size_t data_size,
                                        void (*cb_destroy) (void *))
 
 {
