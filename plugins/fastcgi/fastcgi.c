@@ -18,26 +18,27 @@
  */
 
 #include <monkey/mk_api.h>
+#include <dirent.h>
 
 #include "fastcgi.h"
 #include "fcgi_handler.h"
 
-static int mk_fastcgi_config(char *path)
+#define MAX_FCGI_SERVERS 5
+struct mk_fcgi_conf* serverList[MAX_FCGI_SERVERS] = {NULL};
+
+static int mk_fastcgi_config(struct mk_fcgi_conf *fcgi_conf, char *path)
 {
     int ret;
     int sep;
-    char *file = NULL;
     char *cnf_srv_name = NULL;
     char *cnf_srv_addr = NULL;
     char *cnf_srv_port = NULL;
     char *cnf_srv_path = NULL;
-    unsigned long len;
     struct file_info finfo;
     struct mk_rconf *conf;
     struct mk_rconf_section *section;
 
-    mk_api->str_build(&file, &len, "%sfastcgi.conf", path);
-    conf = mk_api->config_open(file);
+    conf = mk_api->config_create(path);
     if (!conf) {
         return -1;
     }
@@ -92,10 +93,10 @@ static int mk_fastcgi_config(char *path)
     }
 
     /* Set the global configuration */
-    fcgi_conf.server_name = cnf_srv_name;
-    fcgi_conf.server_addr = cnf_srv_addr;
-    fcgi_conf.server_port = cnf_srv_port;
-    fcgi_conf.server_path = cnf_srv_path;
+    fcgi_conf->server_name = cnf_srv_name;
+    fcgi_conf->server_addr = cnf_srv_addr;
+    fcgi_conf->server_port = cnf_srv_port;
+    fcgi_conf->server_path = cnf_srv_path;
 
     return 0;
 }
@@ -111,7 +112,31 @@ int mk_fastcgi_stage30(struct mk_plugin *plugin,
     (void) params;
     struct fcgi_handler *handler;
 
-    handler = fcgi_handler_new(plugin, cs, sr);
+    char * serverName = NULL;
+    struct mk_fcgi_conf *fcgi_conf = serverList[0];
+    int i = 0;
+
+    struct mk_vhost_handler_param *param;
+
+    if (n_params > 0) {
+        /* ServerName */
+        param = mk_api->handler_param_get(0, params);
+        if (param) {
+          serverName = param->p.data;
+        }
+    }
+
+    if (serverName) {
+        while (serverList[i] && i < MAX_FCGI_SERVERS) {
+            if (strncasecmp(serverName, serverList[i]->server_name, strlen(serverName)) == 0) {
+                fcgi_conf = serverList[i];
+                break;
+            }
+            ++i;
+        }
+    }
+
+    handler = fcgi_handler_new(plugin, fcgi_conf, cs, sr);
     if (!handler) {
         return MK_PLUGIN_RET_NOT_ME;
     }
@@ -146,20 +171,63 @@ int mk_fastcgi_stage30_hangup(struct mk_plugin *plugin,
 
 int mk_fastcgi_plugin_init(struct plugin_api **api, char *confdir)
 {
-    int ret;
-
     mk_api = *api;
 
-    /* read global configuration */
-    ret = mk_fastcgi_config(confdir);
-    if (ret == -1) {
-        mk_warn("[fastcgi] configuration error/missing, plugin disabled.");
+    struct dirent *entry;
+    DIR *dir = opendir( confdir );
+    struct mk_fcgi_conf *fcgi_conf;
+
+    char *file = NULL;
+    unsigned long len;
+
+    int count = 0;
+    while( ( entry = readdir( dir )) != NULL  && count < MAX_FCGI_SERVERS)
+    {
+        if (entry->d_name[0] == '.') {
+            continue;
+        }
+        if (strcmp((char *) entry->d_name, "..") == 0) {
+            continue;
+        }
+        if (entry->d_name[strlen(entry->d_name) - 1] ==  '~') {
+            continue;
+        }
+        if (strcasecmp((char *) entry->d_name, "default") == 0) {
+            continue;
+        }
+
+        fcgi_conf = mk_api->mem_alloc(sizeof(struct mk_fcgi_conf));
+        if (!fcgi_conf) {
+            mk_err("malloc failed: %s", strerror(errno));
+            return -1;
+        }
+
+        file = NULL;
+        mk_api->str_build(&file, &len, "%s%s", confdir, entry->d_name);
+
+        /* read each configurations */
+        if (mk_fastcgi_config(fcgi_conf, file) == -1) {
+            mk_mem_free(fcgi_conf);
+            mk_warn("[fastcgi] configuration %s error/missing, plugin disabled.", file);
+        }
+        else {
+            serverList[count] = fcgi_conf;
+            ++count;
+        }
     }
-	return ret;
+    closedir( dir );
+
+    return count > 0 ? 0 : -1;
 }
 
 int mk_fastcgi_plugin_exit()
 {
+    int i = 0;
+    while (serverList[i])
+    {
+        mk_api->mem_free(serverList[i]);
+        ++i;
+    }
     return 0;
 }
 

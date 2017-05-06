@@ -31,6 +31,4 @@ struct mk_fcgi_conf {
     char *server_port;
 };
 
-struct mk_fcgi_conf fcgi_conf;
-
 #endif
