@@ -184,6 +184,10 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
         }
         else if (input->type == MK_STREAM_IOV) {
             iov   = input->buffer;
+            if (!iov) {
+                return MK_CHANNEL_EMPTY;
+            }
+
             bytes = mk_sched_conn_writev(channel, iov);
 
             MK_TRACE("[CH %i] STREAM_IOV, wrote %d bytes",
