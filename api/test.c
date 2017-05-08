@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define API_ADDR   "127.0.0.1"
+#define API_PORT   "2020"
+
 void cb_worker(void *data)
 {
     printf("test worker callback; data=%p\n", data);
@@ -29,7 +32,7 @@ int main()
 
     ctx = mk_create();
     mk_config_set(ctx,
-                  "Listen", "2020",
+                  "Listen", API_PORT,
                   NULL);
 
     vid = mk_vhost_create(ctx, NULL);
@@ -42,6 +45,7 @@ int main()
                        cb_worker,
                        ctx);
 
+    mk_info("Service: http://%s:%s/test",  API_ADDR, API_PORT);
     mk_start(ctx);
 
     sleep(60);
