@@ -481,15 +481,71 @@ int mk_http_header(mk_request_t *req,
 int mk_http_send(mk_request_t *req, char *buf, size_t len,
                  void (*cb_finish)(mk_request_t *))
 {
+    int chunk_len;
     int ret;
+    char chunk_pre[32];
     (void) cb_finish;
 
+    if (req->headers.status == -1) {
+        /* Cannot append data if the status have not been set */
+        mk_err("HTTP: set the response status first");
+        return -1;
+    }
+
+    /* Chunk encoding prefix */
+    chunk_len = snprintf(chunk_pre, sizeof(chunk_pre) - 1, "%zx\r\n", len);
+    if (chunk_len < 0) {
+        return -1;
+    }
+
+    int i;
+    for (i = 0; i < chunk_len; i++) {
+        printf("%X ", chunk_pre[i]);
+    }
+
+    printf("\nchunk_len: %i\n", chunk_len);
+    ret = mk_stream_in_raw(&req->stream, NULL,
+                           chunk_pre, chunk_len, NULL, NULL);
+    if (ret != 0) {
+        return -1;
+    }
+
+    /* Append raw data */
     ret = mk_stream_in_raw(&req->stream, NULL,
                            buf, len, NULL, NULL);
     if (ret == 0) {
-        /* Update content length */
-        req->headers.content_length += len;
+        /* Update count of bytes */
+        req->stream_size += len;
     }
 
+    /*
+     * Let's keep it simple for now: if the headers have not been sent, do it
+     * now and then send the body content just queued.
+     */
+    if (req->headers.sent == MK_FALSE) {
+        /* Force chunked-transfer encoding */
+        req->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        mk_header_prepare(req->session, req, req->session->server);
+    }
+
+    /* Flush channel data */
+
+    //mk_channel_write(req->session->conn->channel, NULL);
+
+    /* FIXME: decide when to set content-length */
+    /* Update content length */
+    //req->headers.content_length += len;
+
     return ret;
+}
+
+int mk_http_done(mk_request_t *req)
+{
+    (void) req;
+
+    if (req->headers.transfer_encoding == MK_HEADER_TE_TYPE_CHUNKED) {
+        /* Append end-of-chunk bytes */
+        mk_http_send(req, "0\r\n\r\n", 5, NULL);
+    }
+    return 0;
 }

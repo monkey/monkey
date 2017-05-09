@@ -90,6 +90,9 @@ struct mk_http_request
     long port;
     /*------------*/
 
+    /* Body Stream size */
+    uint64_t stream_size;
+
     /* Streams handling: headers and static file */
     struct mk_stream stream;
     struct mk_stream_input in_headers;

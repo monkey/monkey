@@ -16,13 +16,19 @@ void cb_worker(void *data)
 
 void cb_main(mk_request_t *request, void *data)
 {
+    int i;
     char *buf = "this is a test\n";
     int len = 15;
     (void) data;
 
     mk_http_status(request, 200);
     mk_http_header(request, "X-Monkey", 8, "OK", 2);
-    mk_http_send(request, buf, len, NULL);
+
+    for (i = 0; i < 10; i++) {
+        mk_http_send(request, buf, len, NULL);
+    }
+
+    mk_http_done(request);
 }
 
 int main()

@@ -427,7 +427,7 @@ void mk_header_response_reset(struct response_headers *header)
 {
     struct mk_iov *iov;
 
-    header->status = 0;
+    header->status = -1;
     header->sent = MK_FALSE;
     header->ranges[0] = -1;
     header->ranges[1] = -1;

@@ -317,7 +317,7 @@ static inline void mk_sched_conn_timeout_del(struct mk_sched_conn *conn)
 #define mk_sched_conn_read(conn, buf, s)                \
     conn->net->read(conn->event.fd, buf, s)
 #define mk_sched_conn_write(ch, buf, s)         \
-    ch->io->write(ch->fd, buf, s)
+    mk_net_conn_write(ch, buf, s)
 #define mk_sched_conn_writev(ch, iov)           \
     ch->io->writev(ch->fd, iov)
 #define mk_sched_conn_sendfile(ch, f_fd, f_offs, f_count)   \

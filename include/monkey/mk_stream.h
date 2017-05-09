@@ -67,6 +67,7 @@ struct mk_channel {
     struct mk_event *event;
     struct mk_plugin_network *io;
     struct mk_list streams;
+    void *thread;
 };
 
 /* Stream input source */

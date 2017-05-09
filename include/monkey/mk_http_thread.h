@@ -22,6 +22,10 @@
 
 #include <monkey/mk_http.h>
 #include <monkey/mk_thread.h>
+#include <monkey/mk_vhost.h>
+
+#define MK_HTTP_THREAD_LIB     0
+#define MK_HTTP_THREAD_PLUGIN  1
 
 struct mk_http_thread {
     struct mk_http_session *session;  /* HTTP session            */
@@ -30,16 +34,19 @@ struct mk_http_thread {
     struct mk_list _head;             /* Link to worker->threads */
 };
 
-static MK_INLINE void mk_http_thread_resume(struct mk_thread *thread)
+static MK_INLINE void mk_http_thread_resume(struct mk_http_thread *mth)
 {
-    mk_thread_resume(thread);
+    mk_thread_resume(mth->parent);
 }
 
-struct mk_http_thread *mk_http_thread_new(struct mk_plugin *plugin,
+struct mk_http_thread *mk_http_thread_new(int type,
+                                          struct mk_vhost_handler *handler,
                                           struct mk_http_session *session,
                                           struct mk_http_request *request,
                                           int n_params,
                                           struct mk_list *params);
 int mk_http_thread_event(struct mk_event *event);
+
+int mk_http_thread_start(struct mk_http_thread *mth);
 
 #endif

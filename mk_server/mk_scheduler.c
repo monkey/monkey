@@ -429,9 +429,6 @@ void *mk_sched_launch_worker_loop(void *data)
 
     mk_mem_free(thinfo);
 
-
-    mk_thread_prepare();
-
     /* init server thread loop */
     mk_server_worker_loop(server);
 
@@ -507,6 +504,10 @@ int mk_sched_init(struct mk_server *server)
 
     /* Map context into server context */
     server->sched_ctx = ctx;
+
+    /* co-routing thread initialization */
+    mk_thread_prepare();
+
     return 0;
 }
 
@@ -709,7 +710,6 @@ int mk_sched_event_write(struct mk_sched_conn *conn,
     struct mk_event *event;
 
     MK_TRACE("[FD %i] Connection Handler / write", conn->event.fd);
-
 
     ret = mk_channel_write(&conn->channel, &count);
     if (ret == MK_CHANNEL_FLUSH || ret == MK_CHANNEL_BUSY) {
