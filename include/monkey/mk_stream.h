@@ -32,8 +32,6 @@
 #define MK_STREAM_IOV       1  /* mk_iov struct        */
 #define MK_STREAM_FILE      2  /* opened file          */
 #define MK_STREAM_SOCKET    3  /* socket, scared..     */
-#define MK_STREAM_COPYBUF   4  /* raw data, copy data into a dynamic buffer */
-#define MK_STREAM_EOF       5  /* end of stream, trigger callback */
 
 /* Channel return values for write event */
 #define MK_CHANNEL_DONE     1  /* channel consumed all streams */
@@ -176,11 +174,6 @@ static inline int mk_stream_input(struct mk_stream *stream,
         iov = buffer;
         in->bytes_total = iov->total_len;
     }
-    else if (type == MK_STREAM_COPYBUF) {
-        in->buffer = mk_mem_alloc(size);
-        in->bytes_total = size;
-        memcpy(in->buffer, buffer, size);
-    }
     else {
         in->bytes_total = size;
     }
@@ -229,35 +222,6 @@ static inline int mk_stream_in_raw(struct mk_stream *stream,
     return mk_stream_input(stream,
                            in,
                            MK_STREAM_RAW,
-                           -1,
-                           buf, length,
-                           0,
-                           cb_consumed, cb_finished);
-}
-
-static inline int mk_stream_in_eof(struct mk_stream *stream,
-                                   struct mk_stream_input *in,
-                                   void (*cb_finished)(struct mk_stream_input *))
-{
-    return mk_stream_input(stream,
-                           in,
-                           MK_STREAM_EOF,
-                           -1,
-                           NULL, 0,
-                           0,
-                           NULL, cb_finished);
-}
-
-
-static inline int mk_stream_in_cbuf(struct mk_stream *stream,
-                                    struct mk_stream_input *in,
-                                    char *buf, size_t length,
-                                    void (*cb_consumed)(struct mk_stream_input *, long),
-                                    void (*cb_finished)(struct mk_stream_input *))
-{
-    return mk_stream_input(stream,
-                           in,
-                           MK_STREAM_COPYBUF,
                            -1,
                            buf, length,
                            0,

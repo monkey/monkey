@@ -67,28 +67,6 @@ static inline void consume_raw(struct mk_stream_input *in, size_t bytes)
     }
 }
 
-static inline void consume_copybuf(struct mk_stream_input *in, size_t bytes)
-{
-    /*
-     * Copybuf is a dynamic buffer allocated when the stream was configured,
-     * if the number of bytes consumed is equal to the total size, the buffer
-     * can be freed, otherwise we need to adjust the buffer for the next
-     * round of 'write'.
-     *
-     * Note: we don't touch the stream->bytes_total field as this is adjusted
-     * on the caller mk_channel_write().
-     */
-    if (bytes == in->bytes_total) {
-        mk_mem_free(in->buffer);
-        in->buffer = NULL;
-    }
-    else {
-        memmove(in->buffer,
-                in->buffer + bytes,
-                in->bytes_total - bytes);
-    }
-}
-
 /*
  * It 'intent' to write a few streams over the channel and alter the
  * channel notification side if required: READ -> WRITE.
@@ -138,12 +116,6 @@ int mk_channel_flush(struct mk_channel *channel)
 
 int mk_stream_in_release(struct mk_stream_input *in)
 {
-    if (in->type == MK_STREAM_COPYBUF) {
-        if (in->buffer) {
-            mk_mem_free(in->buffer);
-        }
-    }
-
     mk_stream_input_unlink(in);
     if (in->dynamic == MK_TRUE) {
         mk_mem_free(in);
@@ -197,15 +169,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
                 mk_iov_consume(iov, bytes);
             }
         }
-        else if (input->type == MK_STREAM_COPYBUF) {
-            bytes = mk_sched_conn_write(channel,
-                                        input->buffer, input->bytes_total);
-            MK_TRACE("[CH %i] STREAM_COPYBUF, bytes=%zd/%lu",
-                     channel->fd, bytes, stream->bytes_total);
-            if (bytes > 0) {
-                consume_copybuf(input, bytes);
-            }
-        }
         else if (input->type == MK_STREAM_RAW) {
             bytes = mk_sched_conn_write(channel,
                                         input->buffer, input->bytes_total);
@@ -214,13 +177,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
             if (bytes > 0) {
                 consume_raw(input, bytes);
             }
-        }
-        else if (input->type == MK_STREAM_EOF) {
-            if (input->cb_finished) {
-                input->cb_finished(input);
-            }
-            mk_stream_release(stream);
-            return MK_CHANNEL_DONE;
         }
 
         if (bytes > 0) {
