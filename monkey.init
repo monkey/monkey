@@ -1,0 +1,96 @@
+#!/bin/sh
+# Description: Starts and stops the Monkey service
+# chkconfig: - 80 30
+
+prefix=/usr
+exec_prefix=${prefix}
+MONKEY=${exec_prefix}/sbin/monkey
+PIDFILE=/var/run/monkey.pid
+
+status_monkey () {
+        if ps -p $monkeyPID > /dev/null 2>&1; then
+                return 0
+        fi
+
+        return 1
+}
+
+printstatus_monkey() {
+        if status_monkey $1 $2; then
+                echo "monkey (pid $monkeyPID) is running..."
+        else
+                echo "monkey is not running"
+        fi
+}
+
+killproc_monkey () {
+        kill $2 $monkeyPID
+}
+
+pid_monkey () {
+        if test ! -f ${PIDFILE}; then
+        echo "No lock file found in ${PIDFILE}"
+        exit 1
+        fi
+        monkeyPID=`head -n 1 ${PIDFILE}`
+}
+
+# Check that monkey exists.
+if [ ! -f ${MONKEY} ]; then
+        echo "Executable file ${MONKEY} not found.  Exiting."
+        exit 1
+fi
+
+# See how we were called.
+case "$1" in
+        start)
+                echo -n "Starting monkey: "
+                echo
+                if [ -f ${PIDFILE} ]; then
+                        pid_monkey
+                        printstatus_monkey monkey
+                else
+                        /usr/sbin/monkey --daemon
+                fi
+                ;;
+
+        stop)
+                echo -n "Stopping monkey: "
+                echo
+                pid_monkey
+                killproc_monkey monkey
+
+                for i in 1 2 3 4 5 6 7 8 9 10 ; do
+                if status_monkey > /dev/null; then
+                        echo -n '.'
+                        sleep 1
+                else
+                        break
+                fi
+                done
+                if status_monkey > /dev/null; then
+                        echo ''
+                        echo 'Warning - monkey did not exit in a timely manner'
+                else
+                        rm -f ${PIDFILE}
+                        echo 'done.'
+                fi
+                ;;
+
+        status)
+                pid_monkey
+                printstatus_monkey monkey
+                ;;
+
+        restart)
+                printf "Restarting monkey..."
+                $0 stop
+                $0 start
+                ;;
+
+        *)
+                echo "Usage: monkey {start|stop|restart|status}"
+                exit 1
+                ;;
+
+esac
