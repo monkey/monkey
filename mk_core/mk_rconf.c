@@ -370,6 +370,15 @@ void mk_rconf_free(struct mk_rconf *conf)
 {
     struct mk_list *head, *tmp;
     struct mk_rconf_section *section;
+    struct mk_rconf_file *file;
+
+    /* Remove included files */
+    mk_list_foreach_safe(head, tmp, &conf->includes) {
+        file = mk_list_entry(head, struct mk_rconf_file, _head);
+        mk_list_del(&file->_head);
+        mk_mem_free(file->path);
+        mk_mem_free(file);
+    }
 
     /* Free sections */
     mk_list_foreach_safe(head, tmp, &conf->sections) {
@@ -386,6 +395,8 @@ void mk_rconf_free(struct mk_rconf *conf)
     if (conf->file) {
         mk_mem_free(conf->file);
     }
+
+    mk_mem_free(conf->root_path);
     mk_mem_free(conf);
 }
 
