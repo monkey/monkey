@@ -58,7 +58,6 @@ mk_ctx_t *mk_create()
 
 int mk_destroy(mk_ctx_t *ctx)
 {
-    mk_exit_all(ctx->server);
     mk_mem_free(ctx);
 
     return 0;
@@ -131,11 +130,13 @@ static void mk_lib_worker(void *data)
         }
 
         if (val == MK_SERVER_SIGNAL_STOP) {
-            mk_exit_all(server);
-            fflush(stdout);
-            pthread_kill(pthread_self(), 0);
+            break;
         }
     }
+
+    mk_event_loop_destroy(server->lib_evl);
+    mk_exit_all(server);
+    pthread_kill(pthread_self(), 0);
 
     return;
 }

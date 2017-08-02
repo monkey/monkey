@@ -483,6 +483,18 @@ int mk_sched_init(struct mk_server *server)
     return 0;
 }
 
+int mk_sched_exit(struct mk_server *server)
+{
+    struct mk_sched_ctx *ctx;
+
+    ctx = server->sched_ctx;
+    mk_sched_worker_cb_free(server);
+    mk_mem_free(ctx->workers);
+    mk_mem_free(ctx);
+
+    return 0;
+}
+
 void mk_sched_set_request_list(struct rb_root *list)
 {
     MK_TLS_SET(mk_tls_sched_cs, list);
@@ -626,67 +638,6 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
     else if (ret == MK_CHANNEL_FLUSH) {
         printf("FLUSH\n");
     }
-    else {
-        printf("WTF\n");
-    }
-
-    /* REMOVE LATER / content below should be deprecated */
-    return ret;
-    /*
-     * There is a high probability that the protocol-handler have enqueued
-     * some data to write. We will check the Channel, if some Stream is attached,
-     * we will try to dispath the data over the socket, we will do this using the
-     * following logic:
-     *
-     *  1. Try to flush a minimum of bytes contained in multiple Streams. The
-     *     value is given by _SC_PAGESIZE stored on:
-     *
-     *      struct mk_sched_worker {
-     *          ...
-     *          int mem_pagesize;
-     *      };
-     *
-     *  2. If in #1 we receive some -EAGAIN, ask for MK_EVENT_WRITE events on
-     *     the socket. On that way we make sure we flush data when the Kernel
-     *     tell us this is possible.
-     *
-     *  3. If after #1 there is still some enqueued data, handle the remaining
-     *     ones through a MK_EVENT_WRITE and it proper callback handler.
-     */
-    do {
-        ret = mk_channel_write(&conn->channel, &count);
-        total += count;
-    } while (total <= sched->mem_pagesize && ((ret & stop) == 0));
-
-    if (ret == MK_CHANNEL_DONE) {
-        if (conn->protocol->cb_done) {
-            ret = conn->protocol->cb_done(conn, sched, server);
-            if (ret == 1) {
-                /* Protocol handler want to send more data */
-                event = &conn->event;
-                mk_event_add(sched->loop, event->fd,
-                             MK_EVENT_CONNECTION,
-                             MK_EVENT_WRITE,
-                             conn);
-                return 0;
-            }
-            return ret;
-        }
-    }
-    else if (ret & (MK_CHANNEL_FLUSH | MK_CHANNEL_BUSY)) {
-        event = &conn->event;
-        if ((event->mask & MK_EVENT_WRITE) == 0) {
-            mk_event_add(sched->loop, event->fd,
-                         MK_EVENT_CONNECTION,
-                         MK_EVENT_WRITE,
-                         conn);
-        }
-    }
-#ifdef TRACE
-    else if (ret & MK_CHANNEL_ERROR) {
-        MK_TRACE("[FD %i] CHANNEL_ERROR", conn->event.fd);
-    }
-#endif
 
     return ret;
 }

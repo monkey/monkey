@@ -215,6 +215,8 @@ pthread_mutex_t mutex_port_init;
 
 struct mk_sched_worker *mk_sched_next_target();
 int mk_sched_init(struct mk_server *server);
+int mk_sched_exit(struct mk_server *server);
+
 int mk_sched_launch_thread(struct mk_server *server, pthread_t *tout);
 
 void *mk_sched_launch_epoll_loop(void *thread_conf);
