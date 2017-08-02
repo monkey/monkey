@@ -24,7 +24,7 @@ void cb_test_chunks(mk_request_t *request, void *data)
     mk_http_status(request, 200);
     mk_http_header(request, "X-Monkey", 8, "OK", 2);
 
-    for (i = 0; i < 1000000; i++) {
+    for (i = 0; i < 1000; i++) {
         len = snprintf(tmp, sizeof(tmp) -1, "test-chunk %6i\n ", i);
         mk_http_send(request, tmp, len, NULL);
     }
@@ -70,9 +70,10 @@ int main()
     mk_info("Service: http://%s:%s/test",  API_ADDR, API_PORT);
     mk_start(ctx);
 
-    sleep(6000);
+    sleep(10);
 
     mk_stop(ctx);
+    mk_destroy(ctx);
 
     return 0;
 }
