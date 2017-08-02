@@ -371,6 +371,9 @@ struct mk_stream *mk_stream_new(int type, struct mk_channel *channel,
                                 void (*cb_finished) (struct mk_stream *),
                                 void (*cb_bytes_consumed) (struct mk_stream *, long),
                                 void (*cb_exception) (struct mk_stream *, int));
+
+int mk_channel_stream_write(struct mk_stream *stream, size_t *count);
+
 struct mk_channel *mk_channel_new(int type, int fd);
 
 int mk_channel_flush(struct mk_channel *channel);

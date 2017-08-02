@@ -222,28 +222,6 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
     conn->channel.event = event;                /* parent event ref */
     mk_list_init(&conn->channel.streams);
 
-    /* FIXME: do we need to have a Scheduler node in a RBT ?
-
-    struct rb_node **new = &(sched->rb_queue.rb_node);
-    struct rb_node *parent = NULL;
-
-    while (*new) {
-        struct mk_sched_conn *this = container_of(*new, struct mk_sched_conn, _rb_head);
-
-        parent = *new;
-        if (conn->event.fd < this->event.fd)
-            new = &((*new)->rb_left);
-        else if (conn->event.fd > this->event.fd)
-            new = &((*new)->rb_right);
-        else {
-            mk_bug(1);
-            break;
-        }
-    }
-    rb_link_node(&conn->_rb_head, parent, new);
-    rb_insert_color(&conn->_rb_head, &sched->rb_queue);
-    */
-
     /*
      * Register the connections into the timeout_queue:
      *
@@ -265,12 +243,7 @@ struct mk_sched_conn *mk_sched_add_connection(int remote_fd,
 
 static void mk_sched_thread_lists_init()
 {
-    //struct rb_root *sched_cs;
     struct mk_list *sched_cs_incomplete;
-
-    /* mk_tls_sched_cs */
-    //sched_cs = mk_mem_alloc_z(sizeof(struct rb_root));
-    //MK_TLS_SET(mk_tls_sched_cs, sched_cs);
 
     /* mk_tls_sched_cs_incomplete */
     sched_cs_incomplete = mk_mem_alloc(sizeof(struct mk_list));
@@ -315,7 +288,6 @@ static int mk_sched_register_thread(struct mk_server *server)
 #endif
 
     /* Initialize lists */
-    //FIXME sl->rb_queue = RB_ROOT;
     mk_list_init(&worker->timeout_queue);
     worker->request_handler = NULL;
 
@@ -620,6 +592,8 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
     struct mk_event *event;
     uint32_t stop = (MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY);
 
+    printf("event write on read()\n");
+
 #ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler / read", conn->event.fd);
 #endif
@@ -642,6 +616,22 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
         return -1;
     }
 
+    printf("conn protocol cb_read() = ");
+    if (ret == MK_CHANNEL_DONE) {
+        printf("DONE\n");
+    }
+    else if (ret == MK_CHANNEL_BUSY) {
+        printf("BUSY\n");
+    }
+    else if (ret == MK_CHANNEL_FLUSH) {
+        printf("FLUSH\n");
+    }
+    else {
+        printf("WTF\n");
+    }
+
+    /* REMOVE LATER / content below should be deprecated */
+    return ret;
     /*
      * There is a high probability that the protocol-handler have enqueued
      * some data to write. We will check the Channel, if some Stream is attached,

@@ -184,6 +184,9 @@ struct mk_http_request
     /* Parent Session */
     struct mk_http_session *session;
 
+    /* coroutine thread (if any) */
+    void *thread;
+
     /* Head to list of requests */
     struct mk_list _head;
 

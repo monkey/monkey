@@ -25,6 +25,7 @@
 #include <monkey/mk_core.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_stream.h>
+#include <monkey/mk_net.h>
 
 #ifndef MK_SCHEDULER_H
 #define MK_SCHEDULER_H

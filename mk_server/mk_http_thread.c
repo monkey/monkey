@@ -73,9 +73,7 @@ static inline void thread_cb_init_vars()
 
     if (type == MK_HTTP_THREAD_LIB) {
         handler->cb(request, handler->data);
-        printf("after callback\n");
         mk_thread_yield(th);
-        printf("after yield\n");
     }
     else if (type == MK_HTTP_THREAD_PLUGIN) {
         /* FIXME: call plugin handler callback with params */
@@ -134,6 +132,7 @@ struct mk_http_thread *mk_http_thread_new(int type,
     mth->session = session;
     mth->request = request;
     mth->parent  = th;
+    request->thread = mth;
     mk_list_add(&mth->_head, &sched->threads);
 
     th->caller = co_active();
@@ -153,10 +152,8 @@ struct mk_http_thread *mk_http_thread_new(int type,
 
 int mk_http_thread_event(struct mk_event *event)
 {
-    struct mk_net_connection *conn;
-
-    conn = (struct mk_net_connection *) event;
-    mk_thread_resume(conn->thread);
+    struct mk_sched_conn *conn = event;
+    mk_thread_resume(conn->channel.thread);
     return 0;
 }
 
@@ -169,5 +166,3 @@ int mk_http_thread_start(struct mk_http_thread *mth)
     mk_http_thread_resume(mth);
     //mk_header_prepare(cs, sr, server);
 }
-
-//int mk_http_thread_flush(struct mk_http_h

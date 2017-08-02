@@ -26,6 +26,7 @@
 
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
+#include <monkey/mk_thread.h>
 
 #define config_eq(a, b) strcasecmp(a, b)
 
@@ -59,6 +60,42 @@ int mk_destroy(mk_ctx_t *ctx)
 {
     mk_exit_all(ctx->server);
     mk_mem_free(ctx);
+
+    return 0;
+}
+
+static inline int mk_lib_yield(mk_request_t *req)
+{
+    int ret;
+    struct mk_thread *th;
+    struct mk_channel *channel;
+    struct mk_sched_worker *sched;
+
+    sched = mk_sched_get_thread_conf();
+    if (!sched) {
+        return -1;
+    }
+
+    th = pthread_getspecific(mk_thread_key);
+    channel = req->session->channel;
+
+    channel->thread = th;
+
+    ret = mk_event_add(sched->loop,
+                       channel->fd,
+                       MK_EVENT_THREAD,
+                       MK_EVENT_WRITE, channel->event);
+    if (ret == -1) {
+        return -1;
+    }
+
+    /* Just wait */
+    mk_thread_yield(th);
+
+    if (channel->event->status & MK_EVENT_REGISTERED) {
+        /* We got a notification, remove the event registered */
+        ret = mk_event_del(sched->loop, channel->event);
+    }
 
     return 0;
 }
@@ -430,6 +467,16 @@ int mk_vhost_handler(mk_ctx_t *ctx, int vid, char *regex,
     return 0;
 }
 
+/* Flush streams data associated to a request in question */
+int mk_http_flush(mk_request_t *req)
+{
+    int ret;
+    size_t out_bytes = 0;
+
+    ret = mk_channel_stream_write(&req->stream, &out_bytes);
+    return ret;
+}
+
 int mk_http_status(mk_request_t *req, int status)
 {
     req->headers.status = status;
@@ -477,6 +524,44 @@ int mk_http_header(mk_request_t *req,
     return 0;
 }
 
+static inline int chunk_header(long num, char *out)
+{
+    int i = 1;
+    int j, c;
+    int remainder;
+    int quotient;
+    char tmp[32];
+    char hex[] = "0123456789ABCDEF";
+
+    if (num == 0) {
+        out[0] = '0';
+        out[1] = '\r';
+        out[2] = '\n';
+        out[3] = '\r';
+        out[4] = '\n';
+        out[5] = '\0';
+        return 5;
+    }
+
+    quotient = num;
+    while (quotient != 0) {
+        remainder = quotient % 16;
+        tmp[i++] = hex[remainder];
+        quotient = quotient / 16;
+    }
+
+    c = 0;
+    for (j = i -1 ; j > 0; j--, c++) {
+        out[c] = tmp[j];
+    }
+
+    out[c++] = '\r';
+    out[c++] = '\n';
+    out[c] = '\0';
+
+    return c;
+}
+
 /* Enqueue some data for the body response */
 int mk_http_send(mk_request_t *req, char *buf, size_t len,
                  void (*cb_finish)(mk_request_t *))
@@ -493,29 +578,28 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
     }
 
     /* Chunk encoding prefix */
-    chunk_len = snprintf(chunk_pre, sizeof(chunk_pre) - 1, "%zx\r\n", len);
-    if (chunk_len < 0) {
-        return -1;
-    }
-
-    int i;
-    for (i = 0; i < chunk_len; i++) {
-        printf("%X ", chunk_pre[i]);
-    }
-
-    printf("\nchunk_len: %i\n", chunk_len);
-    ret = mk_stream_in_raw(&req->stream, NULL,
-                           chunk_pre, chunk_len, NULL, NULL);
-    if (ret != 0) {
-        return -1;
+    if (req->protocol == MK_HTTP_PROTOCOL_11) {
+        chunk_len = chunk_header(len, chunk_pre);
+        ret = mk_stream_in_raw(&req->stream, NULL,
+                               chunk_pre, chunk_len, NULL, NULL);
+        if (ret != 0) {
+            return -1;
+        }
     }
 
     /* Append raw data */
-    ret = mk_stream_in_raw(&req->stream, NULL,
-                           buf, len, NULL, NULL);
-    if (ret == 0) {
-        /* Update count of bytes */
-        req->stream_size += len;
+    if (len > 0) {
+        ret = mk_stream_in_raw(&req->stream, NULL,
+                               buf, len, NULL, NULL);
+        if (ret == 0) {
+            /* Update count of bytes */
+            req->stream_size += len;
+        }
+    }
+
+    if (req->protocol == MK_HTTP_PROTOCOL_11) {
+        ret = mk_stream_in_raw(&req->stream, NULL,
+                               "\r\n", 2, NULL, NULL);
     }
 
     /*
@@ -524,18 +608,25 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
      */
     if (req->headers.sent == MK_FALSE) {
         /* Force chunked-transfer encoding */
-        req->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        if (req->protocol == MK_HTTP_PROTOCOL_11) {
+            req->headers.transfer_encoding = MK_HEADER_TE_TYPE_CHUNKED;
+        }
+        else {
+            req->headers.content_length = -1;
+        }
         mk_header_prepare(req->session, req, req->session->server);
     }
 
     /* Flush channel data */
+    mk_http_flush(req);
 
-    //mk_channel_write(req->session->conn->channel, NULL);
+    /*
+     * Flush have been done, before to return our original caller, we want to yield
+     * and give some execution time to the event loop to avoid possible blocking
+     * since the caller might be using this mk_http_send() in a loop.
+     */
 
-    /* FIXME: decide when to set content-length */
-    /* Update content length */
-    //req->headers.content_length += len;
-
+    mk_lib_yield(req);
     return ret;
 }
 
@@ -545,7 +636,8 @@ int mk_http_done(mk_request_t *req)
 
     if (req->headers.transfer_encoding == MK_HEADER_TE_TYPE_CHUNKED) {
         /* Append end-of-chunk bytes */
-        mk_http_send(req, "0\r\n\r\n", 5, NULL);
+        mk_http_send(req, NULL, 0, NULL);
     }
+
     return 0;
 }

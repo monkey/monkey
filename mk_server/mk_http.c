@@ -745,7 +745,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
                 if (!mth) {
                     return -1;
                 }
-
                 mk_http_thread_start(mth);
                 return 0;
             }

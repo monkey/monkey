@@ -21,6 +21,7 @@
 #define MK_NET_H
 
 #include <monkey/mk_core.h>
+#include <monkey/mk_stream.h>
 
 struct mk_net_connection {
     struct mk_event event;
@@ -31,5 +32,7 @@ struct mk_net_connection {
 };
 
 struct mk_net_connection *mk_net_conn_create(char *addr, int port);
+int mk_net_conn_write(struct mk_channel *channel,
+                      void *data, size_t len);
 
 #endif

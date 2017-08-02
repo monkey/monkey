@@ -88,7 +88,6 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
 
         sched = mk_sched_get_thread_conf();
         // FIXME: not including the thread
-        printf("FIXME: missing conn->thread context\n");
         //conn->thread = mk_thread_get();
         ret = mk_event_add(sched->loop, conn->fd, MK_EVENT_THREAD,
                            MK_EVENT_WRITE, &conn->event);
@@ -138,7 +137,7 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
 }
 
 int mk_net_conn_write(struct mk_channel *channel,
-                      void *data, size_t len, size_t *out_len)
+                      void *data, size_t len)
 {
     int ret = 0;
     int error;
@@ -164,16 +163,16 @@ int mk_net_conn_write(struct mk_channel *channel,
         send = (len - total);
     }
 
+    send = len - total;
     bytes = channel->io->write(channel->fd, data + total, send);
     if (bytes == -1) {
         if (errno == EAGAIN) {
             MK_EVENT_NEW(channel->event);
             channel->thread = th;
-
             ret = mk_event_add(sched->loop,
                                channel->fd,
                                MK_EVENT_THREAD,
-                               MK_EVENT_WRITE, &channel->event);
+                               MK_EVENT_WRITE, channel->event);
             if (ret == -1) {
                 /*
                  * If we failed here there no much that we can do, just
@@ -203,7 +202,6 @@ int mk_net_conn_write(struct mk_channel *channel,
                 }
 
                 if (error != 0) {
-                    printf("ERROR WRITING\n");
                     return -1;
                 }
 
@@ -223,21 +221,19 @@ int mk_net_conn_write(struct mk_channel *channel,
     /* Update counters */
     total += bytes;
     if (total < len) {
-        if (channel->event->status == MK_EVENT_NONE) {
-            channel->event->mask = MK_EVENT_EMPTY;
-            channel->thread = th;
-            ret = mk_event_add(sched->loop,
-                               channel->fd,
-                               MK_EVENT_THREAD,
-                               MK_EVENT_WRITE, channel->event);
-            if (ret == -1) {
-                /*
-                 * If we failed here there no much that we can do, just
-                 * let the caller we failed
-                 */
-                return -1;
-            }
+        channel->thread = th;
+        ret = mk_event_add(sched->loop,
+                           channel->fd,
+                           MK_EVENT_THREAD,
+                           MK_EVENT_WRITE, channel->event);
+        if (ret == -1) {
+            /*
+             * If we failed here there no much that we can do, just
+             * let the caller we failed
+             */
+            return -1;
         }
+
         mk_thread_yield(th);
         goto retry;
     }
@@ -247,8 +243,5 @@ int mk_net_conn_write(struct mk_channel *channel,
         ret = mk_event_del(sched->loop, channel->event);
     }
 
-    *out_len = total;
-
-    printf("written: %lu/%lu\n", total, len);
-    return bytes;
+    return total;
 }
