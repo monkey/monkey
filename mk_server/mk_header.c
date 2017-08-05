@@ -41,7 +41,7 @@
 #define MK_HEADER_CONN_UPGRADE     "Connection: Upgrade" MK_CRLF
 #define MK_HEADER_CONTENT_LENGTH   "Content-Length: "
 #define MK_HEADER_CONTENT_ENCODING "Content-Encoding: "
-#define MK_HEADER_TE_CHUNKED       "Transfer-Encoding: Chunked" MK_CRLF
+#define MK_HEADER_TE_CHUNKED       "Transfer-Encoding: chunked" MK_CRLF
 #define MK_HEADER_LAST_MODIFIED    "Last-Modified: "
 #define MK_HEADER_UPGRADE_H2C      "Upgrade: h2c" MK_CRLF
 
