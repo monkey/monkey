@@ -4,10 +4,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
 
 #define API_ADDR   "127.0.0.1"
 #define API_PORT   "2020"
+
+/* Main context set as global so the signal handler can use it */
+mk_ctx_t *ctx;
 
 void cb_worker(void *data)
 {
@@ -46,12 +50,39 @@ void cb_test_big_chunk(mk_request_t *request, void *data)
     mk_http_done(request);
 }
 
+
+static void signal_handler(int signal)
+{
+    write(STDERR_FILENO, "[engine] caught signal\n", 23);
+
+    switch (signal) {
+    case SIGTERM:
+    case SIGINT:
+        mk_stop(ctx);
+        mk_destroy(ctx);
+        _exit(EXIT_SUCCESS);
+    default:
+        break;
+    }
+}
+
+static void signal_init()
+{
+    signal(SIGINT,  &signal_handler);
+    signal(SIGTERM, &signal_handler);
+}
+
 int main()
 {
     int vid;
-    mk_ctx_t *ctx;
+
+    signal_init();
 
     ctx = mk_create();
+    if (!ctx) {
+        return -1;
+    }
+
     mk_config_set(ctx,
                   "Listen", API_PORT,
                   NULL);
@@ -70,10 +101,9 @@ int main()
     mk_info("Service: http://%s:%s/test",  API_ADDR, API_PORT);
     mk_start(ctx);
 
-    sleep(10);
-
-    mk_stop(ctx);
-    mk_destroy(ctx);
+    while (1) {
+        sleep(1000);
+    }
 
     return 0;
 }
