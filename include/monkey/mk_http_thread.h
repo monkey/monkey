@@ -39,14 +39,17 @@ static MK_INLINE void mk_http_thread_resume(struct mk_http_thread *mth)
     mk_thread_resume(mth->parent);
 }
 
-struct mk_http_thread *mk_http_thread_new(int type,
-                                          struct mk_vhost_handler *handler,
-                                          struct mk_http_session *session,
-                                          struct mk_http_request *request,
-                                          int n_params,
-                                          struct mk_list *params);
+struct mk_http_thread *mk_http_thread_create(int type,
+                                             struct mk_vhost_handler *handler,
+                                             struct mk_http_session *session,
+                                             struct mk_http_request *request,
+                                             int n_params,
+                                             struct mk_list *params);
+int mk_http_thread_destroy(struct mk_http_thread *mth);
+
 int mk_http_thread_event(struct mk_event *event);
 
 int mk_http_thread_start(struct mk_http_thread *mth);
+int mk_http_thread_purge(struct mk_http_thread *mth);
 
 #endif

@@ -26,15 +26,6 @@
 
 #include <stdlib.h>
 
-static void cb_http_thread_destroy(void *data)
-{
-    struct mk_http_thread *mth;
-
-    /* Before to destroy the thread context, unlink it */
-    mth = (struct mk_http_thread *) data;
-    mk_list_del(&mth->_head);
-}
-
 /*
  * libco do not support parameters in the entrypoint function due to the
  * complexity of implementation in terms of architecture and compiler, but
@@ -53,16 +44,15 @@ struct mk_http_libco_params {
 
 struct mk_http_libco_params libco_param;
 
+
 static inline void thread_cb_init_vars()
 {
     int type = libco_param.type;
     struct mk_vhost_handler *handler = libco_param.handler;
     struct mk_http_session *session = libco_param.session;
     struct mk_http_request *request = libco_param.request;
-    int n_params = libco_param.n_params;
-    struct mk_list *params = libco_param.params;
     struct mk_thread *th = libco_param.th;
-    struct mk_plugin *plugin;
+    //struct mk_plugin *plugin;
 
     /*
      * Until this point the th->callee already set the variables, so we
@@ -72,7 +62,33 @@ static inline void thread_cb_init_vars()
     co_switch(th->caller);
 
     if (type == MK_HTTP_THREAD_LIB) {
+        /* Invoke the handler callback */
         handler->cb(request, handler->data);
+
+        /*
+         * Once the callback finished, we need to sanitize the connection
+         * so other further requests can be processed.
+         */
+        int ret;
+        struct mk_sched_worker *sched;
+        struct mk_channel *channel;
+
+        channel = request->session->channel;
+        sched = mk_sched_get_thread_conf();
+
+        MK_EVENT_NEW(channel->event);
+        ret = mk_event_add(sched->loop,
+                           channel->fd,
+                           MK_EVENT_CONNECTION,
+                           MK_EVENT_READ, channel->event);
+        if (ret == -1) {
+            //return -1;
+        }
+
+        mk_http_request_end(session, session->server);
+        mk_http_thread_purge(request->thread);
+
+        /* Return control to caller */
         mk_thread_yield(th);
     }
     else if (type == MK_HTTP_THREAD_PLUGIN) {
@@ -102,15 +118,15 @@ static inline void thread_params_set(struct mk_thread *th,
     co_switch(th->callee);
 }
 
-struct mk_http_thread *mk_http_thread_new(int type,
-                                          struct mk_vhost_handler *handler,
-                                          struct mk_http_session *session,
-                                          struct mk_http_request *request,
-                                          int n_params,
-                                          struct mk_list *params)
+struct mk_http_thread *mk_http_thread_create(int type,
+                                             struct mk_vhost_handler *handler,
+                                             struct mk_http_session *session,
+                                             struct mk_http_request *request,
+                                             int n_params,
+                                             struct mk_list *params)
 {
     size_t stack_size;
-    struct mk_thread *th;
+    struct mk_thread *th = NULL;
     struct mk_http_thread *mth;
     struct mk_sched_worker *sched;
 
@@ -119,7 +135,7 @@ struct mk_http_thread *mk_http_thread_new(int type,
         return NULL;
     }
 
-    th = mk_thread_new(sizeof(struct mk_http_thread), cb_http_thread_destroy);
+    th = mk_thread_new(sizeof(struct mk_http_thread), NULL);
     if (!th) {
         return NULL;
     }
@@ -150,9 +166,42 @@ struct mk_http_thread *mk_http_thread_new(int type,
     return mth;
 }
 
+/*
+ * Move a http thread context from sched->thread to sched->threads_purge list.
+ * On this way the scheduler will release or reasign the resource later.
+ */
+int mk_http_thread_purge(struct mk_http_thread *mth)
+{
+    struct mk_sched_worker *sched;
+
+    sched = mk_sched_get_thread_conf();
+    if (!sched) {
+        return -1;
+    }
+
+    mk_list_del(&mth->_head);
+    mk_list_add(&mth->_head, &sched->threads_purge);
+
+    return 0;
+}
+
+int mk_http_thread_destroy(struct mk_http_thread *mth)
+{
+    struct mk_thread *th;
+
+    /* Unlink from scheduler thread list */
+    mk_list_del(&mth->_head);
+
+    /* release original memory context */
+    th = mth->parent;
+    mk_thread_destroy(th);
+
+    return 0;
+}
+
 int mk_http_thread_event(struct mk_event *event)
 {
-    struct mk_sched_conn *conn = event;
+    struct mk_sched_conn *conn = (struct mk_sched_conn *) event;
     mk_thread_resume(conn->channel.thread);
     return 0;
 }
@@ -164,5 +213,5 @@ int mk_http_thread_event(struct mk_event *event)
 int mk_http_thread_start(struct mk_http_thread *mth)
 {
     mk_http_thread_resume(mth);
-    //mk_header_prepare(cs, sr, server);
+    return 0;
 }

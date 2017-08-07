@@ -482,6 +482,7 @@ void mk_server_worker_loop(struct mk_server *server)
                 continue;
             }
         }
+        mk_sched_threads_purge(sched);
         mk_sched_event_free_all(sched);
     }
 }

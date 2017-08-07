@@ -738,10 +738,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
             if (h_handler->cb) {
                 /* Create coroutine/thread context */
                 sr->headers.content_length = 0;
-                mth = mk_http_thread_new(MK_HTTP_THREAD_LIB,
-                                         h_handler,
-                                         cs, sr,
-                                         0, NULL);
+                mth = mk_http_thread_create(MK_HTTP_THREAD_LIB,
+                                            h_handler,
+                                            cs, sr,
+                                            0, NULL);
                 if (!mth) {
                     return -1;
                 }
@@ -1115,7 +1115,7 @@ int mk_http_request_end(struct mk_http_session *cs, struct mk_server *server)
     int ret;
     int status;
     int len;
-    struct mk_http_request *sr;
+    struct mk_http_request *sr = NULL;
 
     if (server->max_keep_alive_request <= cs->counter_connections) {
         cs->close_now = MK_TRUE;
@@ -1174,7 +1174,6 @@ int mk_http_request_end(struct mk_http_session *cs, struct mk_server *server)
         mk_sched_conn_timeout_add(cs->conn, mk_sched_get_thread_conf());
         return 0;
     }
-
 
     return -1;
 }

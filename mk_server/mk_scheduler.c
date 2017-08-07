@@ -32,6 +32,7 @@
 #include <monkey/mk_linuxtrace.h>
 #include <monkey/mk_server.h>
 #include <monkey/mk_plugin_stage.h>
+#include <monkey/mk_http_thread.h>
 
 #include <signal.h>
 #include <sys/syscall.h>
@@ -360,6 +361,7 @@ void *mk_sched_launch_worker_loop(void *data)
 
     mk_list_init(&sched->event_free_queue);
     mk_list_init(&sched->threads);
+    mk_list_init(&sched->threads_purge);
 
     /*
      * ULONG_MAX BUG test only
@@ -590,6 +592,22 @@ int mk_sched_check_timeouts(struct mk_sched_worker *sched,
     return 0;
 }
 
+int mk_sched_threads_purge(struct mk_sched_worker *sched)
+{
+    int c = 0;
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_http_thread *mth;
+
+    mk_list_foreach_safe(head, tmp, &sched->threads_purge) {
+        mth = mk_list_entry(head, struct mk_http_thread, _head);
+        mk_http_thread_destroy(mth);
+        c++;
+    }
+
+    return c;
+}
+
 /*
  * Scheduler events handler: lookup for event handler and invoke
  * proper callbacks.
@@ -599,12 +617,6 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
                         struct mk_server *server)
 {
     int ret = 0;
-    size_t count = 0;
-    size_t total = 0;
-    struct mk_event *event;
-    uint32_t stop = (MK_CHANNEL_DONE | MK_CHANNEL_ERROR | MK_CHANNEL_EMPTY);
-
-    printf("event write on read()\n");
 
 #ifdef TRACE
     MK_TRACE("[FD %i] Connection Handler / read", conn->event.fd);
@@ -626,17 +638,6 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
             return 1;
         }
         return -1;
-    }
-
-    printf("conn protocol cb_read() = ");
-    if (ret == MK_CHANNEL_DONE) {
-        printf("DONE\n");
-    }
-    else if (ret == MK_CHANNEL_BUSY) {
-        printf("BUSY\n");
-    }
-    else if (ret == MK_CHANNEL_FLUSH) {
-        printf("FLUSH\n");
     }
 
     return ret;

@@ -92,7 +92,14 @@ static inline int mk_lib_yield(mk_request_t *req)
     mk_thread_yield(th);
 
     if (channel->event->status & MK_EVENT_REGISTERED) {
-        /* We got a notification, remove the event registered */
+        /* We got a notification, remove the event registered
+        ret = mk_event_add(sched->loop,
+                           channel->fd,
+                           MK_EVENT_CONNECTION,
+                           MK_EVENT_READ, channel->event);
+                           mk_thread_yield(th);
+        */
+
         ret = mk_event_del(sched->loop, channel->event);
     }
 
@@ -598,7 +605,7 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
         }
     }
 
-    if (req->protocol == MK_HTTP_PROTOCOL_11) {
+    if (req->protocol == MK_HTTP_PROTOCOL_11 && len > 0) {
         ret = mk_stream_in_raw(&req->stream, NULL,
                                "\r\n", 2, NULL, NULL);
     }
@@ -626,14 +633,71 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
      * and give some execution time to the event loop to avoid possible blocking
      * since the caller might be using this mk_http_send() in a loop.
      */
-
     mk_lib_yield(req);
     return ret;
 }
 
 int mk_http_done(mk_request_t *req)
 {
-    (void) req;
+    /*
+
+    struct mk_channel *channel;
+    struct mk_event *event;
+
+    channel = req->session->channel;
+    event = channel->event;
+
+    printf("event type => ");
+    switch (event->type) {
+    case MK_EVENT_NOTIFICATION:
+        printf("notification");
+        break;
+    case MK_EVENT_LISTENER:
+        printf("listener");
+        break;
+    case MK_EVENT_CONNECTION:
+        printf("connection");
+        break;
+    case MK_EVENT_CUSTOM:
+        printf("custom");
+        break;
+    case MK_EVENT_THREAD:
+        printf("thread");
+        break;
+    default:
+        printf("OTHER: %i", event->type);
+    };
+
+    printf(", status => ");
+    if (event->status == MK_EVENT_NONE) {
+        printf("MK_EVENT_NONE");
+    }
+    else if (event->status == MK_EVENT_REGISTERED) {
+        printf("MK_EVENT_REGISTERED");
+    }
+
+    printf(", mask =>");
+    if (event->mask & MK_EVENT_EMPTY) {
+        printf(" MK_EVENT_EMPTY");
+    }
+    if (event->mask & MK_EVENT_READ) {
+        printf(" MK_EVENT_READ");
+    }
+    if (event->mask & MK_EVENT_WRITE) {
+        printf(" MK_EVENT_WRITE");
+    }
+    if (event->mask & MK_EVENT_SLEEP) {
+        printf(" MK_EVENT_SLEEP");
+    }
+    if (event->mask & MK_EVENT_CLOSE) {
+        printf(" MK_EVENT_CLOSE");
+    }
+    if (event->mask & MK_EVENT_IDLE) {
+        printf(" MK_EVENT_IDLE");
+    }
+    printf("\n");
+    fflush(stdout);
+    */
 
     if (req->headers.transfer_encoding == MK_HEADER_TE_TYPE_CHUNKED) {
         /* Append end-of-chunk bytes */
