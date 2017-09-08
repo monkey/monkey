@@ -34,6 +34,7 @@
 #define MK_STREAM_SOCKET    3  /* socket, scared..     */
 
 /* Channel return values for write event */
+#define MK_CHANNEL_OK       0  /* channel is ok (channel->status) */
 #define MK_CHANNEL_DONE     1  /* channel consumed all streams */
 #define MK_CHANNEL_ERROR    2  /* exception when flusing data  */
 #define MK_CHANNEL_FLUSH    4  /* channel flushed some data    */
@@ -121,6 +122,9 @@ struct mk_stream {
     /* Link to the Channel parent */
     struct mk_list _head;
 };
+
+int mk_stream_in_release(struct mk_stream_input *in);
+
 
 static inline int mk_channel_is_empty(struct mk_channel *channel)
 {
@@ -228,8 +232,19 @@ static inline int mk_stream_in_raw(struct mk_stream *stream,
                            cb_consumed, cb_finished);
 }
 
+
 static inline void mk_stream_release(struct mk_stream *stream)
 {
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_stream_input *in;
+
+    /* Release any pending input */
+    mk_list_foreach_safe(head, tmp, &stream->inputs) {
+        in = mk_list_entry(head, struct mk_stream_input, _head);
+        mk_stream_in_release(in);
+    }
+
     if (stream->cb_finished) {
         stream->cb_finished(stream);
     }
@@ -379,5 +394,4 @@ struct mk_channel *mk_channel_new(int type, int fd);
 int mk_channel_flush(struct mk_channel *channel);
 int mk_channel_write(struct mk_channel *channel, size_t *count);
 int mk_channel_clean(struct mk_channel *channel);
-
 #endif

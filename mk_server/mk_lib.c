@@ -26,6 +26,7 @@
 
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
+#include <monkey/mk_stream.h>
 #include <monkey/mk_thread.h>
 
 #define config_eq(a, b) strcasecmp(a, b)
@@ -570,14 +571,25 @@ static inline int chunk_header(long num, char *out)
     return c;
 }
 
+static void free_chunk_header(struct mk_stream_input *input)
+{
+    mk_mem_free(input->buffer);
+    input->buffer = NULL;
+}
+
 /* Enqueue some data for the body response */
 int mk_http_send(mk_request_t *req, char *buf, size_t len,
                  void (*cb_finish)(mk_request_t *))
 {
     int chunk_len;
     int ret;
+    char *tmp;
     char chunk_pre[32];
     (void) cb_finish;
+
+    if (req->session->channel->status != MK_CHANNEL_OK) {
+        return -1;
+    }
 
     if (req->headers.status == -1) {
         /* Cannot append data if the status have not been set */
@@ -588,8 +600,12 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
     /* Chunk encoding prefix */
     if (req->protocol == MK_HTTP_PROTOCOL_11) {
         chunk_len = chunk_header(len, chunk_pre);
+        tmp = mk_string_dup(chunk_pre);
+        if (!tmp) {
+            return -1;
+        }
         ret = mk_stream_in_raw(&req->stream, NULL,
-                               chunk_pre, chunk_len, NULL, NULL);
+                               tmp, chunk_len, NULL, free_chunk_header);
         if (ret != 0) {
             return -1;
         }
@@ -626,7 +642,7 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
     }
 
     /* Flush channel data */
-    mk_http_flush(req);
+    ret = mk_http_flush(req);
 
     /*
      * Flush have been done, before to return our original caller, we want to yield
@@ -639,6 +655,9 @@ int mk_http_send(mk_request_t *req, char *buf, size_t len,
 
 int mk_http_done(mk_request_t *req)
 {
+    if (req->session->channel->status != MK_CHANNEL_OK) {
+        return -1;
+    }
     /*
 
     struct mk_channel *channel;

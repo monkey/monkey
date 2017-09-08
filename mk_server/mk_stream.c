@@ -27,9 +27,9 @@ struct mk_channel *mk_channel_new(int type, int fd)
     struct mk_channel *channel;
 
     channel = mk_mem_alloc(sizeof(struct mk_channel));
-    channel->type = type;
-    channel->fd   = fd;
-
+    channel->type   = type;
+    channel->fd     = fd;
+    channel->status = MK_CHANNEL_OK;
     mk_list_init(&channel->streams);
 
     return channel;
@@ -104,6 +104,10 @@ int mk_channel_flush(struct mk_channel *channel)
 
 int mk_stream_in_release(struct mk_stream_input *in)
 {
+    if (in->cb_finished) {
+        in->cb_finished(in);
+    }
+
     mk_stream_input_unlink(in);
     if (in->dynamic == MK_TRUE) {
         mk_mem_free(in);
@@ -114,7 +118,7 @@ int mk_stream_in_release(struct mk_stream_input *in)
 
 int mk_channel_stream_write(struct mk_stream *stream, size_t *count)
 {
-    ssize_t bytes = -1;
+    ssize_t bytes = 0;
     struct mk_iov *iov;
     struct mk_list *tmp;
     struct mk_list *head;
@@ -122,6 +126,13 @@ int mk_channel_stream_write(struct mk_stream *stream, size_t *count)
     struct mk_stream_input *input;
 
     channel = stream->channel;
+
+    /* Validate channel status */
+    if (channel->status != MK_CHANNEL_OK) {
+        return -MK_CHANNEL_ERROR;
+    }
+
+    /* Iterate inputs and process stream */
     mk_list_foreach_safe(head, tmp, &stream->inputs) {
         input = mk_list_entry(head, struct mk_stream_input, _head);
         if (input->type == MK_STREAM_FILE) {
@@ -164,25 +175,21 @@ int mk_channel_stream_write(struct mk_stream *stream, size_t *count)
 
             if (input->bytes_total == 0) {
                 MK_TRACE("Input done, unlinking (channel=%p)", channel);
-
-                if (input->cb_finished) {
-                    input->cb_finished(input);
-                }
                 mk_stream_in_release(input);
             }
             MK_TRACE("[CH %i] CHANNEL_FLUSH", channel->fd);
         }
         else if (bytes < 0) {
             mk_stream_in_release(input);
-            return MK_CHANNEL_ERROR;
+            return -MK_CHANNEL_ERROR;
         }
         else if (bytes == 0) {
             mk_stream_in_release(input);
-            return MK_CHANNEL_ERROR;
+            return -MK_CHANNEL_ERROR;
         }
     }
 
-    return MK_CHANNEL_ERROR;
+    return bytes;
 }
 
 /* It perform a direct stream I/O write through the network layer */
@@ -255,10 +262,6 @@ int mk_channel_write(struct mk_channel *channel, size_t *count)
 
             if (input->bytes_total == 0) {
                 MK_TRACE("Input done, unlinking (channel=%p)", channel);
-
-                if (input->cb_finished) {
-                    input->cb_finished(input);
-                }
                 mk_stream_in_release(input);
             }
 
