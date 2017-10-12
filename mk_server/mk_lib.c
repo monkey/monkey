@@ -76,6 +76,7 @@ mk_ctx_t *mk_create()
 
 int mk_destroy(mk_ctx_t *ctx)
 {
+    mk_fifo_destroy(ctx->fifo);
     mk_mem_free(ctx);
 
     return 0;
