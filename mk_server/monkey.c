@@ -74,6 +74,7 @@ struct mk_server *mk_server_create()
     }
 
     /* Library mode: event loop */
+    server->lib_mode = MK_TRUE;
     server->lib_evl = mk_event_loop_create(8);
     if (!server->lib_evl) {
         mk_mem_free(server);
