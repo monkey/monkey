@@ -215,6 +215,26 @@ static int mk_fifo_queue_destroy_all(struct mk_fifo *ctx)
     return c;
 }
 
+static int mk_fifo_worker_destroy_all(struct mk_fifo *ctx)
+{
+    int c = 0;
+    struct mk_list *tmp;
+    struct mk_list *head;
+    struct mk_fifo_worker *fw;
+
+    mk_list_foreach_safe(head, tmp, &ctx->workers) {
+        fw = mk_list_entry(head, struct mk_fifo_worker, _head);
+        close(fw->channel[0]);
+        close(fw->channel[1]);
+        mk_list_del(&fw->_head);
+        mk_mem_free(fw->buf_data);
+        mk_mem_free(fw);
+        c++;
+    }
+
+    return c;
+}
+
 static int msg_write(int fd, void *buf, size_t count)
 {
     ssize_t bytes;
@@ -388,6 +408,7 @@ int mk_fifo_worker_read(void *event)
 int mk_fifo_destroy(struct mk_fifo *ctx)
 {
     mk_fifo_queue_destroy_all(ctx);
+    mk_fifo_worker_destroy_all(ctx);
     mk_mem_free(ctx);
     return 0;
 }
