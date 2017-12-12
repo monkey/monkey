@@ -33,7 +33,6 @@
 
 #if defined (__linux__)
 #include <sys/prctl.h>
-#elif defined (_WIN32)
 #elif defined (_WIN32) || defined (_WIN64)
   #ifndef localtime_r
     struct tm *localtime_r(time_t *_clock, struct tm *_result)
