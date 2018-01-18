@@ -52,7 +52,7 @@ static inline void fcgi_build_request_body(struct fcgi_begin_request_body *body)
 
 static inline size_t fcgi_write_length(char *p, size_t len)
 {
-    if (len < 127) {
+    if (len <= 127) {
 		*p++ = len;
 		return 1;
     }
