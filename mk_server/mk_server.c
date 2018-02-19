@@ -201,6 +201,7 @@ struct mk_list *mk_server_listen_init(struct mk_server *server)
                 listener->protocol = protocol;
             }
 
+#ifdef MK_HAVE_HTTP2
             if (listen->flags & MK_CAP_HTTP2) {
                 protocol = mk_sched_handler_cap(MK_CAP_HTTP2);
                 if (!protocol) {
@@ -209,7 +210,7 @@ struct mk_list *mk_server_listen_init(struct mk_server *server)
                 }
                 listener->protocol = protocol;
             }
-
+#endif
             listener->network = mk_plugin_cap(MK_CAP_SOCK_PLAIN, server);
 
             if (listen->flags & MK_CAP_SOCK_TLS) {
