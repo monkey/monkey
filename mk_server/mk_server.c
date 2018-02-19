@@ -334,7 +334,7 @@ void mk_server_loop_balancer(struct mk_server *server)
                 sched = mk_sched_next_target(server);
                 if (sched != NULL) {
                     mk_server_listen_handler(sched, event, server);
-#ifdef MK_TRACE
+#ifdef MK_HAVE_TRACE
                     int i;
                     struct mk_sched_ctx *ctx = server->sched_ctx;
 
