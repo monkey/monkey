@@ -39,7 +39,7 @@ const mk_ptr_t mk_dir_iov_none  = mk_ptr_init("");
 const mk_ptr_t mk_dir_iov_slash = mk_ptr_init("/");
 
 /* Function wrote by Max (Felipe Astroza), thanks! */
-static char *mk_dirhtml_human_readable_size(char *buf, size_t size, int len)
+static char *mk_dirhtml_human_readable_size(char *buf, size_t size, size_t len)
 {
     unsigned long u = 1024, i;
     static const char *__units[] = {
@@ -48,7 +48,7 @@ static char *mk_dirhtml_human_readable_size(char *buf, size_t size, int len)
     };
 
     for (i = 0; __units[i] != NULL; i++) {
-        if ((size / u) == 0) {
+        if ((len / u) == 0) {
             break;
         }
         u *= 1024;
