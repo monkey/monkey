@@ -15,9 +15,6 @@ mk_ctx_t *ctx;
 
 void cb_main(mk_request_t *request, void *data)
 {
-    int i = 0;
-    int len;
-    char tmp[32];
     (void) data;
 
     mk_http_status(request, 200);
