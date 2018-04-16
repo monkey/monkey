@@ -19,6 +19,7 @@ void cb_main(mk_request_t *request, void *data)
 
     mk_http_status(request, 200);
     mk_http_header(request, "X-Monkey", 8, "OK", 2);
+
     mk_http_send(request, ":)\n", 3, NULL);
     mk_http_done(request);
 }
@@ -77,32 +78,9 @@ static void signal_init()
     signal(SIGTERM, &signal_handler);
 }
 
-static void cb_queue_message(mk_mq_t *queue, void *data, size_t size, void *ctx)
-{
-    size_t i;
-    char *buf;
-    (void) ctx;
-    (void) queue;
-
-    printf("=== cb queue message === \n");
-    printf(" => %lu bytes\n", size);
-    printf(" => ");
-
-    buf = data;
-    for (i = 0; i < size; i++) {
-        printf("%c", buf[i]);
-    }
-    printf("\n\n");
-}
-
-
 int main()
 {
-    int i = 0;
-    int len;
     int vid;
-    int qid;
-    char msg[800000];
 
     signal_init();
 
@@ -110,9 +88,6 @@ int main()
     if (!ctx) {
         return -1;
     }
-
-    /* Create a message queue and a callback for each message */
-    qid = mk_mq_create(ctx, "/data", cb_queue_message, NULL);
 
     mk_config_set(ctx,
                   "Listen", API_PORT,
@@ -128,11 +103,6 @@ int main()
 
     mk_info("Service: http://%s:%s/test_chunks",  API_ADDR, API_PORT);
     mk_start(ctx);
-
-    for (i = 0; i < 5; i++) {
-        len = snprintf(msg, sizeof(msg) - 1, "[...] message ID: %i\n", i);
-        mk_mq_send(ctx, qid, &msg, len);
-    }
 
     sleep(3600);
 
