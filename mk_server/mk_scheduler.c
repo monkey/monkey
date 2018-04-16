@@ -606,6 +606,7 @@ static int sched_thread_cleanup(struct mk_sched_worker *sched,
     struct mk_list *tmp;
     struct mk_list *head;
     struct mk_http_thread *mth;
+    (void) sched;
 
     mk_list_foreach_safe(head, tmp, list) {
         mth = mk_list_entry(head, struct mk_http_thread, _head);
