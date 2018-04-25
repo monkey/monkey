@@ -83,6 +83,8 @@ void mk_http_request_init(struct mk_http_session *session,
     request->real_path.data = NULL;
     request->handler_data = NULL;
 
+    request->in_file.fd = -1;
+
     /* Response Headers */
     mk_header_response_reset(&request->headers);
 
@@ -676,6 +678,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     }
 
     /* Check if this is related to a protocol upgrade */
+#ifdef MK_HAVE_HTTP2
     if (cs->parser.header_connection & MK_HTTP_PARSER_CONN_UPGRADE) {
         /* HTTP/2.0 upgrade ? */
         if (cs->parser.header_connection & MK_HTTP_PARSER_CONN_HTTP2_SE) {
@@ -700,6 +703,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
             }
         }
     }
+#endif
 
     /* Check backward directory request */
     if (memmem(sr->uri_processed.data, sr->uri_processed.len,
@@ -711,9 +715,9 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     if (sr->_content_length.data &&
         (sr->method != MK_METHOD_POST &&
          sr->method != MK_METHOD_PUT)) {
-        return mk_http_error(MK_CLIENT_BAD_REQUEST, cs, sr, server);
+        sr->_content_length.data = NULL;
+        sr->_content_length.len = 0;
     }
-
 
     ret_file = mk_file_get_info(sr->real_path.data, &sr->file_info, MK_FILE_READ);
 
@@ -731,6 +735,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         handlers = &sr->host_conf->handlers;
         mk_list_foreach(head, handlers) {
             h_handler = mk_list_entry(head, struct mk_vhost_handler, _head);
+
             if (regexec(h_handler->match,
                         sr->uri_processed.data, 0, NULL, 0) != 0) {
                 continue;
@@ -746,6 +751,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
                 if (!mth) {
                     return -1;
                 }
+
                 mk_http_thread_start(mth);
                 return MK_EXIT_OK;
             }
@@ -1081,7 +1087,8 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
     }
 
     if (sr->connection.data) {
-        if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_KA) {
+        if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_KA &&
+            sr->protocol == MK_HTTP_PROTOCOL_11) {
             cs->close_now  = MK_FALSE;
         }
         else if (cs->parser.header_connection == MK_HTTP_PARSER_CONN_CLOSE) {
@@ -1126,7 +1133,6 @@ int mk_http_request_end(struct mk_http_session *cs, struct mk_server *server)
     /* Check if we have some enqueued pipeline requests */
     ret = mk_http_parser_more(&cs->parser, cs->body_length);
     if (ret == MK_TRUE) {
-
         /* Our pipeline request limit is the same that our keepalive limit */
         cs->counter_connections++;
         len = (cs->body_length - cs->parser.i) -1;
@@ -1143,7 +1149,11 @@ int mk_http_request_end(struct mk_http_session *cs, struct mk_server *server)
         status = mk_http_parser(sr, &cs->parser, cs->body, cs->body_length,
                                 server);
         if (status == MK_HTTP_PARSER_OK) {
-            mk_http_request_prepare(cs, sr, server);
+            ret = mk_http_request_prepare(cs, sr, server);
+            if (ret == MK_EXIT_ABORT) {
+                return -1;
+            }
+
             /*
              * Return 1 means, we still have more data to send in a different
              * scheduler round.
@@ -1371,7 +1381,6 @@ void mk_http_session_remove(struct mk_http_session *cs,
     mk_list_del(&cs->request_list);
 
     cs->_sched_init = MK_FALSE;
-
 }
 
 /* FIXME: nobody is using this */
@@ -1553,7 +1562,7 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
                 return -1;
             }
             mk_sched_conn_timeout_del(conn);
-            mk_http_request_prepare(cs, sr, server);
+            ret = mk_http_request_prepare(cs, sr, server);
         }
         else if (status == MK_HTTP_PARSER_ERROR) {
             /* The HTTP parser may enqueued some response error */
@@ -1577,7 +1586,7 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
                         struct mk_sched_worker *sched,
                         int type, struct mk_server *server)
 {
-    struct mk_http_session *cs;
+    struct mk_http_session *session;
     (void) sched;
 
 #ifdef TRACE
@@ -1587,8 +1596,8 @@ int mk_http_sched_close(struct mk_sched_conn *conn,
 #endif
 
     /* Release resources of the requests and session */
-    cs = mk_http_session_get(conn);
-    mk_http_session_remove(cs, server);
+    session = mk_http_session_get(conn);
+    mk_http_session_remove(session, server);
     return 0;
 }
 
@@ -1597,15 +1606,15 @@ int mk_http_sched_done(struct mk_sched_conn *conn,
                        struct mk_server *server)
 {
     (void) worker;
-    struct mk_http_session *cs;
+    struct mk_http_session *session;
     struct mk_http_request *sr;
 
-    cs = mk_http_session_get(conn);
-    sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
+    session = mk_http_session_get(conn);
+    sr = mk_list_entry_first(&session->request_list,
+                             struct mk_http_request, _head);
+    mk_plugin_stage_run_40(session, sr, server);
 
-    mk_plugin_stage_run_40(cs, sr, server);
-
-    return mk_http_request_end(cs, server);
+    return mk_http_request_end(session, server);
 }
 
 struct mk_sched_handler mk_http_handler = {

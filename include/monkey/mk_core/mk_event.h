@@ -25,6 +25,7 @@
 #define MK_EVENT_H
 
 /* Events type family */
+#define MK_EVENT_UNMODIFIED     -1    /* keep old event type              */
 #define MK_EVENT_NOTIFICATION    0    /* notification channel (pipe)      */
 #define MK_EVENT_LISTENER        1    /* listener socket                  */
 #define MK_EVENT_CONNECTION      2    /* data on active connection        */
@@ -117,6 +118,7 @@ int mk_event_add(struct mk_event_loop *loop, int fd,
 int mk_event_del(struct mk_event_loop *loop, struct mk_event *event);
 int mk_event_timeout_create(struct mk_event_loop *loop,
                             time_t sec, long nsec,void *data);
+int mk_event_timeout_destroy(struct mk_event_loop *loop, void *data);
 int mk_event_channel_create(struct mk_event_loop *loop,
                             int *r_fd, int *w_fd, void *data);
 int mk_event_wait(struct mk_event_loop *loop);

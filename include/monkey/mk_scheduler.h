@@ -215,7 +215,7 @@ extern pthread_mutex_t mutex_worker_init;
 extern pthread_mutex_t mutex_worker_exit;
 pthread_mutex_t mutex_port_init;
 
-struct mk_sched_worker *mk_sched_next_target();
+struct mk_sched_worker *mk_sched_next_target(struct mk_server *server);
 int mk_sched_init(struct mk_server *server);
 int mk_sched_exit(struct mk_server *server);
 
@@ -339,5 +339,6 @@ void mk_sched_worker_cb_free(struct mk_server *server);
 int mk_sched_send_signal(struct mk_server *server, uint64_t val);
 int mk_sched_workers_join(struct mk_server *server);
 int mk_sched_threads_purge(struct mk_sched_worker *sched);
+int mk_sched_threads_destroy_all(struct mk_sched_worker *sched);
 
 #endif

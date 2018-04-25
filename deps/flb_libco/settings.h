@@ -8,7 +8,7 @@
  * Testing Fluent Bit on Windows when doing co_swap it crash if the
  * option LIBCO_MPROTECT is not defined.
  */
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 #define LIBCO_MPROTECT
 #endif
 
@@ -19,7 +19,11 @@
 
 #ifdef LIBCO_C
   #ifdef LIBCO_MP
-    #define thread_local __thread
+    #if !defined(_WIN32) && !defined(_WIN64)  
+        #define thread_local __thread
+    #else
+        #define thread_local __declspec(thread) 
+    #endif
   #else
     #define thread_local
   #endif

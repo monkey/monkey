@@ -111,13 +111,16 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
     if (event->mask == MK_EVENT_EMPTY) {
         op = EPOLL_CTL_ADD;
         event->fd   = fd;
-        event->type = type;
         event->status = MK_EVENT_REGISTERED;
+        event->type = type;
+
     }
     else {
         op = EPOLL_CTL_MOD;
+        if (type != MK_EVENT_UNMODIFIED) {
+            event->type = type;
+        }
     }
-
     ep_event.events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     ep_event.data.ptr = data;
 
@@ -292,6 +295,14 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     return fd[0];
 }
 #endif /* MK_HAVE_TIMERFD_CREATE */
+
+static inline int _mk_event_timeout_destroy(struct mk_event_ctx *ctx, void *data)
+{
+    (void) ctx;
+    (void) data;
+
+    return 0;
+}
 
 static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
                                            int *r_fd, int *w_fd, void *data)

@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
+#include <glob.h>
 #else
 #define PATH_MAX 1024
 #endif
@@ -166,6 +167,11 @@ static int mk_rconf_meta_add(struct mk_rconf *conf, char *buf, int len)
     return 0;
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
+/* To call this function from mk_rconf_read */
+static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path);
+#endif
+
 static int mk_rconf_read(struct mk_rconf *conf, const char *path)
 {
     int i;
@@ -239,7 +245,15 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
         }
 
         if (len > 9 && strncasecmp(buf, "@INCLUDE ", 9) == 0) {
-            ret = mk_rconf_read(conf, buf + 9);
+#if !defined(_WIN32) && !defined(_WIN64)
+            if ( strchr(buf + 9, '*') != NULL) {
+                ret = mk_rconf_read_glob(conf, buf + 9);
+            }
+            else
+#endif
+            {
+                ret = mk_rconf_read(conf, buf + 9);
+            }
             if (ret == -1) {
                 conf->level--;
                 fclose(f);
@@ -325,6 +339,10 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
         mk_string_trim(&key);
         mk_string_trim(&val);
 
+        if (strlen(val) == 0) {
+            mk_config_error(path, line, "Key has an empty value");
+        }
+
         /* Register entry: key and val are copied as duplicated */
         mk_rconf_section_entry_add(conf, key, val);
 
@@ -374,6 +392,55 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
     return 0;
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
+static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
+{
+    int ret = -1;
+    glob_t glb;
+    char tmp[PATH_MAX];
+
+    const char *glb_path;
+    size_t i;
+    int ret_glb = -1;
+
+    if (conf->root_path) {
+        snprintf(tmp, PATH_MAX, "%s/%s", conf->root_path, path);
+        glb_path = tmp;
+    }
+    else {
+        glb_path = path;
+    }
+
+    ret_glb = glob(glb_path, GLOB_NOSORT, NULL, &glb);
+    if (ret_glb != 0) {
+        switch(ret_glb){
+        case GLOB_NOSPACE:
+            mk_warn("[%s] glob: no space", __FUNCTION__);
+            break;
+        case GLOB_NOMATCH:
+            mk_warn("[%s] glob: no match", __FUNCTION__);
+            break;
+        case GLOB_ABORTED:
+            mk_warn("[%s] glob: aborted", __FUNCTION__);
+            break;
+        default:
+            mk_warn("[%s] glob: other error", __FUNCTION__);
+        }
+        return ret;
+    }
+
+    for (i = 0; i < glb.gl_pathc; i++) {
+        ret = mk_rconf_read(conf, glb.gl_pathv[i]);
+        if (ret < 0) {
+            break;
+        }
+    }
+
+    globfree(&glb);
+    return ret;
+}
+#endif
+
 static int mk_rconf_path_set(struct mk_rconf *conf, char *file)
 {
     char *p;
@@ -385,7 +452,7 @@ static int mk_rconf_path_set(struct mk_rconf *conf, char *file)
     if (!p) {
         return -1;
     }
-#else    
+#else
     DWORD  retval = 0;
 
     retval = GetFullPathName(file, PATH_MAX + 1, path, NULL);
