@@ -48,7 +48,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifndef _WIN32
+#if !defined(_WIN64) && !defined(_WIN32)
 #include <sys/socket.h>
 #include <sys/stat.h>
 #else
@@ -68,7 +68,7 @@
 #include <netdb.h>
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 #include <winsock2.h>
 #endif
 
@@ -76,7 +76,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
+#if !defined(_WIN64) && !defined(_WIN32)
 #include <syslog.h>
 #endif
 #include <signal.h>
@@ -1551,7 +1551,7 @@ evhttp_connection_cb(struct bufferevent *bufev, short what, void *arg)
 		 * when connecting to a local address.  the cleanup is going
 		 * to reschedule this function call.
 		 */
-#ifndef _WIN32
+#if !defined(_WIN64) && !defined(_WIN32)
 		if (errno == ECONNREFUSED)
 			goto cleanup;
 #endif
@@ -1711,24 +1711,24 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
 	switch (method_len) {
 	    case 3:
 		/* The length of the method string is 3, meaning it can only be one of two methods: GET or PUT */
-            
+
 		/* Since both GET and PUT share the same character 'T' at the end,
 		 * if the string doesn't have 'T', we can immediately determine this
 		 * is an invalid HTTP method */
-            
+
 		if (method[2] != 'T') {
 		    break;
 		}
-            
+
 		switch (*method) {
 		    case 'G':
 			/* This first byte is 'G', so make sure the next byte is
 			 * 'E', if it isn't then this isn't a valid method */
-                    
+
 			if (method[1] == 'E') {
 			    type = EVHTTP_REQ_GET;
 			}
-                    
+
 			break;
 		    case 'P':
 			/* First byte is P, check second byte for 'U', if not,
@@ -1770,7 +1770,7 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
 			if (method[4] == 'E' && method[3] == 'C' && method[2] == 'A' && method[1] == 'R') {
 			    type = EVHTTP_REQ_TRACE;
 			}
-                    
+
 			break;
 		    default:
 			break;
@@ -1778,7 +1778,7 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
 		break;
 	    case 6:
 		/* Method length is 6, only valid method 6 bytes in length is DELEte */
-            
+
 		/* If the first byte isn't 'D' then it's invalid */
 		if (*method != 'D') {
 		    break;
@@ -1797,14 +1797,14 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
 				method[3] == 'I' && method[2] == 'T' && method[1] == 'P') {
 			    type = EVHTTP_REQ_OPTIONS;
 			}
-                   
+
 		       	break;
 		    case 'C':
 			if (method[6] == 'T' && method[5] == 'C' && method[4] == 'E' &&
 				method[3] == 'N' && method[2] == 'N' && method[1] == 'O') {
 			    type = EVHTTP_REQ_CONNECT;
 			}
-                    
+
 			break;
 		    default:
 			break;
@@ -1818,7 +1818,7 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
                 /* No error yet; we'll give a better error later when
                  * we see that req->type is unsupported. */
 	}
-	    
+
 	req->type = type;
 
 	if (evhttp_parse_http_version(version, req) < 0)
@@ -2209,7 +2209,7 @@ evhttp_get_body(struct evhttp_connection *evcon, struct evhttp_request *req)
 				   now, just optimistically tell the client to
 				   send their message body. */
 				if (req->ntoread > 0) {
-					/* ntoread is ev_int64_t, max_body_size is ev_uint64_t */ 
+					/* ntoread is ev_int64_t, max_body_size is ev_uint64_t */
 					if ((req->evcon->max_body_size <= EV_INT64_MAX) &&
 						(ev_uint64_t)req->ntoread > req->evcon->max_body_size) {
 						evhttp_lingering_fail(evcon, req);

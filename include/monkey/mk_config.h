@@ -174,7 +174,7 @@ struct mk_server
 };
 
 /* Functions */
-struct mk_server_config *mk_config_init();
+struct mk_server *mk_config_init();
 void mk_config_start_configure(struct mk_server *server);
 void mk_config_signature(struct mk_server *server);
 void mk_config_add_index(char *indexname);

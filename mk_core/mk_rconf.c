@@ -23,8 +23,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <glob.h>
+#else
+#define PATH_MAX 1024
+#endif
 
 #include <mk_core/mk_rconf.h>
 #include <mk_core/mk_utils.h>
@@ -163,8 +167,10 @@ static int mk_rconf_meta_add(struct mk_rconf *conf, char *buf, int len)
     return 0;
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
 /* To call this function from mk_rconf_read */
 static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path);
+#endif
 
 static int mk_rconf_read(struct mk_rconf *conf, const char *path)
 {
@@ -239,10 +245,13 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
         }
 
         if (len > 9 && strncasecmp(buf, "@INCLUDE ", 9) == 0) {
+#if !defined(_WIN32) && !defined(_WIN64)
             if ( strchr(buf + 9, '*') != NULL) {
                 ret = mk_rconf_read_glob(conf, buf + 9);
             }
-            else {
+            else
+#endif
+            {
                 ret = mk_rconf_read(conf, buf + 9);
             }
             if (ret == -1) {
@@ -383,12 +392,13 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
     return 0;
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
 static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
 {
     int ret = -1;
     glob_t glb;
     char tmp[PATH_MAX];
-    
+
     const char *glb_path;
     size_t i;
     int ret_glb = -1;
@@ -429,6 +439,7 @@ static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
     globfree(&glb);
     return ret;
 }
+#endif
 
 static int mk_rconf_path_set(struct mk_rconf *conf, char *file)
 {
@@ -436,10 +447,20 @@ static int mk_rconf_path_set(struct mk_rconf *conf, char *file)
     char *end;
     char path[PATH_MAX + 1];
 
+#if !defined(_WIN32) && !defined(_WIN64)
     p = realpath(file, path);
     if (!p) {
         return -1;
     }
+#else
+    DWORD  retval = 0;
+
+    retval = GetFullPathName(file, PATH_MAX + 1, path, NULL);
+    if (retval == 0)
+    {
+        return -1;
+    }
+#endif
 
     /* lookup path ending and truncate */
     end = strrchr(path, '/');

@@ -1,4 +1,4 @@
-/*-*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*  Monkey HTTP Server
  *  ==================
@@ -17,15 +17,19 @@
  *  limitations under the License.
  */
 
-#ifndef MK_PTHREAD_H
-#define MK_PTHREAD_H
+#ifndef MK_CORE_INFO_H
+#define MK_CORE_INFO_H
 
-#include "mk_core_info.h"
-
-#if defined (MK_THREADS_POSIX)    /* Heaven */
-#include <pthread.h>
-#elif defined (MK_THREADS_WIN32) || defined (MK_THREADS_WIN64)  /* Not Heaven */
-#include "external/winpthreads.h"
+/* General flags set by CMakeLists.txt */
+#ifndef MK_THREADS_WIN32
+#define MK_THREADS_WIN32
 #endif
+#ifndef MK_THREADS_WIN64
+#define MK_THREADS_WIN64
+#endif
+#ifndef MK_HAVE_EVENT_SELECT
+#define MK_HAVE_EVENT_SELECT
+#endif
+
 
 #endif

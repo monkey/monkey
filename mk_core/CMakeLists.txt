@@ -20,12 +20,14 @@ endmacro()
 # Set threading system
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   MK_DEFINITION(MK_THREADS_WIN32)
+  MK_DEFINITION(MK_THREADS_WIN64)
   set(src
     ${src}
     "external/wingetopt.c"
     "external/winpthreads.c"
     )
   include_directories(deps/libevent/include)
+  include_directories("${PROJECT_BINARY_DIR}/mk_core/deps/libevent/include/")
   include_directories("${PROJECT_BINARY_DIR}/lib/monkey/mk_core/deps/libevent/include/")
   add_subdirectory(deps/)
 else()
