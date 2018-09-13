@@ -116,11 +116,15 @@ endif()
 
 # Validate memrchr()
 check_c_source_compiles("
+   #define _GNU_SOURCE
    #include <string.h>
    int main() {
-      memrchr(\"test\", '\n', 4);
+      memrchr(\"test\", 'e', 4);
       return 0;
    }" MK_HAVE_MEMRCHR)
+
+include(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS(memrchr MK_HAVE_MEMRCHR)
 
 if (MK_HAVE_MEMRCHR)
   MK_DEFINITION(MK_HAVE_MEMRCHR)
