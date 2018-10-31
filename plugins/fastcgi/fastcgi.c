@@ -175,6 +175,19 @@ int mk_fastcgi_stage30_hangup(struct mk_plugin *plugin,
     return 0;
 }
 
+int mk_fastcgi_stage40(struct mk_http_session *cs, struct mk_http_request *sr)
+{
+    struct fcgi_handler *handler;
+
+    handler = sr->handler_data;
+    if (!handler) {
+        return -1;
+    }
+
+    MK_TRACE("[fastcgi=%i] set handler as inactive",handler->server_fd);
+    handler->active = MK_FALSE;
+}
+
 int mk_fastcgi_plugin_init(struct plugin_api **api, char *confdir)
 {
     int ret;
@@ -186,7 +199,7 @@ int mk_fastcgi_plugin_init(struct plugin_api **api, char *confdir)
     if (ret == -1) {
         mk_warn("[fastcgi] configuration error/missing, plugin disabled.");
     }
-	return ret;
+    return ret;
 }
 
 int mk_fastcgi_plugin_exit()
@@ -207,7 +220,8 @@ void mk_fastcgi_worker_init()
 struct mk_plugin_stage mk_plugin_stage_fastcgi = {
     .stage30        = &mk_fastcgi_stage30,
     .stage30_thread = &mk_fastcgi_stage30_thread,
-    .stage30_hangup = &mk_fastcgi_stage30_hangup
+    .stage30_hangup = &mk_fastcgi_stage30_hangup,
+    .stage40        = &mk_fastcgi_stage40
 };
 
 struct mk_plugin mk_plugin_fastcgi = {
