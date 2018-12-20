@@ -23,13 +23,16 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <glob.h>
 
 #include <mk_core/mk_rconf.h>
 #include <mk_core/mk_utils.h>
 #include <mk_core/mk_string.h>
 #include <mk_core/mk_list.h>
+
+#ifdef _MSC_VER
+#define PATH_MAX MAX_PATH
+#endif
 
 /* Raise a configuration schema error */
 static void mk_config_error(const char *path, int line, const char *msg)
