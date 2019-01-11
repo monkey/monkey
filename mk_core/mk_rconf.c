@@ -23,7 +23,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _MSC_VER
 #include <glob.h>
+#endif
 
 #include <mk_core/mk_rconf.h>
 #include <mk_core/mk_utils.h>
@@ -396,6 +398,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
     return 0;
 }
 
+#ifndef _MSC_VER
 static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
 {
     int ret = -1;
@@ -442,6 +445,14 @@ static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
     globfree(&glb);
     return ret;
 }
+#else
+static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
+{
+    mk_err("[config] wildcard is not supported on Windows");
+    mk_err("[config] path: %s", path);
+    return -1;
+}
+#endif
 
 static int mk_rconf_path_set(struct mk_rconf *conf, char *file)
 {
