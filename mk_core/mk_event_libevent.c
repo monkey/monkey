@@ -23,6 +23,12 @@
 /* Libevent */
 #include <event.h>
 
+#ifdef _WIN32
+#define ERR(e) (WSA##e)
+#else
+#define ERR(e) (e)
+#endif
+
 struct ev_map {
     /* for pipes */
     evutil_socket_t pipe[2];
@@ -173,7 +179,9 @@ static void cb_timeout(evutil_socket_t fd, short flags, void *data)
 
     ret = send(ev_map->pipe[1], &val, sizeof(uint64_t), 0);
     if (ret == -1) {
-        perror("write");
+        if (evutil_socket_geterror(fd) != ERR(ECONNABORTED)) {
+            perror("write");
+        }
         evutil_closesocket(ev_map->pipe[1]);
         event_del(ev_map->event);
         event_free(ev_map->event);
