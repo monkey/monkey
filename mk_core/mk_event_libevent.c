@@ -194,7 +194,7 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     evutil_socket_t fd[2];
     struct event *libev;
     struct mk_event *event;
-    struct timeval timev = {sec, nsec};
+    struct timeval timev = {sec, nsec / 1000}; /* (tv_sec, tv_usec} */
     struct ev_map *ev_map;
 
     if (evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == -1) {
