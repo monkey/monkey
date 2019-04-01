@@ -33,7 +33,11 @@ extern "C" {
 /**
  * The tagged branch is unlikely to be taken
  */
+#ifdef _MSC_VER
+#define RB_UNLIKELY(x) (!!x) /* MSVC does not have __builtin_expect equivalent. */
+#else
 #define RB_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#endif
 /**@}*/
 
 /** \defgroup rb_tree_state State Structures
