@@ -104,6 +104,59 @@ static void cb_event(evutil_socket_t fd, short flags, void *data)
     ctx->fired_count++;
 }
 
+/*
+ * Update an event that is already associated with an event loop.
+ *
+ * We use this method in _mk_event_add so that it can handle a dirty
+ * event transparently. In particular, this allows users to reuse an
+ * event object without reconstructing it.
+ *
+ * Return 0 on success and -1 otherwise.
+ */
+static inline int _mk_event_update(struct mk_event_ctx *ctx, evutil_socket_t fd,
+                                   int type, uint32_t events, void *data)
+{
+    int ret;
+    int flags = 0;
+    struct ev_map *ev_map;
+    struct mk_event *event;
+    struct event *libev;
+
+    event = (struct mk_event *) data;
+    ev_map = (struct ev_map *) event->data;
+
+    /* Remove an existing timer first */
+    event_del(ev_map->event);
+    event_free(ev_map->event);
+
+    /* Compose context */
+    if (type != MK_EVENT_UNMODIFIED) {
+        event->type = type;
+    }
+    if (events & MK_EVENT_READ) {
+        flags |= EV_READ;
+    }
+    if (events & MK_EVENT_WRITE) {
+        flags |= EV_WRITE;
+    }
+    flags |= EV_PERSIST;
+
+    /* Register into libevent */
+    libev = event_new(ctx->base, fd, flags, cb_event, event);
+    if (libev == NULL) {
+        return -1;
+    }
+
+    ret = event_add(libev, NULL);
+    if (ret < 0) {
+        return -1;
+    }
+
+    ev_map->event = libev;
+    ev_map->ctx   = ctx;
+    return 0;
+}
+
 /* Add the file descriptor to the arrays */
 static inline int _mk_event_add(struct mk_event_ctx *ctx, evutil_socket_t fd,
                                 int type, uint32_t events, void *data)
@@ -112,6 +165,11 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, evutil_socket_t fd,
     struct event *libev;
     struct mk_event *event;
     struct ev_map *ev_map;
+
+    event = (struct mk_event *) data;
+    if (event->mask != MK_EVENT_EMPTY) {
+        return _mk_event_update(ctx, fd, type, events, data);
+    }
 
     ev_map = mk_mem_alloc_z(sizeof(struct ev_map));
     if (!ev_map) {
@@ -127,7 +185,6 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, evutil_socket_t fd,
     }
 
     /* Compose context */
-    event = (struct mk_event *) data;
     event->fd   = fd;
     event->type = type;
     event->mask = events;
