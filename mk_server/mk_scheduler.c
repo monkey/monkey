@@ -646,7 +646,7 @@ int mk_sched_event_read(struct mk_sched_conn *conn,
 {
     int ret = 0;
 
-#ifdef TRACE
+#ifdef MK_HAVE_TRACE
     MK_TRACE("[FD %i] Connection Handler / read", conn->event.fd);
 #endif
 

@@ -136,7 +136,6 @@ endif()
 
 # Check Trace
 if(MK_TRACE)
-  MK_DEFINITION(MK_TRACE)
   MK_DEFINITION(MK_HAVE_TRACE)
 endif()
 

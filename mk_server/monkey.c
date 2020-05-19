@@ -102,9 +102,7 @@ struct mk_server *mk_server_create()
     mk_list_init(&server->stage50_handler);
     server->scheduler_mode = -1;
 
-#ifdef TRACE
     mk_core_init();
-#endif
 
     /* Init Kernel version data */
     kern_version = mk_kernel_version();
@@ -113,7 +111,7 @@ struct mk_server *mk_server_create()
     server->kernel_version = kern_version;
     server->kernel_features = kern_features;
 
-#ifdef TRACE
+#ifdef MK_HAVE_TRACE
     MK_TRACE("Monkey TRACE is enabled");
     env_trace_filter = getenv("MK_TRACE_FILTER");
     pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);

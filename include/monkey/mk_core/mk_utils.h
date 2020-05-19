@@ -27,7 +27,6 @@
 
 #include "mk_pthread.h"
 
-time_t mk_core_init_time;
 char *env_trace_filter;
 pthread_mutex_t mutex_trace;
 
