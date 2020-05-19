@@ -27,9 +27,6 @@
 
 #include "mk_pthread.h"
 
-char *env_trace_filter;
-pthread_mutex_t mutex_trace;
-
 /* Trace definitions */
 #ifdef TRACE
 
