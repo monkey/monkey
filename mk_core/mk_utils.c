@@ -55,7 +55,8 @@
 #include <mk_core/mk_macros.h>
 #include <mk_core/mk_utils.h>
 
-static pthread_mutex_t mutex_trace;
+pthread_mutex_t mutex_trace;
+pthread_key_t mk_utils_error_key;
 
 #ifdef MK_HAVE_TRACE
 #include <sys/time.h>
