@@ -286,6 +286,8 @@ int mk_fifo_send(struct mk_fifo *ctx, int id, void *data, size_t size)
         return -1;
     }
 
+    pthread_mutex_lock(&ctx->mutex_init);
+
     mk_list_foreach(head, &ctx->workers) {
         fw = mk_list_entry(head, struct mk_fifo_worker, _head);
 
@@ -295,6 +297,7 @@ int mk_fifo_send(struct mk_fifo *ctx, int id, void *data, size_t size)
 
         ret = msg_write(fw->channel[1], &msg, sizeof(struct mk_fifo_msg));
         if (ret == -1) {
+            pthread_mutex_unlock(&ctx->mutex_init);
             perror("write");
             fprintf(stderr, "[msg] error writing message header\n");
             return -1;
@@ -302,11 +305,14 @@ int mk_fifo_send(struct mk_fifo *ctx, int id, void *data, size_t size)
 
         ret = msg_write(fw->channel[1], data, size);
         if (ret == -1) {
+            pthread_mutex_unlock(&ctx->mutex_init);
             perror("write");
             fprintf(stderr, "[msg] error writing message body\n");
             return -1;
         }
     }
+
+    pthread_mutex_unlock(&ctx->mutex_init);
 
     return 0;
 }
