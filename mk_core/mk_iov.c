@@ -20,8 +20,7 @@
 #define _GNU_SOURCE
 #include <fcntl.h>
 
-#include <sys/uio.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +28,7 @@
 #include <mk_core/mk_macros.h>
 #include <mk_core/mk_memory.h>
 #include <mk_core/mk_iov.h>
+#include <mk_core/mk_uio.h>
 
 const mk_ptr_t mk_iov_crlf = mk_ptr_init(MK_IOV_CRLF);
 const mk_ptr_t mk_iov_lf = mk_ptr_init(MK_IOV_LF);
@@ -56,8 +56,8 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
     /* Set pointer address */
     iov     = p;
-    iov->io = p + sizeof(struct mk_iov);
-    iov->buf_to_free = (void *) (p + sizeof(struct mk_iov) + s_iovec);
+    iov->io = (uint8_t *)p + sizeof(struct mk_iov);
+    iov->buf_to_free = (void *) ((uint8_t*)p + sizeof(struct mk_iov) + s_iovec);
 
     mk_iov_init(iov, n, offset);
     return iov;
@@ -187,7 +187,7 @@ int mk_iov_consume(struct mk_iov *mk_io, size_t bytes)
         }
 
         if (bytes < len) {
-            mk_io->io[i].iov_base += bytes;
+            mk_io->io[i].iov_base = (uint8_t *)mk_io->io[i].iov_base + bytes;
             mk_io->io[i].iov_len   = (len - bytes);
             break;
         }

@@ -19,7 +19,8 @@
 
 #define _GNU_SOURCE
 
-#include <pthread.h>
+#include <mk_core/mk_pthread.h>
+
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_clock.h>
@@ -31,7 +32,11 @@ void mk_server_info(struct mk_server *server)
     struct mk_plugin *p;
     struct mk_config_listener *l;
 
+#ifdef _WIN32
+    printf(MK_BANNER_ENTRY "Process ID is %ld\n", (long)GetCurrentProcessId());
+#else
     printf(MK_BANNER_ENTRY "Process ID is %ld\n", (long) getpid());
+#endif
     mk_list_foreach(head, &server->listeners) {
         l = mk_list_entry(head, struct mk_config_listener, _head);
         printf(MK_BANNER_ENTRY "Server listening on %s:%s\n",
@@ -72,6 +77,14 @@ struct mk_server *mk_server_create()
     if (!server) {
         return NULL;
     }
+
+    /* I'll try to leave both initializations here because 
+     * it should be possible to run in windows using the accept
+     * backend in which case it doesn't make sense to tie the net stack
+     * initialization to libevent.
+     */
+    mk_net_init();
+    mk_event_init();
 
     /* Library mode: event loop */
     server->lib_mode = MK_TRUE;

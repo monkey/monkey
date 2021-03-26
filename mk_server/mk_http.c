@@ -842,6 +842,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         }
     }
 
+#ifndef _WIN32
     /* Check symbolic link file */
     if (sr->file_info.is_link == MK_TRUE) {
         if (server->symlink == MK_FALSE) {
@@ -856,6 +857,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
             }
         }
     }
+#endif
 
     /* Plugin Stage 30: look for handlers for this request */
     if (sr->stage30_blocked == MK_FALSE) {
@@ -1240,6 +1242,7 @@ int mk_http_error(int http_status, struct mk_http_session *cs,
             if (fd == -1) {
                 break;
             }
+            /* This fd seems to be leaked, we need to verify this logic */
 
             /* Outgoing headers */
             sr->headers.content_length = finfo.size;

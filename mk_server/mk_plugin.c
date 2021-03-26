@@ -29,8 +29,10 @@
 #include <monkey/mk_core.h>
 #include <monkey/mk_net.h>
 
+#ifndef _WIN32
 #include <dlfcn.h>
 #include <err.h>
+#endif
 
 enum {
     bufsize = 256
@@ -59,10 +61,15 @@ void *mk_plugin_load_dynamic(const char *path)
 {
     void *handle;
 
+#ifdef _WIN32
+    handle = (void *) LoadLibraryA(path);
+#else
     handle = dlopen(path, RTLD_LAZY);
+
     if (!handle) {
         mk_warn("dlopen() %s", dlerror());
     }
+#endif
 
     return handle;
 }
@@ -71,11 +78,15 @@ void *mk_plugin_load_symbol(void *handler, const char *symbol)
 {
     void *s;
 
+#ifdef _WIN32
+    s = GetProcAddress((HMODULE)handler, symbol);
+#else
     dlerror();
     s = dlsym(handler, symbol);
     if (dlerror() != NULL) {
         return NULL;
     }
+#endif
 
     return s;
 }
@@ -143,7 +154,11 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
         plugin  = mk_plugin_load_symbol(handler, symbol);
         if (!plugin) {
             mk_warn("Plugin '%s' is not registering properly", path);
+#ifdef _WIN32
+            FreeLibrary((HMODULE)handler);
+#else
             dlclose(handler);
+#endif
             return NULL;
         }
 
@@ -154,7 +169,11 @@ struct mk_plugin *mk_plugin_load(int type, const char *shortname,
                 strcmp(tmp->name, plugin->name) == 0){
                 mk_warn("Plugin '%s' have been built-in.",
                         tmp->shortname);
+#ifdef _WIN32
+                FreeLibrary((HMODULE)handler);
+#else
                 dlclose(handler);
+#endif
                 return NULL;
             }
         }
@@ -239,7 +258,11 @@ void mk_plugin_unregister(struct mk_plugin *p)
     mk_mem_free(p->path);
     mk_list_del(&p->_head);
     if (p->load_type == MK_PLUGIN_DYNAMIC) {
+#ifdef _WIN32
+        FreeLibrary((HMODULE)p->handler);
+#else
         dlclose(p->handler);
+#endif
     }
 
 }
@@ -248,7 +271,10 @@ void mk_plugin_api_init(struct mk_server *server)
 {
     /* Create an instance of the API */
     api = mk_mem_alloc_z(sizeof(struct plugin_api));
+
+#ifndef _WIN32
     __builtin_prefetch(api);
+#endif
 
     /* Setup and connections list */
     /* FIXME: api->config = server; */
@@ -523,7 +549,11 @@ void mk_plugin_exit_all(struct mk_server *server)
 
         if (plugin->load_type == MK_PLUGIN_DYNAMIC) {
             mk_mem_free(plugin->path);
-            dlclose(plugin->handler);
+#ifdef _WIN32
+            FreeLibrary((HMODULE)plugin->handler);
+#else
+            dlclose(plugin ->handler);
+#endif
         }
     }
     mk_mem_free(api);

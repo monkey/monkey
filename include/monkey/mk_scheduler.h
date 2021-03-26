@@ -36,6 +36,13 @@
 #define MK_SCHED_SIGNAL_DEADBEEF  0xDEADBEEF
 #define MK_SCHED_SIGNAL_FREE_ALL  0xFFEE0000
 
+#ifdef _WIN32
+    /* The pid field in the mk_sched_worker structure is ignored in platforms other than
+     * linux and mac os so it can be safely plugged in this meaningless way
+     */
+    typedef uint64_t pid_t;
+#endif
+
 /*
  * Scheduler balancing mode:
  *
@@ -75,6 +82,7 @@ struct mk_sched_worker
     unsigned char initialized;
 
     pthread_t tid;
+
     pid_t pid;
 
     /* store the memory page size (_SC_PAGESIZE) */

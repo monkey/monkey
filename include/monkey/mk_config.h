@@ -21,10 +21,16 @@
 #define MK_CONFIG_H
 
 #define _GNU_SOURCE
-#include <unistd.h>
+#include <mk_core/mk_unistd.h>
 
 #include <monkey/mk_info.h>
 #include "../../deps/rbtree/rbtree.h"
+
+#ifdef _WIN32
+typedef uint32_t mode_t;
+typedef uint32_t uid_t;
+typedef uint32_t gid_t;
+#endif
 
 #ifndef O_NOATIME
 #define O_NOATIME       01000000

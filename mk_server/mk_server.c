@@ -30,10 +30,15 @@
 #include <monkey/mk_fifo.h>
 #include <monkey/mk_http_thread.h>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#endif
+
+//#include <sys/time.h>
+//#include <sys/resource.h>
 
 pthread_key_t mk_server_fifo_key;
 
@@ -42,6 +47,8 @@ unsigned int mk_server_capacity(struct mk_server *server)
 {
     int ret;
     int cur;
+
+#ifndef _WIN32
     struct rlimit lim;
 
     /* Limit by system */
@@ -63,6 +70,17 @@ unsigned int mk_server_capacity(struct mk_server *server)
     else if (server->fd_limit > 0) {
         cur = server->fd_limit;
     }
+
+#else
+    ret = 0;
+    cur = INT_MAX; 
+
+    /* This is not the right way to plug this, according to raymond chen the only limit
+     * to fd count is free memory in their winsock provider and there are no other limits
+     * that I know of but I should still look for a more elegant solution. (even if it
+     * was just ignoring the server_capacity limit in scheduler.c: _next_target)
+    */
+#endif
 
     return cur;
 }
@@ -397,6 +415,7 @@ void mk_server_worker_loop(struct mk_server *server)
             event->type == MK_EVENT_NOTIFICATION) {
             if (event->fd == sched->signal_channel_r) {
                 ret = read(event->fd, &val, sizeof(val));
+
                 if (ret < 0) {
                     mk_libc_error("read");
                     continue;
@@ -490,7 +509,11 @@ void mk_server_worker_loop(struct mk_server *server)
                 event->handler(event);
             }
             else if (event->type == MK_EVENT_NOTIFICATION) {
+#ifdef _WIN32
+                ret = recv(event->fd, &val, sizeof(val), MSG_WAITALL);
+#else
                 ret = read(event->fd, &val, sizeof(val));
+#endif
                 if (ret < 0) {
                     mk_libc_error("read");
                     continue;
@@ -541,7 +564,12 @@ static int mk_server_lib_notify_started(struct mk_server *server)
     }
 
     val = MK_SERVER_SIGNAL_START;
+
+#ifdef _WIN32
+    return send(server->lib_ch_manager[1], &val, sizeof(uint64_t), 0);
+#else
     return write(server->lib_ch_manager[1], &val, sizeof(uint64_t));
+#endif
 }
 
 

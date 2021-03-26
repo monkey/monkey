@@ -244,7 +244,7 @@ static int msg_write(int fd, void *buf, size_t count)
     size_t total = 0;
 
     do {
-        bytes = write(fd, buf + total, count - total);
+        bytes = write(fd, (uint8_t *)buf + total, count - total);
         if (bytes == -1) {
             if (errno == EAGAIN) {
                 /*
@@ -252,7 +252,12 @@ static int msg_write(int fd, void *buf, size_t count)
                  * return until all data have been read, just sleep a little
                  * bit (0.05 seconds)
                  */
+
+#ifdef _WIN32
+                Sleep(5);
+#else
                 usleep(50000);
+#endif
                 continue;
             }
         }

@@ -26,9 +26,10 @@
 #include <monkey/mk_http_status.h>
 #include <monkey/mk_info.h>
 
+#include <mk_core/mk_dirent.h>
+
 #include <regex.h>
 #include <sys/stat.h>
-#include <dirent.h>
 #include <fcntl.h>
 
 /* Initialize Virtual Host FDT mutex */

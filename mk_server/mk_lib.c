@@ -21,8 +21,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>
 #include <signal.h>
+
+#include <mk_core/mk_pthread.h>
 
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
@@ -30,6 +31,7 @@
 #include <monkey/mk_thread.h>
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_fifo.h>
+#include <monkey/mk_utils.h>
 
 #define config_eq(a, b) strcasecmp(a, b)
 
@@ -251,7 +253,7 @@ int mk_config_set_property(struct mk_server *server, char *k, char *v)
     else if (config_eq(k, "Workers") == 0) {
         num = atoi(v);
         if (num <= 0) {
-            server->workers = sysconf(_SC_NPROCESSORS_ONLN);
+            server->workers = mk_utils_get_system_core_count();
         }
         else {
             server->workers = num;
