@@ -34,8 +34,6 @@
 /* Initialize the network stack*/
 int mk_net_init()
 {
-printf("TEST 2\n");
-
 #ifdef _WIN32
     int result;
     WSADATA wsa_data;

@@ -20,6 +20,7 @@
 #define _GNU_SOURCE
 
 #include <mk_core/mk_pthread.h>
+#include <mk_core/mk_event.h>
 
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_plugin.h>
@@ -94,11 +95,28 @@ struct mk_server *mk_server_create()
         return NULL;
     }
 
+
     /* Library mode: channel manager */
+
+    /* This code causes a memory corruption because it interprets the mk_server structure 
+     * pointer as a mk_event structure pointer but the mk_server structure doesn't start
+     * with a mk_event member, however, so I added an event to that structure to fix the 
+     * issue, however, I could be wrong so some input on this would be great.
+     */
+
+    memset(&server->lib_ch_event, 0, sizeof(struct mk_event));
+
+    ret = mk_event_channel_create(server->lib_evl,
+        &server->lib_ch_manager[0],
+        &server->lib_ch_manager[1],
+        &server->lib_ch_event);
+/*
     ret = mk_event_channel_create(server->lib_evl,
                                   &server->lib_ch_manager[0],
                                   &server->lib_ch_manager[1],
                                   server);
+*/
+
     if (ret != 0) {
         mk_event_loop_destroy(server->lib_evl);
         mk_mem_free(server);
@@ -126,7 +144,7 @@ struct mk_server *mk_server_create()
 
 #ifdef MK_HAVE_TRACE
     MK_TRACE("Monkey TRACE is enabled");
-    pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
+    //pthread_mutex_init(&mutex_trace, (pthread_mutexattr_t *) NULL);
 #endif
 
 #ifdef LINUX_TRACE

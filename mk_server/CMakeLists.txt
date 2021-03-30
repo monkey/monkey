@@ -31,11 +31,6 @@ if(MK_HTTP2)
     )
 endif()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-  include_directories(../mk_core/deps/libevent/include)
-  include_directories("${PROJECT_BINARY_DIR}/mk_core/deps/libevent/include/")
-endif()
-
 # Always build a static library, thats our core :)
 add_library(monkey-core-static STATIC ${src})
 set_target_properties(monkey-core-static PROPERTIES OUTPUT_NAME monkey)

@@ -16,6 +16,8 @@ include(GNUInstallDirs)
 if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath \$<))\"'")
+else()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__=__FILE__")
 endif()
 
 # Monkey Version
@@ -83,7 +85,6 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(MK_ACCEPT        1)
   set(MK_ACCEPT4       0)
   set(MK_SYSTEM_MALLOC 1)
-  set(MK_PLUGIN_LIANA  No)
 endif()
 
 if(MK_STATIC_PLUGINS)
@@ -272,6 +273,11 @@ include_directories(deps/flb_libco)
 include_directories(deps/regex)
 include_directories(include)
 include_directories(include/monkey/)
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+  include_directories(mk_core/deps/libevent/include)
+  include_directories("${PROJECT_BINARY_DIR}/mk_core/deps/libevent/include/")
+endif()
 
 # Instruct CMake to build the the code base
 # =========================================

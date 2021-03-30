@@ -60,7 +60,7 @@ int mk_socket_set_nonblocking(int sockfd)
     u_long flags;
 
     flags = 0;
-    if (NO_ERROR == ioctlsocket(sockfd, FIONBIO, &flags)) {
+    if (SOCKET_ERROR == ioctlsocket(sockfd, FIONBIO, &flags)) {
         mk_err("Can't set to non-blocking mode socket %i", sockfd);
         return -1;
     }

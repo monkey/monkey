@@ -414,8 +414,15 @@ void mk_server_worker_loop(struct mk_server *server)
         if ((event->mask & MK_EVENT_READ) &&
             event->type == MK_EVENT_NOTIFICATION) {
             if (event->fd == sched->signal_channel_r) {
+        /* When using libevent _mk_event_channel_create creates a unix socket
+         * instead of a pipe and windows doesn't us calling read / write on a
+         * socket instead of recv / send
+         */
+#ifdef _WIN32
+                ret = recv(event->fd, &val, sizeof(val), MSG_WAITALL);
+#else
                 ret = read(event->fd, &val, sizeof(val));
-
+#endif
                 if (ret < 0) {
                     mk_libc_error("read");
                     continue;

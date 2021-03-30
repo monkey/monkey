@@ -191,7 +191,17 @@ int mk_start(mk_ctx_t *ctx)
     mk_event_wait(server->lib_evl);
     mk_event_foreach(event, server->lib_evl) {
         fd = event->fd;
+
+        /* When using libevent _mk_event_channel_create creates a unix socket
+         * instead of a pipe and windows doesn't us calling read / write on a
+         * socket instead of recv / send
+         */
+#ifdef _WIN32        
+        bytes = recv(fd, &val, sizeof(uint64_t), MSG_WAITALL);
+#else
         bytes = read(fd, &val, sizeof(uint64_t));
+#endif
+        
         if (bytes <= 0) {
             return -1;
         }

@@ -24,8 +24,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     ${src}
     "external/winpthreads.c"
     )
-  include_directories(deps/libevent/include)
-  include_directories("${PROJECT_BINARY_DIR}/mk_core/deps/libevent/include/")
   add_subdirectory(deps/)
 else()
   MK_DEFINITION(MK_THREADS_POSIX)
