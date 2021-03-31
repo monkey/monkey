@@ -354,6 +354,9 @@ void mk_server_loop_balancer(struct mk_server *server)
                 sched = mk_sched_next_target(server);
                 if (sched != NULL) {
                     mk_server_listen_handler(sched, event, server);
+
+                    mk_server_lib_notify_event_loop_break(sched);
+
 #ifdef MK_HAVE_TRACE
                     int i;
                     struct mk_sched_ctx *ctx = server->sched_ctx;
@@ -541,6 +544,13 @@ void mk_server_worker_loop(struct mk_server *server)
                         mk_sched_worker_free(server);
                         return;
                     }
+                    else if (val == MK_SCHED_SIGNAL_EVENT_LOOP_BREAK) {
+                        /* NOTE: This is just a notification that's sent to break out
+                         *       of the libevent loop in windows after accepting a new
+                         *       client
+                        */
+                        MK_TRACE("New client accepted, awesome!");
+                    }
                 }
                 else if (event->fd == timeout_fd) {
                     mk_sched_check_timeouts(sched, server);
@@ -559,6 +569,24 @@ void mk_server_worker_loop(struct mk_server *server)
         mk_sched_threads_purge(sched);
         mk_sched_event_free_all(sched);
     }
+}
+
+static int mk_server_lib_notify_event_loop_break(struct mk_sched_worker *sched)
+{
+    uint64_t val;
+
+    /* Check the channel is valid (enabled by library mode) */
+    if (sched->signal_channel_w <= 0) {
+        return -1;
+    }
+
+    val = MK_SCHED_SIGNAL_EVENT_LOOP_BREAK;
+
+#ifdef _WIN32
+    return send(sched->signal_channel_w, &val, sizeof(uint64_t), 0);
+#else
+    return write(sched->signal_channel_w, &val, sizeof(uint64_t));
+#endif
 }
 
 static int mk_server_lib_notify_started(struct mk_server *server)
@@ -593,7 +621,7 @@ void mk_server_loop(struct mk_server *server)
 
     /* Wake up workers */
     val = MK_SERVER_SIGNAL_START;
-    mk_sched_send_signal(server, val);
+    mk_sched_broadcast_signal(server, val);
 
     /* Signal lib caller (if any) */
     mk_server_lib_notify_started(server);

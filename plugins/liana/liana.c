@@ -53,8 +53,6 @@ int mk_liana_plugin_exit()
 
 int mk_liana_read(int socket_fd, void *buf, int count)
 {
-    printf("I'm in liana read!\n");
-
     return recv(socket_fd, (void*)buf, count, 0);
 }
 
