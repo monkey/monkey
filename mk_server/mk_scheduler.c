@@ -809,7 +809,7 @@ int mk_sched_send_signal(struct mk_sched_worker *worker, uint64_t val)
      * instead of a pipe and windows doesn't us calling read / write on a
      * socket instead of recv / send
      */
-    
+
 #ifdef _WIN32
     n = send(worker->signal_channel_w, &val, sizeof(uint64_t), 0);
 #else
@@ -838,22 +838,6 @@ int mk_sched_broadcast_signal(struct mk_server *server, uint64_t val)
         worker = &ctx->workers[i];
 
         count += mk_sched_send_signal(worker, val);
-
-        /* When using libevent _mk_event_channel_create creates a unix socket
-         * instead of a pipe and windows doesn't us calling read / write on a
-         * socket instead of recv / send
-         */
-// #ifdef _WIN32
-//         n = send(worker->signal_channel_w, &val, sizeof(uint64_t), 0);
-// #else
-//         n = write(worker->signal_channel_w, &val, sizeof(uint64_t));
-// #endif
-//         if (n < 0) {
-//             mk_libc_error("write");
-//         }
-//         else {
-//             count++;
-//         }
     }
 
     return count;
