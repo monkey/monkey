@@ -33,26 +33,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-/* Definitions: */
-
-#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
-#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
-
-
-enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
-
-typedef struct regex_t
-{
-  unsigned char  type;   /* CHAR, STAR, etc.                      */
-  union
-  {
-    unsigned char  ch;   /*      the character itself             */
-    unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  } u;
-} regex_t;
-
-
-
 /* Private function declarations: */
 static int matchpattern(regex_t* pattern, const char* text, int* matchlength);
 static int matchcharclass(char c, const char* str);
@@ -77,6 +57,13 @@ int re_match(const char* pattern, const char* text, int* matchlength)
 
 int re_matchp(re_t pattern, const char* text, int* matchlength)
 {
+  int matchlength_;
+
+  if(NULL == matchlength)
+  {
+    matchlength = &matchlength_;
+  }
+
   *matchlength = 0;
   if (pattern != 0)
   {
@@ -155,7 +142,7 @@ re_t re_compile(const char* pattern)
             /* Escaped character, e.g. '.' or '$' */
             default:
             {
-              re_compiled[j].type = CHAR;
+              re_compiled[j].type = RE_CHAR;
               re_compiled[j].u.ch = pattern[i];
             } break;
           }
@@ -164,7 +151,7 @@ re_t re_compile(const char* pattern)
 /*
         else
         {
-          re_compiled[j].type = CHAR;
+          re_compiled[j].type = RE_CHAR;
           re_compiled[j].ch = pattern[i];
         }
 */
@@ -229,7 +216,7 @@ re_t re_compile(const char* pattern)
       /* Other characters: */
       default:
       {
-        re_compiled[j].type = CHAR;
+        re_compiled[j].type = RE_CHAR;
         re_compiled[j].u.ch = c;
       } break;
     }
@@ -250,7 +237,7 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
+  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "RE_CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
 
   int i;
   int j;
@@ -277,7 +264,7 @@ void re_print(regex_t* pattern)
       }
       printf("]");
     }
-    else if (pattern[i].type == CHAR)
+    else if (pattern[i].type == RE_CHAR)
     {
       printf(" '%c'", pattern[i].u.ch);
     }

@@ -25,7 +25,8 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <regex.h>
+//#include <regex.h>
+#include <re.h>
 
 #include <monkey/monkey.h>
 #include <monkey/mk_user.h>
@@ -736,8 +737,8 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         mk_list_foreach(head, handlers) {
             h_handler = mk_list_entry(head, struct mk_vhost_handler, _head);
 
-            if (regexec(h_handler->match,
-                        sr->uri_processed.data, 0, NULL, 0) != 0) {
+            if (re_matchp(h_handler->match,
+                          sr->uri_processed.data, NULL) == -1) {
                 continue;
             }
 
@@ -874,8 +875,7 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         handlers = &sr->host_conf->handlers;
         mk_list_foreach(head, handlers) {
             h_handler = mk_list_entry(head, struct mk_vhost_handler, _head);
-            if (regexec(h_handler->match,
-                        uri, 0, NULL, 0) != 0) {
+            if (re_matchp(h_handler->match, uri, NULL) == -1) {
                 continue;
             }
 
