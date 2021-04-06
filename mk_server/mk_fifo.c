@@ -20,6 +20,10 @@
 #include <monkey/mk_fifo.h>
 #include <monkey/mk_scheduler.h>
 
+#ifdef _WIN32
+#include <event.h>
+#endif
+
 static struct mk_fifo_worker *mk_fifo_worker_create(struct mk_fifo *ctx,
                                                     void *data)
 {
@@ -50,12 +54,21 @@ static struct mk_fifo_worker *mk_fifo_worker_create(struct mk_fifo *ctx,
     fw->buf_len = 0;
     fw->buf_size = MK_FIFO_BUF_SIZE;
 
+#ifdef _WIN32
+    ret = evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, fw->channel);
+    if (ret == -1) {
+        perror("socketpair");
+        mk_mem_free(fw);
+        return NULL;
+    }
+#else
     ret = pipe(fw->channel);
     if (ret == -1) {
         perror("pipe");
         mk_mem_free(fw);
         return NULL;
     }
+#endif
 
     mk_list_add(&fw->_head, &ctx->workers);
     return fw;
@@ -244,7 +257,11 @@ static int msg_write(int fd, void *buf, size_t count)
     size_t total = 0;
 
     do {
-        bytes = write(fd, buf + total, count - total);
+#ifdef _WIN32
+        bytes = send(fd, (uint8_t *)buf + total, count - total, 0);
+#else
+        bytes = write(fd, (uint8_t *)buf + total, count - total);
+#endif
         if (bytes == -1) {
             if (errno == EAGAIN) {
                 /*
@@ -252,7 +269,12 @@ static int msg_write(int fd, void *buf, size_t count)
                  * return until all data have been read, just sleep a little
                  * bit (0.05 seconds)
                  */
+
+#ifdef _WIN32
+                Sleep(5);
+#else
                 usleep(50000);
+#endif
                 continue;
             }
         }
@@ -374,7 +396,12 @@ int mk_fifo_worker_read(void *event)
     }
 
     /* Read data from pipe */
+#ifdef _WIN32
+    bytes = recv(fw->channel[0], fw->buf_data + fw->buf_len, available, 0);
+#else
     bytes = read(fw->channel[0], fw->buf_data + fw->buf_len, available);
+#endif
+
     if (bytes == 0) {
         return -1;
     }

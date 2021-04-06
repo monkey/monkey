@@ -21,7 +21,7 @@
 #define MK_IOV_H
 
 #include <stdio.h>
-#include <sys/uio.h>
+#include "mk_uio.h"
 #include "mk_utils.h"
 #include "mk_macros.h"
 

@@ -32,14 +32,20 @@ extern "C" {
 
 #include "mk_core/mk_core_info.h"
 
-#ifdef MK_HAVE_SYS_UIO_H
 #include "mk_core/mk_iov.h"
-#endif
-
 #include "mk_core/mk_list.h"
 #include "mk_core/mk_pthread.h"
 
 /* WIN32 */
+#ifdef _WIN32
+/* Posix function name deprecation warning */
+#pragma warning(disable : 4996)
+/* Type casting issues, only disabled momentarily*/
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4133)
+#endif
+
 #include "mk_core/mk_getopt.h"
 #include "mk_core/mk_pipe.h"
 #include "mk_core/mk_sleep.h"

@@ -23,7 +23,7 @@
 #include <monkey/mk_info.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_core.h>
-#include <pthread.h>
+#include <mk_core/mk_pthread.h>
 
 #define MK_FIFO_BUF_SIZE   32768
 
