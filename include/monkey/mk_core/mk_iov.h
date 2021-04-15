@@ -50,7 +50,7 @@ struct mk_iov {
     int buf_idx;
     int size;
     unsigned long total_len;
-    struct iovec *io;
+    struct mk_iovec *io;
     void **buf_to_free;
 };
 

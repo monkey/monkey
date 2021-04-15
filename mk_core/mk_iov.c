@@ -46,7 +46,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
     struct mk_iov *iov;
 
     s_all      = sizeof(struct mk_iov);       /* main mk_iov structure */
-    s_iovec    = (n * sizeof(struct iovec));  /* iovec array size      */
+    s_iovec    = (n * sizeof(struct mk_iovec));  /* iovec array size      */
     s_free_buf = (n * sizeof(void *));        /* free buf array        */
 
     p = mk_mem_alloc_z(s_all + s_iovec + s_free_buf);
@@ -56,7 +56,7 @@ struct mk_iov *mk_iov_create(int n, int offset)
 
     /* Set pointer address */
     iov     = p;
-    iov->io = (uint8_t *)p + sizeof(struct mk_iov);
+    iov->io = (struct mk_iov *)((uint8_t *)p + sizeof(struct mk_iov));
     iov->buf_to_free = (void *) ((uint8_t*)p + sizeof(struct mk_iov) + s_iovec);
 
     mk_iov_init(iov, n, offset);
@@ -203,6 +203,6 @@ int mk_iov_consume(struct mk_iov *mk_io, size_t bytes)
         }
     }
 
-    mk_io->total_len -= bytes;
+    mk_io->total_len -= (unsigned long)bytes;
     return 0;
 }

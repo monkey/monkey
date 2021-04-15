@@ -14,7 +14,7 @@
 typedef SSIZE_T ssize_t;
 #endif
 
-struct iovec
+struct mk_iovec
 {
     void   *iov_base;    /* Base address of a memory region for input or output */
     size_t  iov_len;     /* The size of the memory pointed to by iov_base */
@@ -22,13 +22,13 @@ struct iovec
 
 /* Long way to go here, it's mostly a placeholder */
 
-static inline ssize_t readv(int fildes, const struct iovec *iov, int iovcnt)
+static inline ssize_t readv(int fildes, const struct mk_iovec *iov, int iovcnt)
 {
     errno = ENOSYS;
     return -1;
 }
 
-static inline ssize_t writev(int fildes, const struct iovec *iov, int iovcnt)
+static inline ssize_t writev(int fildes, const struct mk_iovec *iov, int iovcnt)
 {
     int i;
     uint32_t bytes_written = 0;

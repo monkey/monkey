@@ -829,7 +829,6 @@ int mk_sched_broadcast_signal(struct mk_server *server, uint64_t val)
 {
     int i;
     int count = 0;
-    ssize_t n;
     struct mk_sched_ctx *ctx;
     struct mk_sched_worker *worker;
 

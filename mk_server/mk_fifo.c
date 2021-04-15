@@ -55,7 +55,7 @@ static struct mk_fifo_worker *mk_fifo_worker_create(struct mk_fifo *ctx,
     fw->buf_size = MK_FIFO_BUF_SIZE;
 
 #ifdef _WIN32
-    ret = evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, fw->channel);
+    ret = evutil_socketpair(AF_INET, SOCK_STREAM, 0, fw->channel);
     if (ret == -1) {
         perror("socketpair");
         mk_mem_free(fw);
