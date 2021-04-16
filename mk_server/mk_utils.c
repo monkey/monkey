@@ -135,7 +135,7 @@ int mk_utils_get_system_core_count()
 int mk_utils_get_system_page_size()
 {
     return sysconf(_SC_PAGESIZE);
-{
+}
 
 #endif
 

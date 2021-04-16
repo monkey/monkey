@@ -37,10 +37,14 @@
 #include <netinet/in.h>
 #endif
 
-//#include <sys/time.h>
-//#include <sys/resource.h>
+#ifndef _WIN32
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
 
 pthread_key_t mk_server_fifo_key;
+
+static int mk_server_lib_notify_event_loop_break(struct mk_sched_worker *sched);
 
 /* Return the number of clients that can be attended  */
 unsigned int mk_server_capacity(struct mk_server *server)
