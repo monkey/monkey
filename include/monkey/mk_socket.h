@@ -35,7 +35,6 @@
 #include <sys/un.h>
 #endif
 
-#include <mk_core/mk_uio.h>
 #include <monkey/mk_core.h>
 #include <monkey/mk_config.h>
 #include <monkey/mk_info.h>

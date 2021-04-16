@@ -31,8 +31,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <mk_core/mk_pthread.h>
-#include <mk_core/mk_unistd.h>
+#include <monkey/mk_core.h>
 
 #ifdef LINUX_TRACE
 #define TRACEPOINT_CREATE_PROBES

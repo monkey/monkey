@@ -31,10 +31,12 @@ extern "C" {
 #include <sys/types.h>
 
 #include "mk_core/mk_core_info.h"
-
+#include "mk_core/mk_pthread.h"
 #include "mk_core/mk_iov.h"
+#include "mk_core/mk_uio.h"
 #include "mk_core/mk_list.h"
 #include "mk_core/mk_pthread.h"
+#include "mk_core/mk_unistd.h"
 
 /* WIN32 */
 #ifdef _WIN32
