@@ -5,7 +5,7 @@
 
 #ifdef MK_HAVE_SYS_UIO_H
 #include <sys/uio.h>
-typedef struct mk_iovec struct iovec;
+#define mk_iovec iovec
 #else
 #include "external/winuio.h"
 #endif
