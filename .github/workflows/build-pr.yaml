@@ -1,0 +1,33 @@
+name: Build PR(s)
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    types: [opened, edited, synchronize]
+jobs:
+  run-unit-tests-amd64:
+    name: Build sources on amd64 for ${{ matrix.os }} - ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 48
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        compiler: [ gcc, clang ]
+        exclude:
+          - os: windows-latest
+            compiler: gcc
+          - os: windows-latest
+            compiler: clang
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build on ${{ matrix.os }} with ${{ matrix.compiler }}
+        run: |
+          echo "CC = $CC, CXX = $CXX"
+          cmake .
+          make
+        env:
+          CC: ${{ matrix.compiler }}
