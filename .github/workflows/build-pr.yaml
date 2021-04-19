@@ -8,14 +8,30 @@ on:
       - master
     types: [opened, edited, synchronize]
 jobs:
-  run-unit-tests-amd64:
+  build-windows:
+    name: Build sources on amd64 for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 48
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build on ${{ matrix.os }} with vs-2019
+        run: |
+          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On
+          cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\"
+          .\MSBuild.exe $Env:GITHUB_WORKSPACE\monkey.sln /p:Configuration=Release
+
+  build-unix:
     name: Build sources on amd64 for ${{ matrix.os }} - ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 48
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         compiler: [ gcc, clang ]
         exclude:
           - os: windows-latest
