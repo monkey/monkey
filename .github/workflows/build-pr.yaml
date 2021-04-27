@@ -43,7 +43,7 @@ jobs:
       - name: Build on ${{ matrix.os }} with ${{ matrix.compiler }}
         run: |
           echo "CC = $CC, CXX = $CXX"
-          cmake .
+          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On
           make
         env:
           CC: ${{ matrix.compiler }}
