@@ -12,10 +12,11 @@
 #include <string.h>
 #include <stdint.h>
 
-#ifndef __APPLE__
-#ifndef IOS
+#if defined(__APPLE__)
+#elif defined(__FreeBSD__)
+#include <malloc_np.h>
+#else
 #include <malloc.h>
-#endif
 #endif
 
 #ifdef __cplusplus
