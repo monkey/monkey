@@ -169,31 +169,6 @@ static int mk_rconf_meta_add(struct mk_rconf *conf, char *buf, int len)
     return 0;
 }
 
-static int check_indent(const char *line, const char *indent)
-{
-    while (*line == *indent && *indent) {
-        line++;
-        indent++;
-    }
-
-    if (*indent != '\0') {
-        if (isblank(*line)) {
-            mk_err("[config] Inconsistent use of tab and space");
-        }
-        else {
-            mk_err("[config] Indentation level is too low");
-        }
-        return -1;
-    }
-
-    if (isblank(*line)) {
-        mk_err("[config] Extra indentation level found");
-        return -1;
-    }
-
-    return 0;
-}
-
 /* To call this function from mk_rconf_read */
 static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path);
 
@@ -362,7 +337,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
         }
 
         /* Validate indentation level */
-        if (check_indent(buf, indent) < 0) {
+        if (strncmp(buf, indent, indent_len) != 0 ||
             isblank(buf[indent_len]) != 0) {
             mk_config_error(path, line, "Invalid indentation level");
             mk_mem_free(key);
