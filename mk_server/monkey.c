@@ -27,6 +27,14 @@
 #include <monkey/mk_clock.h>
 #include <monkey/mk_mimetype.h>
 
+pthread_once_t mk_server_tls_setup_once = PTHREAD_ONCE_INIT;
+
+static void mk_set_up_tls_keys()
+{
+    MK_TLS_INIT();
+    mk_thread_keys_init();
+}
+
 void mk_server_info(struct mk_server *server)
 {
     struct mk_list *head;
@@ -95,27 +103,14 @@ struct mk_server *mk_server_create()
         return NULL;
     }
 
-
     /* Library mode: channel manager */
-
-    /* This code causes a memory corruption because it interprets the mk_server structure 
-     * pointer as a mk_event structure pointer but the mk_server structure doesn't start
-     * with a mk_event member, however, so I added an event to that structure to fix the 
-     * issue, however, I could be wrong so some input on this would be great.
-     */
 
     memset(&server->lib_ch_event, 0, sizeof(struct mk_event));
 
     ret = mk_event_channel_create(server->lib_evl,
-        &server->lib_ch_manager[0],
-        &server->lib_ch_manager[1],
-        &server->lib_ch_event);
-/*
-    ret = mk_event_channel_create(server->lib_evl,
                                   &server->lib_ch_manager[0],
                                   &server->lib_ch_manager[1],
-                                  server);
-*/
+                                  &server->lib_ch_event);
 
     if (ret != 0) {
         mk_event_loop_destroy(server->lib_evl);
@@ -169,6 +164,7 @@ int mk_server_setup(struct mk_server *server)
 
     mk_sched_init(server);
 
+
     /* Clock init that must happen before starting threads */
     mk_clock_sequential_init(server);
 
@@ -183,7 +179,7 @@ int mk_server_setup(struct mk_server *server)
     }
 
     /* Init thread keys */
-    mk_thread_keys_init();
+    pthread_once(&mk_server_tls_setup_once, mk_set_up_tls_keys);
 
     /* Configuration sanity check */
     mk_config_sanity_check(server);
@@ -192,7 +188,6 @@ int mk_server_setup(struct mk_server *server)
     mk_plugin_core_process(server);
 
     /* Launch monkey http workers */
-    MK_TLS_INIT();
     mk_server_launch_workers(server);
 
     return 0;
