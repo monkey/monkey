@@ -51,7 +51,7 @@ mk_ctx_t *mk_create()
 {
     mk_ctx_t *ctx;
 
-    ctx = mk_mem_alloc(sizeof(mk_ctx_t));
+    ctx = mk_mem_alloc_z(sizeof(mk_ctx_t));
     if (!ctx) {
         return NULL;
     }
