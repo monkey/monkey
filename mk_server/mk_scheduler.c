@@ -490,8 +490,9 @@ int mk_sched_init(struct mk_server *server)
     /* Map context into server context */
     server->sched_ctx = ctx;
 
-    /* co-routing thread initialization */
-    mk_thread_prepare();
+    /* The mk_thread_prepare call was replaced by mk_http_thread_initialize_tls
+     * which is called earlier.
+     */
 
     return 0;
 }
