@@ -177,6 +177,9 @@ struct mk_server
     pthread_cond_t  pth_cond;
     pthread_mutex_t pth_mutex;
 
+    /* Used for vhost initialization synchronization */
+    pthread_mutex_t vhost_fdt_mutex;
+
     /* worker_id as used by mk_sched_register_thread, it was moved here
      * because it has to be local to each mk_server instance.
      */
