@@ -25,14 +25,18 @@
 #include <monkey/mk_scheduler.h>
 #include <monkey/mk_plugin.h>
 #include <monkey/mk_clock.h>
+#include <monkey/mk_thread.h>
 #include <monkey/mk_mimetype.h>
+#include <monkey/mk_http_thread.h>
 
 pthread_once_t mk_server_tls_setup_once = PTHREAD_ONCE_INIT;
 
 static void mk_set_up_tls_keys()
 {
-    MK_TLS_INIT();
-    mk_thread_keys_init();
+    MK_INIT_INITIALIZE_TLS_UNIVERSAL();
+    MK_INIT_INITIALIZE_TLS();
+
+    mk_http_thread_initialize_tls();
 }
 
 void mk_server_info(struct mk_server *server)
@@ -130,6 +134,9 @@ struct mk_server *mk_server_create()
 
     mk_core_init();
 
+    /* Init thread keys */
+    pthread_once(&mk_server_tls_setup_once, mk_set_up_tls_keys);
+
     /* Init Kernel version data */
     kern_version = mk_kernel_version();
     kern_features = mk_kernel_features(kern_version);
@@ -149,6 +156,8 @@ struct mk_server *mk_server_create()
     mk_config_set_init_values(server);
 
     mk_mimetype_init(server);
+
+    pthread_mutex_init(&server->vhost_fdt_mutex, NULL);
 
     return server;
 }
@@ -178,9 +187,6 @@ int mk_server_setup(struct mk_server *server)
         return -1;
     }
 
-    /* Init thread keys */
-    pthread_once(&mk_server_tls_setup_once, mk_set_up_tls_keys);
-
     /* Configuration sanity check */
     mk_config_sanity_check(server);
 
@@ -192,14 +198,6 @@ int mk_server_setup(struct mk_server *server)
 
     return 0;
 }
-
-
-void mk_thread_keys_init(void)
-{
-    /* Create thread keys */
-    pthread_key_create(&mk_utils_error_key, NULL);
-}
-
 
 void mk_exit_all(struct mk_server *server)
 {
