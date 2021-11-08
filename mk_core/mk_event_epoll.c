@@ -362,9 +362,21 @@ static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
 static inline int _mk_event_wait(struct mk_event_loop *loop)
 {
     struct mk_event_ctx *ctx = loop->data;
+    int ret = 0;
 
-    loop->n_events = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
-    return loop->n_events;
+    while(1) {
+        ret = epoll_wait(ctx->efd, ctx->events, ctx->queue_size, -1);
+        if (ret >= 0) {
+            break;
+        }
+        else if(ret < 0 && errno != EINTR) {
+            mk_libc_error("epoll_wait");
+            break;
+        }
+        /* retry when errno is EINTR */
+    }
+    loop->n_events = ret;
+    return ret;
 }
 
 static inline char *_mk_event_backend()
