@@ -461,7 +461,7 @@ static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
     size_t i;
     int ret_glb = -1;
 
-    if (conf->root_path) {
+    if (conf->root_path && path[0] != '/') {
         snprintf(tmp, PATH_MAX, "%s/%s", conf->root_path, path);
         glb_path = tmp;
     }
@@ -473,16 +473,16 @@ static int mk_rconf_read_glob(struct mk_rconf *conf, const char * path)
     if (ret_glb != 0) {
         switch(ret_glb){
         case GLOB_NOSPACE:
-            mk_warn("[%s] glob: no space", __FUNCTION__);
+            mk_warn("[%s] glob: [%s] no space", __FUNCTION__, glb_path);
             break;
         case GLOB_NOMATCH:
-            mk_warn("[%s] glob: no match", __FUNCTION__);
+            mk_warn("[%s] glob: [%s] no match", __FUNCTION__, glb_path);
             break;
         case GLOB_ABORTED:
-            mk_warn("[%s] glob: aborted", __FUNCTION__);
+            mk_warn("[%s] glob: [%s] aborted", __FUNCTION__, glb_path);
             break;
         default:
-            mk_warn("[%s] glob: other error", __FUNCTION__);
+            mk_warn("[%s] glob: [%s] other error", __FUNCTION__, glb_path);
         }
         return ret;
     }
