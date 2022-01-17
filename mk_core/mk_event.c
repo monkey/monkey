@@ -112,7 +112,7 @@ int mk_event_inject(struct mk_event_loop *loop, struct mk_event *event,
         return -1;
     }
 
-    _mk_event_inject(loop, event, flags, int prevent_duplication);
+    _mk_event_inject(loop, event, flags, prevent_duplication);
 
     return 0;
 }
