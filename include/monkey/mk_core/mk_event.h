@@ -130,7 +130,7 @@ int mk_event_add(struct mk_event_loop *loop, int fd,
                  int type, uint32_t mask, void *data);
 int mk_event_del(struct mk_event_loop *loop, struct mk_event *event);
 int mk_event_inject(struct mk_event_loop *loop, struct mk_event *event,
-                    int flags);
+                    int flags, int prevent_duplication);
 int mk_event_timeout_create(struct mk_event_loop *loop,
                             time_t sec, long nsec,void *data);
 int mk_event_timeout_disable(struct mk_event_loop *loop, void *data);

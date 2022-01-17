@@ -348,11 +348,21 @@ static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
 
 static inline int _mk_event_inject(struct mk_event_loop *loop,
                                    struct mk_event *event,
-                                   int mask)
+                                   int mask,
+                                   int prevent_duplication)
 {
+    size_t               index;
     struct mk_event_ctx *ctx;
 
     ctx = loop->data;
+
+    if (prevent_duplication) {
+        for (index = 0 ; index < loop->n_events ; index++) {
+            if (ctx->fired[index].data == event) {
+                return 0;
+            }
+        }
+    }
 
     event->mask = mask;
 
