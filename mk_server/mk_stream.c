@@ -35,7 +35,7 @@ struct mk_channel *mk_channel_new(int type, int fd)
     return channel;
 }
 
-int mk_channel_release(mk_channel *channel)
+int mk_channel_release(struct mk_channel *channel)
 {
     mk_mem_free(channel);
 }
