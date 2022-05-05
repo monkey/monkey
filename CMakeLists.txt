@@ -259,12 +259,12 @@ endif()
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h.in"
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_info.h"
+  "${PROJECT_BINARY_DIR}/include/monkey/mk_info.h"
   )
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h.in"
-  "${PROJECT_SOURCE_DIR}/include/monkey/mk_env.h"
+  "${PROJECT_BINARY_DIR}/include/monkey/mk_env.h"
   )
 
 
