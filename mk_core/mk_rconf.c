@@ -250,6 +250,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
     /* Allocate temporal buffer to read file content */
     buf = mk_mem_alloc(MK_RCONF_KV_SIZE);
     if (!buf) {
+        fclose(f);
         perror("malloc");
         return -1;
     }
@@ -271,6 +272,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
              */
             if (!feof(f)) {
                 mk_config_error(path, line, "Length of content has exceeded limit");
+                fclose(f);
                 mk_mem_free(buf);
                 return -1;
             }
@@ -341,6 +343,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
             }
             else {
                 mk_config_error(path, line, "Bad header definition");
+                fclose(f);
                 mk_mem_free(buf);
                 return -1;
             }
@@ -364,6 +367,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
         /* Validate indentation level */
         if (check_indent(buf, indent) < 0) {
             mk_config_error(path, line, "Invalid indentation level");
+            fclose(f);
             return -1;
         }
 
@@ -382,6 +386,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
 
         if (!key || !val || i < 0) {
             mk_config_error(path, line, "Each key must have a value");
+            fclose(f);
             mk_mem_free(key);
             mk_mem_free(val);
             return -1;
@@ -393,6 +398,7 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
 
         if (strlen(val) == 0) {
             mk_config_error(path, line, "Key has an empty value");
+            fclose(f);
             mk_mem_free(key);
             mk_mem_free(val);
             return -1;
