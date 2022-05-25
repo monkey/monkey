@@ -102,6 +102,10 @@ struct mk_rconf *mk_rconf_create(const char *name)
 
     /* Alloc configuration node */
     conf = mk_mem_alloc_z(sizeof(struct mk_rconf));
+    if (!conf) {
+        perror("malloc");
+        return NULL;
+    }
     conf->created = time(NULL);
     conf->file = mk_string_dup(name);
     mk_list_init(&conf->sections);
@@ -152,7 +156,6 @@ static int mk_rconf_meta_add(struct mk_rconf *conf, char *buf, int len)
 
     meta = mk_mem_alloc(sizeof(struct mk_rconf_entry));
     if (!meta) {
-        perror("malloc");
         return -1;
     }
 
@@ -337,6 +340,15 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
                 /* Create new section */
                 section = mk_string_copy_substr(buf, 1, end);
                 current = mk_rconf_section_add(conf, section);
+                if (!current) {
+                    fclose(f);
+                    if (indent) {
+                        mk_mem_free(indent);
+                    }
+                    mk_mem_free(buf);
+                    mk_mem_free(section);
+                    return -1;
+                }
                 mk_mem_free(section);
                 n_keys = 0;
                 continue;
@@ -443,7 +455,6 @@ static int mk_rconf_read(struct mk_rconf *conf, const char *path)
     /* Append this file to the list */
     file = mk_mem_alloc(sizeof(struct mk_rconf_file));
     if (!file) {
-        perror("malloc");
         conf->level--;
         return -1;
     }
@@ -627,6 +638,10 @@ struct mk_rconf *mk_rconf_open(const char *path)
 
     /* Alloc configuration node */
     conf = mk_mem_alloc_z(sizeof(struct mk_rconf));
+    if (!conf) {
+        perror("malloc");
+        return NULL;
+    }
     conf->created = time(NULL);
     conf->file = mk_string_dup(path);
     conf->level = -1;
@@ -715,6 +730,9 @@ struct mk_rconf_section *mk_rconf_section_add(struct mk_rconf *conf,
 
     /* Alloc section node */
     new = mk_mem_alloc(sizeof(struct mk_rconf_section));
+    if (!new) {
+        return NULL;
+    }
     new->name = mk_string_dup(name);
     mk_list_init(&new->entries);
     mk_list_add(&new->_head, &conf->sections);
