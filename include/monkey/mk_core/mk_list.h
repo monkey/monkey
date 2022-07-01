@@ -82,6 +82,29 @@ static inline void mk_list_add_after(struct mk_list *_new,
     next->prev = _new;
 }
 
+static inline void mk_list_add_before(struct mk_list *_new,
+                                      struct mk_list *next,
+                                      struct mk_list *head)
+{
+    struct mk_list *prev;
+
+    if (_new == NULL || next == NULL || head == NULL) {
+        return;
+    }
+
+    if ((head->prev == head && head->next == head) /*empty*/||
+        next == head) {
+        mk_list_add(_new, head);
+        return;
+    }
+
+    prev = next->prev;
+    _new->next = next;
+    _new->prev = prev;
+    prev->next = _new;
+    next->prev = _new;
+}
+
 static inline void __mk_list_del(struct mk_list *prev, struct mk_list *next)
 {
     prev->next = next;
