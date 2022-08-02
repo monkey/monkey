@@ -320,6 +320,29 @@ static inline int _mk_event_channel_create(struct mk_event_ctx *ctx,
     return 0;
 }
 
+static inline int _mk_event_channel_destroy(struct mk_event_ctx *ctx,
+                                            int r_fd, int w_fd, void *data)
+{
+    struct mk_event *event;
+    int ret;
+
+
+    event = (struct mk_event *)data;
+    if (event->fd != r_fd) {
+        return -1;
+    }
+
+    ret = _mk_event_del(ctx, event);
+    if (ret != 0) {
+        return ret;
+    }
+
+    close(r_fd);
+    close(w_fd);
+
+    return 0;
+}
+
 static inline int _mk_event_inject(struct mk_event_loop *loop,
                                    struct mk_event *event,
                                    int mask,
