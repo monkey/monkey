@@ -178,6 +178,8 @@ endif()
 # Use old Pthread TLS
 if(NOT MK_PTHREAD_TLS)
   check_c_source_compiles("
+     #include <sys/types.h>
+     extern void *__tls_get_addr(size_t *v);
      __thread int a;
      int main() {
          __tls_get_addr(0);
