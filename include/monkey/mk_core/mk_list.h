@@ -82,6 +82,12 @@ static inline void mk_list_add_after(struct mk_list *_new,
     next->prev = _new;
 }
 
+static inline int mk_list_is_empty(struct mk_list *head)
+{
+    if (head->next == head) return 0;
+    else return -1;
+}
+
 static inline void mk_list_add_before(struct mk_list *_new,
                                       struct mk_list *next,
                                       struct mk_list *head)
@@ -92,7 +98,7 @@ static inline void mk_list_add_before(struct mk_list *_new,
         return;
     }
 
-    if ((head->prev == head && head->next == head) /*empty*/||
+    if (mk_list_is_empty(head) == 0 /*empty*/||
         next == head) {
         mk_list_add(_new, head);
         return;
@@ -116,12 +122,6 @@ static inline void mk_list_del(struct mk_list *entry)
     __mk_list_del(entry->prev, entry->next);
     entry->prev = NULL;
     entry->next = NULL;
-}
-
-static inline int mk_list_is_empty(struct mk_list *head)
-{
-    if (head->next == head) return 0;
-    else return -1;
 }
 
 static inline int mk_list_is_set(struct mk_list *head)
