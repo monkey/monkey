@@ -20,9 +20,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build on ${{ matrix.os }} with vs-2019
         run: |
-          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On
-          cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\"
-          .\MSBuild.exe $Env:GITHUB_WORKSPACE\monkey.sln /p:Configuration=Release
+          mkdir build
+          cd build
+          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On ..\
+          cmake --build . --config Release
 
   build-unix:
     name: Build sources on amd64 for ${{ matrix.os }} - ${{ matrix.compiler }}
@@ -42,8 +43,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build on ${{ matrix.os }} with ${{ matrix.compiler }}
         run: |
+          mkdir build
+          cd build
           echo "CC = $CC, CXX = $CXX"
-          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On
-          make
+          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On ..\
+          cmake --build .
         env:
           CC: ${{ matrix.compiler }}
