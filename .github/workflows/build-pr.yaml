@@ -46,7 +46,7 @@ jobs:
           mkdir build
           cd build
           echo "CC = $CC, CXX = $CXX"
-          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On ..\
+          cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On ../
           cmake --build .
         env:
           CC: ${{ matrix.compiler }}
