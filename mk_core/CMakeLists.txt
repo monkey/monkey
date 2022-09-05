@@ -145,7 +145,7 @@ endif()
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/../include/monkey/mk_core/mk_core_info.h.in"
-  "${PROJECT_BINARY_DIR}/../include/monkey/mk_core/mk_core_info.h"
+  "${PROJECT_BINARY_DIR}/include/monkey/mk_core/mk_core_info.h" 
   )
 
 add_library(mk_core STATIC ${src})
