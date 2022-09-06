@@ -221,7 +221,7 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
     struct ev_map *ev_map;
 
     mk_bug(ctx == NULL);
-    mk_bug(data == NULL);
+    mk_bug(event == NULL);
 
     if (!MK_EVENT_IS_REGISTERED(event)) {
         return 0;
