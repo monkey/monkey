@@ -18,10 +18,11 @@
  *  limitations under the License.
  */
 
-#ifndef   	MK_LIST_H_
-#define   	MK_LIST_H_
+#ifndef MK_LIST_H_
+#define MK_LIST_H_
 
 #include <stddef.h>
+#include "mk_macros.h"
 
 #ifdef _WIN32
 /* Windows */
@@ -163,6 +164,23 @@ static inline int mk_list_size(struct mk_list *head)
     struct mk_list *it;
     for (it = head->next; it != head; it = it->next, ret++);
     return ret;
+}
+
+static inline void mk_list_entry_init(struct mk_list *list)
+{
+    list->next = NULL;
+    list->prev = NULL;
+}
+
+static inline int mk_list_entry_is_orphan(struct mk_list *head)
+{
+    if (head->next != NULL &&
+        head->prev != NULL &&
+        head->next != head->prev) {
+        return MK_FALSE;
+    }
+
+    return MK_TRUE;
 }
 
 static inline int mk_list_entry_orphan(struct mk_list *head)
