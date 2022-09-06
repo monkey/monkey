@@ -130,8 +130,7 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
 
     event->mask = events;
     event->priority = MK_EVENT_PRIORITY_DEFAULT;
-
-    mk_list_init(&event->_priority_head);
+    mk_list_entry_init(&event->_priority_head);
 
     return 0;
 }
@@ -167,7 +166,7 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
     }
 
     /* Remove from priority queue */
-    if (mk_list_entry_orphan(&event->_priority_head) != 0) {
+    if (!mk_list_entry_is_orphan(&event->_priority_head)) {
         mk_list_del(&event->_priority_head);
     }
 
@@ -203,8 +202,7 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     event->mask = MK_EVENT_EMPTY;
 
     event->priority = MK_EVENT_PRIORITY_DEFAULT;
-
-    mk_list_init(&event->_priority_head);
+    mk_list_entry_init(&event->_priority_head);
 
 #if defined(NOTE_SECONDS) && !defined(__APPLE__)
     /* FreeBSD or LINUX_KQUEUE defined */
@@ -257,7 +255,7 @@ static inline int _mk_event_timeout_destroy(struct mk_event_ctx *ctx, void *data
     }
 
     /* Remove from priority queue */
-    if (mk_list_entry_orphan(&event->_priority_head) != 0) {
+    if (!mk_list_entry_is_orphan(&event->_priority_head)) {
         mk_list_del(&event->_priority_head);
     }
 
