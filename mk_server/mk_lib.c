@@ -196,8 +196,8 @@ int mk_start(mk_ctx_t *ctx)
     ctx->worker_tid = tid;
 
     /* Wait for the started signal so we can return to the caller */
-    mk_event_wait(server->lib_evl);
-    mk_event_foreach(event, server->lib_evl) {
+    mk_event_wait(server->lib_evl_start);
+    mk_event_foreach(event, server->lib_evl_start) {
         fd = event->fd;
 
         /* When using libevent _mk_event_channel_create creates a unix socket
@@ -222,6 +222,8 @@ int mk_start(mk_ctx_t *ctx)
             return -1;
         }
     }
+
+    mk_event_loop_destroy(server->lib_evl_start);
 
     return 0;
 }
