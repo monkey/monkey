@@ -211,31 +211,50 @@ int mk_start(mk_ctx_t *ctx)
 #endif
         
         if (bytes <= 0) {
-            return -1;
+            ret = -1;
+            break;
         }
 
         if (val == MK_SERVER_SIGNAL_START) {
-            return 0;
+            ret = 0;
+            break;
         }
         else {
-            mk_stop(ctx);
-            return -1;
+            ret = -1;
+            break;
         }
     }
 
     mk_event_loop_destroy(server->lib_evl_start);
+    if (ret == -1) {
+        mk_stop(ctx);
+    } 
 
-    return 0;
+    return ret;
 }
 
 int mk_stop(mk_ctx_t *ctx)
 {
     int n;
     uint64_t val;
+    int8_t scheduler_mode ;
     struct mk_server *server = ctx->server;
 
-    /* Send a signal for mk_server_loop_balancer to abort */
+    /* Keep track of the scheduler mode on stack, since the
+     * the worker may free the server before we need the info. 
+     */
+    scheduler_mode = server->scheduler_mode;
+
     val = MK_SERVER_SIGNAL_STOP;
+
+    /* Send a stop signal to the main lib channel to abort.
+     *
+     * MK_SCHEDULER_FAIR_BALANCING: this signal will be
+     * consumed by mk_server_loop_balancer.
+     * 
+     * MK_SCHEDULER_REUSEPORT: this signal will be consumed
+     * by mk_lib_worker. 
+     */
 #ifdef _WIN32
     n = send(server->lib_ch_manager[1], &val, sizeof(val), 0); 
 #else
@@ -246,18 +265,23 @@ int mk_stop(mk_ctx_t *ctx)
         return -1;
     }
 
-    sleep(1);
+    /* In MK_SCHEDULER_FAIR_BALANCING mode, we need one more 
+     * stop signal to abort mk_lib_worker.
+     */
+    if (scheduler_mode == MK_SCHEDULER_FAIR_BALANCING) {
+        /* Give mk_server_loop_balancer time to clean up. */
+        sleep(1);
 
-    /* Send a signal for mk_lib_worker to abort */
-    val = MK_SERVER_SIGNAL_STOP;
+        /* Send a signal for mk_lib_worker to abort */
 #ifdef _WIN32
-    n = send(server->lib_ch_manager[1], &val, sizeof(val), 0); 
+        n = send(server->lib_ch_manager[1], &val, sizeof(val), 0); 
 #else
-    n = write(server->lib_ch_manager[1], &val, sizeof(val));
+        n = write(server->lib_ch_manager[1], &val, sizeof(val));
 #endif
-    if (n <= 0) {
-        perror("write");
-        return -1;
+        if (n <= 0) {
+            perror("write");
+            return -1;
+        }
     }
 
     /* Wait for the child thread to exit */

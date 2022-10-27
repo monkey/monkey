@@ -420,6 +420,8 @@ void mk_server_loop_balancer(struct mk_server *server)
             }
         }
     }
+    mk_event_loop_destroy(evl);
+    mk_server_listen_exit(listeners);
 }
 
 /*
