@@ -125,6 +125,7 @@ struct mk_server *mk_server_create()
     /* Library mode: start event loop */
     server->lib_evl_start = mk_event_loop_create(1);
     if (!server->lib_evl_start) {
+        mk_event_loop_destroy(server->lib_evl);
         mk_mem_free(server);
         return NULL;
     }
