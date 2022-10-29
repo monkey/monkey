@@ -50,6 +50,7 @@ option(MK_MBEDTLS_SHARED "Use mbedtls shared lib"       No)
 option(MK_VALGRIND       "Enable Valgrind support"      No)
 option(MK_FUZZ_MODE      "Enable HonggFuzz mode"        No)
 option(MK_HTTP2          "Enable HTTP Support (dev)"    No)
+option(MK_TESTS          "Enable Tests"                 No)
 
 # Plugins: what should be build ?, these options
 # will be processed later on the plugins/CMakeLists.txt file
@@ -323,4 +324,8 @@ add_subdirectory(api)
 
 if(MK_FUZZ_MODE)
   add_subdirectory(fuzz)
+endif()
+
+if(MK_TESTS)
+  add_subdirectory(test)
 endif()
