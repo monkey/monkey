@@ -281,9 +281,5 @@ TEST_LIST = {
         "server_start_stop_force_fair_balancing", 
         test_server_start_stop_force_fair_balancing 
     },
-    { 
-        "server_start_fail_bad_endpoint", 
-        test_server_start_fail_bad_endpoint 
-    },
     {NULL, NULL}
 };
