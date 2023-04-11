@@ -327,6 +327,15 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     _mk_event_add(ctx, fd[0], MK_EVENT_NOTIFICATION, MK_EVENT_READ, data);
     event->mask = MK_EVENT_READ;
 
+    /* _mk_event_add will reset the `data` field on the event. This is an issue because
+     * if the event is destroyed manually, the read end of the socket needs to be closed
+     * purposefully so `cb_timeout` can eventually close the write end and resolve. This
+     * will add it back to the event data manually in the case that the event is manually
+     * deleted.
+     */
+    ev_map = event->data;
+    ev_map->pipe[0] = fd[0];
+
     return fd[0];
 }
 
