@@ -343,7 +343,7 @@ static inline int _mk_event_timeout_destroy(struct mk_event_ctx *ctx, void *data
      * data and clean itself up (including the write end of the socket and the event's
      * data).
      */
-    event = data; 
+    event = (struct mk_event*)data; 
     if (event->fd > 0) {
         evutil_closesocket(event->fd);
     }
