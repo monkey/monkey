@@ -9,6 +9,7 @@
 # endif()
 set(UNIT_TESTS_FILES
   lib_server.c
+  event_timeout.c
   )
 
 # Prepare list of unit tests

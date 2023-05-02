@@ -15,9 +15,10 @@
  *  limitations under the License.
  */
 
-#include "mk_tests.h"
 #include <monkey/mk_lib.h>
 #include <monkey/monkey.h>
+
+#include "mk_tests.h"
 
 #define TEST_NOT_RUN 0
 #define TEST_SUCCESS 1
