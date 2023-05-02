@@ -97,7 +97,7 @@ struct mk_net_connection *mk_net_conn_create(char *addr, int port)
     struct mk_net_connection *conn;
 
     /* Allocate connection context */
-    conn = mk_mem_alloc_z(sizeof(struct mk_net_connection));
+    conn = mk_mem_alloc(sizeof(struct mk_net_connection));
     if (!conn) {
         return NULL;
     }
@@ -201,7 +201,7 @@ int mk_net_conn_write(struct mk_channel *channel,
     }
 
     send = len - total;
-    bytes = channel->io->write(channel->fd, (uint8_t *)data + total, send);
+    bytes = channel->io->write(channel->io->plugin, channel->fd, (uint8_t *)data + total, send);
     if (bytes == -1) {
         if (errno == EAGAIN) {
             MK_EVENT_NEW(channel->event);
