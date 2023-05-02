@@ -357,7 +357,7 @@ void *mk_sched_launch_worker_loop(void *data)
      * Create the notification instance and link it to the worker
      * thread-scope list.
      */
-    notif = mk_mem_alloc(sizeof(struct mk_sched_notif));
+    notif = mk_mem_alloc_z(sizeof(struct mk_sched_notif));
     MK_TLS_SET(mk_tls_sched_worker_notif, notif);
 
     /* Register the scheduler channel to signal active workers */
