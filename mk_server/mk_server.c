@@ -124,7 +124,7 @@ struct mk_sched_conn *mk_server_listen_handler(struct mk_sched_worker *sched,
 
 error:
     if (client_fd != -1) {
-        listener->network->network->close(client_fd);
+        listener->network->network->close(listener->network, client_fd);
     }
 
     return NULL;
