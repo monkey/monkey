@@ -484,7 +484,6 @@ parse_more:
             p->chunk_processed_start = p->chunk_expected_start;
         }
         else {
-            //p->chunk_processed_start = req->session->body + p->i;
             p->chunk_processed_start = buf_request + p->i;
 
             /* Mark the very first chunk */
