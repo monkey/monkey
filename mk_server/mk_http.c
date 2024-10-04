@@ -314,6 +314,7 @@ int mk_http_handler_read(struct mk_sched_conn *conn, struct mk_http_session *cs,
          */
         if (cs->body == cs->body_fixed) {
             cs->body = mk_mem_alloc(new_size + 1);
+            printf("allocating new size: %d\n", new_size);
             cs->body_size = new_size;
             memcpy(cs->body, cs->body_fixed, cs->body_length);
             MK_TRACE("[FD %i] New size: %i, length: %i",
@@ -1150,6 +1151,7 @@ int mk_http_request_end(struct mk_http_session *cs, struct mk_server *server)
         mk_http_parser_init(&cs->parser);
         status = mk_http_parser(sr, &cs->parser, cs->body, cs->body_length,
                                 server);
+        //printf("parser status: %d\n", status);
         if (status == MK_HTTP_PARSER_OK) {
             ret = mk_http_request_prepare(cs, sr, server);
             if (ret == MK_EXIT_ABORT) {
@@ -1564,8 +1566,16 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
         else {
             sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
         }
+
+        // char *tmp = mk_mem_alloc_z(1024);
+        // memcpy(tmp, cs->body, cs->body_length);
+        // printf("body: %s\n", tmp);
+        // mk_mem_free(tmp);
+
         status = mk_http_parser(sr, &cs->parser, cs->body,
                                 cs->body_length, server);
+        printf("mk_http_parser status: %d\n", status);
+
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
             if (mk_http_status_completed(cs, conn) == -1) {
