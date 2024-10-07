@@ -392,4 +392,9 @@ int mk_http_parser_chunked_decode(struct mk_http_parser *p,
                                   char *buf_request, size_t buf_request_len,
                                   char **out_buf, size_t *out_buf_size);
 
+int mk_http_parser_chunked_decode_buf(struct mk_http_parser *p,
+                                      char *buf_request, size_t buf_request_len,
+                                      char *out_buf, size_t out_buf_size, size_t *out_buf_len);
+
+
 #endif /* MK_HTTP_H */
