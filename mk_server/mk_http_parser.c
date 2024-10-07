@@ -618,43 +618,73 @@ static int cb_copy_chunk(char *in, size_t in_len, char *out, size_t out_size, si
 {
     (void) out_size;
 
+    /* check we don't overflow the buffer */
+    if (*out_len_processed + in_len > out_size) {
+        return -1;
+    }
+
+    /* copy the chunk */
     memcpy(out + *out_len_processed, in, in_len);
     *out_len_processed += in_len;
 
     return 0;
 }
 
-int mk_http_parser_chunked_decode(struct mk_http_parser *p,
-                                  char *buf_request, size_t buf_request_len,
-                                  char **out_buf, size_t *out_buf_size)
+/*
+ * This function assumes that the output buffer size has enough space to copy the desired
+ * chunked content. We do some sanity checks but if the buffer is smaller the data will
+ * be truncated.
+ */
+int mk_http_parser_chunked_decode_buf(struct mk_http_parser *p,
+                                      char *buf_request, size_t buf_request_len,
+                                      char *out_buf, size_t out_buf_size, size_t *out_buf_len)
 {
     int ret;
-    size_t size;
-    size_t tmp = 0;
-    char *out;
-
-    size = mk_http_parser_content_length(p);
-    if (size == 0) {
-        return -1;
-    }
-
-    out = mk_mem_alloc(size);
-    if (!out) {
-        return -1;
-    }
+    size_t written_bytes = 0;
 
     ret = mk_http_parser_read_chunked_content(p,
                                               buf_request, buf_request_len,
                                               cb_copy_chunk,
-                                              out, size, &tmp);
+                                              out_buf, out_buf_size, &written_bytes);
     if (ret == MK_HTTP_PARSER_OK) {
-        *out_buf = out;
-        *out_buf_size = size;
+        *out_buf_len = written_bytes;
         return 0;
     }
 
-    mk_mem_free(out);
     return -1;
+}
+
+int mk_http_parser_chunked_decode(struct mk_http_parser *p,
+                                    char *buf_request, size_t buf_request_len,
+                                    char **out_buf, size_t *out_buf_size)
+{
+    int ret;
+    char *tmp_buf;
+    size_t tmp_buf_size = 0;
+    size_t tmp_written_bytes = 0;
+
+    tmp_buf_size = mk_http_parser_content_length(p);
+    if (tmp_buf_size == 0) {
+        return -1;
+    }
+
+    tmp_buf = mk_mem_alloc(tmp_buf_size);
+    if (!tmp_buf) {
+        return -1;
+    }
+
+    ret = mk_http_parser_chunked_decode_buf(p,
+                                            buf_request, buf_request_len,
+                                            tmp_buf, tmp_buf_size, &tmp_written_bytes);
+    if (ret == -1) {
+        mk_mem_free(tmp_buf);
+        return -1;
+    }
+
+    *out_buf = tmp_buf;
+    *out_buf_size = tmp_written_bytes;
+
+    return 0;
 }
 
 /*
