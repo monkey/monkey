@@ -1566,14 +1566,8 @@ int mk_http_sched_read(struct mk_sched_conn *conn,
             sr = mk_list_entry_first(&cs->request_list, struct mk_http_request, _head);
         }
 
-        // char *tmp = mk_mem_alloc_z(1024);
-        // memcpy(tmp, cs->body, cs->body_length);
-        // printf("body: %s\n", tmp);
-        // mk_mem_free(tmp);
-
         status = mk_http_parser(sr, &cs->parser, cs->body,
                                 cs->body_length, server);
-        printf("mk_http_parser status: %d\n", status);
 
         if (status == MK_HTTP_PARSER_OK) {
             MK_TRACE("[FD %i] HTTP_PARSER_OK", socket);
