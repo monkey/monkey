@@ -548,8 +548,6 @@ parse_more:
             return MK_HTTP_PARSER_ERROR;
         }
 
-        /* update the parser index to the last position */
-        p->i = p->chunk_processed_start - buf_request + 5;
         return MK_HTTP_PARSER_OK;
     }
     else {
