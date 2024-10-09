@@ -373,15 +373,6 @@ static inline void mk_http_parser_init(struct mk_http_parser *p)
     mk_list_init(&p->header_list);
 }
 
-static inline int mk_http_parser_more(struct mk_http_parser *p, int len)
-{
-    if (abs(len - p->i) - 1 > 0) {
-        return MK_TRUE;
-    }
-
-    return MK_FALSE;
-}
-
 int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                    char *buffer, int buf_len, struct mk_server *server);
 
@@ -396,5 +387,43 @@ int mk_http_parser_chunked_decode_buf(struct mk_http_parser *p,
                                       char *buf_request, size_t buf_request_len,
                                       char *out_buf, size_t out_buf_size, size_t *out_buf_len);
 
+static inline int mk_http_parser_more(struct mk_http_parser *p, int len)
+{
+    if (abs(len - p->i) - 1 > 0) {
+        return MK_TRUE;
+    }
+
+    return MK_FALSE;
+}
+
+/* Returns the full size of the HTTP request in bytes "If" mk_http_parser() has returned MK_HTTP_PARSER_OK */
+static inline size_t mk_http_parser_request_size(struct mk_http_parser *p, char *buf_request, size_t buf_request_len)
+{
+    size_t bytes;
+
+    /*
+     * if the request is chunked encoded, p->i points to the beginning of the last chunk
+     * found, so we need to check if the last chunk is complete, if so we can return the
+     * size of the request
+     */
+    if (mk_http_parser_is_content_chunked(p)) {
+        if (p->chunk_processed_start < buf_request) {
+            return -1;
+        }
+
+        /* Look at the last chunk processed (0\r\n\r\n) */
+        bytes = p->chunk_processed_start - buf_request + 5;
+        if (bytes > buf_request_len) {
+            return -1;
+        }
+        return bytes;
+    }
+    else if (p->header_content_length > 0) {
+        /* p->i points to the last byte after the content body */
+        return p->i;
+    }
+
+    return -1;
+}
 
 #endif /* MK_HTTP_H */
