@@ -186,6 +186,7 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     int ret;
     struct mk_event *event;
     struct kevent ke;
+    long msecs;
 
     mk_bug(data == NULL);
 
@@ -211,12 +212,19 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
 #if defined(NOTE_SECONDS) && !defined(__APPLE__)
     /* FreeBSD or LINUX_KQUEUE defined */
     /* TODO : high resolution interval support. */
+    if (sec <= 0) {
+        sec = 1;
+    }
     EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, sec, event);
 #else
     /* Other BSD have no NOTE_SECONDS & specify milliseconds */
     /* Also, on macOS, NOTE_SECONDS has severe side effect that cause
      * performance degradation. */
-    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, 0, (sec * 1000) + (nsec / 1000000) , event);
+    msecs = (sec * 1000) + (nsec / 1000000);
+    if (msecs <= 0) {
+        msecs = 1;
+    }
+    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, 0, msecs, event);
 #endif
 
     ret = kevent(ctx->kfd, &ke, 1, NULL, 0, NULL);
