@@ -210,12 +210,16 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     event->priority = MK_EVENT_PRIORITY_DEFAULT;
     mk_list_entry_init(&event->_priority_head);
 
-#if defined(NOTE_SECONDS) && !defined(__APPLE__)
-    /* FreeBSD or LINUX_KQUEUE defined */
-    /* TODO : high resolution interval support. */
+#if defined(NOTE_NSECONDS)
+    /* The modern FreeBSD & NetBSD & OpenBSD & macOS have a high-resolution
+       event timer. */
+    EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_NSECONDS,
+           (sec * 1000000000) + nsec, event);
+#elif defined(NOTE_SECONDS) && !defined(__APPLE__)
+    /* LINUX_KQUEUE defined */
     EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, NOTE_SECONDS, sec, event);
 #else
-    /* Other BSD have no NOTE_SECONDS & specify milliseconds */
+    /* Keep backward compatibility; use the millisecond-resolution event timer. */
     /* Also, on macOS, NOTE_SECONDS has severe side effect that cause
      * performance degradation. */
     EV_SET(&ke, fd, EVFILT_TIMER, EV_ADD, 0, (sec * 1000) + (nsec / 1000000) , event);
