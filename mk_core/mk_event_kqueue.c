@@ -74,8 +74,9 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
     int ret;
     int set = MK_FALSE;
     struct mk_event *event;
-    struct kevent ke = {0, 0, 0, 0, 0, 0};
+    struct kevent ke;
 
+    EV_SET(&ke, 0, 0, 0, 0, 0, 0);
     mk_bug(ctx == NULL);
     mk_bug(data == NULL);
 
@@ -142,8 +143,9 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
 static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event)
 {
     int ret;
-    struct kevent ke = {0, 0, 0, 0, 0, 0};
+    struct kevent ke;
 
+    EV_SET(&ke, 0, 0, 0, 0, 0, 0);
     mk_bug(ctx == NULL);
     mk_bug(event == NULL);
 
@@ -239,8 +241,9 @@ static inline int _mk_event_timeout_destroy(struct mk_event_ctx *ctx, void *data
 {
     int ret;
     struct mk_event *event;
-    struct kevent ke = {0, 0, 0, 0, 0, 0};
+    struct kevent ke;
 
+    EV_SET(&ke, 0, 0, 0, 0, 0, 0);
     if (data == NULL) {
         return 0;
     }
