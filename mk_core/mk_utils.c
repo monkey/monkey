@@ -324,14 +324,22 @@ int mk_utils_set_daemon()
 
     /* Redirect stdin, stdout, stderr to `/dev/null`. */
     fd = open("/dev/null", O_RDWR);
-    if (fd != -1) {
-        dup2(fd, STDIN_FILENO);
-        dup2(fd, STDOUT_FILENO);
-        dup2(fd, STDERR_FILENO);
-        if (fd > 2)
-            close(fd);
+    if (fd == -1) {
+		mk_err("Error: Failed to open /dev/null for daemonization");
+        return -1;
     }
 
+    if (dup2(fd, STDIN_FILENO) == -1 ||
+        dup2(fd, STDOUT_FILENO) == -1 ||
+        dup2(fd, STDERR_FILENO) == -1) {
+        close(fd);
+        mk_err("Failed to redirect standard file descriptors to /dev/null");
+        return -1;
+    }
+
+    if (fd > 2) {
+        close(fd);
+    }
     return 0;
 }
 
