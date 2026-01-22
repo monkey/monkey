@@ -285,7 +285,7 @@ void mk_plugin_api_init(struct mk_server *server)
 #endif
 
     /* Setup and connections list */
-    /* FIXME: api->config = server; */
+    api->hosts = &server->hosts;
 
     /* API plugins funcions */
 
