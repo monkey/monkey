@@ -2,7 +2,11 @@
 
 [Monkey](http://monkey-project.com) is a fast and lightweight Web Server for Linux. It has been designed to be very scalable with low memory and CPU consumption, the perfect solution for Embedded Linux and high end production environments.
 
+Monkey was started in 2001 as an open source project. It is currently licensed under the Apache License v2. Monkey community is well established and available through the mailing list or in the Freenode IRC channel
+
 Besides the common features as HTTP server, it expose a flexible C API which aims to behave as a fully HTTP development framework, so it can be extended as desired through the plugins interface.
+
+The server is designed as a small core extensible through its plugin interface. The binary size of Monkey is around 100 KB and around 250 KB on runtime depending on the loaded plugins. Monkey can perform well on x86 and x86-64, and ARM architectures running Linux embedded variants.
 
 For more details please refer to the [official documentation](http://monkey-project.com/documentation/).
 
@@ -24,6 +28,8 @@ For more details please refer to the [official documentation](http://monkey-proj
   - FastCGI
   - Much more!
 - Embeddable as a shared library
+- Monkey HTTP Server Workers: event loop
+- Web Services What do we usually expect 
 
 ## Requirements
 
