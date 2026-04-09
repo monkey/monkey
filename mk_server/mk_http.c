@@ -999,7 +999,6 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
         sr->in_file.fd           = sr->file_fd;
         sr->in_file.bytes_offset = 0;
         sr->in_file.bytes_total  = sr->file_info.size;
-        sr->in_file.stream       = &sr->stream;
     }
 
     /* Process methods */
@@ -1042,8 +1041,10 @@ int mk_http_init(struct mk_http_session *cs, struct mk_http_request *sr,
     /* Send file content */
     if (sr->method == MK_METHOD_GET || sr->method == MK_METHOD_POST) {
         /* Note: bytes and offsets are set after the Range check */
-        sr->in_file.type = MK_STREAM_FILE;
-        mk_stream_append(&sr->in_file, &sr->stream);
+        mk_stream_in_file(&sr->stream, &sr->in_file, sr->file_fd,
+                          sr->in_file.bytes_total,
+                          sr->in_file.bytes_offset,
+                          NULL, NULL);
     }
 
     /*
@@ -1429,7 +1430,7 @@ int mk_http_session_init(struct mk_http_session *cs, struct mk_sched_conn *conn,
 
     /* alloc space for body content */
     if (conn->net->buffer_size > MK_REQUEST_CHUNK) {
-        cs->body = mk_mem_alloc(conn->net->buffer_size);
+        cs->body = mk_mem_alloc(conn->net->buffer_size + 1);
         cs->body_size = conn->net->buffer_size;
     }
     else {

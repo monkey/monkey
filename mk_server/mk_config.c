@@ -102,6 +102,10 @@ void mk_config_free_all(struct mk_server *server)
 
     mk_config_listeners_free(server);
 
+    if (server->mimetype_default_str) {
+        mk_mem_free(server->mimetype_default_str);
+    }
+
     mk_ptr_free(&server->server_software);
     mk_mem_free(server);
 }
@@ -123,14 +127,7 @@ int mk_config_listen_check_busy(struct mk_server *server)
 {
     int fd;
     struct mk_list *head;
-    struct mk_plugin *p;
     struct mk_config_listener *listen;
-
-    p = mk_plugin_cap(MK_CAP_SOCK_PLAIN, server);
-    if (!p) {
-        mk_warn("Listen check: consider build monkey with basic socket handling!");
-        return MK_FALSE;
-    }
 
     mk_list_foreach(head, &server->listeners) {
         listen = mk_list_entry(head, struct mk_config_listener, _head);
@@ -277,6 +274,7 @@ static int mk_config_read_files(char *path_conf, char *file_conf,
 {
     unsigned long len;
     char *tmp = NULL;
+    char *default_mimetype = NULL;
     struct stat checkdir;
     struct mk_rconf *cnf;
     struct mk_rconf_section *section;
@@ -303,8 +301,10 @@ static int mk_config_read_files(char *path_conf, char *file_conf,
         mk_err("Cannot read '%s'", server->conf_main);
         return -1;
     }
+
     section = mk_rconf_section_get(cnf, "SERVER");
     if (!section) {
+        mk_mem_free(tmp);
         mk_err("ERROR: No 'SERVER' section defined");
         return -1;
     }
@@ -436,10 +436,10 @@ static int mk_config_read_files(char *path_conf, char *file_conf,
     }
 
     /* Default Mimetype */
-    mk_mem_free(tmp);
-    tmp = mk_rconf_section_get_key(section, "DefaultMimeType", MK_RCONF_STR);
-    if (tmp) {
-        mk_string_build(&server->mimetype_default_str, &len, "%s\r\n", tmp);
+    default_mimetype = mk_rconf_section_get_key(section, "DefaultMimeType", MK_RCONF_STR);
+    if (default_mimetype) {
+        mk_string_build(&server->mimetype_default_str, &len, "%s\r\n", default_mimetype);
+        mk_mem_free(default_mimetype);
     }
 
     /* File Descriptor Table (FDT) */
