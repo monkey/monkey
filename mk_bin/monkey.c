@@ -24,6 +24,9 @@
 
 #include <signal.h>
 #include <getopt.h>
+#include <limits.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #if defined(__DATE__) && defined(__TIME__)
 static const char MONKEY_BUILT[] = __DATE__ " " __TIME__;
@@ -37,7 +40,7 @@ static void mk_version(void)
     printf("Monkey HTTP Server v%s\n", MK_VERSION_STR);
     printf("Built : %s (%s %i.%i.%i)\n",
            MONKEY_BUILT, CC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-    printf("Home  : http://monkey-project.com\n");
+    printf("Home  : https://monkeywebserver.com\n");
     fflush(stdout);
 }
 
@@ -98,9 +101,108 @@ static void mk_help(int rc)
     printf("  -h, --help\t\t\t\tprint this help\n\n");
 
     printf("%sDocumentation%s\n", ANSI_BOLD, ANSI_RESET);
-    printf("  http://monkey-project.com/documentation\n\n");
+    printf("  https://monkeywebserver.com/documentation\n\n");
 
     exit(rc);
+}
+
+static int mk_dir_exists(const char *path)
+{
+    struct stat st;
+
+    if (path == NULL || path[0] == '\0') {
+        return MK_FALSE;
+    }
+
+    if (stat(path, &st) == -1) {
+        return MK_FALSE;
+    }
+
+    if (S_ISDIR(st.st_mode) == 0) {
+        return MK_FALSE;
+    }
+
+    return MK_TRUE;
+}
+
+static const char *mk_default_config_dir(char *buf, size_t size, const char *argv0)
+{
+    char exe_path[PATH_MAX];
+    char candidate[PATH_MAX];
+    char *last_slash;
+    int written;
+    ssize_t len;
+
+    if (mk_dir_exists("conf") == MK_TRUE) {
+        if (realpath("conf", buf) != NULL) {
+            return buf;
+        }
+
+        written = snprintf(buf, size, "%s", "conf");
+        if (written < 0 || (size_t) written >= size) {
+            return NULL;
+        }
+        return buf;
+    }
+
+    if (MK_PATH_CONF[0] != '\0' && mk_dir_exists(MK_PATH_CONF) == MK_TRUE) {
+        written = snprintf(buf, size, "%s", MK_PATH_CONF);
+        if (written < 0 || (size_t) written >= size) {
+            return NULL;
+        }
+        return buf;
+    }
+
+    len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    if (len > 0) {
+        exe_path[len] = '\0';
+    }
+    else if (argv0 != NULL && realpath(argv0, exe_path) != NULL) {
+        len = strlen(exe_path);
+    }
+    else {
+        return NULL;
+    }
+
+    last_slash = strrchr(exe_path, '/');
+    if (last_slash == NULL) {
+        return NULL;
+    }
+    *last_slash = '\0';
+
+    written = snprintf(candidate, sizeof(candidate), "%s/../conf", exe_path);
+    if (written < 0 || (size_t) written >= sizeof(candidate)) {
+        return NULL;
+    }
+    if (mk_dir_exists(candidate) == MK_TRUE) {
+        if (realpath(candidate, buf) != NULL) {
+            return buf;
+        }
+
+        written = snprintf(buf, size, "%s", candidate);
+        if (written < 0 || (size_t) written >= size) {
+            return NULL;
+        }
+        return buf;
+    }
+
+    written = snprintf(candidate, sizeof(candidate), "%s/conf", exe_path);
+    if (written < 0 || (size_t) written >= sizeof(candidate)) {
+        return NULL;
+    }
+    if (mk_dir_exists(candidate) == MK_TRUE) {
+        if (realpath(candidate, buf) != NULL) {
+            return buf;
+        }
+
+        written = snprintf(buf, size, "%s", candidate);
+        if (written < 0 || (size_t) written >= size) {
+            return NULL;
+        }
+        return buf;
+    }
+
+    return NULL;
 }
 
 /* MAIN */
@@ -121,6 +223,8 @@ int main(int argc, char **argv)
     char *sites_conf_dir = NULL;
     char *plugins_conf_dir = NULL;
     char *mimes_conf_file = NULL;
+    char default_config_dir[PATH_MAX];
+    const char *resolved_config_dir;
     struct mk_server *server;
 
     static const struct option long_opts[] = {
@@ -211,11 +315,14 @@ int main(int argc, char **argv)
     server = mk_server_create();
 
     /* set configuration path */
-    if (!path_config) {
-        server->path_conf_root = MK_PATH_CONF;
+    if (path_config != NULL) {
+        server->path_conf_root = path_config;
     }
     else {
-        server->path_conf_root = path_config;
+        resolved_config_dir = mk_default_config_dir(default_config_dir,
+                                                    sizeof(default_config_dir),
+                                                    argv[0]);
+        server->path_conf_root = (char *) resolved_config_dir;
     }
 
     /* set target configuration file for the server */
@@ -305,7 +412,10 @@ int main(int argc, char **argv)
      * Once the all configuration is set, let mk_server configure the
      * internals. Not accepting connections yet.
      */
-    mk_server_setup(server);
+    if (mk_server_setup(server) != 0) {
+        mk_err("Startup aborted due to configuration/setup failure.");
+        return EXIT_FAILURE;
+    }
 
     /* Register PID of Monkey */
     mk_utils_register_pid(server->path_conf_pidfile);
