@@ -22,7 +22,11 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <pthread.h>
 
 #include <openssl/ssl.h>
@@ -129,6 +133,33 @@ static const char tls_builtin_key[] =
 "-----END PRIVATE KEY-----\n";
 
 static struct tls_context_head *context_get_head(int fd);
+
+#ifdef _WIN32
+static ssize_t tls_pread(int fd, void *buf, size_t count, off_t offset)
+{
+    __int64 original;
+    int ret;
+
+    original = _lseeki64(fd, 0, SEEK_CUR);
+    if (original < 0) {
+        return -1;
+    }
+
+    if (_lseeki64(fd, offset, SEEK_SET) < 0) {
+        return -1;
+    }
+
+    ret = _read(fd, buf, (unsigned int) count);
+    _lseeki64(fd, original, SEEK_SET);
+
+    return ret;
+}
+#else
+static ssize_t tls_pread(int fd, void *buf, size_t count, off_t offset)
+{
+    return pread(fd, buf, count, offset);
+}
+#endif
 
 static int tls_load_builtin_credentials(struct tls_server_context *ctx)
 {
@@ -644,7 +675,7 @@ static int mk_tls_send_file(struct mk_plugin *plugin, int fd, int file_fd,
     remain = file_count;
 
     do {
-        used = pread(file_fd, buf, SENDFILE_BUF_SIZE, *file_offset);
+        used = tls_pread(file_fd, buf, SENDFILE_BUF_SIZE, *file_offset);
         if (used == 0) {
             ret = 0;
         }
@@ -681,7 +712,7 @@ static int mk_tls_close(struct mk_plugin *plugin, int fd)
     (void) plugin;
 
     context_unset(fd);
-    close(fd);
+    mk_event_closesocket(fd);
     return 0;
 }
 
