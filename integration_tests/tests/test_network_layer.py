@@ -11,6 +11,7 @@ from src.monkey_manager import ENV_MONKEY_BIN_MBEDTLS
 from src.monkey_manager import ENV_MONKEY_BIN_OPENSSL
 from src.monkey_manager import ENV_MONKEY_BIN_PLAIN
 from src.monkey_manager import find_available_port
+from src.monkey_manager import generate_tls_assets
 from src.monkey_manager import MonkeyBinary
 from src.monkey_manager import MonkeyManager
 from src.monkey_manager import replace_config_value
@@ -162,6 +163,168 @@ def test_binary_starts_with_no_arguments_from_build_tree(tmp_path: Path):
         response = manager.request("GET", "/")
         assert response.status == 200
         assert response.body == b"Monkey direct startup regression\n"
+    finally:
+        log_handle.flush()
+        log_handle.close()
+        if process is not None:
+            process.terminate()
+            process.wait(timeout=5)
+
+
+def test_binary_https_can_be_enabled_from_cli_without_tls_conf(tmp_path: Path):
+    plain_binary = resolve_binary(MonkeyBinary("plain", ENV_MONKEY_BIN_PLAIN, False))
+    build_root = Path(plain_binary).resolve().parent.parent
+    runtime_root = tmp_path / "runtime-https"
+    runtime_bin = runtime_root / "bin"
+    runtime_conf = runtime_root / "conf"
+    runtime_sites = runtime_conf / "sites"
+    runtime_htdocs = runtime_root / "htdocs"
+    runtime_run = runtime_root / "run"
+    runtime_logs = runtime_root / "logs"
+    port = find_available_port()
+    log_file = runtime_root / "monkey.log"
+
+    runtime_bin.mkdir(parents=True)
+    runtime_sites.mkdir(parents=True)
+    runtime_htdocs.mkdir(parents=True)
+    runtime_run.mkdir(parents=True)
+    runtime_logs.mkdir(parents=True)
+
+    shutil.copy2(build_root / "bin" / "monkey", runtime_bin / "monkey")
+    shutil.copy2(build_root / "conf" / "monkey.mime", runtime_conf / "monkey.mime")
+    shutil.copy2(build_root / "conf" / "plugins.load", runtime_conf / "plugins.load")
+
+    monkey_conf = (build_root / "conf" / "monkey.conf").read_text(encoding="utf-8")
+    monkey_conf = replace_config_value(
+        monkey_conf, "PidFile", str((runtime_run / "monkey.pid").resolve())
+    )
+    (runtime_conf / "monkey.conf").write_text(monkey_conf, encoding="utf-8")
+
+    site_conf = (build_root / "conf" / "sites" / "default").read_text(encoding="utf-8")
+    site_conf = replace_config_value(
+        site_conf, "DocumentRoot", str(runtime_htdocs.resolve())
+    )
+    site_conf = replace_config_value(
+        site_conf, "AccessLog", str((runtime_logs / "access.log").resolve())
+    )
+    site_conf = replace_config_value(
+        site_conf, "ErrorLog", str((runtime_logs / "error.log").resolve())
+    )
+    (runtime_sites / "default").write_text(site_conf, encoding="utf-8")
+
+    (runtime_htdocs / "index.html").write_text(
+        "Monkey CLI HTTPS regression\n",
+        encoding="utf-8",
+    )
+    generate_tls_assets(runtime_root)
+
+    process = None
+    log_handle = log_file.open("w", encoding="utf-8")
+    try:
+        process = subprocess.Popen(
+            [
+                "./bin/monkey",
+                "--https",
+                "-p",
+                str(port),
+                "--tls-cert",
+                str((runtime_root / "srv_cert.pem").resolve()),
+                "--tls-key",
+                str((runtime_root / "rsa_key.pem").resolve()),
+                "--tls-dh",
+                str((runtime_root / "dhparam.pem").resolve()),
+            ],
+            cwd=runtime_root,
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        wait_for_port("127.0.0.1", port)
+
+        manager = MonkeyManager(plain_binary, tls=True)
+        manager.host = "127.0.0.1"
+        manager.port = port
+        response = manager.request("GET", "/")
+        assert response.status == 200
+        assert response.body == b"Monkey CLI HTTPS regression\n"
+    finally:
+        log_handle.flush()
+        log_handle.close()
+        if process is not None:
+            process.terminate()
+            process.wait(timeout=5)
+
+
+def test_binary_https_without_explicit_certs_uses_builtin_fallback(tmp_path: Path):
+    plain_binary = resolve_binary(MonkeyBinary("plain", ENV_MONKEY_BIN_PLAIN, False))
+    build_root = Path(plain_binary).resolve().parent.parent
+    runtime_root = tmp_path / "runtime-https-fallback"
+    runtime_bin = runtime_root / "bin"
+    runtime_conf = runtime_root / "conf"
+    runtime_sites = runtime_conf / "sites"
+    runtime_htdocs = runtime_root / "htdocs"
+    runtime_run = runtime_root / "run"
+    runtime_logs = runtime_root / "logs"
+    port = find_available_port()
+    log_file = runtime_root / "monkey.log"
+
+    runtime_bin.mkdir(parents=True)
+    runtime_sites.mkdir(parents=True)
+    runtime_htdocs.mkdir(parents=True)
+    runtime_run.mkdir(parents=True)
+    runtime_logs.mkdir(parents=True)
+
+    shutil.copy2(build_root / "bin" / "monkey", runtime_bin / "monkey")
+    shutil.copy2(build_root / "conf" / "monkey.mime", runtime_conf / "monkey.mime")
+    shutil.copy2(build_root / "conf" / "plugins.load", runtime_conf / "plugins.load")
+    shutil.copy2(build_root / "conf" / "tls.conf", runtime_conf / "tls.conf")
+
+    monkey_conf = (build_root / "conf" / "monkey.conf").read_text(encoding="utf-8")
+    monkey_conf = replace_config_value(
+        monkey_conf, "PidFile", str((runtime_run / "monkey.pid").resolve())
+    )
+    (runtime_conf / "monkey.conf").write_text(monkey_conf, encoding="utf-8")
+
+    site_conf = (build_root / "conf" / "sites" / "default").read_text(encoding="utf-8")
+    site_conf = replace_config_value(
+        site_conf, "DocumentRoot", str(runtime_htdocs.resolve())
+    )
+    site_conf = replace_config_value(
+        site_conf, "AccessLog", str((runtime_logs / "access.log").resolve())
+    )
+    site_conf = replace_config_value(
+        site_conf, "ErrorLog", str((runtime_logs / "error.log").resolve())
+    )
+    (runtime_sites / "default").write_text(site_conf, encoding="utf-8")
+
+    (runtime_htdocs / "index.html").write_text(
+        "Monkey CLI HTTPS builtin fallback\n",
+        encoding="utf-8",
+    )
+
+    process = None
+    log_handle = log_file.open("w", encoding="utf-8")
+    try:
+        process = subprocess.Popen(
+            [
+                "./bin/monkey",
+                "--https",
+                "-p",
+                str(port),
+            ],
+            cwd=runtime_root,
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        wait_for_port("127.0.0.1", port)
+
+        manager = MonkeyManager(plain_binary, tls=True)
+        manager.host = "127.0.0.1"
+        manager.port = port
+        response = manager.request("GET", "/")
+        assert response.status == 200
+        assert response.body == b"Monkey CLI HTTPS builtin fallback\n"
     finally:
         log_handle.flush()
         log_handle.close()

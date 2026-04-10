@@ -61,7 +61,7 @@ option(MK_PLUGIN_DIRLISTING    "Directory Listing"       Yes)
 option(MK_PLUGIN_FASTCGI       "FastCGI"                  No)
 option(MK_PLUGIN_LOGGER        "Log Writer"               No)
 option(MK_PLUGIN_MANDRIL       "Security"                Yes)
-option(MK_TLS                  "TLS/SSL support"          No)
+option(MK_TLS                  "TLS/SSL support"         Yes)
 set(MK_TLS_BACKEND "auto" CACHE STRING "TLS backend: auto, openssl, or mbedtls")
 set_property(CACHE MK_TLS_BACKEND PROPERTY STRINGS auto openssl mbedtls)
 

@@ -18,6 +18,46 @@ ENV_MONKEY_VALGRIND = "MONKEY_VALGRIND"
 ENV_MONKEY_VALGRIND_STRICT = "MONKEY_VALGRIND_STRICT"
 
 
+def generate_tls_assets(directory: Path) -> None:
+    subprocess.run(
+        [
+            "openssl",
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-keyout",
+            str(directory / "rsa_key.pem"),
+            "-out",
+            str(directory / "srv_cert.pem"),
+            "-sha256",
+            "-days",
+            "1",
+            "-nodes",
+            "-subj",
+            "/CN=127.0.0.1",
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    subprocess.run(
+        [
+            "openssl",
+            "dhparam",
+            "-out",
+            str(directory / "dhparam.pem"),
+            "512",
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    shutil.copy2(directory / "rsa_key.pem", directory / "rsa.pem")
+
+
 def find_available_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -98,44 +138,7 @@ class MonkeyManager:
 
     def _prepare_tls_assets(self) -> None:
         self._copy_build_conf("tls.conf")
-
-        subprocess.run(
-            [
-                "openssl",
-                "req",
-                "-x509",
-                "-newkey",
-                "rsa:2048",
-                "-keyout",
-                str(self.confdir / "rsa_key.pem"),
-                "-out",
-                str(self.confdir / "srv_cert.pem"),
-                "-sha256",
-                "-days",
-                "1",
-                "-nodes",
-                "-subj",
-                "/CN=127.0.0.1",
-            ],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-        subprocess.run(
-            [
-                "openssl",
-                "dhparam",
-                "-out",
-                str(self.confdir / "dhparam.pem"),
-                "512",
-            ],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-        shutil.copy2(self.confdir / "rsa_key.pem", self.confdir / "rsa.pem")
+        generate_tls_assets(self.confdir)
 
     def prepare(self) -> None:
         self.confdir.mkdir(parents=True, exist_ok=True)

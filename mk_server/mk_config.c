@@ -100,6 +100,22 @@ void mk_config_free_all(struct mk_server *server)
         mk_mem_free(server->transport_layer);
     }
 
+    if (server->tls_cert_file) {
+        mk_mem_free(server->tls_cert_file);
+    }
+
+    if (server->tls_cert_chain_file) {
+        mk_mem_free(server->tls_cert_chain_file);
+    }
+
+    if (server->tls_key_file) {
+        mk_mem_free(server->tls_key_file);
+    }
+
+    if (server->tls_dh_param_file) {
+        mk_mem_free(server->tls_dh_param_file);
+    }
+
     mk_config_listeners_free(server);
 
     if (server->mimetype_default_str) {
@@ -272,9 +288,12 @@ static int mk_config_listen_read(struct mk_rconf_section *section,
 static int mk_config_read_files(char *path_conf, char *file_conf,
                                 struct mk_server *server)
 {
+    int flags;
     unsigned long len;
     char *tmp = NULL;
     char *default_mimetype = NULL;
+    struct mk_list *cur;
+    struct mk_config_listener *listen;
     struct stat checkdir;
     struct mk_rconf *cnf;
     struct mk_rconf_section *section;
@@ -324,8 +343,19 @@ static int mk_config_read_files(char *path_conf, char *file_conf,
         }
     }
     else {
-        mk_config_listener_add(NULL, server->port_override,
-                               MK_CAP_HTTP, server);
+        flags = MK_CAP_HTTP;
+        if (server->tls_mode == MK_TRUE) {
+            flags |= MK_CAP_SOCK_TLS;
+        }
+
+        mk_config_listener_add(NULL, server->port_override, flags, server);
+    }
+
+    if (server->tls_mode == MK_TRUE) {
+        mk_list_foreach(cur, &server->listeners) {
+            listen = mk_list_entry(cur, struct mk_config_listener, _head);
+            listen->flags |= MK_CAP_SOCK_TLS;
+        }
     }
 
     /* Number of thread workers */
@@ -605,6 +635,11 @@ void mk_config_set_init_values(struct mk_server *server)
 
     /* Internals */
     server->safe_event_write = MK_FALSE;
+    server->tls_mode = MK_FALSE;
+    server->tls_cert_file = NULL;
+    server->tls_cert_chain_file = NULL;
+    server->tls_key_file = NULL;
+    server->tls_dh_param_file = NULL;
 
     /* Init plugin list */
     mk_list_init(&server->plugins);
