@@ -13,9 +13,11 @@ function(mk_tls_openssl_matches_target out_var)
       string(TOLOWER "${CMAKE_VS_PLATFORM_NAME}" target_platform)
     elseif(CMAKE_GENERATOR_PLATFORM)
       string(TOLOWER "${CMAKE_GENERATOR_PLATFORM}" target_platform)
+    elseif(CMAKE_SYSTEM_PROCESSOR)
+      string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" target_platform)
     endif()
 
-    if(target_platform STREQUAL "arm64")
+    if(target_platform STREQUAL "arm64" OR target_platform STREQUAL "aarch64")
       foreach(openssl_lib ${OPENSSL_LIBRARIES})
         string(TOLOWER "${openssl_lib}" openssl_lib_lower)
         if(openssl_lib_lower MATCHES "([/\\\\]|^)x64([/\\\\]|$)" OR
