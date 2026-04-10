@@ -31,7 +31,7 @@
 
 pthread_once_t mk_server_tls_setup_once = PTHREAD_ONCE_INIT;
 
-static void mk_set_up_tls_keys()
+static void mk_set_up_tls_keys(void)
 {
     MK_INIT_INITIALIZE_TLS_UNIVERSAL();
     MK_INIT_INITIALIZE_TLS();
