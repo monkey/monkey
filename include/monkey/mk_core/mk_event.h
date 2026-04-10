@@ -78,6 +78,8 @@
     #include "mk_event_kqueue.h"
 #elif defined(MK_EVENT_LOOP_EPOLL)
     #include "mk_event_epoll.h"
+#elif defined(MK_EVENT_LOOP_WIN32)
+    #include "mk_event_win32.h"
 #elif defined(MK_EVENT_LOOP_LIBEVENT)
     #include "mk_event_libevent.h"
 #else
@@ -87,14 +89,14 @@
     #elif defined(__FreeBSD__) || defined(__APPLE__) || defined(__DragonFly__) || defined(__OpenBSD__)
         #include "mk_event_kqueue.h"
     #elif defined(_WIN32)
-        #include "mk_event_libevent.h"
+        #include "mk_event_win32.h"
     #else
         #include "mk_event_select.h"
     #endif
 #endif
 
 #if defined(_WIN32)
-    #define mk_event_closesocket(s) evutil_closesocket(s)
+    #define mk_event_closesocket(s) closesocket(s)
 #else
     #define mk_event_closesocket(s) close(s)
 #endif

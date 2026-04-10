@@ -8,6 +8,7 @@
 #              WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build)
 # endif()
 set(UNIT_TESTS_FILES
+  event_loop.c
   lib_server.c
   event_timeout.c
   )
