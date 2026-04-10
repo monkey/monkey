@@ -727,7 +727,7 @@ static int mk_tls_writev(struct mk_plugin *plugin, int fd, struct mk_iov *mk_io)
 {
     mbedtls_ssl_context *ssl = context_get(fd);
     const int iov_len = mk_io->iov_idx;
-    const struct iovec *io = mk_io->io;
+    const struct mk_iovec *io = mk_io->io;
     const size_t len = mk_io->total_len;
     unsigned char *buf;
     size_t used = 0;
