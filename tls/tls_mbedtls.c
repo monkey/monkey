@@ -28,10 +28,6 @@
 #include <unistd.h>
 #endif
 
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <mk_core/mk_pthread.h>
 
 #include <mbedtls/version.h>
