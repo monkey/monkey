@@ -27,7 +27,7 @@
 #else
 #include <unistd.h>
 #endif
-#include <pthread.h>
+#include <mk_core/mk_pthread.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
