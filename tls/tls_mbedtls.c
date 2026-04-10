@@ -22,7 +22,11 @@
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -115,6 +119,33 @@ static const char *my_dhm_G = MBEDTLS_DHM_RFC5114_MODP_2048_G;
 static pthread_key_t local_context;
 static int local_context_created = MK_FALSE;
 static struct polar_context_head *context_get_head(int fd);
+
+#ifdef _WIN32
+static ssize_t tls_pread(int fd, void *buf, size_t count, off_t offset)
+{
+    __int64 original;
+    int ret;
+
+    original = _lseeki64(fd, 0, SEEK_CUR);
+    if (original < 0) {
+        return -1;
+    }
+
+    if (_lseeki64(fd, offset, SEEK_SET) < 0) {
+        return -1;
+    }
+
+    ret = _read(fd, buf, (unsigned int) count);
+    _lseeki64(fd, original, SEEK_SET);
+
+    return ret;
+}
+#else
+static ssize_t tls_pread(int fd, void *buf, size_t count, off_t offset)
+{
+    return pread(fd, buf, count, offset);
+}
+#endif
 
 /*
  * The following function is taken from PolarSSL sources to get
@@ -750,7 +781,7 @@ static int mk_tls_send_file(struct mk_plugin *plugin, int fd, int file_fd, off_t
     }
 
     do {
-        used = pread(file_fd, buf, SENDFILE_BUF_SIZE, *file_offset);
+        used = tls_pread(file_fd, buf, SENDFILE_BUF_SIZE, *file_offset);
         if (used == 0) {
             ret = 0;
         }
@@ -815,7 +846,7 @@ static int mk_tls_close(struct mk_plugin *plugin, int fd)
         context_unset(fd, ssl);
     }
 
-    close(fd);
+    mk_event_closesocket(fd);
     return 0;
 }
 
