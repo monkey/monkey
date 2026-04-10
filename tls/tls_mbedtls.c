@@ -216,7 +216,9 @@ static int tls_cache_set(void *p, const mbedtls_ssl_session *session)
     return ret;
 }
 
-static int config_parse(const char *confdir, struct polar_config *conf)
+static int config_parse(const char *confdir,
+                        const struct mk_server *server,
+                        struct polar_config *conf)
 {
     long unsigned int len;
     char *conf_path = NULL;
@@ -250,6 +252,34 @@ static int config_parse(const char *confdir, struct polar_config *conf)
                                                           "CheckClientCert",
                                                           MK_RCONF_BOOL);
 fallback:
+    if (server->tls_cert_file != NULL) {
+        if (cert_file != NULL) {
+            mk_mem_free(cert_file);
+        }
+        cert_file = mk_string_dup(server->tls_cert_file);
+    }
+
+    if (server->tls_cert_chain_file != NULL) {
+        if (cert_chain_file != NULL) {
+            mk_mem_free(cert_chain_file);
+        }
+        cert_chain_file = mk_string_dup(server->tls_cert_chain_file);
+    }
+
+    if (server->tls_key_file != NULL) {
+        if (key_file != NULL) {
+            mk_mem_free(key_file);
+        }
+        key_file = mk_string_dup(server->tls_key_file);
+    }
+
+    if (server->tls_dh_param_file != NULL) {
+        if (dh_param_file != NULL) {
+            mk_mem_free(dh_param_file);
+        }
+        dh_param_file = mk_string_dup(server->tls_dh_param_file);
+    }
+
     /* Set default name if not specified */
     if (!cert_file) {
         mk_string_build(&conf->cert_file, &len,
@@ -814,7 +844,7 @@ int mk_tls_init(struct mk_server *server)
         /* If it's used, load certificates.. mandatory */
         server_context = mk_mem_alloc_z(sizeof(struct polar_server_context));
         server_context->server = server;
-        config_parse(server->path_conf_root, &server_context->config);
+        config_parse(server->path_conf_root, server, &server_context->config);
         return tls_global_init();
     }
     else {

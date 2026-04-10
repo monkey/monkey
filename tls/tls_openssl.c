@@ -77,7 +77,107 @@ static pthread_key_t local_context;
 static int local_context_created = MK_FALSE;
 static struct tls_server_context *server_context;
 
+static const char tls_builtin_cert[] =
+"-----BEGIN CERTIFICATE-----\n"
+"MIIDGzCCAgOgAwIBAgIUPmm+Zw0d+wr1qtakXqWvrVEKHkYwDQYJKoZIhvcNAQEL\n"
+"BQAwHTEbMBkGA1UEAwwSTW9ua2V5IERldmVsb3BtZW50MB4XDTI2MDQxMDAwMDQz\n"
+"MFoXDTM2MDQwNzAwMDQzMFowHTEbMBkGA1UEAwwSTW9ua2V5IERldmVsb3BtZW50\n"
+"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqZBfSrPWiomWqMl/tgoD\n"
+"nAJF/us5EqJ0b1n2La0t5tuM7HPnKNsRsdvZ1Ft7EUoOrjXtSaYv/DymcLnGTV50\n"
+"Iim2m9qci21g33IWpBnomKzthJyHpnRGEwfTFFDNS7Q//C3ry8ylfDgQGr0hwHb7\n"
+"9ezriCub4MRA5kRfZ5Vza77zaDMVEbDks9EbaHvx9boWi3DZAVI7njOWsqSlBbol\n"
+"G4IE1h7RMwWzzefOFs9XsDf3/oVxzraC3OXAvs4a9iFVdGfCfL9E+GvudQyfBXmf\n"
+"nxtR/jf2cMr/xHI2o4WrzHJxPG/qioDZFqmgK0c+nGoEEogOiNq6EFWyrAVLF31o\n"
+"KQIDAQABo1MwUTAdBgNVHQ4EFgQUKIDMozCfk+4qUxE78vOy+l4643gwHwYDVR0j\n"
+"BBgwFoAUKIDMozCfk+4qUxE78vOy+l4643gwDwYDVR0TAQH/BAUwAwEB/zANBgkq\n"
+"hkiG9w0BAQsFAAOCAQEAQisVixhpmiNkMVNFpOsFqsPEHu8s9PbYC+doVCSUBA6Q\n"
+"B3Xd9mAcogQb1aCOF6i+jTspFzpoIR2TiqDlh5U/1KldPRHYWW5n1kginFtc8R1n\n"
+"AZTE9Ri/YOIJOkx+bHOY3EY/UntvG03VWbpXRjssyoe+e5bhxSkTAsAk8wivj3Gx\n"
+"knCb1lbE6ydTpuyjGKygpHA51cVreGle71STi7F4XgklWO//eLNlunRRTrpMErAF\n"
+"RQ6I96CkfEER0JdHaVJLqYy+UksWdzoj9Fc8s492qzqi6GFAetQ6P2y7aYWEYVa4\n"
+"7vs9eGnRpAn+8A6B1dSDxMPogQRBAusQYtIRoaP9Ig==\n"
+"-----END CERTIFICATE-----\n";
+
+static const char tls_builtin_key[] =
+"-----BEGIN PRIVATE KEY-----\n"
+"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCpkF9Ks9aKiZao\n"
+"yX+2CgOcAkX+6zkSonRvWfYtrS3m24zsc+co2xGx29nUW3sRSg6uNe1Jpi/8PKZw\n"
+"ucZNXnQiKbab2pyLbWDfchakGeiYrO2EnIemdEYTB9MUUM1LtD/8LevLzKV8OBAa\n"
+"vSHAdvv17OuIK5vgxEDmRF9nlXNrvvNoMxURsOSz0Rtoe/H1uhaLcNkBUjueM5ay\n"
+"pKUFuiUbggTWHtEzBbPN584Wz1ewN/f+hXHOtoLc5cC+zhr2IVV0Z8J8v0T4a+51\n"
+"DJ8FeZ+fG1H+N/Zwyv/EcjajhavMcnE8b+qKgNkWqaArRz6cagQSiA6I2roQVbKs\n"
+"BUsXfWgpAgMBAAECggEADWuazyvKqC5ZmURRclP6kydu6M0vODVZZ9LD9DuHrYTk\n"
+"83X87rPgA6a15+PRqr2kyc8E19ZqZ9lZBwT9F/SI1odcp5s21qYyi5zZA+X1Ddhp\n"
+"+Bv3dIoxXaI555q5lOtQQSJVTk0FL/6z75nWiQghywYUYjOpY7HEvTTeJDGk7/sN\n"
+"Bozc5Bczn5W6z7asKaXt7nC0WwauNMJ18WwKRjJlwOgBhb0/Qj5fqy1IxPI/kPwY\n"
+"eAoIi91ARg/MCkUb4Yh6LTCfkwkElbpEIPr1T+2hYYl/x3wlvOUuEb+eIoZLNZ5x\n"
+"K7kHPBcDEtGyl4yKPV4ltlJ0/ie0lp8pmNmXDNfV8QKBgQDUDx5dn833A1k1JMpm\n"
+"XIjKOtIeaTRT58a2yM/T7de9oKRgC4hgEQ4cXG+R6r8n9/zLm3/m+l8+rH/tdBMl\n"
+"C1Ekn8dL1be5zPpxDJlUSyQcYEJyDo2RHCW6Jgd6hrh73RmeFF5Tr4dFJcVVybZN\n"
+"qAJPX3UcSrgmwrvqsXKkVXjrVQKBgQDMsw8eJzWDGErFLN43iE8UVD2oymgr8pq9\n"
+"RcdoTX/MDHjwqUj0vGoY+IFE/sFXr100kqxH9ao5UNHn6yxed425m3wNP7O1rRqi\n"
+"Nsu4WVsfsJ1J5n1Gbs6ujJ2TSiMG+a3fVr93T+6c+ysxMsWcz3gWZcbs4duRQ3Iw\n"
+"NtM2KOCRhQKBgQDCTgAS5WSB222YBlf2pv8n3fG9r8QkxZEM1r+nfp1ZwaIb5zVU\n"
+"YQw+7GvGlgQFiXL21UrCx9MRyFmHp/4KyW3WUxj34aHw+2LWxyaPWDKEVadMfw00\n"
+"U0g2YrYjjOHpjNP2Rs+PepxFvbAtRSBn03QaamsSO1y1F2W8TE+xSCf96QKBgFlQ\n"
+"a3E5pGSdzcn4iMDsLazuELU8E3XRdejNsHL3FaK/cml3Q4jdSOG6VBT5nvyWXHGa\n"
+"6abALtSxSdUKTKKvQVxR1i+lstC7RdqvU/YMrvDFy+s5sUFxCacpXXutpljdyhqf\n"
+"rAzwCGngQXlG8Og5sej74W7sITRhnEojMcb40PtNAoGAGawnWAi0AkIOVtRMBema\n"
+"QZmW3tdVj798XHCI/8cl0CvsgctDdFmku759j4AUIlrAcn/R+umQwSnPAwwNXGV3\n"
+"spDlSVoSDk7lYS4lVCWYUH+BCxqF+Ytb3IlJlv/FtKxCP4eiD1aCIbm9D/WCwBtf\n"
+"36AgOGpW2UA1O65QO4j7HeU=\n"
+"-----END PRIVATE KEY-----\n";
+
 static struct tls_context_head *context_get_head(int fd);
+
+static int tls_load_builtin_credentials(struct tls_server_context *ctx)
+{
+    BIO *cert_bio;
+    BIO *key_bio;
+    X509 *cert;
+    EVP_PKEY *key;
+
+    cert_bio = BIO_new_mem_buf((void *) tls_builtin_cert, -1);
+    if (cert_bio == NULL) {
+        return -1;
+    }
+
+    cert = PEM_read_bio_X509(cert_bio, NULL, NULL, NULL);
+    BIO_free(cert_bio);
+    if (cert == NULL) {
+        return -1;
+    }
+
+    key_bio = BIO_new_mem_buf((void *) tls_builtin_key, -1);
+    if (key_bio == NULL) {
+        X509_free(cert);
+        return -1;
+    }
+
+    key = PEM_read_bio_PrivateKey(key_bio, NULL, NULL, NULL);
+    BIO_free(key_bio);
+    if (key == NULL) {
+        X509_free(cert);
+        return -1;
+    }
+
+    if (SSL_CTX_use_certificate(ctx->ctx, cert) != 1) {
+        EVP_PKEY_free(key);
+        X509_free(cert);
+        return -1;
+    }
+
+    if (SSL_CTX_use_PrivateKey(ctx->ctx, key) != 1) {
+        EVP_PKEY_free(key);
+        X509_free(cert);
+        return -1;
+    }
+
+    EVP_PKEY_free(key);
+    X509_free(cert);
+
+    return 0;
+}
 
 static struct tls_thread_context *local_thread_context(void)
 {
@@ -120,7 +220,9 @@ static int tls_handle_return(SSL *ssl, int ret)
     }
 }
 
-static int config_parse(const char *confdir, struct tls_config *conf)
+static int config_parse(const char *confdir,
+                        const struct mk_server *server,
+                        struct tls_config *conf)
 {
     long unsigned int len;
     char *conf_path = NULL;
@@ -153,6 +255,34 @@ static int config_parse(const char *confdir, struct tls_config *conf)
                                                           MK_RCONF_BOOL);
 
 fallback:
+    if (server->tls_cert_file != NULL) {
+        if (cert_file != NULL) {
+            mk_mem_free(cert_file);
+        }
+        cert_file = mk_string_dup(server->tls_cert_file);
+    }
+
+    if (server->tls_cert_chain_file != NULL) {
+        if (cert_chain_file != NULL) {
+            mk_mem_free(cert_chain_file);
+        }
+        cert_chain_file = mk_string_dup(server->tls_cert_chain_file);
+    }
+
+    if (server->tls_key_file != NULL) {
+        if (key_file != NULL) {
+            mk_mem_free(key_file);
+        }
+        key_file = mk_string_dup(server->tls_key_file);
+    }
+
+    if (server->tls_dh_param_file != NULL) {
+        if (dh_param_file != NULL) {
+            mk_mem_free(dh_param_file);
+        }
+        dh_param_file = mk_string_dup(server->tls_dh_param_file);
+    }
+
     if (!cert_file) {
         mk_string_build(&conf->cert_file, &len, "%s/srv_cert.pem", confdir);
     }
@@ -274,7 +404,11 @@ static int tls_load_credentials(struct tls_server_context *ctx)
     if (SSL_CTX_use_certificate_chain_file(ctx->ctx, ctx->config.cert_file) != 1) {
         mk_warn("[tls] failed to load certificate chain from %s",
                 ctx->config.cert_file);
-        return -1;
+        mk_warn("[tls] using built-in development certificate, please configure CertificateFile/RSAKeyFile for production");
+        if (tls_load_builtin_credentials(ctx) != 0) {
+            return -1;
+        }
+        return 0;
     }
 
     if (SSL_CTX_use_PrivateKey_file(ctx->ctx, ctx->config.key_file,
@@ -599,7 +733,7 @@ int mk_tls_init(struct mk_server *server)
     }
 
     server_context->server = server;
-    config_parse(server->path_conf_root, &server_context->config);
+    config_parse(server->path_conf_root, server, &server_context->config);
     pthread_mutex_init(&server_context->mutex, NULL);
     mk_list_init(&server_context->threads);
     if (local_context_created == MK_FALSE) {

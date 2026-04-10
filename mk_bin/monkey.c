@@ -86,6 +86,11 @@ static void mk_help(int rc)
     printf("  -I, --pid-file\t\t\tset full path for the PID file (override config)\n");
     printf("  -p, --port=PORT\t\t\tset listener TCP port (override config)\n");
     printf("  -o, --one-shot=DIR\t\t\tone-shot, serve a single directory\n");
+    printf("      --https\t\t\t\tenable HTTPS on configured listeners\n");
+    printf("      --tls-cert=FILE\t\t\tset TLS certificate file\n");
+    printf("      --tls-key=FILE\t\t\tset TLS private key file\n");
+    printf("      --tls-chain=FILE\t\t\tset TLS certificate chain file\n");
+    printf("      --tls-dh=FILE\t\t\tset TLS DH parameters file\n");
     printf("  -t, --transport=TRANSPORT\t\tspecify transport layer (override config)\n");
     printf("  -w, --workers=N\t\t\tset number of workers (override config)\n");
     printf("  -m, --mimes-conf-file=FILE\t\tspecify mimes configuration file\n");
@@ -209,6 +214,7 @@ static const char *mk_default_config_dir(char *buf, size_t size, const char *arg
 int main(int argc, char **argv)
 {
     int opt;
+    int enable_https = MK_FALSE;
     char *port_override = NULL;
     int workers_override = -1;
     int run_daemon = 0;
@@ -223,18 +229,35 @@ int main(int argc, char **argv)
     char *sites_conf_dir = NULL;
     char *plugins_conf_dir = NULL;
     char *mimes_conf_file = NULL;
+    char *tls_cert_file = NULL;
+    char *tls_key_file = NULL;
+    char *tls_chain_file = NULL;
+    char *tls_dh_file = NULL;
     char default_config_dir[PATH_MAX];
     const char *resolved_config_dir;
     struct mk_server *server;
+
+    enum {
+        MK_OPT_HTTPS = 1000,
+        MK_OPT_TLS_CERT,
+        MK_OPT_TLS_KEY,
+        MK_OPT_TLS_CHAIN,
+        MK_OPT_TLS_DH
+    };
 
     static const struct option long_opts[] = {
         { "configdir",              required_argument,  NULL, 'c' },
         { "serverconf",             required_argument,  NULL, 's' },
         { "build",                  no_argument,        NULL, 'b' },
         { "daemon",                 no_argument,        NULL, 'D' },
+        { "https",                  no_argument,        NULL, MK_OPT_HTTPS },
         { "pid-file",               required_argument,  NULL, 'I' },
         { "port",                   required_argument,  NULL, 'p' },
         { "one-shot",               required_argument,  NULL, 'o' },
+        { "tls-cert",               required_argument,  NULL, MK_OPT_TLS_CERT },
+        { "tls-key",                required_argument,  NULL, MK_OPT_TLS_KEY },
+        { "tls-chain",              required_argument,  NULL, MK_OPT_TLS_CHAIN },
+        { "tls-dh",                 required_argument,  NULL, MK_OPT_TLS_DH },
         { "transport",              required_argument,  NULL, 't' },
         { "workers",                required_argument,  NULL, 'w' },
         { "version",                no_argument,        NULL, 'v' },
@@ -263,6 +286,9 @@ int main(int argc, char **argv)
         case 'D':
             run_daemon = 1;
             break;
+        case MK_OPT_HTTPS:
+            enable_https = MK_TRUE;
+            break;
         case 'I':
             pid_file = optarg;
             break;
@@ -271,6 +297,18 @@ int main(int argc, char **argv)
             break;
         case 'o':
             one_shot = optarg;
+            break;
+        case MK_OPT_TLS_CERT:
+            tls_cert_file = mk_string_dup(optarg);
+            break;
+        case MK_OPT_TLS_KEY:
+            tls_key_file = mk_string_dup(optarg);
+            break;
+        case MK_OPT_TLS_CHAIN:
+            tls_chain_file = mk_string_dup(optarg);
+            break;
+        case MK_OPT_TLS_DH:
+            tls_dh_file = mk_string_dup(optarg);
             break;
         case 't':
             transport_layer = mk_string_dup(optarg);
@@ -379,6 +417,11 @@ int main(int argc, char **argv)
     server->one_shot = one_shot;
     server->port_override = port_override;
     server->transport_layer = transport_layer;
+    server->tls_mode = enable_https;
+    server->tls_cert_file = tls_cert_file;
+    server->tls_cert_chain_file = tls_chain_file;
+    server->tls_key_file = tls_key_file;
+    server->tls_dh_param_file = tls_dh_file;
 
     mk_version();
     mk_signal_init(server);
