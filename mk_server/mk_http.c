@@ -384,6 +384,7 @@ static int mk_http_error_page(char *title, mk_ptr_t *message, char *signature,
                               char **out_buf, unsigned long *out_size)
 {
     char *temp;
+    char *escaped;
 
     *out_buf = NULL;
 
@@ -394,9 +395,19 @@ static int mk_http_error_page(char *title, mk_ptr_t *message, char *signature,
         temp = mk_string_dup("");
     }
 
-    mk_string_build(out_buf, out_size,
-                    MK_REQUEST_DEFAULT_PAGE, title, temp, signature);
+    if (!temp) {
+        return -1;
+    }
+
+    escaped = mk_string_html_escape(temp);
     mk_mem_free(temp);
+    if (!escaped) {
+        return -1;
+    }
+
+    mk_string_build(out_buf, out_size,
+                    MK_REQUEST_DEFAULT_PAGE, title, escaped, signature);
+    mk_mem_free(escaped);
     return 0;
 }
 

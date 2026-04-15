@@ -76,6 +76,18 @@ def test_server_header_present(monkey_instance: MonkeyManager):
     assert headers["server"].startswith("Monkey/")
 
 
+def test_forbidden_error_page_escapes_reflected_uri(monkey_instance: MonkeyManager):
+    payload = b"GET /../\"><script>alert(73541);</script> HTTP/1.1\r\n"
+    payload += f"Host: {monkey_instance.host}:{monkey_instance.port}\r\n".encode()
+    payload += b"Connection: close\r\n\r\n"
+
+    response = monkey_instance.raw_request(payload)
+
+    assert b"HTTP/1.1 403 Forbidden" in response
+    assert b"<script>alert(73541);</script>" not in response
+    assert b"/../&quot;&gt;&lt;script&gt;alert(73541);&lt;/script&gt;" in response
+
+
 def test_server_restarts_cleanly():
     for candidate in selected_binaries():
         manager = MonkeyManager(resolve_binary(candidate), tls=candidate.tls)
