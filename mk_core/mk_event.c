@@ -36,6 +36,8 @@
     #include "mk_event_kqueue.c"
 #elif defined(MK_EVENT_LOOP_EPOLL)
     #include "mk_event_epoll.c"
+#elif defined(MK_EVENT_LOOP_WIN32)
+    #include "mk_event_win32.c"
 #elif defined(MK_EVENT_LOOP_LIBEVENT)
     #include "mk_event_libevent.c"
 #else
@@ -45,7 +47,7 @@
     #elif defined(__FreeBSD__) || defined(__APPLE__) || defined(__DragonFly__) || defined(__OpenBSD__)
         #include "mk_event_kqueue.c"
     #elif defined(_WIN32)
-        #include "mk_event_libevent.c"
+        #include "mk_event_win32.c"
     #else
         #include "mk_event_select.c"
     #endif

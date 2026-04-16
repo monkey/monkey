@@ -21,7 +21,76 @@
 #include <monkey/mk_scheduler.h>
 
 #ifdef _WIN32
-#include <event.h>
+static int mk_fifo_socketpair(mk_fifo_channel_fd channel[2])
+{
+    int ret;
+    int addr_len;
+    int one = 1;
+    SOCKET listener = INVALID_SOCKET;
+    SOCKET client = INVALID_SOCKET;
+    SOCKET server = INVALID_SOCKET;
+    struct sockaddr_in addr;
+
+    listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listener == INVALID_SOCKET) {
+        return -1;
+    }
+
+    ret = setsockopt(listener, SOL_SOCKET, SO_REUSEADDR,
+                     (const char *) &one, sizeof(one));
+    if (ret == SOCKET_ERROR) {
+        closesocket(listener);
+        return -1;
+    }
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = 0;
+
+    ret = bind(listener, (struct sockaddr *) &addr, sizeof(addr));
+    if (ret == SOCKET_ERROR) {
+        closesocket(listener);
+        return -1;
+    }
+
+    ret = listen(listener, 1);
+    if (ret == SOCKET_ERROR) {
+        closesocket(listener);
+        return -1;
+    }
+
+    addr_len = sizeof(addr);
+    ret = getsockname(listener, (struct sockaddr *) &addr, &addr_len);
+    if (ret == SOCKET_ERROR) {
+        closesocket(listener);
+        return -1;
+    }
+
+    client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (client == INVALID_SOCKET) {
+        closesocket(listener);
+        return -1;
+    }
+
+    ret = connect(client, (struct sockaddr *) &addr, sizeof(addr));
+    if (ret == SOCKET_ERROR) {
+        closesocket(client);
+        closesocket(listener);
+        return -1;
+    }
+
+    server = accept(listener, NULL, NULL);
+    closesocket(listener);
+    if (server == INVALID_SOCKET) {
+        closesocket(client);
+        return -1;
+    }
+
+    channel[0] = (mk_fifo_channel_fd) server;
+    channel[1] = (mk_fifo_channel_fd) client;
+    return 0;
+}
 #endif
 
 static struct mk_fifo_worker *mk_fifo_worker_create(struct mk_fifo *ctx,
@@ -55,7 +124,7 @@ static struct mk_fifo_worker *mk_fifo_worker_create(struct mk_fifo *ctx,
     fw->buf_size = MK_FIFO_BUF_SIZE;
 
 #ifdef _WIN32
-    ret = evutil_socketpair(AF_INET, SOCK_STREAM, 0, fw->channel);
+    ret = mk_fifo_socketpair(fw->channel);
     if (ret == -1) {
         perror("socketpair");
         mk_mem_free(fw);
@@ -249,8 +318,8 @@ static int mk_fifo_worker_destroy_all(struct mk_fifo *ctx)
         fw = mk_list_entry(head, struct mk_fifo_worker, _head);
 
 #ifdef _WIN32
-        evutil_closesocket(fw->channel[0]);
-        evutil_closesocket(fw->channel[1]);
+        closesocket((SOCKET) fw->channel[0]);
+        closesocket((SOCKET) fw->channel[1]);
 #else
         close(fw->channel[0]);
         close(fw->channel[1]);

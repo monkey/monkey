@@ -25,7 +25,9 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     ${src}
     "external/winpthreads.c"
     )
-  add_subdirectory(deps/)
+  if (MK_EVENT_LOOP_LIBEVENT)
+    add_subdirectory(deps/)
+  endif()
 else()
   if (MK_EVENT_LOOP_LIBEVENT)
     add_subdirectory(deps/)
@@ -123,6 +125,15 @@ check_c_source_compiles("
      return epoll_create(1);
   }" HAVE_EPOLL)
 
+if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND
+    NOT MK_EVENT_LOOP_SELECT AND
+    NOT MK_EVENT_LOOP_POLL AND
+    NOT MK_EVENT_LOOP_KQUEUE AND
+    NOT MK_EVENT_LOOP_EPOLL AND
+    NOT MK_EVENT_LOOP_LIBEVENT)
+  set(MK_EVENT_LOOP_WIN32 Yes)
+endif()
+
 if (MK_EVENT_LOOP_SELECT)
   if (NOT HAVE_SELECT)
     message(FATAL_ERROR "Event loop backend > select(2) not available")
@@ -156,6 +167,15 @@ if (MK_EVENT_LOOP_EPOLL)
   else()
     message(STATUS "Event loop backend > epoll(2)")
     MK_DEFINITION(MK_EVENT_LOOP_EPOLL)
+  endif()
+endif()
+
+if (MK_EVENT_LOOP_WIN32)
+  if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
+    message(FATAL_ERROR "Event loop backend > win32 only available on Windows")
+  else()
+    message(STATUS "Event loop backend > win32")
+    MK_DEFINITION(MK_EVENT_LOOP_WIN32)
   endif()
 endif()
 
@@ -209,6 +229,10 @@ configure_file(
 
 add_library(mk_core STATIC ${src})
 target_link_libraries(mk_core ${CMAKE_THREAD_LIBS_INIT})
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+  target_link_libraries(mk_core ws2_32)
+endif()
 
 if (MK_EVENT_LOOP_LIBEVENT)
   target_link_libraries(mk_core event)
