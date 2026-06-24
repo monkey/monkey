@@ -123,6 +123,22 @@ check_c_source_compiles("
      return epoll_create(1);
   }" HAVE_EPOLL)
 
+if (NOT MK_EVENT_LOOP_SELECT AND
+    NOT MK_EVENT_LOOP_POLL AND
+    NOT MK_EVENT_LOOP_KQUEUE AND
+    NOT MK_EVENT_LOOP_EPOLL AND
+    NOT MK_EVENT_LOOP_LIBEVENT)
+  if (HAVE_EPOLL)
+    set(MK_EVENT_LOOP_EPOLL Yes)
+  elseif (HAVE_KQUEUE)
+    set(MK_EVENT_LOOP_KQUEUE Yes)
+  elseif (HAVE_POLL)
+    set(MK_EVENT_LOOP_POLL Yes)
+  elseif (HAVE_SELECT)
+    set(MK_EVENT_LOOP_SELECT Yes)
+  endif()
+endif()
+
 if (MK_EVENT_LOOP_SELECT)
   if (NOT HAVE_SELECT)
     message(FATAL_ERROR "Event loop backend > select(2) not available")
