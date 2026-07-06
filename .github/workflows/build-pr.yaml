@@ -42,6 +42,29 @@ jobs:
           cmake -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On ${{ matrix.config.cmake_additional_opt }} ..\
           cmake --build . --config Release
 
+  build-windows-mingw:
+    name: Cross-build for Windows with MinGW-w64 (UCRT64)
+    runs-on: ubuntu-latest
+    container: fedora:44
+    steps:
+      - name: Install the MinGW-w64 UCRT toolchain and build tools
+        run: >-
+          dnf install -y cmake gcc gcc-c++ git make ninja-build
+          ucrt64-gcc ucrt64-gcc-c++ ucrt64-openssl ucrt64-zlib
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cross-build monkey as a static library
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          mkdir build
+          cd build
+          cmake -G Ninja \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-ucrt64.cmake \
+            -DMK_DEBUG=On -DMK_WITHOUT_BIN=On -DMK_WITHOUT_CONF=On -DMK_LIB_ONLY=On \
+            ..
+          cmake --build .
+
   build-unix:
     name: Build sources on amd64 for ${{ matrix.os }} - ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
