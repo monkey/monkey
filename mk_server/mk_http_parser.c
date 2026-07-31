@@ -243,6 +243,10 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
             mk_list_add(&header->_head, &p->header_list);
 
             if (i == MK_HEADER_HOST) {
+                if (header->val.len == 0) {
+                    return -MK_CLIENT_BAD_REQUEST;
+                }
+
                 /* Handle a possible port number in the Host header */
                 int sep = str_searchr(header->val.data, ':', header->val.len);
                 if (sep > 0) {
@@ -291,6 +295,11 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 p->header_content_length = val;
             }
             else if (i == MK_HEADER_CONNECTION) {
+                if (header->val.len == 0) {
+                    p->header_connection = MK_HTTP_PARSER_CONN_UNKNOWN;
+                    return 0;
+                }
+
                 /* Check Connection: Keep-Alive */
                 if (header->val.len == sizeof(MK_CONN_KEEP_ALIVE) - 1) {
                     if (header_cmp(MK_CONN_KEEP_ALIVE,
@@ -331,6 +340,10 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 }
             }
             else if (i == MK_HEADER_TRANSFER_ENCODING) {
+                if (header->val.len == 0) {
+                    return 0;
+                }
+
                 /* Check Transfer-Encoding: chunked */
                 pos = mk_string_search_n(header->val.data,
                                          "chunked",
@@ -377,6 +390,10 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 }
             }
             else if (i == MK_HEADER_UPGRADE) {
+                    if (header->val.len == 0) {
+                        return -MK_CLIENT_BAD_REQUEST;
+                    }
+
                     if (header_cmp(MK_UPGRADE_H2C,
                                    header->val.data, header->val.len) == 0) {
                         p->header_upgrade = MK_HTTP_PARSER_UPGRADE_H2C;
@@ -1008,11 +1025,36 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
             }
             /* Parsing the header value */
             else if (p->status == MK_ST_HEADER_VALUE) {
-                /* Trim left, set starts only when found something != ' ' */
-                if (buffer[p->i] == '\r' || buffer[p->i] == '\n') {
+                /* Empty field values are valid; trim optional whitespace. */
+                if (buffer[p->i] == '\r') {
+                    p->header_val = p->i;
+                    mark_end();
+
+                    ret = header_lookup(p, buffer);
+                    if (ret != 0) {
+                        if (ret < -1) {
+                            mk_http_error(-ret, req->session, req, server);
+                        }
+                        return MK_HTTP_PARSER_ERROR;
+                    }
+
+                    /* Try to catch next LF */
+                    if (p->i + 1 < len) {
+                        if (buffer[p->i + 1] == '\n') {
+                            p->i++;
+                            p->status = MK_ST_HEADER_KEY;
+                            p->chars = -1;
+                            start_next();
+                        }
+                    }
+
+                    p->status = MK_ST_HEADER_END;
+                    start_next();
+                }
+                else if (buffer[p->i] == '\n') {
                     return MK_HTTP_PARSER_ERROR;
                 }
-                else if (buffer[p->i] != ' ') {
+                else if (buffer[p->i] != ' ' && buffer[p->i] != '\t') {
                     p->status = MK_ST_HEADER_VAL_STARTS;
                     p->start = p->header_val = p->i;
                 }

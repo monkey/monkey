@@ -411,6 +411,42 @@ def test_http10_without_host_is_accepted(monkey_instance: MonkeyManager):
     assert b"HTTP/1.1 200 OK" in response
 
 
+def test_empty_generic_header_values_are_accepted(monkey_instance: MonkeyManager):
+    response = monkey_instance.raw_request(
+        b"GET / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"X-Empty:\r\n"
+        b"X-Empty-Whitespace: \t\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+    )
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
+def test_empty_host_header_returns_400(monkey_instance: MonkeyManager):
+    response = monkey_instance.raw_request(
+        b"GET / HTTP/1.1\r\n"
+        b"Host:\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+    )
+
+    assert b"HTTP/1.1 400" in response
+
+
+def test_empty_upgrade_header_returns_400(monkey_instance: MonkeyManager):
+    response = monkey_instance.raw_request(
+        b"GET / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Upgrade:\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+    )
+
+    assert b"HTTP/1.1 400" in response
+
+
 def test_absolute_form_request_target_returns_400(monkey_instance: MonkeyManager):
     response = monkey_instance.raw_request(
         b"GET http://localhost/ HTTP/1.1\r\n"
