@@ -424,6 +424,38 @@ def test_empty_generic_header_values_are_accepted(monkey_instance: MonkeyManager
     assert b"HTTP/1.1 200 OK" in response
 
 
+def test_empty_connection_and_transfer_encoding_are_accepted(
+    monkey_instance: MonkeyManager,
+):
+    response = monkey_instance.raw_request(
+        b"GET / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Connection:\r\n"
+        b"Transfer-Encoding: \t\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+    )
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
+def test_fragmented_empty_header_value_is_accepted(monkey_instance: MonkeyManager):
+    response = monkey_instance.raw_request_parts(
+        [
+            b"GET / HTTP/1.1\r\n"
+            b"Host: localhost\r\n"
+            b"X-Empty:",
+            b"\r",
+            b"\n"
+            b"Connection: close\r\n"
+            b"\r\n",
+        ],
+        pause_between_parts=0.01,
+    )
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
 def test_empty_host_header_returns_400(monkey_instance: MonkeyManager):
     response = monkey_instance.raw_request(
         b"GET / HTTP/1.1\r\n"
