@@ -205,11 +205,55 @@ static inline int header_cmp(const char *expected, char *value, int len)
     return 0;
 }
 
+static inline int content_length_parse(char *value, unsigned long len,
+                                       long *result)
+{
+    int digit;
+    long parsed;
+    unsigned long i;
+
+    if (len == 0) {
+        return -MK_CLIENT_BAD_REQUEST;
+    }
+
+    parsed = 0;
+    for (i = 0; i < len; i++) {
+        if (value[i] == ' ' || value[i] == '\t') {
+            break;
+        }
+
+        if (value[i] < '0' || value[i] > '9') {
+            return -MK_CLIENT_BAD_REQUEST;
+        }
+
+        digit = value[i] - '0';
+        if (parsed > (LONG_MAX - digit) / 10) {
+            return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
+        }
+
+        parsed = (parsed * 10) + digit;
+    }
+
+    if (i == 0) {
+        return -MK_CLIENT_BAD_REQUEST;
+    }
+
+    for (; i < len; i++) {
+        if (value[i] != ' ' && value[i] != '\t') {
+            return -MK_CLIENT_BAD_REQUEST;
+        }
+    }
+
+    *result = parsed;
+    return 0;
+}
+
 static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
     int len;
     int pos;
+    int ret;
     long val;
     char *endptr;
     char *tmp;
@@ -279,17 +323,14 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 }
             }
             else if (i == MK_HEADER_CONTENT_LENGTH) {
-                errno = 0;
-                val = strtol(header->val.data, &endptr, 10);
-                if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
-                    || (errno != 0 && val == 0)) {
-                    return -MK_CLIENT_REQUEST_ENTITY_TOO_LARGE;
+                if (header->val.len == 0) {
+                    return -MK_CLIENT_BAD_REQUEST;
                 }
-                if (endptr == header->val.data) {
-                    return -1;
-                }
-                if (val < 0) {
-                    return -1;
+
+                ret = content_length_parse(header->val.data,
+                                           header->val.len, &val);
+                if (ret != 0) {
+                    return ret;
                 }
 
                 p->header_content_length = val;
