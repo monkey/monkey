@@ -424,6 +424,102 @@ def test_empty_generic_header_values_are_accepted(monkey_instance: MonkeyManager
     assert b"HTTP/1.1 200 OK" in response
 
 
+def test_post_with_body_and_empty_generic_header_is_accepted(
+    monkey_instance: MonkeyManager,
+):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Content-Type: application/json\r\n"
+        b"Content-Length: 2\r\n"
+        b"X-Empty:\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+        b"{}"
+    )
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
+@pytest.mark.parametrize("header_value", [b"", b" \t"])
+def test_empty_content_length_before_numeric_header_returns_400(
+    monkey_instance: MonkeyManager,
+    header_value: bytes,
+):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Content-Length:" + header_value + b"\r\n"
+        b"1-X: value\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+        b"1"
+    )
+
+    assert b"HTTP/1.1 400" in response
+
+
+@pytest.mark.parametrize("header_value", [b"", b" \t"])
+def test_empty_content_length_before_numeric_body_returns_400(
+    monkey_instance: MonkeyManager,
+    header_value: bytes,
+):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Connection: close\r\n"
+        b"Content-Length:" + header_value + b"\r\n"
+        b"\r\n"
+        b"1"
+    )
+
+    assert b"HTTP/1.1 400" in response
+
+
+@pytest.mark.parametrize("header_value", [b"2x", b"2 1", b"+2", b"-1"])
+def test_invalid_content_length_value_returns_400(
+    monkey_instance: MonkeyManager,
+    header_value: bytes,
+):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Content-Length: " + header_value + b"\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+        b"{}"
+    )
+
+    assert b"HTTP/1.1 400" in response
+
+
+def test_content_length_overflow_returns_413(monkey_instance: MonkeyManager):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Content-Length: 9999999999999999999999999999999999999999\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+    )
+
+    assert b"HTTP/1.1 413" in response
+
+
+def test_content_length_with_trailing_whitespace_is_accepted(
+    monkey_instance: MonkeyManager,
+):
+    response = monkey_instance.raw_request(
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Content-Length: 2 \t\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+        b"{}"
+    )
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
 def test_empty_connection_and_transfer_encoding_are_accepted(
     monkey_instance: MonkeyManager,
 ):
