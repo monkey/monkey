@@ -66,6 +66,7 @@ set(src "${src}"
   )
 
 check_c_source_compiles("
+  #define _GNU_SOURCE
   #include <string.h>
   int main() {
      char  haystack[] = \"1234\";
