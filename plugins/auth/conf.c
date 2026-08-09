@@ -146,7 +146,7 @@ int mk_auth_conf_init_users_list()
 
     /* vhost configuration */
     struct mk_list *head_hosts;
-    struct mk_list *hosts = &mk_api->config->hosts;
+    struct mk_list *hosts = mk_api->hosts;
     struct mk_list *head_sections;
     struct mk_vhost *entry_host;
     struct mk_rconf_section *section;
