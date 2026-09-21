@@ -32,7 +32,7 @@ struct fd_timer {
     long   nsec;
 #ifdef __EMSCRIPTEN__
     int read_fd;
-    struct mk_event *event;
+    int registered;
     double interval;
     double deadline;
     struct fd_timer *next;
@@ -109,6 +109,9 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
     int i;
     int found = MK_FALSE;
     struct mk_event *event;
+#ifdef __EMSCRIPTEN__
+    struct fd_timer *timer;
+#endif
 
     mk_bug(ctx == NULL);
     mk_bug(data == NULL);
@@ -163,6 +166,15 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
         event->type = type;
     }
 
+#ifdef __EMSCRIPTEN__
+    for (timer = ctx->timers; timer != NULL; timer = timer->next) {
+        if (timer->read_fd == fd) {
+            timer->registered = MK_TRUE;
+            break;
+        }
+    }
+#endif
+
     return 0;
 }
 
@@ -170,6 +182,9 @@ static inline int _mk_event_add(struct mk_event_ctx *ctx, int fd,
 static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event)
 {
     int i;
+#ifdef __EMSCRIPTEN__
+    struct fd_timer *timer;
+#endif
 
     mk_bug(ctx == NULL);
     mk_bug(event == NULL);
@@ -194,6 +209,15 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
     if (!mk_list_entry_is_orphan(&event->_priority_head)) {
         mk_list_del(&event->_priority_head);
     }
+
+#ifdef __EMSCRIPTEN__
+    for (timer = ctx->timers; timer != NULL; timer = timer->next) {
+        if (timer->read_fd == event->fd) {
+            timer->registered = MK_FALSE;
+            break;
+        }
+    }
+#endif
 
     MK_EVENT_NEW(event);
     return 0;
@@ -298,7 +322,7 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
 
 #ifdef __EMSCRIPTEN__
     timer->read_fd = fd[0];
-    timer->event = event;
+    timer->registered = MK_TRUE;
     timer->interval = sec * 1000.0 + nsec / 1000000.0;
     timer->deadline = emscripten_get_now() + timer->interval;
     timer->next = ctx->timers;
@@ -337,7 +361,7 @@ static inline int _mk_event_timeout_destroy(struct mk_event_ctx *ctx, void *data
 #ifdef __EMSCRIPTEN__
     for (link = &ctx->timers; *link != NULL; link = &(*link)->next) {
         timer = *link;
-        if (timer->event == event) {
+        if (timer->read_fd == event->fd) {
             *link = timer->next;
             close(timer->fd);
             mk_mem_free(timer);
@@ -465,13 +489,13 @@ static int mk_event_poll_wait(struct mk_event_ctx *ctx, struct pollfd *fds,
         }
         delay = timeout < 0 ? INT_MAX : (end - now);
         for (timer = ctx->timers; timer != NULL; timer = timer->next) {
-            if (!MK_EVENT_IS_REGISTERED(timer->event)) {
+            if (!timer->registered) {
                 continue;
             }
             if (now >= timer->deadline) {
                 expirations = 1 + (uint64_t) ((now - timer->deadline) / timer->interval);
                 timer->deadline += expirations * timer->interval;
-                timer_fd.fd = timer->event->fd;
+                timer_fd.fd = timer->read_fd;
                 timer_fd.events = POLLIN;
                 /* Coalesce unread notifications instead of growing the pipe. */
                 if (mk_event_poll_now(&timer_fd, 1) == 0) {

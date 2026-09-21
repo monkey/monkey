@@ -84,8 +84,8 @@ int main(void)
         CHECK(mk_event_wait_2(loop, 0) == 0);
         mk_event_loop_destroy(loop);
     }
-    /* A disabled registration is no longer used by the caller. Destroying
-     * the loop must close its timer descriptors without reading that object.
+    /* A disabled registration is no longer used by the caller. Waiting and
+     * destroying the loop must not read that object.
      */
     loop = mk_event_loop_create(1);
     CHECK(loop != NULL);
@@ -95,6 +95,10 @@ int main(void)
     CHECK(reader >= 0);
     CHECK(mk_event_timeout_disable(loop, removed_timer) == 0);
     free(removed_timer);
+    CHECK(mk_event_wait_2(loop, 0) == 0);
+    start = emscripten_get_now();
+    CHECK(mk_event_wait_2(loop, 20) == 0);
+    CHECK(emscripten_get_now() - start >= 19.0);
     mk_event_loop_destroy(loop);
     errno = 0;
     CHECK(fcntl(reader, F_GETFD) == -1 && errno == EBADF);
