@@ -12,6 +12,13 @@ set(UNIT_TESTS_FILES
   event_timeout.c
   )
 
+if(MK_EVENT_LOOP_LIBEVENT)
+  set(UNIT_TESTS_FILES
+    ${UNIT_TESTS_FILES}
+    event_overflow.c
+    )
+endif()
+
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   set(UNIT_TESTS_FILES
     ${UNIT_TESTS_FILES}
