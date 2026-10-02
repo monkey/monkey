@@ -526,6 +526,7 @@ int mk_vhost_set(mk_ctx_t *ctx, int vid, ...)
         value = va_arg(va, char *);
         if (!value) {
             /* Wrong parameter */
+            va_end(va);
             return -1;
         }
 
