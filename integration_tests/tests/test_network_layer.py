@@ -391,6 +391,46 @@ def test_put_returns_405(monkey_instance: MonkeyManager):
     assert response.status == 405
 
 
+@pytest.mark.parametrize("content_length", [b"5", b"100"])
+def test_chunked_request_ignores_content_length(
+    monkey_instance: MonkeyManager, content_length: bytes
+):
+    # RFC 9112 section 6.3: Transfer-Encoding overrides Content-Length.
+    payload = (
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Transfer-Encoding: chunked\r\n"
+        b"Content-Length: " + content_length + b"\r\n"
+        b"Connection: close\r\n"
+        b"\r\n"
+        b"5\r\nhello\r\n"
+        b"0\r\n\r\n"
+    )
+    response = monkey_instance.raw_request(payload)
+
+    assert b"HTTP/1.1 200 OK" in response
+
+
+def test_chunked_request_with_content_length_closes_connection(
+    monkey_instance: MonkeyManager,
+):
+    # RFC 9112 section 6.3: the server must close the connection after
+    # responding to a request framed by both headers.
+    payload = (
+        b"POST / HTTP/1.1\r\n"
+        b"Host: localhost\r\n"
+        b"Transfer-Encoding: chunked\r\n"
+        b"Content-Length: 100\r\n"
+        b"\r\n"
+        b"5\r\nhello\r\n"
+        b"0\r\n\r\n"
+    )
+    response = monkey_instance.raw_request(payload)
+
+    assert b"HTTP/1.1 200 OK" in response
+    assert b"Connection: Close" in response
+
+
 def test_http11_without_host_returns_400(monkey_instance: MonkeyManager):
     payload = (
         b"GET / HTTP/1.1\r\n"

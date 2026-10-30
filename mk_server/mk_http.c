@@ -1137,6 +1137,15 @@ int mk_http_keepalive_check(struct mk_http_session *cs,
         }
     }
 
+    /*
+     * A request framed by both Transfer-Encoding: chunked and Content-Length
+     * must not reuse the connection (RFC 9112 section 6.3).
+     */
+    if (mk_http_parser_is_content_chunked(&cs->parser) &&
+        cs->parser.header_content_length >= 0) {
+        cs->close_now = MK_TRUE;
+    }
+
     /* Client has reached keep-alive connections limit */
     if (cs->counter_connections >= server->max_keep_alive_request) {
         cs->close_now = MK_TRUE;
