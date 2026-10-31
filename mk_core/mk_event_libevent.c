@@ -310,13 +310,22 @@ static inline int _mk_event_del(struct mk_event_ctx *ctx, struct mk_event *event
 static void cb_timeout(evutil_socket_t fd, short flags, void *data)
 {
     int ret;
+    int err;
     uint64_t val = 1;
     struct ev_map *ev_map = data;
 
     ret = send(ev_map->pipe[1], (char *) &val, sizeof(uint64_t), 0);
 
     if (ret == -1) {
-        if (evutil_socket_geterror(fd) != ERR(ECONNABORTED)) {
+        err = evutil_socket_geterror(fd);
+
+        /*
+         * _mk_event_timeout_destroy() closes the read end, so a failed send
+         * is how this worker learns to clean itself up. Windows reports it
+         * as WSAECONNABORTED or WSAECONNRESET, depending on the socket pair
+         * type and on whether data was left unread.
+         */
+        if (err != ERR(ECONNABORTED) && err != ERR(ECONNRESET)) {
             perror("write");
         }
         evutil_closesocket(ev_map->pipe[1]);
