@@ -326,7 +326,8 @@ static void cb_timeout(evutil_socket_t fd, short flags, void *data)
          * type and on whether data was left unread.
          */
         if (err != ERR(ECONNABORTED) && err != ERR(ECONNRESET)) {
-            perror("write");
+            /* Winsock does not set errno, so perror() would print a stale one */
+            fprintf(stderr, "write: %s\n", evutil_socket_error_to_string(err));
         }
         evutil_closesocket(ev_map->pipe[1]);
         event_del(ev_map->event);
