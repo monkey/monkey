@@ -371,5 +371,6 @@ if(MK_FUZZ_MODE)
 endif()
 
 if(MK_TESTS)
+  enable_testing()
   add_subdirectory(test)
 endif()

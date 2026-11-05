@@ -566,7 +566,7 @@ parse_more:
             p->chunk_expected_start = p->chunk_processed_start;
         }
 
-        len = buf_request_len - p->i;
+        len = buf_request_len - (p->chunk_processed_start - buf_request);
         if (len == 0) {
             return MK_HTTP_PARSER_PENDING;
         }
@@ -783,23 +783,22 @@ static inline int mk_http_parser_ok(struct mk_http_request *req,
         return MK_HTTP_PARSER_ERROR;
     }
 
-    /* POST checks */
-    if (req->method == MK_METHOD_POST || req->method == MK_METHOD_PUT) {
-        /* validate Content-Length exists for non-chunked requests */
-        if (mk_http_parser_is_content_chunked(p)) {
-            p->level = REQ_LEVEL_BODY;
+    /* Framing applies to every method, including GET requests with bodies. */
+    if (mk_http_parser_is_content_chunked(p)) {
+        p->level = REQ_LEVEL_BODY;
+        ret = http_parser_transfer_encoding_chunked(p,
+                                                    buf_request, buf_request_len,
+                                                    NULL, NULL, 0, NULL);
+        if (ret == MK_HTTP_PARSER_OK) {
+            p->i = p->chunk_processed_start - buf_request + 4;
+        }
+        return ret;
+    }
 
-            ret = http_parser_transfer_encoding_chunked(p,
-                                                        buf_request, buf_request_len,
-                                                        NULL, NULL, 0, NULL);
-            return ret;
-        }
-        else {
-            if (p->headers[MK_HEADER_CONTENT_LENGTH].type == 0) {
-                mk_http_error(MK_CLIENT_LENGTH_REQUIRED, req->session, req, server);
-                return MK_HTTP_PARSER_ERROR;
-            }
-        }
+    if ((req->method == MK_METHOD_POST || req->method == MK_METHOD_PUT) &&
+        p->header_content_length < 0) {
+        mk_http_error(MK_CLIENT_LENGTH_REQUIRED, req->session, req, server);
+        return MK_HTTP_PARSER_ERROR;
     }
 
     return MK_HTTP_PARSER_OK;
@@ -1196,7 +1195,8 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
                 }
 
                 /* Cut off */
-                p->i += p->body_received;
+                p->body_received = p->header_content_length;
+                p->i = p->start + p->body_received - 1;
                 req->data.len  = p->body_received;
                 req->data.data = (buffer + p->start);
             }
