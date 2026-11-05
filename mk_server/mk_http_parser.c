@@ -248,6 +248,49 @@ static inline int content_length_parse(char *value, unsigned long len,
     return 0;
 }
 
+/* Transfer codings are tokens, never substrings. Preserve state across fields. */
+static int transfer_encoding_parse(struct mk_http_parser *p,
+                                   const char *value, size_t len)
+{
+    size_t i = 0;
+    size_t start;
+    size_t size;
+
+    while (i < len) {
+        while (i < len && (value[i] == ' ' || value[i] == '\t')) {
+            i++;
+        }
+        start = i;
+        while (i < len &&
+               ((value[i] >= 'a' && value[i] <= 'z') ||
+                (value[i] >= 'A' && value[i] <= 'Z') ||
+                (value[i] >= '0' && value[i] <= '9') ||
+                (value[i] != '\0' && strchr("!#$%&'*+-.^_`|~", value[i])))) {
+            i++;
+        }
+        size = i - start;
+        if (size == 0 || mk_http_parser_is_content_chunked(p)) {
+            return -MK_CLIENT_BAD_REQUEST;
+        }
+        if (size == 7 && header_cmp("chunked", value + start, 7) == 0) {
+            p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_CHUNKED;
+        }
+        else {
+            p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_UNSUPPORTED;
+        }
+        while (i < len && (value[i] == ' ' || value[i] == '\t')) {
+            i++;
+        }
+        if (i == len) {
+            return 0;
+        }
+        if (value[i++] != ',' || i == len) {
+            return -MK_CLIENT_BAD_REQUEST;
+        }
+    }
+    return -MK_CLIENT_BAD_REQUEST;
+}
+
 static inline int header_lookup(struct mk_http_parser *p, char *buffer)
 {
     int i;
@@ -333,6 +376,10 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                     return ret;
                 }
 
+                if (p->header_content_length >= 0 &&
+                    p->header_content_length != val) {
+                    return -MK_CLIENT_BAD_REQUEST;
+                }
                 p->header_content_length = val;
             }
             else if (i == MK_HEADER_CONNECTION) {
@@ -381,53 +428,10 @@ static inline int header_lookup(struct mk_http_parser *p, char *buffer)
                 }
             }
             else if (i == MK_HEADER_TRANSFER_ENCODING) {
-                if (header->val.len == 0) {
-                    return 0;
-                }
-
-                /* Check Transfer-Encoding: chunked */
-                pos = mk_string_search_n(header->val.data,
-                                         "chunked",
-                                         MK_STR_INSENSITIVE,
-                                         header->val.len);
-                if (pos >= 0) {
-                    p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_CHUNKED;
-                }
-
-                /* Check Transfer-Encoding: gzip */
-                pos = mk_string_search_n(header->val.data,
-                                         "gzip",
-                                         MK_STR_INSENSITIVE,
-                                         header->val.len);
-                if (pos >= 0) {
-                    p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_GZIP;
-                }
-
-                /* Check Transfer-Encoding: compress */
-                pos = mk_string_search_n(header->val.data,
-                                         "compress",
-                                         MK_STR_INSENSITIVE,
-                                         header->val.len);
-                if (pos >= 0) {
-                    p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_COMPRESS;
-                }
-
-                /* Check Transfer-Encoding: deflate */
-                pos = mk_string_search_n(header->val.data,
-                                         "deflate",
-                                         MK_STR_INSENSITIVE,
-                                         header->val.len);
-                if (pos >= 0) {
-                    p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_DEFLATE;
-                }
-
-                /* Check Transfer-Encoding: identity */
-                pos = mk_string_search_n(header->val.data,
-                                         "identity",
-                                         MK_STR_INSENSITIVE,
-                                         header->val.len);
-                if (pos >= 0) {
-                    p->header_transfer_encoding |= MK_HTTP_PARSER_TRANSFER_ENCODING_IDENTITY;
+                ret = transfer_encoding_parse(p, header->val.data,
+                                              header->val.len);
+                if (ret != 0) {
+                    return ret;
                 }
             }
             else if (i == MK_HEADER_UPGRADE) {
@@ -1152,6 +1156,18 @@ int mk_http_parser(struct mk_http_request *req, struct mk_http_parser *p,
         }
         else if (p->level == REQ_LEVEL_END) {
             if (buffer[p->i] == '\n') {
+                /* Validate framing before waiting for or consuming any body. */
+                if (p->headers[MK_HEADER_TRANSFER_ENCODING].type != 0) {
+                    if (p->header_content_length >= 0) {
+                        mk_http_error(MK_CLIENT_BAD_REQUEST, req->session, req, server);
+                        return MK_HTTP_PARSER_ERROR;
+                    }
+                    if (p->header_transfer_encoding &
+                        MK_HTTP_PARSER_TRANSFER_ENCODING_UNSUPPORTED) {
+                        mk_http_error(MK_SERVER_NOT_IMPLEMENTED, req->session, req, server);
+                        return MK_HTTP_PARSER_ERROR;
+                    }
+                }
                 if (p->header_content_length > 0) {
                     p->level = REQ_LEVEL_BODY;
                     p->chars = -1;
