@@ -104,7 +104,7 @@ struct plugin_api
     /* Async Network */
     struct mk_net_connection *(*net_conn_create) (char *, int);
 
-    struct mk_server_config *config;
+    struct mk_list *hosts;
     struct mk_list *plugins;
 
     /* Error helper */
