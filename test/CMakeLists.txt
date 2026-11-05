@@ -10,6 +10,7 @@
 set(UNIT_TESTS_FILES
   lib_server.c
   event_timeout.c
+  http_framing.c
   )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -29,9 +30,15 @@ foreach(source_file ${UNIT_TESTS_FILES})
     ${source_file}
     )
 
-  target_link_libraries(${source_file_we} monkey-core-static)
+  if(source_file STREQUAL "http_framing.c")
+    # Compile the production parser with the test's error-response stub.
+    target_sources(${source_file_we} PRIVATE ../mk_server/mk_http_parser.c)
+    target_link_libraries(${source_file_we} mk_core)
+  else()
+    target_link_libraries(${source_file_we} monkey-core-static)
+  endif()
 
   add_test(NAME ${source_file_we}
-    COMMAND ${CMAKE_BINARY_DIR}/tests/${source_file_we}
-    WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/tests)
+    COMMAND $<TARGET_FILE:${source_file_we}>
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()

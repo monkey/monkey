@@ -56,6 +56,8 @@
 #define MK_HTTP_PARSER_TRANSFER_ENCODING_DEFLATE   (1 << 3)
 #define MK_HTTP_PARSER_TRANSFER_ENCODING_IDENTITY  (1 << 4)
 
+#define MK_HTTP_PARSER_TRANSFER_ENCODING_UNSUPPORTED (1 << 5)
+
 #define MK_HEADER_EXTRA_SIZE        50
 
 /* Request levels
@@ -395,9 +397,8 @@ static inline size_t mk_http_parser_request_size(struct mk_http_parser *p, char 
     size_t bytes;
 
     /*
-     * if the request is chunked encoded, p->i points to the beginning of the last chunk
-     * found, so we need to check if the last chunk is complete, if so we can return the
-     * size of the request
+     * For chunked requests, derive the size from the terminating chunk and
+     * verify that it fits in the supplied buffer.
      */
     if (mk_http_parser_is_content_chunked(p)) {
         if (p->chunk_processed_start < buf_request) {
@@ -412,8 +413,8 @@ static inline size_t mk_http_parser_request_size(struct mk_http_parser *p, char 
         return bytes;
     }
     else if (p->header_content_length > 0) {
-        /* p->i points to the last byte after the content body */
-        return p->i;
+        /* p->i points to the last byte of the content body. */
+        return p->i + 1;
     }
 
     return -1;
