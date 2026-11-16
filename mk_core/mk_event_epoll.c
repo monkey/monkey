@@ -209,12 +209,13 @@ static inline int _mk_event_timeout_create(struct mk_event_ctx *ctx,
     its.it_interval.tv_sec  = sec;
     its.it_interval.tv_nsec = nsec;
 
-    /*
-     * initial expiration: note that we don't use nanoseconds in the timer,
-     * feel free to send a Pull Request if you need it.
-     */
+    /* initial expiration */
     its.it_value.tv_sec  = now.tv_sec + sec;
-    its.it_value.tv_nsec = 0;
+    its.it_value.tv_nsec = now.tv_nsec + nsec;
+    if (its.it_value.tv_nsec >= 1000000000L) {
+        its.it_value.tv_sec++;
+        its.it_value.tv_nsec -= 1000000000L;
+    }
 
     timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
     if (timer_fd == -1) {
