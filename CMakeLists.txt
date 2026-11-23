@@ -18,6 +18,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$$(subst ${CMAKE_SOURCE_DIR}/,,$$(abspath \$$<))\"'")
 else()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__=__FILE__")
+if(MINGW)
+  # MinGW-w64 only declares the POSIX *_r time functions (localtime_r, ...)
+  # when this feature-test macro is set. The Winsock recv/send/getsockopt
+  # buffer arguments are char* where POSIX is void*, which GCC 14+ makes a
+  # hard error; MSVC accepts them, so keep them warnings under MinGW too.
+  add_definitions(-D_POSIX_THREAD_SAFE_FUNCTIONS=200112L)
+  add_compile_options(-Wno-error=incompatible-pointer-types)
+endif()
 endif()
 
 # Monkey Version
