@@ -113,6 +113,7 @@ static const struct header_status_response status_response[] = {
     status_entry(MK_CLIENT_UNSUPPORTED_MEDIA, MK_RH_CLIENT_UNSUPPORTED_MEDIA),
     status_entry(MK_CLIENT_REQUESTED_RANGE_NOT_SATISF,
                  MK_RH_CLIENT_REQUESTED_RANGE_NOT_SATISF),
+    status_entry(MK_CLIENT_TOO_MANY_REQUESTS, MK_RH_CLIENT_TOO_MANY_REQUESTS),
 
     /* Server side errors */
     status_entry(MK_SERVER_INTERNAL_ERROR, MK_RH_SERVER_INTERNAL_ERROR),

@@ -71,6 +71,7 @@
 #define MK_RH_CLIENT_UNSUPPORTED_MEDIA  "HTTP/1.1 415 Unsupported Media Type\r\n"
 #define MK_RH_CLIENT_REQUESTED_RANGE_NOT_SATISF \
     "HTTP/1.1 416 Requested Range Not Satisfiable\r\n"
+#define MK_RH_CLIENT_TOO_MANY_REQUESTS "HTTP/1.1 429 Too Many Requests\r\n"
 
 /* Server side errors */
 #define MK_RH_SERVER_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error\r\n"
