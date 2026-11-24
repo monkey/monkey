@@ -19,6 +19,16 @@
 #include <monkey/monkey.h>
 #include <monkey/mk_net.h>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
+
 #include "mk_tests.h"
 
 #define TEST_NOT_RUN 0
@@ -304,7 +314,140 @@ void test_server_clock_worker_repeated_start_stop(void)
     }
 }
 
+#define THROTTLE_BODY "slow down"
+#define THROTTLE_STATUS_LINE "HTTP/1.1 429 Too Many Requests\r\n"
+#define THROTTLE_CONNECT_RETRIES 10
+#define THROTTLE_READ_MAX 64
+
+static void test_cb_throttle_handler(mk_request_t *request, void *data)
+{
+    (void) data;
+
+    mk_http_status(request, 429);
+    mk_http_send(request, THROTTLE_BODY, strlen(THROTTLE_BODY), NULL);
+    mk_http_done(request);
+}
+
+static int test_client_connect(int port)
+{
+    int i;
+    int fd;
+    struct sockaddr_in addr;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    for (i = 0; i < THROTTLE_CONNECT_RETRIES; i++) {
+        fd = (int) socket(AF_INET, SOCK_STREAM, 0);
+        if (fd == -1) {
+            return -1;
+        }
+        if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) == 0) {
+            return fd;
+        }
+#ifdef _WIN32
+        closesocket(fd);
+#else
+        close(fd);
+#endif
+        sleep(1);
+    }
+
+    return -1;
+}
+
+static int test_cb_throttle_client(mk_ctx_t *srv)
+{
+    int i;
+    int fd;
+    int ret = -1;
+    long n;
+    size_t used = 0;
+    char buf[1024];
+#ifdef _WIN32
+    DWORD tmo;
+#else
+    struct timeval tmo;
+#endif
+    const char *req = "GET /throttle HTTP/1.1\r\n"
+                      "Host: 127.0.0.1\r\n"
+                      "Connection: close\r\n\r\n";
+    (void) srv;
+
+    fd = test_client_connect(27456);
+    if (fd == -1) {
+        return -1;
+    }
+
+    if (send(fd, req, (int) strlen(req), 0) != (long) strlen(req)) {
+        goto done;
+    }
+
+    /* The server may keep the socket open after the last chunk, so give up
+     * on silence and stop as soon as the body has arrived.
+     */
+#ifdef _WIN32
+    tmo = 2000;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tmo, sizeof(tmo));
+#else
+    tmo.tv_sec = 2;
+    tmo.tv_usec = 0;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tmo, sizeof(tmo));
+#endif
+
+    /* Bounded read: stop on EOF, error, full buffer or too many iterations */
+    for (i = 0; i < THROTTLE_READ_MAX && used < sizeof(buf) - 1; i++) {
+        n = (long) recv(fd, buf + used, (int) (sizeof(buf) - 1 - used), 0);
+        if (n <= 0) {
+            break;
+        }
+        used += n;
+        buf[used] = '\0';
+        if (strstr(buf, THROTTLE_BODY) != NULL) {
+            break;
+        }
+    }
+    buf[used] = '\0';
+
+    if (strncmp(buf, THROTTLE_STATUS_LINE, strlen(THROTTLE_STATUS_LINE)) != 0) {
+        goto done;
+    }
+    if (strstr(buf, THROTTLE_BODY) == NULL) {
+        goto done;
+    }
+    ret = 0;
+
+done:
+#ifdef _WIN32
+    closesocket(fd);
+#else
+    close(fd);
+#endif
+    return ret;
+}
+
+void test_server_status_too_many_requests(void)
+{
+    int vid;
+    uint8_t result;
+    mk_ctx_t *srv = mk_create();
+
+    TEST_ASSERT(srv != NULL);
+    mk_config_set(srv, "Listen", "127.0.0.1:27456", "Workers", "1", NULL);
+    vid = mk_vhost_create(srv, NULL);
+    TEST_ASSERT(vid >= 0);
+    mk_vhost_set(srv, vid, "Name", "throttle", NULL);
+    mk_vhost_handler(srv, vid, "/throttle", test_cb_throttle_handler, NULL);
+
+    result = run_server_test(srv, 10, test_cb_throttle_client);
+    mk_destroy(srv);
+    TEST_CHECK(result == TEST_SUCCESS);
+}
+
 TEST_LIST = {
+    {"server_status_too_many_requests", test_server_status_too_many_requests},
     {"server_clock_worker_repeated_start_stop", test_server_clock_worker_repeated_start_stop},
     {
         "core_plain_transport_available",
